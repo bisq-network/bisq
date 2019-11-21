@@ -17,7 +17,7 @@
 
 package bisq.network.p2p;
 
-import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.InboundConnection;
@@ -57,7 +57,7 @@ public class MockNode {
         this.maxConnections = maxConnections;
         networkNode = mock(NetworkNode.class);
         Storage<PeerList> storage = new Storage<>(mock(File.class), mock(PersistenceProtoResolver.class), mock(CorruptedDatabaseFilesHandler.class));
-        peerManager = new PeerManager(networkNode, mock(DefaultSeedNodeRepository.class), new ClockWatcher(), maxConnections, storage);
+        peerManager = new PeerManager(networkNode, mock(SeedNodeRepository.class), new ClockWatcher(), maxConnections, storage);
         connections = new HashSet<>();
         when(networkNode.getAllConnections()).thenReturn(connections);
     }
