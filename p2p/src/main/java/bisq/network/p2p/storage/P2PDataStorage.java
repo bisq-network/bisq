@@ -228,19 +228,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
      */
-    public GetDataResponse buildGetDataResponse(GetDataRequest getDataRequest, Connection connection) {
-        return new GetDataResponse(getFilteredProtectedStorageEntries(getDataRequest, connection),
-                getFilteredPersistableNetworkPayload(getDataRequest, connection),
+    public GetDataResponse buildGetDataResponse(GetDataRequest getDataRequest, String connectionInfo, Connection connection) {
+        return new GetDataResponse(getFilteredProtectedStorageEntries(getDataRequest, connectionInfo, connection),
+                getFilteredPersistableNetworkPayload(getDataRequest, connectionInfo, connection),
                 getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
     }
 
     private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
+                                                                                String connectionInfo,
                                                                                 Connection connection) {
         Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
-        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
-                .map(e -> "node address " + e.getFullAddress())
-                .orElseGet(() -> "connection UID " + connection.getUid());
 
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
         AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
@@ -265,12 +263,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest,
+                                                                          String connectionInfo,
                                                                           Connection connection) {
         Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
         Set<Integer> lookupSet = new HashSet<>();
-        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
-                .map(e -> "node address " + e.getFullAddress())
-                .orElseGet(() -> "connection UID " + connection.getUid());
 
         AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());

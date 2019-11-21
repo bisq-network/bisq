@@ -80,7 +80,11 @@ public class GetDataRequestHandler {
 
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
         long ts = System.currentTimeMillis();
-        GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(getDataRequest, connection);
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
+
+        GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(getDataRequest, connectionInfo, connection);
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
