@@ -52,7 +52,6 @@ public class P2PDataStorageProcessGetDataResponse {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         this.testState = new TestState();
-        P2PDataStorage.initialRequestApplied = false;
 
         this.peerNodeAddress = new NodeAddress("peer", 8080);
     }

@@ -118,9 +118,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = 60;
 
-    // TODO: Remove static
-    @VisibleForTesting
-    static boolean initialRequestApplied = false;
+    private boolean initialRequestApplied = false;
 
     private final Broadcaster broadcaster;
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
