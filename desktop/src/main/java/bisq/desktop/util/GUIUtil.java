@@ -27,6 +27,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -1106,5 +1107,15 @@ public class GUIUtil {
         return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
                 state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
                 MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+    }
+
+    public static RegexValidator addressRegexValidator() {
+        RegexValidator regexValidator = new RegexValidator();
+        String portRegexPattern = "(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])";
+        String onionV2RegexPattern = String.format("[a-zA-Z2-7]{16}\\.onion(?:\\:%1$s)?", portRegexPattern);
+        String onionV3RegexPattern = String.format("[a-zA-Z2-7]{56}\\.onion(?:\\:%1$s)?", portRegexPattern);
+        String ipv4RegexPattern = String.format("(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\\:%1$s)?", portRegexPattern);
+        regexValidator.setPattern(String.format("^(?:(?:(?:%1$s)|(?:%2$s)),)*(?:(?:%1$s)|(?:%2$s))*$", onionV2RegexPattern, ipv4RegexPattern));
+        return regexValidator;
     }
 }

@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.Restrictions;
@@ -324,8 +325,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // ignoreTraders
         ignoreTradersListInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers"));
-        ignoreTradersListListener = (observable, oldValue, newValue) ->
+        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
+        ignoreTradersListInputTextField.setValidator(regexValidator);
+        ignoreTradersListInputTextField.setErrorMessage(Res.get("validation.invalidAddressList"));
+        ignoreTradersListListener = (observable, oldValue, newValue) -> {
+            if (regexValidator.validate(newValue).isValid && !newValue.equals(oldValue)) {
                 preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue).split(",")));
+            }
+        };
 
         // referralId
        /* referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));
