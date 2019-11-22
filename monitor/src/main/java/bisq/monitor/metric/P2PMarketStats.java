@@ -221,20 +221,15 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
                 versions.log(protectedStoragePayload);
             });
 
-            Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
-                    .getPersistableNetworkPayloadSet();
-            if (persistableNetworkPayloadSet != null) {
-                persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
+            dataResponse.getPersistableNetworkPayloadSet().forEach(persistableNetworkPayload -> {
+                // memorize message hashes
+                //Byte[] bytes = new Byte[persistableNetworkPayload.getHash().length];
+                //Arrays.setAll(bytes, n -> persistableNetworkPayload.getHash()[n]);
 
-                    // memorize message hashes
-                    //Byte[] bytes = new Byte[persistableNetworkPayload.getHash().length];
-                    //Arrays.setAll(bytes, n -> persistableNetworkPayload.getHash()[n]);
+                //hashes.add(bytes);
 
-                    //hashes.add(bytes);
-
-                    hashes.add(persistableNetworkPayload.getHash());
-                });
-            }
+                hashes.add(persistableNetworkPayload.getHash());
+            });
 
             bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), result);
             versionBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), versions);

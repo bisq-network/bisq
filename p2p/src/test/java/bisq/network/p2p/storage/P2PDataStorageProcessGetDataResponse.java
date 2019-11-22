@@ -69,7 +69,7 @@ public class P2PDataStorageProcessGetDataResponse {
             List<PersistableNetworkPayload> persistableNetworkPayloads) {
         return new GetDataResponse(
                 new HashSet<>(protectedStorageEntries),
-                persistableNetworkPayloads == null ? null : new HashSet<>(persistableNetworkPayloads),
+                new HashSet<>(persistableNetworkPayloads),
                 1,
                 false);
     }
@@ -169,18 +169,6 @@ public class P2PDataStorageProcessGetDataResponse {
                 this.peerNodeAddress, false, false, false, false);
 
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
-
-        TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
-        this.testState.verifyPersistableAdd(
-                beforeState, persistableNetworkPayload, false, false, false, false);
-    }
-
-    // TESTCASE: GetDataResponse w/ null PNP changes no state
-    @Test
-    public void processGetDataResponse_nullPNPSetDoesNothing() {
-        PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[] { 1 });
-        GetDataResponse getDataResponse = buildGetDataResponse(Collections.emptyList(), null);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);

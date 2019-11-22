@@ -37,6 +37,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
 
 @Slf4j
@@ -47,8 +49,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     private final Set<ProtectedStorageEntry> dataSet;
 
     // Set of PersistableNetworkPayload objects
-    // We added that in v 0.6 and we would get a null object from older peers, so keep it annotated with @Nullable
-    @Nullable
+    // We added that in v 0.6 and the fromProto code will create an empty HashSet if it doesn't exist
     private final Set<PersistableNetworkPayload> persistableNetworkPayloadSet;
 
     private final int requestNonce;
@@ -57,7 +58,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     private final Capabilities supportedCapabilities;
 
     public GetDataResponse(Set<ProtectedStorageEntry> dataSet,
-                           @Nullable Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
+                           @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                            int requestNonce,
                            boolean isGetUpdatedDataResponse) {
         this(dataSet,
@@ -73,7 +74,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private GetDataResponse(Set<ProtectedStorageEntry> dataSet,
-                            @Nullable Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
+                            @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                             int requestNonce,
                             boolean isGetUpdatedDataResponse,
                             @Nullable Capabilities supportedCapabilities,
@@ -101,12 +102,12 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                                         .build())
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
-                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
+                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
+                .addAllPersistableNetworkPayloadItems(persistableNetworkPayloadSet.stream()
+                        .map(PersistableNetworkPayload::toProtoMessage)
+                        .collect(Collectors.toList()));
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
-        Optional.ofNullable(persistableNetworkPayloadSet).ifPresent(set -> builder.addAllPersistableNetworkPayloadItems(set.stream()
-                .map(PersistableNetworkPayload::toProtoMessage)
-                .collect(Collectors.toList())));
 
         protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetDataResponse(builder)
@@ -124,14 +125,11 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                         .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
                         .collect(Collectors.toSet()));
 
-        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = proto.getPersistableNetworkPayloadItemsList().isEmpty() ?
-                null :
-                new HashSet<>(
-                        proto.getPersistableNetworkPayloadItemsList().stream()
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = new HashSet<>(
+                proto.getPersistableNetworkPayloadItemsList().stream()
                                 .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
                                 .collect(Collectors.toSet()));
 
-        //PersistableNetworkPayload
         return new GetDataResponse(dataSet,
                 persistableNetworkPayloadSet,
                 proto.getRequestNonce(),

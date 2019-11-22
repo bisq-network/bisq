@@ -248,24 +248,20 @@ class RequestDataHandler implements MessageListener {
             payloadByClassName.get(className).add(protectedStoragePayload);
         });
 
+        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
+            // For logging different data types
+            String className = persistableNetworkPayload.getClass().getSimpleName();
+            if (!payloadByClassName.containsKey(className))
+                payloadByClassName.put(className, new HashSet<>());
 
-        if (persistableNetworkPayloadSet != null) {
-            persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
-                // For logging different data types
-                String className = persistableNetworkPayload.getClass().getSimpleName();
-                if (!payloadByClassName.containsKey(className))
-                    payloadByClassName.put(className, new HashSet<>());
-
-                payloadByClassName.get(className).add(persistableNetworkPayload);
-            });
-        }
+            payloadByClassName.get(className).add(persistableNetworkPayload);
+        });
 
         // Log different data types
         StringBuilder sb = new StringBuilder();
         sb.append("\n#################################################################\n");
         sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
-        final int items = dataSet.size() +
-                (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
+        final int items = dataSet.size() + persistableNetworkPayloadSet.size();
         sb.append("Received ").append(items).append(" instances\n");
         payloadByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")

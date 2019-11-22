@@ -335,30 +335,28 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         });
         log.info("Processing {} protectedStorageEntries took {} ms.", dataSet.size(), this.clock.millis() - ts2);
 
-        if (persistableNetworkPayloadSet != null) {
-            ts2 = this.clock.millis();
-            persistableNetworkPayloadSet.forEach(e -> {
-                if (e instanceof ProcessOncePersistableNetworkPayload) {
-                    // We use an optimized method as many checks are not required in that case to avoid
-                    // performance issues.
-                    // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
-                    // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
-                    // trade stats stats and all account age witness data.
+        ts2 = this.clock.millis();
+        persistableNetworkPayloadSet.forEach(e -> {
+            if (e instanceof ProcessOncePersistableNetworkPayload) {
+                // We use an optimized method as many checks are not required in that case to avoid
+                // performance issues.
+                // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
+                // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
+                // trade stats stats and all account age witness data.
 
-                    // We only apply it once from first response
-                    if (!initialRequestApplied) {
-                        addPersistableNetworkPayloadFromInitialRequest(e);
+                // We only apply it once from first response
+                if (!initialRequestApplied) {
+                    addPersistableNetworkPayloadFromInitialRequest(e);
 
-                    }
-                } else {
-                    // We don't broadcast here as we are only connected to the seed node and would be pointless
-                    addPersistableNetworkPayload(e, sender, false,
-                            false, false, false);
                 }
-            });
-            log.info("Processing {} persistableNetworkPayloads took {} ms.",
-                    persistableNetworkPayloadSet.size(), this.clock.millis() - ts2);
-        }
+            } else {
+                // We don't broadcast here as we are only connected to the seed node and would be pointless
+                addPersistableNetworkPayload(e, sender, false,
+                        false, false, false);
+            }
+        });
+        log.info("Processing {} persistableNetworkPayloads took {} ms.",
+                persistableNetworkPayloadSet.size(), this.clock.millis() - ts2);
 
         // We only process PersistableNetworkPayloads implementing ProcessOncePersistableNetworkPayload once. It can cause performance
         // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
