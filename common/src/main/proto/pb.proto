@@ -394,13 +394,13 @@ message GetBlocksRequest {
 }
 
 message GetBlocksResponse {
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     repeated BaseBlock raw_blocks = 1;
     int32 request_nonce = 2;
 }
 
 message NewBlockBroadcastMessage {
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     BaseBlock raw_block = 1;
 }
 
@@ -1581,12 +1581,12 @@ message BaseBlock {
 }
 
 message RawBlock {
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     repeated BaseTx raw_txs = 1;
 }
 
 message Block {
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     repeated BaseTx txs = 1;
 }
 
@@ -1604,12 +1604,12 @@ message BaseTx {
 }
 
 message RawTx {
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     repeated BaseTxOutput raw_tx_outputs = 1;
 }
 
 message Tx {
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     repeated BaseTxOutput tx_outputs = 1;
     TxType txType = 2;
     int64 burnt_bsq = 3;
@@ -1733,10 +1733,10 @@ message Cycle {
 
 message DaoState {
     int32 chain_height = 1;
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     repeated BaseBlock blocks = 2;
     repeated Cycle cycles = 3;
-    // Because of the way how PB implements inheritence we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type
     map<string, BaseTxOutput> unspent_tx_output_map = 4;
     map<string, Issuance> issuance_map = 5;
     repeated string confiscated_lockup_tx_list = 6;
