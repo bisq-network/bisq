@@ -328,21 +328,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
 
         long ts2 = System.currentTimeMillis();
-        AtomicInteger counter = new AtomicInteger();
         dataSet.forEach(e -> {
             // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
             addProtectedStorageEntry(e, sender, null, false, false);
-            counter.getAndIncrement();
 
         });
-        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts2);
+        log.info("Processing {} protectedStorageEntries took {} ms.", dataSet.size(), this.clock.millis() - ts2);
 
-                        /* // engage the firstRequest logic only if we are a seed node. Normal clients get here twice at most.
-                        if (!Capabilities.app.containsAll(Capability.SEED_NODE))
-                            firstRequest = true;*/
-
-        if (persistableNetworkPayloadSet != null /*&& firstRequest*/) {
-            ts2 = System.currentTimeMillis();
+        if (persistableNetworkPayloadSet != null) {
+            ts2 = this.clock.millis();
             persistableNetworkPayloadSet.forEach(e -> {
                 if (e instanceof LazyProcessedPayload) {
                     // We use an optimized method as many checks are not required in that case to avoid
@@ -362,13 +356,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                             false, false, false);
                 }
             });
-
-            // We set initialRequestApplied to true after the loop, otherwise we would only process 1 entry
-            initialRequestApplied = true;
-
             log.info("Processing {} persistableNetworkPayloads took {} ms.",
-                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts2);
+                    persistableNetworkPayloadSet.size(), this.clock.millis() - ts2);
         }
+
+        // We only process PersistableNetworkPayloads implementing LazyProcessedPayload once. It can cause performance
+        // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
+        // startup.
+        initialRequestApplied = true;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
