@@ -31,7 +31,6 @@ configure(subprojects) {
         bitcoinjVersion = 'a88d36d'
         btcdCli4jVersion = '975ff5d4'
         codecVersion = '1.9'
-        commonProtosVersion = '1.17.0'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
         findbugsVersion = '3.0.2'
@@ -60,9 +59,9 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        nettyTcNativeVersion = '2.0.27.Final'
         netlayerVersion = '0.6.5.2'
-        protobufVersion = '3.9.1'
+        protobufVersion = '3.10.0'
+        protocVersion = protobufVersion
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
         sarxosVersion = '0.3.12'
@@ -171,7 +170,7 @@ configure(project(':common')) {
 
     protobuf {
         protoc {
-            artifact = "com.google.protobuf:protoc:$protobufVersion"
+            artifact = "com.google.protobuf:protoc:$protocVersion"
         }
     }
 
@@ -180,7 +179,7 @@ configure(project(':common')) {
         compile "org.openjfx:javafx-base:$javafxVersion:$os"
         compile "org.openjfx:javafx-graphics:$javafxVersion:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
-        compile 'com.google.code.gson:gson:2.7'
+        compile 'com.google.code.gson:gson:2.8.5'
         compile "org.springframework:spring-core:$springVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
@@ -232,26 +231,6 @@ configure(project(':p2p')) {
 configure(project(':core')) {
     apply plugin: 'com.google.protobuf'
 
-    // FIXME we dont want to have one src dir inside the other....
-    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main"
-    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
-
-    protobuf {
-        protoc {
-            artifact = "com.google.protobuf:protoc:$protobufVersion"
-        }
-        plugins {
-            grpc {
-                artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
-            }
-        }
-        generateProtoTasks {
-            all()*.plugins {
-                grpc {}
-            }
-        }
-    }
-
     dependencies {
         compile project(':assets')
         compile project(':p2p')
@@ -277,43 +256,19 @@ configure(project(':core')) {
         compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
             exclude(module: 'jackson-annotations')
         }
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        compile "com.google.protobuf:protobuf-java:$protobufVersion"
-        compile "com.google.api.grpc:proto-google-common-protos:$commonProtosVersion"
-
-        // FIXME Not clear which of the following libs have a newer version of guava which is not compatible with ours
-        compile ("io.grpc:grpc-alts:$grpcVersion") {
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation("io.grpc:grpc-protobuf:$grpcVersion") {
             exclude(module: 'guava')
         }
-
-        compile ("io.grpc:grpc-netty:$grpcVersion") {
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
             exclude(module: 'guava')
         }
-
-        compile ("io.grpc:grpc-protobuf:$grpcVersion") {
-            exclude(module: 'guava')
-        }
-
-        compile ("io.grpc:grpc-stub:$grpcVersion") {
-            exclude(module: 'guava')
-        }
-
-        // Used for TLS in HelloWorldServerTls
-        compile "io.netty:netty-tcnative-boringssl-static:${nettyTcNativeVersion}"
-
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:1.2"
+        runtimeOnly ("io.grpc:grpc-netty-shaded:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        testCompile "io.grpc:grpc-testing:${grpcVersion}"
-        testCompile "org.mockito:mockito-core:$mockitoVersion"
-        testCompile "org.springframework:spring-test:$springVersion"
-        testCompile "com.natpryce:make-it-easy:$easyVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
         testCompile "org.mockito:mockito-core:$mockitoVersion"
         testCompile "org.springframework:spring-test:$springVersion"
@@ -322,6 +277,25 @@ configure(project(':core')) {
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
+
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:${protocVersion}"
+        }
+        plugins {
+            grpc {
+                artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+            }
+        }
+        generateProtoTasks {
+            all()*.plugins { grpc {} }
+        }
+    }
+
+    sourceSets.main.java.srcDirs += [
+        'build/generated/source/proto/main/grpc',
+        'build/generated/source/proto/main/java'
+    ]
 
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
@@ -333,6 +307,12 @@ configure(project(':cli')) {
 
     dependencies {
         compile project(':core')
+        implementation("io.grpc:grpc-core:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+        }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
@@ -479,6 +459,9 @@ configure(project(':grpc')) {
 
     dependencies {
         compile project(':core')
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+        }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:1.2"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
