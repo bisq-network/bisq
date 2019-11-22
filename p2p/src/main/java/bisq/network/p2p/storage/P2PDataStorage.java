@@ -641,7 +641,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private void broadcastProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
                                                 @Nullable NodeAddress sender,
                                                 @Nullable BroadcastHandler.Listener broadcastListener) {
-        broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener);
+        broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener);
     }
 
     /**
@@ -688,7 +688,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
 
         // Always broadcast refreshes
-        broadcast(refreshTTLMessage, sender, null);
+        broadcaster.broadcast(refreshTTLMessage, sender, null);
 
         return true;
     }
@@ -736,9 +736,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after remove");
 
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-            broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null);
+            broadcaster.broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null);
         } else {
-            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null);
+            broadcaster.broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null);
         }
 
         return true;
@@ -906,11 +906,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         } else {
             return true;
         }
-    }
-
-    private void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
-                           @Nullable BroadcastHandler.Listener listener) {
-        broadcaster.broadcast(message, sender, listener);
     }
 
     public static ByteArray get32ByteHashAsByteArray(NetworkPayload data) {
