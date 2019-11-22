@@ -29,7 +29,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,8 +37,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -54,10 +51,9 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
 
     private final int requestNonce;
     private final boolean isGetUpdatedDataResponse;
-    @Nullable
     private final Capabilities supportedCapabilities;
 
-    public GetDataResponse(Set<ProtectedStorageEntry> dataSet,
+    public GetDataResponse(@NotNull Set<ProtectedStorageEntry> dataSet,
                            @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                            int requestNonce,
                            boolean isGetUpdatedDataResponse) {
@@ -73,11 +69,11 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetDataResponse(Set<ProtectedStorageEntry> dataSet,
+    private GetDataResponse(@NotNull Set<ProtectedStorageEntry> dataSet,
                             @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                             int requestNonce,
                             boolean isGetUpdatedDataResponse,
-                            @Nullable Capabilities supportedCapabilities,
+                            @NotNull Capabilities supportedCapabilities,
                             int messageVersion) {
         super(messageVersion);
 
@@ -101,13 +97,12 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                                         .setProtectedStorageEntry((protobuf.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
                                         .build())
                         .collect(Collectors.toList()))
-                .setRequestNonce(requestNonce)
-                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
                 .addAllPersistableNetworkPayloadItems(persistableNetworkPayloadSet.stream()
                         .map(PersistableNetworkPayload::toProtoMessage)
-                        .collect(Collectors.toList()));
-
-        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
+                        .collect(Collectors.toList()))
+                .setRequestNonce(requestNonce)
+                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
+                .addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities));
 
         protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetDataResponse(builder)
