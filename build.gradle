@@ -89,8 +89,8 @@ configure(subprojects) {
 
 
 configure([project(':cli'),
+           project(':daemon'),
            project(':desktop'),
-           project(':grpc'),
            project(':monitor'),
            project(':relay'),
            project(':seednode'),
@@ -453,8 +453,8 @@ configure(project(':statsnode')) {
     }
 }
 
-configure(project(':grpc')) {
-    mainClassName = 'bisq.grpc.BisqGrpcServerMain'
+configure(project(':daemon')) {
+    mainClassName = 'bisq.daemon.app.BisqDaemonMain'
 
     dependencies {
         compile project(':core')

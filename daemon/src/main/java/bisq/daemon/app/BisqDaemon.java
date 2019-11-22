@@ -15,12 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.grpc;
+package bisq.daemon.app;
 
 import bisq.core.app.BisqHeadlessApp;
 
-/**
- * Headless Bisq application. Only used if gRPC API runs in headless mode.
- */
-public class BisqGrpcApp extends BisqHeadlessApp {
+public class BisqDaemon extends BisqHeadlessApp {
 }
