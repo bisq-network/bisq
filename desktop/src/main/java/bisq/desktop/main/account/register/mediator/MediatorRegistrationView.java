@@ -25,7 +25,7 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 

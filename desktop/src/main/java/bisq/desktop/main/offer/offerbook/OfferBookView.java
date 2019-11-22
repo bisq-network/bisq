@@ -65,8 +65,7 @@ import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.inject.name.Named;
-
+import javax.inject.Named;
 import javax.inject.Inject;
 
 import de.jensd.fx.glyphs.GlyphIcons;

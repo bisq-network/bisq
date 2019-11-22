@@ -34,7 +34,7 @@ import bisq.common.storage.JsonFileManager;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 

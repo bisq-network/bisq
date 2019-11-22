@@ -45,7 +45,7 @@ import bisq.network.p2p.NodeAddress;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 

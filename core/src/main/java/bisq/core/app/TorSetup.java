@@ -22,7 +22,7 @@ import bisq.network.NetworkOptionKeys;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.storage.FileUtil;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

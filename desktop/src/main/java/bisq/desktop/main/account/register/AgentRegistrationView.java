@@ -38,7 +38,7 @@ import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;

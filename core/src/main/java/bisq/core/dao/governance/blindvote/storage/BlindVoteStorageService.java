@@ -23,8 +23,7 @@ import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.storage.Storage;
 
-import com.google.inject.name.Named;
-
+import javax.inject.Named;
 import javax.inject.Inject;
 
 import java.io.File;

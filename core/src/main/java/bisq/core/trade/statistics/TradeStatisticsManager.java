@@ -31,7 +31,7 @@ import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
