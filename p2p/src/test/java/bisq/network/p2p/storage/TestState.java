@@ -51,8 +51,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import lombok.Getter;
-
 import org.junit.Assert;
 
 import org.mockito.ArgumentCaptor;
@@ -67,7 +65,6 @@ import static org.mockito.Mockito.*;
 public class TestState {
     static final int MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE = 5;
 
-    @Getter
     P2PDataStorage mockedStorage;
     final Broadcaster mockBroadcaster;
 
@@ -77,7 +74,7 @@ public class TestState {
     private final ProtectedDataStoreService protectedDataStoreService;
     final ClockFake clockFake;
 
-    public TestState() {
+    TestState() {
         this.mockBroadcaster = mock(Broadcaster.class);
         this.mockSeqNrStorage = mock(Storage.class);
         this.clockFake = new ClockFake();
