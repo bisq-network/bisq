@@ -629,7 +629,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast)
-            broadcastProtectedStorageEntry(protectedStorageEntry, sender, listener);
+            broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, listener);
 
         // Persist ProtectedStorageEntrys carrying PersistablePayload payloads
         if (protectedStoragePayload instanceof PersistablePayload)
@@ -637,13 +637,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         return true;
     }
-
-    private void broadcastProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
-                                                @Nullable NodeAddress sender,
-                                                @Nullable BroadcastHandler.Listener broadcastListener) {
-        broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener);
-    }
-
+    
     /**
      * Updates a local RefreshOffer with TTL changes and broadcasts those changes to the network
      *
