@@ -637,7 +637,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         return true;
     }
-    
+
     /**
      * Updates a local RefreshOffer with TTL changes and broadcasts those changes to the network
      *
@@ -717,7 +717,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
-        maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
+        // Update that we have seen this AddOncePayload so the next time it is seen it fails verification
+        if (protectedStoragePayload instanceof AddOncePayload)
+            removedAddOncePayloads.add(hashOfPayload);
 
         if (storedEntry != null) {
             // Valid remove entry, do the remove and signal listeners
@@ -767,13 +769,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // We do not broadcast as this is a local operation only to avoid our maps get polluted with invalid objects
         // and as we do not check for ownership a node would not accept such a procedure if it would come from untrusted
         // source (network).
-    }
-
-    private void maybeAddToRemoveAddOncePayloads(ProtectedStoragePayload protectedStoragePayload,
-                                                 ByteArray hashOfData) {
-        if (protectedStoragePayload instanceof AddOncePayload) {
-            removedAddOncePayloads.add(hashOfData);
-        }
     }
 
     public ProtectedStorageEntry getProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
