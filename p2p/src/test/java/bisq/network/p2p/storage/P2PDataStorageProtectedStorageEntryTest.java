@@ -202,15 +202,10 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
         void doProtectedStorageRemoveAndVerify(ProtectedStorageEntry entry,
                                                boolean expectedReturnValue,
-                                               boolean expectInternalStateChange) {
-
-            doProtectedStorageRemoveAndVerify(entry, expectedReturnValue, expectInternalStateChange, expectInternalStateChange);
-        }
-
-        void doProtectedStorageRemoveAndVerify(ProtectedStorageEntry entry,
-                                               boolean expectedReturnValue,
-                                               boolean expectInternalStateChange,
-                                               boolean expectSeqNrWrite) {
+                                               boolean expectedHashMapAndDataStoreUpdated,
+                                               boolean expectedListenersSignaled,
+                                               boolean expectedBroadcast,
+                                               boolean expectedSeqNrWrite) {
 
             SavedTestState beforeState = this.testState.saveTestState(entry);
 
@@ -219,7 +214,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, expectInternalStateChange, expectSeqNrWrite, expectSeqNrWrite, this.expectIsDataOwner());
+            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast, expectedSeqNrWrite, this.expectIsDataOwner());
         }
 
         /// Valid Add Tests (isValidForAdd() and matchesRelevantPubKey() return true)
@@ -272,7 +267,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, false, false, false);
 
             doProtectedStorageAddAndVerify(entryForAdd, false, false);
         }
@@ -320,7 +315,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, false, false, false);
         }
 
         // TESTCASE: Removing an item after successfully added (remove seq # > add seq #)
@@ -330,15 +325,15 @@ public class P2PDataStorageProtectedStorageEntryTest {
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2);
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, true, true, true, true);
         }
 
-        // TESTCASE: Removing an item before it was added. This triggers a SequenceNumberMap write, but nothing else
+        // TESTCASE: Removing an item before it was added. This triggers a SequenceNumberMap write and broadcast
         @Test
         public void remove_notExists() {
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
 
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, false, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, false, false, true, true);
         }
 
         // TESTCASE: Removing an item after successfully adding (remove seq # < add seq #)
@@ -348,7 +343,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, false, false, false);
         }
 
         // TESTCASE: Add after removed (same seq #)
@@ -358,7 +353,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2);
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, true, true, true, true);
 
             doProtectedStorageAddAndVerify(entryForAdd, false, false);
         }
@@ -370,7 +365,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2);
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, true, true, true, true);
 
             entryForAdd = this.getProtectedStorageEntryForAdd(3);
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
@@ -385,7 +380,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2, false, true);
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, false, false, false);
         }
 
         // TESTCASE: Remove fails if Entry is valid for remove, but metadata doesn't match remove target
@@ -395,7 +390,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2, true, false);
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, false, false, false);
         }
 
         // TESTCASE: Remove fails if Entry is not valid for remove and metadata doesn't match remove target
@@ -405,7 +400,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2, false, false);
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, false, false, false);
         }
 
 
@@ -416,7 +411,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(3);
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, true, true, true, true);
 
             entryForAdd = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entryForAdd, false, false);
@@ -567,7 +562,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2);
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, true, true, true, true);
 
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entryForAdd, this.payloadOwnerKeys,3), false, false);
         }
@@ -664,7 +659,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2);
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, true, true, true, true);
 
             entryForAdd = this.getProtectedStorageEntryForAdd(3);
             doProtectedStorageAddAndVerify(entryForAdd, false, false);
