@@ -219,7 +219,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, true, expectSeqNrWrite, this.expectIsDataOwner());
+            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, expectInternalStateChange, expectInternalStateChange, expectSeqNrWrite, this.expectIsDataOwner());
         }
 
         /// Valid Add Tests (isValidForAdd() and matchesRelevantPubKey() return true)

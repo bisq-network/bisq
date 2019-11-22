@@ -69,7 +69,7 @@ public class P2PDataStoreDisconnectTest {
         ProtectedStorageEntry protectedStorageEntry = beforeState.protectedStorageEntryBeforeOp;
 
         currentState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry,
-                wasRemoved, false, false, false);
+                wasRemoved, wasRemoved, false, false, false);
 
         if (wasTTLReduced)
             Assert.assertTrue(protectedStorageEntry.getCreationTimeStamp() < beforeState.creationTimestampBeforeUpdate);

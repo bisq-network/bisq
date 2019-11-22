@@ -67,7 +67,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false, false);
     }
 
     // TESTCASE: Correctly skips all PersistableNetworkPayloads since they are not expirable
@@ -93,7 +93,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false, false);
     }
 
     // TESTCASE: Correctly expires non-persistable entries that are expired
@@ -110,7 +110,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, true, false, false, false);
     }
 
     // TESTCASE: Correctly skips persistable entries that are not expired
@@ -124,7 +124,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false, false);
     }
 
     // TESTCASE: Correctly expires persistable entries that are expired
@@ -141,7 +141,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, true, false, false, false);
     }
 
     // TESTCASE: Ensure we try to purge old entries sequence number map when size exceeds the maximum size
@@ -187,7 +187,7 @@ public class P2PDataStorageRemoveExpiredTest {
         // The first 4 entries (11 days old) should be purged from the SequenceNumberMap
         SavedTestState beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
-        this.testState.verifyProtectedStorageRemove(beforeState, expectedRemoves, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, expectedRemoves, true, true, false, false, false);
 
         // Which means that an addition of a purged entry should succeed.
         beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
