@@ -703,6 +703,10 @@ public class AccountAgeWitnessService {
         return signedWitnessService.isSignerAccountAgeWitness(accountAgeWitness);
     }
 
+    public boolean tradeAmountIsSufficient(Coin tradeAmount) {
+        return signedWitnessService.isSufficientTradeAmountForSigning(tradeAmount);
+    }
+
     public SignState getSignState(Offer offer) {
         return findWitness(offer)
                 .map(this::getSignState)

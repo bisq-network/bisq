@@ -360,7 +360,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 dataModel.getBuyersPaymentAccountPayload());
 
         return accountAgeWitnessService.accountIsSigner(myWitness) &&
-                !accountAgeWitnessService.peerHasSignedWitness(trade);
+                !accountAgeWitnessService.peerHasSignedWitness(trade) &&
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
     }
 
     public void maybeSignWitness(boolean asSeller) {
