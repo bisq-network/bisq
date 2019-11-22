@@ -576,6 +576,34 @@ public class P2PDataStorageProtectedStorageEntryTest {
             KeyPair notOwner = TestUtils.generateKeyPair();
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, notOwner, 2), false, false);
         }
+
+        // TESTCASE: After restart, identical sequence numbers are accepted ONCE. We need a way to reconstruct
+        // in-memory ProtectedStorageEntrys from seed and peer nodes around startup time.
+        @Test
+        public void addProtectedStorageEntry_afterRestartCanAddDuplicateSeqNr() {
+            ProtectedStorageEntry toAdd1 = this.getProtectedStorageEntryForAdd(1);
+            doProtectedStorageAddAndVerify(toAdd1, true, true);
+
+            this.testState.simulateRestart();
+
+            // Can add equal seqNr only once
+            doProtectedStorageAddAndVerify(toAdd1, true, true);
+
+            // Can't add equal seqNr twice
+            doProtectedStorageAddAndVerify(toAdd1, false, false);
+        }
+
+        // TESTCASE: After restart, old sequence numbers are not accepted
+        @Test
+        public void addProtectedStorageEntry_afterRestartCanNotAddLowerSeqNr() {
+            ProtectedStorageEntry toAdd1 = this.getProtectedStorageEntryForAdd(1);
+            ProtectedStorageEntry toAdd2 = this.getProtectedStorageEntryForAdd(2);
+            doProtectedStorageAddAndVerify(toAdd2, true, true);
+
+            this.testState.simulateRestart();
+
+            doProtectedStorageAddAndVerify(toAdd1, false, false);
+        }
     }
 
     /**
@@ -607,6 +635,18 @@ public class P2PDataStorageProtectedStorageEntryTest {
             this.testState.simulateRestart();
 
             Assert.assertEquals(beforeRestart, this.testState.mockedStorage.getMap());
+        }
+
+        // TESTCASE: After restart, identical sequence numbers are not accepted for persistent payloads
+        @Test
+        public void addProtectedStorageEntry_afterRestartCanNotAddDuplicateSeqNr() {
+            ProtectedStorageEntry toAdd1 = this.getProtectedStorageEntryForAdd(1);
+            doProtectedStorageAddAndVerify(toAdd1, true, true);
+
+            this.testState.simulateRestart();
+
+            // Can add equal seqNr only once
+            doProtectedStorageAddAndVerify(toAdd1, false, false);
         }
     }
 

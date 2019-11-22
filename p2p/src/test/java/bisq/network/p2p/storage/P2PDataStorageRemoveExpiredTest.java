@@ -188,15 +188,5 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
         this.testState.verifyProtectedStorageRemove(beforeState, expectedRemoves, true, true, false, false, false);
-
-        // Which means that an addition of a purged entry should succeed.
-        beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
-        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
-        this.testState.verifyProtectedStorageAdd(beforeState, purgedProtectedStorageEntry, true, false);
-
-        // The last entry (5 days old) should still exist in the SequenceNumberMap which means trying to add it again should fail.
-        beforeState = this.testState.saveTestState(keepProtectedStorageEntry);
-        Assert.assertFalse(this.testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
-        this.testState.verifyProtectedStorageAdd(beforeState, keepProtectedStorageEntry, false, false);
     }
 }

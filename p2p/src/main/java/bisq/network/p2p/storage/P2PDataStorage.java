@@ -390,15 +390,25 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
         }
 
-        // If we have seen a more recent operation for this payload, we ignore the current one
-        if(!hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
+        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+
+        // If we have seen a more recent operation for this payload and we have a payload locally, ignore it
+        if (storedEntry != null &&
+                !hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload)) {
             return false;
+        }
+
+        // We want to allow add operations for equal sequence numbers if we don't have the payload locally. This is
+        // the case for non-persistent Payloads that need to be reconstructed from peer and seed nodes each startup.
+        MapValue sequenceNumberMapValue = sequenceNumberMap.get(hashOfPayload);
+        if (sequenceNumberMapValue != null &&
+                protectedStorageEntry.getSequenceNumber() < sequenceNumberMapValue.sequenceNr) {
+            return false;
+        }
 
         // Verify the ProtectedStorageEntry is well formed and valid for the add operation
         if (!protectedStorageEntry.isValidForAddOperation())
             return false;
-
-        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
 
         // If we have already seen an Entry with the same hash, verify the metadata is equal
         if (storedEntry != null && !protectedStorageEntry.matchesRelevantPubKey(storedEntry))
