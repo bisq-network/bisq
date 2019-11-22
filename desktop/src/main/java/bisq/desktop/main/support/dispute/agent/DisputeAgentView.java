@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.support.dispute.agent;
 
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -38,8 +37,6 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
-
 import javafx.scene.control.Button;
 
 public abstract class DisputeAgentView extends DisputeView {
@@ -53,7 +50,7 @@ public abstract class DisputeAgentView extends DisputeView {
                             ContractWindow contractWindow,
                             TradeDetailsWindow tradeDetailsWindow,
                             AccountAgeWitnessService accountAgeWitnessService,
-                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                            boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
                 tradeManager,

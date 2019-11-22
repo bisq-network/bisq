@@ -19,7 +19,6 @@ package bisq.desktop.main.account.register;
 
 
 import bisq.desktop.common.view.ActivatableViewAndModel;
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TitledGroupBg;
@@ -37,8 +36,6 @@ import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
-
-import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -88,7 +85,7 @@ public abstract class AgentRegistrationView<R extends DisputeAgent, T extends Ag
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AgentRegistrationView(T model, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public AgentRegistrationView(T model, boolean useDevPrivilegeKeys) {
         super(model);
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
