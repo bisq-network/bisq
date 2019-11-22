@@ -219,7 +219,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, expectInternalStateChange, expectInternalStateChange, expectSeqNrWrite, this.expectIsDataOwner());
+            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, expectInternalStateChange, expectSeqNrWrite, expectSeqNrWrite, this.expectIsDataOwner());
         }
 
         /// Valid Add Tests (isValidForAdd() and matchesRelevantPubKey() return true)
@@ -338,7 +338,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
         public void remove_notExists() {
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
 
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, false, true);
         }
 
         // TESTCASE: Removing an item after successfully adding (remove seq # < add seq #)

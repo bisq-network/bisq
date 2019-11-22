@@ -501,14 +501,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
 
-        // This means the RemoveData or RemoveMailboxData was seen prior to the AddData. We have already updated
-        // the SequenceNumberMap appropriately so the stale Add will not pass validation, but we don't want to
-        // signal listeners for state changes since no original state existed.
-        if (storedEntry == null)
-            return false;
-
-        // Valid remove entry, do the remove and signal listeners
-        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
+        if (storedEntry != null) {
+            // Valid remove entry, do the remove and signal listeners
+            removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
+        } /* else {
+            // This means the RemoveData or RemoveMailboxData was seen prior to the AddData. We have already updated
+            // the SequenceNumberMap appropriately so the stale Add will not pass validation, but we still want to
+            // broadcast the remove to peers so they can update their state appropriately
+        } */
         printData("after remove");
 
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
