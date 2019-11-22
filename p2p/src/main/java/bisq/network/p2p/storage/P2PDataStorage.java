@@ -648,7 +648,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener, isDataOwner);
     }
 
+    /**
+     * Updates a local RefreshOffer with TTL changes and broadcasts those changes to the network
+     *
+     * @param refreshTTLMessage refreshTTLMessage containing the update
+     * @param sender local NodeAddress, if available
+     * @return <code>true</code> if the RefreshOffer was successfully updated and changes broadcast
+     */
     public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
+                              @Nullable NodeAddress sender) {
+        return refreshTTL(refreshTTLMessage, sender, true);
+    }
+
+    private boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
                               @Nullable NodeAddress sender,
                               boolean isDataOwner) {
 

@@ -164,7 +164,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.refreshTTL(offerPayload, true);
+        boolean result = p2PService.refreshTTL(offerPayload);
         if (result) {
             resultHandler.handleResult();
         } else {

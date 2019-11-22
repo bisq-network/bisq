@@ -796,11 +796,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public boolean refreshTTL(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
+    public boolean refreshTTL(ProtectedStoragePayload protectedStoragePayload) {
         if (isBootstrapped()) {
             try {
                 RefreshOfferMessage refreshTTLMessage = p2PDataStorage.getRefreshTTLMessage(protectedStoragePayload, keyRing.getSignatureKeyPair());
-                return p2PDataStorage.refreshTTL(refreshTTLMessage, networkNode.getNodeAddress(), isDataOwner);
+                return p2PDataStorage.refreshTTL(refreshTTLMessage, networkNode.getNodeAddress());
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;

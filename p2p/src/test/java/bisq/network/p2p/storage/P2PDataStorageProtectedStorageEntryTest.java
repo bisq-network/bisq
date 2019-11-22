@@ -146,8 +146,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All external callers just pass in true for isDataOwner a future patch can remove the argument.
-                return this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true);
+                return this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress());
             }
         }
 

@@ -123,7 +123,7 @@ public class P2PDataStorageClientAPITest {
         RefreshOfferMessage refreshOfferMessage = this.testState.mockedStorage.getRefreshTTLMessage(protectedStoragePayload, ownerKeys);
 
         SavedTestState beforeState = this.testState.saveTestState(refreshOfferMessage);
-        Assert.assertFalse(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true));
+        Assert.assertFalse(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress()));
 
         this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, false, true);
     }
@@ -138,14 +138,14 @@ public class P2PDataStorageClientAPITest {
         this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null);
 
         RefreshOfferMessage refreshOfferMessage = this.testState.mockedStorage.getRefreshTTLMessage(protectedStoragePayload, ownerKeys);
-        this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true);
+        this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress());
 
         refreshOfferMessage = this.testState.mockedStorage.getRefreshTTLMessage(protectedStoragePayload, ownerKeys);
 
         this.testState.incrementClock();
 
         SavedTestState beforeState = this.testState.saveTestState(refreshOfferMessage);
-        Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true));
+        Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress()));
 
         this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, true, true);
     }
@@ -169,7 +169,7 @@ public class P2PDataStorageClientAPITest {
         this.testState.incrementClock();
 
         SavedTestState beforeState = this.testState.saveTestState(refreshOfferMessage);
-        Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true));
+        Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress()));
 
         this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, true, true);
     }
