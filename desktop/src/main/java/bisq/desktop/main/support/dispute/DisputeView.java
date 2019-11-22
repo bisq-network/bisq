@@ -302,9 +302,12 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     else
                         nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
 
-                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress, useDevPrivilegeKeys)
-                            .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
-                            .show();
+                    new SendPrivateNotificationWindow(
+                            privateNotificationManager,
+                            pubKeyRing,
+                            nodeAddress,
+                            useDevPrivilegeKeys
+                    ).show();
                 }
             } else {
                 handleKeyPressed(event);
