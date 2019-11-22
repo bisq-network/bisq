@@ -265,7 +265,7 @@ public class FilterManager {
             signAndAddSignatureToFilter(filter);
             user.setDevelopersFilter(filter);
 
-            boolean result = p2PService.addProtectedStorageEntry(filter, true);
+            boolean result = p2PService.addProtectedStorageEntry(filter);
             if (result)
                 log.trace("Add filter to network was successful. FilterMessage = {}", filter);
 

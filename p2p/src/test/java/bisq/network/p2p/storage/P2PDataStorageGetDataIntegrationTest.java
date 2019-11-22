@@ -77,7 +77,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         P2PDataStorage clientNode = clientNodeTestState.mockedStorage;
 
         ProtectedStorageEntry onSeedNode = getProtectedStorageEntry();
-        seedNode.addProtectedStorageEntry(onSeedNode, null, null, false);
+        seedNode.addProtectedStorageEntry(onSeedNode, null, null);
 
         GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1);
 
@@ -102,9 +102,9 @@ public class P2PDataStorageGetDataIntegrationTest {
         TestState clientNodeTestState = new TestState();
         P2PDataStorage clientNode = clientNodeTestState.mockedStorage;
 
-        seedNode.addProtectedStorageEntry(transientEntry, null, null, false);
+        seedNode.addProtectedStorageEntry(transientEntry, null, null);
 
-        clientNode.addProtectedStorageEntry(transientEntry, null, null, false);
+        clientNode.addProtectedStorageEntry(transientEntry, null, null);
 
         clientNodeTestState.simulateRestart();
         clientNode = clientNodeTestState.mockedStorage;
@@ -135,9 +135,9 @@ public class P2PDataStorageGetDataIntegrationTest {
         TestState clientNodeTestState = new TestState();
         P2PDataStorage clientNode = clientNodeTestState.mockedStorage;
 
-        seedNode.addProtectedStorageEntry(persistentEntry, null, null, false);
+        seedNode.addProtectedStorageEntry(persistentEntry, null, null);
 
-        clientNode.addProtectedStorageEntry(persistentEntry, null, null, false);
+        clientNode.addProtectedStorageEntry(persistentEntry, null, null);
 
         clientNodeTestState.simulateRestart();
         clientNode = clientNodeTestState.mockedStorage;
@@ -171,8 +171,8 @@ public class P2PDataStorageGetDataIntegrationTest {
         ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
         ProtectedStorageEntry onSeedNodeAndClientNode = getProtectedStorageEntry(
                 ownerKeys.getPublic(), protectedStoragePayload, 1);
-        seedNode.addProtectedStorageEntry(onSeedNodeAndClientNode, null, null, false);
-        clientNode.addProtectedStorageEntry(onSeedNodeAndClientNode, null, null, false);
+        seedNode.addProtectedStorageEntry(onSeedNodeAndClientNode, null, null);
+        clientNode.addProtectedStorageEntry(onSeedNodeAndClientNode, null, null);
 
         // Seed node sees the remove, but client node does not
         seedNode.remove(getProtectedStorageEntry(

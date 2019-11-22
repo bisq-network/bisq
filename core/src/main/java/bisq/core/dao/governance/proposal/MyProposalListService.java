@@ -214,7 +214,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private boolean addToP2PNetworkAsProtectedData(Proposal proposal) {
-        return p2PService.addProtectedStorageEntry(new TempProposalPayload(proposal, signaturePubKey), true);
+        return p2PService.addProtectedStorageEntry(new TempProposalPayload(proposal, signaturePubKey));
     }
 
     private void rePublishMyProposalsOnceWellConnected() {

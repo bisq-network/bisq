@@ -336,7 +336,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
                                     P2PDataStorage.get32ByteHash(fromPeerAndLocal.getProtectedStoragePayload()))));
 
             this.testState.mockedStorage.addProtectedStorageEntry(
-                    fromPeerAndLocal, this.localNodeAddress, null, false);
+                    fromPeerAndLocal, this.localNodeAddress, null);
 
             AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
             AtomicBoolean outPSETruncated = new AtomicBoolean(false);
@@ -361,7 +361,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataRequest getDataRequest = this.buildGetDataRequest(1, new HashSet<>());
 
             this.testState.mockedStorage.addProtectedStorageEntry(
-                    onlyLocal, this.localNodeAddress, null, false);
+                    onlyLocal, this.localNodeAddress, null);
 
             AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
             AtomicBoolean outPSETruncated = new AtomicBoolean(false);
@@ -387,9 +387,9 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataRequest getDataRequest = this.buildGetDataRequest(1, new HashSet<>());
 
             this.testState.mockedStorage.addProtectedStorageEntry(
-                    onlyLocal1, this.localNodeAddress, null, false);
+                    onlyLocal1, this.localNodeAddress, null);
             this.testState.mockedStorage.addProtectedStorageEntry(
-                    onlyLocal2, this.localNodeAddress, null, false);
+                    onlyLocal2, this.localNodeAddress, null);
 
             AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
             AtomicBoolean outPSETruncated = new AtomicBoolean(false);
@@ -416,7 +416,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
                     getProtectedStorageEntryForAdd(new Capabilities(Collections.singletonList(Capability.MEDIATION)));
 
             this.testState.mockedStorage.addProtectedStorageEntry(
-                    onlyLocal, this.localNodeAddress, null, false);
+                    onlyLocal, this.localNodeAddress, null);
 
             GetDataRequest getDataRequest = this.buildGetDataRequest(1, new HashSet<>());
 
@@ -442,7 +442,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
                     getProtectedStorageEntryForAdd(new Capabilities(Collections.singletonList(Capability.MEDIATION)));
 
             this.testState.mockedStorage.addProtectedStorageEntry(
-                    onlyLocal, this.localNodeAddress, null, false);
+                    onlyLocal, this.localNodeAddress, null);
 
             GetDataRequest getDataRequest =
                     this.buildGetDataRequest(1, new HashSet<>());

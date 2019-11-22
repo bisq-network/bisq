@@ -127,7 +127,7 @@ public class AlertManager {
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
             user.setDevelopersAlert(alert);
-            boolean result = p2PService.addProtectedStorageEntry(alert, true);
+            boolean result = p2PService.addProtectedStorageEntry(alert);
             if (result) {
                 log.trace("Add alertMessage to network was successful. AlertMessage={}", alert);
             }

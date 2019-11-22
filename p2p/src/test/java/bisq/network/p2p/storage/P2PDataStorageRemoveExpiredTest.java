@@ -62,7 +62,7 @@ public class P2PDataStorageRemoveExpiredTest {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
         ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
-        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
+        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null));
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
@@ -88,7 +88,7 @@ public class P2PDataStorageRemoveExpiredTest {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayloadStub(ownerKeys.getPublic());
         ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
-        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
+        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null));
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
@@ -102,7 +102,7 @@ public class P2PDataStorageRemoveExpiredTest {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayloadStub(ownerKeys.getPublic(), 0);
         ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
-        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
+        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null));
 
         // Increment the clock by an hour which will cause the Payloads to be outside the TTL range
         this.testState.incrementClock();
@@ -119,7 +119,7 @@ public class P2PDataStorageRemoveExpiredTest {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayloadStub(ownerKeys.getPublic());
         ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
-        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
+        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null));
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
@@ -133,7 +133,7 @@ public class P2PDataStorageRemoveExpiredTest {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayloadStub(ownerKeys.getPublic(), 0);
         ProtectedStorageEntry protectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
-        Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
+        Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null));
 
         // Increment the clock by an hour which will cause the Payloads to be outside the TTL range
         this.testState.incrementClock();
@@ -158,14 +158,14 @@ public class P2PDataStorageRemoveExpiredTest {
         ProtectedStorageEntry purgedProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(purgedProtectedStoragePayload, purgedOwnerKeys);
         expectedRemoves.add(purgedProtectedStorageEntry);
 
-        Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, TestState.getTestNodeAddress(), null, true));
+        Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, TestState.getTestNodeAddress(), null));
 
         for (int i = 0; i < MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE - 1; ++i) {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
             ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayloadStub(ownerKeys.getPublic(), 0);
             ProtectedStorageEntry tmpEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
             expectedRemoves.add(tmpEntry);
-            Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(tmpEntry, TestState.getTestNodeAddress(), null, true));
+            Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(tmpEntry, TestState.getTestNodeAddress(), null));
         }
 
         // Increment the time by 5 days which is less than the purge requirement. This will allow the map to have
@@ -178,7 +178,7 @@ public class P2PDataStorageRemoveExpiredTest {
         ProtectedStorageEntry keepProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(keepProtectedStoragePayload, keepOwnerKeys);
         expectedRemoves.add(keepProtectedStorageEntry);
 
-        Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, TestState.getTestNodeAddress(), null, true));
+        Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, TestState.getTestNodeAddress(), null));
 
         // P2PDataStorage::PURGE_AGE_DAYS == 10 days
         // Advance time past it so they will be valid purge targets

@@ -133,10 +133,8 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All external callers just pass in true for isDataOwner and allowBroadcast a future patch can
-                // remove the argument.
                 return this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry,
-                        TestState.getTestNodeAddress(), null, true);
+                        TestState.getTestNodeAddress(), null);
             }
         }
 

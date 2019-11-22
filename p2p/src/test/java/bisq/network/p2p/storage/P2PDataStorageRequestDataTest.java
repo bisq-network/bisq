@@ -124,8 +124,8 @@ public class P2PDataStorageRequestDataTest {
         this.testState.mockedStorage.addPersistableNetworkPayload(toAdd1, this.localNodeAddress, false);
         this.testState.mockedStorage.addPersistableNetworkPayload(toAdd2, this.localNodeAddress, false);
 
-        this.testState.mockedStorage.addProtectedStorageEntry(toAdd3, this.localNodeAddress, null, false);
-        this.testState.mockedStorage.addProtectedStorageEntry(toAdd4, this.localNodeAddress, null, false);
+        this.testState.mockedStorage.addProtectedStorageEntry(toAdd3, this.localNodeAddress, null);
+        this.testState.mockedStorage.addProtectedStorageEntry(toAdd4, this.localNodeAddress, null);
 
         PreliminaryGetDataRequest getDataRequest = this.testState.mockedStorage.buildPreliminaryGetDataRequest(1);
 
@@ -152,8 +152,8 @@ public class P2PDataStorageRequestDataTest {
         this.testState.mockedStorage.addPersistableNetworkPayload(toAdd1, this.localNodeAddress, false);
         this.testState.mockedStorage.addPersistableNetworkPayload(toAdd2, this.localNodeAddress, false);
 
-        this.testState.mockedStorage.addProtectedStorageEntry(toAdd3, this.localNodeAddress, null, false);
-        this.testState.mockedStorage.addProtectedStorageEntry(toAdd4, this.localNodeAddress, null, false);
+        this.testState.mockedStorage.addProtectedStorageEntry(toAdd3, this.localNodeAddress, null);
+        this.testState.mockedStorage.addProtectedStorageEntry(toAdd4, this.localNodeAddress, null);
 
         GetUpdatedDataRequest getDataRequest =
                 this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1);

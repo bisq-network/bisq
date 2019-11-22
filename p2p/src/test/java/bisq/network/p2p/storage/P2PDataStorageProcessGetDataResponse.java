@@ -231,7 +231,7 @@ public class P2PDataStorageProcessGetDataResponse {
     @Test
     public void processGetDataResponse_duplicatePSEDoesNothing() throws NoSuchAlgorithmException {
         ProtectedStorageEntry protectedStorageEntry = getProtectedStorageEntryForAdd();
-        this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, this.peerNodeAddress, null, false);
+        this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, this.peerNodeAddress, null);
 
         GetDataResponse getDataResponse = buildGetDataResponse(protectedStorageEntry);
 

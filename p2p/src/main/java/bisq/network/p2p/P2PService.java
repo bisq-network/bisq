@@ -699,7 +699,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             // to the logic from BroadcastHandler.sendToPeer
                         }
                     };
-                    boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
+                    boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener);
                     if (!result) {
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
 
@@ -782,11 +782,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return p2PDataStorage.addPersistableNetworkPayload(payload, networkNode.getNodeAddress(), reBroadcast);
     }
 
-    public boolean addProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
+    public boolean addProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload) {
         if (isBootstrapped()) {
             try {
                 ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedStorageEntry(protectedStoragePayload, keyRing.getSignatureKeyPair());
-                return p2PDataStorage.addProtectedStorageEntry(protectedStorageEntry, networkNode.getNodeAddress(), null, isDataOwner);
+                return p2PDataStorage.addProtectedStorageEntry(protectedStorageEntry, networkNode.getNodeAddress(), null);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;

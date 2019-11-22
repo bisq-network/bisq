@@ -415,7 +415,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (networkEnvelope instanceof BroadcastMessage) {
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (networkEnvelope instanceof AddDataMessage) {
-                    addProtectedStorageEntry(((AddDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, false);
+                    addProtectedStorageEntry(((AddDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, false, true);
                 } else if (networkEnvelope instanceof RemoveDataMessage) {
                     remove(((RemoveDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, false);
                 } else if (networkEnvelope instanceof RemoveMailboxDataMessage) {
@@ -569,12 +569,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
+    /**
+     * Adds a ProtectedStorageEntry to the local P2P data storage. If it does not already exist locally, it will be
+     * broadcast to the P2P network.
+     *
+     * @param protectedStorageEntry ProtectedStorageEntry to add to the network
+     * @param sender local NodeAddress, if available
+     * @param listener optional listener that can be used to receive events on broadcast
+     * @return <code>true</code> if the ProtectedStorageEntry was added to the local P2P data storage and broadcast
+     */
     public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
-                                            @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
-        return addProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner, true);
+                                            @Nullable BroadcastHandler.Listener listener) {
+        return addProtectedStorageEntry(protectedStorageEntry, sender, listener, true, true);
     }
 
-    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
+    private boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
                                             @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener,
                                             boolean isDataOwner,
