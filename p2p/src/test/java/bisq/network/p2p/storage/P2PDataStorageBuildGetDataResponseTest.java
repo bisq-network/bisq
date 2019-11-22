@@ -166,7 +166,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
             PersistableNetworkPayload fromPeerAndLocal = new PersistableNetworkPayloadStub(new byte[]{1});
 
             this.testState.mockedStorage.addPersistableNetworkPayload(
-                    fromPeerAndLocal, this.localNodeAddress, false, false, false, false);
+                    fromPeerAndLocal, this.localNodeAddress, false);
 
             GetDataRequest getDataRequest =
                     this.buildGetDataRequest(
@@ -194,7 +194,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
             PersistableNetworkPayload onlyLocal = new PersistableNetworkPayloadStub(new byte[]{1});
 
             this.testState.mockedStorage.addPersistableNetworkPayload(
-                    onlyLocal, this.localNodeAddress, false, false, false, false);
+                    onlyLocal, this.localNodeAddress, false);
 
             GetDataRequest getDataRequest =
                     this.buildGetDataRequest(1, new HashSet<>());
@@ -221,9 +221,9 @@ public class P2PDataStorageBuildGetDataResponseTest {
             PersistableNetworkPayload onlyLocal2 = new PersistableNetworkPayloadStub(new byte[]{2});
 
             this.testState.mockedStorage.addPersistableNetworkPayload(
-                    onlyLocal1, this.localNodeAddress, false, false, false, false);
+                    onlyLocal1, this.localNodeAddress, false);
             this.testState.mockedStorage.addPersistableNetworkPayload(
-                    onlyLocal2, this.localNodeAddress, false, false, false, false);
+                    onlyLocal2, this.localNodeAddress, false);
 
             GetDataRequest getDataRequest =
                     this.buildGetDataRequest(1, new HashSet<>());
@@ -252,7 +252,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
                             new byte[]{1});
 
             this.testState.mockedStorage.addPersistableNetworkPayload(
-                    onlyLocal, this.localNodeAddress, false, false, false, false);
+                    onlyLocal, this.localNodeAddress, false);
 
             GetDataRequest getDataRequest =
                     this.buildGetDataRequest(1, new HashSet<>());
@@ -280,7 +280,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
                             new byte[]{1});
 
             this.testState.mockedStorage.addPersistableNetworkPayload(
-                    onlyLocal, this.localNodeAddress, false, false, false, false);
+                    onlyLocal, this.localNodeAddress, false);
 
             GetDataRequest getDataRequest =
                     this.buildGetDataRequest(1, new HashSet<>());

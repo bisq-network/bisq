@@ -490,15 +490,32 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Client API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Adds a PersistableNetworkPayload to the local P2P data storage. If it does not already exist locally, it will
+     * be broadcast to the P2P network.
+     * @param payload PersistableNetworkPayload to add to the network
+     * @param sender local NodeAddress, if available
+     * @param allowReBroadcast <code>true</code> if the PersistableNetworkPayload should be rebroadcast even if it
+     *                         already exists locally
+     * @return <code>true</code> if the PersistableNetworkPayload passes all validation and exists in the P2PDataStore
+     *         on completion
+     */
     public boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
                                                 @Nullable NodeAddress sender,
-                                                boolean isDataOwner,
-                                                boolean allowBroadcast,
-                                                boolean reBroadcast,
-                                                boolean checkDate) {
+                                                boolean allowReBroadcast) {
+        return addPersistableNetworkPayload(
+                payload, sender, true, true, allowReBroadcast, false);
+    }
+
+    private boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
+                                                 @Nullable NodeAddress sender,
+                                                 boolean isDataOwner,
+                                                 boolean allowBroadcast,
+                                                 boolean reBroadcast,
+                                                 boolean checkDate) {
         log.trace("addPersistableNetworkPayload payload={}", payload);
 
         // Payload hash size does not match expectation for that type of message.

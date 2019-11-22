@@ -75,7 +75,7 @@ public class P2PDataStorageRemoveExpiredTest {
     public void removeExpiredEntries_skipsPersistableNetworkPayload() {
         PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(true);
 
-        Assert.assertTrue(this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload,getTestNodeAddress(), true, true, false, false));
+        Assert.assertTrue(this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload,getTestNodeAddress(), false));
 
         this.testState.mockedStorage.removeExpiredEntries();
 

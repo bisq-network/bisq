@@ -65,13 +65,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         public TestCase testCase;
 
         @Parameterized.Parameter(1)
-        public boolean allowBroadcast;
-
-        @Parameterized.Parameter(2)
         public boolean reBroadcast;
-
-        @Parameterized.Parameter(3)
-        public boolean checkDate;
 
         PersistableNetworkPayload persistableNetworkPayload;
 
@@ -91,7 +85,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
 
             if (this.testCase == TestCase.PUBLIC_API) {
                 Assert.assertEquals(expectedReturnValue,
-                        this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload, TestState.getTestNodeAddress(), true, this.allowBroadcast, this.reBroadcast, this.checkDate));
+                        this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload, TestState.getTestNodeAddress(), this.reBroadcast));
             } else { // onMessage
                 Connection mockedConnection = mock(Connection.class);
                 when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
@@ -114,14 +108,14 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             List<Object[]> data = new ArrayList<>();
 
             // onMessage doesn't use other parameters
-            data.add(new Object[] { TestCase.ON_MESSAGE, false, false, false });
+            data.add(new Object[] { TestCase.ON_MESSAGE, false });
 
             // Client API uses two permutations
             // Normal path
-            data.add(new Object[] { TestCase.PUBLIC_API, true, true, false });
+            data.add(new Object[] { TestCase.PUBLIC_API, true });
 
             // Refresh path
-            data.add(new Object[] { TestCase.PUBLIC_API, true, false, false });
+            data.add(new Object[] { TestCase.PUBLIC_API, false });
 
             return data;
         }

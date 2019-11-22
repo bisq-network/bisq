@@ -138,7 +138,7 @@ public class P2PDataStorageProcessGetDataResponse {
     public void processGetDataResponse_duplicatePNPDoesNothing() {
         PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[] { 1 });
         this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload,
-                this.peerNodeAddress, false, false, false, false);
+                this.peerNodeAddress, false);
 
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
@@ -166,7 +166,7 @@ public class P2PDataStorageProcessGetDataResponse {
     public void processGetDataResponse_duplicatePNPDoesNothing_LazyProcessed() {
         PersistableNetworkPayload persistableNetworkPayload = new LazyPersistableNetworkPayloadStub(new byte[] { 1 });
         this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload,
-                this.peerNodeAddress, false, false, false, false);
+                this.peerNodeAddress, false);
 
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
