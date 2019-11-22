@@ -119,8 +119,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All callers just pass in true, a future patch can remove the argument.
-                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress(), true);
+                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress());
             }
         }
 
@@ -690,8 +689,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All external callers just pass in true, a future patch can remove the argument.
-                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress(), true);
+                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress());
             }
         }
 

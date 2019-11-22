@@ -176,7 +176,7 @@ public class P2PDataStorageGetDataIntegrationTest {
 
         // Seed node sees the remove, but client node does not
         seedNode.remove(getProtectedStorageEntry(
-                ownerKeys.getPublic(), protectedStoragePayload, 2), null, false);
+                ownerKeys.getPublic(), protectedStoragePayload, 2), null);
 
         GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1);
 

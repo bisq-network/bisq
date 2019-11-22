@@ -691,7 +691,20 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return true;
     }
 
+    /**
+     * Removes a ProtectedStorageEntry from the local P2P data storage. If it is successful, it will broadcast that
+     * change to the P2P network.
+     *
+     * @param protectedStorageEntry ProtectedStorageEntry to add to the network
+     * @param sender local NodeAddress, if available
+     * @return <code>true</code> if the ProtectedStorageEntry was removed from the local P2P data storage and broadcast
+     */
     public boolean remove(ProtectedStorageEntry protectedStorageEntry,
+                          @Nullable NodeAddress sender) {
+        return remove(protectedStorageEntry, sender, true);
+    }
+
+    private boolean remove(ProtectedStorageEntry protectedStorageEntry,
                           @Nullable NodeAddress sender,
                           boolean isDataOwner) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();

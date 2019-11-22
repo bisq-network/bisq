@@ -187,7 +187,7 @@ public class OfferBookService {
     public void removeOffer(OfferPayload offerPayload,
                             @Nullable ResultHandler resultHandler,
                             @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(offerPayload, true)) {
+        if (p2PService.removeData(offerPayload)) {
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {

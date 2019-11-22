@@ -81,7 +81,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
                                    ResultHandler resultHandler,
                                    ErrorMessageHandler errorMessageHandler) {
         log.debug("removeDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
-        if (p2PService.removeData(disputeAgent, true)) {
+        if (p2PService.removeData(disputeAgent)) {
             log.trace("Remove disputeAgent from network was successful. DisputeAgent.hashCode() = " + disputeAgent.hashCode());
             resultHandler.handleResult();
         } else {

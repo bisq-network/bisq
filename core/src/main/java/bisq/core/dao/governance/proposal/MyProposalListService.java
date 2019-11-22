@@ -163,7 +163,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
 
     public boolean remove(Proposal proposal) {
         if (canRemoveProposal(proposal, daoStateService, periodService)) {
-            boolean success = p2PService.removeData(new TempProposalPayload(proposal, signaturePubKey), true);
+            boolean success = p2PService.removeData(new TempProposalPayload(proposal, signaturePubKey));
             if (!success)
                 log.warn("Removal of proposal from p2p network failed. proposal={}", proposal);
 

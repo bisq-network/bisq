@@ -186,7 +186,7 @@ public class P2PDataStorageClientAPITest {
                 this.testState.mockedStorage.getMailboxDataWithSignedSeqNr(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
         SavedTestState beforeState = this.testState.saveTestState(protectedMailboxStorageEntry);
-        Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress(), true));
+        Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress()));
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedMailboxStorageEntry, false, false, false, true, true);
     }
@@ -208,7 +208,7 @@ public class P2PDataStorageClientAPITest {
                 this.testState.mockedStorage.getMailboxDataWithSignedSeqNr(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
         SavedTestState beforeState = this.testState.saveTestState(protectedMailboxStorageEntry);
-        Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress(), true));
+        Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress()));
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedMailboxStorageEntry, true, true, true, true,true);
     }
@@ -235,7 +235,7 @@ public class P2PDataStorageClientAPITest {
                 this.testState.mockedStorage.getMailboxDataWithSignedSeqNr(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
         SavedTestState beforeState = this.testState.saveTestState(protectedMailboxStorageEntry);
-        Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress(), true));
+        Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress()));
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedMailboxStorageEntry, true, true, true, true,true);
     }
