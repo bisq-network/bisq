@@ -42,7 +42,6 @@ import com.google.inject.name.Named;
 
 import javafx.scene.control.Button;
 
-@FxmlView
 public abstract class DisputeAgentView extends DisputeView {
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,

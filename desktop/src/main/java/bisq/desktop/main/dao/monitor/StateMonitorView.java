@@ -76,7 +76,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@FxmlView
 public abstract class StateMonitorView<StH extends StateHash,
         StB extends StateBlock<StH>,
         BLI extends StateBlockListItem<StH, StB>,

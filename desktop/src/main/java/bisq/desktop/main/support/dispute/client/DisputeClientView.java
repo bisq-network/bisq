@@ -34,7 +34,6 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
-@FxmlView
 public abstract class DisputeClientView extends DisputeView {
     public DisputeClientView(DisputeManager<? extends DisputeList<? extends DisputeList>> DisputeManager,
                              KeyRing keyRing,

@@ -70,7 +70,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 // TODO translation string keys should renamed to be more generic.
 // Lets do it for 1.1.7 the translator have time to add new string.
-@FxmlView
 public abstract class AgentRegistrationView<R extends DisputeAgent, T extends AgentRegistrationViewModel<R, ?>>
         extends ActivatableViewAndModel<VBox, T> {
 
