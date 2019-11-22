@@ -22,7 +22,7 @@ import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.storage.mocks.PersistableNetworkPayloadStub;
 import bisq.network.p2p.storage.mocks.ProtectedStoragePayloadStub;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -95,7 +95,7 @@ public class P2PDataStorageProcessGetDataResponse {
     }
 
     static class LazyPersistableNetworkPayloadStub extends PersistableNetworkPayloadStub
-            implements LazyProcessedPayload {
+            implements ProcessOncePersistableNetworkPayload {
 
         LazyPersistableNetworkPayloadStub(byte[] hash) {
             super(hash);
@@ -107,7 +107,7 @@ public class P2PDataStorageProcessGetDataResponse {
     }
 
     // TESTCASE: GetDataResponse w/ missing PNP is added with no broadcast or listener signal
-    // XXXBUGXXX: We signal listeners w/ non LazyProcessedPayloads
+    // XXXBUGXXX: We signal listeners w/ non ProcessOncePersistableNetworkPayloads
     @Test
     public void processGetDataResponse_newPNPUpdatesState() {
         PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[] { 1 });
@@ -148,7 +148,7 @@ public class P2PDataStorageProcessGetDataResponse {
                 beforeState, persistableNetworkPayload, false, false, false, false);
     }
 
-    // TESTCASE: GetDataResponse w/ missing PNP is added with no broadcast or listener signal (LazyProcessedPayload)
+    // TESTCASE: GetDataResponse w/ missing PNP is added with no broadcast or listener signal (ProcessOncePersistableNetworkPayload)
     @Test
     public void processGetDataResponse_newPNPUpdatesState_LazyProcessed() {
         PersistableNetworkPayload persistableNetworkPayload = new LazyPersistableNetworkPayloadStub(new byte[] { 1 });
@@ -161,7 +161,7 @@ public class P2PDataStorageProcessGetDataResponse {
                 beforeState, persistableNetworkPayload, true, false, false, false);
     }
 
-    // TESTCASE: GetDataResponse w/ existing PNP changes no state (LazyProcessedPayload)
+    // TESTCASE: GetDataResponse w/ existing PNP changes no state (ProcessOncePersistableNetworkPayload)
     @Test
     public void processGetDataResponse_duplicatePNPDoesNothing_LazyProcessed() {
         PersistableNetworkPayload persistableNetworkPayload = new LazyPersistableNetworkPayloadStub(new byte[] { 1 });
@@ -188,7 +188,7 @@ public class P2PDataStorageProcessGetDataResponse {
                 beforeState, persistableNetworkPayload, false, false, false, false);
     }
 
-    // TESTCASE: Second call to processGetDataResponse adds PNP for non-LazyProcessedPayloads
+    // TESTCASE: Second call to processGetDataResponse adds PNP for non-ProcessOncePersistableNetworkPayloads
     @Test
     public void processGetDataResponse_secondProcessNewPNPUpdatesState() {
         PersistableNetworkPayload addFromFirstProcess = new PersistableNetworkPayloadStub(new byte[] { 1 });

@@ -27,7 +27,7 @@ import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.storage.TestState;
 import bisq.network.p2p.storage.mocks.PersistableNetworkPayloadStub;
 import bisq.network.p2p.storage.mocks.ProtectedStoragePayloadStub;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -99,7 +99,7 @@ public class GetDataRequestOnMessageTest {
     }
 
     static class LazyPersistableNetworkPayloadStub extends PersistableNetworkPayloadStub
-                                                   implements LazyProcessedPayload {
+                                                   implements ProcessOncePersistableNetworkPayload {
 
         LazyPersistableNetworkPayloadStub(byte[] hash) {
             super(hash);

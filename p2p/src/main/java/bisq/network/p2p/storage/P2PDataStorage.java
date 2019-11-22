@@ -39,7 +39,7 @@ import bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
@@ -338,7 +338,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (persistableNetworkPayloadSet != null) {
             ts2 = this.clock.millis();
             persistableNetworkPayloadSet.forEach(e -> {
-                if (e instanceof LazyProcessedPayload) {
+                if (e instanceof ProcessOncePersistableNetworkPayload) {
                     // We use an optimized method as many checks are not required in that case to avoid
                     // performance issues.
                     // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
@@ -360,7 +360,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     persistableNetworkPayloadSet.size(), this.clock.millis() - ts2);
         }
 
-        // We only process PersistableNetworkPayloads implementing LazyProcessedPayload once. It can cause performance
+        // We only process PersistableNetworkPayloads implementing ProcessOncePersistableNetworkPayload once. It can cause performance
         // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
         // startup.
         initialRequestApplied = true;
