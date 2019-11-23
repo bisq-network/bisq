@@ -549,7 +549,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Broadcast the payload if requested by caller
         if (allowBroadcast)
-            broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
+            broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null);
 
         return true;
     }
@@ -926,7 +926,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     private void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
                            @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
-        broadcaster.broadcast(message, sender, listener, isDataOwner);
+        broadcaster.broadcast(message, sender, listener);
     }
 
     public static ByteArray get32ByteHashAsByteArray(NetworkPayload data) {

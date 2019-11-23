@@ -189,9 +189,9 @@ public class TestState {
 
         if (expectedBroadcast)
             verify(this.mockBroadcaster).broadcast(any(AddPersistableNetworkPayloadMessage.class), any(NodeAddress.class),
-                    eq(null), eq(expectedIsDataOwner));
+                    eq(null));
         else
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class));
     }
 
     void verifyProtectedStorageAdd(SavedTestState beforeState,
@@ -222,13 +222,13 @@ public class TestState {
         if (expectedBroadcast) {
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
             verify(this.mockBroadcaster).broadcast(captor.capture(), any(NodeAddress.class),
-                    eq(null), eq(expectedIsDataOwner));
+                    eq(null));
 
             BroadcastMessage broadcastMessage = captor.getValue();
             Assert.assertTrue(broadcastMessage instanceof AddDataMessage);
             Assert.assertEquals(protectedStorageEntry, ((AddDataMessage) broadcastMessage).getProtectedStorageEntry());
         } else {
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class));
         }
 
         if (expectedSequenceNrMapWrite) {
@@ -280,7 +280,7 @@ public class TestState {
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
 
         if (!expectedBroadcast)
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class));
 
 
         protectedStorageEntries.forEach(protectedStorageEntry -> {
@@ -292,9 +292,9 @@ public class TestState {
 
             if (expectedBroadcast) {
                 if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-                    verify(this.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+                    verify(this.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), any(NodeAddress.class), eq(null));
                 else
-                    verify(this.mockBroadcaster).broadcast(any(RemoveDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+                    verify(this.mockBroadcaster).broadcast(any(RemoveDataMessage.class), any(NodeAddress.class), eq(null));
             }
 
 
@@ -326,7 +326,7 @@ public class TestState {
 
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
             verify(this.mockBroadcaster).broadcast(captor.capture(), any(NodeAddress.class),
-                    eq(null), eq(expectedIsDataOwner));
+                    eq(null));
 
             BroadcastMessage broadcastMessage = captor.getValue();
             Assert.assertTrue(broadcastMessage instanceof RefreshOfferMessage);
@@ -343,7 +343,7 @@ public class TestState {
                 Assert.assertEquals(beforeState.creationTimestampBeforeUpdate, entryAfterRefresh.getCreationTimeStamp());
             }
 
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class));
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
         }
     }
