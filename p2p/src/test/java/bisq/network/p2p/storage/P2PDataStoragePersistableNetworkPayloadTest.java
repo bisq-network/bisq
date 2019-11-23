@@ -76,7 +76,11 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             ON_MESSAGE,
         }
 
-        void doAddAndVerify(PersistableNetworkPayload persistableNetworkPayload, boolean expectedReturnValue, boolean expectedStateChange) {
+        void doAddAndVerify(PersistableNetworkPayload persistableNetworkPayload,
+                            boolean expectedReturnValue,
+                            boolean expectedHashMapAndDataStoreUpdated,
+                            boolean expectedListenersSignaled,
+                            boolean expectedBroadcast) {
             SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
 
             if (this.testCase == TestCase.PUBLIC_API) {
@@ -89,7 +93,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
                 testState.mockedStorage.onMessage(new AddPersistableNetworkPayloadMessage(persistableNetworkPayload), mockedConnection);
             }
 
-            this.testState.verifyPersistableAdd(beforeState, persistableNetworkPayload, expectedStateChange, expectedStateChange, expectedStateChange);
+            this.testState.verifyPersistableAdd(beforeState, persistableNetworkPayload, expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast);
         }
 
         @Before
@@ -119,16 +123,15 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         @Test
         public void addPersistableNetworkPayload() {
             // First add should succeed regardless of parameters
-            doAddAndVerify(this.persistableNetworkPayload, true, true);
+            doAddAndVerify(this.persistableNetworkPayload, true, true, true, true);
         }
 
         @Test
         public void addPersistableNetworkPayloadDuplicate() {
-            doAddAndVerify(this.persistableNetworkPayload, true, true);
+            doAddAndVerify(this.persistableNetworkPayload, true, true, true, true);
 
-            // Second call only succeeds if reBroadcast was set
-            boolean expectedReturnValue = this.reBroadcast;
-            doAddAndVerify(this.persistableNetworkPayload, expectedReturnValue, false);
+            // We return true and broadcast if reBroadcast is set
+            doAddAndVerify(this.persistableNetworkPayload, this.reBroadcast, false, false, this.reBroadcast);
         }
     }
 
@@ -145,7 +148,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         public void invalidHash() {
             PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(false);
 
-            doAddAndVerify(persistableNetworkPayload, false, false);
+            doAddAndVerify(persistableNetworkPayload, false, false, false, false);
         }
     }
 
@@ -168,7 +171,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             // The onMessage path checks for tolerance
             boolean expectedReturn = this.testCase != TestCase.ON_MESSAGE;
 
-            doAddAndVerify(persistableNetworkPayload, expectedReturn, expectedReturn);
+            doAddAndVerify(persistableNetworkPayload, expectedReturn, expectedReturn, expectedReturn, expectedReturn);
         }
     }
 }
