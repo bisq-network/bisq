@@ -107,14 +107,13 @@ public class ProtectedMailboxStorageEntryTest {
 
     // TESTCASE: validForAddOperation() should fail if the signature isn't valid
     @Test
-    public void isValidForAddOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
+    public void isValidForAddOperation_BadSignature() throws NoSuchAlgorithmException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 1);
-
-        protectedStorageEntry.updateSignature( new byte[] { 0 });
+        ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(
+                mailboxStoragePayload, senderKeys.getPublic(), 1, new byte[] { 0 }, receiverKeys.getPublic(), Clock.systemDefaultZone());
 
         Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
@@ -145,14 +144,14 @@ public class ProtectedMailboxStorageEntryTest {
 
     // TESTCASE: isValidForRemoveOperation() should fail if the signature is bad
     @Test
-    public void isValidForRemoveOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
+    public void isValidForRemoveOperation_BadSignature() throws NoSuchAlgorithmException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic(), 1);
-
-        protectedStorageEntry.updateSignature(new byte[] { 0 });
+        ProtectedStorageEntry protectedStorageEntry =
+                new ProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys.getPublic(),
+                            1, new byte[] { 0 }, receiverKeys.getPublic(), Clock.systemDefaultZone());
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }

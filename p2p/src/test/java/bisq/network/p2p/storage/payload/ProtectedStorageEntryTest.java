@@ -125,11 +125,13 @@ public class ProtectedStorageEntryTest {
 
     // TESTCASE: validForAddOperation() should fail if the signature isn't valid
     @Test
-    public void isValidForAddOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
+    public void isValidForAddOperation_BadSignature() throws NoSuchAlgorithmException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
 
-        protectedStorageEntry.updateSignature( new byte[] { 0 });
+        ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry =
+                new ProtectedStorageEntry(protectedStoragePayload, ownerKeys.getPublic(),
+                        1, new byte[] { 0 }, Clock.systemDefaultZone());
 
         Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
@@ -181,11 +183,13 @@ public class ProtectedStorageEntryTest {
 
     // TESTCASE: isValidForRemoveOperation() should fail if the signature is bad
     @Test
-    public void isValidForRemoveOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
+    public void isValidForRemoveOperation_BadSignature() throws NoSuchAlgorithmException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
 
-        protectedStorageEntry.updateSignature(new byte[] { 0 });
+        ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry =
+                new ProtectedStorageEntry(protectedStoragePayload, ownerKeys.getPublic(),
+                        1, new byte[] { 0 }, Clock.systemDefaultZone());
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }

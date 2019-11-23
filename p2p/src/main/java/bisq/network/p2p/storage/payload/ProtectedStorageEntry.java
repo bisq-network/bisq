@@ -47,7 +47,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private final byte[] ownerPubKeyBytes;
     transient private final PublicKey ownerPubKey;
     private final int sequenceNumber;
-    private byte[] signature;
+    private final byte[] signature;
     private long creationTimeStamp;
 
     public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
@@ -144,11 +144,6 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     public void backDate() {
         if (protectedStoragePayload instanceof ExpirablePayload)
             creationTimeStamp -= ((ExpirablePayload) protectedStoragePayload).getTTL() / 2;
-    }
-
-    // TODO: only used in tests so find a better way to test and delete public API
-    public void updateSignature(byte[] signature) {
-        this.signature = signature;
     }
 
     public boolean isExpired(Clock clock) {
