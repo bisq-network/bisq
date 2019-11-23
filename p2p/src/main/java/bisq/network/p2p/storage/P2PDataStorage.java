@@ -330,7 +330,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         long ts2 = System.currentTimeMillis();
         dataSet.forEach(e -> {
             // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
-            addProtectedStorageEntry(e, sender, null, false, false);
+            addProtectedStorageEntry(e, sender, null, false);
 
         });
         log.info("Processing {} protectedStorageEntries took {} ms.", dataSet.size(), this.clock.millis() - ts2);
@@ -351,8 +351,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 }
             } else {
                 // We don't broadcast here as we are only connected to the seed node and would be pointless
-                addPersistableNetworkPayload(e, sender, false,
-                        false, false, false);
+                addPersistableNetworkPayload(e, sender,false, false, false);
             }
         });
         log.info("Processing {} persistableNetworkPayloads took {} ms.",
@@ -415,16 +414,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (networkEnvelope instanceof BroadcastMessage) {
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (networkEnvelope instanceof AddDataMessage) {
-                    addProtectedStorageEntry(((AddDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, false, true);
+                    addProtectedStorageEntry(((AddDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, true);
                 } else if (networkEnvelope instanceof RemoveDataMessage) {
-                    remove(((RemoveDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, false);
+                    remove(((RemoveDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress);
                 } else if (networkEnvelope instanceof RemoveMailboxDataMessage) {
-                    remove(((RemoveMailboxDataMessage) networkEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress, false);
+                    remove(((RemoveMailboxDataMessage) networkEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress);
                 } else if (networkEnvelope instanceof RefreshOfferMessage) {
-                    refreshTTL((RefreshOfferMessage) networkEnvelope, peersNodeAddress, false);
+                    refreshTTL((RefreshOfferMessage) networkEnvelope, peersNodeAddress);
                 } else if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
                     addPersistableNetworkPayload(((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload(),
-                            peersNodeAddress, false, true, false, true);
+                            peersNodeAddress, true, false, true);
                 }
             });
         }
@@ -507,12 +506,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                 @Nullable NodeAddress sender,
                                                 boolean allowReBroadcast) {
         return addPersistableNetworkPayload(
-                payload, sender, true, true, allowReBroadcast, false);
+                payload, sender, true, allowReBroadcast, false);
     }
 
     private boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
                                                  @Nullable NodeAddress sender,
-                                                 boolean isDataOwner,
                                                  boolean allowBroadcast,
                                                  boolean reBroadcast,
                                                  boolean checkDate) {
@@ -580,13 +578,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener) {
-        return addProtectedStorageEntry(protectedStorageEntry, sender, listener, true, true);
+        return addProtectedStorageEntry(protectedStorageEntry, sender, listener, true);
     }
 
     private boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
                                             @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener,
-                                            boolean isDataOwner,
                                             boolean allowBroadcast) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
@@ -632,7 +629,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast)
-            broadcastProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner);
+            broadcastProtectedStorageEntry(protectedStorageEntry, sender, listener);
 
         // Persist ProtectedStorageEntrys carrying PersistablePayload payloads
         if (protectedStoragePayload instanceof PersistablePayload)
@@ -643,9 +640,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     private void broadcastProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
                                                 @Nullable NodeAddress sender,
-                                                @Nullable BroadcastHandler.Listener broadcastListener,
-                                                boolean isDataOwner) {
-        broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener, isDataOwner);
+                                                @Nullable BroadcastHandler.Listener broadcastListener) {
+        broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener);
     }
 
     /**
@@ -657,12 +653,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
                               @Nullable NodeAddress sender) {
-        return refreshTTL(refreshTTLMessage, sender, true);
-    }
-
-    private boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
-                              @Nullable NodeAddress sender,
-                              boolean isDataOwner) {
 
         ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
         ProtectedStorageEntry storedData = map.get(hashOfPayload);
@@ -698,7 +688,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
 
         // Always broadcast refreshes
-        broadcast(refreshTTLMessage, sender, null, isDataOwner);
+        broadcast(refreshTTLMessage, sender, null);
 
         return true;
     }
@@ -713,12 +703,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     public boolean remove(ProtectedStorageEntry protectedStorageEntry,
                           @Nullable NodeAddress sender) {
-        return remove(protectedStorageEntry, sender, true);
-    }
-
-    private boolean remove(ProtectedStorageEntry protectedStorageEntry,
-                          @Nullable NodeAddress sender,
-                          boolean isDataOwner) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
@@ -752,9 +736,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after remove");
 
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-            broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null, isDataOwner);
+            broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null);
         } else {
-            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
+            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null);
         }
 
         return true;
@@ -925,7 +909,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     private void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
-                           @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
+                           @Nullable BroadcastHandler.Listener listener) {
         broadcaster.broadcast(message, sender, listener);
     }
 

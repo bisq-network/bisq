@@ -117,7 +117,7 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, persistableNetworkPayload, true, true, false, false);
+                beforeState, persistableNetworkPayload, true, true, false);
     }
 
     // TESTCASE: GetDataResponse w/ invalid PNP does nothing (LazyProcessed)
@@ -130,7 +130,7 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, persistableNetworkPayload, false, false, false, false);
+                beforeState, persistableNetworkPayload, false, false, false);
     }
 
     // TESTCASE: GetDataResponse w/ existing PNP changes no state
@@ -145,7 +145,7 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, persistableNetworkPayload, false, false, false, false);
+                beforeState, persistableNetworkPayload, false, false, false);
     }
 
     // TESTCASE: GetDataResponse w/ missing PNP is added with no broadcast or listener signal (ProcessOncePersistableNetworkPayload)
@@ -158,7 +158,7 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, persistableNetworkPayload, true, false, false, false);
+                beforeState, persistableNetworkPayload, true, false, false);
     }
 
     // TESTCASE: GetDataResponse w/ existing PNP changes no state (ProcessOncePersistableNetworkPayload)
@@ -173,7 +173,7 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, persistableNetworkPayload, false, false, false, false);
+                beforeState, persistableNetworkPayload, false, false, false);
     }
 
     // TESTCASE: Second call to processGetDataResponse adds PNP for non-ProcessOncePersistableNetworkPayloads
@@ -185,14 +185,14 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(addFromFirstProcess);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, addFromFirstProcess, true, true, false, false);
+                beforeState, addFromFirstProcess, true, true, false);
 
         PersistableNetworkPayload addFromSecondProcess = new PersistableNetworkPayloadStub(new byte[] { 2 });
         getDataResponse = buildGetDataResponse(addFromSecondProcess);
         beforeState = this.testState.saveTestState(addFromSecondProcess);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, addFromSecondProcess, true, true, false, false);
+                beforeState, addFromSecondProcess, true, true, false);
     }
 
     // TESTCASE: Second call to processGetDataResponse does not add any PNP (LazyProcessed)
@@ -204,14 +204,14 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(addFromFirstProcess);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, addFromFirstProcess, true, false, false, false);
+                beforeState, addFromFirstProcess, true, false, false);
 
         PersistableNetworkPayload addFromSecondProcess = new LazyPersistableNetworkPayloadStub(new byte[] { 2 });
         getDataResponse = buildGetDataResponse(addFromSecondProcess);
         beforeState = this.testState.saveTestState(addFromSecondProcess);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyPersistableAdd(
-                beforeState, addFromSecondProcess, false, false, false, false);
+                beforeState, addFromSecondProcess, false, false, false);
     }
 
     // TESTCASE: GetDataResponse w/ missing PSE is added with no broadcast or listener signal
@@ -224,7 +224,7 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyProtectedStorageAdd(
-                beforeState, protectedStorageEntry, true, true, false, true, false);
+                beforeState, protectedStorageEntry, true, true, false, true);
     }
 
     // TESTCASE: GetDataResponse w/ existing PSE changes no state
@@ -238,7 +238,7 @@ public class P2PDataStorageProcessGetDataResponse {
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         TestState.SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.verifyProtectedStorageAdd(
-                beforeState, protectedStorageEntry, false, false, false, false, false);
+                beforeState, protectedStorageEntry, false, false, false, false);
     }
 
     // TESTCASE: GetDataResponse w/ missing PSE is added with no broadcast or listener signal
@@ -251,13 +251,13 @@ public class P2PDataStorageProcessGetDataResponse {
         TestState.SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyProtectedStorageAdd(
-                beforeState, protectedStorageEntry, true, true, false, true, false);
+                beforeState, protectedStorageEntry, true, true, false, true);
 
         protectedStorageEntry = getProtectedStorageEntryForAdd();
         getDataResponse = buildGetDataResponse(protectedStorageEntry);
         beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
         this.testState.verifyProtectedStorageAdd(
-                beforeState, protectedStorageEntry, true, true, false, true, false);
+                beforeState, protectedStorageEntry, true, true, false, true);
     }
 }

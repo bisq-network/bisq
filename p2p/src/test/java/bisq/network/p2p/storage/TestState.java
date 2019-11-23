@@ -173,8 +173,7 @@ public class TestState {
                               PersistableNetworkPayload persistableNetworkPayload,
                               boolean expectedHashMapAndDataStoreUpdated,
                               boolean expectedListenersSignaled,
-                              boolean expectedBroadcast,
-                              boolean expectedIsDataOwner) {
+                              boolean expectedBroadcast) {
         P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash());
 
         if (expectedHashMapAndDataStoreUpdated)
@@ -199,8 +198,7 @@ public class TestState {
                                    boolean expectedHashMapAndDataStoreUpdated,
                                    boolean expectedListenersSignaled,
                                    boolean expectedBroadcast,
-                                   boolean expectedSequenceNrMapWrite,
-                                   boolean expectedIsDataOwner) {
+                                   boolean expectedSequenceNrMapWrite) {
         P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
 
         if (expectedHashMapAndDataStoreUpdated) {
@@ -243,12 +241,11 @@ public class TestState {
                                       boolean expectedHashMapAndDataStoreUpdated,
                                       boolean expectedListenersSignaled,
                                       boolean expectedBroadcast,
-                                      boolean expectedSeqNrWrite,
-                                      boolean expectedIsDataOwner) {
+                                      boolean expectedSeqNrWrite) {
 
         verifyProtectedStorageRemove(beforeState, Collections.singletonList(protectedStorageEntry),
                 expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast,
-                expectedSeqNrWrite, expectedIsDataOwner);
+                expectedSeqNrWrite);
     }
 
     void verifyProtectedStorageRemove(SavedTestState beforeState,
@@ -256,8 +253,7 @@ public class TestState {
                                       boolean expectedHashMapAndDataStoreUpdated,
                                       boolean expectedListenersSignaled,
                                       boolean expectedBroadcast,
-                                      boolean expectedSeqNrWrite,
-                                      boolean expectedIsDataOwner) {
+                                      boolean expectedSeqNrWrite) {
 
         // The default matcher expects orders to stay the same. So, create a custom matcher function since
         // we don't care about the order.
@@ -312,8 +308,7 @@ public class TestState {
 
     void verifyRefreshTTL(SavedTestState beforeState,
                           RefreshOfferMessage refreshOfferMessage,
-                          boolean expectedStateChange,
-                          boolean expectedIsDataOwner) {
+                          boolean expectedStateChange) {
         P2PDataStorage.ByteArray payloadHash = new P2PDataStorage.ByteArray(refreshOfferMessage.getHashOfPayload());
 
         ProtectedStorageEntry entryAfterRefresh = this.mockedStorage.getMap().get(payloadHash);

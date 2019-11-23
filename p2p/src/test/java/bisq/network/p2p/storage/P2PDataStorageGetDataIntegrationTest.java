@@ -88,7 +88,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         clientNode.processGetDataResponse(getDataResponse, null);
 
         clientNodeTestState.verifyProtectedStorageAdd(
-                beforeState, onSeedNode, true, true, false, true, false);
+                beforeState, onSeedNode, true, true, false, true);
     }
 
     // TESTCASE: Synchronization after peer restart works for in-memory ProtectedStorageEntrys
@@ -118,7 +118,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         clientNode.processGetDataResponse(getDataResponse, null);
 
         clientNodeTestState.verifyProtectedStorageAdd(
-                beforeState, transientEntry, true, true, false, true, false);
+                beforeState, transientEntry, true, true, false, true);
     }
 
     // TESTCASE: Synchronization after peer restart works for in-memory ProtectedStorageEntrys
@@ -151,7 +151,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         clientNode.processGetDataResponse(getDataResponse, null);
 
         clientNodeTestState.verifyProtectedStorageAdd(
-                beforeState, persistentEntry, false, false, false, false, false);
+                beforeState, persistentEntry, false, false, false, false);
         Assert.assertTrue(clientNodeTestState.mockedStorage.getMap().containsValue(persistentEntry));
     }
 
@@ -188,6 +188,6 @@ public class P2PDataStorageGetDataIntegrationTest {
 
         // Should succeed
         clientNodeTestState.verifyProtectedStorageRemove(
-                beforeState, onSeedNodeAndClientNode, false, false, false, false, false);
+                beforeState, onSeedNodeAndClientNode, false, false, false, false);
     }
 }
