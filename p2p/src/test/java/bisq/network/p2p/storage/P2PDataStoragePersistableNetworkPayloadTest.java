@@ -49,11 +49,10 @@ import static bisq.network.p2p.storage.TestState.*;
  * Each subclass (Payload type) can optionally add additional tests that verify functionality only relevant
  * to that payload.
  *
- * Each test case is run through 4 entry points to verify the correct behavior:
+ * Each test case is run through 3 entry points to verify the correct behavior:
  *
- * 1.    RequestData path [addPersistableNetworkPayloadFromInitialRequest]
- * 2 & 3 Client API [addPersistableNetworkPayload(reBroadcast=(true && false))]
- * 4.    onMessage() [onMessage(AddPersistableNetworkPayloadMessage)]
+ * 1 & 2 Client API [addPersistableNetworkPayload(reBroadcast=(true && false))]
+ * 3.    onMessage() [onMessage(AddPersistableNetworkPayloadMessage)]
  */
 @SuppressWarnings("unused")
 public class P2PDataStoragePersistableNetworkPayloadTest {
@@ -81,11 +80,6 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         enum TestCase {
             PUBLIC_API,
             ON_MESSAGE,
-            INIT,
-        }
-
-        boolean expectBroadcastOnStateChange() {
-            return this.testCase != TestCase.INIT;
         }
 
         boolean expectedIsDataOwner() {
@@ -95,9 +89,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         void doAddAndVerify(PersistableNetworkPayload persistableNetworkPayload, boolean expectedReturnValue, boolean expectedStateChange) {
             SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
 
-            if (this.testCase == TestCase.INIT) {
-                Assert.assertEquals(expectedReturnValue, this.testState.mockedStorage.addPersistableNetworkPayloadFromInitialRequest(persistableNetworkPayload));
-            } else if (this.testCase == TestCase.PUBLIC_API) {
+            if (this.testCase == TestCase.PUBLIC_API) {
                 Assert.assertEquals(expectedReturnValue,
                         this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload, TestState.getTestNodeAddress(), true, this.allowBroadcast, this.reBroadcast, this.checkDate));
             } else { // onMessage
@@ -107,9 +99,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
                 testState.mockedStorage.onMessage(new AddPersistableNetworkPayloadMessage(persistableNetworkPayload), mockedConnection);
             }
 
-            boolean expectedBroadcast = expectedStateChange && this.expectBroadcastOnStateChange();
-
-            this.testState.verifyPersistableAdd(beforeState, persistableNetworkPayload, expectedStateChange, expectedBroadcast, expectedBroadcast, this.expectedIsDataOwner());
+            this.testState.verifyPersistableAdd(beforeState, persistableNetworkPayload, expectedStateChange, expectedStateChange, expectedStateChange, this.expectedIsDataOwner());
         }
 
         @Before
@@ -122,9 +112,6 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         @Parameterized.Parameters(name = "{index}: Test with TestCase={0} allowBroadcast={1} reBroadcast={2} checkDate={3}")
         public static Collection<Object[]> data() {
             List<Object[]> data = new ArrayList<>();
-
-            // Init doesn't use other parameters
-            data.add(new Object[] { TestCase.INIT, false, false, false });
 
             // onMessage doesn't use other parameters
             data.add(new Object[] { TestCase.ON_MESSAGE, false, false, false });
@@ -149,9 +136,8 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         public void addPersistableNetworkPayloadDuplicate() {
             doAddAndVerify(this.persistableNetworkPayload, true, true);
 
-            // Second call only succeeds if reBroadcast was set or we are adding through the init
-            // path which just overwrites
-            boolean expectedReturnValue = this.reBroadcast || this.testCase == TestCase.INIT;
+            // Second call only succeeds if reBroadcast was set
+            boolean expectedReturnValue = this.reBroadcast;
             doAddAndVerify(this.persistableNetworkPayload, expectedReturnValue, false);
         }
     }
