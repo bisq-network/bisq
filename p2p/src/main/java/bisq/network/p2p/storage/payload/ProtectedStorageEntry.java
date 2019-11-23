@@ -52,7 +52,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private final byte[] signature;
     private long creationTimeStamp;
 
-    public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+    public ProtectedStorageEntry(@NotNull ProtectedStoragePayload protectedStoragePayload,
                                  @NotNull PublicKey ownerPubKey,
                                  int sequenceNumber,
                                  byte[] signature,
@@ -66,7 +66,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                 clock);
     }
 
-    protected ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+    protected ProtectedStorageEntry(@NotNull ProtectedStoragePayload protectedStoragePayload,
                                     byte[] ownerPubKeyBytes,
                                     @NotNull PublicKey ownerPubKey,
                                     int sequenceNumber,
@@ -91,7 +91,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+    private ProtectedStorageEntry(@NotNull ProtectedStoragePayload protectedStoragePayload,
                                   byte[] ownerPubKeyBytes,
                                   int sequenceNumber,
                                   byte[] signature,
@@ -162,13 +162,12 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                     mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         } else {
-            boolean result = this.protectedStoragePayload != null &&
-                    this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
+            boolean result = this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
 
             if (!result) {
                 String res1 = this.toString();
                 String res2 = "null";
-                if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+                if (protectedStoragePayload.getOwnerPubKey() != null)
                     res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
 
                 log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
@@ -191,7 +190,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         if (!result) {
             String res1 = this.toString();
             String res2 = "null";
-            if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+            if (protectedStoragePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
 
             log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
