@@ -80,9 +80,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
 
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
-        this.creationTimeStamp = creationTimeStamp;
 
-        maybeAdjustCreationTimeStamp(clock);
+        // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
+        this.creationTimeStamp = Math.min(creationTimeStamp, clock.millis());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,12 +134,6 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void maybeAdjustCreationTimeStamp(Clock clock) {
-        // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
-        if (creationTimeStamp > clock.millis())
-            creationTimeStamp = clock.millis();
-    }
 
     public void backDate() {
         if (protectedStoragePayload instanceof ExpirablePayload)

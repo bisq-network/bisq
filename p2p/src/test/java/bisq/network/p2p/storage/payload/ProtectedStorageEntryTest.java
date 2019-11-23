@@ -31,6 +31,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 
 import java.time.Clock;
+import java.time.Duration;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -252,5 +253,21 @@ public class ProtectedStorageEntryTest {
         IncompatiblePayload incompatiblePayload = new IncompatiblePayload(ownerKeys.getPublic());
         new ProtectedStorageEntry(incompatiblePayload,ownerKeys.getPublic(), 1,
                 new byte[] { 0 }, Clock.systemDefaultZone());
+    }
+
+    // TESTCASE: PSEs received with future-dated timestamps are updated to be min(currentTime, creationTimeStamp)
+    @Test
+    public void futureTimestampIsSanitized() throws NoSuchAlgorithmException {
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+
+        Clock baseClock = Clock.systemDefaultZone();
+        Clock futureClock = Clock.offset(baseClock, Duration.ofDays(1));
+
+        ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry =
+                new ProtectedStorageEntry(protectedStoragePayload, Sig.getPublicKeyBytes(ownerKeys.getPublic()),
+                        ownerKeys.getPublic(), 1, new byte[] { 0 }, futureClock.millis(), baseClock);
+
+        Assert.assertTrue(protectedStorageEntry.getCreationTimeStamp() <= baseClock.millis());
     }
 }
