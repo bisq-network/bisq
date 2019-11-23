@@ -39,6 +39,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 @Getter
 @EqualsAndHashCode
 @Slf4j
@@ -51,10 +53,10 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private long creationTimeStamp;
 
     public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                    PublicKey ownerPubKey,
-                                    int sequenceNumber,
-                                    byte[] signature,
-                                    Clock clock) {
+                                 @NotNull PublicKey ownerPubKey,
+                                 int sequenceNumber,
+                                 byte[] signature,
+                                 Clock clock) {
         this(protectedStoragePayload,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 ownerPubKey,
@@ -65,12 +67,12 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     }
 
     protected ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                 byte[] ownerPubKeyBytes,
-                                 PublicKey ownerPubKey,
-                                 int sequenceNumber,
-                                 byte[] signature,
-                                 long creationTimeStamp,
-                                 Clock clock) {
+                                    byte[] ownerPubKeyBytes,
+                                    @NotNull PublicKey ownerPubKey,
+                                    int sequenceNumber,
+                                    byte[] signature,
+                                    long creationTimeStamp,
+                                    Clock clock) {
 
         Preconditions.checkArgument(!(protectedStoragePayload instanceof PersistableNetworkPayload));
 
@@ -90,11 +92,11 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                    byte[] ownerPubKeyBytes,
-                                    int sequenceNumber,
-                                    byte[] signature,
-                                    long creationTimeStamp,
-                                    Clock clock) {
+                                  byte[] ownerPubKeyBytes,
+                                  int sequenceNumber,
+                                  byte[] signature,
+                                  long creationTimeStamp,
+                                  Clock clock) {
         this(protectedStoragePayload,
                 ownerPubKeyBytes,
                 Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
@@ -160,8 +162,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                     mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         } else {
-            boolean result = this.ownerPubKey != null &&
-                    this.protectedStoragePayload != null &&
+            boolean result = this.protectedStoragePayload != null &&
                     this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
 
             if (!result) {
@@ -228,9 +229,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         boolean result = protectedStorageEntry.getOwnerPubKey().equals(this.ownerPubKey);
 
         if (!result) {
-            log.warn("New data entry does not match our stored data. storedData.ownerPubKey=" +
-                    (protectedStorageEntry.getOwnerPubKey() != null ? protectedStorageEntry.getOwnerPubKey().toString() : "null") +
-                    ", ownerPubKey=" + this.ownerPubKey);
+            log.warn("New data entry does not match our stored data. storedData.ownerPubKey={}, ownerPubKey={}}",
+                    protectedStorageEntry.getOwnerPubKey().toString(), this.ownerPubKey);
         }
 
         return result;
