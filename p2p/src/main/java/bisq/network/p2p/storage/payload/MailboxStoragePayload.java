@@ -37,6 +37,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
 
 /**
@@ -63,7 +65,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
     private Map<String, String> extraDataMap;
 
     public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
-                                 PublicKey senderPubKeyForAddOperation,
+                                 @NotNull PublicKey senderPubKeyForAddOperation,
                                  PublicKey ownerPubKey) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;

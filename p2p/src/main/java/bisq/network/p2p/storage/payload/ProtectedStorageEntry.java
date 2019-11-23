@@ -158,8 +158,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         // TODO: The code currently supports MailboxStoragePayload objects inside ProtectedStorageEntry. Fix this.
         if (protectedStoragePayload instanceof MailboxStoragePayload) {
             MailboxStoragePayload mailboxStoragePayload = (MailboxStoragePayload) this.getProtectedStoragePayload();
-            return mailboxStoragePayload.getSenderPubKeyForAddOperation() != null &&
-                    mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+            return mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         } else {
             boolean result = this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());

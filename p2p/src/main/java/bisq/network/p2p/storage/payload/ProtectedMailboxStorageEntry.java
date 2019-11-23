@@ -101,8 +101,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
             return false;
         }
 
-        boolean result = mailboxStoragePayload.getSenderPubKeyForAddOperation() != null &&
-                mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+        boolean result = mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         if (!result) {
             String res1 = this.toString();
