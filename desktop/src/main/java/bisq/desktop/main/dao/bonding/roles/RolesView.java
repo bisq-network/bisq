@@ -120,7 +120,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        observableList.setAll(daoFacade.getBondedRoles().stream()
+        observableList.setAll(daoFacade.getAcceptedBondedRoles().stream()
                 .map(bond -> new RolesListItem(bond, daoFacade))
                 .sorted(Comparator.comparing(RolesListItem::getLockupDate).reversed())
                 .collect(Collectors.toList()));

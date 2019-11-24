@@ -32,6 +32,7 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -71,6 +72,13 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
 
     public Optional<RoleProposal> getAcceptedBondedRoleProposal(Role role) {
         return getAcceptedBondedRoleProposalStream().filter(e -> e.getRole().getUid().equals(role.getUid())).findAny();
+    }
+
+
+    public List<BondedRole> getAcceptedBonds() {
+        return bonds.stream()
+                .filter(bondedRole -> getAcceptedBondedRoleProposal(bondedRole.getBondedAsset()).isPresent())
+                .collect(Collectors.toList());
     }
 
 
