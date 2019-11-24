@@ -72,22 +72,12 @@ public class BsqFormatter implements CoinFormatter {
 
     @Inject
     public BsqFormatter() {
-        this.monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
-        this.immutableCoinFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
+        this.btcCoinFormat = BisqEnvironment.getParameters().getMonetaryFormat();
+        this.monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
+        this.immutableCoinFormatter = new ImmutableCoinFormatter(monetaryFormat);
 
         GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> switchLocale(newValue));
         switchLocale(GlobalSettings.getLocale());
-
-        btcCoinFormat = monetaryFormat;
-
-        final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-        switch (baseCurrencyCode) {
-            case "BTC":
-                monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
-                break;
-            default:
-                throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
-        }
 
         amountFormat.setMinimumFractionDigits(2);
     }
