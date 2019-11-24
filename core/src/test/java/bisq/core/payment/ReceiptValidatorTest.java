@@ -175,6 +175,57 @@ public class ReceiptValidatorTest {
     }
 
     @Test
+    // Same or Specific Bank offers can't be taken by National Bank accounts. TODO: Consider partially relaxing to allow Specific Banks.
+    public void testIsValidWhenNationalBankAccountAndOfferIsNot() {
+        account = mock(NationalBankAccount.class);
+
+        when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
+        when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(false);
+        when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
+        when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
+        when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
+
+        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
+
+        verify(predicates, never()).isOfferRequireSameOrSpecificBank(offer, account);
+        verify(predicates, never()).isMatchingBankId(offer, account);
+    }
+
+    @Test
+    // National or Same Bank offers can't be taken by Specific Banks accounts. TODO: Consider partially relaxing to allow National Bank.
+    public void testIsValidWhenSpecificBanksAccountAndOfferIsNot() {
+        account = mock(SpecificBanksAccount.class);
+
+        when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
+        when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(false);
+        when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
+        when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
+        when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
+
+        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
+
+        verify(predicates, never()).isOfferRequireSameOrSpecificBank(offer, account);
+        verify(predicates, never()).isMatchingBankId(offer, account);
+    }
+
+    @Test
+    // National or Specific Bank offers can't be taken by Same Bank accounts.
+    public void testIsValidWhenSameBankAccountAndOfferIsNot() {
+        account = mock(SameBankAccount.class);
+
+        when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
+        when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(false);
+        when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
+        when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
+        when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
+
+        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
+
+        verify(predicates, never()).isOfferRequireSameOrSpecificBank(offer, account);
+        verify(predicates, never()).isMatchingBankId(offer, account);
+    }
+
+    @Test
     public void testIsValidWhenWesternUnionAccount() {
         account = mock(WesternUnionAccount.class);
 
