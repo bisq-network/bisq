@@ -18,17 +18,18 @@
 package bisq.core.payment;
 
 import bisq.core.offer.Offer;
-import bisq.core.payment.payload.PaymentMethod;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class ReceiptValidatorTest {
     private ReceiptValidator validator;
     private PaymentAccount account;
@@ -41,6 +42,11 @@ public class ReceiptValidatorTest {
         this.account = mock(CountryBasedPaymentAccount.class);
         this.offer = mock(Offer.class);
         this.validator = new ReceiptValidator(offer, account, predicates);
+    }
+
+    @After
+    public void tearDown() {
+        verifyZeroInteractions(offer);
     }
 
     @Test
@@ -172,10 +178,6 @@ public class ReceiptValidatorTest {
     public void testIsValidWhenWesternUnionAccount() {
         account = mock(WesternUnionAccount.class);
 
-        PaymentMethod.WESTERN_UNION = mock(PaymentMethod.class);
-
-        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.WESTERN_UNION);
-
         when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
         when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
@@ -202,17 +204,14 @@ public class ReceiptValidatorTest {
     public void testIsValidWhenMoneyGramAccount() {
         account = mock(MoneyGramAccount.class);
 
-        PaymentMethod.MONEY_GRAM = mock(PaymentMethod.class);
-
-        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.MONEY_GRAM);
-
         when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
-        when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(false);
-        when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
-        when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
-        when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
 
         assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
+
+        verify(predicates, never()).isMatchingCountryCodes(offer, account);
+        verify(predicates, never()).isMatchingSepaOffer(offer, account);
+        verify(predicates, never()).isMatchingSepaInstant(offer, account);
+        verify(predicates, never()).isOfferRequireSameOrSpecificBank(offer, account);
     }
 }
