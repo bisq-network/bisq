@@ -41,8 +41,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class FileManager<T extends PersistableEnvelope> {
     private final File dir;
@@ -73,10 +71,13 @@ public class FileManager<T extends PersistableEnvelope> {
             try {
                 Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
 
-                // Atomically take the next object to write and set the value to null so `saveLater` callers can
-                // determine if there is a pending write.
+                // Atomically take the next object to write and set the value to null so concurrent saveFileTask
+                // won't duplicate work.
                 T persistable = this.nextWrite.getAndSet(null);
-                checkNotNull(persistable);
+
+                // If null, a concurrent saveFileTask already grabbed the data. Don't duplicate work.
+                if (persistable == null)
+                    return null;
 
                 saveNowInternal(persistable);
             } catch (Throwable e) {
@@ -104,11 +105,11 @@ public class FileManager<T extends PersistableEnvelope> {
     public void saveLater(T persistable, long delayInMilli) {
         // Atomically set the value of the next write. This allows batching of multiple writes of the same data
         // structure if there are multiple calls to saveLater within a given `delayInMillis`.
-        T pendingWrite = this.nextWrite.getAndSet(persistable);
+        this.nextWrite.set(persistable);
 
-        // If there isn't a pending write. Schedule one for `persistable`.
-        if (pendingWrite == null)
-            executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
+        // Always schedule a write. It is possible that a previous saveLater was called with a larger `delayInMilli`
+        // and we want the lower delay to execute. The saveFileTask handles concurrent operations.
+        executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("unchecked")
