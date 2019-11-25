@@ -297,7 +297,7 @@ public class ChatView extends AnchorPane {
                     }
 
                     @Override
-                    public void updateItem(ChatMessage message, boolean empty) {
+                    protected void updateItem(ChatMessage message, boolean empty) {
                         super.updateItem(message, empty);
                         if (message != null && !empty) {
                             copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
@@ -311,6 +311,14 @@ public class ChatView extends AnchorPane {
                             if (!messageAnchorPane.prefWidthProperty().isBound())
                                 messageAnchorPane.prefWidthProperty()
                                         .bind(messageListView.widthProperty().subtract(padding + GUIUtil.getScrollbarWidth(messageListView)));
+
+                            AnchorPane.clearConstraints(bg);
+                            AnchorPane.clearConstraints(headerLabel);
+                            AnchorPane.clearConstraints(arrow);
+                            AnchorPane.clearConstraints(messageLabel);
+                            AnchorPane.clearConstraints(copyIcon);
+                            AnchorPane.clearConstraints(statusHBox);
+                            AnchorPane.clearConstraints(attachmentsBox);
 
                             AnchorPane.setTopAnchor(bg, 15d);
                             AnchorPane.setBottomAnchor(bg, bottomBorder);
@@ -381,7 +389,6 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setRightAnchor(copyIcon, padding);
                                 AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                 AnchorPane.setRightAnchor(attachmentsBox, padding);
-                                AnchorPane.clearConstraints(statusHBox);
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             } else if (senderIsTrader) {
                                 AnchorPane.setLeftAnchor(headerLabel, padding + arrowWidth);
@@ -393,19 +400,17 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setRightAnchor(copyIcon, padding);
                                 AnchorPane.setLeftAnchor(attachmentsBox, padding + arrowWidth);
                                 AnchorPane.setRightAnchor(attachmentsBox, padding);
-                                AnchorPane.clearConstraints(statusHBox);
                                 AnchorPane.setRightAnchor(statusHBox, padding);
                             } else {
                                 AnchorPane.setRightAnchor(headerLabel, padding + arrowWidth);
-                                AnchorPane.setLeftAnchor(bg, border);
                                 AnchorPane.setRightAnchor(bg, border + arrowWidth);
+                                AnchorPane.setLeftAnchor(bg, border);
                                 AnchorPane.setRightAnchor(arrow, border);
                                 AnchorPane.setLeftAnchor(messageLabel, padding);
                                 AnchorPane.setRightAnchor(messageLabel, msgLabelPaddingRight + arrowWidth);
                                 AnchorPane.setRightAnchor(copyIcon, padding + arrowWidth);
                                 AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                 AnchorPane.setRightAnchor(attachmentsBox, padding + arrowWidth);
-                                AnchorPane.clearConstraints(statusHBox);
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
@@ -452,14 +457,6 @@ public class ChatView extends AnchorPane {
                                 sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
                             messageAnchorPane.prefWidthProperty().unbind();
-
-                            AnchorPane.clearConstraints(bg);
-                            AnchorPane.clearConstraints(headerLabel);
-                            AnchorPane.clearConstraints(arrow);
-                            AnchorPane.clearConstraints(messageLabel);
-                            AnchorPane.clearConstraints(copyIcon);
-                            AnchorPane.clearConstraints(statusHBox);
-                            AnchorPane.clearConstraints(attachmentsBox);
 
                             copyIcon.setOnMouseClicked(null);
                             messageLabel.setOnMouseClicked(null);
