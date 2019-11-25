@@ -36,20 +36,21 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class FileManager<T extends PersistableEnvelope> {
     private final File dir;
     private final File storageFile;
     private final ScheduledThreadPoolExecutor executor;
-    private final AtomicBoolean savePending;
     private final long delay;
     private final Callable<Void> saveFileTask;
-    private T persistable;
+    private final AtomicReference<T> nextWrite;
     private final PersistenceProtoResolver persistenceProtoResolver;
     private final ReentrantLock writeLock = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW).newReentrantLock("writeLock");
 
@@ -61,25 +62,22 @@ public class FileManager<T extends PersistableEnvelope> {
         this.dir = dir;
         this.storageFile = storageFile;
         this.persistenceProtoResolver = persistenceProtoResolver;
+        this.nextWrite = new AtomicReference<>(null);
 
         executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
 
         // File must only be accessed from the auto-save executor from now on, to avoid simultaneous access.
-        savePending = new AtomicBoolean();
         this.delay = delay;
 
         saveFileTask = () -> {
             try {
                 Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
-                // Runs in an auto save thread.
-                // TODO: this looks like it could cause corrupt data as the savePending is unset before the actual
-                // save. By moving to after the save there might be some persist operations that are not performed
-                // and data would be lost. Probably all persist operations should happen sequencially rather than
-                // skip one when there is already one scheduled
-                if (!savePending.getAndSet(false)) {
-                    // Some other scheduled request already beat us to it.
-                    return null;
-                }
+
+                // Atomically take the next object to write and set the value to null so `saveLater` callers can
+                // determine if there is a pending write.
+                T persistable = this.nextWrite.getAndSet(null);
+                checkNotNull(persistable);
+
                 saveNowInternal(persistable);
             } catch (Throwable e) {
                 log.error("Error during saveFileTask", e);
@@ -111,12 +109,13 @@ public class FileManager<T extends PersistableEnvelope> {
     }
 
     public void saveLater(T persistable, long delayInMilli) {
-        this.persistable = persistable;
+        // Atomically set the value of the next write. This allows batching of multiple writes of the same data
+        // structure if there are multiple calls to saveLater within a given `delayInMillis`.
+        T pendingWrite = this.nextWrite.getAndSet(persistable);
 
-        if (savePending.getAndSet(true))
-            return;   // Already pending.
-
-        executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
+        // If there isn't a pending write. Schedule one for `persistable`.
+        if (pendingWrite == null)
+            executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("unchecked")
