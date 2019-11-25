@@ -101,7 +101,7 @@ $JAVA_HOME/bin/javapackager \
     -Bicon=$base_dir/desktop/package/linux/icon.png \
     -native deb \
     -name Bisq \
-    -title "The decentralized exchange network." \
+    -title "A decentralized Bitcoin exchange network." \
     -vendor Bisq \
     -outdir $base_dir/desktop/package/linux \
     -srcdir $src_dir \
@@ -127,7 +127,7 @@ $JAVA_HOME/bin/javapackager \
     -Bicon=$base_dir/desktop/package/linux/icon.png \
     -native rpm \
     -name Bisq \
-    -title "The decentralized exchange network." \
+    -title "A decentralized Bitcoin exchange network." \
     -vendor Bisq \
     -outdir $base_dir/desktop/package/linux \
     -srcdir $src_dir \

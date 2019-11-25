@@ -84,7 +84,7 @@ $JAVA_HOME/bin/javapackager \
     -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
     -name Bisq \
-    -title Bisq \
+    -title "A decentralized Bitcoin exchange network." \
     -vendor Bisq \
     -outdir deploy \
     -srcdir deploy \
