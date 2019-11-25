@@ -286,7 +286,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                     addSuccessContent();
                 }
             } else {
-                new Popup<>().error(Res.get("popup.accountSigning.signAccounts.ECKey.error")).onClose(this::hide).show();
+                new Popup().error(Res.get("popup.accountSigning.signAccounts.ECKey.error")).onClose(this::hide).show();
             }
 
         });

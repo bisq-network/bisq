@@ -22,12 +22,17 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
+
+import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -51,29 +56,12 @@ import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
 import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
-    private SendFilterMessageHandler sendFilterMessageHandler;
-    private RemoveFilterMessageHandler removeFilterMessageHandler;
     private final FilterManager filterManager;
     private final boolean useDevPrivilegeKeys;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    public interface SendFilterMessageHandler {
-        boolean handle(Filter filter, String privKey);
-    }
-
-    public interface RemoveFilterMessageHandler {
-        boolean handle(String privKey);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public FilterWindow(FilterManager filterManager, boolean useDevPrivilegeKeys) {
+    @Inject
+    public FilterWindow(FilterManager filterManager,
+                        @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.filterManager = filterManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
@@ -90,21 +78,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
         applyStyles();
         display();
     }
-
-    public FilterWindow onAddFilter(SendFilterMessageHandler sendFilterMessageHandler) {
-        this.sendFilterMessageHandler = sendFilterMessageHandler;
-        return this;
-    }
-
-    public FilterWindow onRemoveFilter(RemoveFilterMessageHandler removeFilterMessageHandler) {
-        this.removeFilterMessageHandler = removeFilterMessageHandler;
-        return this;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void setupKeyHandler(Scene scene) {
@@ -166,7 +139,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
-            if (sendFilterMessageHandler.handle(
+            if (filterManager.addFilterMessageIfKeyIsValid(
                     new Filter(
                             readAsList(offerIdsInputTextField),
                             readAsList(nodesInputTextField),
@@ -188,16 +161,16 @@ public class FilterWindow extends Overlay<FilterWindow> {
             )
                 hide();
             else
-                new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
         removeFilterMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
-                if (removeFilterMessageHandler.handle(keyInputTextField.getText()))
+                if (filterManager.removeFilterMessageIfKeyIsValid(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 

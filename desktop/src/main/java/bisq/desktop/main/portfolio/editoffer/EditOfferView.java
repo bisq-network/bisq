@@ -122,7 +122,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
     public void onClose() {
         model.onCancelEditOffer(errorMessage -> {
             log.error(errorMessage);
-            new Popup<>().warning(Res.get("editOffer.failed", errorMessage)).show();
+            new Popup().warning(Res.get("editOffer.failed", errorMessage)).show();
         });
     }
 
@@ -145,13 +145,13 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
         model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
-            new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
+            new Popup().warning(Res.get("editOffer.failed", errorMessage))
                     .onClose(this::close)
                     .show();
         });
 
         if (!model.isSecurityDepositValid()) {
-            new Popup<>().warning(Res.get("editOffer.invalidDeposit"))
+            new Popup().warning(Res.get("editOffer.invalidDeposit"))
                     .onClose(this::close)
                     .show();
         }
@@ -205,7 +205,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
                 //edit offer
                 model.onPublishOffer(() -> {
                     log.debug("Edit offer was successful");
-                    new Popup<>().feedback(Res.get("editOffer.success")).show();
+                    new Popup().feedback(Res.get("editOffer.success")).show();
                     spinnerInfoLabel.setText("");
                     busyAnimation.stop();
                     close();
@@ -215,7 +215,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
                     busyAnimation.stop();
                     model.isNextButtonDisabled.setValue(false);
                     cancelButton.setDisable(false);
-                    new Popup<>().warning(Res.get("editOffer.failed", message)).show();
+                    new Popup().warning(Res.get("editOffer.failed", message)).show();
                 });
             }
         });

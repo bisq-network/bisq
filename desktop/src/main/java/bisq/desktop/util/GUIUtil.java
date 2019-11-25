@@ -192,7 +192,7 @@ public class GUIUtil {
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-            new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
+            new Popup().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
                     .onClose(runnable)
                     .useIUnderstandButton()
                     .show();
@@ -214,10 +214,10 @@ public class GUIUtil {
                 Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
                 paymentAccountsStorage.queueUpForSave();
-                new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+                new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
             }
         } else {
-            new Popup<>().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
+            new Popup().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
         }
     }
 
@@ -254,10 +254,10 @@ public class GUIUtil {
                         }
                     });
                     user.addImportedPaymentAccounts(paymentAccounts);
-                    new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                    new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
-                    new Popup<>().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                    new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
                 }
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
@@ -289,7 +289,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
             }
         }
     }
@@ -305,7 +305,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
             }
         }
     }
@@ -606,7 +606,7 @@ public class GUIUtil {
 
         if (DontShowAgainLookup.showAgain(OPEN_WEB_PAGE_KEY)) {
             final String finalTarget = target;
-            new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
+            new Popup().information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
                         DontShowAgainLookup.dontShowAgain(OPEN_WEB_PAGE_KEY, true);
@@ -686,7 +686,7 @@ public class GUIUtil {
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
         final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
-        new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+        new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)
@@ -702,7 +702,7 @@ public class GUIUtil {
 
     public static boolean isBootstrappedOrShowPopup(P2PService p2PService) {
         if (!p2PService.isBootstrapped()) {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
             return false;
         }
 
@@ -715,12 +715,12 @@ public class GUIUtil {
         }
 
         if (!walletsSetup.hasSufficientPeersForBroadcast()) {
-            new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
+            new Popup().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
             return false;
         }
 
         if (!walletsSetup.isDownloadComplete()) {
-            new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
+            new Popup().information(Res.get("popup.warning.downloadNotComplete")).show();
             return false;
         }
 
@@ -729,17 +729,17 @@ public class GUIUtil {
 
     public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
         if (!user.hasAcceptedRefundAgents()) {
-            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+            new Popup().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
             return false;
         }
 
         if (!user.hasAcceptedMediators()) {
-            new Popup<>().warning(Res.get("popup.warning.noMediatorsAvailable")).show();
+            new Popup().warning(Res.get("popup.warning.noMediatorsAvailable")).show();
             return false;
         }
 
         if (user.currentPaymentAccountProperty().get() == null) {
-            new Popup<>().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
+            new Popup().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
                     .instruction(Res.get("popup.warning.noTradingAccountSetup.msg"))
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
@@ -753,7 +753,7 @@ public class GUIUtil {
     }
 
     public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, CoinFormatter btcFormatter) {
-        new Popup<>().warning(Res.get("popup.warning.burnBTC", btcFormatter.formatCoinWithCode(miningFee),
+        new Popup().warning(Res.get("popup.warning.burnBTC", btcFormatter.formatCoinWithCode(miningFee),
                 btcFormatter.formatCoinWithCode(amount))).show();
     }
 
@@ -763,7 +763,7 @@ public class GUIUtil {
 
     public static void reSyncSPVChain(Preferences preferences) {
         try {
-            new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+            new Popup().feedback(Res.get("settings.net.reSyncSPVSuccess"))
                     .useShutDownButton()
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
@@ -773,7 +773,7 @@ public class GUIUtil {
                     .hideCloseButton()
                     .show();
         } catch (Throwable t) {
-            new Popup<>().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
+            new Popup().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
         }
     }
 
@@ -781,18 +781,18 @@ public class GUIUtil {
         try {
             FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
         } catch (Throwable t) {
-            new Popup<>().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
+            new Popup().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
         }
         walletsManager.restoreSeedWords(
                 seed,
                 () -> UserThread.execute(() -> {
                     log.info("Wallets restored with seed words");
-                    new Popup<>().feedback(Res.get("seed.restore.success")).hideCloseButton().show();
+                    new Popup().feedback(Res.get("seed.restore.success")).hideCloseButton().show();
                     BisqApp.getShutDownHandler().run();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.toString());
-                    new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
+                    new Popup().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
                             .show();
                 }));
     }
@@ -928,7 +928,7 @@ public class GUIUtil {
                     txSize / 1000d,
                     type);
         }
-        new Popup<>().headLine(Res.get("dao.feeTx.confirm", type))
+        new Popup().headLine(Res.get("dao.feeTx.confirm", type))
                 .confirmation(confirmationMessage)
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(actionHandler)
@@ -957,7 +957,7 @@ public class GUIUtil {
         tableView.setVisible(false);
         // We need to delay the setter to the next render frame as otherwise views don' get updated in some cases
         // Not 100% clear what causes that issue, but seems the requestLayout method is not called otherwise.
-        // We still need to set the height immediately, otherwise some views render a incorrect layout.
+        // We still need to set the height immediately, otherwise some views render an incorrect layout.
         tableView.setPrefHeight(height);
 
         UserThread.execute(() -> {

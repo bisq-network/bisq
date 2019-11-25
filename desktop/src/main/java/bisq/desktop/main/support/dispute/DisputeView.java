@@ -280,7 +280,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 });
                 String message = stringBuilder.toString();
                 // We don't translate that as it is not intended for the public
-                new Popup<>().headLine("All disputes (" + disputeGroups.size() + ")")
+                new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
                         .information(message)
                         .width(1000)
                         .actionButtonText("Copy")
@@ -302,9 +302,12 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     else
                         nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
 
-                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress, useDevPrivilegeKeys)
-                            .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
-                            .show();
+                    new SendPrivateNotificationWindow(
+                            privateNotificationManager,
+                            pubKeyRing,
+                            nodeAddress,
+                            useDevPrivilegeKeys
+                    ).show();
                 }
             } else {
                 handleKeyPressed(event);
@@ -467,7 +470,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
                     .show(dispute);
         } else {
-            new Popup<>()
+            new Popup()
                     .warning(Res.get("support.wrongVersion", protocolVersion))
                     .show();
         }

@@ -37,7 +37,7 @@ Anyone may participate in peer review which is expressed by comments in the pull
  - `Concept ACK` means "I agree in the general principle of this pull request";
  - `Nit` refers to trivial, often non-blocking issues.
 
-Please note that Pull Requests marked `NACK` and/or Github's `Change requested` are closed after 30 days if not addressed.
+Please note that Pull Requests marked `NACK` and/or GitHub's `Change requested` are closed after 30 days if not addressed.
 
 
 ## Compensation

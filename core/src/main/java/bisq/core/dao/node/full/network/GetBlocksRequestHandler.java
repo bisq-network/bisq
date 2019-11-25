@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Accepts a GetBlocksRequest from a lite nodes and send back a corresponding GetBlocksResponse.
+ * Accepts a GetBlocksRequest from a lite node and sends back a corresponding GetBlocksResponse.
  */
 @Slf4j
 class GetBlocksRequestHandler {

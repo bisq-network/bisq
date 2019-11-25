@@ -219,7 +219,7 @@ public class JapanBankTransferForm extends PaymentMethodForm
                 String bankNameFull = StringUtils.substringAfter(bank, JapanBankData.SPACE);
                 if (bankNameFull != null)
                 {
-                    // parse beginning as japanese bank name
+                    // parse beginning as Japanese bank name
                     String bankNameJa = StringUtils.substringBefore(bankNameFull, JapanBankData.SPACE);
                     if (bankNameJa != null)
                     {

@@ -275,7 +275,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup<>().information(Res.get("settings.net.needRestart"))
+                new Popup().information(Res.get("settings.net.needRestart"))
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
@@ -378,7 +378,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     }
 
     private void showShutDownPopup() {
-        new Popup<>()
+        new Popup()
                 .information(Res.get("settings.net.needRestart"))
                 .closeButtonText(Res.get("shared.cancel"))
                 .useShutDownButton()
@@ -401,7 +401,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                 btcNodesLabel.setDisable(false);
                 if (calledFromUser && !btcNodesInputTextField.getText().isEmpty()) {
                     if (isPreventPublicBtcNetwork()) {
-                        new Popup<>().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
+                        new Popup().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
                                 .onAction(() -> {
                                     UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
                                 }).show();
@@ -414,7 +414,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                 btcNodesInputTextField.setDisable(true);
                 btcNodesLabel.setDisable(true);
                 if (calledFromUser)
-                    new Popup<>()
+                    new Popup()
                             .warning(Res.get("settings.net.warn.usePublicNodes"))
                             .actionButtonText(Res.get("settings.net.warn.usePublicNodes.useProvided"))
                             .onAction(() -> {

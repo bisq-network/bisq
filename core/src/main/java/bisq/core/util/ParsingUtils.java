@@ -61,7 +61,7 @@ public class ParsingUtils {
     }
 
     public static String convertCharsForNumber(String input) {
-        // Some languages like finnish use the long dash for the minus
+        // Some languages like Finnish use the long dash for the minus
         input = input.replace("−", "-");
         input = StringUtils.deleteWhitespace(input);
         return input.replace(",", ".");

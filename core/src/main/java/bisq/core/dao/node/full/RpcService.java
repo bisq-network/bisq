@@ -155,7 +155,7 @@ public class RpcService {
                 this.client = client;
             } catch (BitcoindException | CommunicationException e) {
                 if (e instanceof CommunicationException)
-                    log.error("Probably Bitcoin core is not running or the rpc port is not set correctly. rpcPort=" + rpcPort);
+                    log.error("Probably Bitcoin Core is not running or the rpc port is not set correctly. rpcPort=" + rpcPort);
                 log.error(e.toString());
                 e.printStackTrace();
                 log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");

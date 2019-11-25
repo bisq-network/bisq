@@ -115,7 +115,7 @@ public class BondingViewUtils {
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
                     String duration = FormattingUtils.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
-                    new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
+                    new Popup().headLine(Res.get("dao.bond.reputation.lockup.headline"))
                             .confirmation(Res.get("dao.bond.reputation.lockup.details",
                                     bsqFormatter.formatCoinWithCode(lockupAmount),
                                     lockupTime,
@@ -131,7 +131,7 @@ public class BondingViewUtils {
                 } catch (Throwable e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                    new Popup<>().warning(e.getMessage()).show();
+                    new Popup().warning(e.getMessage()).show();
                 }
             } else {
                 publishLockupTx(lockupAmount, lockupTime, lockupReason, hash, resultHandler);
@@ -146,7 +146,7 @@ public class BondingViewUtils {
                 hash,
                 txId -> {
                     if (!DevEnv.isDevMode())
-                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
+                        new Popup().feedback(Res.get("dao.tx.published.success")).show();
 
                     if (resultHandler != null)
                         resultHandler.accept(txId);
@@ -173,7 +173,7 @@ public class BondingViewUtils {
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
                     String duration = FormattingUtils.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
-                    new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
+                    new Popup().headLine(Res.get("dao.bond.reputation.unlock.headline"))
                             .confirmation(Res.get("dao.bond.reputation.unlock.details",
                                     bsqFormatter.formatCoinWithCode(unlockAmount),
                                     lockTime,
@@ -192,7 +192,7 @@ public class BondingViewUtils {
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
-                new Popup<>().warning(t.getMessage()).show();
+                new Popup().warning(t.getMessage()).show();
             }
         }
         log.info("unlock tx: {}", lockupTxId);
@@ -202,12 +202,12 @@ public class BondingViewUtils {
         daoFacade.publishUnlockTx(lockupTxId,
                 txId -> {
                     if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                        new Popup().confirmation(Res.get("dao.tx.published.success")).show();
 
                     if (resultHandler != null)
                         resultHandler.accept(txId);
                 },
-                errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
+                errorMessage -> new Popup().warning(errorMessage.toString()).show()
         );
     }
 
@@ -215,14 +215,14 @@ public class BondingViewUtils {
         if (throwable instanceof InsufficientMoneyException) {
             final Coin missingCoin = ((InsufficientMoneyException) throwable).missing;
             final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-            new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
+            new Popup().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
         } else {
             log.error(throwable.toString());
             throwable.printStackTrace();
-            new Popup<>().warning(throwable.toString()).show();
+            new Popup().warning(throwable.toString()).show();
         }
     }
 }

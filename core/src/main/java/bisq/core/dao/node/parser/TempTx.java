@@ -32,7 +32,7 @@ import lombok.Data;
 import javax.annotation.Nullable;
 
 /**
- * Used only only temporary during the transaction parsing process to support mutable data while parsing.
+ * Used only temporary during the transaction parsing process to support mutable data while parsing.
  * After parsing it will get cloned to the immutable Tx.
  * We don't need to implement the ProtoBuffer methods as it is not persisted or sent over the wire.
  */

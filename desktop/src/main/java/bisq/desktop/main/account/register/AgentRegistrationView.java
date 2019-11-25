@@ -244,7 +244,7 @@ public abstract class AgentRegistrationView<R extends DisputeAgent, T extends Ag
         model.onRemoveLanguage(locale);
 
         if (languagesListView.getItems().size() == 0) {
-            new Popup<>().warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
+            new Popup().warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
             model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode());
         }
     }
@@ -252,8 +252,8 @@ public abstract class AgentRegistrationView<R extends DisputeAgent, T extends Ag
     private void onRevoke() {
         if (model.isBootstrappedOrShowPopup()) {
             model.onRevoke(
-                    () -> new Popup<>().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
-                    (errorMessage) -> new Popup<>().error(Res.get("account.arbitratorRegistration.removedFailed",
+                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.removedFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
         }
     }
@@ -261,8 +261,8 @@ public abstract class AgentRegistrationView<R extends DisputeAgent, T extends Ag
     private void onRegister() {
         if (model.isBootstrappedOrShowPopup()) {
             model.onRegister(
-                    () -> new Popup<>().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
-                    (errorMessage) -> new Popup<>().error(Res.get("account.arbitratorRegistration.registerFailed",
+                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.registerFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
         }
     }

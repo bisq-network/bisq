@@ -265,7 +265,7 @@ public class TxParser {
             } else {
                 log.warn("It can be that we have a opReturn which is correct from its structure but the whole tx " +
                         "in not valid as the issuanceCandidate in not there. " +
-                        "As the BSQ fee is set it must be either a buggy tx or an manually crafted invalid tx.");
+                        "As the BSQ fee is set it must be either a buggy tx or a manually crafted invalid tx.");
                 // Even though the request part if invalid the BSQ transfer and change output should still be valid
                 // as long as the BSQ change <= BSQ inputs.
                 // We tolerate such an incorrect tx and do not burn the BSQ
@@ -373,7 +373,7 @@ public class TxParser {
      *
      * @param tempTx               The temporary transaction.
      * @param optionalOpReturnType The optional OP_RETURN type of the transaction.
-     * @param hasBurntBSQ          If the have been remaining value from the inputs which got not spent in outputs.
+     * @param hasBurntBSQ          If there have been remaining value from the inputs which got not spent in outputs.
      *                             Might be valid BSQ fees or burned BSQ from an invalid tx.
      * @return The type of the transaction, if it is relevant to bisq.
      */

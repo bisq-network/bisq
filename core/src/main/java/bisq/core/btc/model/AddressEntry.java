@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Every trade use a addressEntry with a dedicated address for all transactions related to the trade.
+ * Every trade uses a addressEntry with a dedicated address for all transactions related to the trade.
  * That way we have a kind of separated trade wallet, isolated from other transactions and avoiding coin merge.
  * If we would not avoid coin merge the user would lose privacy between trades.
  */
@@ -60,7 +60,7 @@ public final class AddressEntry implements PersistablePayload {
 
     // keyPair can be null in case the object is created from deserialization as it is transient.
     // It will be restored when the wallet is ready at setDeterministicKey
-    // So after startup it never must be null
+    // So after startup it must never be null
 
     @Nullable
     @Getter

@@ -223,7 +223,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         Coin maxTradeLimitSecondMonth = maxTradeLimitAsCoin.divide(2L);
         Coin maxTradeLimitFirstMonth = maxTradeLimitAsCoin.divide(4L);
         if (paymentAccount instanceof F2FAccount) {
-            new Popup<>().information(Res.get("payment.f2f.info"))
+            new Popup().information(Res.get("payment.f2f.info"))
                     .width(700)
                     .closeButtonText(Res.get("payment.f2f.info.openURL"))
                     .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/trading-rules.html#f2f-trading"))
@@ -232,7 +232,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .show();
         } else if (paymentAccount instanceof HalCashAccount) {
             // HalCash has no chargeback risk so we don't show the text from payment.limits.info.
-            new Popup<>().information(Res.get("payment.halCash.info"))
+            new Popup().information(Res.get("payment.halCash.info"))
                     .width(700)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
@@ -248,7 +248,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 initialLimit = formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT);
             }
 
-            new Popup<>().information(Res.get(limitsInfoKey,
+            new Popup().information(Res.get(limitsInfoKey,
                     initialLimit,
                     formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
                     formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
@@ -258,42 +258,42 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .onAction(() -> {
                         final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
                         if (paymentAccount instanceof ClearXchangeAccount) {
-                            new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof WesternUnionAccount) {
-                            new Popup<>().information(Res.get("payment.westernUnion.info"))
+                            new Popup().information(Res.get("payment.westernUnion.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof MoneyGramAccount) {
-                            new Popup<>().information(Res.get("payment.moneyGram.info"))
+                            new Popup().information(Res.get("payment.moneyGram.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof CashDepositAccount) {
-                            new Popup<>().information(Res.get("payment.cashDeposit.info"))
+                            new Popup().information(Res.get("payment.cashDeposit.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof RevolutAccount) {
-                            new Popup<>().information(Res.get("payment.revolut.info"))
+                            new Popup().information(Res.get("payment.revolut.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof USPostalMoneyOrderAccount) {
-                            new Popup<>().information(Res.get("payment.usPostalMoneyOrder.info"))
+                            new Popup().information(Res.get("payment.usPostalMoneyOrder.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
@@ -313,7 +313,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
-            new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
+            new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
         }
     }
 

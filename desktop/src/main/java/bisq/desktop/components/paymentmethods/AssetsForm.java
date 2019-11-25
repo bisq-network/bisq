@@ -113,7 +113,7 @@ public class AssetsForm extends PaymentMethodForm {
         tradeInstantCheckBox.setOnAction(e -> {
             tradeInstant = tradeInstantCheckBox.isSelected();
             if (tradeInstant)
-                new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
+                new Popup().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
         });
 
         gridPane.getChildren().remove(tradeInstantCheckBox);

@@ -153,7 +153,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 seedWordsValid, seedWordsEdited));
 
         restoreButton.setOnAction(e -> {
-            new Popup<>().information(Res.get("account.seed.restore.info"))
+            new Popup().information(Res.get("account.seed.restore.info"))
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("account.seed.restore.ok"))
                     .onAction(this::onRestore)
@@ -172,7 +172,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         } else {
             String key = "showSeedWordsWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                new Popup<>().warning(Res.get("account.seed.warn.noPw.msg"))
+                new Popup().warning(Res.get("account.seed.warn.noPw.msg"))
                         .actionButtonText(Res.get("account.seed.warn.noPw.yes"))
                         .onAction(() -> {
                             DontShowAgainLookup.dontShowAgain(key, true);
@@ -226,7 +226,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup<>().warning(Res.get("seed.warn.walletNotEmpty.msg"))
+            new Popup().warning(Res.get("seed.warn.walletNotEmpty.msg"))
                     .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
                     .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
@@ -238,7 +238,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup<>().information(Res.get("seed.warn.notEncryptedAnymore"))
+            new Popup().information(Res.get("seed.warn.notEncryptedAnymore"))
                     .closeButtonText(Res.get("shared.no"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)

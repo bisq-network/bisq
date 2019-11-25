@@ -299,7 +299,7 @@ public class DaoFacade implements DaoSetupService {
         return ProposalConsensus.getFee(daoStateService, chainHeight);
     }
 
-    // Publish proposal tx, proposal payload and and persist it to myProposalList
+    // Publish proposal tx, proposal payload and persist it to myProposalList
     public void publishMyProposal(Proposal proposal, Transaction transaction, ResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
         myProposalListService.publishTxAndPayload(proposal, transaction, resultHandler, errorMessageHandler);
@@ -393,7 +393,7 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Presentation of phases
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
     // next block which would be already the next phase we hide that last block to the user and add it to the break.
     public int getFirstBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
         int firstBlock = periodService.getFirstBlockOfPhase(height, phase);
@@ -422,7 +422,7 @@ public class DaoFacade implements DaoSetupService {
         return firstBlock;
     }
 
-    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
     // next block which would be already the next phase we hide that last block to the user and add it to the break.
     public int getLastBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
         int lastBlock = periodService.getLastBlockOfPhase(height, phase);

@@ -113,7 +113,7 @@ public class RequestBlocksHandler implements MessageListener {
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                             if (!stopped) {
-                                String errorMessage = "A timeout occurred at sending getBlocksRequest:" + getBlocksRequest +
+                                String errorMessage = "A timeout occurred when sending getBlocksRequest:" + getBlocksRequest +
                                         " on peersNodeAddress:" + nodeAddress;
                                 log.debug(errorMessage + " / RequestDataHandler=" + RequestBlocksHandler.this);
                                 handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
@@ -135,7 +135,7 @@ public class RequestBlocksHandler implements MessageListener {
                         log.info("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
-                                "Might be caused by an previous timeout.");
+                                "Might be caused by a previous timeout.");
                     }
                 }
 
@@ -150,7 +150,7 @@ public class RequestBlocksHandler implements MessageListener {
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
-                                "Might be caused by an previous timeout.");
+                                "Might be caused by a previous timeout.");
                     }
                 }
             });

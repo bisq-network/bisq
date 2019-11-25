@@ -299,7 +299,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
-            new Popup<>().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
+            new Popup().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
                     .instruction(Res.get("popup.warning.noTradingAccountSetup.msg"))
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
@@ -332,7 +332,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             model.getDataModel().swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
             if (preferences.showAgain(key)) {
-                new Popup<>().information(Res.get("createOffer.alreadyFunded"))
+                new Popup().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                         .dontShowAgainId(key)
@@ -379,7 +379,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
-            new Popup<>().warning(message)
+            new Popup().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
                     .show();
@@ -417,7 +417,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                         model.getTradeFee(),
                         model.getTxFee()
                 );
-                new Popup<>().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
+                new Popup().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
                         .instruction(message)
                         .dontShowAgainId(key)
                         .show();
@@ -440,7 +440,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         if (!DevEnv.isDevMode()) {
             String key = "securityDepositInfo";
-            new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
+            new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bisq.network/faq#6"))
                     .useIUnderstandButton()
@@ -704,7 +704,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
-                UserThread.runAfter(() -> new Popup<>().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
+                UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
 
@@ -724,7 +724,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups
                 String key = "createOfferSuccessInfo";
                 if (DontShowAgainLookup.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup<>().headLine(Res.get("createOffer.success.headline"))
+                    UserThread.runAfter(() -> new Popup().headLine(Res.get("createOffer.success.headline"))
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
@@ -1218,7 +1218,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         cancelButton2.setOnAction(e -> {
             if (model.getDataModel().getIsBtcWalletFunded().get()) {
-                new Popup<>().warning(Res.get("createOffer.warnCancelOffer"))
+                new Popup().warning(Res.get("createOffer.warnCancelOffer"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
@@ -1240,7 +1240,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup<>().warning(Res.get("shared.openDefaultWalletFailed")).show();
+            new Popup().warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 

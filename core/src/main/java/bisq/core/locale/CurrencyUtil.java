@@ -332,7 +332,7 @@ public class CurrencyUtil {
      *
      * As we use a boolean result for isCryptoCurrency and isFiatCurrency we do not treat missing currencies correctly.
      * To throw an exception might be an option but that will require quite a lot of code change, so we don't do that
-     * for the moment, but could be considered for the future. Another maybe better option is to introduce a enum which
+     * for the moment, but could be considered for the future. Another maybe better option is to introduce an enum which
      * contains 3 entries (CryptoCurrency, Fiat, Undefined).
      */
     public static boolean isCryptoCurrency(String currencyCode) {
@@ -483,7 +483,7 @@ public class CurrencyUtil {
             return optionalAsset;
         }
 
-        // If we are in mainnet we need have a mainet asset defined.
+        // If we are in mainnet we need have a mainnet asset defined.
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
     }
 

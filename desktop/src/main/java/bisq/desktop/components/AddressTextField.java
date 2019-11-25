@@ -111,7 +111,7 @@ public class AddressTextField extends AnchorPane {
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception e) {
             log.warn(e.getMessage());
-            new Popup<>().warning(Res.get("addressTextField.openWallet.failed")).show();
+            new Popup().warning(Res.get("addressTextField.openWallet.failed")).show();
         }
     }
 

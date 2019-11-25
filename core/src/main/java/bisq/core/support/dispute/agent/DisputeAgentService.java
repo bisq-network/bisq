@@ -110,7 +110,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
             if (!map.containsKey(disputeAgentNodeAddress))
                 map.put(disputeAgentNodeAddress, disputeAgent);
             else
-                log.warn("disputeAgentAddress already exist in disputeAgent map. Seems an disputeAgent object is already registered with the same address.");
+                log.warn("disputeAgentAddress already exists in disputeAgent map. Seems a disputeAgent object is already registered with the same address.");
         }
         return map;
     }

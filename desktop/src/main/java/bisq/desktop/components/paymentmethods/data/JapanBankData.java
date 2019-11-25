@@ -52,7 +52,7 @@ public class JapanBankData
        Returns the main list of ~500 banks in Japan with bank codes,
        but since 90%+ of people will be using one of ~30 major banks,
        we hard-code those at the top for easier pull-down selection,
-       and add their English names in paranthesis for foreigners.
+       and add their English names in parenthesis for foreigners.
     */
     public static List<String> prettyPrintBankList() // {{{
     {
@@ -863,11 +863,11 @@ public class JapanBankData
                 if (ja) return "入力は漢字、ひらがな、またはカタカナでなければなりません";
                 return "Input must be Kanji, Hiragana, or Katakana";
             case "japanese.validation.regex":
-                // epic regex to only match japanese input
-                return "[" + // match any of the these characters:
+                // epic regex to only match Japanese input
+                return "[" + // match any of these characters:
                 // "Ａ-ｚ" + // full-width alphabet
                 // "０-９" + // full-width numerals
-                "一-龯" + // all japanese kanji (0x4e00 ~ 0x9fcf)
+                "一-龯" + // all Japanese kanji (0x4e00 ~ 0x9fcf)
                 "ぁ-ゔ" + // full-width hiragana (0x3041 ~ 0x3094)
                 "ァ-・" + // full-width katakana (0x30a1 ~ 0x30fb)
                 "ぁ-ゞ" + // half-width hiragana

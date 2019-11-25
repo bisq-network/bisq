@@ -206,7 +206,7 @@ public class TradeWalletService {
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee + burned BSQ fee
 
-        // In case of txs for burned BSQ fees we have no receiver output and it might be that there is no change outputs
+        // In case of txs for burned BSQ fees we have no receiver output and it might be that there are no change outputs
         // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
         // for BTC to force an additional change output.
 
@@ -273,7 +273,7 @@ public class TradeWalletService {
 
     // We construct the deposit transaction in the way that the buyer is always the first entry (inputs, outputs, MS keys) and then the seller.
     // In the creation of the deposit tx the taker/maker roles are the determining roles instead of buyer/seller.
-    // In the payout tx is is the buyer/seller role. We keep the buyer/seller ordering over all transactions to not get confusion with ordering,
+    // In the payout tx it is the buyer/seller role. We keep the buyer/seller ordering over all transactions to not get confusion with ordering,
     // which is important to follow correctly specially for the order of the MS keys.
 
 
@@ -437,7 +437,7 @@ public class TradeWalletService {
         List<TransactionInput> makerInputs = dummyTx.getInputs();
         TransactionOutput makerOutput = null;
 
-        // We don't support more then 1 optional change output
+        // We don't support more than 1 optional change output
         checkArgument(dummyTx.getOutputs().size() < 3, "dummyTx.getOutputs().size() >= 3");
 
         // Only save change outputs, the dummy output is ignored (that's why we start with index 1)
@@ -457,14 +457,14 @@ public class TradeWalletService {
             }
 
             // Add seller inputs
-            // the sellers input is not signed so we attach empty script bytes
+            // the seller's input is not signed so we attach empty script bytes
             for (RawTransactionInput rawTransactionInput : takerRawTransactionInputs)
                 preparedDepositTx.addInput(getTransactionInput(preparedDepositTx, new byte[]{}, rawTransactionInput));
         } else {
             // taker is buyer role
 
             // Add buyer inputs
-            // the sellers input is not signed so we attach empty script bytes
+            // the seller's input is not signed so we attach empty script bytes
             for (RawTransactionInput rawTransactionInput : takerRawTransactionInputs)
                 preparedDepositTx.addInput(getTransactionInput(preparedDepositTx, new byte[]{}, rawTransactionInput));
 
@@ -1012,7 +1012,7 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    // Emergency payout tool. Used only in cased when the payput from the arbitrator does not work because some data
+    // Emergency payout tool. Used only in cased when the payout from the arbitrator does not work because some data
     // in the trade/dispute are messed up.
     // We keep here arbitratorPayoutAmount just in case (requires cooperation from peer anyway)
     public Transaction emergencySignAndPublishPayoutTxFrom2of3MultiSig(String depositTxHex,
@@ -1297,7 +1297,7 @@ public class TradeWalletService {
                                                     Address changeAddress) throws WalletException {
         SendRequest sendRequest = null;
         try {
-            // Lets let the framework do the work to find the right inputs
+            // Let the framework do the work to find the right inputs
             sendRequest = SendRequest.forTx(transaction);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;

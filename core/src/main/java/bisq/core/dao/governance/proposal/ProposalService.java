@@ -159,7 +159,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        // We try to broadcast at any  block in the break1 phase. If we have received the data already we do not
+        // We try to broadcast at any block in the break1 phase. If we have received the data already we do not
         // broadcast so we do not flood the network.
         if (periodService.isInPhase(block.getHeight(), DaoPhase.Phase.BREAK1)) {
             // We only republish if we are completed with parsing old blocks, otherwise we would republish old
@@ -171,7 +171,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void onParseBlockChainComplete() {
-        // Fill the lists with the data we have collected in out stores.
+        // Fill the lists with the data we have collected in our stores.
         fillListFromProtectedStore();
         fillListFromAppendOnlyDataStore();
     }

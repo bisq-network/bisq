@@ -561,7 +561,7 @@ public class PopOver extends PopupControl {
      * Sets the value of the detached property.
      *
      * @param detached
-     *            if true the pop over will change its apperance to "detached"
+     *            if true the pop over will change its appearance to "detached"
      *            mode
      *
      * @see #detachedProperty()

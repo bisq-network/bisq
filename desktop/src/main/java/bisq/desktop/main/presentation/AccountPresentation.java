@@ -82,7 +82,7 @@ public class AccountPresentation {
                     Res.get(s, optionalParam, Res.get("popup.accountSigning.generalInformation")) :
                     Res.get(s, Res.get("popup.accountSigning.generalInformation"));
 
-            new Popup<>().information(message)
+            new Popup().information(message)
                     .show();
         }
     }

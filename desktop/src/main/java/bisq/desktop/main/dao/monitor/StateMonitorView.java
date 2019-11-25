@@ -158,14 +158,14 @@ public abstract class StateMonitorView<StH extends StateHash,
                 newFileName = "BallotList_" + currentTime;
                 FileManager.removeAndBackupFile(storageDir, new File(storageDir, "BallotList"), newFileName, backupDirName);
 
-                daoFacade.resyncDao(() -> new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                daoFacade.resyncDao(() -> new Popup().attention(Res.get("setting.preferences.dao.resync.popup"))
                         .useShutDownButton()
                         .hideCloseButton()
                         .show());
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error(t.toString());
-                new Popup<>().error(t.toString()).show();
+                new Popup().error(t.toString()).show();
             }
         });
 

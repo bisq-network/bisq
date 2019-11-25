@@ -31,7 +31,7 @@ public class BankUtil {
     // BankName
     @SuppressWarnings("SameReturnValue")
     public static boolean isBankNameRequired(String countryCode) {
-        // Currently we always return true but lets keep that method to be more flexible in case we what to not show
+        // Currently we always return true but let's keep that method to be more flexible in case we what to not show
         // it at some new payment method.
         return true;
          /*
@@ -89,7 +89,7 @@ public class BankUtil {
     public static String getBankIdLabel(String countryCode) {
         switch (countryCode) {
             case "CA":
-                return "Institution Number";// do not translate as it is used in english only
+                return "Institution Number";// do not translate as it is used in English only
             case "MX":
             case "HK":
                 return Res.get("payment.bankCode");
@@ -122,15 +122,15 @@ public class BankUtil {
     public static String getBranchIdLabel(String countryCode) {
         switch (countryCode) {
             case "GB":
-                return "UK sort code"; // do not translate as it is used in english only
+                return "UK sort code"; // do not translate as it is used in English only
             case "US":
-                return "Routing Number"; // do not translate as it is used in english only
+                return "Routing Number"; // do not translate as it is used in English only
             case "BR":
-                return "Código da Agência"; // do not translate as it is used in portuguese only
+                return "Código da Agência"; // do not translate as it is used in Portuguese only
             case "AU":
-                return "BSB code"; // do not translate as it is used in english only
+                return "BSB code"; // do not translate as it is used in English only
             case "CA":
-                return "Transit Number"; // do not translate as it is used in english only
+                return "Transit Number"; // do not translate as it is used in English only
             default:
                 return isBranchIdRequired(countryCode) ? Res.get("payment.branchNr") : Res.get("payment.branchNrOptional");
         }
@@ -161,11 +161,11 @@ public class BankUtil {
             case "SE":
                 return "Kontonummer"; // do not translate as it is used in norwegian and swedish only
             case "MX":
-                return "CLABE"; // do not translate as it is used in spanish only
+                return "CLABE"; // do not translate as it is used in Spanish only
             case "CL":
-                return "Cuenta"; // do not translate as it is used in spanish only
+                return "Cuenta"; // do not translate as it is used in Spanish only
             case "AR":
-                return "Número de cuenta"; // do not translate as it is used in spanish only
+                return "Número de cuenta"; // do not translate as it is used in Spanish only
             default:
                 return Res.get("payment.accountNrLabel");
         }
@@ -221,11 +221,11 @@ public class BankUtil {
     public static String getHolderIdLabel(String countryCode) {
         switch (countryCode) {
             case "BR":
-                return "Cadastro de Pessoas Físicas (CPF)"; // do not translate as it is used in portuguese only
+                return "Cadastro de Pessoas Físicas (CPF)"; // do not translate as it is used in Portuguese only
             case "CL":
-                return "Rol Único Tributario (RUT)";  // do not translate as it is used in spanish only
+                return "Rol Único Tributario (RUT)";  // do not translate as it is used in Spanish only
             case "AR":
-                return "CUIL/CUIT"; // do not translate as it is used in spanish only
+                return "CUIL/CUIT"; // do not translate as it is used in Spanish only
             default:
                 return Res.get("payment.personalId");
         }
