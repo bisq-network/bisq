@@ -95,16 +95,9 @@ public class FileManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Actually write the wallet file to disk, using an atomic rename when possible. Runs on the current thread.
-     */
-    public void saveNow(T persistable) {
-        saveNowInternal(persistable);
-    }
-
-    /**
      * Queues up a save in the background. Useful for not very important wallet changes.
      */
-    public void saveLater(T persistable) {
+    void saveLater(T persistable) {
         saveLater(persistable, delay);
     }
 
@@ -133,7 +126,7 @@ public class FileManager<T extends PersistableEnvelope> {
         }
     }
 
-    public synchronized void removeFile(String fileName) {
+    synchronized void removeFile(String fileName) {
         File file = new File(dir, fileName);
         boolean result = file.delete();
         if (!result)
@@ -154,7 +147,7 @@ public class FileManager<T extends PersistableEnvelope> {
     /**
      * Shut down auto-saving.
      */
-    void shutDown() {
+    private void shutDown() {
         executor.shutdown();
         try {
             executor.awaitTermination(5, TimeUnit.SECONDS);
@@ -174,11 +167,11 @@ public class FileManager<T extends PersistableEnvelope> {
         FileUtil.renameFile(storageFile, corruptedFile);
     }
 
-    public synchronized void removeAndBackupFile(String fileName) throws IOException {
+    synchronized void removeAndBackupFile(String fileName) throws IOException {
         removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
     }
 
-    public synchronized void backupFile(String fileName, int numMaxBackupFiles) {
+    synchronized void backupFile(String fileName, int numMaxBackupFiles) {
         FileUtil.rollingBackup(dir, fileName, numMaxBackupFiles);
     }
 
