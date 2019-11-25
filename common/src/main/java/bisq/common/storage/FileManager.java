@@ -79,7 +79,9 @@ public class FileManager<T extends PersistableEnvelope> {
                 if (persistable == null)
                     return null;
 
-                saveNowInternal(persistable);
+                long now = System.currentTimeMillis();
+                saveToFile(persistable, dir, storageFile);
+                log.debug("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
             } catch (Throwable e) {
                 log.error("Error during saveFileTask", e);
             }
@@ -179,12 +181,6 @@ public class FileManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void saveNowInternal(T persistable) {
-        long now = System.currentTimeMillis();
-        saveToFile(persistable, dir, storageFile);
-        log.debug("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
-    }
 
     private synchronized void saveToFile(T persistable, File dir, File storageFile) {
         File tempFile = null;
