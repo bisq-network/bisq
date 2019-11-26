@@ -294,6 +294,10 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesRepository.getBonds();
     }
 
+    public List<BondedRole> getAcceptedBondedRoles() {
+        return bondedRolesRepository.getAcceptedBonds();
+    }
+
     // Show fee
     public Coin getProposalFee(int chainHeight) {
         return ProposalConsensus.getFee(daoStateService, chainHeight);
