@@ -39,7 +39,7 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 

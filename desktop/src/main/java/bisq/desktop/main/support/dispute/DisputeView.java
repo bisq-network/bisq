@@ -99,7 +99,6 @@ import java.util.Optional;
 
 import lombok.Getter;
 
-@FxmlView
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     protected final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;

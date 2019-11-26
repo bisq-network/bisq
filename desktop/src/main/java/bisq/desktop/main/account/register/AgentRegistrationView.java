@@ -19,7 +19,6 @@ package bisq.desktop.main.account.register;
 
 
 import bisq.desktop.common.view.ActivatableViewAndModel;
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TitledGroupBg;
@@ -37,8 +36,6 @@ import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
-
-import com.google.inject.name.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -70,7 +67,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 // TODO translation string keys should renamed to be more generic.
 // Lets do it for 1.1.7 the translator have time to add new string.
-@FxmlView
 public abstract class AgentRegistrationView<R extends DisputeAgent, T extends AgentRegistrationViewModel<R, ?>>
         extends ActivatableViewAndModel<VBox, T> {
 
@@ -89,7 +85,7 @@ public abstract class AgentRegistrationView<R extends DisputeAgent, T extends Ag
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AgentRegistrationView(T model, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public AgentRegistrationView(T model, boolean useDevPrivilegeKeys) {
         super(model);
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }

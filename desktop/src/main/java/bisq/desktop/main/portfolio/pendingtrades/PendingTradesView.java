@@ -47,7 +47,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 
