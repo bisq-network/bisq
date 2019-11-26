@@ -42,7 +42,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
-import bisq.network.p2p.storage.persistence.ProtectedDataStoreListener;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
@@ -126,7 +125,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
 
     private final Set<AppendOnlyDataStoreListener> appendOnlyDataStoreListeners = new CopyOnWriteArraySet<>();
-    private final Set<ProtectedDataStoreListener> protectedDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Clock clock;
 
     /// The maximum number of items that must exist in the SequenceNumberMap before it is scheduled for a purge
@@ -426,12 +424,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (allowBroadcast)
             broadcastProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner);
 
-        // Persist ProtectedStorageEntrys carrying PersistablePayload payloads and signal listeners on changes
-        if (protectedStoragePayload instanceof PersistablePayload) {
-            ProtectedStorageEntry previous = protectedDataStoreService.putIfAbsent(hashOfPayload, protectedStorageEntry);
-            if (previous == null)
-                protectedDataStoreListeners.forEach(e -> e.onAdded(protectedStorageEntry));
-        }
+        // Persist ProtectedStorageEntrys carrying PersistablePayload payloads
+        if (protectedStoragePayload instanceof PersistablePayload)
+            protectedDataStoreService.put(hashOfPayload, protectedStorageEntry);
 
         return true;
     }
@@ -632,17 +627,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         appendOnlyDataStoreListeners.remove(listener);
     }
 
-    @SuppressWarnings("unused")
-    public void addProtectedDataStoreListener(ProtectedDataStoreListener listener) {
-        protectedDataStoreListeners.add(listener);
-    }
-
-    @SuppressWarnings("unused")
-    public void removeProtectedDataStoreListener(ProtectedDataStoreListener listener) {
-        protectedDataStoreListeners.remove(listener);
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -668,11 +652,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             if (protectedStoragePayload instanceof PersistablePayload) {
                 ProtectedStorageEntry previous = protectedDataStoreService.remove(hashOfPayload, protectedStorageEntry);
-                if (previous != null) {
-                    protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
-                } else {
-                    log.info("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
-                }
+                if (previous == null)
+                    log.error("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
             }
         });
 
