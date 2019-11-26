@@ -78,7 +78,7 @@ public class MissingDataRequestService implements DaoSetupService {
         republishGovernanceDataHandler.sendRepublishRequest();
     }
 
-    // Can be triggered with shortcut ctrl+UP or alt+UP
+    // Can be triggered with shortcut ctrl+h, cmd+h or alt+h
     public void reRepublishAllGovernanceData() {
         // We only want to do it once in case we would get flooded with requests.
         if (!reRepublishAllGovernanceDataDone) {
