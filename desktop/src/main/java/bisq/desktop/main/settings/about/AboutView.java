@@ -20,7 +20,6 @@ package bisq.desktop.main.settings.about;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
@@ -51,8 +50,8 @@ public class AboutView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 4, Res.get("setting.about.aboutBisq"));
-        GridPane.setColumnSpan(titledGroupBg, 2);
+        addTitledGroupBg(root, gridRow, 4, Res.get("setting.about.aboutBisq"));
+
         Label label = addLabel(root, gridRow, Res.get("setting.about.about"), Layout.TWICE_FIRST_ROW_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
@@ -64,8 +63,8 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://bisq.network/source/bisq/blob/master/LICENSE");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.about.support"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 2);
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.support"), Layout.GROUP_DISTANCE);
+
         label = addLabel(root, gridRow, Res.get("setting.about.def"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
@@ -73,22 +72,20 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.contribute"), "https://bisq.network/contribute");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        final boolean isBtc = Res.getBaseCurrencyCode().equals("BTC");
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, isBtc ? 3 : 2, Res.get("setting.about.providers"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 2);
+        boolean isBtc = Res.getBaseCurrencyCode().equals("BTC");
+        addTitledGroupBg(root, ++gridRow, isBtc ? 3 : 2, Res.get("setting.about.providers"), Layout.GROUP_DISTANCE);
+
         label = addLabel(root, gridRow, Res.get(isBtc ? "setting.about.apisWithFee" : "setting.about.apis"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
-        GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders",
                 "BitcoinAverage (https://bitcoinaverage.com)",
                 "Poloniex (https://poloniex.com)",
                 "Coinmarketcap (https://coinmarketcap.com)"));
         if (isBtc)
-            addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "21 (https://bitcoinfees.earn.com)");
+            addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "Earn.com (https://bitcoinfees.earn.com)");
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 2);
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
         addCompactTopLabelTextField(root, gridRow, Res.get("setting.about.version"), Version.VERSION, Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(root, ++gridRow,
                 Res.get("setting.about.subsystems.label"),
