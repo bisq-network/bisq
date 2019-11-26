@@ -39,10 +39,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import static bisq.network.p2p.storage.TestState.*;
@@ -72,7 +69,7 @@ public class P2PDataStoreDisconnectTest {
         ProtectedStorageEntry protectedStorageEntry = beforeState.protectedStorageEntryBeforeOp;
 
         currentState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry,
-                wasRemoved, false, false, false);
+                wasRemoved, wasRemoved, false, false, false);
 
         if (wasTTLReduced)
             Assert.assertTrue(protectedStorageEntry.getCreationTimeStamp() < beforeState.creationTimestampBeforeUpdate);
@@ -173,7 +170,7 @@ public class P2PDataStoreDisconnectTest {
         class ExpirablePersistentProtectedStoragePayloadStub
                                          extends ExpirableProtectedStoragePayloadStub implements PersistablePayload {
 
-            public ExpirablePersistentProtectedStoragePayloadStub(PublicKey ownerPubKey) {
+            private ExpirablePersistentProtectedStoragePayloadStub(PublicKey ownerPubKey) {
                 super(ownerPubKey, 0);
             }
         }

@@ -52,6 +52,7 @@ import java.security.SignatureException;
 import java.math.BigInteger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -133,23 +134,27 @@ public class FilterManager {
 
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
-                public void onAdded(ProtectedStorageEntry data) {
-                    if (data.getProtectedStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getProtectedStoragePayload();
-                        boolean wasValid = addFilter(filter);
-                        if (!wasValid) {
-                            UserThread.runAfter(() -> p2PService.getP2PDataStorage().removeInvalidProtectedStorageEntry(data), 1);
+                public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                    protectedStorageEntries.forEach(protectedStorageEntry -> {
+                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            boolean wasValid = addFilter(filter);
+                            if (!wasValid) {
+                                UserThread.runAfter(() -> p2PService.getP2PDataStorage().removeInvalidProtectedStorageEntry(protectedStorageEntry), 1);
+                            }
                         }
-                    }
+                    });
                 }
 
                 @Override
-                public void onRemoved(ProtectedStorageEntry data) {
-                    if (data.getProtectedStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getProtectedStoragePayload();
-                        if (verifySignature(filter))
-                            resetFilters();
-                    }
+                public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                    protectedStorageEntries.forEach(protectedStorageEntry -> {
+                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            if (verifySignature(filter))
+                                resetFilters();
+                        }
+                    });
                 }
             });
         }

@@ -46,6 +46,7 @@ import java.security.SignatureException;
 import java.math.BigInteger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -131,18 +132,22 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     public void onAllServicesInitialized() {
         disputeAgentService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                if (isExpectedInstance(data)) {
-                    updateMap();
-                }
+            public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.forEach(protectedStorageEntry -> {
+                    if (isExpectedInstance(protectedStorageEntry)) {
+                        updateMap();
+                    }
+                });
             }
 
             @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                if (isExpectedInstance(data)) {
-                    updateMap();
-                    removeAcceptedDisputeAgentFromUser(data);
-                }
+            public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.forEach(protectedStorageEntry -> {
+                    if (isExpectedInstance(protectedStorageEntry)) {
+                        updateMap();
+                        removeAcceptedDisputeAgentFromUser(protectedStorageEntry);
+                    }
+                });
             }
         });
 

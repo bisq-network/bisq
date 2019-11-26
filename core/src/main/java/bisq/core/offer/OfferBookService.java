@@ -40,6 +40,7 @@ import javax.inject.Inject;
 
 import java.io.File;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -87,26 +88,30 @@ public class OfferBookService {
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getProtectedStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
-                        Offer offer = new Offer(offerPayload);
-                        offer.setPriceFeedService(priceFeedService);
-                        listener.onAdded(offer);
-                    }
+            public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.forEach(protectedStorageEntry -> {
+                    offerBookChangedListeners.stream().forEach(listener -> {
+                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
+                            OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
+                            Offer offer = new Offer(offerPayload);
+                            offer.setPriceFeedService(priceFeedService);
+                            listener.onAdded(offer);
+                        }
+                    });
                 });
             }
 
             @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getProtectedStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
-                        Offer offer = new Offer(offerPayload);
-                        offer.setPriceFeedService(priceFeedService);
-                        listener.onRemoved(offer);
-                    }
+            public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.forEach(protectedStorageEntry -> {
+                    offerBookChangedListeners.stream().forEach(listener -> {
+                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
+                            OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
+                            Offer offer = new Offer(offerPayload);
+                            offer.setPriceFeedService(priceFeedService);
+                            listener.onRemoved(offer);
+                        }
+                    });
                 });
             }
         });

@@ -36,7 +36,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,10 +46,9 @@ public class FileManager<T extends PersistableEnvelope> {
     private final File dir;
     private final File storageFile;
     private final ScheduledThreadPoolExecutor executor;
-    private final AtomicBoolean savePending;
     private final long delay;
     private final Callable<Void> saveFileTask;
-    private T persistable;
+    private final AtomicReference<T> nextWrite;
     private final PersistenceProtoResolver persistenceProtoResolver;
     private final ReentrantLock writeLock = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW).newReentrantLock("writeLock");
 
@@ -61,26 +60,28 @@ public class FileManager<T extends PersistableEnvelope> {
         this.dir = dir;
         this.storageFile = storageFile;
         this.persistenceProtoResolver = persistenceProtoResolver;
+        this.nextWrite = new AtomicReference<>(null);
 
         executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
 
         // File must only be accessed from the auto-save executor from now on, to avoid simultaneous access.
-        savePending = new AtomicBoolean();
         this.delay = delay;
 
         saveFileTask = () -> {
             try {
                 Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
-                // Runs in an auto save thread.
-                // TODO: this looks like it could cause corrupt data as the savePending is unset before the actual
-                // save. By moving to after the save there might be some persist operations that are not performed
-                // and data would be lost. Probably all persist operations should happen sequencially rather than
-                // skip one when there is already one scheduled
-                if (!savePending.getAndSet(false)) {
-                    // Some other scheduled request already beat us to it.
+
+                // Atomically take the next object to write and set the value to null so concurrent saveFileTask
+                // won't duplicate work.
+                T persistable = this.nextWrite.getAndSet(null);
+
+                // If null, a concurrent saveFileTask already grabbed the data. Don't duplicate work.
+                if (persistable == null)
                     return null;
-                }
-                saveNowInternal(persistable);
+
+                long now = System.currentTimeMillis();
+                saveToFile(persistable, dir, storageFile);
+                log.debug("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
             } catch (Throwable e) {
                 log.error("Error during saveFileTask", e);
             }
@@ -97,25 +98,19 @@ public class FileManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Actually write the wallet file to disk, using an atomic rename when possible. Runs on the current thread.
-     */
-    public void saveNow(T persistable) {
-        saveNowInternal(persistable);
-    }
-
-    /**
      * Queues up a save in the background. Useful for not very important wallet changes.
      */
-    public void saveLater(T persistable) {
+    void saveLater(T persistable) {
         saveLater(persistable, delay);
     }
 
     public void saveLater(T persistable, long delayInMilli) {
-        this.persistable = persistable;
+        // Atomically set the value of the next write. This allows batching of multiple writes of the same data
+        // structure if there are multiple calls to saveLater within a given `delayInMillis`.
+        this.nextWrite.set(persistable);
 
-        if (savePending.getAndSet(true))
-            return;   // Already pending.
-
+        // Always schedule a write. It is possible that a previous saveLater was called with a larger `delayInMilli`
+        // and we want the lower delay to execute. The saveFileTask handles concurrent operations.
         executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
@@ -134,7 +129,7 @@ public class FileManager<T extends PersistableEnvelope> {
         }
     }
 
-    public synchronized void removeFile(String fileName) {
+    synchronized void removeFile(String fileName) {
         File file = new File(dir, fileName);
         boolean result = file.delete();
         if (!result)
@@ -155,7 +150,7 @@ public class FileManager<T extends PersistableEnvelope> {
     /**
      * Shut down auto-saving.
      */
-    void shutDown() {
+    private void shutDown() {
         executor.shutdown();
         try {
             executor.awaitTermination(5, TimeUnit.SECONDS);
@@ -175,23 +170,17 @@ public class FileManager<T extends PersistableEnvelope> {
         FileUtil.renameFile(storageFile, corruptedFile);
     }
 
-    public synchronized void removeAndBackupFile(String fileName) throws IOException {
+    synchronized void removeAndBackupFile(String fileName) throws IOException {
         removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
     }
 
-    public synchronized void backupFile(String fileName, int numMaxBackupFiles) {
+    synchronized void backupFile(String fileName, int numMaxBackupFiles) {
         FileUtil.rollingBackup(dir, fileName, numMaxBackupFiles);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void saveNowInternal(T persistable) {
-        long now = System.currentTimeMillis();
-        saveToFile(persistable, dir, storageFile);
-        log.debug("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
-    }
 
     private synchronized void saveToFile(T persistable, File dir, File storageFile) {
         File tempFile = null;

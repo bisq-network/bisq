@@ -35,7 +35,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
-import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreListener;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
@@ -47,8 +46,10 @@ import bisq.common.storage.Storage;
 
 import java.security.PublicKey;
 
-import java.time.Clock;
-
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -63,51 +64,88 @@ import static org.mockito.Mockito.*;
  * Used in the P2PDataStorage*Test(s) in order to leverage common test set up and validation.
  */
 public class TestState {
-    final P2PDataStorage mockedStorage;
+    static final int MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE = 5;
+
+    P2PDataStorage mockedStorage;
     final Broadcaster mockBroadcaster;
 
     final AppendOnlyDataStoreListener appendOnlyDataStoreListener;
     private final ProtectedDataStoreListener protectedDataStoreListener;
-    final HashMapChangedListener hashMapChangedListener;
+    private final HashMapChangedListener hashMapChangedListener;
     private final Storage<SequenceNumberMap> mockSeqNrStorage;
+    private final ProtectedDataStoreService protectedDataStoreService;
     final ClockFake clockFake;
-
-    /**
-     * Subclass of P2PDataStorage that allows for easier testing, but keeps all functionality
-     */
-    static class P2PDataStorageForTest extends P2PDataStorage {
-
-        P2PDataStorageForTest(NetworkNode networkNode,
-                              Broadcaster broadcaster,
-                              AppendOnlyDataStoreService appendOnlyDataStoreService,
-                              ProtectedDataStoreService protectedDataStoreService,
-                              ResourceDataStoreService resourceDataStoreService,
-                              Storage<SequenceNumberMap> sequenceNumberMapStorage,
-                              Clock clock) {
-            super(networkNode, broadcaster, appendOnlyDataStoreService, protectedDataStoreService, resourceDataStoreService, sequenceNumberMapStorage, clock);
-
-            this.maxSequenceNumberMapSizeBeforePurge = 5;
-        }
-    }
 
     TestState() {
         this.mockBroadcaster = mock(Broadcaster.class);
         this.mockSeqNrStorage = mock(Storage.class);
         this.clockFake = new ClockFake();
+        this.protectedDataStoreService = new ProtectedDataStoreServiceFake();
 
-        this.mockedStorage = new P2PDataStorageForTest(mock(NetworkNode.class),
+        this.mockedStorage = new P2PDataStorage(mock(NetworkNode.class),
                 this.mockBroadcaster,
                 new AppendOnlyDataStoreServiceFake(),
-                new ProtectedDataStoreServiceFake(), mock(ResourceDataStoreService.class),
-                this.mockSeqNrStorage, this.clockFake);
+                this.protectedDataStoreService, mock(ResourceDataStoreService.class),
+                this.mockSeqNrStorage, this.clockFake, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
 
         this.appendOnlyDataStoreListener = mock(AppendOnlyDataStoreListener.class);
         this.protectedDataStoreListener = mock(ProtectedDataStoreListener.class);
         this.hashMapChangedListener = mock(HashMapChangedListener.class);
 
-        this.mockedStorage.addHashMapChangedListener(this.hashMapChangedListener);
-        this.mockedStorage.addAppendOnlyDataStoreListener(this.appendOnlyDataStoreListener);
-        this.mockedStorage.addProtectedDataStoreListener(this.protectedDataStoreListener);
+        this.mockedStorage = createP2PDataStorageForTest(
+                this.mockBroadcaster,
+                this.protectedDataStoreService,
+                this.mockSeqNrStorage,
+                this.clockFake,
+                this.hashMapChangedListener,
+                this.appendOnlyDataStoreListener,
+                this.protectedDataStoreListener);
+    }
+
+
+    /**
+     * Re-initializes the in-memory data structures from the storage objects to simulate a node restarting. Important
+     * to note that the current TestState uses Test Doubles instead of actual disk storage so this is just "simulating"
+     * not running the entire storage code paths.
+     */
+    void simulateRestart() {
+        when(this.mockSeqNrStorage.initAndGetPersisted(any(SequenceNumberMap.class), anyLong()))
+                .thenReturn(this.mockedStorage.sequenceNumberMap);
+
+        this.mockedStorage = createP2PDataStorageForTest(
+                this.mockBroadcaster,
+                this.protectedDataStoreService,
+                this.mockSeqNrStorage,
+                this.clockFake,
+                this.hashMapChangedListener,
+                this.appendOnlyDataStoreListener,
+                this.protectedDataStoreListener);
+    }
+
+    private static P2PDataStorage createP2PDataStorageForTest(
+            Broadcaster broadcaster,
+            ProtectedDataStoreService protectedDataStoreService,
+            Storage<SequenceNumberMap> sequenceNrMapStorage,
+            ClockFake clock,
+            HashMapChangedListener hashMapChangedListener,
+            AppendOnlyDataStoreListener appendOnlyDataStoreListener,
+            ProtectedDataStoreListener protectedDataStoreListener) {
+
+        P2PDataStorage p2PDataStorage = new P2PDataStorage(mock(NetworkNode.class),
+                broadcaster,
+                new AppendOnlyDataStoreServiceFake(),
+                protectedDataStoreService, mock(ResourceDataStoreService.class),
+                sequenceNrMapStorage, clock, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
+
+        // Currently TestState only supports reading ProtectedStorageEntries off disk.
+        p2PDataStorage.readFromResources("unused");
+        p2PDataStorage.readPersisted();
+
+        p2PDataStorage.addHashMapChangedListener(hashMapChangedListener);
+        p2PDataStorage.addAppendOnlyDataStoreListener(appendOnlyDataStoreListener);
+        p2PDataStorage.addProtectedDataStoreListener(protectedDataStoreListener);
+
+        return p2PDataStorage;
     }
 
     private void resetState() {
@@ -177,7 +215,6 @@ public class TestState {
                                    boolean expectedStateChange,
                                    boolean expectedIsDataOwner) {
         P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
-        P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
 
         if (expectedStateChange) {
             Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getMap().get(hashMapHash));
@@ -187,14 +224,14 @@ public class TestState {
             // TODO: Should the behavior be identical between this and the HashMap listeners?
             // TODO: Do we want ot overwrite stale values in order to persist updated sequence numbers and timestamps?
             if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload && beforeState.protectedStorageEntryBeforeOpDataStoreMap == null) {
-                Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+                Assert.assertEquals(protectedStorageEntry, this.protectedDataStoreService.getMap().get(hashMapHash));
                 verify(this.protectedDataStoreListener).onAdded(protectedStorageEntry);
             } else {
-                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.protectedDataStoreService.getMap().get(hashMapHash));
                 verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             }
 
-            verify(this.hashMapChangedListener).onAdded(protectedStorageEntry);
+            verify(this.hashMapChangedListener).onAdded(Collections.singletonList(protectedStorageEntry));
 
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
             verify(this.mockBroadcaster).broadcast(captor.capture(), any(NodeAddress.class),
@@ -207,12 +244,12 @@ public class TestState {
             this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
         } else {
             Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
-            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.protectedDataStoreService.getMap().get(hashMapHash));
 
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
 
             // Internal state didn't change... nothing should be notified
-            verify(this.hashMapChangedListener, never()).onAdded(protectedStorageEntry);
+            verify(this.hashMapChangedListener, never()).onAdded(Collections.singletonList(protectedStorageEntry));
             verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
         }
@@ -220,42 +257,77 @@ public class TestState {
 
     void verifyProtectedStorageRemove(SavedTestState beforeState,
                                       ProtectedStorageEntry protectedStorageEntry,
-                                      boolean expectedStateChange,
-                                      boolean expectedBroadcastOnStateChange,
-                                      boolean expectedSeqNrWriteOnStateChange,
+                                      boolean expectedHashMapAndDataStoreUpdated,
+                                      boolean expectedListenersSignaled,
+                                      boolean expectedBroadcast,
+                                      boolean expectedSeqNrWrite,
                                       boolean expectedIsDataOwner) {
-        P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
-        P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
 
-        if (expectedStateChange) {
-            Assert.assertNull(this.mockedStorage.getMap().get(hashMapHash));
+        verifyProtectedStorageRemove(beforeState, Collections.singletonList(protectedStorageEntry),
+                expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast,
+                expectedSeqNrWrite, expectedIsDataOwner);
+    }
 
-            if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload) {
-                Assert.assertNull(this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+    void verifyProtectedStorageRemove(SavedTestState beforeState,
+                                      Collection<ProtectedStorageEntry> protectedStorageEntries,
+                                      boolean expectedHashMapAndDataStoreUpdated,
+                                      boolean expectedListenersSignaled,
+                                      boolean expectedBroadcast,
+                                      boolean expectedSeqNrWrite,
+                                      boolean expectedIsDataOwner) {
 
-                verify(this.protectedDataStoreListener).onRemoved(protectedStorageEntry);
-            }
+        // The default matcher expects orders to stay the same. So, create a custom matcher function since
+        // we don't care about the order.
+        if (expectedListenersSignaled) {
+            final ArgumentCaptor<Collection<ProtectedStorageEntry>> argument = ArgumentCaptor.forClass(Collection.class);
+            verify(this.hashMapChangedListener).onRemoved(argument.capture());
 
-            verify(this.hashMapChangedListener).onRemoved(protectedStorageEntry);
+            Set<ProtectedStorageEntry> actual = new HashSet<>(argument.getValue());
+            Set<ProtectedStorageEntry> expected = new HashSet<>(protectedStorageEntries);
 
-            if (expectedSeqNrWriteOnStateChange)
-                this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
+            // Ensure we didn't remove duplicates
+            Assert.assertEquals(protectedStorageEntries.size(), expected.size());
+            Assert.assertEquals(argument.getValue().size(), actual.size());
+            Assert.assertEquals(expected, actual);
+        } else {
+            verify(this.hashMapChangedListener, never()).onRemoved(any());
+            verify(this.protectedDataStoreListener, never()).onAdded(any());
+        }
 
-            if (expectedBroadcastOnStateChange) {
+        if (!expectedSeqNrWrite)
+            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
+
+        if (!expectedBroadcast)
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
+
+
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
+
+            if (expectedSeqNrWrite)
+                this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(
+                        protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
+
+            if (expectedBroadcast) {
                 if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
                     verify(this.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
                 else
                     verify(this.mockBroadcaster).broadcast(any(RemoveDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
             }
 
-        } else {
-            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
 
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
-            verify(this.hashMapChangedListener, never()).onAdded(protectedStorageEntry);
-            verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
-            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
-        }
+            if (expectedHashMapAndDataStoreUpdated) {
+                Assert.assertNull(this.mockedStorage.getMap().get(hashMapHash));
+
+                if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload) {
+                    Assert.assertNull(this.protectedDataStoreService.getMap().get(hashMapHash));
+
+                    verify(this.protectedDataStoreListener).onRemoved(protectedStorageEntry);
+                }
+            } else {
+                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
+            }
+        });
     }
 
     void verifyRefreshTTL(SavedTestState beforeState,
@@ -352,11 +424,10 @@ public class TestState {
         private SavedTestState(TestState testState, ProtectedStorageEntry protectedStorageEntry) {
             this(testState);
 
-            P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
-            this.protectedStorageEntryBeforeOpDataStoreMap = testState.mockedStorage.getProtectedDataStoreMap().get(storageHash);
-
             P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
             this.protectedStorageEntryBeforeOp = testState.mockedStorage.getMap().get(hashMapHash);
+            this.protectedStorageEntryBeforeOpDataStoreMap = testState.protectedDataStoreService.getMap().get(hashMapHash);
+
 
             this.creationTimestampBeforeUpdate = (this.protectedStorageEntryBeforeOp != null) ? this.protectedStorageEntryBeforeOp.getCreationTimeStamp() : 0;
         }

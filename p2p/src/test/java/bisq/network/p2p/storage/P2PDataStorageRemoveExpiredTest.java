@@ -32,6 +32,7 @@ import bisq.common.crypto.CryptoException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -66,7 +67,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false, false);
     }
 
     // TESTCASE: Correctly skips all PersistableNetworkPayloads since they are not expirable
@@ -92,7 +93,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false, false);
     }
 
     // TESTCASE: Correctly expires non-persistable entries that are expired
@@ -109,7 +110,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, true, false, false, false);
     }
 
     // TESTCASE: Correctly skips persistable entries that are not expired
@@ -123,7 +124,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false, false);
     }
 
     // TESTCASE: Correctly expires persistable entries that are expired
@@ -140,7 +141,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, true, false, false, false);
     }
 
     // TESTCASE: Ensure we try to purge old entries sequence number map when size exceeds the maximum size
@@ -149,17 +150,21 @@ public class P2PDataStorageRemoveExpiredTest {
     public void removeExpiredEntries_PurgeSeqNrMap() throws CryptoException, NoSuchAlgorithmException {
         final int initialClockIncrement = 5;
 
+        ArrayList<ProtectedStorageEntry> expectedRemoves = new ArrayList<>();
+
         // Add 4 entries to our sequence number map that will be purged
         KeyPair purgedOwnerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload purgedProtectedStoragePayload = new PersistableExpirableProtectedStoragePayloadStub(purgedOwnerKeys.getPublic(), 0);
         ProtectedStorageEntry purgedProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(purgedProtectedStoragePayload, purgedOwnerKeys);
+        expectedRemoves.add(purgedProtectedStorageEntry);
 
         Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE - 1; ++i) {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
             ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayloadStub(ownerKeys.getPublic(), 0);
             ProtectedStorageEntry tmpEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+            expectedRemoves.add(tmpEntry);
             Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(tmpEntry, TestState.getTestNodeAddress(), null, true));
         }
 
@@ -171,6 +176,7 @@ public class P2PDataStorageRemoveExpiredTest {
         KeyPair keepOwnerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload keepProtectedStoragePayload = new PersistableExpirableProtectedStoragePayloadStub(keepOwnerKeys.getPublic(), 0);
         ProtectedStorageEntry keepProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(keepProtectedStoragePayload, keepOwnerKeys);
+        expectedRemoves.add(keepProtectedStorageEntry);
 
         Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
@@ -178,19 +184,9 @@ public class P2PDataStorageRemoveExpiredTest {
         // Advance time past it so they will be valid purge targets
         this.testState.clockFake.increment(TimeUnit.DAYS.toMillis(P2PDataStorage.PURGE_AGE_DAYS + 1 - initialClockIncrement));
 
-        // The first entry (11 days old) should be purged
+        // The first 4 entries (11 days old) should be purged from the SequenceNumberMap
         SavedTestState beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
-        this.testState.verifyProtectedStorageRemove(beforeState, purgedProtectedStorageEntry, true, false, false, false);
-
-        // Which means that an addition of a purged entry should succeed.
-        beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
-        Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
-        this.testState.verifyProtectedStorageAdd(beforeState, purgedProtectedStorageEntry, true, false);
-
-        // The second entry (5 days old) should still exist which means trying to add it again should fail.
-        beforeState = this.testState.saveTestState(keepProtectedStorageEntry);
-        Assert.assertFalse(this.testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
-        this.testState.verifyProtectedStorageAdd(beforeState, keepProtectedStorageEntry, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, expectedRemoves, true, true, false, false, false);
     }
 }

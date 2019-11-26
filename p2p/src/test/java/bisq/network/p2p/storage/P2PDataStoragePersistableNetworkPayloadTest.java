@@ -55,6 +55,7 @@ import static bisq.network.p2p.storage.TestState.*;
  * 2 & 3 Client API [addPersistableNetworkPayload(reBroadcast=(true && false))]
  * 4.    onMessage() [onMessage(AddPersistableNetworkPayloadMessage)]
  */
+@SuppressWarnings("unused")
 public class P2PDataStoragePersistableNetworkPayloadTest {
 
     @RunWith(Parameterized.class)
