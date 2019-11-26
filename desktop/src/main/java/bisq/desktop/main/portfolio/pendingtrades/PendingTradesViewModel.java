@@ -32,8 +32,8 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.User;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 
@@ -352,19 +352,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public boolean isSignWitnessTrade(boolean asSeller) {
+    public boolean isSignWitnessTrade() {
         checkNotNull(trade, "trade must not be null");
         checkNotNull(trade.getOffer(), "offer must not be null");
-        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(asSeller ?
-                dataModel.getSellersPaymentAccountPayload() :
-                dataModel.getBuyersPaymentAccountPayload());
+        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(dataModel.getSellersPaymentAccountPayload());
 
         return accountAgeWitnessService.accountIsSigner(myWitness) &&
-                !accountAgeWitnessService.peerHasSignedWitness(trade);
+                !accountAgeWitnessService.peerHasSignedWitness(trade) &&
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
     }
 
-    public void maybeSignWitness(boolean asSeller) {
-        if (isSignWitnessTrade(asSeller)) {
+    public void maybeSignWitness() {
+        if (isSignWitnessTrade()) {
             accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
         }
     }
