@@ -174,16 +174,6 @@ public class BisqGrpcServer {
         }
     }
 
-    /**
-     * Await termination on the main thread since the grpc library uses daemon threads.
-     * Only used for headless version
-     */
-    public void blockUntilShutdown() throws InterruptedException {
-        if (server != null) {
-            server.awaitTermination();
-        }
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////

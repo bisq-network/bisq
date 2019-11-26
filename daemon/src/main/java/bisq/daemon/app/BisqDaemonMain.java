@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.BisqSetupListener {
-    private static BisqGrpcServer bisqGrpcServer;
 
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
@@ -76,19 +75,6 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
         headlessApp.setGracefulShutDownHandler(this);
     }
 
-    @Override
-    public void onSetupComplete() {
-        CoreApi coreApi = injector.getInstance(CoreApi.class);
-        bisqGrpcServer = new BisqGrpcServer(coreApi);
-
-        // If we start headless we need to keep the main thread busy...
-        try {
-            bisqGrpcServer.blockUntilShutdown();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
@@ -120,6 +106,6 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
         super.onApplicationStarted();
 
         CoreApi coreApi = injector.getInstance(CoreApi.class);
-        bisqGrpcServer = new BisqGrpcServer(coreApi);
+        new BisqGrpcServer(coreApi);
     }
 }
