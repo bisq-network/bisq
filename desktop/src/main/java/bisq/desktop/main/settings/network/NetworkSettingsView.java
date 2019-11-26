@@ -225,10 +225,6 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
             selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
         }
-        if (!btcNodes.useProvidedBtcNodes()) {
-            selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PUBLIC;
-            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
-        }
 
         selectBitcoinPeersToggle();
         onBitcoinPeersToggleSelected(false);
