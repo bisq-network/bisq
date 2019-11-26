@@ -123,7 +123,7 @@ public class TradeWalletService {
      * @param reservedForTradeAddress From where we want to spend the transaction fee. Used also as change reservedForTradeAddress.
      * @param useSavingsWallet
      * @param tradingFee              The amount of the trading fee.
-     * @param feeReceiverAddresses    The reservedForTradeAddress of the receiver of the trading fee (arbitrator).   @return The broadcasted transaction
+     * @param feeReceiverAddresses    The reservedForTradeAddress of the receiver of the trading fee.   @return The broadcasted transaction
      * @throws InsufficientMoneyException
      * @throws AddressFormatException
      */
@@ -809,7 +809,7 @@ public class TradeWalletService {
         TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
                 Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(sellerSignature, Transaction.SigHash.ALL, false);
-        // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (arbitrator, seller, buyer)
+        // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (seller, buyer)
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig),
                 redeemScript);
         TransactionInput input = payoutTx.getInput(0);
@@ -872,7 +872,7 @@ public class TradeWalletService {
                 Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(sellerSignature),
                 Transaction.SigHash.ALL, false);
-        // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (arbitrator, seller, buyer)
+        // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (seller, buyer)
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
@@ -890,56 +890,8 @@ public class TradeWalletService {
     // Arbitrated payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * That arbitrator signs the payout transaction
-     *
-     * @param depositTxSerialized Serialized deposit tx
-     * @param buyerPayoutAmount   The payout amount of the buyer.
-     * @param sellerPayoutAmount  The payout amount of the seller.
-     * @param buyerAddressString  The address of the buyer.
-     * @param sellerAddressString The address of the seller.
-     * @param arbitratorKeyPair   The keypair of the arbitrator.
-     * @param buyerPubKey         The public key of the buyer.
-     * @param sellerPubKey        The public key of the seller.
-     * @param arbitratorPubKey    The public key of the arbitrator.
-     * @return DER encoded canonical signature of arbitrator
-     * @throws AddressFormatException
-     * @throws TransactionVerificationException
-     */
-    public byte[] arbitratorSignsDisputedPayoutTx(byte[] depositTxSerialized,
-                                                  Coin buyerPayoutAmount,
-                                                  Coin sellerPayoutAmount,
-                                                  String buyerAddressString,
-                                                  String sellerAddressString,
-                                                  DeterministicKey arbitratorKeyPair,
-                                                  byte[] buyerPubKey,
-                                                  byte[] sellerPubKey,
-                                                  byte[] arbitratorPubKey)
-            throws AddressFormatException, TransactionVerificationException {
-        Transaction depositTx = new Transaction(params, depositTxSerialized);
-        // Our MS is index 0
-        TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
-        Transaction preparedPayoutTx = new Transaction(params);
-        preparedPayoutTx.addInput(p2SHMultiSigOutput);
-        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
-            preparedPayoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
-        }
-        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
-            preparedPayoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
-        }
-
-        // take care of sorting!
-        Script redeemScript = get2of3MultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
-        Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        checkNotNull(arbitratorKeyPair, "arbitratorKeyPair must not be null");
-        if (arbitratorKeyPair.isEncrypted()) {
-            checkNotNull(aesKey);
-        }
-        ECKey.ECDSASignature arbitratorSignature = arbitratorKeyPair.sign(sigHash, aesKey).toCanonicalised();
-        WalletService.verifyTransaction(preparedPayoutTx);
-        WalletService.printTx("preparedPayoutTx", preparedPayoutTx);
-        return arbitratorSignature.encodeToDER();
-    }
+    // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
+    // Atm it is still used by ArbitrationManager.
 
     /**
      * A trader who got the signed tx from the arbitrator finalizes the payout tx
@@ -1011,87 +963,6 @@ public class TradeWalletService {
     // Emergency payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    // Emergency payout tool. Used only in cased when the payout from the arbitrator does not work because some data
-    // in the trade/dispute are messed up.
-    // We keep here arbitratorPayoutAmount just in case (requires cooperation from peer anyway)
-    public Transaction emergencySignAndPublishPayoutTxFrom2of3MultiSig(String depositTxHex,
-                                                                       Coin buyerPayoutAmount,
-                                                                       Coin sellerPayoutAmount,
-                                                                       Coin arbitratorPayoutAmount,
-                                                                       Coin txFee,
-                                                                       String buyerAddressString,
-                                                                       String sellerAddressString,
-                                                                       String arbitratorAddressString,
-                                                                       @Nullable String buyerPrivateKeyAsHex,
-                                                                       @Nullable String sellerPrivateKeyAsHex,
-                                                                       String arbitratorPrivateKeyAsHex,
-                                                                       String buyerPubKeyAsHex,
-                                                                       String sellerPubKeyAsHex,
-                                                                       String arbitratorPubKeyAsHex,
-                                                                       TxBroadcaster.Callback callback)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
-        checkNotNull((buyerPrivateKeyAsHex != null || sellerPrivateKeyAsHex != null),
-                "either buyerPrivateKeyAsHex or sellerPrivateKeyAsHex must not be null");
-
-        byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
-        byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
-        byte[] arbitratorPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(arbitratorPubKeyAsHex)).getPubKey();
-
-        Script p2SHMultiSigOutputScript = get2of3MultiSigOutputScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
-
-        Coin msOutput = buyerPayoutAmount.add(sellerPayoutAmount).add(arbitratorPayoutAmount).add(txFee);
-        TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, null, msOutput, p2SHMultiSigOutputScript.getProgram());
-        Transaction depositTx = new Transaction(params);
-        depositTx.addOutput(p2SHMultiSigOutput);
-
-        Transaction payoutTx = new Transaction(params);
-        Sha256Hash spendTxHash = Sha256Hash.wrap(depositTxHex);
-        payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
-
-        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
-            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
-        }
-        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
-            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
-        }
-        if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO)) {
-            payoutTx.addOutput(arbitratorPayoutAmount, Address.fromBase58(params, arbitratorAddressString));
-        }
-
-        // take care of sorting!
-        Script redeemScript = get2of3MultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
-        Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-
-        ECKey.ECDSASignature tradersSignature;
-        if (buyerPrivateKeyAsHex != null && !buyerPrivateKeyAsHex.isEmpty()) {
-            final ECKey buyerPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(buyerPrivateKeyAsHex));
-            checkNotNull(buyerPrivateKey, "buyerPrivateKey must not be null");
-            tradersSignature = buyerPrivateKey.sign(sigHash, aesKey).toCanonicalised();
-        } else {
-            checkNotNull(sellerPrivateKeyAsHex, "sellerPrivateKeyAsHex must not be null");
-            final ECKey sellerPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(sellerPrivateKeyAsHex));
-            checkNotNull(sellerPrivateKey, "sellerPrivateKey must not be null");
-            tradersSignature = sellerPrivateKey.sign(sigHash, aesKey).toCanonicalised();
-        }
-        ECKey key = ECKey.fromPrivate(Utils.HEX.decode(arbitratorPrivateKeyAsHex));
-        checkNotNull(key, "key must not be null");
-        ECKey.ECDSASignature arbitratorSignature = key.sign(sigHash, aesKey).toCanonicalised();
-        TransactionSignature tradersTxSig = new TransactionSignature(tradersSignature, Transaction.SigHash.ALL, false);
-        TransactionSignature arbitratorTxSig = new TransactionSignature(arbitratorSignature, Transaction.SigHash.ALL, false);
-        // Take care of order of signatures. See comment below at getMultiSigRedeemScript (sort order needed here: arbitrator, seller, buyer)
-        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(arbitratorTxSig, tradersTxSig), redeemScript);
-
-        TransactionInput input = payoutTx.getInput(0);
-        input.setScriptSig(inputScript);
-        WalletService.printTx("payoutTx", payoutTx);
-        WalletService.verifyTransaction(payoutTx);
-        WalletService.checkWalletConsistency(wallet);
-        broadcastTx(payoutTx, callback, 20);
-        return payoutTx;
-    }
-
-    //todo add window tool for usage
     public Transaction emergencySignAndPublishPayoutTxFrom2of2MultiSig(String depositTxHex,
                                                                        Coin buyerPayoutAmount,
                                                                        Coin sellerPayoutAmount,
@@ -1223,6 +1094,9 @@ public class TradeWalletService {
     }
 
 
+    // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
+    // Atm it is still used by traderSignAndFinalizeDisputedPayoutTx which is used by ArbitrationManager.
+
     // Don't use ScriptBuilder.createRedeemScript and ScriptBuilder.createP2SHOutputScript as they use a sorting
     // (Collections.sort(pubKeys, ECKey.PUBKEY_COMPARATOR);) which can lead to a non-matching list of signatures with pubKeys and the executeMultiSig does
     // not iterate all possible combinations of sig/pubKeys leading to a verification fault. That nasty bug happens just randomly as the list after sorting
@@ -1247,10 +1121,6 @@ public class TradeWalletService {
         // Take care of sorting! Need to reverse to the order we use normally (buyer, seller)
         List<ECKey> keys = ImmutableList.of(sellerKey, buyerKey);
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
-    }
-
-    private Script get2of3MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey, byte[] arbitratorPubKey) {
-        return ScriptBuilder.createP2SHOutputScript(get2of3MultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey));
     }
 
     private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey) {
