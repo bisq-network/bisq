@@ -23,7 +23,8 @@ import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.debug.DebugView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.EmptyWalletWindow;
+import bisq.desktop.main.overlays.windows.BsqEmptyWalletWindow;
+import bisq.desktop.main.overlays.windows.BtcEmptyWalletWindow;
 import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
@@ -31,7 +32,6 @@ import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
@@ -39,7 +39,6 @@ import bisq.core.app.OSXStandbyModeDisabler;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -269,9 +268,9 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 shutDownByUser();
             } else {
                 if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
-                    showBtcEmergencyWalletPopup(injector);
+                    injector.getInstance(BtcEmptyWalletWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
-                    showBsqEmergencyWalletPopup(injector);
+                    injector.getInstance(BsqEmptyWalletWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
                     injector.getInstance(SendAlertMessageWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
@@ -334,18 +333,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         } else {
             stop();
         }
-    }
-
-    private void showBtcEmergencyWalletPopup(Injector injector) {
-        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setIsBtc(true);
-        emptyWalletWindow.show();
-    }
-
-    private void showBsqEmergencyWalletPopup(Injector injector) {
-        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setIsBtc(false);
-        emptyWalletWindow.show();
     }
 
     // Used for debugging trade process
