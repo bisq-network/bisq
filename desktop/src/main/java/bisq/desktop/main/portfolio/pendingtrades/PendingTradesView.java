@@ -47,9 +47,8 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -210,7 +209,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(popup::hide)
                         .show();
-            } else if (Utilities.isAltPressed(KeyCode.Y, keyEvent)) {
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
                 new Popup().warning(Res.get("portfolio.pending.removeFailedTrade"))
                         .onAction(model.dataModel::onMoveToFailedTrades)
                         .show();
