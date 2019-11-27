@@ -92,8 +92,8 @@ public class TacWindow extends Overlay<TacWindow> {
                 "    - Opening a refund request from an arbitrator triggers the delayed payout transaction, sending all funds from the deposit transaction to the Bisq DAO receiver address ('collateral for refund to avoid scamming the refund process'). At this point, the arbitrator will re-investigate the case and personally refund (at their discretion) the trader who requested arbitration.\n" +
                 "The arbitrator may charge a small fee (max. the traders security deposit) as compensation for their work.\n" +
                 "    - The arbitrator will then make a reimbursement request to the Bisq DAO to get reimbursed for the refund they paid to the trader.\n\n" +
-                "For more details and a general overview please read the full documentation about the " +
-                "arbitration system and the dispute process.";
+                "For more details and a general overview please read the full documentation about " +
+                "dispute resolution.";
         message(text);
         actionButtonText(Res.get("tacWindow.agree"));
         closeButtonText(Res.get("tacWindow.disagree"));
@@ -108,7 +108,7 @@ public class TacWindow extends Overlay<TacWindow> {
         String fontStyleClass = smallScreen ? "small-text" : "normal-text";
         messageLabel.getStyleClass().add(fontStyleClass);
         HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
-                "https://bisq.network/docs/exchange/arbitration-system");
+                "https://docs.bisq.network/trading-rules.html#dispute-resolution");
         hyperlinkWithIcon.getStyleClass().add(fontStyleClass);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(-6, 0, -20, -4));
     }
