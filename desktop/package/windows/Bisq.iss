@@ -53,16 +53,16 @@ Name: fr; MessagesFile: "compiler:Languages\French.isl"
 Name: sp; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [CustomMessages]
-en.AppComments=A decentralized Bitcoin exchange network
+en.AppComments=A decentralized bitcoin exchange network
 en.AppIsRunning=Bisq is running, please close it and run setup again.
 en.SpecialAppPath=Your default install path appears to have special characters: %1%n%nThis may prevent Bisq from starting. See https://github.com/bisq-network/bisq/issues/3605 for more information.%n%nYou can either cancel this installation and install as a user without special characters in the username, or proceed with this installation using a different install path that does not contain special characters (e.g. %2).
-de.AppComments=Ein dezentrales Bitcoin-Austauschnetz
+de.AppComments=Ein dezentrales bitcoin-Austauschnetz
 de.AppIsRunning=Bisq läuft, bitte schließen Sie es und führen Sie das Setup erneut aus.
 de.SpecialAppPath=Ihr Standardinstallationspfad scheint Sonderzeichen zu enthalten: %1%n%nDies kann den Start von Bisq verhindern. Weitere Informationen finden Sie unter https://github.com/bisq-network/bisq/issues/3605.%n%nSie können diese Installation abbrechen und als Benutzer ohne Sonderzeichen im Benutzernamen installieren oder mit dieser Installation fortfahren, indem Sie einen anderen Installationspfad verwenden, der keine Sonderzeichen enthält (z. B. %2).
-fr.AppComments=Un réseau d’échange Bitcoin décentralisé
+fr.AppComments=Un réseau d’échange bitcoin décentralisé
 fr.AppIsRunning=Bisq est en cours d'exécution, fermez-le et exécutez à nouveau le programme d'installation.
 fr.SpecialAppPath=Votre chemin d'installation par défaut semble comporter des caractères spéciaux: %1%n%nCela peut empêcher le démarrage de Bisq. Voir https://github.com/bisq-network/bisq/issues/3605 pour plus d'informations.%n%nVous pouvez annuler cette installation et l'installer en tant qu'utilisateur sans caractères spéciaux dans le nom d'utilisateur ou procéder à cette installation en utilisant un chemin d'installation différent ne contenant pas de caractères spéciaux (par exemple, %2).
-sp.AppComments=Una red descentralizada de intercambio de Bitcoin
+sp.AppComments=Una red descentralizada de intercambio de bitcoin
 sp.AppIsRunning=Bisq se está ejecutando, ciérrelo y vuelva a ejecutar la configuración.
 sp.SpecialAppPath=Su ruta de instalación predeterminada parece tener caracteres especiales: %1%n%nEsto puede evitar que Bisq se inicie. Consulte https://github.com/bisq-network/bisq/issues/3605 para obtener más información.%n%nPuede cancelar esta instalación e instalar como usuario sin caracteres especiales en el nombre de usuario, o continuar con esta instalación utilizando una ruta de instalación diferente que no contenga caracteres especiales (por ejemplo, %2).
 
