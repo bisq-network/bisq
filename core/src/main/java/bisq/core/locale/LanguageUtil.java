@@ -36,6 +36,7 @@ public class LanguageUtil {
             "pt", // Portuguese
             "pt-BR", // Portuguese (Brazil)
             "zh-Hans", // Chinese [Han Simplified]
+            "zh-Hant", // Chinese [Han Traditional]
             "ru", // Russian
             "fr", // French
             "vi", // Vietnamese
