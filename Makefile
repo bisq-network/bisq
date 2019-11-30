@@ -241,4 +241,4 @@ block:
 				-rpcpassword=bsq \
 				generatetoaddress 1
 
-.PHONY: seednode
+.PHONY: build seednode
