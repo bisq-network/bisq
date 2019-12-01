@@ -926,10 +926,10 @@ public class TradeWalletService {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
-        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
+        if (buyerPayoutAmount.isPositive()) {
             payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         }
-        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
+        if (sellerPayoutAmount.isPositive()) {
             payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
         }
 
@@ -989,10 +989,10 @@ public class TradeWalletService {
         Sha256Hash spendTxHash = Sha256Hash.wrap(depositTxHex);
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
-        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
+        if (buyerPayoutAmount.isPositive()) {
             payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         }
-        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
+        if (sellerPayoutAmount.isPositive()) {
             payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
         }
 
