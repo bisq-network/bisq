@@ -1135,8 +1135,13 @@ public class TradeWalletService {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
-        transaction.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
-        transaction.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+        if (buyerPayoutAmount.isPositive()) {
+            transaction.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+        }
+        if (sellerPayoutAmount.isPositive()) {
+            transaction.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+        }
+        checkArgument(transaction.getOutputs().size() >= 1, "We need at least one output.");
         return transaction;
     }
 
