@@ -43,12 +43,12 @@
 #     bisq-seednode
 #     bisq-statsnode
 #
-#  - You will see a new 'localnet' directory containing the data dirs
+#  - You will see a new '.localnet' directory containing the data dirs
 #  for your regtest Bitcoin and Bisq nodes. Once you've deployed
 #  them in the step below, the directory will look as follows:
 #
-#     $ tree -d -L 1 localnet
-#     localnet
+#     $ tree -d -L 1 .localnet
+#     .localnet
 #     ├── alice
 #     ├── bitcoind
 #     ├── bob
@@ -101,6 +101,7 @@
 # cases.
 #
 
+STATE_DIR := .localnet
 
 # Set up everything necessary for deploying your localnet. This is the
 # default target.
@@ -112,7 +113,8 @@ clean-build:
 	./gradlew clean
 
 clean-localnet:
-	rm -rf localnet
+	rm -rf $(STATE_DIR)
+	rm -rf ./dao-setup
 
 # Build all Bisq binaries and generate the shell scripts used to run
 # them in the targets below
@@ -122,21 +124,21 @@ build:
 # Unpack and customize a Bitcoin regtest node and Alice and Bob Bisq
 # nodes that have been preconfigured with a blockchain containing the
 # BSQ genesis transaction
-localnet:
+localnet: clean-localnet
 	# Unpack the old dao-setup.zip and move things around for more concise
 	# and intuitive naming. This is a temporary measure until we clean these
 	# resources up more thoroughly.
 	unzip docs/dao-setup.zip
-	mv dao-setup localnet
-	mv localnet/Bitcoin-regtest localnet/bitcoind
-	mv localnet/bisq-BTC_REGTEST_Alice_dao localnet/alice
-	mv localnet/bisq-BTC_REGTEST_Bob_dao localnet/bob
+	mv dao-setup $(STATE_DIR)
+	mv $(STATE_DIR)/Bitcoin-regtest $(STATE_DIR)/bitcoind
+	mv $(STATE_DIR)/bisq-BTC_REGTEST_Alice_dao $(STATE_DIR)/alice
+	mv $(STATE_DIR)/bisq-BTC_REGTEST_Bob_dao $(STATE_DIR)/bob
 	# Remove the preconfigured bitcoin.conf in favor of explicitly
 	# parameterizing the invocation of bitcoind in the target below
-	rm -v localnet/bitcoind/bitcoin.conf
+	rm -v $(STATE_DIR)/bitcoind/bitcoin.conf
 	# Avoid spurious 'runCommand' errors in the bitcoind log when nc
 	# fails to bind to one of the listed block notification ports
-	echo exit 0 >> localnet/bitcoind/blocknotify
+	echo exit 0 >> $(STATE_DIR)/bitcoind/blocknotify
 
 # Deploy a complete localnet by running all required Bitcoin and Bisq
 # nodes, each in their own named screen window. If you are not a screen
@@ -163,8 +165,8 @@ bitcoind: localnet
 		-server \
 		-rpcuser=bisqdao \
 		-rpcpassword=bsq \
-		-datadir=localnet/bitcoind \
-		-blocknotify='localnet/bitcoind/blocknotify %s'
+		-datadir=$(STATE_DIR)/bitcoind \
+		-blocknotify='$(STATE_DIR)/bitcoind/blocknotify %s'
 
 seednode: build
 	./bisq-seednode \
@@ -176,7 +178,7 @@ seednode: build
 		--rpcPassword=bsq \
 		--rpcBlockNotificationPort=5120 \
 		--nodePort=2002 \
-		--userDataDir=localnet \
+		--userDataDir=$(STATE_DIR) \
 		--appName=seednode
 
 seednode2: build
@@ -189,7 +191,7 @@ seednode2: build
 		--rpcPassword=bsq \
 		--rpcBlockNotificationPort=5121 \
 		--nodePort=3002 \
-		--userDataDir=localnet \
+		--userDataDir=$(STATE_DIR) \
 		--appName=seednode2
 
 mediator: build
@@ -198,7 +200,7 @@ mediator: build
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
 		--nodePort=4444 \
-		--appDataDir=localnet/mediator \
+		--appDataDir=$(STATE_DIR)/mediator \
 		--appName=Mediator
 
 alice: setup
@@ -213,7 +215,7 @@ alice: setup
 		--rpcBlockNotificationPort=5122 \
 		--genesisBlockHeight=111 \
 		--genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf \
-		--appDataDir=localnet/alice \
+		--appDataDir=$(STATE_DIR)/alice \
 		--appName=Alice
 
 bob: setup
@@ -222,7 +224,7 @@ bob: setup
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
 		--nodePort=6666 \
-		--appDataDir=localnet/bob \
+		--appDataDir=$(STATE_DIR)/bob \
 		--appName=Bob
 
 # Generate a new block on your Bitcoin regtest network. Requires that
@@ -239,4 +241,4 @@ block:
 				-rpcpassword=bsq \
 				generatetoaddress 1
 
-.PHONY: seednode
+.PHONY: build seednode
