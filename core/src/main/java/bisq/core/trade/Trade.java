@@ -911,12 +911,37 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isFundsLockedIn() {
-        return isDepositPublished() &&
-                !isPayoutPublished() &&
-                disputeState != DisputeState.DISPUTE_CLOSED &&
-                disputeState != DisputeState.REFUND_REQUESTED &&
-                disputeState != DisputeState.REFUND_REQUEST_STARTED_BY_PEER &&
-                disputeState != DisputeState.REFUND_REQUEST_CLOSED;
+        // If no deposit tx was published we have no funds locked in
+        if (!isDepositPublished()) {
+            return false;
+        }
+
+        // If we have the payout tx published (non disputed case) we have no funds locked in. Here we might have more
+        // complex cases where users open a mediation but continue the trade to finalize it without mediated payout.
+        // The trade state handles that but does not handle mediated payouts or refund agents payouts.
+        if (isPayoutPublished()) {
+            return false;
+        }
+
+        // Legacy arbitration is not handled anymore as not used anymore.
+
+        // In mediation case we check for the mediationResultState. As there are multiple sub-states we use ordinal.
+        if (disputeState == DisputeState.MEDIATION_CLOSED) {
+            if (mediationResultState != null &&
+                    mediationResultState.ordinal() >= MediationResultState.PAYOUT_TX_PUBLISHED.ordinal()) {
+                return false;
+            }
+        }
+
+        // In refund agent case the funds are spent anyway with the time locked payout. We do not consider that as
+        // locked in funds.
+        if (disputeState == DisputeState.REFUND_REQUESTED ||
+                disputeState == DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
+                disputeState == DisputeState.REFUND_REQUEST_CLOSED) {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean isDepositConfirmed() {
