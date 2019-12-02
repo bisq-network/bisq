@@ -20,11 +20,11 @@
 #
 # USAGE
 #
-# The following commands (and a couple manual instructions) will get your
-# localnet up and running quickly.
+# The following commands (and a couple manual instructions) will get
+# your localnet up and running quickly.
 #
-# STEP 1: Build all Bisq binaries and set up localnet resources. This will
-# take a few minutes the first time through.
+# STEP 1: Build all Bisq binaries and set up localnet resources. This
+# will take a few minutes the first time through.
 #
 #     $ make
 #
@@ -44,8 +44,8 @@
 #     bisq-statsnode
 #
 #  - You will see a new '.localnet' directory containing the data dirs
-#  for your regtest Bitcoin and Bisq nodes. Once you've deployed
-#  them in the step below, the directory will look as follows:
+#  for your regtest Bitcoin and Bisq nodes. Once you've deployed them in
+#  the step below, the directory will look as follows:
 #
 #     $ tree -d -L 1 .localnet
 #     .localnet
@@ -122,9 +122,9 @@ build:
 # nodes that have been preconfigured with a blockchain containing the
 # BSQ genesis transaction
 .localnet:
-	# Unpack the old dao-setup.zip and move things around for more concise
-	# and intuitive naming. This is a temporary measure until we clean these
-	# resources up more thoroughly.
+	# Unpack the old dao-setup.zip and move things around for more
+	# concise and intuitive naming. This is a temporary measure until we
+	# clean these resources up more thoroughly.
 	unzip docs/dao-setup.zip
 	mv dao-setup .localnet
 	mv .localnet/Bitcoin-regtest .localnet/bitcoind
