@@ -164,6 +164,7 @@ bitcoind: .localnet
 		-regtest \
 		-prune=0 \
 		-txindex=1 \
+		-peerbloomfilters=1 \
 		-server \
 		-rpcuser=bisqdao \
 		-rpcpassword=bsq \
