@@ -108,15 +108,19 @@ setup: build .localnet
 clean: clean-build clean-localnet
 
 clean-build:
-	rm -rf build
+	./gradlew clean
 
 clean-localnet:
 	rm -rf .localnet ./dao-setup
 
-# Build all Bisq binaries and generate the shell scripts used to run
-# them in the targets below
-build:
-	./gradlew build
+# Build Bisq binaries and shell scripts used in the targets below
+build: seednode/build desktop/build
+
+seednode/build:
+	./gradlew :seednode:build
+
+desktop/build:
+	./gradlew :desktop:build
 
 # Unpack and customize a Bitcoin regtest node and Alice and Bob Bisq
 # nodes that have been preconfigured with a blockchain containing the
@@ -171,7 +175,7 @@ bitcoind: .localnet
 		-datadir=.localnet/bitcoind \
 		-blocknotify='.localnet/bitcoind/blocknotify %s'
 
-seednode: build
+seednode: seednode/build
 	./bisq-seednode \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
@@ -184,7 +188,7 @@ seednode: build
 		--userDataDir=.localnet \
 		--appName=seednode
 
-seednode2: build
+seednode2: seednode/build
 	./bisq-seednode \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
@@ -197,7 +201,7 @@ seednode2: build
 		--userDataDir=.localnet \
 		--appName=seednode2
 
-mediator: build
+mediator: desktop/build
 	./bisq-desktop \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
@@ -244,4 +248,4 @@ block:
 				-rpcpassword=bsq \
 				generatetoaddress 1
 
-.PHONY: seednode
+.PHONY: build seednode
