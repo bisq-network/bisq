@@ -101,11 +101,9 @@
 # cases.
 #
 
-STATE_DIR := .localnet
-
 # Set up everything necessary for deploying your localnet. This is the
 # default target.
-setup: build localnet
+setup: build .localnet
 
 clean: clean-build clean-localnet
 
@@ -113,8 +111,7 @@ clean-build:
 	./gradlew clean
 
 clean-localnet:
-	rm -rf $(STATE_DIR)
-	rm -rf ./dao-setup
+	rm -rf .localnet ./dao-setup
 
 # Build all Bisq binaries and generate the shell scripts used to run
 # them in the targets below
@@ -124,21 +121,25 @@ build:
 # Unpack and customize a Bitcoin regtest node and Alice and Bob Bisq
 # nodes that have been preconfigured with a blockchain containing the
 # BSQ genesis transaction
-localnet:
+.localnet:
 	# Unpack the old dao-setup.zip and move things around for more concise
 	# and intuitive naming. This is a temporary measure until we clean these
 	# resources up more thoroughly.
 	unzip docs/dao-setup.zip
-	mv dao-setup $(STATE_DIR)
-	mv $(STATE_DIR)/Bitcoin-regtest $(STATE_DIR)/bitcoind
-	mv $(STATE_DIR)/bisq-BTC_REGTEST_Alice_dao $(STATE_DIR)/alice
-	mv $(STATE_DIR)/bisq-BTC_REGTEST_Bob_dao $(STATE_DIR)/bob
+	mv dao-setup .localnet
+	mv .localnet/Bitcoin-regtest .localnet/bitcoind
+	mv .localnet/bisq-BTC_REGTEST_Alice_dao .localnet/alice
+	mv .localnet/bisq-BTC_REGTEST_Bob_dao .localnet/bob
 	# Remove the preconfigured bitcoin.conf in favor of explicitly
 	# parameterizing the invocation of bitcoind in the target below
-	rm -v $(STATE_DIR)/bitcoind/bitcoin.conf
+	rm -v .localnet/bitcoind/bitcoin.conf
 	# Avoid spurious 'runCommand' errors in the bitcoind log when nc
 	# fails to bind to one of the listed block notification ports
-	echo exit 0 >> $(STATE_DIR)/bitcoind/blocknotify
+	echo exit 0 >> .localnet/bitcoind/blocknotify
+
+# Alias '.localnet' to 'localnet' so the target is discoverable in tab
+# completion
+localnet: .localnet
 
 # Deploy a complete localnet by running all required Bitcoin and Bisq
 # nodes, each in their own named screen window. If you are not a screen
@@ -157,7 +158,7 @@ deploy: setup
 	screen -t bob make bob
 	screen -t mediator make mediator
 
-bitcoind: localnet
+bitcoind: .localnet
 	bitcoind \
 		-regtest \
 		-prune=0 \
@@ -165,8 +166,8 @@ bitcoind: localnet
 		-server \
 		-rpcuser=bisqdao \
 		-rpcpassword=bsq \
-		-datadir=$(STATE_DIR)/bitcoind \
-		-blocknotify='$(STATE_DIR)/bitcoind/blocknotify %s'
+		-datadir=.localnet/bitcoind \
+		-blocknotify='.localnet/bitcoind/blocknotify %s'
 
 seednode: build
 	./bisq-seednode \
@@ -178,7 +179,7 @@ seednode: build
 		--rpcPassword=bsq \
 		--rpcBlockNotificationPort=5120 \
 		--nodePort=2002 \
-		--userDataDir=$(STATE_DIR) \
+		--userDataDir=.localnet \
 		--appName=seednode
 
 seednode2: build
@@ -191,7 +192,7 @@ seednode2: build
 		--rpcPassword=bsq \
 		--rpcBlockNotificationPort=5121 \
 		--nodePort=3002 \
-		--userDataDir=$(STATE_DIR) \
+		--userDataDir=.localnet \
 		--appName=seednode2
 
 mediator: build
@@ -200,7 +201,7 @@ mediator: build
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
 		--nodePort=4444 \
-		--appDataDir=$(STATE_DIR)/mediator \
+		--appDataDir=.localnet/mediator \
 		--appName=Mediator
 
 alice: setup
@@ -215,7 +216,7 @@ alice: setup
 		--rpcBlockNotificationPort=5122 \
 		--genesisBlockHeight=111 \
 		--genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf \
-		--appDataDir=$(STATE_DIR)/alice \
+		--appDataDir=.localnet/alice \
 		--appName=Alice
 
 bob: setup
@@ -224,7 +225,7 @@ bob: setup
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
 		--nodePort=6666 \
-		--appDataDir=$(STATE_DIR)/bob \
+		--appDataDir=.localnet/bob \
 		--appName=Bob
 
 # Generate a new block on your Bitcoin regtest network. Requires that
