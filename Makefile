@@ -108,7 +108,7 @@ setup: build .localnet
 clean: clean-build clean-localnet
 
 clean-build:
-	./gradlew clean
+	rm -rf build
 
 clean-localnet:
 	rm -rf .localnet ./dao-setup
@@ -143,20 +143,21 @@ localnet: .localnet
 
 # Deploy a complete localnet by running all required Bitcoin and Bisq
 # nodes, each in their own named screen window. If you are not a screen
-# user, you'll need to run each of the make commands manually in a
-# separate terminal or as a background job.
-#
-# NOTE: You MUST already be attached to a screen session for the
-# following commands to work properly.
+# user, you'll need to manually run each of the targets listed below
+# commands manually in a separate terminal or as background jobs.
 deploy: setup
-	screen -t bitcoin make bitcoind
-	sleep 2    # wait for bitcoind rpc server to start
-	make block # generate a block to ensure Bisq nodes get dao-synced
-	screen -t seednode make seednode
-	screen -t seednode2 make seednode2
-	screen -t alice make alice
-	screen -t bob make bob
-	screen -t mediator make mediator
+	# create a new screen session named 'localnet'
+	screen -dmS localnet
+	# deploy each node in its own named screen window
+	targets=('bitcoind' 'seednode' 'seednode2' 'alice' 'bob' 'mediator'); \
+	for t in "$${targets[@]}"; do \
+		screen -S localnet -X screen -t $$t; \
+		screen -S localnet -p $$t -X stuff "make $$t\n"; \
+	done;
+	# give bitcoind rpc server time to start
+	sleep 5
+	# generate a block to ensure Bisq nodes get dao-synced
+	make block
 
 bitcoind: .localnet
 	bitcoind \
@@ -242,4 +243,4 @@ block:
 				-rpcpassword=bsq \
 				generatetoaddress 1
 
-.PHONY: build seednode
+.PHONY: seednode
