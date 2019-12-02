@@ -223,6 +223,10 @@ class TransactionsListItem {
                     } else if (trade.getPayoutTx() != null &&
                             trade.getPayoutTx().getHashAsString().equals(txId)) {
                         details = Res.get("funds.tx.multiSigPayout", tradeId);
+
+                        if (amountAsCoin.isZero()) {
+                            txConfidenceIndicator.setVisible(false);
+                        }
                     } else {
                         Trade.DisputeState disputeState = trade.getDisputeState();
                         if (disputeState == Trade.DisputeState.DISPUTE_CLOSED) {
