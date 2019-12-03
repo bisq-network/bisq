@@ -539,6 +539,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             //noinspection UnstableApiUsage
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
+            MoreExecutors.shutdownAndAwaitTermination(bundleSender, 500, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete " + this.toString());
             // Use UserThread.execute as its not clear if that is called from a non-UserThread
