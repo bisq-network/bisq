@@ -168,6 +168,14 @@ deploy: setup
 	# generate a block to ensure Bisq nodes get dao-synced
 	make block
 
+# Undeploy a running localnet by killing all Bitcoin and Bisq
+# node processes, then killing the localnet screen session altogether
+undeploy:
+	# kill all Bitcoind and Bisq nodes running in screen windows
+	screen -S localnet -X at "#" stuff "^C"
+	# quit all screen windows which results in killing the session
+	screen -S localnet -X at "#" kill
+
 bitcoind: .localnet
 	bitcoind \
 		-regtest \
