@@ -153,10 +153,15 @@ deploy: setup
 	# create a new screen session named 'localnet'
 	screen -dmS localnet
 	# deploy each node in its own named screen window
-	targets=('bitcoind' 'seednode' 'seednode2' 'alice' 'bob' 'mediator'); \
-	for t in "$${targets[@]}"; do \
-		screen -S localnet -X screen -t $$t; \
-		screen -S localnet -p $$t -X stuff "make $$t\n"; \
+	for target in \
+			bitcoind \
+			seednode \
+			seednode2 \
+			alice \
+			bob \
+			mediator; do \
+		screen -S localnet -X screen -t $$target; \
+		screen -S localnet -p $$target -X stuff "make $$target\n"; \
 	done;
 	# give bitcoind rpc server time to start
 	sleep 5
