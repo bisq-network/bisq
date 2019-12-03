@@ -28,7 +28,7 @@ public class Bitzenyplus extends Coin {
     }
 
     public static class BitzenyplusMainNetParams extends NetworkParametersAdapter {
-        public DenariusMainNetParams() {
+        public BitzenyplusMainNetParams() {
             this.addressHeader = 81;
             this.p2shHeader = 5;
             this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
