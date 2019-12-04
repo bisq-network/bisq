@@ -116,7 +116,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL_SEC = 60;
+    public static final int CHECK_TTL_INTERVAL_SEC = 60;
 
     private boolean initialRequestApplied = false;
 
