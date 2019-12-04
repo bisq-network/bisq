@@ -671,8 +671,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                         .closeButtonText(Res.get("shared.ok"))
                         .show();
 
-                if (model.needsArbitrationLanguageWarning()) {
-                    new Popup().warning(Res.get("settings.preferences.arbitrationLanguageWarning",
+                if (model.needsSupportLanguageWarning()) {
+                    new Popup().warning(Res.get("settings.preferences.supportLanguageWarning",
+                            model.getMediationLanguages(),
                             model.getArbitrationLanguages()))
                             .closeButtonText(Res.get("shared.ok"))
                             .show();
