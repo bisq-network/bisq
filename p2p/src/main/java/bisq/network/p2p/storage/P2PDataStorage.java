@@ -448,43 +448,24 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
 
-        // Retrieve all the eligible payloads based on the node that disconnected
-        ArrayList<Map.Entry<ByteArray, ProtectedStorageEntry>> toBackDate =
-                map.entrySet().stream()
-                        .filter(entry -> entry.getValue().getProtectedStoragePayload() instanceof ExpirablePayload)
-                        .filter(entry -> entry.getValue().getProtectedStoragePayload() instanceof RequiresOwnerIsOnlinePayload)
-                        .filter(entry -> ((RequiresOwnerIsOnlinePayload) entry.getValue().getProtectedStoragePayload()).getOwnerNodeAddress().equals(peersNodeAddress))
-                        .collect(Collectors.toCollection(ArrayList::new));
-
-        // Backdate each payload
-        toBackDate.forEach(mapEntry -> {
-            // We only set the data back by half of the TTL and remove the data only if is has
-            // expired after that back dating.
-            // We might get connection drops which are not caused by the node going offline, so
-            // we give more tolerance with that approach, giving the node the change to
-            // refresh the TTL with a refresh message.
-            // We observed those issues during stress tests, but it might have been caused by the
-            // test set up (many nodes/connections over 1 router)
-            // TODO investigate what causes the disconnections.
-            // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
-            log.debug("We remove the data as the data owner got disconnected with " +
-                    "closeConnectionReason=" + closeConnectionReason);
-            mapEntry.getValue().backDate();
-        });
-
-        // Remove each backdated payload that is now expired
-        ArrayList<Map.Entry<ByteArray, ProtectedStorageEntry>> toRemoveList =
-            toBackDate.stream().filter(mapEntry -> mapEntry.getValue().isExpired(this.clock))
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-        toRemoveList.forEach(toRemoveItem -> {
-            log.debug("We found an expired data entry. We remove the protectedData:\n\t" +
-                    Utilities.toTruncatedString(toRemoveItem.getValue()));
-        });
-        removeFromMapAndDataStore(toRemoveList);
-
-        if (sequenceNumberMap.size() > this.maxSequenceNumberMapSizeBeforePurge)
-            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
+        // Backdate all the eligible payloads based on the node that disconnected
+        map.values().stream()
+                .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof ExpirablePayload)
+                .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof RequiresOwnerIsOnlinePayload)
+                .filter(protectedStorageEntry -> ((RequiresOwnerIsOnlinePayload) protectedStorageEntry.getProtectedStoragePayload()).getOwnerNodeAddress().equals(peersNodeAddress))
+                .forEach(protectedStorageEntry ->  {
+                    // We only set the data back by half of the TTL and remove the data only if is has
+                    // expired after that back dating.
+                    // We might get connection drops which are not caused by the node going offline, so
+                    // we give more tolerance with that approach, giving the node the change to
+                    // refresh the TTL with a refresh message.
+                    // We observed those issues during stress tests, but it might have been caused by the
+                    // test set up (many nodes/connections over 1 router)
+                    // TODO investigate what causes the disconnections.
+                    // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
+                    log.debug("Backdating {} due to closeConnectionReason={}", protectedStorageEntry, closeConnectionReason);
+                    protectedStorageEntry.backDate();
+                });
     }
 
     @Override
