@@ -57,7 +57,7 @@ public class P2PDataStoreDisconnectTest {
         ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayloadStub(ownerKeys.getPublic(), ttl);
 
         ProtectedStorageEntry protectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
-        testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null);
+        testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null);
 
         return protectedStorageEntry;
     }
@@ -85,17 +85,30 @@ public class P2PDataStoreDisconnectTest {
 
     // TESTCASE: Bad peer info
     @Test
-    public void peerConnectionUnknown() {
+    public void peerConnectionUnknown() throws CryptoException, NoSuchAlgorithmException {
         when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(false);
 
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
+
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
+
         this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
+
+        verifyStateAfterDisconnect(this.testState, beforeState, false, false);
     }
 
     // TESTCASE: Intended disconnects don't trigger expiration
     @Test
-    public void connectionClosedIntended() {
+    public void connectionClosedIntended() throws CryptoException, NoSuchAlgorithmException {
         when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
+
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
+
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
+
         this.testState.mockedStorage.onDisconnect(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER, mockedConnection);
+
+        verifyStateAfterDisconnect(this.testState, beforeState, false, false);
     }
 
     // TESTCASE: Peer NodeAddress unknown
@@ -104,7 +117,7 @@ public class P2PDataStoreDisconnectTest {
         when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
         when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.empty());
 
-        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
@@ -134,7 +147,7 @@ public class P2PDataStoreDisconnectTest {
         when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
         when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(new NodeAddress("notTestNode", 2020)));
 
-        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
@@ -149,7 +162,7 @@ public class P2PDataStoreDisconnectTest {
         when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
         when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
 
-        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
@@ -158,7 +171,7 @@ public class P2PDataStoreDisconnectTest {
 
         this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
 
-        verifyStateAfterDisconnect(this.testState, beforeState, true, false);
+        verifyStateAfterDisconnect(this.testState, beforeState, true, true);
     }
 
     // TESTCASE: ProtectedStoragePayloads implementing the PersistablePayload interface are correctly removed
@@ -186,7 +199,7 @@ public class P2PDataStoreDisconnectTest {
                 testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
 
         testState.mockedStorage.addProtectedStorageEntry(
-                protectedStorageEntry, TestState.getTestNodeAddress(), null);
+                protectedStorageEntry, getTestNodeAddress(), null);
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
