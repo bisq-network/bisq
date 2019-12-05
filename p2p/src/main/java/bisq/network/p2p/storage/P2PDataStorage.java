@@ -443,16 +443,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (connection.hasPeersNodeAddress() && !closeConnectionReason.isIntended) {
             map.values()
                     .forEach(protectedStorageEntry -> {
-                        NetworkPayload networkPayload = protectedStorageEntry.getProtectedStoragePayload();
-                        if (networkPayload instanceof ExpirablePayload && networkPayload instanceof RequiresOwnerIsOnlinePayload) {
-                            NodeAddress ownerNodeAddress = ((RequiresOwnerIsOnlinePayload) networkPayload).getOwnerNodeAddress();
+                        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+                        if (protectedStoragePayload instanceof ExpirablePayload && protectedStoragePayload instanceof RequiresOwnerIsOnlinePayload) {
+                            NodeAddress ownerNodeAddress = ((RequiresOwnerIsOnlinePayload) protectedStoragePayload).getOwnerNodeAddress();
                             if (connection.getPeersNodeAddressOptional().isPresent() &&
                                     ownerNodeAddress.equals(connection.getPeersNodeAddressOptional().get())) {
                                 // We have a RequiresLiveOwnerData data object with the node address of the
                                 // disconnected peer. We remove that data from our map.
 
                                 // Check if we have the data (e.g. OfferPayload)
-                                ByteArray hashOfPayload = get32ByteHashAsByteArray(networkPayload);
+                                ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
                                 boolean containsKey = map.containsKey(hashOfPayload);
                                 if (containsKey) {
                                     log.debug("We remove the data as the data owner got disconnected with " +
