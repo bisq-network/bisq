@@ -450,7 +450,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Backdate all the eligible payloads based on the node that disconnected
         map.values().stream()
-                .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof ExpirablePayload)
                 .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof RequiresOwnerIsOnlinePayload)
                 .filter(protectedStorageEntry -> ((RequiresOwnerIsOnlinePayload) protectedStorageEntry.getProtectedStoragePayload()).getOwnerNodeAddress().equals(peersNodeAddress))
                 .forEach(protectedStorageEntry ->  {
