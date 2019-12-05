@@ -87,5 +87,4 @@ See the issues in the [bisq-network/style](https://github.com/bisq-network/style
 ## See also
 
  - [contributor checklist](https://docs.bisq.network/contributor-checklist.html)
- - [developer docs](docs#readme) including build and dev environment setup instructions
-
+ - [developer docs](docs/README.md) including build and dev environment setup instructions
