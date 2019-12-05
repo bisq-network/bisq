@@ -86,8 +86,7 @@ public class P2PDataStoreDisconnectTest {
     // TESTCASE: Bad peer info
     @Test
     public void peerConnectionUnknown() throws CryptoException, NoSuchAlgorithmException {
-        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(false);
-
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.empty());
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
@@ -100,8 +99,7 @@ public class P2PDataStoreDisconnectTest {
     // TESTCASE: Intended disconnects don't trigger expiration
     @Test
     public void connectionClosedIntended() throws CryptoException, NoSuchAlgorithmException {
-        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
-
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
@@ -114,8 +112,7 @@ public class P2PDataStoreDisconnectTest {
     // TESTCASE: Peer NodeAddress unknown
     @Test
     public void connectionClosedSkipsItemsPeerInfoBadState() throws NoSuchAlgorithmException, CryptoException {
-        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
-        when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.empty());
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.empty());
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
@@ -129,8 +126,7 @@ public class P2PDataStoreDisconnectTest {
     // TESTCASE: Unintended disconnects reduce the TTL for entrys that match disconnected peer
     @Test
     public void connectionClosedReduceTTL() throws NoSuchAlgorithmException, CryptoException {
-        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
-        when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, TimeUnit.DAYS.toMillis(90));
 
@@ -144,8 +140,7 @@ public class P2PDataStoreDisconnectTest {
     // TESTCASE: Unintended disconnects don't reduce TTL for entrys that are not from disconnected peer
     @Test
     public void connectionClosedSkipsItemsNotFromPeer() throws NoSuchAlgorithmException, CryptoException {
-        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
-        when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(new NodeAddress("notTestNode", 2020)));
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(new NodeAddress("notTestNode", 2020)));
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
@@ -159,8 +154,7 @@ public class P2PDataStoreDisconnectTest {
     // TESTCASE: Unintended disconnects expire entrys that match disconnected peer and TTL is low enough for expire
     @Test
     public void connectionClosedReduceTTLAndExpireItemsFromPeer() throws NoSuchAlgorithmException, CryptoException {
-        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
-        when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 2);
 
@@ -188,8 +182,7 @@ public class P2PDataStoreDisconnectTest {
             }
         }
 
-        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
-        when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
 
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         ProtectedStoragePayload protectedStoragePayload =
