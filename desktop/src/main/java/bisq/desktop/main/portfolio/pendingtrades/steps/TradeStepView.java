@@ -178,7 +178,7 @@ public abstract class TradeStepView extends AnchorPane {
             	String supportPopupInfo = TradePeriodState.TRADE_PERIOD_OVER.equals(trade.getTradePeriodState()) ? 
             		Res.get("portfolio.pending.support.popup.info", "") :
             		Res.get("portfolio.pending.support.popup.info", "portfolio.pending.support.popup.info.inprogress");
-                new Popup<>().attention(MediationManager.isMediationActivated() ?
+                new Popup().attention(model.dataModel.mediationManager.isBootstrapped() ?
                         supportPopupInfo : Res.get("portfolio.pending.support.popup.info.arbitrator"))
                         .actionButtonText(Res.get("portfolio.pending.support.popup.button"))
                         .onAction(this::openSupportTicket)
