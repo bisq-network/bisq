@@ -19,6 +19,13 @@ package bisq.network.p2p.storage.mocks;
 
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
+/**
+ * Stub implementation of a PersistableNetworkPayload that can be used in tests
+ * to provide canned answers to calls. Useful if the tests don't care about the implementation
+ *  * details of the PersistableNetworkPayload.
+ *
+ * @see <a href="https://martinfowler.com/articles/mocksArentStubs.html#TheDifferenceBetweenMocksAndStubs">Reference</a>
+ */
 public class PersistableNetworkPayloadStub implements PersistableNetworkPayload {
     private final boolean hashSizeValid;
 

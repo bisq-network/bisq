@@ -36,6 +36,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 
+import java.time.Clock;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -72,7 +74,7 @@ public class AddDataMessageTest {
         MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(prefixedSealedAndSignedMessage,
                 keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey());
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
-                keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
+                keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey(), Clock.systemDefaultZone());
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
         protobuf.NetworkEnvelope envelope = dataMessage1.toProtoNetworkEnvelope();
 

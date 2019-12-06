@@ -36,7 +36,7 @@ import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple3;
@@ -86,7 +86,7 @@ public class AssetsForm extends PaymentMethodForm {
                       InputValidator inputValidator,
                       GridPane gridPane,
                       int gridRow,
-                      BSFormatter formatter,
+                      CoinFormatter formatter,
                       AssetService assetService,
                       FilterManager filterManager,
                       Preferences preferences) {
@@ -113,7 +113,7 @@ public class AssetsForm extends PaymentMethodForm {
         tradeInstantCheckBox.setOnAction(e -> {
             tradeInstant = tradeInstantCheckBox.isSelected();
             if (tradeInstant)
-                new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
+                new Popup().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
         });
 
         gridPane.getChildren().remove(tradeInstantCheckBox);
@@ -211,10 +211,11 @@ public class AssetsForm extends PaymentMethodForm {
             currencyComboBox.setPromptText("");
         });
 
-        ((AutocompleteComboBox) currencyComboBox).setAutocompleteItems(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
+        ((AutocompleteComboBox<TradeCurrency>) currencyComboBox).setAutocompleteItems(
+                CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
 
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        currencyComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 return tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
@@ -223,12 +224,12 @@ public class AssetsForm extends PaymentMethodForm {
             @Override
             public TradeCurrency fromString(String s) {
                 return currencyComboBox.getItems().stream().
-                       filter(item -> item.getNameAndCode().equals(s)).
-                       findAny().orElse(null);
+                        filter(item -> item.getNameAndCode().equals(s)).
+                        findAny().orElse(null);
             }
         });
 
-        ((AutocompleteComboBox) currencyComboBox).setOnChangeConfirmed(e -> {
+        ((AutocompleteComboBox<?>) currencyComboBox).setOnChangeConfirmed(e -> {
             addressInputTextField.resetValidation();
             addressInputTextField.validate();
             paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());

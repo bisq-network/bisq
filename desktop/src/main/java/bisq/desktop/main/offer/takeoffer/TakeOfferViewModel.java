@@ -43,8 +43,9 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.network.p2p.P2PService;
@@ -57,6 +58,7 @@ import bisq.common.app.DevEnv;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
@@ -90,7 +92,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final PriceFeedService priceFeedService;
     private AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
     private String amountRange;
@@ -151,7 +153,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                               PriceFeedService priceFeedService,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
-                              BSFormatter btcFormatter,
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super(dataModel);
         this.dataModel = dataModel;
@@ -216,8 +218,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
 
         amountRange = btcFormatter.formatCoin(offer.getMinAmount()) + " - " + btcFormatter.formatCoin(offer.getAmount());
-        price = BSFormatter.formatPrice(dataModel.tradePrice);
-        marketPriceMargin = BSFormatter.formatToPercent(offer.getMarketPriceMargin());
+        price = FormattingUtils.formatPrice(dataModel.tradePrice);
+        marketPriceMargin = FormattingUtils.formatToPercent(offer.getMarketPriceMargin());
         paymentLabel = Res.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
@@ -273,7 +275,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
             return true;
         } else {
-            new Popup<>().warning(Res.get("shared.notEnoughFunds",
+            new Popup().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
                     btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
@@ -327,7 +329,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
                         feeInFiatAsString,
-                        BSFormatter.formatToPercentWithSymbol(percent)));
+                        FormattingUtils.formatToPercentWithSymbol(percent)));
             }
         }
         tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :
@@ -385,13 +387,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
-                    new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
+                    new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
                             btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 } else {
-                    new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                    new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
                             btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
@@ -664,7 +666,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    BSFormatter getBtcFormatter() {
+    CoinFormatter getBtcFormatter() {
         return btcFormatter;
     }
 
@@ -787,7 +789,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return btcFormatter.formatCoin(dataModel.getSellerSecurityDeposit());
     }
 
-    private BSFormatter getFormatterForTakerFee() {
+    private CoinFormatter getFormatterForTakerFee() {
         return dataModel.isCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 

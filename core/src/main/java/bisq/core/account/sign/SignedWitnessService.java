@@ -61,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
     public static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
+    static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = Coin.parseCoin("0.0025");
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -100,7 +101,7 @@ public class SignedWitnessService {
                 addToMap((SignedWitness) payload);
         });
 
-        // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
+        // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
         p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
             if (e instanceof SignedWitness)
                 addToMap((SignedWitness) e);
@@ -187,6 +188,11 @@ public class SignedWitnessService {
                                       PublicKey peersPubKey) throws CryptoException {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
+            return;
+        }
+
+        if (!isSufficientTradeAmountForSigning(tradeAmount)) {
+            log.warn("Trader tried to sign account with too little trade amount");
             return;
         }
 
@@ -279,6 +285,10 @@ public class SignedWitnessService {
 
     public boolean isSignerAccountAgeWitness(AccountAgeWitness accountAgeWitness) {
         return isSignerAccountAgeWitness(accountAgeWitness, new Date().getTime());
+    }
+
+    public boolean isSufficientTradeAmountForSigning(Coin tradeAmount) {
+        return !tradeAmount.isLessThan(MINIMUM_TRADE_AMOUNT_FOR_SIGNING);
     }
 
     /**

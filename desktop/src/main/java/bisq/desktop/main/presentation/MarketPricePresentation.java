@@ -30,11 +30,13 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
@@ -64,7 +66,7 @@ import lombok.Getter;
 @Singleton
 public class MarketPricePresentation {
     private final Preferences preferences;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final PriceFeedService priceFeedService;
     @Getter
     private final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
@@ -92,7 +94,7 @@ public class MarketPricePresentation {
                                    PriceFeedService priceFeedService,
                                    Preferences preferences,
                                    FeeService feeService,
-                                   BSFormatter formatter) {
+                                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.formatter = formatter;
@@ -137,12 +139,12 @@ public class MarketPricePresentation {
     }
 
     private void setupMarketPriceFeed() {
-        priceFeedService.requestPriceFeed(price -> marketPrice.set(BSFormatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
+        priceFeedService.requestPriceFeed(price -> marketPrice.set(FormattingUtils.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
                 (errorMessage, throwable) -> marketPrice.set(Res.get("shared.na")));
 
         marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPrice,
-                (currencyCode, price) -> BSFormatter.getCurrencyPair(currencyCode) + ": " + price);
+                (currencyCode, price) -> CurrencyUtil.getCurrencyPair(currencyCode) + ": " + price);
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -194,14 +196,14 @@ public class MarketPricePresentation {
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
             if (marketPrice != null && marketPrice.isPriceAvailable()) {
-                priceString = BSFormatter.formatMarketPrice(marketPrice.getPrice(), currencyCode);
+                priceString = FormattingUtils.formatMarketPrice(marketPrice.getPrice(), currencyCode);
                 item.setPriceAvailable(true);
                 item.setExternallyProvidedPrice(marketPrice.isExternallyProvidedPrice());
             } else {
                 priceString = Res.get("shared.na");
                 item.setPriceAvailable(false);
             }
-            item.setDisplayString(BSFormatter.getCurrencyPair(currencyCode) + ": " + priceString);
+            item.setDisplayString(CurrencyUtil.getCurrencyPair(currencyCode) + ": " + priceString);
 
             final String code = item.currencyCode;
             if (selectedPriceFeedComboBoxItemProperty.get() != null &&

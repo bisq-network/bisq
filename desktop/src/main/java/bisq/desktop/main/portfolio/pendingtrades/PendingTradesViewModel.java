@@ -24,6 +24,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -31,8 +32,9 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -43,6 +45,8 @@ import bisq.common.app.DevEnv;
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -86,7 +90,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         STEP4
     }
 
-    public final BSFormatter btcFormatter;
+    public final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     public final BtcAddressValidator btcAddressValidator;
     final AccountAgeWitnessService accountAgeWitnessService;
@@ -110,7 +114,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     @Inject
     public PendingTradesViewModel(PendingTradesDataModel dataModel,
-                                  BSFormatter btcFormatter,
+                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
@@ -201,7 +205,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
     private long getMaxTradePeriod() {
@@ -223,7 +227,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getRemainingTradeDurationAsWords() {
-        return BSFormatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+        return FormattingUtils.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
     }
 
     public double getRemainingTradeDurationAsPercentage() {
@@ -254,7 +258,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return BSFormatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
+            return getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }
@@ -348,19 +352,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public boolean isSignWitnessTrade(boolean asSeller) {
+    public boolean isSignWitnessTrade() {
         checkNotNull(trade, "trade must not be null");
         checkNotNull(trade.getOffer(), "offer must not be null");
-        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(asSeller ?
-                dataModel.getSellersPaymentAccountPayload() :
-                dataModel.getBuyersPaymentAccountPayload());
+        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(dataModel.getSellersPaymentAccountPayload());
 
         return accountAgeWitnessService.accountIsSigner(myWitness) &&
-                !accountAgeWitnessService.peerHasSignedWitness(trade);
+                !accountAgeWitnessService.peerHasSignedWitness(trade) &&
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
     }
 
-    public void maybeSignWitness(boolean asSeller) {
-        if (isSignWitnessTrade(asSeller)) {
+    public void maybeSignWitness() {
+        if (isSignWitnessTrade()) {
             accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
         }
     }
@@ -480,4 +483,29 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
         }
     }
+
+    private static String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String baseCurrencyCode = Res.getBaseCurrencyCode();
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
+        } else {
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
+        }
+
+    }
+
 }

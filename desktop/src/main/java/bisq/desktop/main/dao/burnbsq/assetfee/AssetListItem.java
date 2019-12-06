@@ -19,7 +19,7 @@ package bisq.desktop.main.dao.burnbsq.assetfee;
 
 import bisq.core.dao.governance.asset.StatefulAsset;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import lombok.Value;
 

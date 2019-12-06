@@ -88,6 +88,8 @@ import bisq.common.proto.network.NetworkProtoResolver;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.time.Clock;
+
 import lombok.extern.slf4j.Slf4j;
 
 // TODO Use ProtobufferException instead of ProtobufferRuntimeException
@@ -95,7 +97,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class CoreNetworkProtoResolver extends CoreProtoResolver implements NetworkProtoResolver {
     @Inject
-    public CoreNetworkProtoResolver() {
+    public CoreNetworkProtoResolver(Clock clock) {
+        this.clock = clock;
     }
 
     @Override

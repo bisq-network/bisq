@@ -47,7 +47,8 @@ import bisq.core.exceptions.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -56,6 +57,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXComboBox;
@@ -144,7 +146,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
     private final ToggleGroup navButtons = new ToggleGroup();
     private ChangeListener<String> walletServiceErrorMsgListener;
@@ -156,7 +158,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator, p2pNetworkProgressBar;
     private Label btcSplashInfo;
-    private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
+    private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private final DaoStateMonitoringService daoStateMonitoringService;
 
     @Inject
@@ -164,7 +166,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                     CachingViewLoader viewLoader,
                     Navigation navigation,
                     Transitions transitions,
-                    BSFormatter formatter,
+                    @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                     DaoStateMonitoringService daoStateMonitoringService) {
         super(model);
         this.viewLoader = viewLoader;
@@ -425,7 +427,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     @Override
     public void onCheckpointFail() {
-        new Popup<>().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
+        new Popup().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
                 .useShutDownButton()
                 .show();
     }
@@ -713,7 +715,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                 btcInfoLabel.setId("splash-error-state-msg");
                 btcInfoLabel.getStyleClass().add("error-text");
                 if (btcNetworkWarnMsgPopup == null) {
-                    btcNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                    btcNetworkWarnMsgPopup = new Popup().warning(newValue);
                     btcNetworkWarnMsgPopup.show();
                 }
             } else {
@@ -772,7 +774,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
         model.getP2pNetworkWarnMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
                 p2PNetworkWarnMsgPopup.show();
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();

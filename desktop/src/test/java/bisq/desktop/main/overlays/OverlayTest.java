@@ -15,12 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.storage.persistence;
+package bisq.desktop.main.overlays;
 
-import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import org.junit.Test;
 
-public interface ProtectedDataStoreListener {
-    void onAdded(ProtectedStorageEntry protectedStorageEntry);
+public class OverlayTest {
 
-    void onRemoved(ProtectedStorageEntry protectedStorageEntry);
+    @Test
+    public void typeSafeCreation() {
+        new A();
+        new C();
+        new D<>();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void typeUnsafeCreation() {
+        new B();
+    }
+
+    private static class A extends Overlay<A> {
+    }
+
+    private static class B extends Overlay<A> {
+    }
+
+    private static class C extends TabbedOverlay<C> {
+    }
+
+    private static class D<T> extends Overlay<D<T>> {
+    }
 }

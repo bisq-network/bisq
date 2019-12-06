@@ -51,9 +51,10 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.Timer;
@@ -66,6 +67,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
@@ -96,7 +98,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final Preferences preferences;
-    protected final BSFormatter btcFormatter;
+    protected final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final FiatVolumeValidator fiatVolumeValidator;
     private final FiatPriceValidator fiatPriceValidator;
@@ -196,7 +198,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  Navigation navigation,
                                  Preferences preferences,
-                                 BSFormatter btcFormatter,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                  BsqFormatter bsqFormatter) {
         super(dataModel);
 
@@ -326,11 +328,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                 double percentage = dataModel.getDirection() == compareDirection ? 1 - relation : relation - 1;
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
-                                marketPriceMargin.set(BSFormatter.formatToPercent(percentage));
+                                marketPriceMargin.set(FormattingUtils.formatToPercent(percentage));
                                 applyMakerFee();
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
-                                new Popup<>().warning(Res.get("validation.NaN")).show();
+                                new Popup().warning(Res.get("validation.NaN")).show();
                             }
                         } else {
                             log.debug("We don't have a market price. We use the static price instead.");
@@ -346,7 +348,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
                         double percentage = ParsingUtils.parsePercentStringToDouble(newValue);
                         if (percentage >= 1 || percentage <= -1) {
-                            new Popup<>().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
+                            new Popup().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
                                     Res.get("popup.warning.examplePercentageValue"))
                                     .show();
                         } else {
@@ -367,7 +369,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                         Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
                                 // protect from triggering unwanted updates
                                 ignorePriceStringListener = true;
-                                price.set(BSFormatter.formatRoundedDoubleWithPrecision(targetPrice, precision));
+                                price.set(FormattingUtils.formatRoundedDoubleWithPrecision(targetPrice, precision));
                                 ignorePriceStringListener = false;
                                 setPriceToModel();
                                 dataModel.setMarketPriceMargin(percentage);
@@ -379,7 +381,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                 marketPriceMargin.set("");
                                 String id = "showNoPriceFeedAvailablePopup";
                                 if (preferences.showAgain(id)) {
-                                    new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable"))
+                                    new Popup().warning(Res.get("popup.warning.noPriceFeedAvailable"))
                                             .dontShowAgainId(id)
                                             .show();
                                 }
@@ -389,11 +391,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 } catch (NumberFormatException t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup<>().warning(Res.get("validation.NaN")).show();
+                    new Popup().warning(Res.get("validation.NaN")).show();
                 } catch (Throwable t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup<>().warning(Res.get("validation.inputError", t.toString())).show();
+                    new Popup().warning(Res.get("validation.inputError", t.toString())).show();
                 }
             }
         };
@@ -444,7 +446,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         priceListener = (ov, oldValue, newValue) -> {
             ignorePriceStringListener = true;
             if (newValue != null)
-                price.set(BSFormatter.formatPrice(newValue));
+                price.set(FormattingUtils.formatPrice(newValue));
             else
                 price.set("");
 
@@ -464,7 +466,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
         securityDepositAsDoubleListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
-                buyerSecurityDeposit.set(BSFormatter.formatToPercent((double) newValue));
+                buyerSecurityDeposit.set(FormattingUtils.formatToPercent((double) newValue));
                 if (dataModel.getAmount().get() != null)
                     buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(dataModel.getBuyerSecurityDepositAsCoin()));
             } else {
@@ -523,7 +525,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
                 tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
                         feeInFiatAsString,
-                        BSFormatter.formatToPercentWithSymbol(percent)));
+                        FormattingUtils.formatToPercentWithSymbol(percent)));
             }
         }
         tradeFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
@@ -604,7 +606,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
 
         securityDepositValidator.setPaymentAccount(dataModel.paymentAccount);
-        buyerSecurityDeposit.set(BSFormatter.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
+        buyerSecurityDeposit.set(FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
         buyerSecurityDepositLabel.set(getSecurityDepositLabel());
 
         applyMakerFee();
@@ -681,7 +683,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     void onShowPayFundsScreen(Runnable actionHandler) {
-        dataModel.estimateTxSize();
+        dataModel.updateEstimatedFeeAndTxSize();
         dataModel.requestTxFee(actionHandler);
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
@@ -693,7 +695,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             updateButtonDisableState();
             return true;
         } else {
-            new Popup<>().warning(Res.get("shared.notEnoughFunds",
+            new Popup().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
                     btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
@@ -734,7 +736,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
             } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 amount.set(btcFormatter.formatCoin(btcValidator.getMaxTradeLimit()));
-                new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
                         btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                         Res.get("offerbook.warning.newVersionAnnouncement")))
                         .width(900)
@@ -796,7 +798,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 setPriceToModel();
                 ignorePriceStringListener = true;
                 if (dataModel.getPrice().get() != null)
-                    price.set(BSFormatter.formatPrice(dataModel.getPrice().get()));
+                    price.set(FormattingUtils.formatPrice(dataModel.getPrice().get()));
                 ignorePriceStringListener = false;
                 dataModel.calculateVolume();
                 dataModel.calculateAmount();
@@ -820,7 +822,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 // field wasn't set manually
                 inputIsMarketBasedPrice = true;
             }
-            marketPriceMargin.set(btcFormatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
+            marketPriceMargin.set(FormattingUtils.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
         }
 
         // We want to trigger a recalculation of the volume
@@ -883,15 +885,15 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     String postfix = dataModel.isBuyOffer() ?
                             Res.get("createOffer.tooLowSecDeposit.makerIsBuyer") :
                             Res.get("createOffer.tooLowSecDeposit.makerIsSeller");
-                    new Popup<>()
+                    new Popup()
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
-                                    BSFormatter.formatToPercentWithSymbol(defaultSecurityDeposit)) + "\n\n" + postfix)
+                                    FormattingUtils.formatToPercentWithSymbol(defaultSecurityDeposit)) + "\n\n" + postfix)
                             .width(800)
                             .actionButtonText(Res.get("createOffer.resetToDefault"))
                             .onAction(() -> {
                                 dataModel.setBuyerSecurityDeposit(defaultSecurityDeposit);
                                 ignoreSecurityDepositStringListener = true;
-                                buyerSecurityDeposit.set(BSFormatter.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
+                                buyerSecurityDeposit.set(FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
                                 ignoreSecurityDepositStringListener = false;
                             })
                             .closeButtonText(Res.get("createOffer.useLowerValue"))
@@ -908,7 +910,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private void applyBuyerSecurityDepositOnFocusOut() {
         setBuyerSecurityDepositToModel();
         ignoreSecurityDepositStringListener = true;
-        buyerSecurityDeposit.set(BSFormatter.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
+        buyerSecurityDeposit.set(FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
         ignoreSecurityDepositStringListener = false;
     }
 
@@ -930,9 +932,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     private void displayPriceOutOfRangePopup() {
-        Popup popup = new Popup<>();
+        Popup popup = new Popup();
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
-                BSFormatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
+                FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))
                 .onAction(popup::hide)
                 .closeButtonTextWithGoTo("navigation.settings.preferences")
@@ -940,7 +942,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 .show();
     }
 
-    BSFormatter getBtcFormatter() {
+    CoinFormatter getBtcFormatter() {
         return btcFormatter;
     }
 
@@ -1210,7 +1212,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         }
     }
 
-    private BSFormatter getFormatterForMakerFee() {
+    private CoinFormatter getFormatterForMakerFee() {
         return dataModel.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 
@@ -1226,7 +1228,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
             int precision = isCryptoCurrency ?
                     Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
-            price.set(BSFormatter.formatRoundedDoubleWithPrecision(manualPriceAsDouble, precision));
+            price.set(FormattingUtils.formatRoundedDoubleWithPrecision(manualPriceAsDouble, precision));
             setPriceToModel();
             dataModel.calculateTotalToPay();
             updateButtonDisableState();
@@ -1235,7 +1237,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             marketPriceMargin.set("");
             String id = "showNoPriceFeedAvailablePopup";
             if (preferences.showAgain(id)) {
-                new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable"))
+                new Popup().warning(Res.get("popup.warning.noPriceFeedAvailable"))
                         .dontShowAgainId(id)
                         .show();
             }

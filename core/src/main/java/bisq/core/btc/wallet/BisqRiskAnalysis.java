@@ -60,7 +60,7 @@ import static com.google.common.base.Preconditions.checkState;
 // override it.
 // The changes to DefaultRiskAnalysis are: removal of the RBF check and accept as standard an OP_RETURN outputs
 // with 0 value.
-// For Bisq's use cases RBF is not considered risky. Requiring a confirmation for RBF payments from a users
+// For Bisq's use cases RBF is not considered risky. Requiring a confirmation for RBF payments from a user's
 // external wallet to Bisq would hurt usability. The trade transaction requires anyway a confirmation and we don't see
 // a use case where a Bisq user accepts unconfirmed payment from untrusted peers and would not wait anyway for at least
 // one confirmation.

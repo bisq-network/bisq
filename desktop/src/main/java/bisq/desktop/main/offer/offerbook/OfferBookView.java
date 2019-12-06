@@ -56,7 +56,8 @@ import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -64,8 +65,7 @@ import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.inject.name.Named;
-
+import javax.inject.Named;
 import javax.inject.Inject;
 
 import de.jensd.fx.glyphs.GlyphIcons;
@@ -120,7 +120,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
     private final AccountAgeWitnessService accountAgeWitnessService;
@@ -148,7 +148,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     OfferBookView(OfferBookViewModel model,
                   Navigation navigation,
                   OfferDetailsWindow offerDetailsWindow,
-                  BSFormatter formatter,
+                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
                   @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
                   AccountAgeWitnessService accountAgeWitnessService) {
@@ -236,7 +236,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.setPlaceholder(placeholder);
 
         marketColumn.setComparator(Comparator.comparing(
-                o -> BSFormatter.getCurrencyPair(o.getOffer().getCurrencyCode()),
+                o -> CurrencyUtil.getCurrencyPair(o.getOffer().getCurrencyCode()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
@@ -326,7 +326,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             tableView.getColumns().add(0, marketColumn);
                     } else {
                         volumeColumn.setTitleWithHelpText(Res.get("offerbook.volume", code), Res.get("shared.amountHelp"));
-                        priceColumn.setTitle(BSFormatter.getPriceWithCurrencyCode(code));
+                        priceColumn.setTitle(CurrencyUtil.getPriceWithCurrencyCode(code));
                         priceColumn.getStyleClass().add("first-column");
 
                         tableView.getColumns().remove(marketColumn);
@@ -519,7 +519,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void onCreateOffer() {
         if (model.canCreateOrTakeOffer()) {
             if (!model.hasPaymentAccountForCurrency()) {
-                new Popup<>().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
+                new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                         .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                         .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                         .onAction(() -> {
@@ -558,27 +558,27 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     FiatAccountsView.class,
                     "navigation.account");
         } else if (isInsufficientCounterpartyTradeLimit) {
-            new Popup<>().warning(Res.get("offerbook.warning.counterpartyTradeRestrictions")).show();
+            new Popup().warning(Res.get("offerbook.warning.counterpartyTradeRestrictions")).show();
         } else if (!hasSameProtocolVersion) {
-            new Popup<>().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
+            new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
         } else if (isIgnored) {
-            new Popup<>().warning(Res.get("offerbook.warning.userIgnored")).show();
+            new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
         } else if (isOfferBanned) {
-            new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (isCurrencyBanned) {
-            new Popup<>().warning(Res.get("offerbook.warning.currencyBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
         } else if (isPaymentMethodBanned) {
-            new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
         } else if (isNodeAddressBanned) {
-            new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else if (requireUpdateToNewVersion) {
-            new Popup<>().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else if (isInsufficientTradeLimit) {
             final Optional<PaymentAccount> account = model.getMostMaturePaymentAccountForOffer(offer);
             if (account.isPresent()) {
                 final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
                         offer.getCurrencyCode(), offer.getMirroredDirection());
-                new Popup<>()
+                new Popup()
                         .warning(Res.get("offerbook.warning.tradeLimitNotMatching",
                                 DisplayUtils.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),
                                 formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
@@ -594,7 +594,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.canCreateOrTakeOffer()) {
             if (offer.getDirection() == OfferPayload.Direction.SELL &&
                     offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
-                new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
+                new Popup().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
                         .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
                         .onAction(() -> offerActionHandler.onTakeOffer(offer))
                         .show();
@@ -608,7 +608,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)))
+                new Popup().warning(Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -626,7 +626,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 () -> {
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (DontShowAgainLookup.showAgain(key))
-                        new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
+                        new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key)
@@ -634,12 +634,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 },
                 (message) -> {
                     log.error(message);
-                    new Popup<>().warning(Res.get("offerbook.removeOffer.failed", message)).show();
+                    new Popup().warning(Res.get("offerbook.removeOffer.failed", message)).show();
                 });
     }
 
     private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
-        new Popup<>().headLine(headLine)
+        new Popup().headLine(headLine)
                 .instruction(message)
                 .actionButtonTextWithGoTo(targetAsString)
                 .onAction(() -> {
@@ -697,7 +697,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty)
-                                    setText(BSFormatter.getCurrencyPair(item.getOffer().getCurrencyCode()));
+                                    setText(CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode()));
                                 else
                                     setText("");
                             }

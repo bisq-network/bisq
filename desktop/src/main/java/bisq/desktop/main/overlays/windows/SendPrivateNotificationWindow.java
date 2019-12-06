@@ -22,6 +22,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.locale.Res;
 
@@ -51,29 +52,13 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificationWindow> {
     private static final Logger log = LoggerFactory.getLogger(SendPrivateNotificationWindow.class);
 
+    private final PrivateNotificationManager privateNotificationManager;
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private final boolean useDevPrivilegeKeys;
-    private SendPrivateNotificationHandler sendPrivateNotificationHandler;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public interface SendPrivateNotificationHandler {
-        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-        boolean handle(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing,
-                       NodeAddress nodeAddress, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public SendPrivateNotificationWindow(PubKeyRing pubKeyRing, NodeAddress nodeAddress, boolean useDevPrivilegeKeys) {
+    public SendPrivateNotificationWindow(PrivateNotificationManager privateNotificationManager, PubKeyRing pubKeyRing, NodeAddress nodeAddress, boolean useDevPrivilegeKeys) {
+        this.privateNotificationManager = privateNotificationManager;
         this.pubKeyRing = pubKeyRing;
         this.nodeAddress = nodeAddress;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
@@ -92,16 +77,6 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         display();
     }
 
-    public SendPrivateNotificationWindow onAddAlertMessage(SendPrivateNotificationHandler sendPrivateNotificationHandler) {
-        this.sendPrivateNotificationHandler = sendPrivateNotificationHandler;
-        return this;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     protected void setupKeyHandler(Scene scene) {
         if (!hideCloseButton) {
@@ -115,8 +90,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10);
+        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
@@ -131,7 +105,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 PrivateNotificationPayload privateNotification = new PrivateNotificationPayload(alertMessageTextArea.getText());
-                if (!sendPrivateNotificationHandler.handle(
+                if (!privateNotificationManager.sendPrivateNotificationMessageIfKeyIsValid(
                         privateNotification,
                         pubKeyRing,
                         nodeAddress,
@@ -140,14 +114,14 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                             @Override
                             public void onArrived() {
                                 log.info("PrivateNotificationPayload arrived at peer {}.", nodeAddress);
-                                new Popup<>().feedback(Res.get("shared.messageArrived"))
+                                new Popup().feedback(Res.get("shared.messageArrived"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.info("PrivateNotificationPayload stored in mailbox for peer {}.", nodeAddress);
-                                new Popup<>().feedback(Res.get("shared.messageStoredInMailbox"))
+                                new Popup().feedback(Res.get("shared.messageStoredInMailbox"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
@@ -155,11 +129,11 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                             public void onFault(String errorMessage) {
                                 log.error("PrivateNotificationPayload failed: Peer {}, errorMessage={}", nodeAddress,
                                         errorMessage);
-                                new Popup<>().feedback(Res.get("shared.messageSendingFailed", errorMessage))
+                                new Popup().feedback(Res.get("shared.messageSendingFailed", errorMessage))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
                         }))
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
@@ -177,6 +151,4 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }
-
-
 }

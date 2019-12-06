@@ -22,12 +22,14 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -36,18 +38,20 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import javafx.collections.ObservableList;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
 
     @Inject
     public OpenOffersViewModel(OpenOffersDataModel dataModel,
                                P2PService p2PService,
-                               BSFormatter btcFormatter,
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                BsqFormatter bsqFormatter) {
         super(dataModel);
 
@@ -89,8 +93,8 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         if (price != null) {
             String postFix = "";
             if (offer.isUseMarketBasedPrice())
-                postFix = " (" + BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            return BSFormatter.formatPrice(price) + postFix;
+                postFix = " (" + FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+            return FormattingUtils.formatPrice(price) + postFix;
         } else {
             return Res.get("shared.na");
         }
@@ -111,7 +115,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode());
     }
 
     String getDate(OpenOfferListItem item) {

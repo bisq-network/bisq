@@ -34,8 +34,9 @@ public class LanguageUtil {
             "el", // Greek
             "es", // Spanish
             "pt", // Portuguese
-            "pt_BR", // Brazilian Portuguese
-            "zh", // Chinese
+            "pt-BR", // Portuguese (Brazil)
+            "zh-Hans", // Chinese [Han Simplified]
+            "zh-Hant", // Chinese [Han Traditional]
             "ru", // Russian
             "fr", // French
             "vi", // Vietnamese
@@ -44,7 +45,7 @@ public class LanguageUtil {
             "fa" // Persian
             /*
             // not translated yet
-            "sr", // Serbian
+            "sr-Latn-RS", // Serbian [Latin] (Serbia)
             "hu", // Hungarian
             "ro", // Romanian
             "tr" // Turkish
@@ -112,24 +113,16 @@ public class LanguageUtil {
     }
 
     public static String getDefaultLanguageLocaleAsCode() {
-        return new Locale(LanguageUtil.getDefaultLanguage(), "").getLanguage();
+        return new Locale(LanguageUtil.getDefaultLanguage()).getLanguage();
     }
 
     public static String getEnglishLanguageLocaleCode() {
-        return new Locale(Locale.ENGLISH.getLanguage(), "").getLanguage();
+        return new Locale(Locale.ENGLISH.getLanguage()).getLanguage();
     }
 
     public static String getDisplayName(String code) {
-        Locale locale = new Locale(code.toUpperCase());
-        if (locale.getLanguage().equals("sr")) {
-            // Serbia
-            // shows it in russian by default
-            return "Srpski";
-        } else if (locale.getLanguage().equals("pt_br")) {
-            return "português (Brasil)";
-        } else {
-            return locale.getDisplayName(locale);
-        }
+        Locale locale = Locale.forLanguageTag(code);
+        return locale.getDisplayName(locale);
     }
 
     public static boolean isDefaultLanguageRTL() {

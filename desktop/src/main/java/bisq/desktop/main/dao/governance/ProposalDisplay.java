@@ -58,7 +58,7 @@ import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.asset.Asset;
@@ -136,7 +136,7 @@ public class ProposalDisplay {
     @Getter
     private List<TextInputControl> inputControls = new ArrayList<>();
     @Getter
-    private List<ComboBox> comboBoxes = new ArrayList<>();
+    private List<ComboBox<?>> comboBoxes = new ArrayList<>();
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
     private ChangeListener<Param> paramChangeListener;
@@ -602,10 +602,8 @@ public class ProposalDisplay {
             inputControl.focusedProperty().addListener(focusOutListener);
         });
         comboBoxes.stream()
-                .filter(Objects::nonNull).forEach(comboBox -> {
-            //noinspection unchecked
-            comboBox.getSelectionModel().selectedItemProperty().addListener(inputListener);
-        });
+                .filter(Objects::nonNull)
+                .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().addListener(inputListener));
     }
 
     public void removeListeners() {
@@ -615,10 +613,8 @@ public class ProposalDisplay {
             inputControl.focusedProperty().removeListener(focusOutListener);
         });
         comboBoxes.stream()
-                .filter(Objects::nonNull).forEach(comboBox -> {
-            //noinspection unchecked
-            comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener);
-        });
+                .filter(Objects::nonNull)
+                .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener));
 
         if (paramComboBox != null && paramChangeListener != null)
             paramComboBox.getSelectionModel().selectedItemProperty().removeListener(paramChangeListener);

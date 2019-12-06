@@ -30,7 +30,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -210,7 +210,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                         .append(" (No. of signed accounts: ").append(list.size()).append(")\n");
                 list.forEach(traderDataItem -> {
                     sb.append("Account created: ")
-                            .append(BSFormatter.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
+                            .append(FormattingUtils.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
                             .append(" Account: ")
                             .append(traderDataItem.getPaymentAccountPayload().getPaymentDetails()).append("\n");
                 });
@@ -226,7 +226,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                     .append(" (No. of signed accounts: ").append(traderDataItemList.size()).append(")\n");
             traderDataItemList.forEach(traderDataItem -> {
                 sb.append("Account created: ")
-                        .append(BSFormatter.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
+                        .append(FormattingUtils.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
                         .append(" Account: ")
                         .append(traderDataItem.getPaymentAccountPayload().getPaymentDetails()).append("\n");
             });
@@ -286,7 +286,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                     addSuccessContent();
                 }
             } else {
-                new Popup<>().error(Res.get("popup.accountSigning.signAccounts.ECKey.error")).onClose(this::hide).show();
+                new Popup().error(Res.get("popup.accountSigning.signAccounts.ECKey.error")).onClose(this::hide).show();
             }
 
         });

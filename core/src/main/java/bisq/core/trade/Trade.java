@@ -685,9 +685,9 @@ public abstract class Trade implements Tradable, Model {
         return delayedPayoutTx;
     }
 
-    // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we
-    // will received it again at next startup. Such might happen in edge cases when the user shuts down after we
-    // received the msb but before the init is called.
+    // We don't need to persist the msg as if we don't apply it it will not be removed from the P2P network and we
+    // will receive it again on next startup. This might happen in edge cases when the user shuts down after we
+    // received the msg but before the init is called.
     void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
@@ -911,12 +911,37 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isFundsLockedIn() {
-        return isDepositPublished() &&
-                !isPayoutPublished() &&
-                disputeState != DisputeState.DISPUTE_CLOSED &&
-                disputeState != DisputeState.REFUND_REQUESTED &&
-                disputeState != DisputeState.REFUND_REQUEST_STARTED_BY_PEER &&
-                disputeState != DisputeState.REFUND_REQUEST_CLOSED;
+        // If no deposit tx was published we have no funds locked in
+        if (!isDepositPublished()) {
+            return false;
+        }
+
+        // If we have the payout tx published (non disputed case) we have no funds locked in. Here we might have more
+        // complex cases where users open a mediation but continue the trade to finalize it without mediated payout.
+        // The trade state handles that but does not handle mediated payouts or refund agents payouts.
+        if (isPayoutPublished()) {
+            return false;
+        }
+
+        // Legacy arbitration is not handled anymore as not used anymore.
+
+        // In mediation case we check for the mediationResultState. As there are multiple sub-states we use ordinal.
+        if (disputeState == DisputeState.MEDIATION_CLOSED) {
+            if (mediationResultState != null &&
+                    mediationResultState.ordinal() >= MediationResultState.PAYOUT_TX_PUBLISHED.ordinal()) {
+                return false;
+            }
+        }
+
+        // In refund agent case the funds are spent anyway with the time locked payout. We do not consider that as
+        // locked in funds.
+        if (disputeState == DisputeState.REFUND_REQUESTED ||
+                disputeState == DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
+                disputeState == DisputeState.REFUND_REQUEST_CLOSED) {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean isDepositConfirmed() {

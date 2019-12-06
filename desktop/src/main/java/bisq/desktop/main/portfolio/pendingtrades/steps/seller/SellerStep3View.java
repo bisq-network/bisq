@@ -294,10 +294,10 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                if (model.isSignWitnessTrade(true)) {
+                if (model.isSignWitnessTrade()) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
                 }
-                new Popup<>()
+                new Popup()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
@@ -351,13 +351,13 @@ public class SellerStep3View extends TradeStepView {
                 message += Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
             }
 
-            if (model.isSignWitnessTrade(true)) {
+            if (model.isSignWitnessTrade()) {
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
             }
         }
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();
         }
@@ -370,7 +370,7 @@ public class SellerStep3View extends TradeStepView {
         if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
-        model.maybeSignWitness(true);
+        model.maybeSignWitness();
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed.
@@ -381,7 +381,7 @@ public class SellerStep3View extends TradeStepView {
         }, errorMessage -> {
             // confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 

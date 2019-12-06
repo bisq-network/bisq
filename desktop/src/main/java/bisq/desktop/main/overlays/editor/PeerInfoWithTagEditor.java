@@ -245,10 +245,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                 doClose();
                 UserThread.runAfter(() -> {
                     //TODO only taker could send msg as maker would use its own key from offer....
-                    PubKeyRing pubKeyRing = offer.getPubKeyRing();
-                    new SendPrivateNotificationWindow(pubKeyRing, offer.getMakerNodeAddress(), useDevPrivilegeKeys)
-                            .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
-                            .show();
+                    new SendPrivateNotificationWindow(
+                            privateNotificationManager,
+                            offer.getPubKeyRing(),
+                            offer.getMakerNodeAddress(),
+                            useDevPrivilegeKeys
+                    ).show();
                 }, 100, TimeUnit.MILLISECONDS);
             }
         };

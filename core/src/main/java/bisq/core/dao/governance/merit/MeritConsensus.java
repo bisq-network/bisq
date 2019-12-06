@@ -121,11 +121,11 @@ public class MeritConsensus {
         if (issuanceHeight < 0)
             throw new IllegalArgumentException("issuanceHeight must not be negative. issuanceHeight=" + issuanceHeight);
 
-        // We use a linear function  to apply a factor for the issuance amount of 1 if the issuance was recent and 0
+        // We use a linear function to apply a factor for the issuance amount of 1 if the issuance was recent and 0
         // if the issuance was 2 years old or older.
         // To avoid rounding issues with double values we multiply initially with a large number and divide at the end
-        // by that number again. As we multiply the amount in satoshi we get a reasonable good precision even the long
-        // division is not using rounding. Sticking with long values makes that operation more safe against consensus
+        // by that number again. As we multiply the amount in satoshis we get a reasonable good precision even the long
+        // division is not using rounding. Sticking with long values makes that operation safer against consensus
         // failures causes by rounding differences with double.
 
         long maxAge = 2 * blocksPerYear; // maxAge=100 000 (MeritConsensus.BLOCKS_PER_YEAR is 50_000)

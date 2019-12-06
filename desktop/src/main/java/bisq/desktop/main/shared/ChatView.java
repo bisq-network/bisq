@@ -32,7 +32,7 @@ import bisq.core.support.SupportManager;
 import bisq.core.support.SupportSession;
 import bisq.core.support.dispute.Attachment;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.network.Connection;
 
@@ -133,12 +133,12 @@ public class ChatView extends AnchorPane {
     private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
     private ChangeListener<String> sendMessageErrorPropertyListener;
 
-    protected final BSFormatter formatter;
+    protected final CoinFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private SupportManager supportManager;
     private Optional<SupportSession> optionalSupportSession = Optional.empty();
 
-    public ChatView(SupportManager supportManager, BSFormatter formatter) {
+    public ChatView(SupportManager supportManager, CoinFormatter formatter) {
         this.supportManager = supportManager;
         this.formatter = formatter;
         allowAttachments = true;
@@ -297,7 +297,7 @@ public class ChatView extends AnchorPane {
                     }
 
                     @Override
-                    public void updateItem(ChatMessage message, boolean empty) {
+                    protected void updateItem(ChatMessage message, boolean empty) {
                         super.updateItem(message, empty);
                         if (message != null && !empty) {
                             copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
@@ -311,6 +311,14 @@ public class ChatView extends AnchorPane {
                             if (!messageAnchorPane.prefWidthProperty().isBound())
                                 messageAnchorPane.prefWidthProperty()
                                         .bind(messageListView.widthProperty().subtract(padding + GUIUtil.getScrollbarWidth(messageListView)));
+
+                            AnchorPane.clearConstraints(bg);
+                            AnchorPane.clearConstraints(headerLabel);
+                            AnchorPane.clearConstraints(arrow);
+                            AnchorPane.clearConstraints(messageLabel);
+                            AnchorPane.clearConstraints(copyIcon);
+                            AnchorPane.clearConstraints(statusHBox);
+                            AnchorPane.clearConstraints(attachmentsBox);
 
                             AnchorPane.setTopAnchor(bg, 15d);
                             AnchorPane.setBottomAnchor(bg, bottomBorder);
@@ -381,7 +389,6 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setRightAnchor(copyIcon, padding);
                                 AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                 AnchorPane.setRightAnchor(attachmentsBox, padding);
-                                AnchorPane.clearConstraints(statusHBox);
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             } else if (senderIsTrader) {
                                 AnchorPane.setLeftAnchor(headerLabel, padding + arrowWidth);
@@ -393,19 +400,17 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setRightAnchor(copyIcon, padding);
                                 AnchorPane.setLeftAnchor(attachmentsBox, padding + arrowWidth);
                                 AnchorPane.setRightAnchor(attachmentsBox, padding);
-                                AnchorPane.clearConstraints(statusHBox);
                                 AnchorPane.setRightAnchor(statusHBox, padding);
                             } else {
                                 AnchorPane.setRightAnchor(headerLabel, padding + arrowWidth);
-                                AnchorPane.setLeftAnchor(bg, border);
                                 AnchorPane.setRightAnchor(bg, border + arrowWidth);
+                                AnchorPane.setLeftAnchor(bg, border);
                                 AnchorPane.setRightAnchor(arrow, border);
                                 AnchorPane.setLeftAnchor(messageLabel, padding);
                                 AnchorPane.setRightAnchor(messageLabel, msgLabelPaddingRight + arrowWidth);
                                 AnchorPane.setRightAnchor(copyIcon, padding + arrowWidth);
                                 AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                 AnchorPane.setRightAnchor(attachmentsBox, padding + arrowWidth);
-                                AnchorPane.clearConstraints(statusHBox);
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
@@ -452,14 +457,6 @@ public class ChatView extends AnchorPane {
                                 sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
                             messageAnchorPane.prefWidthProperty().unbind();
-
-                            AnchorPane.clearConstraints(bg);
-                            AnchorPane.clearConstraints(headerLabel);
-                            AnchorPane.clearConstraints(arrow);
-                            AnchorPane.clearConstraints(messageLabel);
-                            AnchorPane.clearConstraints(copyIcon);
-                            AnchorPane.clearConstraints(statusHBox);
-                            AnchorPane.clearConstraints(attachmentsBox);
 
                             copyIcon.setOnMouseClicked(null);
                             messageLabel.setOnMouseClicked(null);
@@ -528,11 +525,11 @@ public class ChatView extends AnchorPane {
                 if (text.length() < 5_000) {
                     onSendMessage(text);
                 } else {
-                    new Popup<>().information(Res.get("popup.warning.messageTooLong")).show();
+                    new Popup().information(Res.get("popup.warning.messageTooLong")).show();
                 }
             }
         } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -556,9 +553,9 @@ public class ChatView extends AnchorPane {
                         int size = filesAsBytes.length;
                         int newSize = totalSize + size;
                         if (newSize > maxMsgSize) {
-                            new Popup<>().warning(Res.get("support.attachmentTooLarge", (newSize / 1024), maxSizeInKB)).show();
+                            new Popup().warning(Res.get("support.attachmentTooLarge", (newSize / 1024), maxSizeInKB)).show();
                         } else if (size > maxMsgSize) {
-                            new Popup<>().warning(Res.get("support.maxSize", maxSizeInKB)).show();
+                            new Popup().warning(Res.get("support.maxSize", maxSizeInKB)).show();
                         } else {
                             tempAttachments.add(new Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[" + Res.get("support.attachment") + " " + result.getName() + "]");
@@ -573,7 +570,7 @@ public class ChatView extends AnchorPane {
                 }
             }
         } else {
-            new Popup<>().warning(Res.get("support.tooManyAttachments")).show();
+            new Popup().warning(Res.get("support.tooManyAttachments")).show();
         }
     }
 

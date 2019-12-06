@@ -182,8 +182,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
-        checkNotNull(signatureAsBase64, "signatureAsBase64 must nto be null");
-        checkNotNull(ownerPubKeyBytes, "ownerPubKeyBytes must nto be null");
+        checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
+        checkNotNull(ownerPubKeyBytes, "ownerPubKeyBytes must not be null");
         List<protobuf.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(PaymentAccountFilter::toProtoMessage)
                 .collect(Collectors.toList());

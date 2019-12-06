@@ -21,11 +21,16 @@ package bisq.core.account.sign;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 
 import com.google.common.base.Charsets;
@@ -44,9 +49,7 @@ import static bisq.core.account.sign.SignedWitness.VerificationMethod.ARBITRATOR
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.TRADE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class SignedWitnessServiceTest {
     private SignedWitnessService signedWitnessService;
@@ -74,6 +77,8 @@ public class SignedWitnessServiceTest {
     private long SIGN_AGE_1 = SignedWitnessService.SIGNER_AGE_DAYS * 3 + 5;
     private long SIGN_AGE_2 = SignedWitnessService.SIGNER_AGE_DAYS * 2 + 4;
     private long SIGN_AGE_3 = SignedWitnessService.SIGNER_AGE_DAYS + 3;
+    private KeyRing keyRing;
+    private P2PService p2pService;
 
 
     @Before
@@ -81,7 +86,9 @@ public class SignedWitnessServiceTest {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
-        signedWitnessService = new SignedWitnessService(null, null, arbitratorManager, null, appendOnlyDataStoreService, null);
+        keyRing = mock(KeyRing.class);
+        p2pService = mock(P2PService.class);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
@@ -331,5 +338,35 @@ public class SignedWitnessServiceTest {
         return Instant.ofEpochMilli(new Date().getTime()).minus(days, ChronoUnit.DAYS).toEpochMilli();
     }
 
+    @Test
+    public void testSignAccountAgeWitness_withTooLowTradeAmount() throws CryptoException {
+        long accountCreationTime = getTodayMinusNDays(SIGN_AGE_1 + 1);
+
+        KeyPair peerKeyPair = Sig.generateKeyPair();
+        KeyPair signerKeyPair = Sig.generateKeyPair();
+
+        when(keyRing.getSignatureKeyPair()).thenReturn(signerKeyPair);
+
+        AccountAgeWitness accountAgeWitness = new AccountAgeWitness(account1DataHash, accountCreationTime);
+        signedWitnessService.signAccountAgeWitness(Coin.ZERO, accountAgeWitness, peerKeyPair.getPublic());
+
+        verify(p2pService, never()).addPersistableNetworkPayload(any(PersistableNetworkPayload.class), anyBoolean());
+    }
+
+    @Test
+    public void testSignAccountAgeWitness_withSufficientTradeAmount() throws CryptoException {
+        long accountCreationTime = getTodayMinusNDays(SIGN_AGE_1 + 1);
+
+        KeyPair peerKeyPair = Sig.generateKeyPair();
+        KeyPair signerKeyPair = Sig.generateKeyPair();
+
+        when(keyRing.getSignatureKeyPair()).thenReturn(signerKeyPair);
+
+
+        AccountAgeWitness accountAgeWitness = new AccountAgeWitness(account1DataHash, accountCreationTime);
+        signedWitnessService.signAccountAgeWitness(SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, peerKeyPair.getPublic());
+
+        verify(p2pService, times(1)).addPersistableNetworkPayload(any(PersistableNetworkPayload.class), anyBoolean());
+    }
 }
 

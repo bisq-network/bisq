@@ -38,9 +38,12 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import com.google.common.math.LongMath;
 
@@ -74,15 +77,15 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final Navigation navigation;
 
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
-    private final List<XYChart.Data> buyData = new ArrayList<>();
-    private final List<XYChart.Data> sellData = new ArrayList<>();
+    private final List<XYChart.Data<Number, Number>> buyData = new ArrayList<>();
+    private final List<XYChart.Data<Number, Number>> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
     final CurrencyList currencyListItems;
     private final ObservableList<OfferListItem> topBuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<OfferListItem> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private int selectedTabIndex;
     public final IntegerProperty maxPlacesForBuyPrice = new SimpleIntegerProperty();
     public final IntegerProperty maxPlacesForBuyVolume = new SimpleIntegerProperty();
@@ -96,7 +99,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
-                                   AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, BSFormatter formatter) {
+                                   AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
@@ -131,7 +134,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             fillTradeCurrencies();
         };
 
-        currenciesUpdatedListener = new ChangeListener<Number>() {
+        currenciesUpdatedListener = new ChangeListener<>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (!isAnyPricePresent()) {
@@ -210,11 +213,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<XYChart.Data> getBuyData() {
+    public List<XYChart.Data<Number, Number>> getBuyData() {
         return buyData;
     }
 
-    public List<XYChart.Data> getSellData() {
+    public List<XYChart.Data<Number, Number>> getSellData() {
         return sellData;
     }
 
@@ -359,7 +362,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 
-    private void buildChartAndTableEntries(List<Offer> sortedList, OfferPayload.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
+    private void buildChartAndTableEntries(List<Offer> sortedList,
+                                           OfferPayload.Direction direction,
+                                           List<XYChart.Data<Number, Number>> data,
+                                           ObservableList<OfferListItem> offerTableList) {
         data.clear();
         double accumulatedAmount = 0;
         List<OfferListItem> offerTableListTemp = new ArrayList<>();

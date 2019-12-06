@@ -65,22 +65,8 @@ public class ProtectedDataStoreService {
         services.stream()
                 .filter(service -> service.canHandle(entry))
                 .forEach(service -> {
-                    service.putIfAbsent(hash, entry);
+                    service.put(hash, entry);
                 });
-    }
-
-    public ProtectedStorageEntry putIfAbsent(P2PDataStorage.ByteArray hash, ProtectedStorageEntry entry) {
-        Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = getMap();
-        if (!map.containsKey(hash)) {
-            put(hash, entry);
-            return null;
-        } else {
-            return map.get(hash);
-        }
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return getMap().containsKey(hash);
     }
 
     public ProtectedStorageEntry remove(P2PDataStorage.ByteArray hash, ProtectedStorageEntry protectedStorageEntry) {

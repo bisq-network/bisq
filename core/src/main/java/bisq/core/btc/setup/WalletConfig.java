@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -465,7 +466,7 @@ public class WalletConfig extends AbstractIdleService {
                 vPeerGroup.startBlockChainDownload(listener);
                 listener.await();
             } else {
-                Futures.addCallback(vPeerGroup.startAsync(), new FutureCallback() {
+                Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
                     @Override
                     public void onSuccess(@Nullable Object result) {
                         final PeerDataEventListener listener = downloadListener == null ?
@@ -476,7 +477,6 @@ public class WalletConfig extends AbstractIdleService {
                     @Override
                     public void onFailure(@NotNull Throwable t) {
                         throw new RuntimeException(t);
-
                     }
                 });
             }

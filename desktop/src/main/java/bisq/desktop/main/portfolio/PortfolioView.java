@@ -18,8 +18,7 @@
 package bisq.desktop.main.portfolio;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -50,7 +49,7 @@ import javafx.collections.ListChangeListener;
 import java.util.List;
 
 @FxmlView
-public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class PortfolioView extends ActivatableView<TabPane, Void> {
 
     @FXML
     Tab openOffersTab, pendingTradesTab, closedTradesTab;

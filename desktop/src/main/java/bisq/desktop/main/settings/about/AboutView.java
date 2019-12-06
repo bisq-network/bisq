@@ -17,8 +17,7 @@
 
 package bisq.desktop.main.settings.about;
 
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -41,7 +40,7 @@ import static bisq.desktop.util.FormBuilder.addLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
+public class AboutView extends ActivatableView<GridPane, Void> {
 
     private int gridRow = 0;
 

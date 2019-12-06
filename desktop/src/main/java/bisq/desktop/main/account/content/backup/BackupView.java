@@ -141,7 +141,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                     String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
                     FileUtil.copyDirectory(dataDir, new File(destination));
-                    new Popup<>().feedback(Res.get("account.backup.success", destination)).show();
+                    new Popup().feedback(Res.get("account.backup.success", destination)).show();
                 } catch (IOException e) {
                     e.printStackTrace();
                     log.error(e.getMessage());
@@ -181,7 +181,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     private void showWrongPathWarningAndReset(@Nullable Throwable t) {
         String error = t != null ? Res.get("shared.errorMessageInline", t.getMessage()) : "";
-        new Popup<>().warning(Res.get("account.backup.directoryNotAccessible", error)).show();
+        new Popup().warning(Res.get("account.backup.directoryNotAccessible", error)).show();
         applyBackupDirectory(Utilities.getSystemHomeDirectory());
     }
 

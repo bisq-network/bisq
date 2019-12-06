@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
+// Here we add the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
 @EqualsAndHashCode(callSuper = true)
 @Value

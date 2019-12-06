@@ -56,8 +56,8 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -121,13 +121,13 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-public abstract class MutableOfferView<M extends MutableOfferViewModel> extends ActivatableViewAndModel<AnchorPane, M> {
+public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
     public static final String BUYER_SECURITY_DEPOSIT_NEWS = "buyerSecurityDepositNews0.9.5";
     protected final Navigation navigation;
     private final Preferences preferences;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
     private ScrollPane scrollPane;
@@ -185,7 +185,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                             Preferences preferences,
                             Transitions transitions,
                             OfferDetailsWindow offerDetailsWindow,
-                            BSFormatter btcFormatter,
+                            CoinFormatter btcFormatter,
                             BsqFormatter bsqFormatter) {
         super(model);
 
@@ -299,7 +299,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
-            new Popup<>().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
+            new Popup().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
                     .instruction(Res.get("popup.warning.noTradingAccountSetup.msg"))
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
@@ -332,7 +332,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             model.getDataModel().swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
             if (preferences.showAgain(key)) {
-                new Popup<>().information(Res.get("createOffer.alreadyFunded"))
+                new Popup().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                         .dontShowAgainId(key)
@@ -379,7 +379,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
-            new Popup<>().warning(message)
+            new Popup().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
                     .show();
@@ -417,7 +417,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                         model.getTradeFee(),
                         model.getTxFee()
                 );
-                new Popup<>().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
+                new Popup().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
                         .instruction(message)
                         .dontShowAgainId(key)
                         .show();
@@ -438,10 +438,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
 
-        //noinspection PointlessBooleanExpression
         if (!DevEnv.isDevMode()) {
             String key = "securityDepositInfo";
-            new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
+            new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bisq.network/faq#6"))
                     .useIUnderstandButton()
@@ -554,11 +553,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> BSFormatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
 
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
-        priceDescriptionLabel.textProperty().bind(createStringBinding(() -> BSFormatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get(), "shared.fixedPriceInCurForCur"), model.tradeCurrencyCode));
+        priceDescriptionLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getPriceWithCurrencyCode(model.tradeCurrencyCode.get(), "shared.fixedPriceInCurForCur"), model.tradeCurrencyCode));
         volumeDescriptionLabel.textProperty().bind(createStringBinding(model.volumeDescriptionLabel::get, model.tradeCurrencyCode, model.volumeDescriptionLabel));
         amountTextField.textProperty().bindBidirectional(model.amount);
         minAmountTextField.textProperty().bindBidirectional(model.minAmount);
@@ -705,7 +704,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
-                UserThread.runAfter(() -> new Popup<>().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
+                UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
 
@@ -725,7 +724,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups
                 String key = "createOfferSuccessInfo";
                 if (DontShowAgainLookup.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup<>().headLine(Res.get("createOffer.success.headline"))
+                    UserThread.runAfter(() -> new Popup().headLine(Res.get("createOffer.success.headline"))
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
@@ -1219,7 +1218,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         cancelButton2.setOnAction(e -> {
             if (model.getDataModel().getIsBtcWalletFunded().get()) {
-                new Popup<>().warning(Res.get("createOffer.warnCancelOffer"))
+                new Popup().warning(Res.get("createOffer.warnCancelOffer"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
@@ -1241,7 +1240,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup<>().warning(Res.get("shared.openDefaultWalletFailed")).show();
+            new Popup().warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 

@@ -207,7 +207,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         dispute.setIsClosed(true);
 
         if (dispute.disputeResultProperty().get() != null) {
-            log.warn("We got already a dispute result. That should only happen if a dispute needs to be closed " +
+            log.warn("We already got a dispute result. That should only happen if a dispute needs to be closed " +
                     "again because the first close did not succeed. TradeId = " + tradeId);
         }
 
@@ -288,7 +288,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                         success = false;
                     }
                 } else {
-                    log.warn("We got already a payout tx. That might be the case if the other peer did not get the " +
+                    log.warn("We already got a payout tx. That might be the case if the other peer did not get the " +
                             "payout tx and opened a dispute. TradeId = " + tradeId);
                     dispute.setDisputePayoutTxId(payoutTx.getHashAsString());
                     sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);

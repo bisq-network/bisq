@@ -18,8 +18,7 @@
 package bisq.desktop.main.settings.network;
 
 import bisq.desktop.app.BisqApp;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -36,7 +35,8 @@ import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
@@ -45,6 +45,7 @@ import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.fxml.FXML;
 
@@ -74,7 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
+public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
     @FXML
     TitledGroupBg p2pHeader, btcHeader;
@@ -111,7 +112,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private final BisqEnvironment bisqEnvironment;
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final ClockWatcher clockWatcher;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
 
@@ -142,7 +143,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                                BisqEnvironment bisqEnvironment,
                                TorNetworkSettingsWindow torNetworkSettingsWindow,
                                ClockWatcher clockWatcher,
-                               BSFormatter formatter) {
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
@@ -274,7 +275,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup<>().information(Res.get("settings.net.needRestart"))
+                new Popup().information(Res.get("settings.net.needRestart"))
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
@@ -305,8 +306,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         totalTrafficTextField.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(),
                 Statistic.totalReceivedBytesProperty(),
                 (sent, received) -> Res.get("settings.net.sentReceived",
-                        BSFormatter.formatBytes((long) sent),
-                        BSFormatter.formatBytes((long) received))));
+                        FormattingUtils.formatBytes((long) sent),
+                        FormattingUtils.formatBytes((long) received))));
 
         bitcoinSortedList.comparatorProperty().bind(bitcoinPeersTableView.comparatorProperty());
         bitcoinPeersTableView.setItems(bitcoinSortedList);
@@ -377,7 +378,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     private void showShutDownPopup() {
-        new Popup<>()
+        new Popup()
                 .information(Res.get("settings.net.needRestart"))
                 .closeButtonText(Res.get("shared.cancel"))
                 .useShutDownButton()
@@ -400,7 +401,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 btcNodesLabel.setDisable(false);
                 if (calledFromUser && !btcNodesInputTextField.getText().isEmpty()) {
                     if (isPreventPublicBtcNetwork()) {
-                        new Popup<>().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
+                        new Popup().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
                                 .onAction(() -> {
                                     UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
                                 }).show();
@@ -413,7 +414,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 btcNodesInputTextField.setDisable(true);
                 btcNodesLabel.setDisable(true);
                 if (calledFromUser)
-                    new Popup<>()
+                    new Popup()
                             .warning(Res.get("settings.net.warn.usePublicNodes"))
                             .actionButtonText(Res.get("settings.net.warn.usePublicNodes.useProvided"))
                             .onAction(() -> {

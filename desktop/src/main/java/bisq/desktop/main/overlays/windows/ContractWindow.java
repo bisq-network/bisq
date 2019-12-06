@@ -37,7 +37,8 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -47,6 +48,7 @@ import bisq.common.crypto.PubKeyRing;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -77,7 +79,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private Dispute dispute;
 
 
@@ -90,7 +92,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                           MediationManager mediationManager,
                           RefundManager refundManager,
                           AccountAgeWitnessService accountAgeWitnessService,
-                          BSFormatter formatter) {
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
         this.refundManager = refundManager;
@@ -154,7 +156,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.offerType"),
                 DisplayUtils.getDirectionBothSides(offer.getDirection(), currencyCode));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                BSFormatter.formatPrice(contract.getTradePrice()));
+                FormattingUtils.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, DisplayUtils.formatVolumeLabel(currencyCode, ":"),

@@ -34,7 +34,7 @@ import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import javax.inject.Inject;
 
@@ -120,7 +120,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        observableList.setAll(daoFacade.getBondedRoles().stream()
+        observableList.setAll(daoFacade.getAcceptedBondedRoles().stream()
                 .map(bond -> new RolesListItem(bond, daoFacade))
                 .sorted(Comparator.comparing(RolesListItem::getLockupDate).reversed())
                 .collect(Collectors.toList()));

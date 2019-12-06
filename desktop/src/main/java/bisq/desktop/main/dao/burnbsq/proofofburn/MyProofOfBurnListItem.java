@@ -23,7 +23,7 @@ import bisq.core.dao.governance.proofofburn.MyProofOfBurn;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Utilities;
 

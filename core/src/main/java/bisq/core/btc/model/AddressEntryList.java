@@ -111,7 +111,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
 
             // In case we restore from seed words and have balance we need to add the relevant addresses to our list.
-            // IssuedReceiveAddresses does not contain all addressed where we expect balance so we need to listen to
+            // IssuedReceiveAddresses does not contain all addresses where we expect balance so we need to listen to
             // incoming txs at blockchain sync to add the rest.
             if (wallet.getBalance().isPositive()) {
                 wallet.getIssuedReceiveAddresses().forEach(address -> {

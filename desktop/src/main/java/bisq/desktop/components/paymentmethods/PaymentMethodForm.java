@@ -38,7 +38,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple3;
@@ -81,7 +81,7 @@ public abstract class PaymentMethodForm {
     protected final InputValidator inputValidator;
     protected final GridPane gridPane;
     protected int gridRow;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     protected final BooleanProperty allInputsValid = new SimpleBooleanProperty();
 
     protected int gridRowFrom;
@@ -90,7 +90,7 @@ public abstract class PaymentMethodForm {
     protected ComboBox<TradeCurrency> currencyComboBox;
 
     public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
-                             InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+                             InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         this.paymentAccount = paymentAccount;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.inputValidator = inputValidator;
@@ -264,7 +264,7 @@ public abstract class PaymentMethodForm {
 
     void applyTradeCurrency(TradeCurrency tradeCurrency, FiatCurrency defaultCurrency) {
         if (!defaultCurrency.equals(tradeCurrency)) {
-            new Popup<>().warning(Res.get("payment.foreign.currency"))
+            new Popup().warning(Res.get("payment.foreign.currency"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
                         paymentAccount.setSingleTradeCurrency(tradeCurrency);
@@ -281,6 +281,7 @@ public abstract class PaymentMethodForm {
 
     void setAccountNameWithString(String name) {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
+            name = name.trim();
             name = StringUtils.abbreviate(name, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(name));

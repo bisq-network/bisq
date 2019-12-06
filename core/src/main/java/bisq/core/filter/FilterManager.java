@@ -41,8 +41,8 @@ import bisq.common.crypto.KeyRing;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -52,6 +52,7 @@ import java.security.SignatureException;
 import java.math.BigInteger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -133,23 +134,27 @@ public class FilterManager {
 
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
-                public void onAdded(ProtectedStorageEntry data) {
-                    if (data.getProtectedStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getProtectedStoragePayload();
-                        boolean wasValid = addFilter(filter);
-                        if (!wasValid) {
-                            UserThread.runAfter(() -> p2PService.getP2PDataStorage().removeInvalidProtectedStorageEntry(data), 1);
+                public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                    protectedStorageEntries.forEach(protectedStorageEntry -> {
+                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            boolean wasValid = addFilter(filter);
+                            if (!wasValid) {
+                                UserThread.runAfter(() -> p2PService.getP2PDataStorage().removeInvalidProtectedStorageEntry(protectedStorageEntry), 1);
+                            }
                         }
-                    }
+                    });
                 }
 
                 @Override
-                public void onRemoved(ProtectedStorageEntry data) {
-                    if (data.getProtectedStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getProtectedStoragePayload();
-                        if (verifySignature(filter))
-                            resetFilters();
-                    }
+                public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                    protectedStorageEntries.forEach(protectedStorageEntry -> {
+                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            if (verifySignature(filter))
+                                resetFilters();
+                        }
+                    });
                 }
             });
         }
@@ -169,7 +174,7 @@ public class FilterManager {
 
             @Override
             public void onUpdatedDataReceived() {
-                // We should have received all data at that point and if the filers was not set we
+                // We should have received all data at that point and if the filers were not set we
                 // clean up as it might be that we missed the filter remove message if we have not been online.
                 UserThread.runAfter(() -> {
                     if (filterProperty.get() == null)
@@ -308,7 +313,7 @@ public class FilterManager {
         }
     }
 
-    // We dont use full data from Filter as we are only interested in the filter data not the sig and keys
+    // We don't use full data from Filter as we are only interested in the filter data not the sig and keys
     private String getHexFromData(Filter filter) {
         protobuf.Filter.Builder builder = protobuf.Filter.newBuilder()
                 .addAllBannedOfferIds(filter.getBannedOfferIds())

@@ -18,7 +18,7 @@
 package bisq.desktop.main.dao.governance;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @FxmlView
-public class GovernanceView extends ActivatableViewAndModel implements DaoStateListener {
+public class GovernanceView extends ActivatableView<AnchorPane, Void> implements DaoStateListener {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final DaoFacade daoFacade;

@@ -4,7 +4,7 @@ import com.jfoenix.controls.JFXTabPane;
 
 import javafx.scene.layout.Region;
 
-public abstract class TabbedOverlay<T extends TabbedOverlay> extends Overlay {
+public abstract class TabbedOverlay<T extends TabbedOverlay<T>> extends Overlay<T> {
 
     protected JFXTabPane tabPane;
 

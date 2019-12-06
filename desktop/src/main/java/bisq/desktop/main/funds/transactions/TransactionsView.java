@@ -36,7 +36,8 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -55,6 +56,7 @@ import org.bitcoinj.wallet.listeners.WalletEventListener;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -110,7 +112,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final BtcWalletService btcWalletService;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -127,7 +129,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private TransactionsView(BtcWalletService btcWalletService,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             BSFormatter formatter,
+                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
                              OfferDetailsWindow offerDetailsWindow,
@@ -356,7 +358,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     } else {
                                         if (item.isDustAttackTx()) {
                                             hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
-                                            hyperlinkWithIcon.setOnAction(event -> new Popup<>().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
+                                            hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
                                             setGraphic(hyperlinkWithIcon);
                                         } else {
                                             setGraphic(new AutoTooltipLabel(item.getDetails()));
@@ -547,10 +549,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     if (tradable != null)
                         btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                    new Popup<>().information(Res.get("funds.tx.txSent")).show();
-                }, errorMessage -> new Popup<>().warning(errorMessage).show());
+                    new Popup().information(Res.get("funds.tx.txSent")).show();
+                }, errorMessage -> new Popup().warning(errorMessage).show());
             } catch (Throwable e) {
-                new Popup<>().warning(e.getMessage()).show();
+                new Popup().warning(e.getMessage()).show();
             }
         }
     }
@@ -640,7 +642,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         });
         // This is not intended for the public so we don't translate here
         String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
-        new Popup<>().headLine("Statistical info")
+        new Popup().headLine("Statistical info")
                 .information(message)
                 .actionButtonText("Copy")
                 .onAction(() -> Utilities.copyToClipboard(message +

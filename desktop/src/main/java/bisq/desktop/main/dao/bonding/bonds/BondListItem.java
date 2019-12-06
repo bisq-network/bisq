@@ -23,7 +23,7 @@ import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Utilities;
 

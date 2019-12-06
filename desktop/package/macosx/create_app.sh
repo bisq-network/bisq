@@ -6,7 +6,7 @@ mkdir -p deploy
 
 set -e
 
-version="1.2.3-SNAPSHOT"
+version="1.2.4-SNAPSHOT"
 
 cd ..
 ./gradlew :desktop:build -x test shadowJar
@@ -84,7 +84,7 @@ $JAVA_HOME/bin/javapackager \
     -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
     -name Bisq \
-    -title Bisq \
+    -title "A decentralized bitcoin exchange network." \
     -vendor Bisq \
     -outdir deploy \
     -srcdir deploy \

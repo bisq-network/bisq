@@ -32,11 +32,12 @@ import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.RefundSession;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 
@@ -47,7 +48,7 @@ public class RefundAgentView extends DisputeAgentView {
     public RefundAgentView(RefundManager refundManager,
                            KeyRing keyRing,
                            TradeManager tradeManager,
-                           BSFormatter formatter,
+                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            DisputeSummaryWindow disputeSummaryWindow,
                            PrivateNotificationManager privateNotificationManager,
                            ContractWindow contractWindow,

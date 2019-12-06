@@ -79,14 +79,14 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     }
 
     protected void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup<>().warning(Res.get("shared.askConfirmDeleteAccount"))
+        new Popup().warning(Res.get("shared.askConfirmDeleteAccount"))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     boolean isPaymentAccountUsed = deleteAccountFromModel(paymentAccount);
                     if (!isPaymentAccountUsed)
                         removeSelectAccountForm();
                     else
-                        UserThread.runAfter(() -> new Popup<>().warning(
+                        UserThread.runAfter(() -> new Popup().warning(
                                 Res.get("shared.cannotDeleteAccount"))
                                 .show(), 100, TimeUnit.MILLISECONDS);
                 })

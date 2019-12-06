@@ -59,10 +59,16 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
+import java.time.Clock;
+
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CoreProtoResolver implements ProtoResolver {
+    @Getter
+    protected Clock clock;
+
     @Override
     public PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         if (proto != null) {

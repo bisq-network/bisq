@@ -32,8 +32,8 @@ import bisq.common.proto.network.NetworkEnvelope;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Charsets;
 

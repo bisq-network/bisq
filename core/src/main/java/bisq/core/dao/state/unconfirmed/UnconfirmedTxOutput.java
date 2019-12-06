@@ -32,8 +32,8 @@ import javax.annotation.concurrent.Immutable;
 
 /**
  * Used for tracking unconfirmed change outputs to allow them to be spent in follow up
- * transactions in txType permits it. We can assume the the user is not intending to
- * double spend own transactions as well that he does not try to spend a invalid BSQ
+ * transactions in txType permits it. We can assume that the user is not intending to
+ * double spend own transactions as well that he does not try to spend an invalid BSQ
  * output to a BSQ address.
  * We do not allow spending unconfirmed BSQ outputs received from elsewhere.
  */

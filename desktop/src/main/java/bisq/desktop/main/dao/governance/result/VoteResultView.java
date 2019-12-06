@@ -60,7 +60,7 @@ import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
@@ -326,7 +326,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         });
                     });
             if (sb.length() != 0) {
-                new Popup<>().information(Res.get("dao.results.invalidVotes", sb.toString())).show();
+                new Popup().information(Res.get("dao.results.invalidVotes", sb.toString())).show();
             }
         }
     }

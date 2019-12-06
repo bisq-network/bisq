@@ -23,7 +23,8 @@ import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.debug.DebugView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.EmptyWalletWindow;
+import bisq.desktop.main.overlays.windows.BsqEmptyWalletWindow;
+import bisq.desktop.main.overlays.windows.BtcEmptyWalletWindow;
 import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
@@ -31,7 +32,6 @@ import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
@@ -39,7 +39,6 @@ import bisq.core.app.OSXStandbyModeDisabler;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -65,7 +64,6 @@ import javafx.stage.StageStyle;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
@@ -149,7 +147,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     @Override
     public void stop() {
         if (!shutDownRequested) {
-            new Popup<>().headLine(Res.get("popup.shutDownInProgress.headline"))
+            new Popup().headLine(Res.get("popup.shutDownInProgress.headline"))
                     .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
                     .hideCloseButton()
                     .useAnimation(false)
@@ -182,7 +180,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 try {
                     if (!popupOpened) {
                         popupOpened = true;
-                        new Popup<>().error(Objects.requireNonNullElse(throwable.getMessage(), throwable.toString()))
+                        new Popup().error(Objects.requireNonNullElse(throwable.getMessage(), throwable.toString()))
                                 .onClose(() -> popupOpened = false)
                                 .show();
                     }
@@ -270,13 +268,13 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 shutDownByUser();
             } else {
                 if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
-                    showBtcEmergencyWalletPopup(injector);
+                    injector.getInstance(BtcEmptyWalletWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
-                    showBsqEmergencyWalletPopup(injector);
+                    injector.getInstance(BsqEmptyWalletWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
-                    showSendAlertMessagePopup(injector);
+                    injector.getInstance(SendAlertMessageWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
-                    showFilterPopup(injector);
+                    injector.getInstance(FilterWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.UP, keyEvent)) {
                     log.warn("We re-published all proposalPayloads and blindVotePayloads to the P2P network.");
                     injector.getInstance(MissingDataRequestService.class).reRepublishAllGovernanceData();
@@ -296,12 +294,12 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     if (walletsManager.areWalletsAvailable())
                         new ShowWalletDataWindow(walletsManager).show();
                     else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
                     if (injector.getInstance(BtcWalletService.class).isWalletReady())
                         injector.getInstance(ManualPayoutTxWindow.class).show();
                     else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.isDevMode()) {
                     if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent))
                         showDebugWindow(scene, injector);
@@ -327,7 +325,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         // We show a popup to inform user that open offers will be removed if Bisq is not running.
         String key = "showOpenOfferWarnPopupAtShutDown";
         if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
-            new Popup<>().information(Res.get("popup.info.shutDownWithOpenOffers"))
+            new Popup().information(Res.get("popup.info.shutDownWithOpenOffers"))
                     .dontShowAgainId(key)
                     .useShutDownButton()
                     .closeButtonText(Res.get("shared.cancel"))
@@ -335,36 +333,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         } else {
             stop();
         }
-    }
-
-    private void showSendAlertMessagePopup(Injector injector) {
-        AlertManager alertManager = injector.getInstance(AlertManager.class);
-        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new SendAlertMessageWindow(useDevPrivilegeKeys)
-                .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
-                .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
-                .show();
-    }
-
-    private void showFilterPopup(Injector injector) {
-        FilterManager filterManager = injector.getInstance(FilterManager.class);
-        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new FilterWindow(filterManager, useDevPrivilegeKeys)
-                .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
-                .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
-                .show();
-    }
-
-    private void showBtcEmergencyWalletPopup(Injector injector) {
-        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setIsBtc(true);
-        emptyWalletWindow.show();
-    }
-
-    private void showBsqEmergencyWalletPopup(Injector injector) {
-        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setIsBtc(false);
-        emptyWalletWindow.show();
     }
 
     // Used for debugging trade process

@@ -18,8 +18,7 @@
 package bisq.desktop.main.market;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -33,16 +32,19 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -65,13 +67,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class MarketView extends ActivatableView<TabPane, Void> {
     @FXML
     Tab offerBookTab, tradesTab, spreadTab;
     private final ViewLoader viewLoader;
     private final P2PService p2PService;
     private final OfferBook offerBook;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final Navigation navigation;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -80,7 +82,7 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
 
     @Inject
-    public MarketView(CachingViewLoader viewLoader, P2PService p2PService, OfferBook offerBook, BSFormatter formatter,
+    public MarketView(CachingViewLoader viewLoader, P2PService p2PService, OfferBook offerBook, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                       Navigation navigation) {
         this.viewLoader = viewLoader;
         this.p2PService = p2PService;
@@ -112,13 +114,13 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         keyEventEventHandler = keyEvent -> {
             if (Utilities.isCtrlPressed(KeyCode.T, keyEvent)) {
                 String allTradesWithReferralId = getAllTradesWithReferralId();
-                new Popup<>().message(StringUtils.abbreviate(allTradesWithReferralId, 600))
+                new Popup().message(StringUtils.abbreviate(allTradesWithReferralId, 600))
                         .actionButtonText(Res.get("shared.copyToClipboard"))
                         .onAction(() -> Utilities.copyToClipboard(allTradesWithReferralId))
                         .show();
             } else if (Utilities.isCtrlPressed(KeyCode.O, keyEvent)) {
                 String allOffersWithReferralId = getAllOffersWithReferralId();
-                new Popup<>().message(StringUtils.abbreviate(allOffersWithReferralId, 600))
+                new Popup().message(StringUtils.abbreviate(allOffersWithReferralId, 600))
                         .actionButtonText(Res.get("shared.copyToClipboard"))
                         .onAction(() -> Utilities.copyToClipboard(allOffersWithReferralId))
                         .show();
@@ -185,8 +187,8 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Trade ID: ").append(trade.getOfferId()).append("\n")
                             .append("Date: ").append(DisplayUtils.formatDateTime(trade.getTradeDate())).append("\n")
-                            .append("Market: ").append(BSFormatter.getCurrencyPair(trade.getCurrencyCode())).append("\n")
-                            .append("Price: ").append(BSFormatter.formatPrice(trade.getTradePrice())).append("\n")
+                            .append("Market: ").append(CurrencyUtil.getCurrencyPair(trade.getCurrencyCode())).append("\n")
+                            .append("Price: ").append(FormattingUtils.formatPrice(trade.getTradePrice())).append("\n")
                             .append("Amount: ").append(formatter.formatCoin(trade.getTradeAmount())).append("\n")
                             .append("Volume: ").append(DisplayUtils.formatVolume(trade.getTradeVolume())).append("\n")
                             .append("Payment method: ").append(Res.get(trade.getOfferPaymentMethod())).append("\n")
@@ -206,8 +208,8 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Offer ID: ").append(offer.getId()).append("\n")
                             .append("Type: ").append(offer.getDirection().name()).append("\n")
-                            .append("Market: ").append(BSFormatter.getCurrencyPair(offer.getCurrencyCode())).append("\n")
-                            .append("Price: ").append(BSFormatter.formatPrice(offer.getPrice())).append("\n")
+                            .append("Market: ").append(CurrencyUtil.getCurrencyPair(offer.getCurrencyCode())).append("\n")
+                            .append("Price: ").append(FormattingUtils.formatPrice(offer.getPrice())).append("\n")
                             .append("Amount: ").append(DisplayUtils.formatAmount(offer, formatter)).append(" BTC\n")
                             .append("Payment method: ").append(Res.get(offer.getPaymentMethod().getId())).append("\n")
                             .append("ReferralID: ").append(offer.getOfferPayload().getExtraDataMap().get(OfferPayload.REFERRAL_ID));

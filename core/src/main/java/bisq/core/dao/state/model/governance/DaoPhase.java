@@ -40,7 +40,7 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
     /**
      * Enum for phase of a cycle.
      *
-     * We don't want to use a enum with the duration as field because the duration can change by voting and enums
+     * We don't want to use an enum with the duration as field because the duration can change by voting and enums
      * should be considered immutable.
      */
     @Immutable

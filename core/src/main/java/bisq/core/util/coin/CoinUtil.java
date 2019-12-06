@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.util;
+package bisq.core.util.coin;
 
 import bisq.common.util.MathUtils;
 

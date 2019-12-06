@@ -37,7 +37,7 @@ public class OpenOfferManagerTest {
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
-        final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
+        final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null,
@@ -73,7 +73,7 @@ public class OpenOfferManagerTest {
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
-        final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
+        final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null,
@@ -101,7 +101,7 @@ public class OpenOfferManagerTest {
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
-        final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
+        final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null,

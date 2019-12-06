@@ -332,7 +332,7 @@ public class CurrencyUtil {
      *
      * As we use a boolean result for isCryptoCurrency and isFiatCurrency we do not treat missing currencies correctly.
      * To throw an exception might be an option but that will require quite a lot of code change, so we don't do that
-     * for the moment, but could be considered for the future. Another maybe better option is to introduce a enum which
+     * for the moment, but could be considered for the future. Another maybe better option is to introduce an enum which
      * contains 3 entries (CryptoCurrency, Fiat, Undefined).
      */
     public static boolean isCryptoCurrency(String currencyCode) {
@@ -483,7 +483,7 @@ public class CurrencyUtil {
             return optionalAsset;
         }
 
-        // If we are in mainnet we need have a mainet asset defined.
+        // If we are in mainnet we need have a mainnet asset defined.
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
     }
 
@@ -506,5 +506,30 @@ public class CurrencyUtil {
                 .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
                 .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))
                 .collect(Collectors.toList());
+    }
+
+    public static String getCurrencyPair(String currencyCode) {
+        if (isFiatCurrency(currencyCode))
+            return Res.getBaseCurrencyCode() + "/" + currencyCode;
+        else
+            return currencyCode + "/" + Res.getBaseCurrencyCode();
+    }
+
+    public static String getCounterCurrency(String currencyCode) {
+        if (isFiatCurrency(currencyCode))
+            return currencyCode;
+        else
+            return Res.getBaseCurrencyCode();
+    }
+
+    public static String getPriceWithCurrencyCode(String currencyCode) {
+        return getPriceWithCurrencyCode(currencyCode, "shared.priceInCurForCur");
+    }
+
+    public static String getPriceWithCurrencyCode(String currencyCode, String translationKey) {
+        if (isCryptoCurrency(currencyCode))
+            return Res.get(translationKey, Res.getBaseCurrencyCode(), currencyCode);
+        else
+            return Res.get(translationKey, currencyCode, Res.getBaseCurrencyCode());
     }
 }

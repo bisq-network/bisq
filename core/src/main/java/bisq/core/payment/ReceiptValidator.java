@@ -66,10 +66,15 @@ class ReceiptValidator {
             return true;
         }
 
+        // Aside from Sepa or Sepa Instant, payment methods need to match
+        if (!isEqualPaymentMethods) {
+            return false;
+        }
+
         if (predicates.isOfferRequireSameOrSpecificBank(offer, account)) {
             return predicates.isMatchingBankId(offer, account);
         }
 
-        return isEqualPaymentMethods;
+        return true;
     }
 }

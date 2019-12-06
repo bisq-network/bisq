@@ -18,8 +18,7 @@
 package bisq.desktop.main.settings;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -42,7 +41,7 @@ import javafx.scene.control.TabPane;
 import javafx.beans.value.ChangeListener;
 
 @FxmlView
-public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class SettingsView extends ActivatableView<TabPane, Void> {
     @FXML
     Tab preferencesTab, networkTab, aboutTab;
     private final ViewLoader viewLoader;

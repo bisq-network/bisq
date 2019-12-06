@@ -45,8 +45,9 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 
 import bisq.common.UserThread;
@@ -60,6 +61,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -96,7 +98,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
 
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
     private final TradeWalletService tradeWalletService;
@@ -130,7 +132,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeSummaryWindow(BSFormatter formatter,
+    public DisputeSummaryWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                 MediationManager mediationManager,
                                 RefundManager refundManager,
                                 TradeWalletService tradeWalletService,
@@ -293,7 +295,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                BSFormatter.formatPrice(contract.getTradePrice()));
+                FormattingUtils.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
                 DisplayUtils.formatVolumeWithCode(contract.getTradeVolume()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
@@ -610,7 +612,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     formatter.formatCoinWithCode(sellerPayoutAmount),
                     sellerPayoutAddressString);
         }
-        new Popup<>().width(900)
+        new Popup().width(900)
                 .headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
                 .confirmation(Res.get("disputeSummaryWindow.close.txDetails",
                         formatter.formatCoinWithCode(inputAmount),
@@ -656,13 +658,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 @Override
                 public void onFailure(TxBroadcastException exception) {
                     log.error("TxBroadcastException at doPayout", exception);
-                    new Popup<>().error(exception.toString()).show();
+                    new Popup().error(exception.toString()).show();
                     ;
                 }
             });
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
             log.error("Exception at doPayout", e);
-            new Popup<>().error(e.toString()).show();
+            new Popup().error(e.toString()).show();
         }
     }
 
@@ -686,7 +688,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
-            UserThread.runAfter(() -> new Popup<>()
+            UserThread.runAfter(() -> new Popup()
                             .attention(Res.get("disputeSummaryWindow.close.closePeer"))
                             .show(),
                     200, TimeUnit.MILLISECONDS);

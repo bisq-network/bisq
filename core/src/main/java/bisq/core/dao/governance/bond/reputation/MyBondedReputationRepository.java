@@ -117,8 +117,8 @@ public class MyBondedReputationRepository implements DaoSetupService, BsqWalletS
                     if (BondRepository.isConfiscated(myBondedReputation, daoStateService)) {
                         myBondedReputation.setBondState(BondState.CONFISCATED);
                     } else {
-                        // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but lets keep the code so if needed
-                        // its there.
+                        // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but let's keep the code so if needed
+                        // it's there.
                         if (BondRepository.isLockupTxUnconfirmed(bsqWalletService, myBondedReputation.getBondedAsset()) &&
                                 myBondedReputation.getBondState() == BondState.READY_FOR_LOCKUP) {
                             myBondedReputation.setBondState(BondState.LOCKUP_TX_PENDING);

@@ -122,7 +122,7 @@ public class TraderChatManager extends SupportManager {
                 }
                 trade.addAndPersistChatMessage(message);
             } else {
-                log.warn("Trade got a chatMessage what we have already stored. UId = {} TradeId = {}",
+                log.warn("Trade got a chatMessage that we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
             }
         });

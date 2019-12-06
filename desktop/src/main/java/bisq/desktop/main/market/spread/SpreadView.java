@@ -26,11 +26,13 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -50,7 +52,7 @@ import java.util.Comparator;
 
 @FxmlView
 public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewModel> {
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private TableView<SpreadItem> tableView;
     private SortedList<SpreadItem> sortedList;
     private ListChangeListener<SpreadItem> itemListChangeListener;
@@ -61,7 +63,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SpreadView(SpreadViewModel model, BSFormatter formatter) {
+    public SpreadView(SpreadViewModel model, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model);
         this.formatter = formatter;
     }

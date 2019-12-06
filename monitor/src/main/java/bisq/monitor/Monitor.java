@@ -89,6 +89,7 @@ public class Monitor {
                 Capability.BLIND_VOTE,
                 Capability.DAO_STATE,
                 Capability.BUNDLE_OF_ENVELOPES,
+                Capability.REFUND_AGENT,
                 Capability.MEDIATION);
 
         // assemble Metrics

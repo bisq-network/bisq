@@ -221,7 +221,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             cleanTorDir(() -> {
                 tuple.second.stop();
                 tuple.third.setText("");
-                new Popup<>().feedback(Res.get("torNetworkSettingWindow.deleteFiles.success"))
+                new Popup().feedback(Res.get("torNetworkSettingWindow.deleteFiles.success"))
                         .useShutDownButton()
                         .hideCloseButton()
                         .show();
@@ -338,7 +338,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         networkNode.shutDown(() -> {
             // We give it a bit extra time to be sure that OS locks are removed
             UserThread.runAfter(() -> {
-                torSetup.cleanupTorFiles(resultHandler, errorMessage -> new Popup<>().error(errorMessage).show());
+                torSetup.cleanupTorFiles(resultHandler, errorMessage -> new Popup().error(errorMessage).show());
             }, 3);
         });
     }

@@ -50,6 +50,8 @@ import javax.inject.Named;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -133,13 +135,15 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAdded(ProtectedStorageEntry entry) {
-        onProtectedDataAdded(entry, true);
+    public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            onProtectedDataAdded(protectedStorageEntry, true);
+        });
     }
 
     @Override
-    public void onRemoved(ProtectedStorageEntry entry) {
-        onProtectedDataRemoved(entry);
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        onProtectedDataRemoved(protectedStorageEntries);
     }
 
 
@@ -159,7 +163,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        // We try to broadcast at any  block in the break1 phase. If we have received the data already we do not
+        // We try to broadcast at any block in the break1 phase. If we have received the data already we do not
         // broadcast so we do not flood the network.
         if (periodService.isInPhase(block.getHeight(), DaoPhase.Phase.BREAK1)) {
             // We only republish if we are completed with parsing old blocks, otherwise we would republish old
@@ -171,7 +175,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void onParseBlockChainComplete() {
-        // Fill the lists with the data we have collected in out stores.
+        // Fill the lists with the data we have collected in our stores.
         fillListFromProtectedStore();
         fillListFromAppendOnlyDataStore();
     }
@@ -266,30 +270,39 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         }
     }
 
-    private void onProtectedDataRemoved(ProtectedStorageEntry entry) {
-        ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
-        if (protectedStoragePayload instanceof TempProposalPayload) {
-            Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
-            // We allow removal only if we are in the proposal phase.
-            boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
-            boolean txInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(), daoStateService.getChainHeight());
-            Optional<Tx> tx = daoStateService.getTx(proposal.getTxId());
-            boolean unconfirmedOrNonBsqTx = !tx.isPresent();
-            // if the tx is unconfirmed we need to be in the PROPOSAL phase, otherwise the tx must be confirmed.
-            if (inPhase || txInPastCycle || unconfirmedOrNonBsqTx) {
-                if (tempProposals.contains(proposal)) {
-                    tempProposals.remove(proposal);
-                    log.debug("We received a remove request for a TempProposalPayload and have removed the proposal " +
-                                    "from our list. proposal creation date={}, proposalTxId={}, inPhase={}, " +
-                                    "txInPastCycle={}, unconfirmedOrNonBsqTx={}",
-                            proposal.getCreationDateAsDate(), proposal.getTxId(), inPhase, txInPastCycle, unconfirmedOrNonBsqTx);
+    private void onProtectedDataRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+
+        // The listeners of tmpProposals can do large amounts of work that cause performance issues. Apply all of the
+        // updates at once using retainAll which will cause all listeners to be updated only once.
+        ArrayList<Proposal> tempProposalsWithUpdates = new ArrayList<>(tempProposals);
+
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+            if (protectedStoragePayload instanceof TempProposalPayload) {
+                Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
+                // We allow removal only if we are in the proposal phase.
+                boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
+                boolean txInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(), daoStateService.getChainHeight());
+                Optional<Tx> tx = daoStateService.getTx(proposal.getTxId());
+                boolean unconfirmedOrNonBsqTx = !tx.isPresent();
+                // if the tx is unconfirmed we need to be in the PROPOSAL phase, otherwise the tx must be confirmed.
+                if (inPhase || txInPastCycle || unconfirmedOrNonBsqTx) {
+                    if (tempProposalsWithUpdates.contains(proposal)) {
+                        tempProposalsWithUpdates.remove(proposal);
+                        log.debug("We received a remove request for a TempProposalPayload and have removed the proposal " +
+                                        "from our list. proposal creation date={}, proposalTxId={}, inPhase={}, " +
+                                        "txInPastCycle={}, unconfirmedOrNonBsqTx={}",
+                                proposal.getCreationDateAsDate(), proposal.getTxId(), inPhase, txInPastCycle, unconfirmedOrNonBsqTx);
+                    }
+                } else {
+                    log.warn("We received a remove request outside the PROPOSAL phase. " +
+                                    "Proposal creation date={}, proposal.txId={}, current blockHeight={}",
+                            proposal.getCreationDateAsDate(), proposal.getTxId(), daoStateService.getChainHeight());
                 }
-            } else {
-                log.warn("We received a remove request outside the PROPOSAL phase. " +
-                                "Proposal creation date={}, proposal.txId={}, current blockHeight={}",
-                        proposal.getCreationDateAsDate(), proposal.getTxId(), daoStateService.getChainHeight());
             }
-        }
+        });
+
+        tempProposals.retainAll(tempProposalsWithUpdates);
     }
 
     private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload, boolean fromBroadcastMessage) {

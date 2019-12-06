@@ -46,10 +46,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * happen again.
  * Further (highly unlikely) consequences could be:
  * If the BSQ output would be sent to a BSQ address the old client would accept that even it is
- * invalid according to the new rules. But sending such a output would require a manually crafted tx
+ * invalid according to the new rules. But sending such an output would require a manually crafted tx
  * (not possible in the UI). Worst case a not updated user would buy invalid BSQ but that is not possible as we
  * enforce update to 1.2.0 for trading a few days after release as that release introduced the new trade protocol
- * and protection tool. Only of both both traders would have deactivated filter messages they could trade.
+ * and protection tool. Only if both traders would have deactivated filter messages they could trade.
  *
  * Problem description:
  * We did not apply the check to not allow BSQ outputs after we had detected a BTC output.
@@ -63,7 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * The BSQ was sitting in the BTC wallet so not even visible as BSQ to the user.
  * If the user would have crafted a custom BSQ tx he could have avoided that the full trade fee was burned.
  *
- * Not an universal rule:
+ * Not a universal rule:
  * We cannot enforce the rule that no BSQ output is permitted to all possible transactions because there can be cases
  * where we need to permit this case.
  * For instance in case we confiscate a lockupTx we have usually 2 BSQ outputs: The first one is the bond which
@@ -191,7 +191,7 @@ class TxOutputParser {
             availableInputValue -= tempTxOutput.getValue();
 
             // We must not set prohibitMoreBsqOutputs at confiscation transactions as optional
-            // BSQ change output (output 2)  must not be confiscated.
+            // BSQ change output (output 2) must not be confiscated.
             tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
         }
     }
@@ -216,7 +216,7 @@ class TxOutputParser {
     /**
      * Whether a transaction is a valid unlock bond transaction or not.
      *
-     * @param txOutputValue The value of the current output, in satoshi.
+     * @param txOutputValue The value of the current output, in satoshis.
      * @param index         The index of the output.
      * @return True if the transaction is an unlock transaction, false otherwise.
      */
@@ -302,8 +302,8 @@ class TxOutputParser {
 
                     // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
                     // structurally same transactions where only the BSQ fee is different. In case of asset listing fee and proof of
-                    // burn it  is a user input, so it is not know to the parser, instead we derive the burned fee from the parser.
-                    // In case of proposal fee  we could derive it from the params.
+                    // burn it is a user input, so it is not known to the parser, instead we derive the burned fee from the parser.
+                    // In case of proposal fee we could derive it from the params.
 
                     // Case 1: 10 BSQ fee to burn
                     // In: 17 BSQ
@@ -336,7 +336,7 @@ class TxOutputParser {
         // We do not permit more BSQ outputs after the issuance candidate.
         prohibitMoreBsqOutputs = true;
 
-        // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee  after all
+        // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee after all
         // outputs are parsed and check the phase. The TxParser will do that....
         optionalIssuanceCandidate = Optional.of(tempTxOutput);
     }
@@ -386,7 +386,7 @@ class TxOutputParser {
             prohibitMoreBsqOutputs = true;
         } else {
             // If we have BSQ left as fee and we are at the second output it might be a compensation request output.
-            // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee  after all
+            // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee after all
             // outputs are parsed and check the phase. The TxParser will do that....
             if (availableInputValue > 0 &&
                     index == 1 &&

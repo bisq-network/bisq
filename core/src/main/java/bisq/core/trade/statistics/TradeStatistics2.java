@@ -171,8 +171,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         return Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
     }
 
-    @Override
-    public protobuf.PersistableNetworkPayload toProtoMessage() {
+    private protobuf.TradeStatistics2.Builder getBuilder() {
         final protobuf.TradeStatistics2.Builder builder = protobuf.TradeStatistics2.newBuilder()
                 .setDirection(OfferPayload.Direction.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
@@ -190,12 +189,16 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
                 .setDepositTxId(depositTxId)
                 .setHash(ByteString.copyFrom(hash));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return protobuf.PersistableNetworkPayload.newBuilder().setTradeStatistics2(builder).build();
+        return builder;
     }
 
-
     public protobuf.TradeStatistics2 toProtoTradeStatistics2() {
-        return toProtoMessage().getTradeStatistics2();
+        return getBuilder().build();
+    }
+
+    @Override
+    public protobuf.PersistableNetworkPayload toProtoMessage() {
+        return protobuf.PersistableNetworkPayload.newBuilder().setTradeStatistics2(getBuilder()).build();
     }
 
     public static TradeStatistics2 fromProto(protobuf.TradeStatistics2 proto) {

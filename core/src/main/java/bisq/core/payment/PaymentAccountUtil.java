@@ -65,13 +65,13 @@ public class PaymentAccountUtil {
                                                 AccountAgeWitnessService accountAgeWitnessService) {
         boolean hasChargebackRisk = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
         boolean hasValidAccountAgeWitness = accountAgeWitnessService.getMyTradeLimit(paymentAccount,
-                offer.getCurrencyCode(), offer.getMirroredDirection()) >= offer.getAmount().value;
+                offer.getCurrencyCode(), offer.getMirroredDirection()) >= offer.getMinAmount().value;
         return !hasChargebackRisk || hasValidAccountAgeWitness;
     }
 
     // TODO might be used to show more details if we get payment methods updates with diff. limits
     public static String getInfoForMismatchingPaymentMethodLimits(Offer offer, PaymentAccount paymentAccount) {
-        // dont translate atm as it is not used so far in the UI just for logs
+        // don't translate atm as it is not used so far in the UI just for logs
         return "Payment methods have different trade limits or trade periods.\n" +
                 "Our local Payment method: " + paymentAccount.getPaymentMethod().toString() + "\n" +
                 "Payment method from offer: " + offer.getPaymentMethod().toString();
