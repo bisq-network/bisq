@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.util.joptsimple;
+package bisq.common.config;
 
 import joptsimple.ValueConverter;
 
@@ -29,10 +29,11 @@ import static org.springframework.util.StringUtils.collectionToDelimitedString;
 
 /**
  * A {@link joptsimple.ValueConverter} that supports case-insensitive conversion from
- * String to an enum label. Useful in conjunction with {@link joptsimple.ArgumentAcceptingOptionSpec#ofType(Class)}
- * when the type in question is an enum.
+ * String to an enum label. Useful in conjunction with
+ * {@link joptsimple.ArgumentAcceptingOptionSpec#ofType(Class)} when the type in question
+ * is an enum.
  */
-public class EnumValueConverter implements ValueConverter<Enum> {
+class EnumValueConverter implements ValueConverter<Enum> {
 
     private final Class<? extends Enum> enumType;
 

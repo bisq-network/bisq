@@ -17,10 +17,8 @@
 
 package bisq.monitor;
 
-import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;

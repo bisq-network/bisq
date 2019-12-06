@@ -87,6 +87,7 @@ import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.Environment;
 
@@ -97,8 +98,8 @@ import static com.google.inject.name.Names.named;
 
 public class DaoModule extends AppModule {
 
-    public DaoModule(Environment environment) {
-        super(environment);
+    public DaoModule(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override
@@ -236,7 +237,7 @@ public class DaoModule extends AppModule {
         bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
                 .to(environment.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
 
-        bind(Boolean.class).annotatedWith(Names.named(DaoOptionKeys.DAO_ACTIVATED)).toInstance(BisqEnvironment.isDaoActivated(environment));
+        bind(Boolean.class).annotatedWith(Names.named(DaoOptionKeys.DAO_ACTIVATED)).toInstance(config.isDaoActivated());
     }
 }
 

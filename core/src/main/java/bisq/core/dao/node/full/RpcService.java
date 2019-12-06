@@ -17,13 +17,13 @@
 
 package bisq.core.dao.node.full;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Utilities;
 
@@ -102,9 +102,9 @@ public class RpcService {
         // mainnet is 8332, testnet 18332, regtest 18443
         boolean isHostSet = rpcHost != null && !rpcHost.isEmpty();
         boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
-        boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
-        boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
-        boolean isDaoBetaNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet();
+        boolean isMainnet = BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet();
+        boolean isTestnet = BaseCurrencyNetwork.CURRENT_NETWORK.isTestnet();
+        boolean isDaoBetaNet = BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet();
         this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet || isDaoBetaNet ? "8332" :

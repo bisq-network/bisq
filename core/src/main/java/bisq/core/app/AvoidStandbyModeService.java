@@ -19,6 +19,8 @@ package bisq.core.app;
 
 import bisq.core.user.Preferences;
 
+import bisq.common.config.Config;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -43,12 +45,16 @@ import javax.sound.sampled.SourceDataLine;
 @Slf4j
 @Singleton
 public class AvoidStandbyModeService {
+
     private final Preferences preferences;
+    private final Config config;
+
     private volatile boolean isStopped;
 
     @Inject
-    public AvoidStandbyModeService(Preferences preferences) {
+    public AvoidStandbyModeService(Preferences preferences, Config config) {
         this.preferences = preferences;
+        this.config = config;
 
         preferences.getUseStandbyModeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
@@ -80,7 +86,7 @@ public class AvoidStandbyModeService {
             InputStream inputStream = null;
             try {
                 inputStream = getClass().getClassLoader().getResourceAsStream("prevent-app-nap-silent-sound.aiff");
-                File soundFile = new File(BisqEnvironment.getStaticAppDataDir(), "prevent-app-nap-silent-sound.aiff");
+                File soundFile = new File(config.getAppDataDir(), "prevent-app-nap-silent-sound.aiff");
                 if (!soundFile.exists()) {
                     outputStream = new FileOutputStream(soundFile);
                     IOUtils.copy(inputStream, outputStream);

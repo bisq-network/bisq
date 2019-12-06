@@ -21,7 +21,7 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
 import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;

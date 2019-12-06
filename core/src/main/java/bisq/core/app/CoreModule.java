@@ -19,6 +19,9 @@ package bisq.core.app;
 
 import bisq.core.alert.AlertModule;
 import bisq.core.btc.BitcoinModule;
+
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
@@ -56,13 +59,14 @@ import static com.google.inject.name.Names.named;
 
 public class CoreModule extends AppModule {
 
-    public CoreModule(Environment environment) {
-        super(environment);
+    public CoreModule(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override
     protected void configure() {
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
+        bind(Config.class).toInstance(config);
 
         bind(BridgeAddressProvider.class).to(Preferences.class);
 
@@ -71,7 +75,7 @@ public class CoreModule extends AppModule {
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
 
-        CoinFormatter btcFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
+        CoinFormatter btcFormatter = new ImmutableCoinFormatter(BaseCurrencyNetwork.CURRENT_PARAMETERS.getMonetaryFormat());
         bind(CoinFormatter.class).annotatedWith(named(FormattingUtils.BTC_FORMATTER_KEY)).toInstance(btcFormatter);
 
         File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
@@ -91,51 +95,15 @@ public class CoreModule extends AppModule {
 
 
         // ordering is used for shut down sequence
-        install(tradeModule());
-        install(encryptionServiceModule());
-        install(offerModule());
-        install(p2pModule());
-        install(bitcoinModule());
-        install(daoModule());
-        install(alertModule());
-        install(filterModule());
-        install(corePresentationModule());
+        install(new TradeModule(environment, config));
+        install(new EncryptionServiceModule(environment, config));
+        install(new OfferModule(environment, config));
+        install(new P2PModule(environment, config));
+        install(new BitcoinModule(environment, config));
+        install(new DaoModule(environment, config));
+        install(new AlertModule(environment, config));
+        install(new FilterModule(environment, config));
+        install(new CorePresentationModule(environment, config));
         bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
-    }
-
-    private TradeModule tradeModule() {
-        return new TradeModule(environment);
-    }
-
-    private EncryptionServiceModule encryptionServiceModule() {
-        return new EncryptionServiceModule(environment);
-    }
-
-    private AlertModule alertModule() {
-        return new AlertModule(environment);
-    }
-
-    private FilterModule filterModule() {
-        return new FilterModule(environment);
-    }
-
-    private OfferModule offerModule() {
-        return new OfferModule(environment);
-    }
-
-    private P2PModule p2pModule() {
-        return new P2PModule(environment);
-    }
-
-    private BitcoinModule bitcoinModule() {
-        return new BitcoinModule(environment);
-    }
-
-    private DaoModule daoModule() {
-        return new DaoModule(environment);
-    }
-
-    private CorePresentationModule corePresentationModule() {
-        return new CorePresentationModule(environment);
     }
 }

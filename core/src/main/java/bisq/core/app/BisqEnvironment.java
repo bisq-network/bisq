@@ -17,25 +17,21 @@
 
 package bisq.core.app;
 
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.UserAgent;
 import bisq.core.dao.DaoOptionKeys;
-import bisq.core.exceptions.BisqException;
-import bisq.core.filter.FilterManager;
 
 import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.network.ConnectionConfig;
 
+import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.NetworkParameters;
-
-import org.springframework.core.env.Environment;
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
@@ -48,19 +44,13 @@ import org.springframework.core.io.support.ResourcePropertySource;
 
 import joptsimple.OptionSet;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
 import ch.qos.logback.classic.Level;
@@ -68,8 +58,6 @@ import ch.qos.logback.classic.Level;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -80,11 +68,7 @@ public class BisqEnvironment extends StandardEnvironment {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void setDefaultAppName(String defaultAppName) {
-        DEFAULT_APP_NAME = defaultAppName;
-    }
-
-    public static String DEFAULT_APP_NAME = "Bisq";
+    static final String DEFAULT_APP_NAME = "Bisq";
 
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
@@ -94,27 +78,6 @@ public class BisqEnvironment extends StandardEnvironment {
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
     public static final String BISQ_APP_DIR_PROPERTY_SOURCE_NAME = "bisqAppDirProperties";
     public static final String BISQ_DEFAULT_PROPERTY_SOURCE_NAME = "bisqDefaultProperties";
-
-    private static String staticAppDataDir;
-
-    public static String getStaticAppDataDir() {
-        return staticAppDataDir;
-    }
-
-    @SuppressWarnings("SameReturnValue")
-    public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {
-        return BaseCurrencyNetwork.BTC_MAINNET;
-    }
-
-    protected static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
-
-    public static NetworkParameters getParameters() {
-        return getBaseCurrencyNetwork().getParameters();
-    }
-
-    public static BaseCurrencyNetwork getBaseCurrencyNetwork() {
-        return baseCurrencyNetwork;
-    }
 
     private static String defaultUserDataDir() {
         if (Utilities.isWindows())
@@ -161,14 +124,6 @@ public class BisqEnvironment extends StandardEnvironment {
         return Paths.get(userDataDir, appName).toString();
     }
 
-    // Util to set isDaoActivated to true if either set as program argument or we run testnet or regtest.
-    // Can be removed once DAO is live.
-    public static boolean isDaoActivated(Environment environment) {
-        Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, true);
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        return daoActivatedFromOptions || !baseCurrencyNetwork.isMainnet();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -185,8 +140,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @Getter
     @Setter
     protected boolean isBitcoinLocalhostNodeRunning;
-    @Getter
-    protected List<String> bannedSeedNodes, bannedBtcNodes, bannedPriceRelayNodes;
 
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
@@ -215,7 +168,6 @@ public class BisqEnvironment extends StandardEnvironment {
         userDataDir = getProperty(commandLineProperties, AppOptionKeys.USER_DATA_DIR_KEY, DEFAULT_USER_DATA_DIR);
         appName = getProperty(commandLineProperties, AppOptionKeys.APP_NAME_KEY, DEFAULT_APP_NAME);
         appDataDir = getProperty(commandLineProperties, AppOptionKeys.APP_DATA_DIR_KEY, appDataDir(userDataDir, appName));
-        staticAppDataDir = appDataDir;
 
         ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
         useDevPrivilegeKeys = getProperty(commandLineProperties, AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, "");
@@ -271,14 +223,11 @@ public class BisqEnvironment extends StandardEnvironment {
         try {
             propertySources.addLast(getAppDirProperties());
 
-            bannedPriceRelayNodes = getListProperty(FilterManager.BANNED_PRICE_RELAY_NODES, null);
-            bannedSeedNodes = getListProperty(FilterManager.BANNED_SEED_NODES, new ArrayList<>());
-            bannedBtcNodes = getListProperty(FilterManager.BANNED_BTC_NODES, null);
+            BaseCurrencyNetwork.CURRENT_NETWORK = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
+                    BaseCurrencyNetwork.BTC_MAINNET.name()).toUpperCase());
+            BaseCurrencyNetwork.CURRENT_PARAMETERS = BaseCurrencyNetwork.CURRENT_NETWORK.getParameters();
 
-            baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                    getDefaultBaseCurrencyNetwork().name()).toUpperCase());
-
-            btcNetworkDir = Paths.get(appDataDir, baseCurrencyNetwork.name().toLowerCase()).toString();
+            btcNetworkDir = Paths.get(appDataDir, BaseCurrencyNetwork.CURRENT_NETWORK.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
                 //noinspection ResultOfMethodCallIgnored
@@ -288,58 +237,6 @@ public class BisqEnvironment extends StandardEnvironment {
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BisqException(ex);
-        }
-    }
-
-    public void saveBaseCryptoNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
-        BisqEnvironment.baseCurrencyNetwork = baseCurrencyNetwork;
-        setProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK, baseCurrencyNetwork.name());
-    }
-
-    public void saveBannedSeedNodes(@Nullable List<String> bannedNodes) {
-        setProperty(FilterManager.BANNED_SEED_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
-    }
-
-    public void saveBannedBtcNodes(@Nullable List<String> bannedNodes) {
-        setProperty(FilterManager.BANNED_BTC_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
-    }
-
-    public void saveBannedPriceRelayNodes(@Nullable List<String> bannedNodes) {
-        setProperty(FilterManager.BANNED_PRICE_RELAY_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
-    }
-
-    protected void setProperty(String key, String value) {
-        try {
-            Resource resource = getAppDirPropertiesResource();
-            File file = resource.getFile();
-            Properties properties = new Properties();
-            if (file.exists()) {
-                Object propertiesObject = getAppDirProperties().getSource();
-                if (propertiesObject instanceof Properties) {
-                    properties = (Properties) propertiesObject;
-                } else {
-                    log.warn("propertiesObject not instance of Properties");
-                }
-            }
-
-            if (!value.isEmpty())
-                properties.setProperty(key, value);
-            else
-                properties.remove(key);
-
-            log.debug("properties=" + properties);
-
-            try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-                properties.store(fileOutputStream, null);
-            } catch (IOException e1) {
-                log.error(e1.toString());
-                e1.printStackTrace();
-                throw new RuntimeException(e1);
-            }
-        } catch (Exception e2) {
-            log.error(e2.toString());
-            e2.printStackTrace();
-            throw new RuntimeException(e2);
         }
     }
 
@@ -361,11 +258,6 @@ public class BisqEnvironment extends StandardEnvironment {
         return properties.containsProperty(propertyKey) ? (String) properties.getProperty(propertyKey) : defaultValue;
     }
 
-    private List<String> getListProperty(String key, List<String> defaultValue) {
-        final String value = getProperty(key, "");
-        return value.isEmpty() ? defaultValue : Arrays.asList(StringUtils.deleteWhitespace(value).split(","));
-    }
-
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
@@ -375,7 +267,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
                 setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
-                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(baseCurrencyNetwork.ordinal()));
+                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
                 setProperty(NetworkOptionKeys.TORRC_FILE, torRcFile);

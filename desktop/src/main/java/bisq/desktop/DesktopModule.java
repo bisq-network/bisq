@@ -26,6 +26,7 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.Environment;
 
@@ -37,8 +38,8 @@ import java.util.ResourceBundle;
 public class DesktopModule extends AppModule {
 
 
-    public DesktopModule(Environment environment) {
-        super(environment);
+    public DesktopModule(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override

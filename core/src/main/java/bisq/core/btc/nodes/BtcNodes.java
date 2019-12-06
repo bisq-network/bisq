@@ -17,7 +17,7 @@
 
 package bisq.core.btc.nodes;
 
-import bisq.core.app.BisqEnvironment;
+import bisq.common.config.BaseCurrencyNetwork;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,7 +87,7 @@ public class BtcNodes {
     }
 
     public boolean useProvidedBtcNodes() {
-        return BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
+        return BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet();
     }
 
     public static List<BtcNodes.BtcNode> toBtcNodesList(Collection<String> nodes) {
@@ -100,7 +100,7 @@ public class BtcNodes {
     @EqualsAndHashCode
     @Getter
     public static class BtcNode {
-        private static final int DEFAULT_PORT = BisqEnvironment.getParameters().getPort(); //8333
+        private static final int DEFAULT_PORT = BaseCurrencyNetwork.CURRENT_PARAMETERS.getPort(); //8333
 
         @Nullable
         private final String onionAddress;

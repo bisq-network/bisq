@@ -21,11 +21,12 @@ import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.ImmutableCoinFormatter;
+
+import bisq.common.config.BaseCurrencyNetwork;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -48,7 +49,7 @@ import static org.mockito.Mockito.when;
 
 public class OfferBookChartViewModelTest {
 
-    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(BaseCurrencyNetwork.CURRENT_PARAMETERS.getMonetaryFormat());
 
     @Before
     public void setUp() {

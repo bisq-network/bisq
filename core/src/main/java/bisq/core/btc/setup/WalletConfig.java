@@ -17,11 +17,12 @@
 
 package bisq.core.btc.setup;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.CheckpointManager;
@@ -113,7 +114,7 @@ public class WalletConfig extends AbstractIdleService {
     private final String spvChainFileName;
     private final Socks5Proxy socks5Proxy;
     private final BisqWalletFactory walletFactory;
-    private final BisqEnvironment bisqEnvironment;
+    private final Config config;
     private final String userAgent;
     private int numConnectionForBtc;
 
@@ -150,13 +151,13 @@ public class WalletConfig extends AbstractIdleService {
     public WalletConfig(NetworkParameters params,
                         Socks5Proxy socks5Proxy,
                         File directory,
-                        BisqEnvironment bisqEnvironment,
+                        Config config,
                         String userAgent,
                         int numConnectionForBtc,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
-        this.bisqEnvironment = bisqEnvironment;
+        this.config = config;
         this.userAgent = userAgent;
         this.numConnectionForBtc = numConnectionForBtc;
         this.context = new Context(params);
@@ -224,7 +225,7 @@ public class WalletConfig extends AbstractIdleService {
 
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
             // We don't use tor mode if we have a local node running
-            BlockingClientManager blockingClientManager = bisqEnvironment.isBitcoinLocalhostNodeRunning() ?
+            BlockingClientManager blockingClientManager = config.isIgnoreLocalBtcNode() ?
                     new BlockingClientManager() :
                     new BlockingClientManager(proxySocketFactory);
 
@@ -236,9 +237,9 @@ public class WalletConfig extends AbstractIdleService {
 
         // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
         // if local btc node is not synced with our dao testnet master node.
-        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ||
-                BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ||
-                !bisqEnvironment.isBitcoinLocalhostNodeRunning())
+        if (BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ||
+                BaseCurrencyNetwork.CURRENT_NETWORK.isDaoTestNet() ||
+                !config.isLocalBitcoinNodeIsRunning())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;

@@ -18,7 +18,6 @@
 package bisq.core.btc;
 
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.setup.RegTestHost;
@@ -35,6 +34,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.Environment;
 
@@ -48,19 +48,20 @@ import java.util.Arrays;
 import static com.google.inject.name.Names.named;
 
 public class BitcoinModule extends AppModule {
-    public BitcoinModule(Environment environment) {
-        super(environment);
+
+    public BitcoinModule(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override
     protected void configure() {
         // If we have selected BTC_DAO_REGTEST or BTC_DAO_TESTNET we use our master regtest node,
         // otherwise the specified host or default (localhost)
-        String regTestHost = environment.getProperty(BtcOptionKeys.REG_TEST_HOST, String.class, "");
+        String regTestHost = config.getBitcoinRegtestHost();
         if (regTestHost.isEmpty()) {
-            regTestHost = BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ?
+            regTestHost = config.getBaseCurrencyNetwork().isDaoTestNet() ?
                     "104.248.31.39" :
-                    BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ?
+                    config.getBaseCurrencyNetwork().isDaoRegTest() ?
                             "134.209.242.206" :
                             RegTestHost.DEFAULT_HOST;
         }

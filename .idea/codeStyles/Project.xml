@@ -161,7 +161,7 @@
           <emptyLine />
           <package name="org.powermock" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="mockit" withSubpackages="true" static="false" />
+          <package name="org.mockito" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="org.junit" withSubpackages="true" static="false" />
           <emptyLine />

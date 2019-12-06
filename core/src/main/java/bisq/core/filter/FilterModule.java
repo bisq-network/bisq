@@ -20,6 +20,7 @@ package bisq.core.filter;
 import bisq.core.app.AppOptionKeys;
 
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.Environment;
 
@@ -29,8 +30,8 @@ import static com.google.inject.name.Names.named;
 
 public class FilterModule extends AppModule {
 
-    public FilterModule(Environment environment) {
-        super(environment);
+    public FilterModule(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override

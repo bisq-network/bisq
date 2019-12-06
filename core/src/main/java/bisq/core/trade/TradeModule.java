@@ -30,6 +30,7 @@ import bisq.core.trade.statistics.TradeStatistics2StorageService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.Environment;
 
@@ -39,8 +40,8 @@ import static com.google.inject.name.Names.named;
 
 public class TradeModule extends AppModule {
 
-    public TradeModule(Environment environment) {
-        super(environment);
+    public TradeModule(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override

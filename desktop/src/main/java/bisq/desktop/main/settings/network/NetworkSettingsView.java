@@ -29,7 +29,6 @@ import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.RegexValidator;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.Filter;
@@ -43,6 +42,7 @@ import bisq.network.p2p.network.Statistic;
 
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 
 import javax.inject.Inject;
 
@@ -108,7 +108,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     private final Preferences preferences;
     private final BtcNodes btcNodes;
     private final FilterManager filterManager;
-    private final BisqEnvironment bisqEnvironment;
+    private final Config config;
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final ClockWatcher clockWatcher;
     private final WalletsSetup walletsSetup;
@@ -137,7 +137,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                                Preferences preferences,
                                BtcNodes btcNodes,
                                FilterManager filterManager,
-                               BisqEnvironment bisqEnvironment,
+                               Config config,
                                TorNetworkSettingsWindow torNetworkSettingsWindow,
                                ClockWatcher clockWatcher) {
         super();
@@ -146,7 +146,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         this.preferences = preferences;
         this.btcNodes = btcNodes;
         this.filterManager = filterManager;
-        this.bisqEnvironment = bisqEnvironment;
+        this.config = config;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.clockWatcher = clockWatcher;
     }
@@ -165,7 +165,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         bitcoinPeerSubVersionColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.subVersionColumn")));
         bitcoinPeerHeightColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.heightColumn")));
         localhostBtcNodeInfoLabel.setText(Res.get("settings.net.localhostBtcNodeInfo"));
-        if (!bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
+        if (!config.isLocalBitcoinNodeIsRunning()) {
             localhostBtcNodeInfoLabel.setVisible(false);
         }
         useProvidedNodesRadio.setText(Res.get("settings.net.useProvidedNodesRadio"));
@@ -380,7 +380,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     }
 
     private void onBitcoinPeersToggleSelected(boolean calledFromUser) {
-        boolean bitcoinLocalhostNodeRunning = bisqEnvironment.isBitcoinLocalhostNodeRunning();
+        boolean bitcoinLocalhostNodeRunning = config.isLocalBitcoinNodeIsRunning();
         useTorForBtcJCheckBox.setDisable(bitcoinLocalhostNodeRunning);
         bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
@@ -460,7 +460,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
     private void applyPreventPublicBtcNetwork() {
         final boolean preventPublicBtcNetwork = isPreventPublicBtcNetwork();
-        usePublicNodesRadio.setDisable(bisqEnvironment.isBitcoinLocalhostNodeRunning() || preventPublicBtcNetwork);
+        usePublicNodesRadio.setDisable(config.isLocalBitcoinNodeIsRunning() || preventPublicBtcNetwork);
         if (preventPublicBtcNetwork && selectedBitcoinNodesOption == BtcNodes.BitcoinNodesOption.PUBLIC) {
             selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());

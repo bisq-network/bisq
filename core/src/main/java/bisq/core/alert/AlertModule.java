@@ -20,6 +20,7 @@ package bisq.core.alert;
 import bisq.core.app.AppOptionKeys;
 
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.Environment;
 
@@ -28,8 +29,9 @@ import com.google.inject.Singleton;
 import static com.google.inject.name.Names.named;
 
 public class AlertModule extends AppModule {
-    public AlertModule(Environment environment) {
-        super(environment);
+
+    public AlertModule(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override

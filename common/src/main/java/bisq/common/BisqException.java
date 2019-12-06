@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.exceptions;
+package bisq.common;
 
 public class BisqException extends RuntimeException {
     public BisqException(Throwable cause) {

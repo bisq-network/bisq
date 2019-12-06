@@ -17,7 +17,6 @@
 
 package bisq.core.util.coin;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
@@ -29,6 +28,7 @@ import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Address;
@@ -72,7 +72,7 @@ public class BsqFormatter implements CoinFormatter {
 
     @Inject
     public BsqFormatter() {
-        this.btcCoinFormat = BisqEnvironment.getParameters().getMonetaryFormat();
+        this.btcCoinFormat = BaseCurrencyNetwork.CURRENT_PARAMETERS.getMonetaryFormat();
         this.monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
         this.immutableCoinFormatter = new ImmutableCoinFormatter(monetaryFormat);
 
@@ -110,7 +110,7 @@ public class BsqFormatter implements CoinFormatter {
             encoded = encoded.substring(prefix.length(), encoded.length());
 
         try {
-            return Address.fromBase58(BisqEnvironment.getParameters(), encoded);
+            return Address.fromBase58(BaseCurrencyNetwork.CURRENT_PARAMETERS, encoded);
         } catch (AddressFormatException e) {
             throw new RuntimeException(e);
         }

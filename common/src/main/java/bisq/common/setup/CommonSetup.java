@@ -18,6 +18,7 @@
 package bisq.common.setup;
 
 import bisq.common.UserThread;
+import bisq.common.crypto.CryptoUtils;
 import bisq.common.crypto.LimitedKeyStrengthException;
 import bisq.common.util.Utilities;
 
@@ -61,7 +62,7 @@ public class CommonSetup {
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
         try {
-            Utilities.checkCryptoPolicySetup();
+            CryptoUtils.checkCryptoPolicySetup();
         } catch (NoSuchAlgorithmException | LimitedKeyStrengthException e) {
             e.printStackTrace();
             UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(e, true));

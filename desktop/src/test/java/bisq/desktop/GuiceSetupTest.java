@@ -53,6 +53,7 @@ import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
+import bisq.common.config.TestConfig;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
@@ -82,7 +83,7 @@ public class GuiceSetupTest {
         Res.setup();
         CurrencyUtil.setup();
 
-        injector = Guice.createInjector(new BisqAppModule(new BisqEnvironment(new MockPropertySource())));
+        injector = Guice.createInjector(new BisqAppModule(new BisqEnvironment(new MockPropertySource()), new TestConfig()));
     }
 
     @Test

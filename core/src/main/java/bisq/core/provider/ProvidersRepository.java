@@ -18,9 +18,10 @@
 package bisq.core.provider;
 
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 
 import bisq.network.NetworkOptionKeys;
+
+import bisq.common.config.Config;
 
 import com.google.inject.Inject;
 
@@ -48,6 +49,7 @@ public class ProvidersRepository {
             "http://gztmprecgqjq64zh.onion/"    // @wiz
     );
 
+    private final Config config;
     private final String providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
 
@@ -65,16 +67,17 @@ public class ProvidersRepository {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProvidersRepository(BisqEnvironment bisqEnvironment,
+    public ProvidersRepository(Config config,
                                @Named(AppOptionKeys.PROVIDERS) String providers,
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
 
+        this.config = config;
         this.providersFromProgramArgs = providers;
         this.useLocalhostForP2P = useLocalhostForP2P;
 
         Collections.shuffle(DEFAULT_NODES);
 
-        applyBannedNodes(bisqEnvironment.getBannedPriceRelayNodes());
+        applyBannedNodes(config.getBannedPriceRelayNodes());
     }
 
     public void applyBannedNodes(@Nullable List<String> bannedNodes) {
@@ -97,7 +100,7 @@ public class ProvidersRepository {
             baseUrl = providerList.get(index);
             index++;
 
-            if (providerList.size() == 1 && BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
+            if (providerList.size() == 1 && config.getBaseCurrencyNetwork().isMainnet())
                 log.warn("We only have one provider");
         } else {
             baseUrl = "";

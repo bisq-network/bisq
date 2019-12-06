@@ -38,15 +38,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     private SeedNode seedNode;
 
     public SeedNodeMain() {
-        super("Bisq Seednode", "bisq-seednode", VERSION);
+        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
     }
 
     public static void main(String[] args) throws Exception {
         log.info("SeedNode.VERSION: " + VERSION);
-        BisqEnvironment.setDefaultAppName("bisq_seednode");
-
-        if (BisqExecutable.setupInitialOptionParser(args))
-            new SeedNodeMain().execute(args);
+        new SeedNodeMain().execute(args);
     }
 
     @Override
@@ -89,7 +86,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected AppModule getModule() {
-        return new ModuleForAppWithP2p(bisqEnvironment);
+        return new ModuleForAppWithP2p(bisqEnvironment, config);
     }
 
     @Override

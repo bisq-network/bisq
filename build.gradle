@@ -181,6 +181,7 @@ configure(project(':common')) {
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.8.5'
         compile "org.springframework:spring-core:$springVersion"
+        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
         compile "ch.qos.logback:logback-classic:$logbackVersion"
@@ -201,6 +202,7 @@ configure(project(':common')) {
         compile "org.apache.commons:commons-lang3:$langVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile "org.hamcrest:hamcrest-all:$hamcrestVersion"
     }
 }
 
@@ -217,7 +219,6 @@ configure(project(':p2p')) {
         compile("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-logging')
         }
-        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile "org.fxmisc.easybind:easybind:$easybindVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -234,7 +235,6 @@ configure(project(':core')) {
     dependencies {
         compile project(':assets')
         compile project(':p2p')
-        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
@@ -273,10 +273,10 @@ configure(project(':core')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
+        testCompile "org.hamcrest:hamcrest-all:$hamcrestVersion"
         testCompile "org.mockito:mockito-core:$mockitoVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
-        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: "$hamcrestVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
@@ -444,6 +444,7 @@ configure(project(':seednode')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
     }
 }
 

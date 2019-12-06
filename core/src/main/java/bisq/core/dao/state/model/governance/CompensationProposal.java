@@ -17,7 +17,6 @@
 
 package bisq.core.dao.state.model.governance;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalType;
@@ -25,6 +24,7 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -121,7 +121,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     public Address getAddress() throws AddressFormatException {
         // Remove leading 'B'
         String underlyingBtcAddress = bsqAddress.substring(1, bsqAddress.length());
-        return Address.fromBase58(BisqEnvironment.getParameters(), underlyingBtcAddress);
+        return Address.fromBase58(BaseCurrencyNetwork.CURRENT_PARAMETERS, underlyingBtcAddress);
     }
 
 

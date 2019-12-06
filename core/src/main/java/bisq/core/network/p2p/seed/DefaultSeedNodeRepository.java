@@ -17,11 +17,11 @@
 
 package bisq.core.network.p2p.seed;
 
-import bisq.core.app.BisqEnvironment;
-
 import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
+
+import bisq.common.config.Config;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,14 +50,14 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");
     private static final String ENDING = ".seednodes";
     private final Collection<NodeAddress> cache = new HashSet<>();
-    private final BisqEnvironment bisqEnvironment;
+    private final Config config;
     @Nullable
     private final String seedNodes;
 
     @Inject
-    public DefaultSeedNodeRepository(BisqEnvironment environment,
+    public DefaultSeedNodeRepository(Config config,
                                      @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
-        bisqEnvironment = environment;
+        this.config = config;
         this.seedNodes = seedNodes;
     }
 
@@ -72,7 +72,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             }
 
             // else, we fetch the seed nodes from our resources
-            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
+            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(config.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
             BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
 
             // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
@@ -90,7 +90,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             });
 
             // filter
-            cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
+            cache.removeAll(config.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
 
             log.info("Seed nodes: {}", cache);
         } catch (Throwable t) {

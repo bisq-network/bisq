@@ -38,6 +38,7 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import com.google.inject.Injector;
@@ -67,7 +68,7 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(RefundDisputeListService.class));
         persistedDataHosts.add(injector.getInstance(P2PService.class));
 
-        if (injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED)))) {
+        if (injector.getInstance(Config.class).isDaoActivated()) {
             persistedDataHosts.add(injector.getInstance(BallotListService.class));
             persistedDataHosts.add(injector.getInstance(MyBlindVoteListService.class));
             persistedDataHosts.add(injector.getInstance(MyVoteListService.class));

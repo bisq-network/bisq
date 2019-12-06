@@ -40,11 +40,10 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqSetup;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.common.config.Config;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -118,7 +117,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final TacWindow tacWindow;
     @Getter
     private final PriceFeedService priceFeedService;
-    private final BisqEnvironment bisqEnvironment;
+    private final Config config;
     private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
@@ -158,7 +157,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          TacWindow tacWindow,
                          FeeService feeService,
                          PriceFeedService priceFeedService,
-                         BisqEnvironment bisqEnvironment,
+                         Config config,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
                          CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
@@ -179,7 +178,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
         this.priceFeedService = priceFeedService;
-        this.bisqEnvironment = bisqEnvironment;
+        this.config = config;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
@@ -318,7 +317,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 .onClose(() -> BisqApp.getShutDownHandler().run())
                 .show());
 
-        bisqSetup.setDisplayUpdateHandler((alert, key) -> new DisplayUpdateDownloadWindow(alert)
+        bisqSetup.setDisplayUpdateHandler((alert, key) -> new DisplayUpdateDownloadWindow(alert, config)
                 .actionButtonText(Res.get("displayUpdateDownloadWindow.button.downloadLater"))
                 .onAction(() -> {
                     preferences.dontShowAgain(key, false); // update later
@@ -371,8 +370,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setShowPopupIfInvalidBtcConfigHandler(this::showPopupIfInvalidBtcConfig);
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
-                .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
-                        bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
+                .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.getAppDataDir()))
                 .useShutDownButton()
                 .show());
 
@@ -438,7 +436,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (walletsSetup.numPeersProperty().get() == 0) {
-                        if (bisqEnvironment.isBitcoinLocalhostNodeRunning())
+                        if (config.isLocalBitcoinNodeIsRunning())
                             getWalletServiceErrorMsg().set(Res.get("mainView.networkWarning.localhostBitcoinLost", Res.getBaseCurrencyName().toLowerCase()));
                         else
                             getWalletServiceErrorMsg().set(Res.get("mainView.networkWarning.allConnectionsLost", Res.getBaseCurrencyName().toLowerCase()));

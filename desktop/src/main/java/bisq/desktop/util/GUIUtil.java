@@ -31,7 +31,6 @@ import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Country;
@@ -59,6 +58,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
@@ -692,7 +692,7 @@ public class GUIUtil {
 
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
-        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+        final String currencyName = BaseCurrencyNetwork.CURRENT_NETWORK.getCurrencyName();
         new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
@@ -702,7 +702,7 @@ public class GUIUtil {
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BaseCurrencyNetwork.CURRENT_PARAMETERS,
                         address), amount, label, null) :
                 "";
     }

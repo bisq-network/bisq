@@ -17,9 +17,9 @@
 
 package bisq.core.dao.state;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoOptionKeys;
+
+import bisq.common.config.BaseCurrencyNetwork;
 
 import org.bitcoinj.core.Coin;
 
@@ -107,7 +107,7 @@ public class GenesisTxInfo {
     public GenesisTxInfo(@Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
                          @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) Integer genesisBlockHeight,
                          @Named(DaoOptionKeys.GENESIS_TOTAL_SUPPLY) Long genesisTotalSupply) {
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
         boolean isMainnet = baseCurrencyNetwork.isMainnet();
         boolean isTestnet = baseCurrencyNetwork.isTestnet();
         boolean isDaoTestNet = baseCurrencyNetwork.isDaoTestNet();

@@ -17,11 +17,9 @@
 
 package bisq.core.locale;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
-
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.BaseCurrencyNetwork;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -46,7 +44,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class Res {
     public static void setup() {
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
         setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
     }

@@ -18,7 +18,6 @@
 package bisq.statistics;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.app.BisqExecutable;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
@@ -36,15 +35,12 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     private Statistics statistics;
 
     public StatisticsMain() {
-        super("Bisq Statsnode", "bisq-statistics", VERSION);
+        super("Bisq Statsnode", "bisq-statistics", "bisq_statistics", VERSION);
     }
 
     public static void main(String[] args) throws Exception {
         log.info("Statistics.VERSION: " + VERSION);
-        BisqEnvironment.setDefaultAppName("bisq_statistics");
-
-        if (BisqExecutable.setupInitialOptionParser(args))
-            new StatisticsMain().execute(args);
+        new StatisticsMain().execute(args);
     }
 
     @Override
@@ -85,7 +81,7 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
 
     @Override
     protected AppModule getModule() {
-        return new ModuleForAppWithP2p(bisqEnvironment);
+        return new ModuleForAppWithP2p(bisqEnvironment, config);
     }
 
     @Override

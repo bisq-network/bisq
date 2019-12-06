@@ -40,6 +40,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.ClockWatcher;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
@@ -59,13 +60,14 @@ import static com.google.inject.name.Names.named;
 
 public class ModuleForAppWithP2p extends AppModule {
 
-    public ModuleForAppWithP2p(Environment environment) {
-        super(environment);
+    public ModuleForAppWithP2p(Environment environment, Config config) {
+        super(environment, config);
     }
 
     @Override
     protected void configure() {
-        configEnvironment();
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
+        bind(Config.class).toInstance(config);
 
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
@@ -95,51 +97,14 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(String.class).annotatedWith(Names.named(AppOptionKeys.REFERRAL_ID)).toInstance(referralId);
 
         // ordering is used for shut down sequence
-        install(tradeModule());
-        install(encryptionServiceModule());
-        install(offerModule());
-        install(p2pModule());
-        install(bitcoinModule());
-        install(daoModule());
-        install(alertModule());
-        install(filterModule());
+        install(new TradeModule(environment, config));
+        install(new EncryptionServiceModule(environment, config));
+        install(new OfferModule(environment, config));
+        install(new P2PModule(environment, config));
+        install(new BitcoinModule(environment, config));
+        install(new DaoModule(environment, config));
+        install(new AlertModule(environment, config));
+        install(new FilterModule(environment, config));
         bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
-
-    }
-
-    protected void configEnvironment() {
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
-    }
-
-    protected TradeModule tradeModule() {
-        return new TradeModule(environment);
-    }
-
-    protected EncryptionServiceModule encryptionServiceModule() {
-        return new EncryptionServiceModule(environment);
-    }
-
-    protected AlertModule alertModule() {
-        return new AlertModule(environment);
-    }
-
-    protected FilterModule filterModule() {
-        return new FilterModule(environment);
-    }
-
-    protected OfferModule offerModule() {
-        return new OfferModule(environment);
-    }
-
-    protected P2PModule p2pModule() {
-        return new P2PModule(environment);
-    }
-
-    protected BitcoinModule bitcoinModule() {
-        return new BitcoinModule(environment);
-    }
-
-    protected DaoModule daoModule() {
-        return new DaoModule(environment);
     }
 }

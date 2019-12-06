@@ -43,7 +43,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
-import bisq.core.exceptions.BisqException;
+import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;

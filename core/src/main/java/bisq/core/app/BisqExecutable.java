@@ -24,7 +24,6 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
-import bisq.core.exceptions.BisqException;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
@@ -35,10 +34,16 @@ import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.ConnectionConfig;
 
+import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.DevEnv;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.BisqHelpFormatter;
+import bisq.common.config.Config;
+import bisq.common.config.ConfigException;
+import bisq.common.config.HelpRequested;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
@@ -59,70 +64,55 @@ import com.google.inject.name.Names;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
+import java.io.File;
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
-import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
-import static bisq.core.btc.BaseCurrencyNetwork.*;
+import static bisq.common.config.BaseCurrencyNetwork.*;
+import static bisq.core.app.BisqEnvironment.BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
+    private static final int EXIT_SUCCESS = 0;
+    private static final int EXIT_FAILURE = 1;
+    private static final String HELP_KEY = "help";
+
     private final String fullName;
     private final String scriptName;
+    private final String appName;
     private final String version;
 
     protected Injector injector;
     protected AppModule module;
     protected BisqEnvironment bisqEnvironment;
+    protected Config config;
 
-    public BisqExecutable(String fullName, String scriptName, String version) {
+    public BisqExecutable(String fullName, String scriptName, String appName, String version) {
         this.fullName = fullName;
         this.scriptName = scriptName;
+        this.appName = appName;
         this.version = version;
     }
 
-    public static boolean setupInitialOptionParser(String[] args) throws IOException {
-        // We don't want to do the full argument parsing here as that might easily change in update versions
-        // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-        OptionParser parser = new OptionParser();
-        parser.allowsUnrecognizedOptions();
+    public void execute(String[] args) throws Exception {
 
-        parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
-                format("User data directory (default: %s)", DEFAULT_USER_DATA_DIR))
-                .withRequiredArg();
-
-        parser.accepts(AppOptionKeys.APP_NAME_KEY,
-                format("Application name (default: %s)", DEFAULT_APP_NAME))
-                .withRequiredArg();
-
-        OptionSet options;
         try {
-            options = parser.parse(args);
-        } catch (OptionException ex) {
+            config = new Config(appName, args);
+        } catch (HelpRequested helpRequested) {
+            helpRequested.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
+            System.exit(EXIT_SUCCESS);
+        } catch (ConfigException ex) {
             System.err.println("error: " + ex.getMessage());
             System.exit(EXIT_FAILURE);
-            return false;
         }
-        BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
 
-        // need to call that before BisqAppMain().execute(args)
-        BisqExecutable.initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
-        return true;
-    }
+        initAppDir(config.getAppDataDir());
 
-
-    private static final int EXIT_SUCCESS = 0;
-    public static final int EXIT_FAILURE = 1;
-    private static final String HELP_KEY = "help";
-
-    public void execute(String[] args) throws Exception {
         OptionParser parser = new OptionParser();
         parser.formatHelpWith(new BisqHelpFormatter(fullName, scriptName, version));
         parser.accepts(HELP_KEY, "This help text").forHelp();
@@ -151,9 +141,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doExecute(OptionSet options) {
-        setupEnvironment(options);
+        bisqEnvironment = new BisqEnvironment(
+                new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
         configUserThread();
-        configCoreSetup(options);
+        CoreSetup.setup(config);
         addCapabilities();
 
         // If application is JavaFX application we need to wait until it is initialized
@@ -161,36 +152,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected abstract void configUserThread();
-
-    protected void setupEnvironment(OptionSet options) {
-        /*
-         * JOptSimple does support input parsing. However, doing only options = parser.parse(args) isn't enough to trigger the parsing.
-         * The parsing is done when the actual value is going to be retrieved, i.e. options.valueOf(attributename).
-         *
-         * In order to keep usability high, we work around the aforementioned characteristics by catching the exception below
-         * (valueOf is called somewhere in getBisqEnvironment), thus, neatly inform the user of an ill-formed parameter and stop execution.
-         *
-         * Might be changed when the project features more user parameters meant for the user.
-         */
-        try {
-            bisqEnvironment = getBisqEnvironment(options);
-        } catch (OptionException e) {
-            // unfortunately, the OptionArgumentConversionException is not visible so we cannot catch only those.
-            // hence, workaround
-            if (e.getCause() != null)
-                // get something like "Error while parsing application parameter '--torrcFile': File [/path/to/file] does not exist"
-                System.err.println("Error while parsing application parameter '--" + e.options().get(0) + "': " + e.getCause().getMessage());
-            else
-                System.err.println("Error while parsing application parameter '--" + e.options().get(0));
-
-            // we only tried to load some config until now, so no graceful shutdown is required
-            System.exit(1);
-        }
-    }
-
-    protected void configCoreSetup(OptionSet options) {
-        CoreSetup.setup(getBisqEnvironment(options));
-    }
 
     protected void addCapabilities() {
     }
@@ -235,7 +196,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
-        DevEnv.setDaoActivated(BisqEnvironment.isDaoActivated(bisqEnvironment));
+        DevEnv.setDaoActivated(config.isDaoActivated());
     }
 
     protected void setupPersistedDataHosts(Injector injector) {
@@ -474,7 +435,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         //BtcOptionKeys
         parser.accepts(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                format("Base currency network (default: %s)", BisqEnvironment.getDefaultBaseCurrencyNetwork().name()))
+                format("Base currency network (default: %s)", BTC_MAINNET.name()))
                 .withRequiredArg()
                 .ofType(String.class)
                 .describedAs(format("%s|%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST, BTC_DAO_TESTNET, BTC_DAO_BETANET, BTC_DAO_REGTEST));
@@ -570,12 +531,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
     }
 
-    public static BisqEnvironment getBisqEnvironment(OptionSet options) {
-        return new BisqEnvironment(new JOptCommandLinePropertySource(BisqEnvironment.BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
-    }
-
-    public static void initAppDir(String appDir) {
-        Path dir = Paths.get(appDir);
+    private void initAppDir(File appDataDir) {
+        Path dir = appDataDir.toPath();
         if (Files.exists(dir)) {
             if (!Files.isWritable(dir))
                 throw new BisqException("Application data directory '%s' is not writeable", dir);

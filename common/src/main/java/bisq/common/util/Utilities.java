@@ -373,13 +373,6 @@ public class Utilities {
         }
     }
 
-    public static void checkCryptoPolicySetup() throws NoSuchAlgorithmException, LimitedKeyStrengthException {
-        if (Cipher.getMaxAllowedKeyLength("AES") > 128)
-            log.debug("Congratulations, you have unlimited key length support!");
-        else
-            throw new LimitedKeyStrengthException();
-    }
-
     public static String toTruncatedString(Object message) {
         return toTruncatedString(message, 200, true);
     }

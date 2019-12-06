@@ -29,6 +29,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
@@ -55,8 +56,8 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     private final long startTime = System.currentTimeMillis();
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
-    public ExecutableForAppWithP2p(String fullName, String scriptName, String version) {
-        super(fullName, scriptName, version);
+    public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
+        super(fullName, scriptName, appName, version);
     }
 
     @Override
@@ -189,12 +190,12 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         });
     }
 
-    protected void restart(BisqEnvironment bisqEnvironment, GracefulShutDownHandler gracefulShutDownHandler) {
+    protected void restart(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         stopped = true;
         gracefulShutDownHandler.gracefulShutDown(() -> {
             //noinspection finally
             try {
-                final String[] tokens = bisqEnvironment.getAppDataDir().split("_");
+                final String[] tokens = config.getAppDataDir().getPath().split("_");
                 String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
                 RestartUtil.restartApplication(logPath);
             } catch (IOException e) {

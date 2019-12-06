@@ -18,7 +18,6 @@
 package bisq.core.filter;
 
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -36,6 +35,8 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.config.ConfigFileEditor;
 import bisq.common.crypto.KeyRing;
 
 import org.bitcoinj.core.ECKey;
@@ -68,6 +69,7 @@ import javax.annotation.Nullable;
 import static org.bitcoinj.core.Utils.HEX;
 
 public class FilterManager {
+
     private static final Logger log = LoggerFactory.getLogger(FilterManager.class);
 
     public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
@@ -87,7 +89,7 @@ public class FilterManager {
     private final KeyRing keyRing;
     private final User user;
     private final Preferences preferences;
-    private final BisqEnvironment bisqEnvironment;
+    private final ConfigFileEditor configFileEditor;
     private final ProvidersRepository providersRepository;
     private boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
@@ -106,7 +108,7 @@ public class FilterManager {
                          KeyRing keyRing,
                          User user,
                          Preferences preferences,
-                         BisqEnvironment bisqEnvironment,
+                         Config config,
                          ProvidersRepository providersRepository,
                          @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
                          @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
@@ -114,7 +116,7 @@ public class FilterManager {
         this.keyRing = keyRing;
         this.user = user;
         this.preferences = preferences;
-        this.bisqEnvironment = bisqEnvironment;
+        this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
         pubKeyAsHex = useDevPrivilegeKeys ?
@@ -201,9 +203,9 @@ public class FilterManager {
     }
 
     private void resetFilters() {
-        bisqEnvironment.saveBannedBtcNodes(null);
-        bisqEnvironment.saveBannedSeedNodes(null);
-        bisqEnvironment.saveBannedPriceRelayNodes(null);
+        saveBannedNodes(BANNED_BTC_NODES, null);
+        saveBannedNodes(BANNED_SEED_NODES, null);
+        saveBannedNodes(BANNED_PRICE_RELAY_NODES, null);
 
         if (providersRepository.getBannedNodes() != null)
             providersRepository.applyBannedNodes(null);
@@ -216,12 +218,12 @@ public class FilterManager {
             // Seed nodes are requested at startup before we get the filter so we only apply the banned
             // nodes at the next startup and don't update the list in the P2P network domain.
             // We persist it to the property file which is read before any other initialisation.
-            bisqEnvironment.saveBannedSeedNodes(filter.getSeedNodes());
-            bisqEnvironment.saveBannedBtcNodes(filter.getBtcNodes());
+            saveBannedNodes(BANNED_SEED_NODES, filter.getSeedNodes());
+            saveBannedNodes(BANNED_BTC_NODES, filter.getBtcNodes());
 
             // Banned price relay nodes we can apply at runtime
             final List<String> priceRelayNodes = filter.getPriceRelayNodes();
-            bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
+            saveBannedNodes(BANNED_PRICE_RELAY_NODES, priceRelayNodes);
 
             providersRepository.applyBannedNodes(priceRelayNodes);
 
@@ -235,6 +237,13 @@ public class FilterManager {
         } else {
             return false;
         }
+    }
+
+    private void saveBannedNodes(String optionName, List<String> bannedNodes) {
+        if (bannedNodes != null)
+            configFileEditor.setOption(optionName, String.join(",", bannedNodes));
+        else
+            configFileEditor.clearOption(optionName);
     }
 
 
