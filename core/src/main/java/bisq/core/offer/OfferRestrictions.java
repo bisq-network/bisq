@@ -17,9 +17,6 @@
 
 package bisq.core.offer;
 
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.trade.Trade;
-
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.util.Utilities;
@@ -40,38 +37,6 @@ public class OfferRestrictions {
     }
 
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
-
-    public static boolean isOfferRisky(Offer offer) {
-        return offer != null &&
-                offer.isBuyOffer() &&
-                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
-                isMinTradeAmountRisky(offer);
-    }
-
-    public static boolean isSellOfferRisky(Offer offer) {
-        return offer != null &&
-                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
-                isMinTradeAmountRisky(offer);
-    }
-
-    public static boolean isTradeRisky(Trade trade) {
-        if (trade == null)
-            return false;
-
-        Offer offer = trade.getOffer();
-        return offer != null &&
-                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
-                trade.getTradeAmount() != null &&
-                isAmountRisky(trade.getTradeAmount());
-    }
-
-    public static boolean isMinTradeAmountRisky(Offer offer) {
-        return isAmountRisky(offer.getMinAmount());
-    }
-
-    private static boolean isAmountRisky(Coin amount) {
-        return amount.isGreaterThan(TOLERATED_SMALL_TRADE_AMOUNT);
-    }
 
     static boolean hasOfferMandatoryCapability(Offer offer, Capability mandatoryCapability) {
         Map<String, String> extraDataMap = offer.getOfferPayload().getExtraDataMap();

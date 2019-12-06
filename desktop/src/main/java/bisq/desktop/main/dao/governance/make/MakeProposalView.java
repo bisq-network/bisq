@@ -50,9 +50,10 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.asset.Asset;
 
@@ -67,6 +68,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -108,7 +110,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final P2PService p2PService;
     private final PhasesView phasesView;
     private final ChangeParamValidator changeParamValidator;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final Navigation navigation;
     private final BsqWalletService bsqWalletService;
@@ -144,7 +146,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                              BsqWalletService bsqWalletService,
                              PhasesView phasesView,
                              ChangeParamValidator changeParamValidator,
-                             BSFormatter btcFormatter,
+                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                              BsqFormatter bsqFormatter,
                              Navigation navigation) {
         this.daoFacade = daoFacade;
@@ -293,7 +295,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
                 if (requiredBond > availableBalance) {
                     long missing = requiredBond - availableBalance;
-                    new Popup<>().warning(Res.get("dao.proposal.create.missingBsqFundsForBond",
+                    new Popup().warning(Res.get("dao.proposal.create.missingBsqFundsForBond",
                             bsqFormatter.formatCoinWithCode(missing)))
                             .actionButtonText(Res.get("dao.proposal.create.publish"))
                             .onAction(() -> {
@@ -308,15 +310,15 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             }
         } catch (InsufficientMoneyException e) {
             if (e instanceof InsufficientBsqException) {
-                new Popup<>().warning(Res.get("dao.proposal.create.missingBsqFunds",
+                new Popup().warning(Res.get("dao.proposal.create.missingBsqFunds",
                         bsqFormatter.formatCoinWithCode(e.missing))).show();
             } else {
                 if (type.equals(ProposalType.COMPENSATION_REQUEST) || type.equals(ProposalType.REIMBURSEMENT_REQUEST)) {
-                    new Popup<>().warning(Res.get("dao.proposal.create.missingIssuanceFunds",
+                    new Popup().warning(Res.get("dao.proposal.create.missingIssuanceFunds",
                             100,
                             btcFormatter.formatCoinWithCode(e.missing))).show();
                 } else {
-                    new Popup<>().warning(Res.get("dao.proposal.create.missingMinerFeeFunds",
+                    new Popup().warning(Res.get("dao.proposal.create.missingMinerFeeFunds",
                             btcFormatter.formatCoinWithCode(e.missing))).show();
                 }
             }
@@ -328,15 +330,15 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             } else {
                 message = e.getMessage();
             }
-            new Popup<>().warning(message).show();
+            new Popup().warning(message).show();
         } catch (IllegalArgumentException e) {
             log.error(e.toString());
             e.printStackTrace();
-            new Popup<>().warning(e.getMessage()).show();
+            new Popup().warning(e.getMessage()).show();
         } catch (Throwable e) {
             log.error(e.toString());
             e.printStackTrace();
-            new Popup<>().warning(e.toString()).show();
+            new Popup().warning(e.toString()).show();
         }
     }
 
@@ -364,7 +366,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 transaction,
                 () -> {
                     if (!DevEnv.isDevMode())
-                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
+                        new Popup().feedback(Res.get("dao.tx.published.success")).show();
 
                     if (proposalDisplay != null)
                         proposalDisplay.clearForm();
@@ -374,7 +376,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                     makeProposalButton.setDisable(false);
                 },
                 errorMessage -> {
-                    new Popup<>().warning(errorMessage).show();
+                    new Popup().warning(errorMessage).show();
                     busyAnimation.stop();
                     busyLabel.setVisible(false);
                     makeProposalButton.setDisable(false);
@@ -426,7 +428,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                             selectedParam,
                             paramValue);
                 } catch (Throwable e) {
-                    new Popup<>().warning(e.getMessage()).show();
+                    new Popup().warning(e.getMessage()).show();
                     return null;
                 }
             case BONDED_ROLE:

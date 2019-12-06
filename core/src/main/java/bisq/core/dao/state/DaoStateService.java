@@ -35,7 +35,7 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.ParamChange;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Coin;
@@ -238,7 +238,7 @@ public class DaoStateService implements DaoSetupService {
         daoStateListeners.forEach(l -> l.onParseBlockComplete(block));
 
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
-        // blocks as that cause performance issues. In earlier versions when we updated at each block it took
+        // blocks as that causes performance issues. In earlier versions when we updated at each block it took
         // 50 sec. for 4000 blocks, after that change it was about 4 sec.
         // Clients
         if (parseBlockChainComplete)
@@ -652,7 +652,7 @@ public class DaoStateService implements DaoSetupService {
     // Unlocking - UNLOCK txOutputs that are not yet spendable due to lock time
     // Unlocked - UNLOCK txOutputs that are spendable since the lock time has passed
     // LockTime - 0 means that the funds are spendable at the same block of the UNLOCK tx. For the user that is not
-    // supported as we do not expose unconfirmed BSQ txs so lockTime of 1 is the smallest the use can actually use.
+    // supported as we do not expose unconfirmed BSQ txs so lockTime of 1 is the smallest the user can actually use.
 
     // LockTime
     public Optional<Integer> getLockTime(String txId) {
@@ -850,7 +850,7 @@ public class DaoStateService implements DaoSetupService {
                     doConfiscateBond(lockupTxId);
                 } else {
                     // We could be more radical here and confiscate the output if it is unspent but lock time is over,
-                    // but its probably better to stick to the rules that confiscation can only happen before lock time
+                    // but it's probably better to stick to the rules that confiscation can only happen before lock time
                     // is over.
                     log.warn("We could not confiscate the bond because the unlock tx was already spent or lock time " +
                             "has exceeded. unlockTxId={}", unlockTxId);

@@ -29,13 +29,15 @@ import bisq.desktop.util.Transitions;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.locale.LanguageUtil;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
+
+import com.google.common.reflect.TypeToken;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -68,8 +70,8 @@ import javafx.scene.transform.Rotate;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.geometry.NodeOrientation;
+import javafx.geometry.Pos;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -93,7 +95,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class Overlay<T extends Overlay> {
+public abstract class Overlay<T extends Overlay<T>> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -152,6 +154,7 @@ public abstract class Overlay<T extends Overlay> {
     private boolean showBusyAnimation;
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
+    protected boolean disableActionButton;
 
     @Getter
     protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
@@ -182,12 +185,25 @@ public abstract class Overlay<T extends Overlay> {
     protected Timer centerTime;
     protected Type type = Type.Undefined;
 
+    protected int maxChar = 1800;
+
+    private T cast() {
+        //noinspection unchecked
+        return (T) this;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Overlay() {
+        //noinspection UnstableApiUsage
+        TypeToken<T> typeToken = new TypeToken<>(getClass()) {
+        };
+        if (!typeToken.isSupertypeOf(getClass())) {
+            throw new RuntimeException("Subclass of Overlay<T> should be castable to T");
+        }
     }
 
     public void show(boolean showAgainChecked) {
@@ -263,26 +279,22 @@ public abstract class Overlay<T extends Overlay> {
 
     public T onClose(Runnable closeHandler) {
         this.closeHandlerOptional = Optional.of(closeHandler);
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T onAction(Runnable actionHandler) {
         this.actionHandlerOptional = Optional.of(actionHandler);
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T onSecondaryAction(Runnable secondaryActionHandlerOptional) {
         this.secondaryActionHandlerOptional = Optional.of(secondaryActionHandlerOptional);
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T headLine(String headLine) {
         this.headLine = headLine;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T notification(String message) {
@@ -291,8 +303,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.notification");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T instruction(String message) {
@@ -301,8 +312,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.instruction");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T attention(String message) {
@@ -311,8 +321,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.attention");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T backgroundInfo(String message) {
@@ -321,8 +330,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.backgroundInfo");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T feedback(String message) {
@@ -331,8 +339,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.feedback");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T confirmation(String message) {
@@ -341,8 +348,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.confirmation");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T information(String message) {
@@ -351,8 +357,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.information");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T warning(String message) {
@@ -362,8 +367,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.warning");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T error(String message) {
@@ -374,125 +378,116 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.error");
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     @SuppressWarnings("UnusedReturnValue")
     public T showReportErrorButtons() {
         this.showReportErrorButtons = true;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T message(String message) {
         this.message = message;
         setTruncatedMessage();
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T closeButtonText(String closeButtonText) {
         this.closeButtonText = closeButtonText;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
         this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://bisq.network/source/bisq/issues"));
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T useIUnderstandButton() {
         this.closeButtonText = Res.get("shared.iUnderstand");
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T actionButtonTextWithGoTo(String target) {
         this.actionButtonText = Res.get("shared.goTo", Res.get(target));
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T secondaryActionButtonTextWithGoTo(String target) {
         this.secondaryActionButtonText = Res.get("shared.goTo", Res.get(target));
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T closeButtonTextWithGoTo(String target) {
         this.closeButtonText = Res.get("shared.goTo", Res.get(target));
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T actionButtonText(String actionButtonText) {
         this.actionButtonText = actionButtonText;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T secondaryActionButtonText(String secondaryActionButtonText) {
         this.secondaryActionButtonText = secondaryActionButtonText;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
         this.actionHandlerOptional = Optional.ofNullable(BisqApp.getShutDownHandler());
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T buttonAlignment(HPos pos) {
         this.buttonAlignment = pos;
-        return (T) this;
+        return cast();
     }
 
     public T width(double width) {
         this.width = width;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
+    }
+
+    public T maxMessageLength(int maxChar) {
+        this.maxChar = maxChar;
+        return cast();
     }
 
     public T showBusyAnimation() {
         this.showBusyAnimation = true;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T dontShowAgainId(String key) {
         this.dontShowAgainId = key;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T dontShowAgainText(String dontShowAgainText) {
         this.dontShowAgainText = dontShowAgainText;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T hideCloseButton() {
         this.hideCloseButton = true;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T useAnimation(boolean useAnimation) {
         this.useAnimation = useAnimation;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
     }
 
     public T setHeadlineStyle(String headlineStyle) {
         this.headlineStyle = headlineStyle;
-        //noinspection unchecked
-        return (T) this;
+        return cast();
+    }
+
+    public T disableActionButton() {
+        this.disableActionButton = true;
+        return cast();
     }
 
 
@@ -925,16 +920,24 @@ public abstract class Overlay<T extends Overlay> {
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new AutoTooltipButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
-            actionButton.setDefaultButton(true);
+
+            if (!disableActionButton)
+                actionButton.setDefaultButton(true);
+            else
+                actionButton.setDisable(true);
+
             HBox.setHgrow(actionButton, Priority.SOMETIMES);
 
             actionButton.getStyleClass().add("action-button");
             //TODO app wide focus
             //actionButton.requestFocus();
-            actionButton.setOnAction(event -> {
-                hide();
-                actionHandlerOptional.ifPresent(Runnable::run);
-            });
+
+            if (!disableActionButton) {
+                actionButton.setOnAction(event -> {
+                    hide();
+                    actionHandlerOptional.ifPresent(Runnable::run);
+                });
+            }
 
             buttonBox.setSpacing(10);
 
@@ -969,8 +972,8 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void setTruncatedMessage() {
-        if (message != null && message.length() > 1800)
-            truncatedMessage = StringUtils.abbreviate(message, 1800);
+        if (message != null && message.length() > maxChar)
+            truncatedMessage = StringUtils.abbreviate(message, maxChar);
         else truncatedMessage = Objects.requireNonNullElse(message, "");
     }
 

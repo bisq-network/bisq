@@ -83,13 +83,14 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         Preferences preferences,
                         ArbitratorManager arbitratorManager,
                         User user,
-                        P2PService p2PService) {
+                        P2PService p2PService,
+                        OfferPayload.Direction direction) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
         this.user = user;
         this.p2PService = p2PService;
-        this.direction = (this instanceof BuyOfferView) ? OfferPayload.Direction.BUY : OfferPayload.Direction.SELL;
+        this.direction = direction;
         this.arbitratorManager = arbitratorManager;
     }
 
@@ -133,7 +134,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
-        Optional<TradeCurrency> tradeCurrencyOptional = (this instanceof SellOfferView) ?
+        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferPayload.Direction.SELL) ?
                 CurrencyUtil.getTradeCurrency(preferences.getSellScreenCurrencyCode()) :
                 CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCurrencyCode());
         tradeCurrency = tradeCurrencyOptional.orElseGet(GlobalSettings::getDefaultTradeCurrency);
@@ -238,7 +239,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private void showNoArbitratorForUserLocaleWarning() {
         String key = "NoArbitratorForUserLocaleWarning";
-        new Popup<>().information(Res.get("offerbook.info.noArbitrationInUserLanguage",
+        new Popup().information(Res.get("offerbook.info.noArbitrationInUserLanguage",
                 getArbitrationLanguages(), LanguageUtil.getDisplayName(preferences.getUserLanguage())))
                 .closeButtonText(Res.get("shared.ok"))
                 .dontShowAgainId(key)

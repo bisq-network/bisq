@@ -38,7 +38,7 @@ import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -322,11 +322,11 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         checkArgument(listingFee % 100 == 0, "Fee must be a multiple of 1 BSQ (100 satoshi).");
         try {
             // We create a prepared Bsq Tx for the listing fee.
-            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTx(Coin.valueOf(listingFee));
+            Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTxForAssetListing(Coin.valueOf(listingFee));
             byte[] hash = AssetConsensus.getHash(statefulAsset);
             byte[] opReturnData = AssetConsensus.getOpReturnData(hash);
             // We add the BTC inputs for the miner fee.
-            final Transaction txWithBtcFee = btcWalletService.completePreparedBurnBsqTx(preparedBurnFeeTx, opReturnData);
+            Transaction txWithBtcFee = btcWalletService.completePreparedBurnBsqTx(preparedBurnFeeTx, opReturnData);
             // We sign the BSQ inputs of the final tx.
             Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
             log.info("Asset listing fee tx: " + transaction);

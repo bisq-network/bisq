@@ -47,7 +47,9 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -59,6 +61,8 @@ import bisq.common.handlers.ResultHandler;
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -101,7 +105,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
-    final BSFormatter formatter;
+    private final CoinFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
 
 
@@ -143,7 +148,8 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
-                              BSFormatter formatter) {
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                              BsqFormatter bsqFormatter) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -156,7 +162,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
-        this.formatter = formatter;
+        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
 
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.sortedItems = new SortedList<>(filteredItems);
@@ -175,9 +182,9 @@ class OfferBookViewModel extends ActivatableViewModel {
                 final OfferBookListItem item = highestAmountOffer.get();
                 if (!item.getOffer().isRange() && containsRangeAmount) {
                     maxPlacesForAmount.set(formatAmount(item.getOffer(), false)
-                            .length() * 2 + BSFormatter.RANGE_SEPARATOR.length());
+                            .length() * 2 + FormattingUtils.RANGE_SEPARATOR.length());
                     maxPlacesForVolume.set(formatVolume(item.getOffer(), false)
-                            .length() * 2 + BSFormatter.RANGE_SEPARATOR.length());
+                            .length() * 2 + FormattingUtils.RANGE_SEPARATOR.length());
                 } else {
                     maxPlacesForAmount.set(formatAmount(item.getOffer(), false).length());
                     maxPlacesForVolume.set(formatVolume(item.getOffer(), false).length());
@@ -286,6 +293,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;
+        else
+            this.selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
 
         applyFilterPredicate();
     }
@@ -341,7 +350,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private String formatAmount(Offer offer, boolean decimalAligned) {
-        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), formatter);
+        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), btcFormatter);
     }
 
 
@@ -359,7 +368,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getAbsolutePriceMargin(Offer offer) {
-        return BSFormatter.formatPercentagePrice(Math.abs(offer.getMarketPriceMargin()));
+        return FormattingUtils.formatPercentagePrice(Math.abs(offer.getMarketPriceMargin()));
     }
 
     private String formatPrice(Offer offer, boolean decimalAligned) {
@@ -369,12 +378,12 @@ class OfferBookViewModel extends ActivatableViewModel {
     private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
         String postFix = "";
         if (offer.isUseMarketBasedPrice()) {
-            postFix = " (" + BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+            postFix = " (" + FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
 
         }
 
         if (decimalAligned) {
-            postFix = BSFormatter.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
+            postFix = FormattingUtils.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
         }
 
         return postFix;
@@ -423,7 +432,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            result = Res.get("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
+            result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
             result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             String countryCode = offer.getCountryCode();
@@ -471,7 +480,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getDirectionLabelTooltip(Offer offer) {
-        return BSFormatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
+        return getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
     Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {
@@ -509,26 +518,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                 PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
-    boolean isSellOfferAndAllTakerPaymentAccountsForOfferImmature(Offer offer) {
-        return user.getPaymentAccounts() != null &&
-                PaymentAccountUtil.isSellOfferAndAllTakerPaymentAccountsForOfferImmature(offer, user.getPaymentAccounts(), accountAgeWitnessService);
-    }
-
-    boolean isRiskyBuyOfferWithImmatureAccountAge(Offer offer) {
-        return PaymentAccountUtil.isRiskyBuyOfferWithImmatureAccountAge(offer, accountAgeWitnessService);
-    }
-
     boolean hasPaymentAccountForCurrency() {
         return (showAllTradeCurrenciesProperty.get() &&
                 user.getPaymentAccounts() != null &&
                 !user.getPaymentAccounts().isEmpty()) ||
                 user.hasPaymentAccountForCurrency(selectedTradeCurrency);
-    }
-
-    boolean hasMakerAnyMatureAccountForBuyOffer() {
-        return direction == OfferPayload.Direction.SELL ||
-                (user.getPaymentAccounts() != null &&
-                        PaymentAccountUtil.hasMakerAnyMatureAccountForBuyOffer(user.getPaymentAccounts(), accountAgeWitnessService));
     }
 
     boolean canCreateOrTakeOffer() {
@@ -579,10 +573,17 @@ class OfferBookViewModel extends ActivatableViewModel {
         return filterManager.requireUpdateToNewVersionForTrading();
     }
 
-    boolean isInsufficientTradeLimit(Offer offer) {
+    boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+                !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
+                });
+    }
+
+    boolean isMyInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
         final long myTradeLimit = accountOptional
-                .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount, offer.getCurrencyCode()))
+                .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
+                        offer.getCurrencyCode(), offer.getMirroredDirection()))
                 .orElse(0L);
         final long offerMinAmount = offer.getMinAmount().value;
         log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
@@ -615,5 +616,33 @@ class OfferBookViewModel extends ActivatableViewModel {
                 })
                 .collect(Collectors.toSet())
                 .size();
+    }
+
+    public boolean hasSelectionAccountSigning() {
+        if (showAllTradeCurrenciesProperty.get()) {
+            if (!selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG)) {
+                return PaymentMethod.hasChargebackRisk(selectedPaymentMethod);
+            }
+        } else {
+            if (selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG))
+                return CurrencyUtil.getMatureMarketCurrencies().stream()
+                        .anyMatch(c -> c.getCode().equals(selectedTradeCurrency.getCode()));
+            else
+                return PaymentMethod.hasChargebackRisk(selectedPaymentMethod, tradeCurrencyCode.get());
+        }
+        return true;
+    }
+
+    public String getMakerFeeAsString(Offer offer) {
+        return offer.isCurrencyForMakerFeeBtc() ?
+                btcFormatter.formatCoinWithCode(offer.getMakerFee()) :
+                bsqFormatter.formatCoinWithCode(offer.getMakerFee());
+    }
+
+    private static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
+        else
+            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 }

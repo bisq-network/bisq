@@ -39,7 +39,7 @@ import javax.annotation.concurrent.Immutable;
 
 /**
  * Parse a rawBlock and creates a block from it with an empty tx list.
- * Iterates all rawTx and if the tx is a a BSQ tx it gets added to the tx list.
+ * Iterates all rawTx and if the tx is a BSQ tx it gets added to the tx list.
  */
 @Slf4j
 @Immutable
@@ -101,7 +101,7 @@ public class BlockParser {
 
         // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
-        // Realistically we don't expect more then a few recursive calls.
+        // Realistically we don't expect more than a few recursive calls.
         // There are some blocks with testing such dependency chains like block 130768 where at each iteration only
         // one get resolved.
         // Lately there is a patter with 24 iterations observed
@@ -115,9 +115,8 @@ public class BlockParser {
                         genesisTotalSupply)
                         .ifPresent(txList::add));
 
-        if (System.currentTimeMillis() - startTs > 0)
-            log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
-                    blockHeight, System.currentTimeMillis() - startTs);
+        log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
+                blockHeight, System.currentTimeMillis() - startTs);
 
         daoStateService.onParseBlockComplete(block);
         return block;

@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressWithIconAndDirection;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -35,7 +36,8 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -54,9 +56,9 @@ import org.bitcoinj.wallet.listeners.WalletEventListener;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -110,7 +112,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final BtcWalletService btcWalletService;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -127,7 +129,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private TransactionsView(BtcWalletService btcWalletService,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             BSFormatter formatter,
+                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
                              OfferDetailsWindow offerDetailsWindow,
@@ -356,7 +358,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     } else {
                                         if (item.isDustAttackTx()) {
                                             hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
-                                            hyperlinkWithIcon.setOnAction(event -> new Popup<>().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
+                                            hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
                                             setGraphic(hyperlinkWithIcon);
                                         } else {
                                             setGraphic(new AutoTooltipLabel(item.getDetails()));
@@ -393,7 +395,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String addressString = item.getAddressString();
                                     field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                            MaterialDesignIcon.LINK, item.getReceived());
+                                            item.getReceived());
                                     field.setOnAction(event -> openAddressInBlockExplorer(item));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                     setGraphic(field);
@@ -426,7 +428,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
@@ -547,10 +549,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     if (tradable != null)
                         btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                    new Popup<>().information(Res.get("funds.tx.txSent")).show();
-                }, errorMessage -> new Popup<>().warning(errorMessage).show());
+                    new Popup().information(Res.get("funds.tx.txSent")).show();
+                }, errorMessage -> new Popup().warning(errorMessage).show());
             } catch (Throwable e) {
-                new Popup<>().warning(e.getMessage()).show();
+                new Popup().warning(e.getMessage()).show();
             }
         }
     }
@@ -592,7 +594,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 Tuple4<Date, Integer, Integer, Integer> tuple = dataByDayMap.get(day);
                 int prev = tuple.second;
                 int numOffers = tuple.third;
-                int numTrades = tuple.forth;
+                int numTrades = tuple.fourth;
                 if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
                     numOffers++;
                 else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
@@ -615,7 +617,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         List<Tuple4<String, Date, Integer, Tuple2<Integer, Integer>>> sortedDataByDayList = dataByDayMap.entrySet().stream().
                 map(e -> {
                     Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
-                    return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
+                    return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.fourth));
                 }).sorted((o1, o2) -> o2.second.compareTo(o1.second))
                 .collect(Collectors.toList());
         StringBuilder transactionsByDayStringBuilder = new StringBuilder();
@@ -625,22 +627,22 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         // This is not intended for the public so we don't translate here
         allStringBuilder.append(Res.get("shared.date")).append(";").append("Offers").append(";").append("Trades").append("\n");
         sortedDataByDayList.forEach(tuple4 -> {
-            offersStringBuilder.append(tuple4.forth.first).append(",");
-            tradesStringBuilder.append(tuple4.forth.second).append(",");
-            allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
+            offersStringBuilder.append(tuple4.fourth.first).append(",");
+            tradesStringBuilder.append(tuple4.fourth.second).append(",");
+            allStringBuilder.append(tuple4.first).append(";").append(tuple4.fourth.first).append(";").append(tuple4.fourth.second).append("\n");
             transactionsByDayStringBuilder.append("\n").
                     append(tuple4.first).
                     append(": ").
                     append(tuple4.third).
                     append(" (Offers: ").
-                    append(tuple4.forth.first).
+                    append(tuple4.fourth.first).
                     append(" / Trades: ").
-                    append(tuple4.forth.second).
+                    append(tuple4.fourth.second).
                     append(")");
         });
         // This is not intended for the public so we don't translate here
         String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
-        new Popup<>().headLine("Statistical info")
+        new Popup().headLine("Statistical info")
                 .information(message)
                 .actionButtonText("Copy")
                 .onAction(() -> Utilities.copyToClipboard(message +

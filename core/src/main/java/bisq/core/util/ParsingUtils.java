@@ -1,6 +1,7 @@
 package bisq.core.util;
 
 import bisq.core.monetary.Price;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.util.MathUtils;
 
@@ -13,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ParsingUtils {
-    public static Coin parseToCoin(String input, BSFormatter bsFormatter) {
-        return parseToCoin(input, bsFormatter.getMonetaryFormat());
+    public static Coin parseToCoin(String input, CoinFormatter coinFormatter) {
+        return parseToCoin(input, coinFormatter.getMonetaryFormat());
     }
 
     public static Coin parseToCoin(String input, MonetaryFormat coinFormat) {
@@ -48,7 +49,7 @@ public class ParsingUtils {
         long value = 0;
         try {
             double amountValue = Double.parseDouble(amount);
-            amount = BSFormatter.formatRoundedDoubleWithPrecision(amountValue, precision);
+            amount = FormattingUtils.formatRoundedDoubleWithPrecision(amountValue, precision);
             value = Price.parse(currencyCode, amount).getValue();
         } catch (NumberFormatException ignore) {
             // expected NumberFormatException if input is not a number
@@ -60,7 +61,7 @@ public class ParsingUtils {
     }
 
     public static String convertCharsForNumber(String input) {
-        // Some languages like finnish use the long dash for the minus
+        // Some languages like Finnish use the long dash for the minus
         input = input.replace("−", "-");
         input = StringUtils.deleteWhitespace(input);
         return input.replace(",", ".");

@@ -54,10 +54,10 @@ public abstract class SetupPayoutTxListener extends TradeTask {
             runInterceptHook();
             if (!trade.isPayoutPublished()) {
                 BtcWalletService walletService = processModel.getBtcWalletService();
-                final String id = processModel.getOffer().getId();
+                String id = processModel.getOffer().getId();
                 Address address = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddress();
 
-                final TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
+                TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
                 if (isInNetwork(confidence)) {
                     applyConfidence(confidence);
                 } else {

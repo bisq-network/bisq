@@ -72,7 +72,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupCompleteListener {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
     private final String fullName;
     private final String scriptName;
@@ -168,7 +168,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
          * The parsing is done when the actual value is going to be retrieved, i.e. options.valueOf(attributename).
          *
          * In order to keep usability high, we work around the aforementioned characteristics by catching the exception below
-         * (valueOf is called somewhere in getBisqEnvironment), thus, neatly inform the user of a ill-formed parameter and stop execution.
+         * (valueOf is called somewhere in getBisqEnvironment), thus, neatly inform the user of an ill-formed parameter and stop execution.
          *
          * Might be changed when the project features more user parameters meant for the user.
          */
@@ -261,7 +261,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void startAppSetup() {
         BisqSetup bisqSetup = injector.getInstance(BisqSetup.class);
-        bisqSetup.addBisqSetupCompleteListener(this);
+        bisqSetup.addBisqSetupListener(this);
         bisqSetup.start();
     }
 

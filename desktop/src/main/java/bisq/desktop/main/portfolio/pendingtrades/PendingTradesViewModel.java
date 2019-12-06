@@ -22,7 +22,9 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -30,8 +32,9 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -42,6 +45,8 @@ import bisq.common.app.DevEnv;
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -58,6 +63,7 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.UNDEFINED;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
 
@@ -84,7 +90,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         STEP4
     }
 
-    public final BSFormatter btcFormatter;
+    public final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     public final BtcAddressValidator btcAddressValidator;
     final AccountAgeWitnessService accountAgeWitnessService;
@@ -108,7 +114,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     @Inject
     public PendingTradesViewModel(PendingTradesDataModel dataModel,
-                                  BSFormatter btcFormatter,
+                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
@@ -199,7 +205,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
     private long getMaxTradePeriod() {
@@ -221,7 +227,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getRemainingTradeDurationAsWords() {
-        return BSFormatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+        return FormattingUtils.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
     }
 
     public double getRemainingTradeDurationAsPercentage() {
@@ -252,7 +258,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return BSFormatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
+            return getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }
@@ -285,7 +291,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public String getTxFee() {
         if (trade != null && trade.getTradeAmount() != null) {
             Coin txFee = dataModel.getTxFee();
-            String percentage = GUIUtil.getPercentageOfTradeAmount(txFee, trade.getTradeAmount(), btcFormatter);
+            String percentage = GUIUtil.getPercentageOfTradeAmount(txFee, trade.getTradeAmount());
             return btcFormatter.formatCoinWithCode(txFee) + percentage;
         } else {
             return "";
@@ -297,7 +303,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             if (dataModel.isMaker() && dataModel.getOffer().isCurrencyForMakerFeeBtc() ||
                     !dataModel.isMaker() && dataModel.getTrade().isCurrencyForTakerFeeBtc()) {
                 Coin tradeFeeInBTC = dataModel.getTradeFeeInBTC();
-                String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(), btcFormatter);
+                String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount());
                 return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
             } else {
                 return bsqFormatter.formatCoinWithCode(dataModel.getTradeFeeAsBsq());
@@ -314,7 +320,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             Coin securityDeposit = dataModel.isBuyer() ?
                     offer.getBuyerSecurityDeposit()
                     : offer.getSellerSecurityDeposit();
-            String percentage = GUIUtil.getPercentageOfTradeAmount(securityDeposit, trade.getTradeAmount(), btcFormatter);
+            String percentage = GUIUtil.getPercentageOfTradeAmount(securityDeposit, trade.getTradeAmount());
             return btcFormatter.formatCoinWithCode(securityDeposit) + percentage;
         } else {
             return "";
@@ -339,6 +345,27 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 })
                 .collect(Collectors.toSet())
                 .size();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // AccountAgeWitness signing
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public boolean isSignWitnessTrade() {
+        checkNotNull(trade, "trade must not be null");
+        checkNotNull(trade.getOffer(), "offer must not be null");
+        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(dataModel.getSellersPaymentAccountPayload());
+
+        return accountAgeWitnessService.accountIsSigner(myWitness) &&
+                !accountAgeWitnessService.peerHasSignedWitness(trade) &&
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
+    }
+
+    public void maybeSignWitness() {
+        if (isSignWitnessTrade()) {
+            accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -378,20 +405,20 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
 
             // #################### Phase DEPOSIT_PAID
-            case TAKER_PUBLISHED_DEPOSIT_TX:
+            case SELLER_PUBLISHED_DEPOSIT_TX:
 
                 // DEPOSIT_TX_PUBLISHED_MSG
-                // taker perspective
-            case TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
-            case TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG:
-            case TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG:
-            case TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG:
+                // seller perspective
+            case SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
+            case SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG:
+            case SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG:
+            case SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG:
 
-                // maker perspective
-            case MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+                // buyer perspective
+            case BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
 
                 // Alternatively the maker could have seen the deposit tx earlier before he received the DEPOSIT_TX_PUBLISHED_MSG
-            case MAKER_SAW_DEPOSIT_TX_IN_NETWORK:
+            case BUYER_SAW_DEPOSIT_TX_IN_NETWORK:
                 buyerState.set(BuyerState.STEP1);
                 sellerState.set(SellerState.STEP1);
                 break;
@@ -456,4 +483,29 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
         }
     }
+
+    private static String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String baseCurrencyCode = Res.getBaseCurrencyCode();
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
+        } else {
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
+        }
+
+    }
+
 }

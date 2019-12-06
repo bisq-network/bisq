@@ -23,7 +23,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -56,7 +56,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
 
     private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
     private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
-    private BSFormatter formatter;
+    private CoinFormatter formatter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
         walletService.removeAddressConfidenceListener(confidenceListener);
     }
 
-    public void setup(Address address, BSFormatter formatter) {
+    public void setup(Address address, CoinFormatter formatter) {
         this.formatter = formatter;
         confidenceListener = new AddressConfidenceListener(address) {
             @Override

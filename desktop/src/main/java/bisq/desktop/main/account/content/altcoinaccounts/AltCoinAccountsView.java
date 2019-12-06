@@ -38,16 +38,19 @@ import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Asset;
+import bisq.asset.coins.Monero;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.stage.Stage;
 
@@ -72,10 +75,9 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
 
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final AssetService assetService;
     private final FilterManager filterManager;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final Preferences preferences;
 
     private PaymentMethodForm paymentMethodForm;
@@ -90,13 +92,12 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                AccountAgeWitnessService accountAgeWitnessService,
                                AssetService assetService,
                                FilterManager filterManager,
-                               BSFormatter formatter,
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                Preferences preferences) {
-        super(model);
+        super(model, accountAgeWitnessService);
 
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.formatter = formatter;
@@ -128,7 +129,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         if (selectedTradeCurrency != null) {
             if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
                 String name = selectedTradeCurrency.getName();
-                new Popup<>().information(Res.get("account.altcoin.popup.wallet.msg",
+                new Popup().information(Res.get("account.altcoin.popup.wallet.msg",
                         selectedTradeCurrency.getCodeAndName(),
                         name,
                         name))
@@ -140,7 +141,10 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
             if (asset.isPresent()) {
                 final AltCoinAccountDisclaimer disclaimerAnnotation = asset.get().getClass().getAnnotation(AltCoinAccountDisclaimer.class);
                 if (disclaimerAnnotation != null) {
-                    new Popup<>().information(Res.get(disclaimerAnnotation.value()))
+                    new Popup()
+                            .width(asset.get() instanceof Monero ? 1000 : 669)
+                            .maxMessageLength(2500)
+                            .information(Res.get(disclaimerAnnotation.value()))
                             .useIUnderstandButton()
                             .show();
                 }
@@ -151,7 +155,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                 model.onSaveNewAccount(paymentAccount);
                 removeNewAccountForm();
             } else {
-                new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
+                new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
             }
 
             preferences.dontShowAgain(INSTANT_TRADE_NEWS, true);

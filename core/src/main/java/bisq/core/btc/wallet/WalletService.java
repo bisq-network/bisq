@@ -34,6 +34,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
@@ -43,6 +44,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.listeners.NewBestBlockListener;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypter;
@@ -102,6 +104,7 @@ public abstract class WalletService {
     protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    @Getter
     protected Wallet wallet;
     @Getter
     protected KeyParameter aesKey;
@@ -223,7 +226,9 @@ public abstract class WalletService {
         }
     }
 
-    public static void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
+    public static void checkScriptSig(Transaction transaction,
+                                      TransactionInput input,
+                                      int inputIndex) throws TransactionVerificationException {
         try {
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
             input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
@@ -245,11 +250,15 @@ public abstract class WalletService {
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void signTransactionInput(Wallet wallet, KeyParameter aesKey, Transaction tx, TransactionInput txIn, int index) {
+    public static void signTransactionInput(Wallet wallet,
+                                            KeyParameter aesKey,
+                                            Transaction tx,
+                                            TransactionInput txIn,
+                                            int index) {
         KeyBag maybeDecryptingKeyBag = new DecryptingKeyBag(wallet, aesKey);
         if (txIn.getConnectedOutput() != null) {
             try {
-                // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
+                // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                 // we sign missing pieces (to check this would require either assuming any signatures are signing
                 // standard output types or a way to get processed signatures out of script execution)
                 txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
@@ -268,11 +277,11 @@ public abstract class WalletService {
             Transaction partialTx = propTx.partialTx;
             txIn = partialTx.getInput(index);
             if (txIn.getConnectedOutput() != null) {
-                // If we dont have a sig we don't do the check to avoid error reports of failed sig checks
+                // If we don't have a sig we don't do the check to avoid error reports of failed sig checks
                 final List<ScriptChunk> chunks = txIn.getConnectedOutput().getScriptPubKey().getChunks();
                 if (!chunks.isEmpty() && chunks.get(0).data != null && chunks.get(0).data.length > 0) {
                     try {
-                        // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
+                        // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                         // we sign missing pieces (to check this would require either assuming any signatures are signing
                         // standard output types or a way to get processed signatures out of script execution)
                         txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
@@ -475,7 +484,10 @@ public abstract class WalletService {
     // Empty complete Wallet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void emptyWallet(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
+    public void emptyWallet(String toAddress,
+                            KeyParameter aesKey,
+                            ResultHandler resultHandler,
+                            ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
         SendRequest sendRequest = SendRequest.emptyWallet(Address.fromBase58(params, toAddress));
         sendRequest.fee = Coin.ZERO;
@@ -672,6 +684,45 @@ public abstract class WalletService {
     public static String getAddressStringFromOutput(TransactionOutput output) {
         return isOutputScriptConvertibleToAddress(output) ?
                 output.getScriptPubKey().getToAddress(BisqEnvironment.getParameters()).toString() : null;
+    }
+
+
+    /**
+     * @param serializedTransaction The serialized transaction to be added to the wallet
+     * @return The transaction we added to the wallet, which is different as the one we passed as argument!
+     * @throws VerificationException
+     */
+    public static Transaction maybeAddTxToWallet(byte[] serializedTransaction,
+                                                 Wallet wallet,
+                                                 TransactionConfidence.Source source) throws VerificationException {
+        Transaction tx = new Transaction(wallet.getParams(), serializedTransaction);
+        Transaction walletTransaction = wallet.getTransaction(tx.getHash());
+
+        if (walletTransaction == null) {
+            // We need to recreate the transaction otherwise we get a null pointer...
+            tx.getConfidence(Context.get()).setSource(source);
+            //wallet.maybeCommitTx(tx);
+            wallet.receivePending(tx, null, true);
+            return tx;
+        } else {
+            return walletTransaction;
+        }
+    }
+
+    public static Transaction maybeAddNetworkTxToWallet(byte[] serializedTransaction,
+                                                        Wallet wallet) throws VerificationException {
+        return maybeAddTxToWallet(serializedTransaction, wallet, TransactionConfidence.Source.NETWORK);
+    }
+
+    public static Transaction maybeAddSelfTxToWallet(Transaction transaction,
+                                                     Wallet wallet) throws VerificationException {
+        return maybeAddTxToWallet(transaction, wallet, TransactionConfidence.Source.SELF);
+    }
+
+    public static Transaction maybeAddTxToWallet(Transaction transaction,
+                                                 Wallet wallet,
+                                                 TransactionConfidence.Source source) throws VerificationException {
+        return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
     }
 
 

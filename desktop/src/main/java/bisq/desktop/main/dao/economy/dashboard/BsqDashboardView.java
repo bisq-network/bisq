@@ -34,8 +34,8 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple3;
@@ -105,7 +105,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private ChangeListener<Number> priceChangeListener;
 
-    private AreaChart bsqPriceChart;
+    private AreaChart<Number, Number> bsqPriceChart;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
     private TextField avgPrice90TextField, marketCapTextField, availableAmountTextField;
@@ -254,7 +254,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         bsqPriceChart.setPrefHeight(bsqPriceChart.getMinHeight());
         bsqPriceChart.setCreateSymbols(true);
         bsqPriceChart.setPadding(new Insets(0));
-        bsqPriceChart.getData().addAll(seriesBSQPrice);
+        bsqPriceChart.getData().add(seriesBSQPrice);
 
         AnchorPane chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");
@@ -322,7 +322,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
         if (optionalBsqPrice.isPresent()) {
             Price bsqPrice = optionalBsqPrice.get();
-            marketPriceLabel.setText(BSFormatter.formatPrice(bsqPrice) + " BSQ/BTC");
+            marketPriceLabel.setText(FormattingUtils.formatPrice(bsqPrice) + " BSQ/BTC");
 
             marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
                     priceFeedService.getMarketPrice(preferences.getPreferredTradeCurrency().getCode()),
@@ -368,7 +368,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         long average = getAverage(bsqTradePast90Days);
         Coin oneBsq = Coin.valueOf(100);
         Price avgPrice = Price.valueOf("BSQ", average);
-        String avg = bsqFormatter.formatPrice(avgPrice);
+        String avg = FormattingUtils.formatPrice(avgPrice);
         String bsqInUsdAvg = average > 0 ? GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, bsqFormatter) : Res.get("shared.na");
         textField.setText(avg + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdAvg + ")");
         return average;

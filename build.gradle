@@ -5,7 +5,7 @@ buildscript {
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
         classpath files('gradle/witness/gradle-witness.jar')
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41"
@@ -46,6 +46,7 @@ configure(subprojects) {
         httpclientVersion = '4.5.3'
         ioVersion = '2.4'
         jacksonVersion = '2.8.10'
+        javafxVersion = '11.0.2'
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
         jfoenixVersion = '9.0.6'
@@ -173,8 +174,8 @@ configure(project(':common')) {
 
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-        compile "org.openjfx:javafx-base:11:$os"
-        compile "org.openjfx:javafx-graphics:11:$os"
+        compile "org.openjfx:javafx-base:$javafxVersion:$os"
+        compile "org.openjfx:javafx-graphics:$javafxVersion:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.7'
         compile "org.springframework:spring-core:$springVersion"
@@ -274,7 +275,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.1.7-SNAPSHOT'
+    version = '1.2.4-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
@@ -293,9 +294,9 @@ configure(project(':desktop')) {
         compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
         compile "com.googlecode.jcsv:jcsv:$jcsvVersion"
         compile "com.github.sarxos:webcam-capture:$sarxosVersion"
-        compile "org.openjfx:javafx-controls:11:$os"
-        compile "org.openjfx:javafx-fxml:11:$os"
-        compile "org.openjfx:javafx-swing:11:$os"
+        compile "org.openjfx:javafx-controls:$javafxVersion:$os"
+        compile "org.openjfx:javafx-fxml:$javafxVersion:$os"
+        compile "org.openjfx:javafx-swing:$javafxVersion:$os"
         compile "com.jfoenix:jfoenix:$jfoenixVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"

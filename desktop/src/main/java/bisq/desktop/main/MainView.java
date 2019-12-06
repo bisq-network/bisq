@@ -31,6 +31,7 @@ import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
+import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -44,9 +45,10 @@ import bisq.desktop.util.Transitions;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.GlobalSettings;
-import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
 import bisq.core.locale.LanguageUtil;
+import bisq.core.locale.Res;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -55,6 +57,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXComboBox;
@@ -82,9 +85,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.geometry.NodeOrientation;
 
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
@@ -143,7 +146,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
     private final ToggleGroup navButtons = new ToggleGroup();
     private ChangeListener<String> walletServiceErrorMsgListener;
@@ -155,7 +158,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator, p2pNetworkProgressBar;
     private Label btcSplashInfo;
-    private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
+    private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private final DaoStateMonitoringService daoStateMonitoringService;
 
     @Inject
@@ -163,7 +166,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                     CachingViewLoader viewLoader,
                     Navigation navigation,
                     Transitions transitions,
-                    BSFormatter formatter,
+                    @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                     DaoStateMonitoringService daoStateMonitoringService) {
         super(model);
         this.viewLoader = viewLoader;
@@ -194,6 +197,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
         JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
         daoButtonWithBadge.getStyleClass().add("new");
+        JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
+        accountButtonWithBadge.getStyleClass().add("new");
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -254,11 +259,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.available");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double availableBalance = Double.parseDouble(
                             model.getAvailableBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(availableBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -278,11 +284,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.reserved");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double reservedBalance = Double.parseDouble(
                             model.getReservedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(reservedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -302,11 +309,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.locked");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double lockedBalance = Double.parseDouble(
                             model.getLockedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(lockedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -322,7 +330,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButtonWithBadge);
+                getNavigationSpacer(), accountButtonWithBadge, getNavigationSpacer(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -366,6 +374,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
         setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
+        setupBadge(accountButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowAccountUpdatesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
@@ -375,12 +384,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             View view = viewLoader.load(viewClass);
             contentContainer.getChildren().setAll(view.getRoot());
 
-            navButtons.getToggles().stream()
+            try {
+            	navButtons.getToggles().stream()
                     .filter(toggle -> toggle instanceof NavButton)
                     .filter(button -> viewClass == ((NavButton) button).viewClass)
                     .findFirst()
                     .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
                     .setSelected(true);
+            } catch (BisqException e) {
+                navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
+			}
         });
 
         VBox splashScreen = createSplashScreen();
@@ -414,7 +427,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     @Override
     public void onCheckpointFail() {
-        new Popup<>().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
+        new Popup().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
                 .useShutDownButton()
                 .show();
     }
@@ -702,7 +715,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                 btcInfoLabel.setId("splash-error-state-msg");
                 btcInfoLabel.getStyleClass().add("error-text");
                 if (btcNetworkWarnMsgPopup == null) {
-                    btcNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                    btcNetworkWarnMsgPopup = new Popup().warning(newValue);
                     btcNetworkWarnMsgPopup.show();
                 }
             } else {
@@ -761,7 +774,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
         model.getP2pNetworkWarnMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
                 p2PNetworkWarnMsgPopup.show();
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();

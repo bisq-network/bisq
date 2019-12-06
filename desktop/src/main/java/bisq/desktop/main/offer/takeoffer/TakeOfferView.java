@@ -54,8 +54,9 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -70,6 +71,7 @@ import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -118,7 +120,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 @FxmlView
 public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> {
     private final Navigation navigation;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final BsqFormatter bsqFormatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final Transitions transitions;
@@ -172,7 +174,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     @Inject
     private TakeOfferView(TakeOfferViewModel model,
                           Navigation navigation,
-                          BSFormatter formatter,
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                           BsqFormatter bsqFormatter,
                           OfferDetailsWindow offerDetailsWindow,
                           Transitions transitions) {
@@ -278,12 +280,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         String currencyCode = model.dataModel.getCurrencyCode();
         volumeCurrencyLabel.setText(currencyCode);
-        priceDescriptionLabel.setText(BSFormatter.getPriceWithCurrencyCode(currencyCode));
+        priceDescriptionLabel.setText(CurrencyUtil.getPriceWithCurrencyCode(currencyCode));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
         if (model.getPossiblePaymentAccounts().size() > 1) {
 
-            new Popup<>().headLine(Res.get("popup.info.multiplePaymentAccounts.headline"))
+            new Popup().headLine(Res.get("popup.info.multiplePaymentAccounts.headline"))
                     .information(Res.get("popup.info.multiplePaymentAccounts.msg"))
                     .dontShowAgainId("MultiplePaymentAccountsAvailableWarning")
                     .show();
@@ -304,13 +306,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             cancelButton1.setVisible(false);
             if (model.isOfferAvailable.get())
                 showNextStepAfterAmountIsSet();
-        }
-
-        if (CurrencyUtil.isFiatCurrency(model.getOffer().getCurrencyCode()) && !DevEnv.isDevMode()) {
-            new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
-                    .information(Res.get("popup.roundedFiatValues.msg", model.getOffer().getCurrencyCode()))
-                    .dontShowAgainId("FiatValuesRoundedWarning")
-                    .show();
         }
 
         boolean currencyForMakerFeeBtc = model.dataModel.isCurrencyForTakerFeeBtc();
@@ -390,7 +385,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             volumeInfoTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
 
         if (offer.getPrice() == null)
-            new Popup<>().warning(Res.get("takeOffer.noPriceFeedAvailable"))
+            new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
                     .onClose(this::close)
                     .show();
     }
@@ -404,7 +399,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Coin balance = model.dataModel.getBalance().get();
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.isDevMode()) {
             model.dataModel.swapTradeToSavings();
-            new Popup<>().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
+            new Popup().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
                     .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
@@ -506,7 +501,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (!DevEnv.isDevMode()) {
             String key = "securityDepositInfo";
-            new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
+            new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bisq.network/faq#6"))
                     .useIUnderstandButton()
@@ -523,7 +518,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     model.getTxFee()
             );
             key = "takeOfferFundWalletInfo";
-            new Popup<>().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
+            new Popup().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
                     .instruction(message)
                     .dontShowAgainId(key)
                     .show();
@@ -606,7 +601,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> BSFormatter.getCounterCurrency(model.dataModel.getCurrencyCode())));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getCounterCurrency(model.dataModel.getCurrencyCode())));
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
         tradeFeeInBtcLabel.textProperty().bind(model.tradeFeeInBtcWithFiat);
@@ -660,7 +655,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 if (offerDetailsWindowDisplayed)
                     offerDetailsWindow.hide();
 
-                UserThread.runAfter(() -> new Popup<>().warning(newValue + "\n\n" +
+                UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
                         Res.get("takeOffer.alreadyPaidInFunds"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> {
@@ -680,7 +675,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
-                new Popup<>().error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
+                new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
                         Res.get("popup.error.tryRestart"))
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
@@ -711,7 +706,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         showWarningInvalidBtcDecimalPlacesSubscription = EasyBind.subscribe(model.showWarningInvalidBtcDecimalPlaces, newValue -> {
             if (newValue) {
-                new Popup<>().warning(Res.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
+                new Popup().warning(Res.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
                 model.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
@@ -724,7 +719,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
                     String key = "takeOfferSuccessInfo";
                     if (DontShowAgainLookup.showAgain(key)) {
-                        UserThread.runAfter(() -> new Popup<>().headLine(Res.get("takeOffer.success.headline"))
+                        UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
                                 .feedback(Res.get("takeOffer.success.info"))
                                 .actionButtonTextWithGoTo("navigation.portfolio.pending")
                                 .dontShowAgainId(key)
@@ -841,6 +836,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountsComboBox = paymentAccountTuple.first;
         HBox.setMargin(paymentAccountsComboBox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
+        paymentAccountsComboBox.setCellFactory(model.getPaymentAccountListCellFactory(paymentAccountsComboBox));
         paymentAccountsComboBox.setVisible(false);
         paymentAccountsComboBox.setManaged(false);
         paymentAccountsComboBox.setOnAction(e -> {
@@ -864,7 +860,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         final Tuple2<Label, VBox> tradeCurrencyTuple = getTopLabelWithVBox(Res.get("shared.tradeCurrency"), currencyTextField);
         HBox.setMargin(tradeCurrencyTuple.second, new Insets(5, 0, 0, 0));
 
-        final HBox hBox = paymentAccountTuple.forth;
+        final HBox hBox = paymentAccountTuple.fourth;
         hBox.setSpacing(30);
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setPadding(new Insets(10, 0, 18, 0));
@@ -1052,7 +1048,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.getIsBtcWalletFunded().get()) {
-                new Popup<>().warning(Res.get("takeOffer.alreadyFunded.askCancel"))
+                new Popup().warning(Res.get("takeOffer.alreadyFunded.askCancel"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
@@ -1074,7 +1070,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup<>().warning(Res.get("shared.openDefaultWalletFailed")).show();
+            new Popup().warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 
@@ -1237,7 +1233,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
-            new Popup<>().warning(message)
+            new Popup().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
                     .show();

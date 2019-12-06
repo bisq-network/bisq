@@ -18,7 +18,7 @@
 package bisq.desktop.main.dao.bonding;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -49,7 +49,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 @FxmlView
-public class BondingView extends ActivatableViewAndModel {
+public class BondingView extends ActivatableView<AnchorPane, Void> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;

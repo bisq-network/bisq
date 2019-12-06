@@ -1,14 +1,23 @@
+# install in /etc/systemd/system/bisq-seednode.service
+
 [Unit]
 Description=Bisq Seed Node
 After=network.target
 
 [Service]
-Environment="JAVA_OPTS=-Xms800M -Xmx800M"
-ExecStart=/home/bisq/bisq/bisq-seednode --appName=seed_BTC_MAINNET --nodePort=8000 --userDataDir=/home/bisq/ --maxConnections=50 --baseCurrencyNetwork=BTC_MAINNET
+EnvironmentFile=/etc/default/bisq-seednode
+ExecStart=/home/bisq/bisq/bisq-seednode --appName=${BISQ_APP_NAME} --nodePort=${BISQ_NODE_PORT} --userDataDir=${BISQ_DATA_DIR} --maxConnections=${BISQ_MAX_CONNECTIONS} --maxMemory=${BISQ_MAX_MEMORY} --fullDaoNode=true --rpcUser=${BITCOIN_RPC_USERNAME} --rpcPassword=${BITCOIN_RPC_PASSWORD} --rpcPort=${BITCOIN_RPC_PORT} --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} --baseCurrencyNetwork=${BISQ_BASE_CURRENCY}
+ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
 
 User=bisq
 Group=bisq
+
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+MemoryDenyWriteExecute=false
 
 [Install]
 WantedBy=multi-user.target

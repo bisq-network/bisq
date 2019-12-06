@@ -23,13 +23,12 @@ import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
@@ -38,19 +37,20 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import java.util.Optional;
 
@@ -61,36 +61,30 @@ class EditOfferDataModel extends MutableOfferDataModel {
     private OpenOffer.State initialState;
 
     @Inject
-    EditOfferDataModel(OpenOfferManager openOfferManager,
+    EditOfferDataModel(CreateOfferService createOfferService,
+                       OpenOfferManager openOfferManager,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        Preferences preferences,
                        User user,
-                       KeyRing keyRing,
                        P2PService p2PService,
                        PriceFeedService priceFeedService,
-                       FilterManager filterManager,
                        AccountAgeWitnessService accountAgeWitnessService,
                        FeeService feeService,
-                       TxFeeEstimationService txFeeEstimationService,
-                       ReferralIdService referralIdService,
-                       BSFormatter btcFormatter,
+                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                        CorePersistenceProtoResolver corePersistenceProtoResolver,
                        MakerFeeProvider makerFeeProvider,
                        Navigation navigation) {
-        super(openOfferManager,
+        super(createOfferService,
+                openOfferManager,
                 btcWalletService,
                 bsqWalletService,
                 preferences,
                 user,
-                keyRing,
                 p2PService,
                 priceFeedService,
-                filterManager,
                 accountAgeWitnessService,
                 feeService,
-                txFeeEstimationService,
-                referralIdService,
                 btcFormatter,
                 makerFeeProvider,
                 navigation);

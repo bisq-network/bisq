@@ -220,7 +220,7 @@ public class SellerStep3View extends TradeStepView {
         Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
                 Res.get("portfolio.pending.step3_seller.confirmReceipt"));
 
-        GridPane.setColumnSpan(tuple.forth, 2);
+        GridPane.setColumnSpan(tuple.fourth, 2);
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;
@@ -294,7 +294,10 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                new Popup<>()
+                if (model.isSignWitnessTrade()) {
+                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
+                }
+                new Popup()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
@@ -345,12 +348,16 @@ public class SellerStep3View extends TradeStepView {
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
-                message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
+                message += Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
+            }
+
+            if (model.isSignWitnessTrade()) {
+                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
             }
         }
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();
         }
@@ -363,6 +370,8 @@ public class SellerStep3View extends TradeStepView {
         if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
+        model.maybeSignWitness();
+
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed.
             // If it succeeds at a second try we remove the support button again.
@@ -372,7 +381,7 @@ public class SellerStep3View extends TradeStepView {
         }, errorMessage -> {
             // confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 

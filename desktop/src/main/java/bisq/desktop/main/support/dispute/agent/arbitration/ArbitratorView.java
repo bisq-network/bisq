@@ -17,9 +17,11 @@
 
 package bisq.desktop.main.support.dispute.agent.arbitration;
 
+import bisq.common.util.Utilities;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
+import bisq.desktop.main.overlays.windows.SignPaymentAccountsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
@@ -32,28 +34,34 @@ import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.ArbitrationSession;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class ArbitratorView extends DisputeAgentView {
 
+    private final SignPaymentAccountsWindow signPaymentAccountsWindow;
+
     @Inject
     public ArbitratorView(ArbitrationManager arbitrationManager,
                           KeyRing keyRing,
                           TradeManager tradeManager,
-                          BSFormatter formatter,
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                           DisputeSummaryWindow disputeSummaryWindow,
                           PrivateNotificationManager privateNotificationManager,
                           ContractWindow contractWindow,
                           TradeDetailsWindow tradeDetailsWindow,
                           AccountAgeWitnessService accountAgeWitnessService,
-                          @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                          @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
+                          SignPaymentAccountsWindow signPaymentAccountsWindow) {
         super(arbitrationManager,
                 keyRing,
                 tradeManager,
@@ -64,6 +72,7 @@ public class ArbitratorView extends DisputeAgentView {
                 tradeDetailsWindow,
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
+        this.signPaymentAccountsWindow = signPaymentAccountsWindow;
     }
 
     @Override
@@ -74,5 +83,12 @@ public class ArbitratorView extends DisputeAgentView {
     @Override
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
         return new ArbitrationSession(dispute, disputeManager.isTrader(dispute));
+    }
+
+    @Override
+    protected void handleKeyPressed(KeyEvent event) {
+        if (Utilities.isAltOrCtrlPressed(KeyCode.S, event)) {
+            signPaymentAccountsWindow.show();
+        }
     }
 }

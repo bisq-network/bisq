@@ -27,12 +27,16 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 class CreateOfferViewModel extends MutableOfferViewModel<CreateOfferDataModel> implements ViewModel {
 
@@ -45,9 +49,10 @@ class CreateOfferViewModel extends MutableOfferViewModel<CreateOfferDataModel> i
                                 BsqValidator bsqValidator,
                                 SecurityDepositValidator securityDepositValidator,
                                 PriceFeedService priceFeedService,
+                                AccountAgeWitnessService accountAgeWitnessService,
                                 Navigation navigation,
                                 Preferences preferences,
-                                BSFormatter btcFormatter,
+                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                 BsqFormatter bsqFormatter) {
         super(dataModel,
                 fiatVolumeValidator,
@@ -57,9 +62,9 @@ class CreateOfferViewModel extends MutableOfferViewModel<CreateOfferDataModel> i
                 bsqValidator,
                 securityDepositValidator,
                 priceFeedService,
+                accountAgeWitnessService,
                 navigation,
                 preferences,
-                btcFormatter,
-                bsqFormatter);
+                btcFormatter, bsqFormatter);
     }
 }

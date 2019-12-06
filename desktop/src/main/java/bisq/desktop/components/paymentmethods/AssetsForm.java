@@ -17,9 +17,8 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.NewBadge;
 import bisq.desktop.components.AutocompleteComboBox;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -37,7 +36,7 @@ import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple3;
@@ -48,12 +47,9 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 
 import javafx.util.StringConverter;
 
@@ -90,7 +86,7 @@ public class AssetsForm extends PaymentMethodForm {
                       InputValidator inputValidator,
                       GridPane gridPane,
                       int gridRow,
-                      BSFormatter formatter,
+                      CoinFormatter formatter,
                       AssetService assetService,
                       FilterManager filterManager,
                       Preferences preferences) {
@@ -117,22 +113,13 @@ public class AssetsForm extends PaymentMethodForm {
         tradeInstantCheckBox.setOnAction(e -> {
             tradeInstant = tradeInstantCheckBox.isSelected();
             if (tradeInstant)
-                new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
+                new Popup().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
         });
 
-        // add new badge for this new feature for this release
-        // TODO: remove it with 0.9.6+
         gridPane.getChildren().remove(tradeInstantCheckBox);
         tradeInstantCheckBox.setPadding(new Insets(0, 40, 0, 0));
 
-        NewBadge instantTradeNewsBadge = new NewBadge(tradeInstantCheckBox, INSTANT_TRADE_NEWS, preferences);
-        instantTradeNewsBadge.setAlignment(Pos.CENTER_LEFT);
-        instantTradeNewsBadge.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-
-        GridPane.setRowIndex(instantTradeNewsBadge, gridRow);
-        GridPane.setHgrow(instantTradeNewsBadge, Priority.NEVER);
-        GridPane.setMargin(instantTradeNewsBadge, new Insets(10, 0, 0, 0));
-        gridPane.getChildren().add(instantTradeNewsBadge);
+        gridPane.getChildren().add(tradeInstantCheckBox);
 
         addressInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"));
@@ -224,10 +211,11 @@ public class AssetsForm extends PaymentMethodForm {
             currencyComboBox.setPromptText("");
         });
 
-        ((AutocompleteComboBox) currencyComboBox).setAutocompleteItems(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
+        ((AutocompleteComboBox<TradeCurrency>) currencyComboBox).setAutocompleteItems(
+                CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
 
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        currencyComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 return tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
@@ -236,12 +224,12 @@ public class AssetsForm extends PaymentMethodForm {
             @Override
             public TradeCurrency fromString(String s) {
                 return currencyComboBox.getItems().stream().
-                       filter(item -> item.getNameAndCode().equals(s)).
-                       findAny().orElse(null);
+                        filter(item -> item.getNameAndCode().equals(s)).
+                        findAny().orElse(null);
             }
         });
 
-        ((AutocompleteComboBox) currencyComboBox).setOnChangeConfirmed(e -> {
+        ((AutocompleteComboBox<?>) currencyComboBox).setOnChangeConfirmed(e -> {
             addressInputTextField.resetValidation();
             addressInputTextField.validate();
             paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());

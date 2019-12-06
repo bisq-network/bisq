@@ -19,7 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.network.NetworkOptionKeys;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 

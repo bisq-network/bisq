@@ -330,7 +330,7 @@ public class BuyerStep2View extends TradeStepView {
         Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);
 
-        GridPane.setColumnSpan(tuple3.forth, 2);
+        GridPane.setColumnSpan(tuple3.fourth, 2);
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
@@ -370,7 +370,7 @@ public class BuyerStep2View extends TradeStepView {
             if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
                 String key = "confirmPaperReceiptSent";
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-                    Popup popup = new Popup<>();
+                    Popup popup = new Popup();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
                             .onAction(this::showConfirmPaymentStartedPopup)
@@ -385,7 +385,7 @@ public class BuyerStep2View extends TradeStepView {
                 String key = "westernUnionMTCNSent";
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     String email = ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
-                    Popup popup = new Popup<>();
+                    Popup popup = new Popup();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg", email))
                             .onAction(this::showConfirmPaymentStartedPopup)
@@ -401,7 +401,7 @@ public class BuyerStep2View extends TradeStepView {
                 String key = "moneyGramMTCNSent";
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     String email = ((MoneyGramAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
-                    Popup popup = new Popup<>();
+                    Popup popup = new Popup();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.msg", email))
                             .onAction(this::showConfirmPaymentStartedPopup)
@@ -417,7 +417,7 @@ public class BuyerStep2View extends TradeStepView {
                 String key = "halCashCodeInfo";
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     String mobileNr = ((HalCashAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getMobileNr();
-                    Popup popup = new Popup<>();
+                    Popup popup = new Popup();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.halCashInfo.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.halCashInfo.msg",
                                     model.dataModel.getTrade().getShortId(), mobileNr))
@@ -439,7 +439,7 @@ public class BuyerStep2View extends TradeStepView {
     private void showConfirmPaymentStartedPopup() {
         String key = "confirmPaymentStarted";
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-            Popup popup = new Popup<>();
+            Popup popup = new Popup();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
                     .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
                             CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
@@ -471,7 +471,7 @@ public class BuyerStep2View extends TradeStepView {
         }, errorMessage -> {
             // confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
@@ -494,7 +494,7 @@ public class BuyerStep2View extends TradeStepView {
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
                         amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
+                        paymentDetailsForTradePopup + "\n\n" +
                         copyPaste;
             } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.cash",
@@ -566,7 +566,7 @@ public class BuyerStep2View extends TradeStepView {
             String key = "startPayment" + trade.getId();
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
-                new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
+                new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                         .attention(message)
                         .show();
             }

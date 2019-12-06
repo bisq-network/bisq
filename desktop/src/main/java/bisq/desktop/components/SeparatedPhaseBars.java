@@ -92,7 +92,7 @@ public class SeparatedPhaseBars extends VBox {
             if (totalDuration > 0) {
                 // We want to have a min. width for the breaks and for the phases which are important to the user but
                 // quite short (blind vote, vote reveal, result). If we display it correctly most of the space is
-                // consumed by the proposal phase. We we apply a min and max width and adjust the available width so
+                // consumed by the proposal phase. We apply a min and max width and adjust the available width so
                 // we have all phases displayed so that the text is fully readable. The proposal phase is shorter as
                 // it would be with correct display but we take that into account to have a better overall overview.
                 final double finalAvailableWidth = availableWidth;

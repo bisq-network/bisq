@@ -27,8 +27,8 @@ import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
+import javax.inject.Provider;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 

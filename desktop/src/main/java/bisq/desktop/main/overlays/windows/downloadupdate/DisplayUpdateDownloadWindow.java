@@ -254,7 +254,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                     showErrorMessage(downloadButton, statusLabel, Res.get("displayUpdateDownloadWindow.verify.failed"));
                                 } else {
                                     verifiedSigLabel.getStyleClass().add("success-text");
-                                    new Popup<>().feedback(Res.get("displayUpdateDownloadWindow.success"))
+                                    new Popup().feedback(Res.get("displayUpdateDownloadWindow.success"))
                                             .actionButtonText(Res.get("displayUpdateDownloadWindow.download.openDir"))
                                             .onAction(() -> {
                                                 try {
@@ -369,7 +369,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         statusLabel.setText("");
         stopAnimations();
         downloadButton.setDisable(false);
-        new Popup<>()
+        new Popup()
                 .headLine(Res.get("displayUpdateDownloadWindow.download.failed.headline"))
                 .feedback(errorMsg)
                 .onClose(this::doClose)

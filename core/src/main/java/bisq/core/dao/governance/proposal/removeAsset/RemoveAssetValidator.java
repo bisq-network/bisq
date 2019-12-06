@@ -51,7 +51,7 @@ public class RemoveAssetValidator extends ProposalValidator implements Consensus
             RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal;
             notEmpty(removeAssetProposal.getTickerSymbol(), "TickerSymbol must not be empty");
 
-            // We want to avoid that someone cause damage by inserting a super long string. Real ticker symbols
+            // We want to avoid that someone causes damage by inserting a super long string. Real ticker symbols
             // are usually very short but we don't want to add additional restrictions here.
             checkArgument(removeAssetProposal.getTickerSymbol().length() <= 100, "TickerSymbol must not exceed 100 chars");
         } catch (ProposalValidationException e) {

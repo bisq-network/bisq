@@ -32,9 +32,8 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -207,7 +206,7 @@ public class OfferUtil {
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
      * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
+     * @param price             Price used in relation to that amount.
      * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
      * @return The adjusted amount
      */
@@ -224,7 +223,7 @@ public class OfferUtil {
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
      * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
+     * @param price             Price used in relation to that amount.
      * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
      * @param factor            The factor used for rounding. E.g. 1 means rounded to units of
      *                          1 EUR, 10 means rounded to 10 EUR, etc.
@@ -234,7 +233,7 @@ public class OfferUtil {
     static Coin getAdjustedAmount(Coin amount, Price price, long maxTradeLimit, int factor) {
         checkArgument(
                 amount.getValue() >= 10_000,
-                "amount needs to be above minimum of 10k satoshi"
+                "amount needs to be above minimum of 10k satoshis"
         );
         checkArgument(
                 factor > 0,
@@ -252,7 +251,7 @@ public class OfferUtil {
         // We use 10 000 satoshi as min allowed amount
         checkArgument(
                 minTradeAmount >= 10_000,
-                "MinTradeAmount must be at least 10k satoshi"
+                "MinTradeAmount must be at least 10k satoshis"
         );
         smallestUnitForAmount = Coin.valueOf(Math.max(minTradeAmount, smallestUnitForAmount.value));
         // We don't allow smaller amount values than smallestUnitForAmount
@@ -282,7 +281,7 @@ public class OfferUtil {
 
     public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
                                                             Preferences preferences, PriceFeedService priceFeedService,
-                                                            BsqFormatter bsqFormatter) {
+                                                            CoinFormatter bsqFormatter) {
         String countryCode = preferences.getUserCountry().code;
         String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
         return getFeeInUserFiatCurrency(makerFee,
@@ -294,7 +293,7 @@ public class OfferUtil {
 
     public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
                                                             String userCurrencyCode, PriceFeedService priceFeedService,
-                                                            BsqFormatter bsqFormatter) {
+                                                            CoinFormatter bsqFormatter) {
         // We use the users currency derived from his selected country.
         // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
 
@@ -326,7 +325,8 @@ public class OfferUtil {
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
-                                                      String currencyCode) {
+                                                      String currencyCode,
+                                                      Preferences preferences) {
         Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());

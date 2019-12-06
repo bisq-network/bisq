@@ -65,7 +65,7 @@ public class VoteResultConsensus {
     }
 
     // We compare first by stake and in case we have multiple entries with same stake we use the
-    // hex encoded hashOfProposalList for comparision
+    // hex encoded hashOfProposalList for comparison
     @Nullable
     public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList)
             throws VoteResultException.ValidationException, VoteResultException.ConsensusException {

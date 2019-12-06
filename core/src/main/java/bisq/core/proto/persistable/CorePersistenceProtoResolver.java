@@ -37,6 +37,7 @@ import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeList;
 import bisq.core.support.dispute.mediation.MediationDisputeList;
+import bisq.core.support.dispute.refund.RefundDisputeList;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.statistics.TradeStatistics2Store;
 import bisq.core.user.PreferencesPayload;
@@ -108,6 +109,10 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                             new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
                 case MEDIATION_DISPUTE_LIST:
                     return MediationDisputeList.fromProto(proto.getMediationDisputeList(),
+                            this,
+                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                case REFUND_DISPUTE_LIST:
+                    return RefundDisputeList.fromProto(proto.getRefundDisputeList(),
                             this,
                             new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
                 case PREFERENCES_PAYLOAD:

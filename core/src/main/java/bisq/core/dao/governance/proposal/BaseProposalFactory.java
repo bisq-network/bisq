@@ -70,7 +70,7 @@ public abstract class BaseProposalFactory<R extends Proposal> {
             throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.name = name;
         this.link = link;
-        // As we don't know the txId yes we create a temp proposal with txId set to an empty string.
+        // As we don't know the txId yet we create a temp proposal with txId set to an empty string.
         R proposal = createProposalWithoutTxId();
         proposalValidator.validateDataFields(proposal);
         Transaction transaction = createTransaction(proposal);
@@ -87,8 +87,9 @@ public abstract class BaseProposalFactory<R extends Proposal> {
         try {
             Coin fee = ProposalConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             // We create a prepared Bsq Tx for the proposal fee.
-            boolean requireChangeOutput = proposal instanceof IssuanceProposal;
-            Transaction preparedBurnFeeTx = bsqWalletService.getPreparedProposalTx(fee, requireChangeOutput);
+            Transaction preparedBurnFeeTx = proposal instanceof IssuanceProposal ?
+                    bsqWalletService.getPreparedIssuanceTx(fee) :
+                    bsqWalletService.getPreparedProposalTx(fee);
 
             // payload does not have txId at that moment
             byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(proposal);

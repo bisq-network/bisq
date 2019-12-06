@@ -96,20 +96,20 @@ public class TxBroadcaster {
 
             broadcastTimerMap.put(txId, timeoutTimer);
         } else {
-            // Would be due a wrong way how to use the API (calling 2 times a broadcast with same tx).
-            // An arbitrator reported to got the error after a manual payout, need to investigate why...
+            // Would be the wrong way how to use the API (calling 2 times a broadcast with same tx).
+            // An arbitrator reported that got the error after a manual payout, need to investigate why...
             stopAndRemoveTimer(txId);
             UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got broadcastTx called with a tx " +
                     "which has an open timeoutTimer. txId=" + txId, txId)));
         }
 
         // We decided the least risky scenario is to commit the tx to the wallet and broadcast it later.
-        // If it's a bsq tx WalletManager.publishAndCommitBsqTx() should have commited the tx to both bsq and btc
+        // If it's a bsq tx WalletManager.publishAndCommitBsqTx() should have committed the tx to both bsq and btc
         // wallets so the next line causes no effect.
         // If it's a btc tx, the next line adds the tx to the wallet.
         wallet.maybeCommitTx(tx);
 
-        Futures.addCallback(peerGroup.broadcastTransaction(tx).future(), new FutureCallback<Transaction>() {
+        Futures.addCallback(peerGroup.broadcastTransaction(tx).future(), new FutureCallback<>() {
             @Override
             public void onSuccess(@Nullable Transaction result) {
                 // We expect that there is still a timeout in our map, otherwise the timeout got triggered
@@ -119,7 +119,7 @@ public class TxBroadcaster {
                     // before the caller is finished.
                     UserThread.execute(() -> callback.onSuccess(tx));
                 } else {
-                    log.warn("We got an onSuccess callback for a broadcast which already triggered the timeout.", txId);
+                    log.warn("We got an onSuccess callback for a broadcast which already triggered the timeout. txId={}", txId);
                 }
             }
 

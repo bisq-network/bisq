@@ -75,6 +75,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import java.security.PublicKey;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -311,6 +312,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
 
         requestDataManager.requestUpdateData();
+        /*if (Capabilities.app.containsAll(Capability.SEED_NODE))
+            UserThread.runPeriodically(() -> requestDataManager.requestUpdateData(), 1, TimeUnit.HOURS);*/
 
         // If we start up first time we don't have any peers so we need to request from seed node.
         // As well it can be that the persisted peer list is outdated with dead peers.
@@ -430,15 +433,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAdded(ProtectedStorageEntry protectedStorageEntry) {
-        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-            processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+    public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+        });
     }
 
     @Override
-    public void onRemoved(ProtectedStorageEntry data) {
-    }
-
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) { }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DirectMessages
@@ -698,12 +701,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     };
                     boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
                     if (!result) {
-                        //TODO remove and add again with a delay to ensure the data will be broadcasted
-                        // The p2PDataStorage.remove makes probably sense but need to be analysed more.
-                        // Don't change that if it is not 100% clear.
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
-                        boolean removeResult = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
-                        log.debug("remove result=" + removeResult);
+
+                        // This should only fail if there are concurrent calls to addProtectedStorageEntry with the
+                        // same ProtectedMailboxStorageEntry. This is an unexpected use case so if it happens we
+                        // want to see it, but it is not worth throwing an exception.
+                        log.error("Unexpected state: adding mailbox message that already exists.");
                     }
                 } catch (CryptoException e) {
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
@@ -757,7 +760,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             expirableMailboxStoragePayload,
                             keyRing.getSignatureKeyPair(),
                             receiversPubKey);
-                    p2PDataStorage.removeMailboxData(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
+                    p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
                 } catch (CryptoException e) {
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 }

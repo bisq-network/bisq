@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.tasks.mediation;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
@@ -55,9 +56,9 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             if (trade.getPayoutTx() == null) {
-                Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.getPayoutTx());
-                trade.setPayoutTx(walletTx);
-                BtcWalletService.printTx("payoutTx received from peer", walletTx);
+                Transaction committedMediatedPayoutTx = WalletService.maybeAddNetworkTxToWallet(message.getPayoutTx(), processModel.getBtcWalletService().getWallet());
+                trade.setPayoutTx(committedMediatedPayoutTx);
+                BtcWalletService.printTx("MediatedPayoutTx received from peer", committedMediatedPayoutTx);
 
                 trade.setMediationResultState(MediationResultState.RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
 

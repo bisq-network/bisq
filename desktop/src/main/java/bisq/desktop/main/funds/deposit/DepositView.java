@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressTextField;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
@@ -35,8 +36,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -48,8 +50,7 @@ import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
 import javax.inject.Inject;
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import javax.inject.Named;
 
 import javafx.fxml.FXML;
 
@@ -107,7 +108,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private final BtcWalletService walletService;
     private final Preferences preferences;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private String paymentLabelString;
     private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
@@ -124,7 +125,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private DepositView(BtcWalletService walletService,
                         FeeService feeService,
                         Preferences preferences,
-                        BSFormatter formatter) {
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.walletService = walletService;
         this.preferences = preferences;
         this.formatter = formatter;
@@ -203,7 +204,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         generateNewAddressButton.setOnAction(event -> {
             boolean hasUnUsedAddress = observableList.stream().anyMatch(e -> e.getNumTxOutputs() == 0);
             if (hasUnUsedAddress) {
-                new Popup<>().warning(Res.get("funds.deposit.selectUnused")).show();
+                new Popup().warning(Res.get("funds.deposit.selectUnused")).show();
             } else {
                 AddressEntry newSavingsAddressEntry = walletService.getFreshAddressEntry();
                 updateList();
@@ -360,7 +361,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    field = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
+                                    field = new ExternalHyperlink(address);
                                     field.setOnAction(event -> {
                                         openBlockExplorer(item);
                                         tableView.getSelectionModel().select(item);

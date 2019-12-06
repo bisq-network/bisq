@@ -32,6 +32,7 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -74,6 +75,13 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
     }
 
 
+    public List<BondedRole> getAcceptedBonds() {
+        return bonds.stream()
+                .filter(bondedRole -> getAcceptedBondedRoleProposal(bondedRole.getBondedAsset()).isPresent())
+                .collect(Collectors.toList());
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +102,7 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
         String lockupTxId = lockupTxOutput.getTxId();
         daoStateService.getTx(lockupTxId).ifPresent(lockupTx -> {
             byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
-            // We used the hash of th bonded bondedAsset object as our hash in OpReturn of the lock up tx to have a
+            // We used the hash of the bonded bondedAsset object as our hash in OpReturn of the lock up tx to have a
             // unique binding of the tx to the data object.
             byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
             Optional<Role> candidate = findBondedAssetByHash(hash);

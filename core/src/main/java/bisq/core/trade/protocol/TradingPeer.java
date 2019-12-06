@@ -38,10 +38,23 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+// Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
+// persist them.
+//todo clean up older fields as well to make most transient
 @Slf4j
 @Getter
 @Setter
 public final class TradingPeer implements PersistablePayload {
+    // Transient/Mutable
+    // Added in v1.2.0
+    @Setter
+    @Nullable
+    transient private byte[] delayedPayoutTxSignature;
+    @Setter
+    @Nullable
+    transient private byte[] preparedDepositTx;
+
+    // Persistable mutable
     @Nullable
     private String accountId;
     @Nullable
@@ -75,6 +88,7 @@ public final class TradingPeer implements PersistablePayload {
     @Nullable
     private byte[] mediatedPayoutTxSignature;
 
+
     public TradingPeer() {
     }
 
@@ -90,7 +104,8 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(signature).ifPresent(e -> builder.setSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(pubKeyRing).ifPresent(e -> builder.setPubKeyRing(e.toProtoMessage()));
         Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(e)));
-        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(e)));
+        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(
+                ProtoUtil.collectionToProto(e, protobuf.RawTransactionInput.class)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignature).ifPresent(e -> builder.setAccountAgeWitnessSignature(ByteString.copyFrom(e)));

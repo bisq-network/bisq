@@ -90,7 +90,9 @@ public class MarketStats extends Metric {
             // prepare to receive data
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-            String all = in.readLine();
+            String line, all = "";
+            while ((line = in.readLine()) != null)
+                all += ' ' + line;
             in.close();
 
             Arrays.stream(all.substring(0, all.length() - 2).split("}")).forEach(trade -> {

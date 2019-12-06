@@ -6,7 +6,7 @@
 #   - Update version below
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
-version=1.1.7-SNAPSHOT
+version=1.2.4-SNAPSHOT
 if [ ! -f "$JAVA_HOME/bin/javapackager" ]; then
 	if [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
     	JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
@@ -101,7 +101,7 @@ $JAVA_HOME/bin/javapackager \
     -Bicon=$base_dir/desktop/package/linux/icon.png \
     -native deb \
     -name Bisq \
-    -title "The decentralized exchange network." \
+    -title "A decentralized bitcoin exchange network." \
     -vendor Bisq \
     -outdir $base_dir/desktop/package/linux \
     -srcdir $src_dir \
@@ -127,7 +127,7 @@ $JAVA_HOME/bin/javapackager \
     -Bicon=$base_dir/desktop/package/linux/icon.png \
     -native rpm \
     -name Bisq \
-    -title "The decentralized exchange network." \
+    -title "A decentralized bitcoin exchange network." \
     -vendor Bisq \
     -outdir $base_dir/desktop/package/linux \
     -srcdir $src_dir \

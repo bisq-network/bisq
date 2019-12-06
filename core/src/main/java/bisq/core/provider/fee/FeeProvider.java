@@ -47,16 +47,15 @@ public class FeeProvider extends HttpClientProvider {
     public Tuple2<Map<String, Long>, Map<String, Long>> getFees() throws IOException {
         String json = httpClient.requestWithGET("getFees", "User-Agent", "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
 
-        LinkedTreeMap<String, Object> linkedTreeMap = new Gson().<LinkedTreeMap<String, Object>>fromJson(json, LinkedTreeMap.class);
+        LinkedTreeMap<?, ?> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("bitcoinFeesTs", ((Double) linkedTreeMap.get("bitcoinFeesTs")).longValue());
 
         Map<String, Long> map = new HashMap<>();
 
         try {
-            //noinspection unchecked
-            LinkedTreeMap<String, Double> dataMap = (LinkedTreeMap<String, Double>) linkedTreeMap.get("dataMap");
-            Long btcTxFee = dataMap.get("btcTxFee").longValue();
+            LinkedTreeMap<?, ?> dataMap = (LinkedTreeMap<?, ?>) linkedTreeMap.get("dataMap");
+            Long btcTxFee = ((Double) dataMap.get("btcTxFee")).longValue();
 
             map.put("BTC", btcTxFee);
         } catch (Throwable t) {

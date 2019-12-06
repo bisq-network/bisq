@@ -34,7 +34,8 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple2;
@@ -43,6 +44,7 @@ import bisq.common.util.Tuple4;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -68,7 +70,7 @@ import static bisq.desktop.util.FormBuilder.*;
 public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(OfferDetailsWindow.class);
 
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final User user;
     private final KeyRing keyRing;
     private final Navigation navigation;
@@ -85,7 +87,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(BSFormatter formatter, User user, KeyRing keyRing,
+    public OfferDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter, User user, KeyRing keyRing,
                               Navigation navigation) {
         this.formatter = formatter;
         this.user = user;
@@ -207,15 +209,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         String priceLabel = Res.get("shared.price");
         if (takeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(tradePrice));
+            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(tradePrice));
         } else {
             Price price = offer.getPrice();
             if (offer.isUseMarketBasedPrice()) {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price) +
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
-                        BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin())));
+                        FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin())));
             } else {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price));
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(price));
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
@@ -389,7 +391,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             hide();
         });
 
-        placeOfferTuple.forth.getChildren().add(cancelButton);
+        placeOfferTuple.fourth.getChildren().add(cancelButton);
 
         button.setOnAction(e -> {
             if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation)) {

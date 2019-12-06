@@ -56,7 +56,7 @@ public class TempProposalStore implements PersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TempProposalStore(List<ProtectedStorageEntry> list) {
-        list.forEach(entry -> map.put(P2PDataStorage.getCompactHashAsByteArray(entry.getProtectedStoragePayload()), entry));
+        list.forEach(entry -> map.put(P2PDataStorage.get32ByteHashAsByteArray(entry.getProtectedStoragePayload()), entry));
     }
 
     public Message toProtoMessage() {

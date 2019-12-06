@@ -20,7 +20,7 @@ package bisq.desktop.util.validation;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 
 import javax.inject.Inject;
@@ -61,7 +61,7 @@ public class SecurityDepositValidator extends NumberValidator {
             double minPercentage = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
             if (percentage < minPercentage)
                 return new ValidationResult(false,
-                        Res.get("validation.inputTooSmall", BSFormatter.formatToPercentWithSymbol(minPercentage)));
+                        Res.get("validation.inputTooSmall", FormattingUtils.formatToPercentWithSymbol(minPercentage)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {
@@ -75,7 +75,7 @@ public class SecurityDepositValidator extends NumberValidator {
             double maxPercentage = Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount);
             if (percentage > maxPercentage)
                 return new ValidationResult(false,
-                        Res.get("validation.inputTooLarge", BSFormatter.formatToPercentWithSymbol(maxPercentage)));
+                        Res.get("validation.inputTooLarge", FormattingUtils.formatToPercentWithSymbol(maxPercentage)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

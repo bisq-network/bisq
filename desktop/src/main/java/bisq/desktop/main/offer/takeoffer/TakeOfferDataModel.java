@@ -22,7 +22,6 @@ import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
@@ -48,7 +47,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -169,7 +168,7 @@ class TakeOfferDataModel extends OfferDataModel {
             tradeManager.checkOfferAvailability(offer,
                     () -> {
                     },
-                    errorMessage -> new Popup<>().warning(errorMessage).show());
+                    errorMessage -> new Popup().warning(errorMessage).show());
         }
     }
 
@@ -307,15 +306,15 @@ class TakeOfferDataModel extends OfferDataModel {
             fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
 
         if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
-            new Popup<>().warning(Res.get("offerbook.warning.currencyBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
         } else if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
-            new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
         } else if (filterManager.isOfferIdBanned(offer.getId())) {
-            new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
-            new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else if (filterManager.requireUpdateToNewVersionForTrading()) {
-            new Popup<>().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,
@@ -329,7 +328,7 @@ class TakeOfferDataModel extends OfferDataModel {
                     tradeResultHandler,
                     errorMessage -> {
                         log.warn(errorMessage);
-                        new Popup<>().warning(errorMessage).show();
+                        new Popup().warning(errorMessage).show();
                     }
             );
         }
@@ -434,10 +433,12 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     long getMaxTradeLimit() {
-        if (paymentAccount != null)
-            return AccountAgeRestrictions.getMyTradeLimitAtTakeOffer(accountAgeWitnessService, paymentAccount, offer, getCurrencyCode(), getDirection());
-        else
+        if (paymentAccount != null) {
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode(),
+                    offer.getMirroredDirection());
+        } else {
             return 0;
+        }
     }
 
     boolean canTakeOffer() {

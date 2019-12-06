@@ -42,14 +42,14 @@ import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import org.springframework.core.env.PropertySource;
+
+import java.time.Clock;
 
 import java.io.File;
 
@@ -120,7 +120,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
             // start the network node
             networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9053")),
-                    new CoreNetworkProtoResolver(), false,
+                    new CoreNetworkProtoResolver(Clock.systemDefaultZone()), false,
                     new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
             networkNode.start(this);
 
@@ -141,7 +141,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 });
                 CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = new CorruptedDatabaseFilesHandler();
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
-                NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver();
+                NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
                         networkProtoResolver, storageDir, corruptedDatabaseFilesHandler);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(environment, null);
@@ -202,8 +202,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         super.configure(properties);
 
         history = Collections.synchronizedMap(new FixedSizeHistoryTracker<>(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
-
-        Capabilities.app.addAll(Capability.DAO_FULL_NODE);
     }
 
     /**

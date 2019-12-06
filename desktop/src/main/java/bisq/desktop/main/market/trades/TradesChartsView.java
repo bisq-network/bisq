@@ -36,7 +36,8 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.MathUtils;
@@ -46,6 +47,7 @@ import bisq.common.util.Tuple3;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.jfoenix.controls.JFXTabPane;
 
@@ -88,7 +90,7 @@ import javafx.util.StringConverter;
 
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Objects;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
@@ -99,7 +101,7 @@ import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
 
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
     private TableView<TradeStatistics2> tableView;
     private AutocompleteComboBox<CurrencyListItem> currencyComboBox;
@@ -139,7 +141,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public TradesChartsView(TradesChartsViewModel model, BSFormatter formatter) {
+    public TradesChartsView(TradesChartsViewModel model, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model);
         this.formatter = formatter;
 
@@ -184,7 +186,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     protected void activate() {
         // root.getParent() is null at initialize
-        tabPaneSelectionModel = Objects.requireNonNull(GUIUtil.getParentOfType(root, JFXTabPane.class)).getSelectionModel();
+        tabPaneSelectionModel = GUIUtil.getParentOfType(root, JFXTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
@@ -240,7 +242,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         String code = selectedTradeCurrency.getCode();
                         volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", code)));
 
-                        priceColumnLabel.set(BSFormatter.getPriceWithCurrencyCode(code));
+                        priceColumnLabel.set(CurrencyUtil.getPriceWithCurrencyCode(code));
 
                         tableView.getColumns().remove(marketColumn);
                     }
@@ -346,9 +348,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 double doubleValue = (double) object;
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                     final double value = MathUtils.scaleDownByPowerOf10(doubleValue, 8);
-                    return BSFormatter.formatRoundedDoubleWithPrecision(value, 8);
+                    return FormattingUtils.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return BSFormatter.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)));
+                    return FormattingUtils.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)));
                 }
             }
 
@@ -363,9 +365,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             public String toString(Number object) {
                 if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
                     final double value = MathUtils.scaleDownByPowerOf10((long) object, 8);
-                    return BSFormatter.formatRoundedDoubleWithPrecision(value, 8);
+                    return FormattingUtils.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return BSFormatter.formatPrice(Price.valueOf(model.getCurrencyCode(), (long) object));
+                    return FormattingUtils.formatPrice(Price.valueOf(model.getCurrencyCode(), (long) object));
                 }
             }
 
@@ -380,8 +382,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
         priceChart.setPadding(new Insets(0));
-        //noinspection unchecked
-        priceChart.setData(FXCollections.observableArrayList(priceSeries));
+        priceChart.setData(FXCollections.observableArrayList(List.of(priceSeries)));
 
         priceChartPane = new AnchorPane();
         priceChartPane.getStyleClass().add("chart-pane");
@@ -428,9 +429,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        //noinspection unchecked
         volumeChart.setId("volume-chart");
-        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+        volumeChart.setData(FXCollections.observableArrayList(List.of(volumeSeries)));
         volumeChart.setMinHeight(128);
         volumeChart.setPrefHeight(128);
         volumeChart.setMaxHeight(200);
@@ -457,8 +457,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceSeries = new XYChart.Series<>();
         priceSeries.getData().setAll(model.priceItems);
         priceChart.getData().clear();
-        //noinspection unchecked
-        priceChart.setData(FXCollections.observableArrayList(priceSeries));
+        priceChart.setData(FXCollections.observableArrayList(List.of(priceSeries)));
     }
 
     private void layoutChart() {
@@ -598,7 +597,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(BSFormatter.getCurrencyPair(item.getCurrencyCode()));
+                                    setText(CurrencyUtil.getCurrencyPair(item.getCurrencyCode()));
                                 else
                                     setText("");
                             }
@@ -622,7 +621,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(BSFormatter.formatPrice(item.getTradePrice()));
+                                    setText(FormattingUtils.formatPrice(item.getTradePrice()));
                                 else
                                     setText("");
                             }

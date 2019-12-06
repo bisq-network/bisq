@@ -19,7 +19,6 @@ package bisq.desktop.main.account.register;
 
 
 import bisq.desktop.common.view.ActivatableViewAndModel;
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TitledGroupBg;
@@ -32,12 +31,11 @@ import bisq.desktop.util.Layout;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.agent.DisputeAgent;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
-
-import com.google.inject.name.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -69,8 +67,8 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 // TODO translation string keys should renamed to be more generic.
 // Lets do it for 1.1.7 the translator have time to add new string.
-@FxmlView
-public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewModel> extends ActivatableViewAndModel<VBox, T> {
+public abstract class AgentRegistrationView<R extends DisputeAgent, T extends AgentRegistrationViewModel<R, ?>>
+        extends ActivatableViewAndModel<VBox, T> {
 
     private final boolean useDevPrivilegeKeys;
     private ListView<String> languagesListView;
@@ -87,7 +85,7 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AgentRegistrationView(T model, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public AgentRegistrationView(T model, boolean useDevPrivilegeKeys) {
         super(model);
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -242,7 +240,7 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
         model.onRemoveLanguage(locale);
 
         if (languagesListView.getItems().size() == 0) {
-            new Popup<>().warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
+            new Popup().warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
             model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode());
         }
     }
@@ -250,8 +248,8 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
     private void onRevoke() {
         if (model.isBootstrappedOrShowPopup()) {
             model.onRevoke(
-                    () -> new Popup<>().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
-                    (errorMessage) -> new Popup<>().error(Res.get("account.arbitratorRegistration.removedFailed",
+                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.removedFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
         }
     }
@@ -259,8 +257,8 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
     private void onRegister() {
         if (model.isBootstrappedOrShowPopup()) {
             model.onRegister(
-                    () -> new Popup<>().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
-                    (errorMessage) -> new Popup<>().error(Res.get("account.arbitratorRegistration.registerFailed",
+                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.registerFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
         }
     }

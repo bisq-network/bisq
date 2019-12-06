@@ -22,26 +22,30 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;
 
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
                                  AccountAgeWitnessService accountAgeWitnessService,
-                                 BSFormatter formatter) {
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
@@ -69,9 +73,9 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return BSFormatter.formatPrice(((Trade) tradable).getTradePrice());
+            return FormattingUtils.formatPrice(((Trade) tradable).getTradePrice());
         else
-            return BSFormatter.formatPrice(tradable.getOffer().getPrice());
+            return FormattingUtils.formatPrice(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {
@@ -135,7 +139,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
     }
 
     String getState(ClosedTradableListItem item) {
@@ -149,6 +153,8 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     return Res.get("portfolio.closed.ticketClosed");
                 } else if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED) {
                     return Res.get("portfolio.closed.mediationTicketClosed");
+                } else if (trade.getDisputeState() == Trade.DisputeState.REFUND_REQUEST_CLOSED) {
+                    return Res.get("portfolio.closed.ticketClosed");
                 } else {
                     log.error("That must not happen. We got a pending state but we are in the closed trades list. state={}", trade.getState().toString());
                     return Res.get("shared.na");

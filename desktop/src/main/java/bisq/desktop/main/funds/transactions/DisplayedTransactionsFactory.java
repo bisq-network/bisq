@@ -30,7 +30,8 @@ public class DisplayedTransactionsFactory {
     private final TransactionAwareTradableFactory transactionAwareTradableFactory;
 
     @Inject
-    DisplayedTransactionsFactory(BtcWalletService btcWalletService, TradableRepository tradableRepository,
+    DisplayedTransactionsFactory(BtcWalletService btcWalletService,
+                                 TradableRepository tradableRepository,
                                  TransactionListItemFactory transactionListItemFactory,
                                  TransactionAwareTradableFactory transactionAwareTradableFactory) {
         this.btcWalletService = btcWalletService;

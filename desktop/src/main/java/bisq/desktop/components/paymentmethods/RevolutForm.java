@@ -29,7 +29,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.RevolutAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.control.TextField;
@@ -64,7 +64,7 @@ public class RevolutForm extends PaymentMethodForm {
 
     public RevolutForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
                        RevolutValidator revolutValidator, InputValidator inputValidator, GridPane gridPane,
-                       int gridRow, BSFormatter formatter) {
+                       int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.account = (RevolutAccount) paymentAccount;
         this.validator = revolutValidator;
@@ -77,7 +77,7 @@ public class RevolutForm extends PaymentMethodForm {
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.phoneNr"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue);
+            account.setAccountId(newValue.trim());
             updateFromInputs();
         });
 
@@ -88,7 +88,8 @@ public class RevolutForm extends PaymentMethodForm {
 
     private void addCurrenciesGrid(boolean isEditable) {
         FlowPane flowPane = addTopLabelFlowPane(gridPane, ++gridRow,
-                Res.get("payment.supportedCurrencies"), 0).second;
+                Res.get("payment.supportedCurrencies"), Layout.FLOATING_LABEL_DISTANCE,
+                Layout.FLOATING_LABEL_DISTANCE).second;
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");

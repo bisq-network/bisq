@@ -126,6 +126,25 @@ public class TxFeeEstimationService {
         return new Tuple2<>(txFee, size);
     }
 
+    public Tuple2<Coin, Integer> getEstimatedFeeAndTxSize(Coin amount,
+                                                          FeeService feeService,
+                                                          BtcWalletService btcWalletService) {
+        Coin txFeePerByte = feeService.getTxFeePerByte();
+        // We start with min taker fee size of 260
+        int estimatedTxSize = TYPICAL_TX_WITH_1_INPUT_SIZE;
+        try {
+            estimatedTxSize = getEstimatedTxSize(List.of(amount), estimatedTxSize, txFeePerByte, btcWalletService);
+        } catch (InsufficientMoneyException e) {
+            log.info("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
+                    "if the user pays from an external wallet. In that case we use an estimated tx size of {} bytes.", estimatedTxSize);
+        }
+
+        Coin txFee = txFeePerByte.multiply(estimatedTxSize);
+        log.info("Fee estimation resulted in a tx size of {} bytes and a tx fee of {} Sat.", estimatedTxSize, txFee.value);
+
+        return new Tuple2<>(txFee, estimatedTxSize);
+    }
+
     // We start with the initialEstimatedTxSize for a tx with 1 input (260) bytes and get from BitcoinJ a tx back which
     // contains the required inputs to fund that tx (outputs + miner fee). The miner fee in that case is based on
     // the assumption that we only need 1 input. Once we receive back the real tx size from the tx BitcoinJ has created

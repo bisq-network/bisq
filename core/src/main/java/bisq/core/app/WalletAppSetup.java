@@ -17,17 +17,20 @@
 
 package bisq.core.app;
 
+import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
@@ -57,7 +60,7 @@ public class WalletAppSetup {
     private final WalletsSetup walletsSetup;
     private final BisqEnvironment bisqEnvironment;
     private final Preferences preferences;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> btcInfoBinding;
@@ -71,6 +74,8 @@ public class WalletAppSetup {
     @Getter
     private final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
     @Getter
+    private final ObjectProperty<RejectedTxException> rejectedTxException = new SimpleObjectProperty<>();
+    @Getter
     private int numBtcPeers = 0;
     @Getter
     private final BooleanProperty useTorForBTC = new SimpleBooleanProperty();
@@ -80,7 +85,7 @@ public class WalletAppSetup {
                           WalletsSetup walletsSetup,
                           BisqEnvironment bisqEnvironment,
                           Preferences preferences,
-                          BSFormatter formatter) {
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.bisqEnvironment = bisqEnvironment;
@@ -120,7 +125,7 @@ public class WalletAppSetup {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + BSFormatter.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
@@ -132,7 +137,7 @@ public class WalletAppSetup {
                                 getNumBtcPeers(),
                                 Res.get("mainView.footer.btcInfo.connectionFailed"),
                                 getBtcNetworkAsString());
-                        log.error(exception.getMessage());
+                        log.error(exception.toString());
                         if (exception instanceof TimeoutException) {
                             getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.timeout"));
                         } else if (exception.getCause() instanceof BlockStoreException) {
@@ -141,6 +146,9 @@ public class WalletAppSetup {
                             } else if (spvFileCorruptedHandler != null) {
                                 spvFileCorruptedHandler.accept(Res.get("error.spvFileCorrupted", exception.getMessage()));
                             }
+                        } else if (exception instanceof RejectedTxException) {
+                            rejectedTxException.set((RejectedTxException) exception);
+                            getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.rejectedTxException", exception.getMessage()));
                         } else {
                             getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.connectionError", exception.toString()));
                         }

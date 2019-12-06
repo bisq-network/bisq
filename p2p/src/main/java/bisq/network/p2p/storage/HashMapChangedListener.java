@@ -19,17 +19,11 @@ package bisq.network.p2p.storage;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
+import java.util.Collection;
+
 public interface HashMapChangedListener {
-    void onAdded(ProtectedStorageEntry data);
+    void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries);
 
     @SuppressWarnings("UnusedParameters")
-    void onRemoved(ProtectedStorageEntry data);
-
-    // We process all expired entries after a delay (60 s) after onBootstrapComplete.
-    // We notify listeners of start and completion so they can optimize to only update after batch processing is done.
-    default void onBatchRemoveExpiredDataStarted() {
-    }
-
-    default void onBatchRemoveExpiredDataCompleted() {
-    }
+    void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries);
 }

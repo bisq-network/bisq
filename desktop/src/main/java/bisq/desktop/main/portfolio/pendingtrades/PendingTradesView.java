@@ -39,14 +39,15 @@ import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 
@@ -99,7 +100,7 @@ import java.util.Map;
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
     private final Preferences preferences;
@@ -138,7 +139,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Inject
     public PendingTradesView(PendingTradesViewModel model,
                              TradeDetailsWindow tradeDetailsWindow,
-                             BSFormatter formatter,
+                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
@@ -180,27 +181,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
-        volumeColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
-                return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
-            else
-                return 0;
-        });
-        amountColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradeAmount() != null && o2.getTrade().getTradeAmount() != null)
-                return o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount());
-            else
-                return 0;
-        });
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
         priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPrice));
-        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getTrade().getOffer() != null ?
-                o.getTrade().getOffer().getPaymentMethod().getId() : null));
-        avatarColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradingPeerNodeAddress() != null && o2.getTrade().getTradingPeerNodeAddress() != null)
-                return o1.getTrade().getTradingPeerNodeAddress().getFullAddress().compareTo(o2.getTrade().getTradingPeerNodeAddress().getFullAddress());
-            else
-                return 0;
-        });
+        paymentMethodColumn.setComparator(Comparator.comparing(
+                o -> o.getTrade().getOffer() != null ? o.getTrade().getOffer().getPaymentMethod().getId() : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
+        avatarColumn.setComparator(Comparator.comparing(
+                o -> o.getTrade().getTradingPeerNodeAddress() != null ? o.getTrade().getTradingPeerNodeAddress().getFullAddress() : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
         roleColumn.setComparator(Comparator.comparing(model::getMyRole));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
@@ -211,7 +202,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = keyEvent -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.O, keyEvent)) {
-                Popup popup = new Popup<>();
+                Popup popup = new Popup();
                 popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
                         .message(Res.get("portfolio.pending.openSupportTicket.msg"))
                         .actionButtonText(Res.get("portfolio.pending.openSupportTicket.headline"))
@@ -220,7 +211,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .onClose(popup::hide)
                         .show();
             } else if (Utilities.isAltPressed(KeyCode.Y, keyEvent)) {
-                new Popup<>().warning(Res.get("portfolio.pending.removeFailedTrade"))
+                new Popup().warning(Res.get("portfolio.pending.removeFailedTrade"))
                         .onAction(model.dataModel::onMoveToFailedTrades)
                         .show();
             }
@@ -368,7 +359,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         trade.stateProperty().addListener(tradeStateListener);
 
         disputeStateListener = (observable, oldValue, newValue) -> {
-            if (newValue == Trade.DisputeState.DISPUTE_CLOSED) {
+            if (newValue == Trade.DisputeState.DISPUTE_CLOSED || newValue == Trade.DisputeState.REFUND_REQUEST_CLOSED) {
                 chatPopupStage.hide();
             }
         };
@@ -558,7 +549,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(BSFormatter.formatPrice(item.getPrice())));
+                                    setGraphic(new AutoTooltipLabel(FormattingUtils.formatPrice(item.getPrice())));
                                 else
                                     setGraphic(null);
                             }
@@ -674,7 +665,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                             trade,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);

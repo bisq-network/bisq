@@ -67,7 +67,7 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
     @Override
     public Message toProtoMessage() {
         return protobuf.PersistableEnvelope.newBuilder().setMediationDisputeList(protobuf.MediationDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list)))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list), protobuf.Dispute.class))).build();
     }
 
     public static MediationDisputeList fromProto(protobuf.MediationDisputeList proto,

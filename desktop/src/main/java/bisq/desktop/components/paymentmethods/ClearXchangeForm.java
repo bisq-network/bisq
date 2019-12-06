@@ -29,7 +29,7 @@ import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.ClearXchangeAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.control.TextField;
@@ -52,7 +52,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public ClearXchangeForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, ClearXchangeValidator clearXchangeValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public ClearXchangeForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, ClearXchangeValidator clearXchangeValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.clearXchangeAccount = (ClearXchangeAccount) paymentAccount;
         this.clearXchangeValidator = clearXchangeValidator;
@@ -66,7 +66,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
                 Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            clearXchangeAccount.setHolderName(newValue);
+            clearXchangeAccount.setHolderName(newValue.trim());
             updateFromInputs();
         });
 
@@ -74,7 +74,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
                 Res.get("payment.email.mobile"));
         mobileNrInputTextField.setValidator(clearXchangeValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            clearXchangeAccount.setEmailOrMobileNr(newValue);
+            clearXchangeAccount.setEmailOrMobileNr(newValue.trim());
             updateFromInputs();
         });
         final TradeCurrency singleTradeCurrency = clearXchangeAccount.getSingleTradeCurrency();

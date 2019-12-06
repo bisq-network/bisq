@@ -25,7 +25,7 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 
@@ -40,6 +40,6 @@ public class ArbitratorRegistrationView extends AgentRegistrationView<Arbitrator
 
     @Override
     protected String getRole() {
-        return Res.get("shared.arbitrator2");
+        return Res.get("shared.arbitrator");
     }
 }

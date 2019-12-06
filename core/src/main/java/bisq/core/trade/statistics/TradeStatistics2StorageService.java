@@ -23,7 +23,7 @@ import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.storage.Storage;
 
-import com.google.inject.name.Named;
+import javax.inject.Named;
 
 import javax.inject.Inject;
 
@@ -32,8 +32,6 @@ import java.io.File;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload> {
@@ -83,8 +81,5 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     protected void readStore() {
         super.readStore();
-        checkArgument(store instanceof TradeStatistics2Store,
-                "Store is not instance of TradeStatistics2Store. That can happen if the ProtoBuffer " +
-                        "file got changed. We clear the data store and recreated it again.");
     }
 }

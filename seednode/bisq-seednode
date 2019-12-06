@@ -1,0 +1,24 @@
+# env for bisq-seednode service
+# install in /etc/default/bisq-seednode
+
+# java home, set to openjdk 10
+JAVA_HOME=/usr/lib/jvm/openjdk-10.0.2
+
+# java memory and remote management options
+JAVA_OPTS="-Xms8192M -Xmx8192M -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.host=127.0.0.1 -Dcom.sun.management.jmxremote.port=6969 -Dcom.sun.management.jmxremote.rmi.port=6969 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
+
+# bitcoin rpc credentials
+BITCOIN_RPC_USERNAME=foo
+BITCOIN_RPC_PASSWORD=bar
+
+# bitcoind rpc ports
+BITCOIN_RPC_PORT=8332
+BITCOIN_RPC_BLOCKNOTIFY_PORT=5120
+
+# bisq seednode settings
+BISQ_APP_NAME=bisq-seednode
+BISQ_DATA_DIR=/home/bisq/
+BISQ_NODE_PORT=8000
+BISQ_MAX_CONNECTIONS=50
+BISQ_MAX_MEMORY=8000
+BISQ_BASE_CURRENCY=BTC_MAINNET
