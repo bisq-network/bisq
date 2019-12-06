@@ -54,6 +54,7 @@ import bisq.core.util.validation.IntegerValidator;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -145,7 +146,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoOptionsSet;
-
+    private final boolean displayStandbyModeFeature;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -174,6 +175,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 rpcUser != null && !rpcUser.isEmpty() &&
                 rpcPassword != null && !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != null && !rpcBlockNotificationPort.isEmpty();
+        this.displayStandbyModeFeature = Utilities.isOSX() || Utilities.isWindows();
     }
 
     @Override
@@ -225,7 +227,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 8 : 7;
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
         userLanguageComboBox = addComboBox(root, gridRow,
@@ -347,9 +350,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         };
 
-        // AvoidStandbyModeService
-        avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
-                Res.get("setting.preferences.avoidStandbyMode"));
+        if (displayStandbyModeFeature) {
+            // AvoidStandbyModeService feature works only on OSX & Windows
+            avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
+                    Res.get("setting.preferences.avoidStandbyMode"));
+        }
     }
 
     private void initializeSeparator() {
@@ -807,8 +812,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
-        avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
-        avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
+        if (displayStandbyModeFeature) {
+            avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
+            avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
+        } else {
+            preferences.setUseStandbyMode(false);
+        }
     }
 
     private void activateDaoPreferences() {
@@ -930,7 +939,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumerically.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
-        avoidStandbyMode.setOnAction(null);
+        if (displayStandbyModeFeature) {
+            avoidStandbyMode.setOnAction(null);
+        }
     }
 
     private void deactivateDaoPreferences() {
