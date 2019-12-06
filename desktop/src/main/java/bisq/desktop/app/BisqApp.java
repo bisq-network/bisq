@@ -224,9 +224,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         addSceneKeyEventHandler(scene, injector);
 
         Preferences preferences = injector.getInstance(Preferences.class);
-        preferences.getCssThemeProperty().addListener((ov) -> {
-            CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
-        });
         CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
 
         return scene;

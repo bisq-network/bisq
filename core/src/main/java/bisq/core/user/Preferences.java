@@ -343,8 +343,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.useAnimationsProperty.set(useAnimations);
     }
 
-    public void setCssTheme(boolean useDarkMode) {
-        this.cssThemeProperty.set(useDarkMode == true ? 1 : 0);
+    public void setCssTheme(int cssTheme) {
+        this.cssThemeProperty.set(cssTheme);
     }
 
     public void addFiatCurrency(FiatCurrency tradeCurrency) {

@@ -24,7 +24,9 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
@@ -74,6 +76,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.Scene;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -794,8 +797,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useAnimations.setSelected(preferences.isUseAnimations());
         useAnimations.setOnAction(e -> preferences.setUseAnimations(useAnimations.isSelected()));
 
-        useDarkMode.setSelected(preferences.getCssTheme() == 1);
-        useDarkMode.setOnAction(e -> preferences.setCssTheme(useDarkMode.isSelected()));
+        useDarkMode.setSelected(preferences.getCssTheme() == CssTheme.CSS_THEME_DARK);
+        useDarkMode.setOnAction(e ->
+        {
+            int theme = (useDarkMode.isSelected() ? CssTheme.CSS_THEME_DARK : CssTheme.CSS_THEME_LIGHT);
+            preferences.setCssTheme(theme);
+
+            Scene scene = MainView.getRootContainer().getScene();
+            CssTheme.loadSceneStyles(scene, theme);
+        });
 
         // useStickyMarketPriceCheckBox.setSelected(preferences.isUseStickyMarketPrice());
         // useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
