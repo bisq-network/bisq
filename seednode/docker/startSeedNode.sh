@@ -54,9 +54,6 @@ if [ ! -z "$USE_LOCALHOST_FOR_P2P" ]; then
     ARGS="$ARGS --useLocalhostForP2P=$USE_LOCALHOST_FOR_P2P"
 fi
 
-#JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS >/dev/null 2>./error.log
-#JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS
-
 while true
 do
 
