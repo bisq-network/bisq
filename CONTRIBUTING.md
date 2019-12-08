@@ -1,6 +1,36 @@
 # Contributing to Bisq
 
-Anyone is welcome to contribute to Bisq. This document provides an overview of how we work. If you're looking for somewhere to start contributing, see the [good first issue](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A"good+first+issue") list.
+Read on to find out if taking part in the development of Bisq is for you and how to do it!
+
+## Are you "the guy"?
+
+Java God, Bitcoin Native, Marketing Genius, Cypherpunk, Testing Machine, or simply someone who likes the idea of Bisq? Anyone is welcome to contribute! However, Bisq is no classic organization, there is no boss, there is no working hours and there is no classic payment. In short, Bisq is not for everyone.
+
+**What is there to work on?** You have to be able to find and work a problem on your own. In general, we do not assign stuff to people, there is no specification to be implemented, there is no given way forward. You yourself have to find, choose and pick something to work on. If you get stuck, we are keen to help, but please do not wait for us to take your hand. Also, you can spend as much (or little) time as you want and when you want to - Bisq still is an open source project.
+
+**Will you get paid?** Well, yes and no. With Bisq, there is no classic funding or investors, so there is no payout of fiat money.
+- Yes, because there is the DAO. The DAO allows for compensation requests to be filed and voted on. If such a voting goes in your favor, you receive BSQ, a colored bitcoin token. Sell your BSQ and you get your fiat eventually.
+- No, because the market is still very small. We can sustain a few full-timers (paying rent, tax, small stuff) but do not expect to get rich fast and easy just now.
+
+The more correct way to see payment is "compensation". By earning BSQ, you invest in the Bisq project (just like other startups do it). But make no mistake, the DAO has only been operating for a few months now. Eventually, Bisq will create serious revenue.
+
+**Tools?** If you want to develop code, we expect you to know your ways around Git and Java. Then comes testing, JavaFX, Gradle, Github, ... As for non-functional skills, we love to see people knowing their ways around P2P networks, cryptography, security, privacy, ...
+
+**Carreer?** Start small, go bigger. If we like your work, we might just ask you to take on a more official role. Maybe someday you are the guy improving this document (again).
+
+
+
+
+Still here? Nice. You are hired. On to the grind.
+
+
+
+
+
+
+
+
+This document provides an overview of how we work. If you're looking for somewhere to start contributing, see the [good first issue](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A"good+first+issue") list.
 
 
 ## Communication Channels
