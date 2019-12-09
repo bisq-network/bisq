@@ -95,6 +95,7 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setWrongOSArchitectureHandler(msg -> log.error("onWrongOSArchitectureHandler. msg={}", msg));
         bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn("voteResultException={}", voteResultException.toString()));
         bisqSetup.setRejectedTxErrorMessageHandler(errorMessage -> log.warn("setRejectedTxErrorMessageHandler. errorMessage={}", errorMessage));
+        bisqSetup.setShowPopupIfInvalidBtcConfigHandler(() -> log.error("onShowPopupIfInvalidBtcConfigHandler"));
 
         //TODO move to bisqSetup
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));

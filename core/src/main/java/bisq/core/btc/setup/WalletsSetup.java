@@ -19,6 +19,7 @@ package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BtcOptionKeys;
+import bisq.core.btc.exceptions.InvalidHostException;
 import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
@@ -91,6 +92,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -106,6 +108,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class WalletsSetup {
     // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 9 nodes
     public static final int DEFAULT_CONNECTIONS = 9;
+
+    @Getter
+    public final BooleanProperty walletsSetupFailed = new SimpleBooleanProperty();
 
     private static final long STARTUP_TIMEOUT = 180;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
@@ -263,13 +268,27 @@ public class WalletsSetup {
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
                 configPeerNodesForRegTestServer();
             } else {
-                configPeerNodes(socks5Proxy);
+                try {
+                    configPeerNodes(socks5Proxy);
+                } catch (IllegalArgumentException e) {
+                    timeoutTimer.stop();
+                    walletsSetupFailed.set(true);
+                    exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
+                    return;
+                }
             }
         } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
             walletConfig.setMinBroadcastConnections(1);
             walletConfig.setPeerNodesForLocalHost();
         } else {
-            configPeerNodes(socks5Proxy);
+            try {
+                configPeerNodes(socks5Proxy);
+            } catch (IllegalArgumentException e) {
+                timeoutTimer.stop();
+                walletsSetupFailed.set(true);
+                exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
+                return;
+            }
         }
 
         walletConfig.setDownloadListener(downloadListener)

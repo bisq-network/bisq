@@ -368,6 +368,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         bisqSetup.setRejectedTxErrorMessageHandler(msg -> new Popup().width(850).warning(msg).show());
 
+        bisqSetup.setShowPopupIfInvalidBtcConfigHandler(this::showPopupIfInvalidBtcConfig);
+
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
                         bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
@@ -469,6 +471,14 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         firstPopup.hide();
         preferences.setResyncSpvRequested(false);
         new Popup().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+                .hideCloseButton()
+                .useShutDownButton()
+                .show();
+    }
+
+    private void showPopupIfInvalidBtcConfig() {
+        preferences.setBitcoinNodesOptionOrdinal(0);
+        new Popup().warning(Res.get("settings.net.warn.invalidBtcConfig"))
                 .hideCloseButton()
                 .useShutDownButton()
                 .show();
