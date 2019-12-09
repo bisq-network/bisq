@@ -23,3 +23,11 @@ markComment: >
 closeComment: >
     This issue has been automatically closed because of inactivity.
     Feel free to reopen it if you think it is still relevant.
+
+pulls:
+    daysUntilStale: 30
+    markComment: >
+        This pull request has been automatically marked as stale because it has not had
+        recent activity. It will be closed if no further activity occurs. Thank you
+        for your contributions.
+
