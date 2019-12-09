@@ -47,10 +47,8 @@ import javax.inject.Singleton;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleLongProperty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -126,10 +124,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(prefPayload.isUseAnimations());
     @Getter
     private final IntegerProperty cssThemeProperty = new SimpleIntegerProperty(prefPayload.getCssTheme());
-    @Getter
-    private final BooleanProperty useCustomWithdrawalTxFeeProperty = new SimpleBooleanProperty(prefPayload.isUseCustomWithdrawalTxFee());
-    @Getter
-    private final LongProperty withdrawalTxFeeInBytesProperty = new SimpleLongProperty(prefPayload.getWithdrawalTxFeeInBytes());
 
     private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
@@ -202,16 +196,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             persist();
         });
 
-        useCustomWithdrawalTxFeeProperty.addListener((ov) -> {
-            prefPayload.setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFeeProperty.get());
-            persist();
-        });
-
-        withdrawalTxFeeInBytesProperty.addListener((ov) -> {
-            prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytesProperty.get());
-            persist();
-        });
-
         fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
     }
@@ -270,8 +254,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // set all properties
         useAnimationsProperty.set(prefPayload.isUseAnimations());
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
-        useCustomWithdrawalTxFeeProperty.set(prefPayload.isUseCustomWithdrawalTxFee());
-        withdrawalTxFeeInBytesProperty.set(prefPayload.getWithdrawalTxFeeInBytes());
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
@@ -508,11 +490,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee) {
-        useCustomWithdrawalTxFeeProperty.set(useCustomWithdrawalTxFee);
+        prefPayload.setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee);
+        persist();
     }
 
     public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) {
-        withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
+        prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
+        persist();
     }
 
     public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent, PaymentAccount paymentAccount) {
@@ -749,15 +733,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();
-    }
-
-
-    public BooleanProperty useCustomWithdrawalTxFeeProperty() {
-        return useCustomWithdrawalTxFeeProperty;
-    }
-
-    public LongProperty withdrawalTxFeeInBytesProperty() {
-        return withdrawalTxFeeInBytesProperty;
     }
 
     public double getBuyerSecurityDepositAsPercent(PaymentAccount paymentAccount) {
