@@ -456,7 +456,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     // We only set the data back by half of the TTL and remove the data only if is has
                     // expired after that back dating.
                     // We might get connection drops which are not caused by the node going offline, so
-                    // we give more tolerance with that approach, giving the node the change to
+                    // we give more tolerance with that approach, giving the node the chance to
                     // refresh the TTL with a refresh message.
                     // We observed those issues during stress tests, but it might have been caused by the
                     // test set up (many nodes/connections over 1 router)
