@@ -92,8 +92,10 @@ Your pull request got merged? great, congrats and thanks for making Bisq more be
 For any work merged into Bisq's `master` branch, you can [submit a compensation request](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://docs.bisq.network/dao/phase-zero.html).
 
 
-## See also
+# Further reading/other resources worth checking
 
+ - tech session on [youtube](https://www.youtube.com/watch?v=ulmUVh3XjRg&list=PLFH5SztL5cYOtcg64PntHlbtLoiO3HAjB)
+ - dev-calls on [youtube](https://www.youtube.com/watch?v=YnTA3p-5v00&list=PLFH5SztL5cYN1m9v_NvpXxvP7_XIKF3At)
  - [contributor checklist](https://docs.bisq.network/contributor-checklist.html)
  - [developer docs](docs#readme) including build and dev environment setup instructions
 
