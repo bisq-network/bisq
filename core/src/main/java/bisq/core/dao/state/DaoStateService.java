@@ -35,18 +35,21 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.ParamChange;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+
+import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -114,6 +117,9 @@ public class DaoStateService implements DaoSetupService {
         log.info("Apply snapshot with chain height {}", snapshot.getChainHeight());
 
         daoState.setChainHeight(snapshot.getChainHeight());
+
+        daoState.getTxMap().clear();
+        daoState.getTxMap().putAll(snapshot.getTxMap());
 
         daoState.getBlocks().clear();
         daoState.getBlocks().addAll(snapshot.getBlocks());
@@ -226,7 +232,16 @@ public class DaoStateService implements DaoSetupService {
         }
     }
 
-    // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
+    // Third we add each successfully parsed BSQ tx to the last block
+    public void onNewTxForLastBlock(Block block, Tx tx) {
+        // At least one block must be present else no rawTx would have been recognised as a BSQ tx.
+        Preconditions.checkArgument(block == getLastBlock().orElseThrow());
+
+        block.getTxs().add(tx);
+        daoState.getTxMap().put(tx.getId(), tx);
+    }
+
+    // Fourth we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
         if (parseBlockChainComplete)
             log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
@@ -348,16 +363,16 @@ public class DaoStateService implements DaoSetupService {
                 .flatMap(block -> block.getTxs().stream());
     }
 
-    public TreeMap<String, Tx> getTxMap() {
-        return new TreeMap<>(getTxStream().collect(Collectors.toMap(Tx::getId, tx -> tx)));
+    public Map<String, Tx> getTxMap() {
+        return daoState.getTxMap();
     }
 
     public Set<Tx> getTxs() {
-        return getTxStream().collect(Collectors.toSet());
+        return new HashSet<>(getTxMap().values());
     }
 
     public Optional<Tx> getTx(String txId) {
-        return getTxStream().filter(tx -> tx.getId().equals(txId)).findAny();
+        return Optional.ofNullable(getTxMap().get(txId));
     }
 
     public List<Tx> getInvalidTxs() {
