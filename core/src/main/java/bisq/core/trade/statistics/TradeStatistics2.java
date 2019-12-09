@@ -25,7 +25,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
@@ -63,7 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Value
-public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
+public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
 
     //We don't support arbitrators anymore so this entry will be only for pre v1.2. trades
     @Deprecated

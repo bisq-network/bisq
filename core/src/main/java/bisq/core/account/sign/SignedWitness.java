@@ -20,7 +20,7 @@ package bisq.core.account.sign;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 // Supports signatures made from EC key (arbitrators) and signature created with DSA key.
 @Slf4j
 @Value
-public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope,
+public class SignedWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope,
         DateTolerantPayload, CapabilityRequiringPayload {
 
     public enum VerificationMethod {

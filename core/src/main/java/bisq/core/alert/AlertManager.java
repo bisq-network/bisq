@@ -127,7 +127,7 @@ public class AlertManager {
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
             user.setDevelopersAlert(alert);
-            boolean result = p2PService.addProtectedStorageEntry(alert, true);
+            boolean result = p2PService.addProtectedStorageEntry(alert);
             if (result) {
                 log.trace("Add alertMessage to network was successful. AlertMessage={}", alert);
             }
@@ -139,7 +139,7 @@ public class AlertManager {
     public boolean removeAlertMessageIfKeyIsValid(String privKeyString) {
         Alert alert = user.getDevelopersAlert();
         if (isKeyValid(privKeyString) && alert != null) {
-            if (p2PService.removeData(alert, true))
+            if (p2PService.removeData(alert))
                 log.trace("Remove alertMessage from network was successful. AlertMessage={}", alert);
 
             user.setDevelopersAlert(null);

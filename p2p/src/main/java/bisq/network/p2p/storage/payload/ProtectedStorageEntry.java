@@ -39,6 +39,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 @Getter
 @EqualsAndHashCode
 @Slf4j
@@ -47,14 +49,14 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private final byte[] ownerPubKeyBytes;
     transient private final PublicKey ownerPubKey;
     private final int sequenceNumber;
-    private byte[] signature;
+    private final byte[] signature;
     private long creationTimeStamp;
 
-    public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                    PublicKey ownerPubKey,
-                                    int sequenceNumber,
-                                    byte[] signature,
-                                    Clock clock) {
+    public ProtectedStorageEntry(@NotNull ProtectedStoragePayload protectedStoragePayload,
+                                 @NotNull PublicKey ownerPubKey,
+                                 int sequenceNumber,
+                                 byte[] signature,
+                                 Clock clock) {
         this(protectedStoragePayload,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 ownerPubKey,
@@ -64,13 +66,13 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                 clock);
     }
 
-    protected ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                 byte[] ownerPubKeyBytes,
-                                 PublicKey ownerPubKey,
-                                 int sequenceNumber,
-                                 byte[] signature,
-                                 long creationTimeStamp,
-                                 Clock clock) {
+    protected ProtectedStorageEntry(@NotNull ProtectedStoragePayload protectedStoragePayload,
+                                    byte[] ownerPubKeyBytes,
+                                    @NotNull PublicKey ownerPubKey,
+                                    int sequenceNumber,
+                                    byte[] signature,
+                                    long creationTimeStamp,
+                                    Clock clock) {
 
         Preconditions.checkArgument(!(protectedStoragePayload instanceof PersistableNetworkPayload));
 
@@ -80,21 +82,21 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
 
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
-        this.creationTimeStamp = creationTimeStamp;
 
-        maybeAdjustCreationTimeStamp(clock);
+        // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
+        this.creationTimeStamp = Math.min(creationTimeStamp, clock.millis());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                    byte[] ownerPubKeyBytes,
-                                    int sequenceNumber,
-                                    byte[] signature,
-                                    long creationTimeStamp,
-                                    Clock clock) {
+    private ProtectedStorageEntry(@NotNull ProtectedStoragePayload protectedStoragePayload,
+                                  byte[] ownerPubKeyBytes,
+                                  int sequenceNumber,
+                                  byte[] signature,
+                                  long creationTimeStamp,
+                                  Clock clock) {
         this(protectedStoragePayload,
                 ownerPubKeyBytes,
                 Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
@@ -135,20 +137,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeAdjustCreationTimeStamp(Clock clock) {
-        // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
-        if (creationTimeStamp > clock.millis())
-            creationTimeStamp = clock.millis();
-    }
-
     public void backDate() {
         if (protectedStoragePayload instanceof ExpirablePayload)
             creationTimeStamp -= ((ExpirablePayload) protectedStoragePayload).getTTL() / 2;
-    }
-
-    // TODO: only used in tests so find a better way to test and delete public API
-    public void updateSignature(byte[] signature) {
-        this.signature = signature;
     }
 
     public boolean isExpired(Clock clock) {
@@ -167,18 +158,15 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         // TODO: The code currently supports MailboxStoragePayload objects inside ProtectedStorageEntry. Fix this.
         if (protectedStoragePayload instanceof MailboxStoragePayload) {
             MailboxStoragePayload mailboxStoragePayload = (MailboxStoragePayload) this.getProtectedStoragePayload();
-            return mailboxStoragePayload.getSenderPubKeyForAddOperation() != null &&
-                    mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+            return mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         } else {
-            boolean result = this.ownerPubKey != null &&
-                    this.protectedStoragePayload != null &&
-                    this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
+            boolean result = this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
 
             if (!result) {
                 String res1 = this.toString();
                 String res2 = "null";
-                if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+                if (protectedStoragePayload.getOwnerPubKey() != null)
                     res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
 
                 log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
@@ -201,7 +189,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         if (!result) {
             String res1 = this.toString();
             String res2 = "null";
-            if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+            if (protectedStoragePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
 
             log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
@@ -239,9 +227,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         boolean result = protectedStorageEntry.getOwnerPubKey().equals(this.ownerPubKey);
 
         if (!result) {
-            log.warn("New data entry does not match our stored data. storedData.ownerPubKey=" +
-                    (protectedStorageEntry.getOwnerPubKey() != null ? protectedStorageEntry.getOwnerPubKey().toString() : "null") +
-                    ", ownerPubKey=" + this.ownerPubKey);
+            log.warn("New data entry does not match our stored data. storedData.ownerPubKey={}, ownerPubKey={}}",
+                    protectedStorageEntry.getOwnerPubKey().toString(), this.ownerPubKey);
         }
 
         return result;

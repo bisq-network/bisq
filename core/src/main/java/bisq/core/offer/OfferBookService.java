@@ -148,7 +148,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload(), true);
+        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload());
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -164,7 +164,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.refreshTTL(offerPayload, true);
+        boolean result = p2PService.refreshTTL(offerPayload);
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -187,7 +187,7 @@ public class OfferBookService {
     public void removeOffer(OfferPayload offerPayload,
                             @Nullable ResultHandler resultHandler,
                             @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(offerPayload, true)) {
+        if (p2PService.removeData(offerPayload)) {
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {

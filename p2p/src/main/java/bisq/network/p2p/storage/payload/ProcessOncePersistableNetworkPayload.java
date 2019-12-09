@@ -20,8 +20,9 @@ package bisq.network.p2p.storage.payload;
 import bisq.common.Payload;
 
 /**
- * Marker interface for payload which gets delayed processed at startup so we don't hit performance too much.
- * Used for TradeStatistics and AccountAgeWitness.
+ * Marker interface for PersistableNetworkPayloads that are only added during the FIRST call to
+ * P2PDataStorage::processDataResponse. This improves performance for objects that don't go out
+ * of sync frequently.
  */
-public interface LazyProcessedPayload extends Payload {
+public interface ProcessOncePersistableNetworkPayload extends Payload {
 }

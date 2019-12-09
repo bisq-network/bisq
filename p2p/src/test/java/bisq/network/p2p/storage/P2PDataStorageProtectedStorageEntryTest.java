@@ -83,12 +83,6 @@ public class P2PDataStorageProtectedStorageEntryTest {
         @Parameterized.Parameter(0)
         public boolean useMessageHandler;
 
-        boolean expectIsDataOwner() {
-            // The onMessage handler variant should always broadcast with isDataOwner == false
-            // The Client API should always broadcast with isDataOwner == true
-            return !useMessageHandler;
-        }
-
         @Parameterized.Parameters(name = "{index}: Test with useMessageHandler={0}")
         public static Collection<Object[]> data() {
             List<Object[]> data = new ArrayList<>();
@@ -119,8 +113,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All callers just pass in true, a future patch can remove the argument.
-                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress(), true);
+                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress());
             }
         }
 
@@ -133,10 +126,8 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All external callers just pass in true for isDataOwner and allowBroadcast a future patch can
-                // remove the argument.
                 return this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry,
-                        TestState.getTestNodeAddress(), null, true);
+                        TestState.getTestNodeAddress(), null);
             }
         }
 
@@ -149,8 +140,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All external callers just pass in true for isDataOwner a future patch can remove the argument.
-                return this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true);
+                return this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress());
             }
         }
 
@@ -197,7 +187,13 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, expectedStateChange, this.expectIsDataOwner());
+            if (expectedStateChange) {
+                this.testState.verifyProtectedStorageAdd(
+                        beforeState, protectedStorageEntry, true, true, true, true);
+            } else{
+                this.testState.verifyProtectedStorageAdd(
+                        beforeState, protectedStorageEntry, false, false, false, false);
+            }
         }
 
         void doProtectedStorageRemoveAndVerify(ProtectedStorageEntry entry,
@@ -214,7 +210,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast, expectedSeqNrWrite, this.expectIsDataOwner());
+            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast, expectedSeqNrWrite);
         }
 
         /// Valid Add Tests (isValidForAdd() and matchesRelevantPubKey() return true)
@@ -490,7 +486,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, returnValue);
 
-            this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, expectStateChange, this.expectIsDataOwner());
+            this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, expectStateChange);
         }
 
         // TESTCASE: Refresh an entry that doesn't exist
@@ -686,8 +682,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
                 return true;
             } else {
-                // XXX: All external callers just pass in true, a future patch can remove the argument.
-                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress(), true);
+                return testState.mockedStorage.remove(entry, TestState.getTestNodeAddress());
             }
         }
 

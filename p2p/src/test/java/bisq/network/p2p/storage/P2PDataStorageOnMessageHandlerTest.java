@@ -69,7 +69,7 @@ public class P2PDataStorageOnMessageHandlerTest {
         this.testState.mockedStorage.onMessage(envelope, mockedConnection);
 
         verify(this.testState.appendOnlyDataStoreListener, never()).onAdded(any(PersistableNetworkPayload.class));
-        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null), anyBoolean());
+        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class P2PDataStorageOnMessageHandlerTest {
         this.testState.mockedStorage.onMessage(envelope, mockedConnection);
 
         verify(this.testState.appendOnlyDataStoreListener, never()).onAdded(any(PersistableNetworkPayload.class));
-        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null), anyBoolean());
+        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null));
     }
 
     @Test
@@ -96,6 +96,6 @@ public class P2PDataStorageOnMessageHandlerTest {
         this.testState.mockedStorage.onMessage(envelope, mockedConnection);
 
         verify(this.testState.appendOnlyDataStoreListener, never()).onAdded(any(PersistableNetworkPayload.class));
-        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null), anyBoolean());
+        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null));
     }
 }

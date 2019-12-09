@@ -64,7 +64,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
         log.debug("addDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
         if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ||
                 !Utilities.encodeToHex(disputeAgent.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
-            boolean result = p2PService.addProtectedStorageEntry(disputeAgent, true);
+            boolean result = p2PService.addProtectedStorageEntry(disputeAgent);
             if (result) {
                 log.trace("Add disputeAgent to network was successful. DisputeAgent.hashCode() = " + disputeAgent.hashCode());
                 resultHandler.handleResult();
@@ -81,7 +81,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
                                    ResultHandler resultHandler,
                                    ErrorMessageHandler errorMessageHandler) {
         log.debug("removeDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
-        if (p2PService.removeData(disputeAgent, true)) {
+        if (p2PService.removeData(disputeAgent)) {
             log.trace("Remove disputeAgent from network was successful. DisputeAgent.hashCode() = " + disputeAgent.hashCode());
             resultHandler.handleResult();
         } else {

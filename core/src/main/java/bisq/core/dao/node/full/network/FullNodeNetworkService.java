@@ -105,7 +105,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
         log.info("Publish new block at height={} and block hash={}", block.getHeight(), block.getHash());
         RawBlock rawBlock = RawBlock.fromBlock(block);
         NewBlockBroadcastMessage newBlockBroadcastMessage = new NewBlockBroadcastMessage(rawBlock);
-        broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress(), null, true);
+        broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress(), null);
     }
 
 

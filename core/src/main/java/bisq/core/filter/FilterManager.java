@@ -265,7 +265,7 @@ public class FilterManager {
             signAndAddSignatureToFilter(filter);
             user.setDevelopersFilter(filter);
 
-            boolean result = p2PService.addProtectedStorageEntry(filter, true);
+            boolean result = p2PService.addProtectedStorageEntry(filter);
             if (result)
                 log.trace("Add filter to network was successful. FilterMessage = {}", filter);
 
@@ -278,7 +278,7 @@ public class FilterManager {
             Filter filter = user.getDevelopersFilter();
             if (filter == null) {
                 log.warn("Developers filter is null");
-            } else if (p2PService.removeData(filter, true)) {
+            } else if (p2PService.removeData(filter)) {
                 log.trace("Remove filter from network was successful. FilterMessage = {}", filter);
                 user.setDevelopersFilter(null);
             } else {
