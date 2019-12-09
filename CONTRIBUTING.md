@@ -23,9 +23,15 @@ The more correct way to see payment is "compensation". By earning BSQ, you inves
 
 Still here? Nice. You are hired. On to the grind.
 
+# Getting started
 
+Join Gibhub if you haven't already, fork the Bisq repository, configure your local git ([username](https://help.github.com/articles/setting-your-username-in-git/), [commit signing](https://help.github.com/articles/signing-commits-with-gpg/)), clone your Bisq-fork to disk, do a compile run `./gradlew build`.
 
+Now you are ready to roll. Pick something off the [Good First Issue List](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22), pick any other issue, do some testing, spot a bug, report it and fix it, maybe there is something in the UI that needs cosmetic work.
 
+Now that you have picked yourself something to work on, be vocal about it! Claim good first issues, or any issues, by simply leaving a comment saying that this is being worked on, join [Keybase](https://keybase.io/team/bisq). Once there, introduce yourself in *#introductions*, get help in *#dev-onboarding* if your setup fights you, use *#dev* to see if the task you picked is a good way forward (you do not have to do that for good first issues) and join other channels if you want to.
+
+Go on and do the actual work.
 
 
 
