@@ -23,7 +23,7 @@ The more correct way to see payment is "compensation". By earning BSQ, you inves
 
 Still here? Nice. You are hired. On to the grind.
 
-# Getting started
+## Getting started
 
 Join Gibhub if you haven't already, fork the Bisq repository, configure your local git ([username](https://help.github.com/articles/setting-your-username-in-git/), [commit signing](https://help.github.com/articles/signing-commits-with-gpg/)), clone your Bisq-fork to disk, do a compile run `./gradlew build`.
 
@@ -34,11 +34,11 @@ Now that you have picked yourself something to work on, be vocal about it! Claim
 Go on and do the actual work.
 
 
-# Pull request rules
+## Pull request rules
 
 Please honor the list of rules below for your pull request to get merged. Due to very limited resources, we are forced to enforce these quite rigorously.
 
-## Honor Git best practice
+### Honor Git best practice
  - Create a topic branch off master
  - Commit little, commit often
  - Maintain a clean commit history (no merges commits!, use rebase and force-push if necessary)
@@ -52,19 +52,19 @@ Please honor the list of rules below for your pull request to get merged. Due to
    6. Wrap the body at 72 characters
    7. Use the body to explain what and why vs. how
 
-## Respect Bisq's coding style
+### Respect Bisq's coding style
  - The .editorconfig settings in this repository ensure consistent management of whitespace, line endings and more. Most modern editors support it natively or with plugin. See http://editorconfig.org for details. See also bisq-network/style#10.
  - Also, please honor the issues in the [bisq-network/style](https://github.com/bisq-network/style/issues) repository
  - Do not commit import reorgs or any other non-changes!
 
 
-## Test your code!
+### Test your code!
  - Create automated tests for your work. JUnit is available. If you are fixing a bug, create a test that demonstrates the bug by failing. Then fix the bug.
  - If automated testing is not feasible (we know it can be hard - working on it ...), provide a textual testing procedure (which we can include in our manual testing checklist): setup, prerequisits, steps, expected results
  - If that is not possible either, provide some info (numbers, screenshots, testing procedure) on how you tested your stuff
  - If all is lost, state why you have not been able to do the above.
 
-## Create a pull request
+### Create a pull request
 - Pull requests have to be focused on a single change. Do not mix unrelated stuff.
 - Use meaningful title and description
   - provide some context, how did stuff work before, how does it work now, why is that better
@@ -73,7 +73,7 @@ Please honor the list of rules below for your pull request to get merged. Due to
   - and of course, reference issues (if applicable) with the use of [keywords](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords)
 - Wait for your pull request to be reviewed
 
-## Pull request review prodecure
+### Pull request review prodecure
 Bisq follows the review workflow established by the Bitcoin Core project. The following is adapted from the [Bitcoin Core contributor documentation](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md#peer-review): 
  - `ACK` means "I have tested the code and I agree it should be merged";
  - `NACK` means "I disagree this should be merged", and must be accompanied by sound technical justification. NACKs without accompanying reasoning may be disregarded;
@@ -85,14 +85,14 @@ In case you receive a NACK and/or `change requested`
  - react within 30 days, or else, your pull request will be rejected automatically
  - **re-request a review** after adressing a change request (because we almost always only look at "review required" pull request because of resource constraints)
 
-## Compensation
+### Compensation
 
 Your pull request got merged? great, congrats and thanks for making Bisq more better.
 
 For any work merged into Bisq's `master` branch, you can [submit a compensation request](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://docs.bisq.network/dao/phase-zero.html).
 
 
-# Further reading/other resources worth checking
+## Further reading/other resources worth checking
 
  - tech session on [youtube](https://www.youtube.com/watch?v=ulmUVh3XjRg&list=PLFH5SztL5cYOtcg64PntHlbtLoiO3HAjB)
  - dev-calls on [youtube](https://www.youtube.com/watch?v=YnTA3p-5v00&list=PLFH5SztL5cYN1m9v_NvpXxvP7_XIKF3At)
