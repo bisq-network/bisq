@@ -17,19 +17,10 @@
 
 package bisq.common.app;
 
-import bisq.common.CommonOptionKeys;
-
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DevEnv {
-    public static void setup(Injector injector) {
-        DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
-    }
 
     // The UI got set the private dev key so the developer does not need to do anything and can test those features.
     // Features: Arbitration registration (alt+R at account), Alert/Update (alt+m), private message to a

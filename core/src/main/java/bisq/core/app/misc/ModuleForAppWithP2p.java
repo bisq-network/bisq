@@ -38,7 +38,6 @@ import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
-import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
@@ -57,6 +56,7 @@ import com.google.inject.name.Names;
 import java.io.File;
 
 import static bisq.common.config.Config.REFERRAL_ID;
+import static bisq.common.config.Config.USE_DEV_MODE;
 import static com.google.inject.name.Names.named;
 
 public class ModuleForAppWithP2p extends AppModule {
@@ -91,9 +91,7 @@ public class ModuleForAppWithP2p extends AppModule {
         Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
 
-        Boolean useDevMode = environment.getProperty(CommonOptionKeys.USE_DEV_MODE, Boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(CommonOptionKeys.USE_DEV_MODE)).toInstance(useDevMode);
-
+        bind(boolean.class).annotatedWith(named(USE_DEV_MODE)).toInstance(config.isUseDevMode());
         bind(String.class).annotatedWith(named(REFERRAL_ID)).toInstance(config.getReferralId());
 
         // ordering is used for shut down sequence

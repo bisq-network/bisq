@@ -195,7 +195,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void setupDevEnv() {
-        DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
+        DevEnv.setDevMode(config.isUseDevMode());
         DevEnv.setDaoActivated(config.isDaoActivated());
     }
 
@@ -417,7 +417,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 "Optional Referral ID (e.g. for API users or pro market makers)")
                 .withRequiredArg();
 
-        parser.accepts(CommonOptionKeys.USE_DEV_MODE,
+        parser.accepts(Config.USE_DEV_MODE,
                 format("Enables dev mode which is used for convenience for developer testing (default: %s)", "false"))
                 .withRequiredArg()
                 .ofType(boolean.class);

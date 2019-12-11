@@ -27,6 +27,7 @@ import static java.util.stream.Collectors.toList;
 public class Config {
 
     public static final String REFERRAL_ID = "referralId";
+    public static final String USE_DEV_MODE = "useDevMode";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
@@ -56,6 +57,7 @@ public class Config {
     private final String logLevel;
     private final Path torrcFile;
     private final String referralId;
+    private final boolean useDevMode;
 
     // FIXME: Carryover from legacy BisqEnvironment; there should be no mutable state here
     private boolean localBitcoinNodeIsRunning = false;
@@ -182,6 +184,13 @@ public class Config {
                         .ofType(String.class)
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<Boolean> useDevModeOpt =
+                parser.accepts(USE_DEV_MODE,
+                        "Enables dev mode which is used for convenience for developer testing")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -234,6 +243,7 @@ public class Config {
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.valueOf(torrcFileOpt);
             this.referralId = options.valueOf(referralIdOpt);
+            this.useDevMode = options.valueOf(useDevModeOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -355,5 +365,9 @@ public class Config {
 
     public String getReferralId() {
         return referralId;
+    }
+
+    public boolean isUseDevMode() {
+        return useDevMode;
     }
 }

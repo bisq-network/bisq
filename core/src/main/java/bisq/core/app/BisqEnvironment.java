@@ -28,6 +28,7 @@ import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
@@ -141,7 +142,7 @@ public class BisqEnvironment extends StandardEnvironment {
     @Setter
     protected boolean isBitcoinLocalhostNodeRunning;
 
-    protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
+    protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
@@ -162,7 +163,6 @@ public class BisqEnvironment extends StandardEnvironment {
     public BisqEnvironment(PropertySource commandLineProperties) {
         //CommonOptionKeys
         logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
-        useDevMode = getProperty(commandLineProperties, CommonOptionKeys.USE_DEV_MODE, "");
 
         //AppOptionKeys
         userDataDir = getProperty(commandLineProperties, AppOptionKeys.USER_DATA_DIR_KEY, DEFAULT_USER_DATA_DIR);
@@ -261,7 +261,6 @@ public class BisqEnvironment extends StandardEnvironment {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
                 setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
-                setProperty(CommonOptionKeys.USE_DEV_MODE, useDevMode);
 
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
