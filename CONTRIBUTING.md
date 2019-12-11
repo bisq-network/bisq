@@ -14,7 +14,7 @@ Java God, Bitcoin Native, Marketing Genius, Cypherpunk, Testing Machine, or simp
 
 The more correct way to see payment is "compensation". By earning BSQ, you invest in the Bisq project (just like other startups do it). But make no mistake, the DAO has only been operating for a few months now. Eventually, Bisq will create serious revenue.
 
-**Tools?** If you want to develop code, we expect you to know your ways around Git and Java. Then comes testing, JavaFX, Gradle, Github, ... As for non-functional skills, we love to see people knowing their ways around P2P networks, cryptography, security, privacy, ...
+**Skills?** If you want to develop code, we expect you to know your ways around Git and Java. Then comes testing, JavaFX, Gradle, Github, ... As for non-functional skills, we love to see people knowing their ways around P2P networks, cryptography, security, privacy, ...
 
 **Carreer?** Start small, go bigger. If we like your work, we might just ask you to take on a more official role. Maybe someday you are the guy improving this document (again).
 
@@ -25,13 +25,13 @@ Still here? Nice. You are hired. On to the grind.
 
 ## Getting started
 
-Join Gibhub if you haven't already, fork the Bisq repository, configure your local git ([username](https://help.github.com/articles/setting-your-username-in-git/), [commit signing](https://help.github.com/articles/signing-commits-with-gpg/)), clone your Bisq-fork to disk, do a compile run `./gradlew build`.
+Join Gibhub if you haven't already, fork the Bisq repository, configure your local git ([username](https://help.github.com/articles/setting-your-username-in-git/), [commit signing](https://help.github.com/articles/signing-commits-with-gpg/)), clone your Bisq-fork to disk and do a compile run `./gradlew build`.
 
-Now you are ready to roll. Pick something off the [Good First Issue List](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22), pick any other issue, do some testing, spot a bug, report it and fix it, maybe there is something in the UI that needs cosmetic work.
+Now you are ready to roll. Pick something off the [Good First Issue List](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22), pick any other [issue](https://github.com/bisq-network/bisq/issues), do some testing, spot a bug, report it and fix it, maybe there is something in the UI that needs cosmetic work. The possibilities are endless. However, make sure the task you pick is of some importance, otherwise it might cause some inconvenience later on.
 
-Now that you have picked yourself something to work on, be vocal about it! Claim good first issues, or any issues, by simply leaving a comment saying that this is being worked on, join [Keybase](https://keybase.io/team/bisq). Once there, introduce yourself in *#introductions*, get help in *#dev-onboarding* if your setup fights you, use *#dev* to see if the task you picked is a good way forward (you do not have to do that for good first issues) and join other channels if you want to.
+Now that you have picked yourself something to work on, be vocal about it! Claim good first issues, or any issues, by simply leaving a comment saying that this is being worked on, join [Keybase](https://keybase.io/team/bisq). Once there, register your github with keybase, introduce yourself in the channel *#introductions*, get help in *#dev-onboarding* if your setup fights you, use *#dev* to see if the task you picked is a good way forward (you do not have to do that for good first issues though) and join other channels if you want to. Furthermore, check our [event calendar](https://bisq.network/calendar) and tune in on [dev-calls](hhttps://github.com/bisq-network/events/issues?q=Dev-Call), growth-calls and daily standup calls.
 
-Go on and do the actual work.
+Go on and do the actual work. And do not forget to enjoy yourself!
 
 
 ## Pull request rules
@@ -42,7 +42,9 @@ Please honor the list of rules below for your pull request to get merged. Due to
  - Create a topic branch off master
  - Commit little, commit often
  - Maintain a clean commit history (no merges commits!, use rebase and force-push if necessary)
- - Use meaningful commit subjects AND description (then, now, good, bad, risks)
+ - Use meaningful commit subjects AND description
+   - how did stuff work before you touched it, what has been bad back then
+   - how does the stuff work now and why is that better
  - Do so in a well-formed manner (from https://chris.beams.io/posts/git-commit/#seven-rules)
    1. Separate subject from body with a blank line
    2. Limit the subject line to 50 characters
