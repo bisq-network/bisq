@@ -26,16 +26,20 @@ import static java.util.stream.Collectors.toList;
 
 public class Config {
 
+    public static final String REFERRAL_ID = "referralId";
+
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
 
     public static File CURRENT_APP_DATA_DIR;
 
+    // default data dir properties
     private final String defaultAppName;
     private final File defaultUserDataDir;
     private final File defaultAppDataDir;
     private final File defaultConfigFile;
 
+    // cli options
     private final File configFile;
     private final String appName;
     private final File userDataDir;
@@ -51,6 +55,7 @@ public class Config {
     private final boolean fullDaoNode;
     private final String logLevel;
     private final Path torrcFile;
+    private final String referralId;
 
     // FIXME: Carryover from legacy BisqEnvironment; there should be no mutable state here
     private boolean localBitcoinNodeIsRunning = false;
@@ -171,6 +176,12 @@ public class Config {
                         .withRequiredArg()
                         .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
 
+        ArgumentAcceptingOptionSpec<String> referralIdOpt =
+                parser.accepts(REFERRAL_ID, "Optional Referral ID (e.g. for API users or pro market makers)")
+                        .withRequiredArg()
+                        .ofType(String.class)
+                        .defaultsTo("");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -222,7 +233,7 @@ public class Config {
             this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.valueOf(torrcFileOpt);
-
+            this.referralId = options.valueOf(referralIdOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -340,5 +351,9 @@ public class Config {
 
     public Path getTorrcFile() {
         return torrcFile;
+    }
+
+    public String getReferralId() {
+        return referralId;
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.core.user;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.wallet.Restrictions;
@@ -153,7 +152,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        Config config,
                        @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
                        @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions,
-                       @Named(AppOptionKeys.REFERRAL_ID) String referralId,
+                       @Named(Config.REFERRAL_ID) String referralId,
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                        @Named(DaoOptionKeys.RPC_USER) String rpcUser,
                        @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,

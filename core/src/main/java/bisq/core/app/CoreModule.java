@@ -55,6 +55,7 @@ import com.google.inject.name.Names;
 
 import java.io.File;
 
+import static bisq.common.config.Config.REFERRAL_ID;
 import static com.google.inject.name.Names.named;
 
 public class CoreModule extends AppModule {
@@ -90,8 +91,7 @@ public class CoreModule extends AppModule {
         Boolean useDevMode = environment.getProperty(CommonOptionKeys.USE_DEV_MODE, Boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(CommonOptionKeys.USE_DEV_MODE)).toInstance(useDevMode);
 
-        String referralId = environment.getProperty(AppOptionKeys.REFERRAL_ID, String.class, "");
-        bind(String.class).annotatedWith(Names.named(AppOptionKeys.REFERRAL_ID)).toInstance(referralId);
+        bind(String.class).annotatedWith(named(REFERRAL_ID)).toInstance(config.getReferralId());
 
 
         // ordering is used for shut down sequence
