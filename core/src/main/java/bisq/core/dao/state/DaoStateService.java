@@ -45,11 +45,12 @@ import javax.inject.Inject;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -363,24 +364,24 @@ public class DaoStateService implements DaoSetupService {
                 .flatMap(block -> block.getTxs().stream());
     }
 
-    public Map<String, Tx> getTxMap() {
-        return daoState.getTxMap();
+    private Stream<Tx> getUnorderedTxStream() {
+        return getTxs().stream();
     }
 
-    public Set<Tx> getTxs() {
-        return new HashSet<>(getTxMap().values());
-    }
-
-    public Optional<Tx> getTx(String txId) {
-        return Optional.ofNullable(getTxMap().get(txId));
+    public Collection<Tx> getTxs() {
+        return Collections.unmodifiableCollection(daoState.getTxMap().values());
     }
 
     public List<Tx> getInvalidTxs() {
-        return getTxStream().filter(tx -> tx.getTxType() == TxType.INVALID).collect(Collectors.toList());
+        return getUnorderedTxStream().filter(tx -> tx.getTxType() == TxType.INVALID).collect(Collectors.toList());
     }
 
     public List<Tx> getIrregularTxs() {
-        return getTxStream().filter(tx -> tx.getTxType() == TxType.IRREGULAR).collect(Collectors.toList());
+        return getUnorderedTxStream().filter(tx -> tx.getTxType() == TxType.IRREGULAR).collect(Collectors.toList());
+    }
+
+    public Optional<Tx> getTx(String txId) {
+        return Optional.ofNullable(daoState.getTxMap().get(txId));
     }
 
     public boolean containsTx(String txId) {
@@ -410,11 +411,11 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public long getTotalBurntFee() {
-        return getTxStream().mapToLong(Tx::getBurntFee).sum();
+        return getUnorderedTxStream().mapToLong(Tx::getBurntFee).sum();
     }
 
     public Set<Tx> getBurntFeeTxs() {
-        return getTxStream()
+        return getUnorderedTxStream()
                 .filter(tx -> tx.getBurntFee() > 0)
                 .collect(Collectors.toSet());
     }
@@ -433,17 +434,17 @@ public class DaoStateService implements DaoSetupService {
     // TxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<TxOutput> getTxOutputStream() {
-        return getTxStream()
+    private Stream<TxOutput> getUnorderedTxOutputStream() {
+        return getUnorderedTxStream()
                 .flatMap(tx -> tx.getTxOutputs().stream());
     }
 
     public boolean existsTxOutput(TxOutputKey key) {
-        return getTxOutputStream().anyMatch(txOutput -> txOutput.getKey().equals(key));
+        return getUnorderedTxOutputStream().anyMatch(txOutput -> txOutput.getKey().equals(key));
     }
 
     public Optional<TxOutput> getTxOutput(TxOutputKey txOutputKey) {
-        return getTxOutputStream()
+        return getUnorderedTxOutputStream()
                 .filter(txOutput -> txOutput.getKey().equals(txOutputKey))
                 .findAny();
     }
@@ -528,8 +529,8 @@ public class DaoStateService implements DaoSetupService {
     // TxOutputType
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Set<TxOutput> getTxOutputsByTxOutputType(TxOutputType txOutputType) {
-        return getTxOutputStream()
+    private Set<TxOutput> getTxOutputsByTxOutputType(TxOutputType txOutputType) {
+        return getUnorderedTxOutputStream()
                 .filter(txOutput -> txOutput.getTxOutputType() == txOutputType)
                 .collect(Collectors.toSet());
     }
@@ -838,12 +839,12 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public long getTotalAmountOfInvalidatedBsq() {
-        return getTxStream().mapToLong(Tx::getInvalidatedBsq).sum();
+        return getUnorderedTxStream().mapToLong(Tx::getInvalidatedBsq).sum();
     }
 
     // Contains burnt fee and invalidated bsq due invalid txs
     public long getTotalAmountOfBurntBsq() {
-        return getTxStream().mapToLong(Tx::getBurntBsq).sum();
+        return getUnorderedTxStream().mapToLong(Tx::getBurntBsq).sum();
     }
 
     // Confiscate bond
