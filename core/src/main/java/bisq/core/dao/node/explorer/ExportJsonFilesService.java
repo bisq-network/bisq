@@ -27,9 +27,9 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import bisq.common.config.Config;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.JsonFileManager;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
@@ -70,7 +70,7 @@ public class ExportJsonFilesService implements DaoSetupService {
 
     @Inject
     public ExportJsonFilesService(DaoStateService daoStateService,
-                                  @Named(Storage.STORAGE_DIR) File storageDir,
+                                  @Named(Config.STORAGE_DIR) File storageDir,
                                   @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.daoStateService = daoStateService;
         this.storageDir = storageDir;

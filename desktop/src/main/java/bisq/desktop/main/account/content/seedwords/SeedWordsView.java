@@ -29,7 +29,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 
-import bisq.common.storage.Storage;
+import bisq.common.config.Config;
 
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
@@ -53,7 +53,6 @@ import javafx.beans.value.ChangeListener;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
@@ -94,7 +93,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private SeedWordsView(WalletsManager walletsManager,
                           BtcWalletService btcWalletService,
                           WalletPasswordWindow walletPasswordWindow,
-                          @Named(Storage.STORAGE_DIR) File storageDir) {
+                          @Named(Config.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
         this.btcWalletService = btcWalletService;
         this.walletPasswordWindow = walletPasswordWindow;

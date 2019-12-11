@@ -25,6 +25,7 @@ import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
@@ -61,7 +62,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     public DaoStateStorageService(ResourceDataStoreService resourceDataStoreService,
                                   DaoState daoState,
                                   DaoStateMonitoringService daoStateMonitoringService,
-                                  @Named(Storage.STORAGE_DIR) File storageDir,
+                                  @Named(Config.STORAGE_DIR) File storageDir,
                                   Storage<DaoStateStore> daoSnapshotStorage) {
         super(storageDir, daoSnapshotStorage);
         this.daoState = daoState;

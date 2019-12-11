@@ -45,6 +45,7 @@ import java.io.File;
 
 import java.util.Arrays;
 
+import static bisq.common.config.Config.WALLET_DIR;
 import static com.google.inject.name.Names.named;
 
 public class BitcoinModule extends AppModule {
@@ -79,8 +80,7 @@ public class BitcoinModule extends AppModule {
         bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(environment.getRequiredProperty(UserAgent.VERSION_KEY));
         bind(UserAgent.class).in(Singleton.class);
 
-        File walletDir = new File(environment.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
-        bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
+        bind(File.class).annotatedWith(named(WALLET_DIR)).toInstance(config.getWalletDir());
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.BTC_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USER_AGENT)).to(environment.getRequiredProperty(BtcOptionKeys.USER_AGENT));

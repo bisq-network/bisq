@@ -38,9 +38,9 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
 import bisq.common.storage.FileManager;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -131,7 +131,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                      DaoStateNetworkService daoStateNetworkService,
                                      GenesisTxInfo genesisTxInfo,
                                      SeedNodeRepository seedNodeRepository,
-                                     @Named(Storage.STORAGE_DIR) File storageDir,
+                                     @Named(Config.STORAGE_DIR) File storageDir,
                                      @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.daoStateService = daoStateService;
         this.daoStateNetworkService = daoStateNetworkService;

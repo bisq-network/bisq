@@ -46,7 +46,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.Storage;
 
 import org.springframework.core.env.Environment;
 
@@ -55,7 +54,9 @@ import com.google.inject.name.Names;
 
 import java.io.File;
 
+import static bisq.common.config.Config.KEY_STORAGE_DIR;
 import static bisq.common.config.Config.REFERRAL_ID;
+import static bisq.common.config.Config.STORAGE_DIR;
 import static bisq.common.config.Config.USE_DEV_MODE;
 import static com.google.inject.name.Names.named;
 
@@ -82,11 +83,8 @@ public class ModuleForAppWithP2p extends AppModule {
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
 
-        File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
-        bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
-
-        File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
-        bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
+        bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.getStorageDir());
+        bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());
 
         Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);

@@ -17,8 +17,7 @@
 
 package bisq.core.app;
 
-import bisq.network.NetworkOptionKeys;
-
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.storage.FileUtil;
 
@@ -42,7 +41,7 @@ public class TorSetup {
     private File torDir;
 
     @Inject
-    public TorSetup(@Named(NetworkOptionKeys.TOR_DIR) File torDir) {
+    public TorSetup(@Named(Config.TOR_DIR) File torDir) {
         this.torDir = torDir;
     }
 

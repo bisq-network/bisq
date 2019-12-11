@@ -151,7 +151,7 @@ public class WalletsSetup {
                         Config config,
                         BtcNodes btcNodes,
                         @Named(BtcOptionKeys.USER_AGENT) String userAgent,
-                        @Named(BtcOptionKeys.WALLET_DIR) File appDir,
+                        @Named(Config.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
                         @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {

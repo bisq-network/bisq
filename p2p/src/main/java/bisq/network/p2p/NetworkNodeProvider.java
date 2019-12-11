@@ -25,6 +25,7 @@ import bisq.network.p2p.network.NewTor;
 import bisq.network.p2p.network.RunningTor;
 import bisq.network.p2p.network.TorNetworkNode;
 
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import javax.inject.Provider;
@@ -43,7 +44,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                BridgeAddressProvider bridgeAddressProvider,
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                                @Named(NetworkOptionKeys.PORT_KEY) int port,
-                               @Named(NetworkOptionKeys.TOR_DIR) File torDir,
+                               @Named(Config.TOR_DIR) File torDir,
                                @Named(NetworkOptionKeys.TORRC_FILE) String torrcFile,
                                @Named(NetworkOptionKeys.TORRC_OPTIONS) String torrcOptions,
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) String controlPort,

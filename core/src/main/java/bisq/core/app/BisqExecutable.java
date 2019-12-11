@@ -59,8 +59,6 @@ import joptsimple.util.RegexMatcher;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

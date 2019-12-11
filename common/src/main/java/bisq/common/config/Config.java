@@ -28,6 +28,10 @@ public class Config {
 
     public static final String REFERRAL_ID = "referralId";
     public static final String USE_DEV_MODE = "useDevMode";
+    public static final String TOR_DIR = "torDir";
+    public static final String STORAGE_DIR = "storageDir";
+    public static final String KEY_STORAGE_DIR = "keyStorageDir";
+    public static final String WALLET_DIR = "walletDir";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
@@ -59,8 +63,12 @@ public class Config {
     private final String referralId;
     private final boolean useDevMode;
 
-    // FIXME: Carryover from legacy BisqEnvironment; there should be no mutable state here
-    private boolean localBitcoinNodeIsRunning = false;
+    // properties derived from cli options, but not exposed as cli options themselves
+    private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
+    private final File torDir;
+    private final File walletDir;
+    private final File storageDir;
+    private final File keyStorageDir;
 
     public Config(String defaultAppName) throws HelpRequested {
         this(defaultAppName, new String[]{});
@@ -251,6 +259,15 @@ public class Config {
                             ex.getCause().getMessage() :
                             ex.getMessage()));
         }
+
+        File btcNetworkDir = new File(appDataDir, baseCurrencyNetwork.name().toLowerCase());
+        if (!btcNetworkDir.exists())
+            btcNetworkDir.mkdir();
+
+        this.torDir = new File(btcNetworkDir, "tor");
+        this.walletDir = btcNetworkDir;
+        this.storageDir = new File(btcNetworkDir, "db");
+        this.keyStorageDir = new File(btcNetworkDir, "keys");
     }
 
     private Optional<OptionSet> parseOptionsFrom(File file, OptionParser parser, OptionSpec<?>... disallowedOpts) {
@@ -369,5 +386,21 @@ public class Config {
 
     public boolean isUseDevMode() {
         return useDevMode;
+    }
+
+    public File getTorDir() {
+        return torDir;
+    }
+
+    public File getWalletDir() {
+        return walletDir;
+    }
+
+    public File getStorageDir() {
+        return storageDir;
+    }
+
+    public File getKeyStorageDir() {
+        return keyStorageDir;
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.common.crypto;
 
+import bisq.common.config.Config;
 import bisq.common.storage.FileUtil;
 
 import com.google.inject.Inject;
@@ -57,8 +58,6 @@ import org.jetbrains.annotations.NotNull;
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);
 
-    public static final String KEY_STORAGE_DIR = "keyStorageDir";
-
     public enum KeyEntry {
         MSG_SIGNATURE("sig", Sig.KEY_ALGO),
         MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO);
@@ -92,7 +91,7 @@ public class KeyStorage {
     private final File storageDir;
 
     @Inject
-    public KeyStorage(@Named(KEY_STORAGE_DIR) File storageDir) {
+    public KeyStorage(@Named(Config.KEY_STORAGE_DIR) File storageDir) {
         storageDir.mkdirs();
         this.storageDir = storageDir;
     }

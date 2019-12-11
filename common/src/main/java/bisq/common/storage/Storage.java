@@ -18,6 +18,7 @@
 package bisq.common.storage;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
@@ -50,7 +51,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class Storage<T extends PersistableEnvelope> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
-    public static final String STORAGE_DIR = "storageDir";
 
     private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
 
@@ -68,7 +68,7 @@ public class Storage<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage(@Named(STORAGE_DIR) File dir,
+    public Storage(@Named(Config.STORAGE_DIR) File dir,
                    PersistenceProtoResolver persistenceProtoResolver,
                    CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.dir = dir;

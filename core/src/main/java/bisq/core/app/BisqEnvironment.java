@@ -28,9 +28,6 @@ import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.config.Config;
-import bisq.common.crypto.KeyStorage;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
@@ -136,7 +133,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String userDataDir;
     @Getter
     protected final String appDataDir;
-    protected final String btcNetworkDir, userAgent;
+    protected final String userAgent;
     protected final String logLevel, providers;
     @Getter
     @Setter
@@ -226,13 +223,6 @@ public class BisqEnvironment extends StandardEnvironment {
                     BaseCurrencyNetwork.BTC_MAINNET.name()).toUpperCase());
             BaseCurrencyNetwork.CURRENT_PARAMETERS = BaseCurrencyNetwork.CURRENT_NETWORK.getParameters();
 
-            btcNetworkDir = Paths.get(appDataDir, BaseCurrencyNetwork.CURRENT_NETWORK.name().toLowerCase()).toString();
-            File btcNetworkDirFile = new File(btcNetworkDir);
-            if (!btcNetworkDirFile.exists())
-                //noinspection ResultOfMethodCallIgnored
-                btcNetworkDirFile.mkdir();
-
-            // btcNetworkDir used in defaultProperties
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BisqException(ex);
@@ -264,7 +254,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
-                setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
@@ -307,7 +296,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
-                setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
                 setProperty(BtcOptionKeys.USER_AGENT, userAgent);
                 setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
                 setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
@@ -315,9 +303,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
-
-                setProperty(Storage.STORAGE_DIR, Paths.get(btcNetworkDir, "db").toString());
-                setProperty(KeyStorage.KEY_STORAGE_DIR, Paths.get(btcNetworkDir, "keys").toString());
             }
         });
     }

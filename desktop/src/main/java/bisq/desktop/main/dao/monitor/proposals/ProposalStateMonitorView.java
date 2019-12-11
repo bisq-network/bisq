@@ -33,7 +33,7 @@ import bisq.core.locale.Res;
 
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.storage.Storage;
+import bisq.common.config.Config;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -68,7 +68,7 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
                                      CycleService cycleService,
                                      PeriodService periodService,
                                      SeedNodeRepository seedNodeRepository,
-                                     @Named(Storage.STORAGE_DIR) File storageDir) {
+                                     @Named(Config.STORAGE_DIR) File storageDir) {
         super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository, storageDir);
 
         this.proposalStateMonitoringService = proposalStateMonitoringService;

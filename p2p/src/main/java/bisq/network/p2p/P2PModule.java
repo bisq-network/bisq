@@ -46,6 +46,7 @@ import java.time.Clock;
 
 import java.io.File;
 
+import static bisq.common.config.Config.TOR_DIR;
 import static com.google.inject.name.Names.named;
 
 public class P2PModule extends AppModule {
@@ -78,8 +79,7 @@ public class P2PModule extends AppModule {
         Boolean useLocalhostForP2P = environment.getProperty(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P, boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)).toInstance(useLocalhostForP2P);
 
-        File torDir = new File(environment.getRequiredProperty(NetworkOptionKeys.TOR_DIR));
-        bind(File.class).annotatedWith(named(NetworkOptionKeys.TOR_DIR)).toInstance(torDir);
+        bind(File.class).annotatedWith(named(TOR_DIR)).toInstance(config.getTorDir());
 
         // use a fixed port as arbitrator use that for his ID
         Integer port = environment.getProperty(NetworkOptionKeys.PORT_KEY, int.class, 9999);

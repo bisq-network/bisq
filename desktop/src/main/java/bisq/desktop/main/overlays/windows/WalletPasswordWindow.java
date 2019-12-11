@@ -32,7 +32,7 @@ import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.storage.Storage;
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -115,7 +115,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     @Inject
     private WalletPasswordWindow(WalletsManager walletsManager,
-                                 @Named(Storage.STORAGE_DIR) File storageDir) {
+                                 @Named(Config.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
         this.storageDir = storageDir;
         type = Type.Attention;

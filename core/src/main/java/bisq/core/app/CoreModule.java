@@ -41,12 +41,10 @@ import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.app.AppModule;
-import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.Storage;
 
 import org.springframework.core.env.Environment;
 
@@ -54,7 +52,9 @@ import com.google.inject.name.Names;
 
 import java.io.File;
 
+import static bisq.common.config.Config.KEY_STORAGE_DIR;
 import static bisq.common.config.Config.REFERRAL_ID;
+import static bisq.common.config.Config.STORAGE_DIR;
 import static bisq.common.config.Config.USE_DEV_MODE;
 import static com.google.inject.name.Names.named;
 
@@ -73,14 +73,12 @@ public class CoreModule extends AppModule {
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
 
-        File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
-        bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
+        bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.getStorageDir());
 
         CoinFormatter btcFormatter = new ImmutableCoinFormatter(BaseCurrencyNetwork.CURRENT_PARAMETERS.getMonetaryFormat());
         bind(CoinFormatter.class).annotatedWith(named(FormattingUtils.BTC_FORMATTER_KEY)).toInstance(btcFormatter);
 
-        File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
-        bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
+        bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class);
