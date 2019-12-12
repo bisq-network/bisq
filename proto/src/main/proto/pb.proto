@@ -628,6 +628,7 @@ message Filter {
     string disable_trade_below_version = 16;
     repeated string mediators = 17;
     repeated string refundAgents = 18;
+    repeated string bannedSignerPubKeys = 19;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older

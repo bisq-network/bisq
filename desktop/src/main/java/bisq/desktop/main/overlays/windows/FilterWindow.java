@@ -108,6 +108,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField bannedCurrenciesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies"));
         InputTextField bannedPaymentMethodsInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
         bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
+        InputTextField bannedSignerPubKeysInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedSignerPubKeys")).second;
+        bannedSignerPubKeysInputTextField.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257"); // Do not translate
         InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
         InputTextField mediatorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.mediators"));
         InputTextField refundAgentsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.refundAgents"));
@@ -126,12 +128,14 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromPaymentAccountFiltersList(paymentAccountFilterInputTextField, filter.getBannedPaymentAccounts());
             setupFieldFromList(bannedCurrenciesInputTextField, filter.getBannedCurrencies());
             setupFieldFromList(bannedPaymentMethodsInputTextField, filter.getBannedPaymentMethods());
+            setupFieldFromList(bannedSignerPubKeysInputTextField, filter.getBannedSignerPubKeys());
             setupFieldFromList(arbitratorsInputTextField, filter.getArbitrators());
             setupFieldFromList(mediatorsInputTextField, filter.getMediators());
             setupFieldFromList(refundAgentsInputTextField, filter.getRefundAgents());
             setupFieldFromList(seedNodesInputTextField, filter.getSeedNodes());
             setupFieldFromList(priceRelayNodesInputTextField, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesInputTextField, filter.getBtcNodes());
+
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
             disableDaoBelowVersionInputTextField.setText(filter.getDisableDaoBelowVersion());
@@ -155,7 +159,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             disableDaoBelowVersionInputTextField.getText(),
                             disableTradeBelowVersionInputTextField.getText(),
                             readAsList(mediatorsInputTextField),
-                            readAsList(refundAgentsInputTextField)
+                            readAsList(refundAgentsInputTextField),
+                            readAsList(bannedSignerPubKeysInputTextField)
                     ),
                     keyInputTextField.getText())
             )
