@@ -112,6 +112,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         initAppDir(config.getAppDataDir());
 
         OptionParser parser = new OptionParser();
+        parser.allowsUnrecognizedOptions();
         parser.formatHelpWith(new BisqHelpFormatter(fullName, scriptName, version));
         parser.accepts(HELP_KEY, "This help text").forHelp();
 
