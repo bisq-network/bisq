@@ -30,7 +30,7 @@ public class PolisTest extends AbstractAssetTest {
     @Test
     public void testValidAddresses() {
         assertValidAddress("PVhekAVcBTdZa6ubDJ9mup83Lg2bt374Cw");
-        assertValidAddress("PQXohxv155izyStLxC77zjLKqFQe4et1q");
+        assertValidAddress("PQXohxv155izyStLxC77zjLKqFQe4et1q5");
         assertValidAddress("PDmRhhLKzekmKj65huGUNDALFS4EAbupWh");
     }
 
