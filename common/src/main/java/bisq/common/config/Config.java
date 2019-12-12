@@ -33,6 +33,7 @@ public class Config {
     public static final String KEY_STORAGE_DIR = "keyStorageDir";
     public static final String WALLET_DIR = "walletDir";
     public static final String USE_DEV_PRIVILEGE_KEYS = "useDevPrivilegeKeys";
+    public static final String DUMP_STATISTICS = "dumpStatistics";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
@@ -64,6 +65,7 @@ public class Config {
     private final String referralId;
     private final boolean useDevMode;
     private final boolean useDevPrivilegeKeys;
+    private final boolean dumpStatistics;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -207,6 +209,13 @@ public class Config {
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> dumpStatisticsOpt =
+                parser.accepts(DUMP_STATISTICS, "If set to true dump trade statistics to a json file in appDataDir")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -261,6 +270,7 @@ public class Config {
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
+            this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -415,5 +425,9 @@ public class Config {
 
     public boolean isUseDevPrivilegeKeys() {
         return useDevPrivilegeKeys;
+    }
+
+    public boolean isDumpStatistics() {
+        return dumpStatistics;
     }
 }

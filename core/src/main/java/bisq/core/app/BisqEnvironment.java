@@ -142,7 +142,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
-            banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
+            banList, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
@@ -168,7 +168,6 @@ public class BisqEnvironment extends StandardEnvironment {
         appDataDir = getProperty(commandLineProperties, AppOptionKeys.APP_DATA_DIR_KEY, appDataDir(userDataDir, appName));
 
         ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
-        dumpStatistics = getProperty(commandLineProperties, AppOptionKeys.DUMP_STATISTICS, "");
         maxMemory = getProperty(commandLineProperties, AppOptionKeys.MAX_MEMORY, "");
         providers = getProperty(commandLineProperties, AppOptionKeys.PROVIDERS, "");
 
@@ -274,7 +273,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
-                setProperty(AppOptionKeys.DUMP_STATISTICS, dumpStatistics);
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
                 setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);

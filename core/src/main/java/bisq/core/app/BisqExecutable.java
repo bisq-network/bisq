@@ -421,12 +421,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg()
                 .ofType(boolean.class);
 
-        parser.accepts(AppOptionKeys.DUMP_STATISTICS,
-                format("If set to true the trade statistics are stored as json file in the data dir. (default: %s)",
-                        "false"))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
         parser.accepts(AppOptionKeys.PROVIDERS,
                 "Custom providers (comma separated)")
                 .withRequiredArg()

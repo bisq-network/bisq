@@ -17,7 +17,6 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -61,7 +60,7 @@ public class TradeStatisticsManager {
                                   TradeStatistics2StorageService tradeStatistics2StorageService,
                                   AppendOnlyDataStoreService appendOnlyDataStoreService,
                                   @Named(Config.STORAGE_DIR) File storageDir,
-                                  @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+                                  @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.tradeStatistics2StorageService = tradeStatistics2StorageService;
