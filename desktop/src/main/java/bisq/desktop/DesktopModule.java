@@ -22,7 +22,6 @@ import bisq.desktop.common.view.ViewFactory;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 
 import bisq.common.app.AppModule;
@@ -34,6 +33,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 import java.util.ResourceBundle;
+
+import static bisq.common.config.Config.APP_NAME;
 
 public class DesktopModule extends AppModule {
 
@@ -49,6 +50,6 @@ public class DesktopModule extends AppModule {
         bind(ResourceBundle.class).toInstance(Res.getResourceBundle());
         bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
 
-        bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(environment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        bindConstant().annotatedWith(Names.named(APP_NAME)).to(config.getAppName());
     }
 }

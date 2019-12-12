@@ -382,10 +382,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(int.class);
 
         //AppOptionKeys
-        parser.accepts(AppOptionKeys.APP_NAME_KEY,
-                format("Application name (default: %s)", BisqEnvironment.DEFAULT_APP_NAME))
-                .withRequiredArg();
-
         parser.accepts(AppOptionKeys.MAX_MEMORY,
                 format("Max. permitted memory (used only at headless versions) (default: %s)", "600"))
                 .withRequiredArg();

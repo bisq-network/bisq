@@ -32,7 +32,6 @@ import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.OSXStandbyModeDisabler;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -47,6 +46,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Profiler;
@@ -242,7 +242,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         });
 
         // configure the primary stage
-        String appName = injector.getInstance(Key.get(String.class, Names.named(AppOptionKeys.APP_NAME_KEY)));
+        String appName = injector.getInstance(Key.get(String.class, Names.named(Config.APP_NAME)));
         if (!BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet())
             appName += " [" + Res.get(BaseCurrencyNetwork.CURRENT_NETWORK.name()) + "]";
 

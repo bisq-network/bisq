@@ -26,6 +26,7 @@ import static java.util.stream.Collectors.toList;
 
 public class Config {
 
+    public static final String APP_NAME = "appName";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
     public static final String USE_DEV_MODE = "useDevMode";
@@ -106,7 +107,7 @@ public class Config {
                         .defaultsTo(defaultUserDataDir);
 
         ArgumentAcceptingOptionSpec<String> appNameOpt =
-                parser.accepts("appName", "Application name")
+                parser.accepts(APP_NAME, "Application name")
                         .withRequiredArg()
                         .ofType(String.class)
                         .defaultsTo(this.defaultAppName);

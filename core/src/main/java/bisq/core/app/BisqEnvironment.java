@@ -18,7 +18,6 @@
 package bisq.core.app;
 
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.UserAgent;
 import bisq.core.dao.DaoOptionKeys;
 
 import bisq.network.NetworkOptionKeys;
@@ -26,9 +25,7 @@ import bisq.network.p2p.network.ConnectionConfig;
 
 import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
-import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.util.Utilities;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -37,8 +34,6 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
 import joptsimple.OptionSet;
-
-import java.nio.file.Paths;
 
 import java.util.Properties;
 
@@ -57,8 +52,6 @@ public class BisqEnvironment extends StandardEnvironment {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    static final String DEFAULT_APP_NAME = "Bisq";
-
     public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
 
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
@@ -69,7 +62,6 @@ public class BisqEnvironment extends StandardEnvironment {
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected final String appName;
     @Getter
     protected final String userAgent;
     protected final String logLevel, providers;
@@ -100,8 +92,6 @@ public class BisqEnvironment extends StandardEnvironment {
         logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
 
         //AppOptionKeys
-        appName = getProperty(commandLineProperties, AppOptionKeys.APP_NAME_KEY, DEFAULT_APP_NAME);
-
         ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
         maxMemory = getProperty(commandLineProperties, AppOptionKeys.MAX_MEMORY, "");
         providers = getProperty(commandLineProperties, AppOptionKeys.PROVIDERS, "");
@@ -187,7 +177,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, sendMsgThrottleSleep);
 
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
-                setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
                 setProperty(AppOptionKeys.PROVIDERS, providers);
 
