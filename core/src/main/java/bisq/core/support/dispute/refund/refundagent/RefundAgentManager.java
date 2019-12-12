@@ -17,13 +17,13 @@
 
 package bisq.core.support.dispute.refund.refundagent;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
 import bisq.core.support.dispute.agent.DisputeAgentManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
@@ -43,7 +43,7 @@ public class RefundAgentManager extends DisputeAgentManager<RefundAgent> {
                               RefundAgentService refundAgentService,
                               User user,
                               FilterManager filterManager,
-                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                              @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(keyRing, refundAgentService, user, filterManager, useDevPrivilegeKeys);
     }
 

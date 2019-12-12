@@ -405,7 +405,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg()
                 .ofType(boolean.class);
 
-        parser.accepts(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS,
+        parser.accepts(Config.USE_DEV_PRIVILEGE_KEYS,
                 format("If that is true all the privileged features which requires a private key " +
                         "to enable it are overridden by a dev key pair (This is for developers only!) (default: %s)", "false"))
                 .withRequiredArg()

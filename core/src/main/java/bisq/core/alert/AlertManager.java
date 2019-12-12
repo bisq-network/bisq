@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import org.bitcoinj.core.ECKey;
@@ -73,7 +74,7 @@ public class AlertManager {
                         KeyRing keyRing,
                         User user,
                         @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
-                        @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                        @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;

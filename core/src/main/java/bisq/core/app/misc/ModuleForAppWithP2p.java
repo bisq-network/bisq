@@ -18,7 +18,6 @@
 package bisq.core.app.misc;
 
 import bisq.core.alert.AlertModule;
-import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.TorSetup;
 import bisq.core.btc.BitcoinModule;
@@ -86,8 +85,8 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.getStorageDir());
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());
 
-        Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
+        Boolean useDevPrivilegeKeys = environment.getProperty(Config.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(Config.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
 
         bind(boolean.class).annotatedWith(named(USE_DEV_MODE)).toInstance(config.isUseDevMode());
         bind(String.class).annotatedWith(named(REFERRAL_ID)).toInstance(config.getReferralId());

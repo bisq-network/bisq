@@ -21,9 +21,10 @@ package bisq.desktop.main.account.register.refundagent;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.account.register.AgentRegistrationView;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
+
+import bisq.common.config.Config;
 
 import javax.inject.Named;
 
@@ -34,7 +35,7 @@ public class RefundAgentRegistrationView extends AgentRegistrationView<RefundAge
 
     @Inject
     public RefundAgentRegistrationView(RefundAgentRegistrationViewModel model,
-                                       @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                                       @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model, useDevPrivilegeKeys);
     }
 

@@ -17,13 +17,13 @@
 
 package bisq.core.support.dispute.arbitration.arbitrator;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
 import bisq.core.support.dispute.agent.DisputeAgentManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
@@ -43,7 +43,7 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
                              ArbitratorService arbitratorService,
                              User user,
                              FilterManager filterManager,
-                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                             @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(keyRing, arbitratorService, user, filterManager, useDevPrivilegeKeys);
     }
 

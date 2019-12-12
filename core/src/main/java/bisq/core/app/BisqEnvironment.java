@@ -28,6 +28,7 @@ import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
@@ -139,7 +140,7 @@ public class BisqEnvironment extends StandardEnvironment {
     @Setter
     protected boolean isBitcoinLocalhostNodeRunning;
 
-    protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useTorForBtc, rpcUser, rpcPassword,
+    protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
@@ -167,7 +168,6 @@ public class BisqEnvironment extends StandardEnvironment {
         appDataDir = getProperty(commandLineProperties, AppOptionKeys.APP_DATA_DIR_KEY, appDataDir(userDataDir, appName));
 
         ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
-        useDevPrivilegeKeys = getProperty(commandLineProperties, AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, "");
         dumpStatistics = getProperty(commandLineProperties, AppOptionKeys.DUMP_STATISTICS, "");
         maxMemory = getProperty(commandLineProperties, AppOptionKeys.MAX_MEMORY, "");
         providers = getProperty(commandLineProperties, AppOptionKeys.PROVIDERS, "");
@@ -274,7 +274,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
-                setProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, useDevPrivilegeKeys);
                 setProperty(AppOptionKeys.DUMP_STATISTICS, dumpStatistics);
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
