@@ -23,6 +23,8 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.RevolutValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
@@ -32,19 +34,29 @@ import bisq.core.payment.payload.RevolutAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import com.jfoenix.controls.JFXComboBox;
+
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+
+import javafx.collections.FXCollections;
+
+import javafx.util.StringConverter;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
 
 public class RevolutForm extends PaymentMethodForm {
     private final RevolutAccount account;
     private RevolutValidator validator;
     private InputTextField accountIdInputTextField;
+    private Country selectedCountry;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -74,6 +86,12 @@ public class RevolutForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
+        // country selection is added only to prevent anymore email id input and
+        // solely to validate the given phone number
+        ComboBox<Country> countryComboBox = addCountrySelection();
+        setCountryComboBoxAction(countryComboBox);
+        countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRevolutCountries()));
+
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.phoneNr"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -84,6 +102,47 @@ public class RevolutForm extends PaymentMethodForm {
         addCurrenciesGrid(true);
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
+
+        //set default country as selected
+        selectedCountry = CountryUtil.getDefaultCountry();
+        if (CountryUtil.getAllRevolutCountries().contains(selectedCountry)) {
+            countryComboBox.getSelectionModel().select(selectedCountry);
+        }
+    }
+
+    ComboBox<Country> addCountrySelection() {
+        HBox hBox = new HBox();
+
+        hBox.setSpacing(5);
+        ComboBox<Country> countryComboBox = new JFXComboBox<>();
+        hBox.getChildren().add(countryComboBox);
+
+        addTopLabelWithVBox(gridPane, ++gridRow, Res.get("payment.bank.country"), hBox, 0);
+
+        countryComboBox.setPromptText(Res.get("payment.select.bank.country"));
+        countryComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Country country) {
+                return country.name + " (" + country.code + ")";
+            }
+
+            @Override
+            public Country fromString(String s) {
+                return null;
+            }
+        });
+        return countryComboBox;
+    }
+
+    void setCountryComboBoxAction(ComboBox<Country> countryComboBox) {
+        countryComboBox.setOnAction(e -> {
+            selectedCountry = countryComboBox.getSelectionModel().getSelectedItem();
+            updateFromInputs();
+            accountIdInputTextField.resetValidation();
+            accountIdInputTextField.validate();
+            accountIdInputTextField.requestFocus();
+            countryComboBox.requestFocus();
+        });
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
@@ -122,7 +181,7 @@ public class RevolutForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && validator.validate(account.getAccountId()).isValid
+                && validator.validate(account.getAccountId(), selectedCountry.code).isValid
                 && account.getTradeCurrencies().size() > 0);
     }
 }

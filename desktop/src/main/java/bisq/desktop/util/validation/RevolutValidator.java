@@ -17,13 +17,11 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.core.util.validation.InputValidator;
+public final class RevolutValidator extends PhoneNumberValidator {
 
-public final class RevolutValidator extends InputValidator {
-
-    @Override
-    public ValidationResult validate(String input) {
-        // TODO
+    public ValidationResult validate(String input, String code) {
+        super.setIsoCountryCode(code);
         return super.validate(input);
     }
+
 }
