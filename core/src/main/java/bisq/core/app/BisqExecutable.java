@@ -394,10 +394,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 format("Max. permitted memory (used only at headless versions) (default: %s)", "600"))
                 .withRequiredArg();
 
-        parser.accepts(AppOptionKeys.APP_DATA_DIR_KEY,
-                format("Application data directory (default: %s)", BisqEnvironment.DEFAULT_APP_DATA_DIR))
-                .withRequiredArg();
-
         parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
                 format("If set to true all signed network_messages from bisq developers are ignored " +
                         "(Global alert, Version update alert, Filters for offers, nodes or trading account data) (default: %s)", "false"))

@@ -35,19 +35,10 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePropertySource;
 
 import joptsimple.OptionSet;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import java.io.File;
-import java.io.IOException;
 
 import java.util.Properties;
 
@@ -69,12 +60,10 @@ public class BisqEnvironment extends StandardEnvironment {
     static final String DEFAULT_APP_NAME = "Bisq";
 
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
-    public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
 
     public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
 
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
-    public static final String BISQ_APP_DIR_PROPERTY_SOURCE_NAME = "bisqAppDirProperties";
     public static final String BISQ_DEFAULT_PROPERTY_SOURCE_NAME = "bisqDefaultProperties";
 
     private static String defaultUserDataDir() {
@@ -86,53 +75,14 @@ public class BisqEnvironment extends StandardEnvironment {
             return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
     }
 
-    private static String appDataDir(String userDataDir, String appName) {
-        //TODO fix for changing app name form bisq to Bisq (add dir renamed as well)
-        final String newAppName = "Bisq";
-        if (appName.equals(newAppName)) {
-            final String oldAppName = "bisq";
-            Path oldPath = Paths.get(Paths.get(userDataDir, oldAppName).toString());// bisq
-            Path newPath = Paths.get(Paths.get(userDataDir, appName).toString());//Bisq
-            File oldDir = new File(oldPath.toString()); // bisq
-            File newDir = new File(newPath.toString()); //Bisq
-            try {
-                if (Files.exists(oldPath) && oldDir.getCanonicalPath().endsWith(oldAppName)) {
-                    if (Files.exists(newPath) && newDir.getCanonicalPath().endsWith(newAppName)) {
-                        // we have both bisq and Bisq and rename Bisq to Bisq_backup
-                        File newDirBackup = new File(newDir.toString() + "_backup"); // Bisq
-                        log.info("Rename Bisq data dir {} to {}", newPath.toString(), newDirBackup.toString());
-                        if (!newDir.renameTo(newDirBackup))
-                            throw new RuntimeException("Cannot rename dir");
-
-                        log.info("Rename old data dir {} to {}", oldDir.toString(), newPath.toString());
-                        if (!oldDir.renameTo(newDir))
-                            throw new RuntimeException("Cannot rename dir");
-                    } else {
-                        log.info("Rename old data dir {} to {}", oldDir.toString(), newPath.toString());
-                        if (!oldDir.renameTo(newDir))
-                            throw new RuntimeException("Cannot rename dir");
-
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return Paths.get(userDataDir, appName).toString();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected final ResourceLoader resourceLoader = new DefaultResourceLoader();
-
     protected final String appName;
     protected final String userDataDir;
     @Getter
-    protected final String appDataDir;
     protected final String userAgent;
     protected final String logLevel, providers;
     @Getter
@@ -164,7 +114,6 @@ public class BisqEnvironment extends StandardEnvironment {
         //AppOptionKeys
         userDataDir = getProperty(commandLineProperties, AppOptionKeys.USER_DATA_DIR_KEY, DEFAULT_USER_DATA_DIR);
         appName = getProperty(commandLineProperties, AppOptionKeys.APP_NAME_KEY, DEFAULT_APP_NAME);
-        appDataDir = getProperty(commandLineProperties, AppOptionKeys.APP_DATA_DIR_KEY, appDataDir(userDataDir, appName));
 
         ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
         maxMemory = getProperty(commandLineProperties, AppOptionKeys.MAX_MEMORY, "");
@@ -215,25 +164,10 @@ public class BisqEnvironment extends StandardEnvironment {
         MutablePropertySources propertySources = getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
-            propertySources.addLast(getAppDirProperties());
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BisqException(ex);
         }
-    }
-
-    private Resource getAppDirPropertiesResource() {
-        String location = String.format("file:%s/bisq.properties", appDataDir);
-        return resourceLoader.getResource(location);
-    }
-
-    PropertySource<?> getAppDirProperties() throws Exception {
-        Resource resource = getAppDirPropertiesResource();
-
-        if (!resource.exists())
-            return new PropertySource.StubPropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME);
-
-        return new ResourcePropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME, resource);
     }
 
     private String getProperty(PropertySource properties, String propertyKey, String defaultValue) {
@@ -265,7 +199,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER, sendMsgThrottleTrigger);
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, sendMsgThrottleSleep);
 
-                setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
