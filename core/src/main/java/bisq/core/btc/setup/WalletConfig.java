@@ -216,8 +216,6 @@ public class WalletConfig extends AbstractIdleService {
         // no proxy case.
         if (socks5Proxy == null) {
             peerGroup = new PeerGroup(params, vChain);
-            // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
-            // if local btc node is not synced with our dao testnet master node.
         } else {
             // proxy case (tor).
             Proxy proxy = new Proxy(Proxy.Type.SOCKS,
@@ -238,7 +236,9 @@ public class WalletConfig extends AbstractIdleService {
 
         // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
         // if local btc node is not synced with our dao testnet master node.
-        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() || BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet())
+        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ||
+                BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ||
+                !bisqEnvironment.isBitcoinLocalhostNodeRunning())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;
