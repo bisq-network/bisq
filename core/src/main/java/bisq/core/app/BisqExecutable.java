@@ -39,7 +39,6 @@ import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.DevEnv;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.BisqHelpFormatter;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigException;
@@ -68,7 +67,6 @@ import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.common.config.BaseCurrencyNetwork.*;
 import static bisq.core.app.BisqEnvironment.BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -427,12 +425,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .describedAs("host:port[,...]");
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                format("Base currency network (default: %s)", BTC_MAINNET.name()))
-                .withRequiredArg()
-                .ofType(String.class)
-                .describedAs(format("%s|%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST, BTC_DAO_TESTNET, BTC_DAO_BETANET, BTC_DAO_REGTEST));
-
         parser.accepts(BtcOptionKeys.REG_TEST_HOST,
                 format("Bitcoin regtest host when using BTC_REGTEST network (default: %s)", RegTestHost.DEFAULT_HOST))
                 .withRequiredArg()

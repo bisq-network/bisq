@@ -26,6 +26,7 @@ import static java.util.stream.Collectors.toList;
 
 public class Config {
 
+    public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
     public static final String USE_DEV_MODE = "useDevMode";
     public static final String TOR_DIR = "torDir";
@@ -144,7 +145,7 @@ public class Config {
                         .describedAs("host:port[,...]");
 
         ArgumentAcceptingOptionSpec<Enum> baseCurrencyNetworkOpt =
-                parser.accepts("baseCurrencyNetwork", "Base currency network")
+                parser.accepts(BASE_CURRENCY_NETWORK, "Base currency network")
                         .withRequiredArg()
                         .ofType(BaseCurrencyNetwork.class)
                         .withValuesConvertedBy(new EnumValueConverter(BaseCurrencyNetwork.class))

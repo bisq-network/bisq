@@ -28,7 +28,6 @@ import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
@@ -217,11 +216,6 @@ public class BisqEnvironment extends StandardEnvironment {
         propertySources.addFirst(commandLineProperties);
         try {
             propertySources.addLast(getAppDirProperties());
-
-            BaseCurrencyNetwork.CURRENT_NETWORK = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                    BaseCurrencyNetwork.BTC_MAINNET.name()).toUpperCase());
-            BaseCurrencyNetwork.CURRENT_PARAMETERS = BaseCurrencyNetwork.CURRENT_NETWORK.getParameters();
-
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BisqException(ex);
