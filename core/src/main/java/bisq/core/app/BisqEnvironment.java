@@ -59,21 +59,10 @@ public class BisqEnvironment extends StandardEnvironment {
 
     static final String DEFAULT_APP_NAME = "Bisq";
 
-    public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
-
     public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
 
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
     public static final String BISQ_DEFAULT_PROPERTY_SOURCE_NAME = "bisqDefaultProperties";
-
-    private static String defaultUserDataDir() {
-        if (Utilities.isWindows())
-            return System.getenv("APPDATA");
-        else if (Utilities.isOSX())
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toString();
-        else // *nix
-            return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +70,6 @@ public class BisqEnvironment extends StandardEnvironment {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected final String appName;
-    protected final String userDataDir;
     @Getter
     protected final String userAgent;
     protected final String logLevel, providers;
@@ -112,7 +100,6 @@ public class BisqEnvironment extends StandardEnvironment {
         logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
 
         //AppOptionKeys
-        userDataDir = getProperty(commandLineProperties, AppOptionKeys.USER_DATA_DIR_KEY, DEFAULT_USER_DATA_DIR);
         appName = getProperty(commandLineProperties, AppOptionKeys.APP_NAME_KEY, DEFAULT_APP_NAME);
 
         ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
@@ -202,7 +189,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
-                setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);
                 setProperty(AppOptionKeys.PROVIDERS, providers);
 
                 setProperty(DaoOptionKeys.RPC_USER, rpcUser);

@@ -382,10 +382,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(int.class);
 
         //AppOptionKeys
-        parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
-                format("User data directory (default: %s)", BisqEnvironment.DEFAULT_USER_DATA_DIR))
-                .withRequiredArg();
-
         parser.accepts(AppOptionKeys.APP_NAME_KEY,
                 format("Application name (default: %s)", BisqEnvironment.DEFAULT_APP_NAME))
                 .withRequiredArg();
