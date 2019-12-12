@@ -76,10 +76,6 @@ public class BitcoinModule extends AppModule {
             bind(RegTestHost.class).toInstance(RegTestHost.REMOTE_HOST);
         }
 
-        bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(environment.getRequiredProperty(UserAgent.NAME_KEY));
-        bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(environment.getRequiredProperty(UserAgent.VERSION_KEY));
-        bind(UserAgent.class).in(Singleton.class);
-
         bind(File.class).annotatedWith(named(WALLET_DIR)).toInstance(config.getWalletDir());
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.BTC_NODES));

@@ -210,9 +210,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
                 setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
                 setProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, String.valueOf(ignoreLocalBtcNode));
-
-                setProperty(UserAgent.NAME_KEY, appName);
-                setProperty(UserAgent.VERSION_KEY, Version.VERSION);
             }
         });
     }
