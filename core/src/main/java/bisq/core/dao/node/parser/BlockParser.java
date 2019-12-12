@@ -53,7 +53,6 @@ public class BlockParser {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public BlockParser(TxParser txParser,
                        DaoStateService daoStateService) {

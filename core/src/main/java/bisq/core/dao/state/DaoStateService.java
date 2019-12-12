@@ -42,11 +42,7 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import com.google.common.base.Preconditions;
-
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -119,8 +115,7 @@ public class DaoStateService implements DaoSetupService {
 
         daoState.setChainHeight(snapshot.getChainHeight());
 
-        daoState.getTxMap().clear();
-        daoState.getTxMap().putAll(snapshot.getTxMap());
+        daoState.setTxCache(snapshot.getTxCache());
 
         daoState.getBlocks().clear();
         daoState.getBlocks().addAll(snapshot.getBlocks());
@@ -235,11 +230,20 @@ public class DaoStateService implements DaoSetupService {
 
     // Third we add each successfully parsed BSQ tx to the last block
     public void onNewTxForLastBlock(Block block, Tx tx) {
-        // At least one block must be present else no rawTx would have been recognised as a BSQ tx.
-        Preconditions.checkArgument(block == getLastBlock().orElseThrow());
+        assertDaoStateChange();
 
-        block.getTxs().add(tx);
-        daoState.getTxMap().put(tx.getId(), tx);
+        getLastBlock().ifPresent(lastBlock -> {
+            if (block == lastBlock) {
+                // We need to ensure that the txs in all blocks are in sync with the txs in our txMap (cache).
+                block.addTx(tx);
+                daoState.addToTxCache(tx);
+            } else {
+                // Not clear if this case can happen but at onNewBlockWithEmptyTxs we handle such a potential edge
+                // case as well, so we need to reflect that here as well.
+                log.warn("Block for parsing does not match last block. That might happen in edge cases at reorgs. " +
+                        "Received block={}", block);
+            }
+        });
     }
 
     // Fourth we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
@@ -359,17 +363,12 @@ public class DaoStateService implements DaoSetupService {
     // Tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<Tx> getTxStream() {
-        return getBlocks().stream()
-                .flatMap(block -> block.getTxs().stream());
+    public Stream<Tx> getUnorderedTxStream() {
+        return daoState.getTxCache().values().stream();
     }
 
-    private Stream<Tx> getUnorderedTxStream() {
-        return getTxs().stream();
-    }
-
-    public Collection<Tx> getTxs() {
-        return Collections.unmodifiableCollection(daoState.getTxMap().values());
+    public int getNumTxs() {
+        return daoState.getTxCache().size();
     }
 
     public List<Tx> getInvalidTxs() {
@@ -381,7 +380,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public Optional<Tx> getTx(String txId) {
-        return Optional.ofNullable(daoState.getTxMap().get(txId));
+        return Optional.ofNullable(daoState.getTxCache().get(txId));
     }
 
     public boolean containsTx(String txId) {
