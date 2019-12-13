@@ -133,8 +133,8 @@ public class DummySeedNode {
                     });
                     log.debug("From processArgs: progArgSeedNodes=" + progArgSeedNodes);
                     progArgSeedNodes.remove(mySeedNodeAddress);
-                } else if (arg.startsWith(NetworkOptionKeys.BAN_LIST)) {
-                    arg = arg.substring(NetworkOptionKeys.BAN_LIST.length() + 1);
+                } else if (arg.startsWith(Config.BAN_LIST)) {
+                    arg = arg.substring(Config.BAN_LIST.length() + 1);
                     checkArgument(arg.contains(":") && arg.split(":").length > 1 && arg.split(":")[1].length() > 3,
                             "Wrong program argument " + arg);
                     List<String> list = Arrays.asList(arg.split(","));

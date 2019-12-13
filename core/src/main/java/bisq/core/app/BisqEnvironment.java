@@ -65,7 +65,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String btcNodes, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
-            banList, socks5ProxyBtcAddress,
+            socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
@@ -83,7 +83,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //NetworkOptionKeys
-        banList = getProperty(commandLineProperties, NetworkOptionKeys.BAN_LIST, "");
         socks5ProxyBtcAddress = getProperty(commandLineProperties, NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, "");
         socks5ProxyHttpAddress = getProperty(commandLineProperties, NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, "");
         torRcFile = getProperty(commandLineProperties, NetworkOptionKeys.TORRC_FILE, "");
@@ -139,7 +138,6 @@ public class BisqEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
-                setProperty(NetworkOptionKeys.BAN_LIST, banList);
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);

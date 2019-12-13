@@ -40,6 +40,7 @@ public class Config {
     public static final String PROVIDERS = "providers";
     public static final String LOG_LEVEL = "logLevel";
     public static final String SEED_NODES = "seedNodes";
+    public static final String BAN_LIST = "banList";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
@@ -76,6 +77,7 @@ public class Config {
     private final boolean ignoreDevMsg;
     private final List<String> providers;
     private final List<String> seedNodes;
+    private final List<String> banList;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -254,6 +256,11 @@ public class Config {
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
 
+        ArgumentAcceptingOptionSpec<String> banListOpt =
+                parser.accepts(BAN_LIST, "Nodes to exclude from network connections.")
+                        .withRequiredArg()
+                        .withValuesSeparatedBy(',')
+                        .describedAs("host:port[,...]");
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -313,6 +320,7 @@ public class Config {
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
+            this.banList = options.valuesOf(banListOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -487,5 +495,9 @@ public class Config {
 
     public List<String> getSeedNodes() {
         return seedNodes;
+    }
+
+    public List<String> getBanList() {
+        return banList;
     }
 }

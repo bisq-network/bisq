@@ -276,11 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.BAN_LIST,
-                "Nodes to exclude from network connections.")
-                .withRequiredArg()
-                .describedAs("host:port[,...]");
-
         // use a fixed port as arbitrator use that for his ID
         parser.accepts(NetworkOptionKeys.PORT_KEY,
                 format("Port to listen on (default: %s)", "9999"))

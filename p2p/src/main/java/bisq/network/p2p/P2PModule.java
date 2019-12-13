@@ -40,12 +40,16 @@ import bisq.common.config.Config;
 import org.springframework.core.env.Environment;
 
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 import java.time.Clock;
 
 import java.io.File;
 
+import java.util.List;
+
+import static bisq.common.config.Config.BAN_LIST;
 import static bisq.common.config.Config.TOR_DIR;
 import static com.google.inject.name.Names.named;
 
@@ -90,7 +94,7 @@ public class P2PModule extends AppModule {
 
         Integer networkId = environment.getProperty(NetworkOptionKeys.NETWORK_ID, int.class, 1);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.NETWORK_ID)).toInstance(networkId);
-        bindConstant().annotatedWith(named(NetworkOptionKeys.BAN_LIST)).to(environment.getRequiredProperty(NetworkOptionKeys.BAN_LIST));
+        bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(BAN_LIST)).toInstance(config.getBanList());
         bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS));
         bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS));
         bindConstant().annotatedWith(named(NetworkOptionKeys.TORRC_FILE)).to(environment.getRequiredProperty(NetworkOptionKeys.TORRC_FILE));
