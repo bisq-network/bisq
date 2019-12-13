@@ -106,8 +106,8 @@ public class DummySeedNode {
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
                     Version.setBaseCryptoNetworkId(networkId);
-                } else if (arg.startsWith(NetworkOptionKeys.MAX_CONNECTIONS)) {
-                    arg = arg.substring(NetworkOptionKeys.MAX_CONNECTIONS.length() + 1);
+                } else if (arg.startsWith(Config.MAX_CONNECTIONS)) {
+                    arg = arg.substring(Config.MAX_CONNECTIONS.length() + 1);
                     maxConnections = Integer.parseInt(arg);
                     log.debug("From processArgs: maxConnections=" + maxConnections);
                     checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");

@@ -276,11 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS,
-                format("Max. connections a peer will try to keep (default: %s)", P2PService.MAX_CONNECTIONS_DEFAULT))
-                .withRequiredArg()
-                .ofType(int.class);
-
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS,
                 "A proxy address to be used for Bitcoin network.")
                 .withRequiredArg()

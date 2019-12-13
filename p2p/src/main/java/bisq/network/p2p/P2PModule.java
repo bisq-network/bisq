@@ -49,10 +49,7 @@ import java.io.File;
 
 import java.util.List;
 
-import static bisq.common.config.Config.BAN_LIST;
-import static bisq.common.config.Config.NODE_PORT;
-import static bisq.common.config.Config.TOR_DIR;
-import static bisq.common.config.Config.USE_LOCALHOST_FOR_P2P;
+import static bisq.common.config.Config.*;
 import static com.google.inject.name.Names.named;
 
 public class P2PModule extends AppModule {
@@ -88,8 +85,7 @@ public class P2PModule extends AppModule {
 
         bind(int.class).annotatedWith(Names.named(NODE_PORT)).toInstance(config.getNodePort());
 
-        Integer maxConnections = environment.getProperty(NetworkOptionKeys.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
-        bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.MAX_CONNECTIONS)).toInstance(maxConnections);
+        bindConstant().annotatedWith(named(MAX_CONNECTIONS)).to(config.getMaxConnections());
 
         Integer networkId = environment.getProperty(NetworkOptionKeys.NETWORK_ID, int.class, 1);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.NETWORK_ID)).toInstance(networkId);
