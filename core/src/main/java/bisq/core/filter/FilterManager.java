@@ -17,7 +17,6 @@
 
 package bisq.core.filter;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -110,7 +109,7 @@ public class FilterManager {
                          Preferences preferences,
                          Config config,
                          ProvidersRepository providersRepository,
-                         @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
+                         @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;

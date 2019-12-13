@@ -17,8 +17,6 @@
 
 package bisq.core.filter;
 
-import bisq.core.app.AppOptionKeys;
-
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
@@ -26,6 +24,7 @@ import org.springframework.core.env.Environment;
 
 import com.google.inject.Singleton;
 
+import static bisq.common.config.Config.IGNORE_DEV_MSG;
 import static com.google.inject.name.Names.named;
 
 public class FilterModule extends AppModule {
@@ -37,6 +36,6 @@ public class FilterModule extends AppModule {
     @Override
     protected final void configure() {
         bind(FilterManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(AppOptionKeys.IGNORE_DEV_MSG_KEY)).to(environment.getRequiredProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY));
+        bindConstant().annotatedWith(named(IGNORE_DEV_MSG)).to(config.isIgnoreDevMsg());
     }
 }

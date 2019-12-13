@@ -69,7 +69,7 @@ public class BisqEnvironment extends StandardEnvironment {
     @Setter
     protected boolean isBitcoinLocalhostNodeRunning;
 
-    protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
+    protected final String btcNodes, seedNodes, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             banList, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
@@ -92,7 +92,6 @@ public class BisqEnvironment extends StandardEnvironment {
         logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
 
         //AppOptionKeys
-        ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
         providers = getProperty(commandLineProperties, AppOptionKeys.PROVIDERS, "");
 
         //NetworkOptionKeys
@@ -175,7 +174,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER, sendMsgThrottleTrigger);
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, sendMsgThrottleSleep);
 
-                setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
                 setProperty(AppOptionKeys.PROVIDERS, providers);
 
                 setProperty(DaoOptionKeys.RPC_USER, rpcUser);

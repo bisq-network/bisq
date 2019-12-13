@@ -382,12 +382,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(int.class);
 
         //AppOptionKeys
-        parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
-                format("If set to true all signed network_messages from bisq developers are ignored " +
-                        "(Global alert, Version update alert, Filters for offers, nodes or trading account data) (default: %s)", "false"))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
         parser.accepts(Config.USE_DEV_PRIVILEGE_KEYS,
                 format("If that is true all the privileged features which requires a private key " +
                         "to enable it are overridden by a dev key pair (This is for developers only!) (default: %s)", "false"))

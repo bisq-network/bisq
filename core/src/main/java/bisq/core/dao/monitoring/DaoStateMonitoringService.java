@@ -17,7 +17,6 @@
 
 package bisq.core.dao.monitoring;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
@@ -132,7 +131,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                      GenesisTxInfo genesisTxInfo,
                                      SeedNodeRepository seedNodeRepository,
                                      @Named(Config.STORAGE_DIR) File storageDir,
-                                     @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+                                     @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg) {
         this.daoStateService = daoStateService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;

@@ -17,7 +17,6 @@
 
 package bisq.core.alert;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
@@ -73,7 +72,7 @@ public class AlertManager {
     public AlertManager(P2PService p2PService,
                         KeyRing keyRing,
                         User user,
-                        @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
+                        @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                         @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
