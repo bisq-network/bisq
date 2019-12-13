@@ -35,7 +35,6 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.ConnectionConfig;
 
 import bisq.common.BisqException;
-import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.DevEnv;
@@ -277,10 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //CommonOptionKeys
-        parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY,
-                format("Log level (default: %s)", BisqEnvironment.LOG_LEVEL_DEFAULT))
-                .withRequiredArg()
-                .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE");
 
         //NetworkOptionKeys
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,

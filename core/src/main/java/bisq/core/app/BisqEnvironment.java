@@ -24,9 +24,7 @@ import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.network.ConnectionConfig;
 
 import bisq.common.BisqException;
-import bisq.common.CommonOptionKeys;
 import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.config.Config;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -37,8 +35,6 @@ import org.springframework.core.env.StandardEnvironment;
 import joptsimple.OptionSet;
 
 import java.util.Properties;
-
-import ch.qos.logback.classic.Level;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -53,8 +49,6 @@ public class BisqEnvironment extends StandardEnvironment {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
-
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
     public static final String BISQ_DEFAULT_PROPERTY_SOURCE_NAME = "bisqDefaultProperties";
 
@@ -65,7 +59,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     @Getter
     protected final String userAgent;
-    protected final String logLevel;
     @Getter
     @Setter
     protected boolean isBitcoinLocalhostNodeRunning;
@@ -90,7 +83,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //CommonOptionKeys
-        logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
 
         //NetworkOptionKeys
         seedNodes = getProperty(commandLineProperties, NetworkOptionKeys.SEED_NODES_KEY, "");
@@ -150,8 +142,6 @@ public class BisqEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
-                setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
-
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));

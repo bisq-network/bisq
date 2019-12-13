@@ -38,6 +38,7 @@ public class Config {
     public static final String DUMP_STATISTICS = "dumpStatistics";
     public static final String IGNORE_DEV_MSG = "ignoreDevMsg";
     public static final String PROVIDERS = "providers";
+    public static final String LOG_LEVEL = "logLevel";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
@@ -185,7 +186,7 @@ public class Config {
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<String> logLevelOpt =
-                parser.accepts("logLevel", "Set logging level")
+                parser.accepts(LOG_LEVEL, "Set logging level")
                         .withRequiredArg()
                         .ofType(String.class)
                         .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE")
