@@ -42,6 +42,7 @@ public class Config {
     public static final String SEED_NODES = "seedNodes";
     public static final String BAN_LIST = "banList";
     public static final String NODE_PORT = "nodePort";
+    public static final String USE_LOCALHOST_FOR_P2P = "useLocalhostForP2P";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -78,6 +79,7 @@ public class Config {
     private final List<String> providers;
     private final List<String> seedNodes;
     private final List<String> banList;
+    private final boolean useLocalhostForP2P;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -261,6 +263,12 @@ public class Config {
                         .withRequiredArg()
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
+
+        ArgumentAcceptingOptionSpec<Boolean> useLocalhostForP2POpt =
+                parser.accepts(USE_LOCALHOST_FOR_P2P, "Use localhost P2P network for development")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -321,6 +329,7 @@ public class Config {
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
             this.banList = options.valuesOf(banListOpt);
+            this.useLocalhostForP2P = options.valueOf(useLocalhostForP2POpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -499,5 +508,9 @@ public class Config {
 
     public List<String> getBanList() {
         return banList;
+    }
+
+    public boolean isUseLocalhostForP2P() {
+        return useLocalhostForP2P;
     }
 }

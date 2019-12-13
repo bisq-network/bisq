@@ -111,8 +111,8 @@ public class DummySeedNode {
                     maxConnections = Integer.parseInt(arg);
                     log.debug("From processArgs: maxConnections=" + maxConnections);
                     checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
-                } else if (arg.startsWith(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)) {
-                    arg = arg.substring(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P.length() + 1);
+                } else if (arg.startsWith(Config.USE_LOCALHOST_FOR_P2P)) {
+                    arg = arg.substring(Config.USE_LOCALHOST_FOR_P2P.length() + 1);
                     checkArgument(arg.equals("true") || arg.equals("false"));
                     useLocalhostForP2P = ("true").equals(arg);
                     log.debug("From processArgs: useLocalhostForP2P=" + useLocalhostForP2P);

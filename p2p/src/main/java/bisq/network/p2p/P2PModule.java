@@ -52,6 +52,7 @@ import java.util.List;
 import static bisq.common.config.Config.BAN_LIST;
 import static bisq.common.config.Config.NODE_PORT;
 import static bisq.common.config.Config.TOR_DIR;
+import static bisq.common.config.Config.USE_LOCALHOST_FOR_P2P;
 import static com.google.inject.name.Names.named;
 
 public class P2PModule extends AppModule {
@@ -81,8 +82,7 @@ public class P2PModule extends AppModule {
 
         requestStaticInjection(Connection.class);
 
-        Boolean useLocalhostForP2P = environment.getProperty(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P, boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)).toInstance(useLocalhostForP2P);
+        bindConstant().annotatedWith(Names.named(USE_LOCALHOST_FOR_P2P)).to(config.isUseLocalhostForP2P());
 
         bind(File.class).annotatedWith(named(TOR_DIR)).toInstance(config.getTorDir());
 

@@ -18,7 +18,6 @@
 package bisq.network;
 
 public class NetworkOptionKeys {
-    public static final String USE_LOCALHOST_FOR_P2P = "useLocalhostForP2P";
     public static final String MAX_CONNECTIONS = "maxConnections";
     public static final String NETWORK_ID = "networkId";
     //SOCKS_5_PROXY_BTC_ADDRESS used in network module so dont move it to BtcOptionKeys

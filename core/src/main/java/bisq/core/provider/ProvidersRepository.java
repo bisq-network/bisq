@@ -17,8 +17,6 @@
 
 package bisq.core.provider;
 
-import bisq.network.NetworkOptionKeys;
-
 import bisq.common.config.Config;
 
 import com.google.inject.Inject;
@@ -65,7 +63,7 @@ public class ProvidersRepository {
     @Inject
     public ProvidersRepository(Config config,
                                @Named(Config.PROVIDERS) List<String> providers,
-                               @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
+                               @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
 
         this.config = config;
         this.providersFromProgramArgs = providers;

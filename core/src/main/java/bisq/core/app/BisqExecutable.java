@@ -276,11 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P,
-                format("Use localhost P2P network for development (default: %s)", "false"))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
         parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS,
                 format("Max. connections a peer will try to keep (default: %s)", P2PService.MAX_CONNECTIONS_DEFAULT))
                 .withRequiredArg()
