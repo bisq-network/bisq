@@ -92,8 +92,6 @@ public class BisqEnvironment extends StandardEnvironment {
         //CommonOptionKeys
         logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
 
-        //AppOptionKeys
-
         //NetworkOptionKeys
         seedNodes = getProperty(commandLineProperties, NetworkOptionKeys.SEED_NODES_KEY, "");
         banList = getProperty(commandLineProperties, NetworkOptionKeys.BAN_LIST, "");

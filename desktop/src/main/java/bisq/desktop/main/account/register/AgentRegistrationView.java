@@ -28,7 +28,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.agent.DisputeAgent;
