@@ -50,6 +50,7 @@ import java.io.File;
 import java.util.List;
 
 import static bisq.common.config.Config.BAN_LIST;
+import static bisq.common.config.Config.NODE_PORT;
 import static bisq.common.config.Config.TOR_DIR;
 import static com.google.inject.name.Names.named;
 
@@ -85,9 +86,7 @@ public class P2PModule extends AppModule {
 
         bind(File.class).annotatedWith(named(TOR_DIR)).toInstance(config.getTorDir());
 
-        // use a fixed port as arbitrator use that for his ID
-        Integer port = environment.getProperty(NetworkOptionKeys.PORT_KEY, int.class, 9999);
-        bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.PORT_KEY)).toInstance(port);
+        bind(int.class).annotatedWith(Names.named(NODE_PORT)).toInstance(config.getNodePort());
 
         Integer maxConnections = environment.getProperty(NetworkOptionKeys.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.MAX_CONNECTIONS)).toInstance(maxConnections);

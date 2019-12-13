@@ -276,12 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        // use a fixed port as arbitrator use that for his ID
-        parser.accepts(NetworkOptionKeys.PORT_KEY,
-                format("Port to listen on (default: %s)", "9999"))
-                .withRequiredArg()
-                .ofType(int.class);
-
         parser.accepts(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P,
                 format("Use localhost P2P network for development (default: %s)", "false"))
                 .withRequiredArg()

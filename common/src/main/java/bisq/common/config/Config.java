@@ -41,9 +41,9 @@ public class Config {
     public static final String LOG_LEVEL = "logLevel";
     public static final String SEED_NODES = "seedNodes";
     public static final String BAN_LIST = "banList";
+    public static final String NODE_PORT = "nodePort";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
-    static final int DEFAULT_NODE_PORT = 9999;
 
     public static File CURRENT_APP_DATA_DIR;
 
@@ -129,10 +129,10 @@ public class Config {
                         .defaultsTo(defaultAppDataDir);
 
         ArgumentAcceptingOptionSpec<Integer> nodePortOpt =
-                parser.accepts("nodePort", "Port to listen on")
+                parser.accepts(NODE_PORT, "Port to listen on")
                         .withRequiredArg()
                         .ofType(Integer.class)
-                        .defaultsTo(DEFAULT_NODE_PORT);
+                        .defaultsTo(9999);
 
         ArgumentAcceptingOptionSpec<String> bannedBtcNodesOpt =
                 parser.accepts("bannedBtcNodes", "List Bitcoin nodes to ban")

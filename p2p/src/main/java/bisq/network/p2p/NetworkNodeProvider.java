@@ -43,7 +43,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
     public NetworkNodeProvider(NetworkProtoResolver networkProtoResolver,
                                BridgeAddressProvider bridgeAddressProvider,
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
-                               @Named(NetworkOptionKeys.PORT_KEY) int port,
+                               @Named(Config.NODE_PORT) int port,
                                @Named(Config.TOR_DIR) File torDir,
                                @Named(NetworkOptionKeys.TORRC_FILE) String torrcFile,
                                @Named(NetworkOptionKeys.TORRC_OPTIONS) String torrcOptions,
