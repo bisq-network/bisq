@@ -37,6 +37,7 @@ public class Config {
     public static final String USE_DEV_PRIVILEGE_KEYS = "useDevPrivilegeKeys";
     public static final String DUMP_STATISTICS = "dumpStatistics";
     public static final String IGNORE_DEV_MSG = "ignoreDevMsg";
+    public static final String PROVIDERS = "providers";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
@@ -71,6 +72,7 @@ public class Config {
     private final boolean dumpStatistics;
     private final int maxMemory;
     private final boolean ignoreDevMsg;
+    private final List<String> providers;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -235,6 +237,12 @@ public class Config {
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<String> providersOpt =
+                parser.accepts(PROVIDERS, "List custom providers")
+                        .withRequiredArg()
+                        .withValuesSeparatedBy(',')
+                        .describedAs("host:port[,...]");
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -292,6 +300,7 @@ public class Config {
             this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
             this.maxMemory = options.valueOf(maxMemoryOpt);
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);
+            this.providers = options.valuesOf(providersOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -458,5 +467,9 @@ public class Config {
 
     public boolean isIgnoreDevMsg() {
         return ignoreDevMsg;
+    }
+
+    public List<String> getProviders() {
+        return providers;
     }
 }

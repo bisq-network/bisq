@@ -397,11 +397,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg()
                 .ofType(boolean.class);
 
-        parser.accepts(AppOptionKeys.PROVIDERS,
-                "Custom providers (comma separated)")
-                .withRequiredArg()
-                .describedAs("host:port[,...]");
-
         //BtcOptionKeys
         parser.accepts(BtcOptionKeys.REG_TEST_HOST,
                 format("Bitcoin regtest host when using BTC_REGTEST network (default: %s)", RegTestHost.DEFAULT_HOST))

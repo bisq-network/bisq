@@ -18,5 +18,4 @@
 package bisq.core.app;
 
 public class AppOptionKeys {
-    public static final String PROVIDERS = "providers";
 }

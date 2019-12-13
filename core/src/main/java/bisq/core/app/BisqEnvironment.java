@@ -26,6 +26,7 @@ import bisq.network.p2p.network.ConnectionConfig;
 import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -64,7 +65,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     @Getter
     protected final String userAgent;
-    protected final String logLevel, providers;
+    protected final String logLevel;
     @Getter
     @Setter
     protected boolean isBitcoinLocalhostNodeRunning;
@@ -92,7 +93,6 @@ public class BisqEnvironment extends StandardEnvironment {
         logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
 
         //AppOptionKeys
-        providers = getProperty(commandLineProperties, AppOptionKeys.PROVIDERS, "");
 
         //NetworkOptionKeys
         seedNodes = getProperty(commandLineProperties, NetworkOptionKeys.SEED_NODES_KEY, "");
@@ -173,8 +173,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC, msgThrottlePer10Sec);
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER, sendMsgThrottleTrigger);
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, sendMsgThrottleSleep);
-
-                setProperty(AppOptionKeys.PROVIDERS, providers);
 
                 setProperty(DaoOptionKeys.RPC_USER, rpcUser);
                 setProperty(DaoOptionKeys.RPC_PASSWORD, rpcPassword);

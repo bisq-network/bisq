@@ -17,7 +17,6 @@
 
 package bisq.core.btc;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.setup.RegTestHost;
@@ -39,12 +38,15 @@ import bisq.common.config.Config;
 import org.springframework.core.env.Environment;
 
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 import java.io.File;
 
 import java.util.Arrays;
+import java.util.List;
 
+import static bisq.common.config.Config.PROVIDERS;
 import static bisq.common.config.Config.WALLET_DIR;
 import static com.google.inject.name.Names.named;
 
@@ -86,7 +88,7 @@ public class BitcoinModule extends AppModule {
         bindConstant().annotatedWith(named(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE)).to(environment.getRequiredProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE));
         String socks5DiscoverMode = environment.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
         bind(String.class).annotatedWith(Names.named(BtcOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
-        bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(environment.getRequiredProperty(AppOptionKeys.PROVIDERS));
+        bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(PROVIDERS)).toInstance(config.getProviders());
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(WalletsSetup.class).in(Singleton.class);

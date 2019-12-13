@@ -17,8 +17,6 @@
 
 package bisq.core.provider;
 
-import bisq.core.app.AppOptionKeys;
-
 import bisq.network.NetworkOptionKeys;
 
 import bisq.common.config.Config;
@@ -26,8 +24,6 @@ import bisq.common.config.Config;
 import com.google.inject.Inject;
 
 import javax.inject.Named;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,7 +46,7 @@ public class ProvidersRepository {
     );
 
     private final Config config;
-    private final String providersFromProgramArgs;
+    private final List<String> providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
 
     private List<String> providerList;
@@ -68,7 +64,7 @@ public class ProvidersRepository {
 
     @Inject
     public ProvidersRepository(Config config,
-                               @Named(AppOptionKeys.PROVIDERS) String providers,
+                               @Named(Config.PROVIDERS) List<String> providers,
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
 
         this.config = config;
@@ -111,7 +107,7 @@ public class ProvidersRepository {
 
     private void fillProviderList() {
         List<String> providers;
-        if (providersFromProgramArgs == null || providersFromProgramArgs.isEmpty()) {
+        if (providersFromProgramArgs.isEmpty()) {
             if (useLocalhostForP2P) {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
@@ -121,7 +117,7 @@ public class ProvidersRepository {
                 providers = DEFAULT_NODES;
             }
         } else {
-            providers = Arrays.asList(StringUtils.deleteWhitespace(providersFromProgramArgs).split(","));
+            providers = providersFromProgramArgs;
         }
         providerList = providers.stream()
                 .filter(e -> bannedNodes == null ||
