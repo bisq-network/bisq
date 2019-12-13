@@ -276,12 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,
-                "Override hard coded seed nodes as comma separated list e.g. " +
-                        "'rxdkppp3vicnbgqt.onion:8002,mfla72c4igh5ta2t.onion:8002'")
-                .withRequiredArg()
-                .describedAs("host:port[,...]");
-
         parser.accepts(NetworkOptionKeys.BAN_LIST,
                 "Nodes to exclude from network connections.")
                 .withRequiredArg()

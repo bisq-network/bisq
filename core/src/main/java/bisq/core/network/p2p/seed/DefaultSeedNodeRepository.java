@@ -17,21 +17,18 @@
 
 package bisq.core.network.p2p.seed;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.regex.Matcher;
@@ -39,8 +36,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 // If a new BaseCurrencyNetwork type gets added we need to add the resource file for it as well!
 @Slf4j
@@ -51,22 +46,18 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     private static final String ENDING = ".seednodes";
     private final Collection<NodeAddress> cache = new HashSet<>();
     private final Config config;
-    @Nullable
-    private final String seedNodes;
 
     @Inject
-    public DefaultSeedNodeRepository(Config config,
-                                     @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
+    public DefaultSeedNodeRepository(Config config) {
         this.config = config;
-        this.seedNodes = seedNodes;
     }
 
     private void reload() {
         try {
             // see if there are any seed nodes configured manually
-            if (seedNodes != null && !seedNodes.isEmpty()) {
+            if (!config.getSeedNodes().isEmpty()) {
                 cache.clear();
-                Arrays.stream(seedNodes.split(",")).forEach(s -> cache.add(new NodeAddress(s)));
+                config.getSeedNodes().forEach(s -> cache.add(new NodeAddress(s)));
 
                 return;
             }

@@ -39,6 +39,7 @@ public class Config {
     public static final String IGNORE_DEV_MSG = "ignoreDevMsg";
     public static final String PROVIDERS = "providers";
     public static final String LOG_LEVEL = "logLevel";
+    public static final String SEED_NODES = "seedNodes";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     static final int DEFAULT_NODE_PORT = 9999;
@@ -74,6 +75,7 @@ public class Config {
     private final int maxMemory;
     private final boolean ignoreDevMsg;
     private final List<String> providers;
+    private final List<String> seedNodes;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -244,6 +246,14 @@ public class Config {
                         .withRequiredArg()
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
+
+        ArgumentAcceptingOptionSpec<String> seedNodesOpt =
+                parser.accepts(SEED_NODES, "Override hard coded seed nodes as comma separated list e.g. " +
+                        "'rxdkppp3vicnbgqt.onion:8002,mfla72c4igh5ta2t.onion:8002'")
+                        .withRequiredArg()
+                        .withValuesSeparatedBy(',')
+                        .describedAs("host:port[,...]");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -302,6 +312,7 @@ public class Config {
             this.maxMemory = options.valueOf(maxMemoryOpt);
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);
             this.providers = options.valuesOf(providersOpt);
+            this.seedNodes = options.valuesOf(seedNodesOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -472,5 +483,9 @@ public class Config {
 
     public List<String> getProviders() {
         return providers;
+    }
+
+    public List<String> getSeedNodes() {
+        return seedNodes;
     }
 }
