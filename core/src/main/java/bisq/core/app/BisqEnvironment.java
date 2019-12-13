@@ -26,6 +26,7 @@ import bisq.network.p2p.network.ConnectionConfig;
 import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -71,7 +72,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
-            banList, maxMemory, socks5ProxyBtcAddress,
+            banList, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
@@ -93,7 +94,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
         //AppOptionKeys
         ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
-        maxMemory = getProperty(commandLineProperties, AppOptionKeys.MAX_MEMORY, "");
         providers = getProperty(commandLineProperties, AppOptionKeys.PROVIDERS, "");
 
         //NetworkOptionKeys
@@ -177,7 +177,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, sendMsgThrottleSleep);
 
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
-                setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
                 setProperty(AppOptionKeys.PROVIDERS, providers);
 
                 setProperty(DaoOptionKeys.RPC_USER, rpcUser);

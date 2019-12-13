@@ -19,6 +19,5 @@ package bisq.core.app;
 
 public class AppOptionKeys {
     public static final String PROVIDERS = "providers";
-    public static final String MAX_MEMORY = "maxMemory";
     public static final String IGNORE_DEV_MSG_KEY = "ignoreDevMsg";
 }

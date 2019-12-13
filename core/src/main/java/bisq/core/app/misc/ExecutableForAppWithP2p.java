@@ -17,8 +17,6 @@
 
 package bisq.core.app.misc;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -48,13 +46,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
-    private static final long MAX_MEMORY_MB_DEFAULT = 1200;
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
     private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
     private volatile boolean stopped;
     private final long startTime = System.currentTimeMillis();
-    private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
     public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
         super(fullName, scriptName, appName, version);
@@ -139,16 +135,8 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         }, CHECK_SHUTDOWN_SEC);
     }
 
-    protected void checkMemory(BisqEnvironment environment, GracefulShutDownHandler gracefulShutDownHandler) {
-        String maxMemoryOption = environment.getProperty(AppOptionKeys.MAX_MEMORY);
-        if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
-            try {
-                maxMemory = Integer.parseInt(maxMemoryOption);
-            } catch (Throwable t) {
-                log.error(t.getMessage());
-            }
-        }
-
+    protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
+        int maxMemory = config.getMaxMemory();
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
             if (!stopped) {

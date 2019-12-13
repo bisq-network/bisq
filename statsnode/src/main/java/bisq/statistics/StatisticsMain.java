@@ -47,7 +47,7 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     protected void doExecute(OptionSet options) {
         super.doExecute(options);
 
-        checkMemory(bisqEnvironment, this);
+        checkMemory(config, this);
         CommonSetup.setup(this);
 
         keepRunning();

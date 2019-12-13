@@ -68,6 +68,7 @@ public class Config {
     private final boolean useDevMode;
     private final boolean useDevPrivilegeKeys;
     private final boolean dumpStatistics;
+    private final int maxMemory;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -218,6 +219,11 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Integer> maxMemoryOpt =
+                parser.accepts("maxMemory", "Max. permitted memory (used only by headless versions)")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(1200);
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -273,6 +279,7 @@ public class Config {
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
             this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
+            this.maxMemory = options.valueOf(maxMemoryOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -431,5 +438,9 @@ public class Config {
 
     public boolean isDumpStatistics() {
         return dumpStatistics;
+    }
+
+    public int getMaxMemory() {
+        return maxMemory;
     }
 }
