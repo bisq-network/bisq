@@ -26,7 +26,6 @@ import bisq.network.p2p.network.ConnectionConfig;
 import bisq.common.BisqException;
 import bisq.common.CommonOptionKeys;
 import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.config.Config;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
