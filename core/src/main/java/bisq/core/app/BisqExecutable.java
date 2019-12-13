@@ -275,8 +275,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void customizeOptionParsing(OptionParser parser) {
-        //CommonOptionKeys
-
         //NetworkOptionKeys
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,
                 "Override hard coded seed nodes as comma separated list e.g. " +

@@ -82,8 +82,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
-        //CommonOptionKeys
-
         //NetworkOptionKeys
         seedNodes = getProperty(commandLineProperties, NetworkOptionKeys.SEED_NODES_KEY, "");
         banList = getProperty(commandLineProperties, NetworkOptionKeys.BAN_LIST, "");
