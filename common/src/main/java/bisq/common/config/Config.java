@@ -44,6 +44,7 @@ public class Config {
     public static final String NODE_PORT = "nodePort";
     public static final String USE_LOCALHOST_FOR_P2P = "useLocalhostForP2P";
     public static final String MAX_CONNECTIONS = "maxConnections";
+    public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -82,6 +83,7 @@ public class Config {
     private final List<String> banList;
     private final boolean useLocalhostForP2P;
     private final int maxConnections;
+    private final String socks5ProxyBtcAddress;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -277,6 +279,12 @@ public class Config {
                         .withRequiredArg()
                         .ofType(int.class)
                         .defaultsTo(12);
+
+        ArgumentAcceptingOptionSpec<String> socks5ProxyBtcAddressOpt =
+                parser.accepts(SOCKS_5_PROXY_BTC_ADDRESS, "A proxy address to be used for Bitcoin network.")
+                        .withRequiredArg()
+                        .describedAs("host:port")
+                        .defaultsTo("");
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -339,6 +347,7 @@ public class Config {
             this.banList = options.valuesOf(banListOpt);
             this.useLocalhostForP2P = options.valueOf(useLocalhostForP2POpt);
             this.maxConnections = options.valueOf(maxConnectionsOpt);
+            this.socks5ProxyBtcAddress = options.valueOf(socks5ProxyBtcAddressOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -525,5 +534,9 @@ public class Config {
 
     public int getMaxConnections() {
         return maxConnections;
+    }
+
+    public String getSocks5ProxyBtcAddress() {
+        return socks5ProxyBtcAddress;
     }
 }

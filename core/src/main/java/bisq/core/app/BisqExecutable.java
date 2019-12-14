@@ -276,11 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS,
-                "A proxy address to be used for Bitcoin network.")
-                .withRequiredArg()
-                .describedAs("host:port");
-
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS,
                 "A proxy address to be used for Http requests (should be non-Tor)")
                 .withRequiredArg()
