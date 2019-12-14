@@ -45,6 +45,7 @@ import bisq.core.support.dispute.DisputeSession;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -281,19 +282,24 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         disputeGroups.forEach(disputeGroup -> {
             if (disputeGroup.size() > 0) {
                 Dispute dispute0 = disputeGroup.get(0);
+                Date openingDate = dispute0.getOpeningDate();
                 stringBuilder.append("\n")
                         .append("Dispute nr. ")
                         .append(disputeIndex.incrementAndGet())
                         .append("\n")
                         .append("Opening date: ")
-                        .append(DisplayUtils.formatDateTime(dispute0.getOpeningDate()))
+                        .append(DisplayUtils.formatDateTime(openingDate))
                         .append("\n");
-
                 DisputeResult disputeResult0 = dispute0.getDisputeResultProperty().get();
                 String summaryNotes0 = "";
                 if (disputeResult0 != null) {
+                    Date closeDate = disputeResult0.getCloseDate();
+                    long duration = closeDate.getTime() - openingDate.getTime();
                     stringBuilder.append("Close date: ")
-                            .append(DisplayUtils.formatDateTime(disputeResult0.getCloseDate()))
+                            .append(DisplayUtils.formatDateTime(closeDate))
+                            .append("\n")
+                            .append("Duration: ")
+                            .append(FormattingUtils.formatDurationAsWords(duration))
                             .append("\n");
 
                     summaryNotes0 = disputeResult0.getSummaryNotesProperty().get();
@@ -330,11 +336,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             stringBuilder.append(k).append(": ").append(v.size()).append("\n");
         });
 
-
         String message = stringBuilder.toString();
         new Popup().headLine("Compact summary of all disputes (" + disputeGroups.size() + ")")
+                .maxMessageLength(500)
                 .information(message)
-                .width(1000)
+                .width(1200)
                 .actionButtonText("Copy to clipboard")
                 .onAction(() -> Utilities.copyToClipboard(message))
                 .show();
@@ -398,8 +404,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         String message = stringBuilder.toString();
         // We don't translate that as it is not intended for the public
         new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
+                .maxMessageLength(1000)
                 .information(message)
-                .width(1000)
+                .width(1200)
                 .actionButtonText("Copy")
                 .onAction(() -> Utilities.copyToClipboard(message))
                 .show();
