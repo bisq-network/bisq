@@ -61,7 +61,7 @@ public class Socks5ProxyProvider {
 
     @Inject
     public Socks5ProxyProvider(@Named(Config.SOCKS_5_PROXY_BTC_ADDRESS) String socks5ProxyBtcAddress,
-                               @Named(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) String socks5ProxyHttpAddress) {
+                               @Named(Config.SOCKS_5_PROXY_HTTP_ADDRESS) String socks5ProxyHttpAddress) {
         socks5ProxyBtc = getProxyFromAddress(socks5ProxyBtcAddress);
         socks5ProxyHttp = getProxyFromAddress(socks5ProxyHttpAddress);
     }

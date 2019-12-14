@@ -45,6 +45,7 @@ public class Config {
     public static final String USE_LOCALHOST_FOR_P2P = "useLocalhostForP2P";
     public static final String MAX_CONNECTIONS = "maxConnections";
     public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
+    public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -84,6 +85,7 @@ public class Config {
     private final boolean useLocalhostForP2P;
     private final int maxConnections;
     private final String socks5ProxyBtcAddress;
+    private final String socks5ProxyHttpAddress;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -285,6 +287,15 @@ public class Config {
                         .withRequiredArg()
                         .describedAs("host:port")
                         .defaultsTo("");
+
+        ArgumentAcceptingOptionSpec<String> socks5ProxyHttpAddressOpt =
+                parser.accepts(SOCKS_5_PROXY_HTTP_ADDRESS,
+                        "A proxy address to be used for Http requests (should be non-Tor)")
+                        .withRequiredArg()
+                        .describedAs("host:port")
+                        .defaultsTo("");
+
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -348,6 +359,7 @@ public class Config {
             this.useLocalhostForP2P = options.valueOf(useLocalhostForP2POpt);
             this.maxConnections = options.valueOf(maxConnectionsOpt);
             this.socks5ProxyBtcAddress = options.valueOf(socks5ProxyBtcAddressOpt);
+            this.socks5ProxyHttpAddress = options.valueOf(socks5ProxyHttpAddressOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -538,5 +550,9 @@ public class Config {
 
     public String getSocks5ProxyBtcAddress() {
         return socks5ProxyBtcAddress;
+    }
+
+    public String getSocks5ProxyHttpAddress() {
+        return socks5ProxyHttpAddress;
     }
 }

@@ -66,7 +66,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
+            useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
 
     @Getter
@@ -82,7 +82,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //NetworkOptionKeys
-        socks5ProxyHttpAddress = getProperty(commandLineProperties, NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, "");
         torRcFile = getProperty(commandLineProperties, NetworkOptionKeys.TORRC_FILE, "");
         torRcOptions = getProperty(commandLineProperties, NetworkOptionKeys.TORRC_OPTIONS, "");
         externalTorControlPort = getProperty(commandLineProperties, NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, "");
@@ -137,7 +136,6 @@ public class BisqEnvironment extends StandardEnvironment {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));
-                setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
                 setProperty(NetworkOptionKeys.TORRC_FILE, torRcFile);
                 setProperty(NetworkOptionKeys.TORRC_OPTIONS, torRcOptions);
                 setProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, externalTorControlPort);

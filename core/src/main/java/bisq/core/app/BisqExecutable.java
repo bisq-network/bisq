@@ -276,11 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS,
-                "A proxy address to be used for Http requests (should be non-Tor)")
-                .withRequiredArg()
-                .describedAs("host:port");
-
         parser.accepts(NetworkOptionKeys.TORRC_FILE,
                 "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
                         "which are critical to Bisq's flawless operation, cannot be overwritten.")
