@@ -46,6 +46,7 @@ public class Config {
     public static final String MAX_CONNECTIONS = "maxConnections";
     public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
+    public static final String TORRC_FILE = "torrcFile";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -72,7 +73,6 @@ public class Config {
     private final boolean daoActivated;
     private final boolean fullDaoNode;
     private final String logLevel;
-    private final Path torrcFile;
     private final String referralId;
     private final boolean useDevMode;
     private final boolean useDevPrivilegeKeys;
@@ -86,6 +86,7 @@ public class Config {
     private final int maxConnections;
     private final String socks5ProxyBtcAddress;
     private final String socks5ProxyHttpAddress;
+    private final File torrcFile;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -204,12 +205,6 @@ public class Config {
                         .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE")
                         .defaultsTo(Level.INFO.levelStr);
 
-        ArgumentAcceptingOptionSpec<Path> torrcFileOpt =
-                parser.accepts("torrcFile", "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
-                        "which are critical to Bisq's correct operation, cannot be overwritten.")
-                        .withRequiredArg()
-                        .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
-
         ArgumentAcceptingOptionSpec<String> referralIdOpt =
                 parser.accepts(REFERRAL_ID, "Optional Referral ID (e.g. for API users or pro market makers)")
                         .withRequiredArg()
@@ -295,7 +290,12 @@ public class Config {
                         .describedAs("host:port")
                         .defaultsTo("");
 
-
+        ArgumentAcceptingOptionSpec<Path> torrcFileOpt =
+                parser.accepts(TORRC_FILE, "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
+                        "which are critical to Bisq's correct operation, cannot be overwritten.")
+                        .withRequiredArg()
+                        .describedAs("File")
+                        .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -346,7 +346,7 @@ public class Config {
             this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
             this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
             this.logLevel = options.valueOf(logLevelOpt);
-            this.torrcFile = options.valueOf(torrcFileOpt);
+            this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
@@ -484,10 +484,6 @@ public class Config {
         this.localBitcoinNodeIsRunning = value;
     }
 
-    public Path getTorrcFile() {
-        return torrcFile;
-    }
-
     public String getReferralId() {
         return referralId;
     }
@@ -554,5 +550,9 @@ public class Config {
 
     public String getSocks5ProxyHttpAddress() {
         return socks5ProxyHttpAddress;
+    }
+
+    public File getTorrcFile() {
+        return torrcFile;
     }
 }

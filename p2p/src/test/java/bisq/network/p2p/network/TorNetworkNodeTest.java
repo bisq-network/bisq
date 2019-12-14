@@ -54,7 +54,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), "", "", new ArrayList<String>()));
+                new NewTor(new File("torNode_" + port), null, "", new ArrayList<String>()));
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -81,7 +81,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), "", "", new ArrayList<String>()));
+                new NewTor(new File("torNode_" + port), null, "", new ArrayList<String>()));
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -139,7 +139,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(2);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), "", "", new ArrayList<String>()));
+                new NewTor(new File("torNode_" + port), null, "", new ArrayList<String>()));
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -165,7 +165,7 @@ public class TorNetworkNodeTest {
 
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), "", "", new ArrayList<String>()));
+                new NewTor(new File("torNode_" + port), null, "", new ArrayList<String>()));
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {

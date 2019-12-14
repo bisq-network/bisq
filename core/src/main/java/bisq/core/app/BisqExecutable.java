@@ -276,12 +276,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.TORRC_FILE,
-                "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
-                        "which are critical to Bisq's flawless operation, cannot be overwritten.")
-                .withRequiredArg()
-                .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
-
         parser.accepts(NetworkOptionKeys.TORRC_OPTIONS,
                 "A list of torrc-entries to amend to Bisq's torrc. Note that torrc-entries," +
                         "which are critical to Bisq's flawless operation, cannot be overwritten. " +
@@ -291,7 +285,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT,
                 "The control port of an already running Tor service to be used by Bisq.")
-                .availableUnless(NetworkOptionKeys.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
+                //.availableUnless(Config.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
                 .withRequiredArg()
                 .ofType(int.class)
                 .describedAs("port");
