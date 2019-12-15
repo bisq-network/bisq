@@ -61,6 +61,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -107,12 +108,18 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("BTC DAO-testnet explorer", "https://bisq.network/explorer/btc/dao_testnet/tx/", "https://bisq.network/explorer/btc/dao_testnet/address/")
     ));
 
-    public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
-            "https://explorer.bisq.network/Address.html?addr=");
-    private static final BlockChainExplorer BSQ_BETA_NET_EXPLORER = new BlockChainExplorer("BSQ", "http://explorer.betanet.bisq.network/tx.html?tx=",
-            "http://explorer.betanet.bisq.network/Address.html?addr=");
-    private static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "http://explorer.testnet.bisq.network/tx.html?tx=",
-            "http://explorer.testnet.bisq.network/Address.html?addr=");
+    public static final ArrayList<BlockChainExplorer> BSQ_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("bsq.wiz.biz (@wiz)", "https://bsq.wiz.biz/tx.html?tx=", "https://bsq.wiz.biz/Address.html?addr="),
+            new BlockChainExplorer("explorer.sqrrm.net (@sqrrm)", "https://explorer.sqrrm.net/tx.html?tx=", "https://explorer.sqrrm.net/Address.html?addr=")
+    ));
+
+    private static final ArrayList<BlockChainExplorer> BSQ_BETA_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
+            new BlockChainExplorer("BSQ", "http://explorer.betanet.bisq.network/tx.html?tx=", "http://explorer.betanet.bisq.network/Address.html?addr=")
+    ));
+
+    private static final ArrayList<BlockChainExplorer> BSQ_TEST_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
+            new BlockChainExplorer("BSQ", "http://explorer.testnet.bisq.network/tx.html?tx=", "http://explorer.testnet.bisq.network/Address.html?addr=")
+    ));
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
@@ -213,6 +220,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(prefPayload.getFiatCurrencies());
             setCryptoCurrencies(prefPayload.getCryptoCurrencies());
+            setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
         } else {
             prefPayload = new PreferencesPayload();
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
@@ -233,6 +241,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                     throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
             }
 
+            // if no preference is set, randomly select a BSQ block explorer for the user
+            ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
+            setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
+
             prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
 
             prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
@@ -240,10 +252,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
             prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
-
-        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER :
-                baseCurrencyNetwork.isDaoBetaNet() ? BSQ_BETA_NET_EXPLORER :
-                        BSQ_TEST_NET_EXPLORER);
 
         // We don't want to pass Preferences to all popups where the don't show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
@@ -531,6 +539,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         cryptoCurrenciesAsObservable.setAll(currencies.stream().distinct().collect(Collectors.toList()));
     }
 
+    public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
+        prefPayload.setBsqBlockChainExplorer(bsqBlockChainExplorer);
+        persist();
+    }
+
     public void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         prefPayload.setBlockChainExplorerTestNet(blockChainExplorerTestNet);
         persist();
@@ -718,6 +731,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
+    }
+
+    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers()
+    {
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        if (baseCurrencyNetwork.isMainnet())
+            return BSQ_MAIN_NET_EXPLORERS;
+        else if (baseCurrencyNetwork.isDaoBetaNet())
+            return BSQ_BETA_NET_EXPLORERS;
+        else // testnet
+            return BSQ_TEST_NET_EXPLORERS;
     }
 
     public boolean showAgain(String key) {
