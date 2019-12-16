@@ -8,6 +8,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import joptsimple.OptionSpecBuilder;
 import joptsimple.util.PathConverter;
 import joptsimple.util.PathProperties;
 import joptsimple.util.RegexMatcher;
@@ -54,6 +55,7 @@ public class Config {
     public static final String TOR_CONTROL_PORT = "torControlPort";
     public static final String TOR_CONTROL_PASSWORD = "torControlPassword";
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
+    public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -98,6 +100,7 @@ public class Config {
     private final int torControlPort;
     private final String torControlPassword;
     private final File torControlCookieFile;
+    private final boolean useTorControlSafeCookieAuth;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -332,12 +335,17 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Path> torControlCookieFileOpt =
                 parser.accepts(TOR_CONTROL_COOKIE_FILE, "The cookie file for authenticating against the already " +
-                        "running Tor service. Use in conjunction with --torControlUseSafeCookieAuth")
+                        "running Tor service. Use in conjunction with --" + TOR_CONTROL_USE_SAFE_COOKIE_AUTH)
                         .availableIf(TOR_CONTROL_PORT)
                         .availableUnless(TOR_CONTROL_PASSWORD)
                         .withRequiredArg()
                         .describedAs("File")
                         .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
+
+        OptionSpecBuilder torControlUseSafeCookieAuthOpt =
+                parser.accepts(TOR_CONTROL_USE_SAFE_COOKIE_AUTH,
+                        "Use the SafeCookie method when authenticating to the already running Tor service.")
+                        .availableIf(TOR_CONTROL_COOKIE_FILE);
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -394,6 +402,7 @@ public class Config {
             this.torControlPassword = options.valueOf(torControlPasswordOpt);
             this.torControlCookieFile = options.has(torControlCookieFileOpt) ?
                     options.valueOf(torControlCookieFileOpt).toFile() : null;
+            this.useTorControlSafeCookieAuth = options.has(torControlUseSafeCookieAuthOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
@@ -617,5 +626,9 @@ public class Config {
 
     public File getTorControlCookieFile() {
         return torControlCookieFile;
+    }
+
+    public boolean isUseTorControlSafeCookieAuth() {
+        return useTorControlSafeCookieAuth;
     }
 }

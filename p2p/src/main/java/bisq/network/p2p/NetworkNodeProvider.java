@@ -53,7 +53,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(Config.TOR_CONTROL_PASSWORD) String password,
                                @Nullable @Named(Config.TOR_CONTROL_COOKIE_FILE) File cookieFile,
                                @Named(NetworkOptionKeys.TOR_STREAM_ISOLATION) boolean streamIsolation,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) boolean useSafeCookieAuthentication ) {
+                               @Named(Config.TOR_CONTROL_USE_SAFE_COOKIE_AUTH) boolean useSafeCookieAuthentication ) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(port, networkProtoResolver) :
                 new TorNetworkNode(port, networkProtoResolver, streamIsolation,

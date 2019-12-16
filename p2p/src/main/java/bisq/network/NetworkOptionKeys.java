@@ -19,7 +19,6 @@ package bisq.network;
 
 public class NetworkOptionKeys {
     public static final String NETWORK_ID = "networkId";
-    public static final String EXTERNAL_TOR_USE_SAFECOOKIE = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
     public static final String MSG_THROTTLE_PER_SEC = "msgThrottlePerSec";
     public static final String MSG_THROTTLE_PER_10_SEC = "msgThrottlePer10Sec";
