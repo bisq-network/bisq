@@ -19,7 +19,6 @@ package bisq.network;
 
 public class NetworkOptionKeys {
     public static final String NETWORK_ID = "networkId";
-    public static final String EXTERNAL_TOR_CONTROL_PORT = "torControlPort";
     public static final String EXTERNAL_TOR_PASSWORD = "torControlPassword";
     public static final String EXTERNAL_TOR_COOKIE_FILE = "torControlCookieFile";
     public static final String EXTERNAL_TOR_USE_SAFECOOKIE = "torControlUseSafeCookieAuth";

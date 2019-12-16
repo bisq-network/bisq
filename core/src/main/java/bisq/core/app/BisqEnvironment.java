@@ -65,7 +65,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String btcNodes, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
-            externalTorControlPort, externalTorPassword, externalTorCookieFile,
+            externalTorPassword, externalTorCookieFile,
             useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
 
@@ -82,7 +82,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //NetworkOptionKeys
-        externalTorControlPort = getProperty(commandLineProperties, NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, "");
         externalTorPassword = getProperty(commandLineProperties, NetworkOptionKeys.EXTERNAL_TOR_PASSWORD, "");
         externalTorCookieFile = getProperty(commandLineProperties, NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE, "");
         externalTorUseSafeCookieAuthentication = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE);
@@ -134,7 +133,6 @@ public class BisqEnvironment extends StandardEnvironment {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));
-                setProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, externalTorControlPort);
                 setProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD, externalTorPassword);
                 setProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE, externalTorCookieFile);
                 if (externalTorUseSafeCookieAuthentication)

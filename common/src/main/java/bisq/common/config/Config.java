@@ -27,6 +27,8 @@ import static java.util.stream.Collectors.toList;
 
 public class Config {
 
+    public static final int NULL_INT = Integer.MIN_VALUE;
+
     public static final String APP_NAME = "appName";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
@@ -49,6 +51,7 @@ public class Config {
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
     public static final String TORRC_FILE = "torrcFile";
     public static final String TORRC_OPTIONS = "torrcOptions";
+    public static final String TOR_CONTROL_PORT = "torControlPort";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -90,6 +93,7 @@ public class Config {
     private final String socks5ProxyHttpAddress;
     private final File torrcFile;
     private final String torrcOptions;
+    private final int torControlPort;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -307,6 +311,15 @@ public class Config {
                         .withRequiredArg()
                         .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"))
                         .defaultsTo("");
+
+        ArgumentAcceptingOptionSpec<Integer> torControlPortOpt =
+                parser.accepts(TOR_CONTROL_PORT,
+                        "The control port of an already running Tor service to be used by Bisq.")
+                        .availableUnless(TORRC_FILE, TORRC_OPTIONS)
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .describedAs("port");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -359,6 +372,7 @@ public class Config {
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
+            this.torControlPort = options.has(torControlPortOpt) ? options.valueOf(torControlPortOpt) : NULL_INT;
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
@@ -570,5 +584,9 @@ public class Config {
 
     public String getTorrcOptions() {
         return torrcOptions;
+    }
+
+    public int getTorControlPort() {
+        return torControlPort;
     }
 }

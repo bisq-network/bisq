@@ -49,7 +49,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(Config.TOR_DIR) File torDir,
                                @Nullable @Named(Config.TORRC_FILE) File torrcFile,
                                @Named(Config.TORRC_OPTIONS) String torrcOptions,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) String controlPort,
+                               @Named(Config.TOR_CONTROL_PORT) int controlPort,
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) String password,
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) String cookieFile,
                                @Named(NetworkOptionKeys.TOR_STREAM_ISOLATION) boolean streamIsolation,
@@ -57,8 +57,8 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(port, networkProtoResolver) :
                 new TorNetworkNode(port, networkProtoResolver, streamIsolation,
-                        !controlPort.isEmpty() ?
-                                new RunningTor(torDir, Integer.parseInt(controlPort), password, cookieFile, useSafeCookieAuthentication) :
+                        controlPort != Config.NULL_INT ?
+                                new RunningTor(torDir, controlPort, password, cookieFile, useSafeCookieAuthentication) :
                                 new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses()));
     }
 

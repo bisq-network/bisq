@@ -275,22 +275,15 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT,
-                "The control port of an already running Tor service to be used by Bisq.")
-                //.availableUnless(Config.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
-                .withRequiredArg()
-                .ofType(int.class)
-                .describedAs("port");
-
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD,
                 "The password for controlling the already running Tor service.")
-                .availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
+                //.availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
                 .withRequiredArg();
 
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE,
                 "The cookie file for authenticating against the already running Tor service. " +
                         "Use in conjunction with --" + NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)
-                .availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
+                //.availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
                 .availableUnless(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD)
                 .withRequiredArg()
                 .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));

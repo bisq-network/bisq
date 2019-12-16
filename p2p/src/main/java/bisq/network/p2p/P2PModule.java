@@ -95,7 +95,7 @@ public class P2PModule extends AppModule {
         bindConstant().annotatedWith(named(SOCKS_5_PROXY_HTTP_ADDRESS)).to(config.getSocks5ProxyHttpAddress());
         bind(File.class).annotatedWith(named(TORRC_FILE)).toProvider(of(config.getTorrcFile())); // allow null value
         bindConstant().annotatedWith(named(TORRC_OPTIONS)).to(config.getTorrcOptions());
-        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT));
+        bindConstant().annotatedWith(named(TOR_CONTROL_PORT)).to(config.getTorControlPort());
         bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD));
         bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE));
         bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)).to(environment.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE));
