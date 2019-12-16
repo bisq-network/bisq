@@ -52,6 +52,7 @@ public class Config {
     public static final String TORRC_FILE = "torrcFile";
     public static final String TORRC_OPTIONS = "torrcOptions";
     public static final String TOR_CONTROL_PORT = "torControlPort";
+    public static final String TOR_CONTROL_PASSWORD = "torControlPassword";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -94,6 +95,7 @@ public class Config {
     private final File torrcFile;
     private final String torrcOptions;
     private final int torControlPort;
+    private final String torControlPassword;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -320,6 +322,11 @@ public class Config {
                         .ofType(int.class)
                         .describedAs("port");
 
+        ArgumentAcceptingOptionSpec<String> torControlPasswordOpt =
+                parser.accepts(TOR_CONTROL_PASSWORD, "The password for controlling the already running Tor service.")
+                        .availableIf(TOR_CONTROL_PORT)
+                        .withRequiredArg()
+                        .defaultsTo("");
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -373,6 +380,7 @@ public class Config {
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
             this.torControlPort = options.has(torControlPortOpt) ? options.valueOf(torControlPortOpt) : NULL_INT;
+            this.torControlPassword = options.valueOf(torControlPasswordOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
@@ -588,5 +596,9 @@ public class Config {
 
     public int getTorControlPort() {
         return torControlPort;
+    }
+
+    public String getTorControlPassword() {
+        return torControlPassword;
     }
 }
