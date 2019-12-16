@@ -10,6 +10,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.util.PathConverter;
 import joptsimple.util.PathProperties;
+import joptsimple.util.RegexMatcher;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,6 +48,7 @@ public class Config {
     public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
     public static final String TORRC_FILE = "torrcFile";
+    public static final String TORRC_OPTIONS = "torrcOptions";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -87,6 +89,7 @@ public class Config {
     private final String socks5ProxyBtcAddress;
     private final String socks5ProxyHttpAddress;
     private final File torrcFile;
+    private final String torrcOptions;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -296,6 +299,14 @@ public class Config {
                         .withRequiredArg()
                         .describedAs("File")
                         .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
+
+        ArgumentAcceptingOptionSpec<String> torrcOptionsOpt =
+                parser.accepts(TORRC_OPTIONS, "A list of torrc-entries to amend to Bisq's torrc. Note that " +
+                        "torrc-entries, which are critical to Bisq's flawless operation, cannot be overwritten. " +
+                        "[torrc options line, torrc option, ...]")
+                        .withRequiredArg()
+                        .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"))
+                        .defaultsTo("");
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -347,6 +358,7 @@ public class Config {
             this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
+            this.torrcOptions = options.valueOf(torrcOptionsOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
@@ -554,5 +566,9 @@ public class Config {
 
     public File getTorrcFile() {
         return torrcFile;
+    }
+
+    public String getTorrcOptions() {
+        return torrcOptions;
     }
 }

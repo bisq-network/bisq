@@ -48,7 +48,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(Config.NODE_PORT) int port,
                                @Named(Config.TOR_DIR) File torDir,
                                @Nullable @Named(Config.TORRC_FILE) File torrcFile,
-                               @Named(NetworkOptionKeys.TORRC_OPTIONS) String torrcOptions,
+                               @Named(Config.TORRC_OPTIONS) String torrcOptions,
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) String controlPort,
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) String password,
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) String cookieFile,

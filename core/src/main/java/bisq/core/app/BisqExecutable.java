@@ -53,7 +53,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.util.PathConverter;
 import joptsimple.util.PathProperties;
-import joptsimple.util.RegexMatcher;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -276,13 +275,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.TORRC_OPTIONS,
-                "A list of torrc-entries to amend to Bisq's torrc. Note that torrc-entries," +
-                        "which are critical to Bisq's flawless operation, cannot be overwritten. " +
-                        "[torrc options line, torrc option, ...]")
-                .withRequiredArg()
-                .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"));
-
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT,
                 "The control port of an already running Tor service to be used by Bisq.")
                 //.availableUnless(Config.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
