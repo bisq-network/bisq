@@ -892,6 +892,10 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
+                                    if (closedProperty != null) {
+                                        closedProperty.removeListener(listener);
+                                    }
+
                                     listener = (observable, oldValue, newValue) -> {
                                         setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
                                         if (getTableRow() != null)
