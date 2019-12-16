@@ -51,8 +51,6 @@ import org.springframework.core.env.JOptCommandLinePropertySource;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import joptsimple.util.PathConverter;
-import joptsimple.util.PathProperties;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -275,17 +273,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE,
-                "The cookie file for authenticating against the already running Tor service. " +
-                        "Use in conjunction with --" + NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)
-                //.availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
-                //.availableUnless(Config.EXTERNAL_TOR_PASSWORD)
-                .withRequiredArg()
-                .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
-
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE,
                 "Use the SafeCookie method when authenticating to the already running Tor service.")
-                .availableIf(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE);
+                /*.availableIf(Config.TOR_CONTROL_COOKIE_FILE)*/;
 
         parser.accepts(NetworkOptionKeys.TOR_STREAM_ISOLATION,
                 "Use stream isolation for Tor [experimental!].");

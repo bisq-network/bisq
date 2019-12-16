@@ -51,7 +51,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(Config.TORRC_OPTIONS) String torrcOptions,
                                @Named(Config.TOR_CONTROL_PORT) int controlPort,
                                @Named(Config.TOR_CONTROL_PASSWORD) String password,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) String cookieFile,
+                               @Nullable @Named(Config.TOR_CONTROL_COOKIE_FILE) File cookieFile,
                                @Named(NetworkOptionKeys.TOR_STREAM_ISOLATION) boolean streamIsolation,
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) boolean useSafeCookieAuthentication ) {
         networkNode = useLocalhostForP2P ?

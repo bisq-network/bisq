@@ -97,7 +97,7 @@ public class P2PModule extends AppModule {
         bindConstant().annotatedWith(named(TORRC_OPTIONS)).to(config.getTorrcOptions());
         bindConstant().annotatedWith(named(TOR_CONTROL_PORT)).to(config.getTorControlPort());
         bindConstant().annotatedWith(named(TOR_CONTROL_PASSWORD)).to(config.getTorControlPassword());
-        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE));
+        bind(File.class).annotatedWith(named(TOR_CONTROL_COOKIE_FILE)).toProvider(of(config.getTorControlCookieFile()));
         bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)).to(environment.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE));
         bindConstant().annotatedWith(named(NetworkOptionKeys.TOR_STREAM_ISOLATION)).to(environment.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION));
         bindConstant().annotatedWith(named(NetworkOptionKeys.MSG_THROTTLE_PER_SEC)).to(environment.getRequiredProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC));

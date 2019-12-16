@@ -29,11 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class creates a brand new instance of the Tor onion router.
- * 
+ *
  * When asked, the class checks for the authentication method selected and
  * connects to the given control port. Finally, a {@link Tor} instance is
  * returned for further use.
- * 
+ *
  * @author Florian Reimair
  *
  */
@@ -46,12 +46,12 @@ public class RunningTor extends TorMode {
     private final boolean useSafeCookieAuthentication;
 
 
-    public RunningTor(final File torDir, final int controlPort, final String password, final String cookieFile,
+    public RunningTor(final File torDir, final int controlPort, final String password, final File cookieFile,
             final boolean useSafeCookieAuthentication) {
         super(torDir);
         this.controlPort = controlPort;
         this.password = password;
-        this.cookieFile = new File(cookieFile);
+        this.cookieFile = cookieFile;
         this.useSafeCookieAuthentication = useSafeCookieAuthentication;
     }
 

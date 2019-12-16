@@ -53,6 +53,7 @@ public class Config {
     public static final String TORRC_OPTIONS = "torrcOptions";
     public static final String TOR_CONTROL_PORT = "torControlPort";
     public static final String TOR_CONTROL_PASSWORD = "torControlPassword";
+    public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -96,6 +97,7 @@ public class Config {
     private final String torrcOptions;
     private final int torControlPort;
     private final String torControlPassword;
+    private final File torControlCookieFile;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -327,6 +329,15 @@ public class Config {
                         .availableIf(TOR_CONTROL_PORT)
                         .withRequiredArg()
                         .defaultsTo("");
+
+        ArgumentAcceptingOptionSpec<Path> torControlCookieFileOpt =
+                parser.accepts(TOR_CONTROL_COOKIE_FILE, "The cookie file for authenticating against the already " +
+                        "running Tor service. Use in conjunction with --torControlUseSafeCookieAuth")
+                        .availableIf(TOR_CONTROL_PORT)
+                        .availableUnless(TOR_CONTROL_PASSWORD)
+                        .withRequiredArg()
+                        .describedAs("File")
+                        .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -381,6 +392,8 @@ public class Config {
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
             this.torControlPort = options.has(torControlPortOpt) ? options.valueOf(torControlPortOpt) : NULL_INT;
             this.torControlPassword = options.valueOf(torControlPasswordOpt);
+            this.torControlCookieFile = options.has(torControlCookieFileOpt) ?
+                    options.valueOf(torControlCookieFileOpt).toFile() : null;
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
@@ -600,5 +613,9 @@ public class Config {
 
     public String getTorControlPassword() {
         return torControlPassword;
+    }
+
+    public File getTorControlCookieFile() {
+        return torControlCookieFile;
     }
 }
