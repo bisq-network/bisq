@@ -140,7 +140,7 @@ public class ExportJsonFilesService implements DaoSetupService {
             // Access to daoStateService is single threaded, we must not access daoStateService from the thread.
             List<JsonTxOutput> allJsonTxOutputs = new ArrayList<>();
 
-            List<JsonTx> jsonTxs = daoStateService.getTxStream()
+            List<JsonTx> jsonTxs = daoStateService.getUnorderedTxStream()
                     .map(tx -> {
                         JsonTx jsonTx = getJsonTx(tx);
                         allJsonTxOutputs.addAll(jsonTx.getOutputs());
