@@ -56,6 +56,7 @@ public class Config {
     public static final String TOR_CONTROL_PASSWORD = "torControlPassword";
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
+    public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
 
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
@@ -101,6 +102,7 @@ public class Config {
     private final String torControlPassword;
     private final File torControlCookieFile;
     private final boolean useTorControlSafeCookieAuth;
+    private final boolean torStreamIsolation;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -346,6 +348,9 @@ public class Config {
                 parser.accepts(TOR_CONTROL_USE_SAFE_COOKIE_AUTH,
                         "Use the SafeCookie method when authenticating to the already running Tor service.")
                         .availableIf(TOR_CONTROL_COOKIE_FILE);
+
+        OptionSpecBuilder torStreamIsolationOpt =
+                parser.accepts(TOR_STREAM_ISOLATION, "Use stream isolation for Tor [experimental!].");
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -403,6 +408,7 @@ public class Config {
             this.torControlCookieFile = options.has(torControlCookieFileOpt) ?
                     options.valueOf(torControlCookieFileOpt).toFile() : null;
             this.useTorControlSafeCookieAuth = options.has(torControlUseSafeCookieAuthOpt);
+            this.torStreamIsolation = options.has(torStreamIsolationOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
@@ -630,5 +636,9 @@ public class Config {
 
     public boolean isUseTorControlSafeCookieAuth() {
         return useTorControlSafeCookieAuth;
+    }
+
+    public boolean isTorStreamIsolation() {
+        return torStreamIsolation;
     }
 }

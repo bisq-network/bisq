@@ -273,9 +273,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
         //NetworkOptionKeys
-        parser.accepts(NetworkOptionKeys.TOR_STREAM_ISOLATION,
-                "Use stream isolation for Tor [experimental!].");
-
         parser.accepts(NetworkOptionKeys.MSG_THROTTLE_PER_SEC,
                 format("Message throttle per sec for connection class (default: %s)",
                         String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_SEC)))

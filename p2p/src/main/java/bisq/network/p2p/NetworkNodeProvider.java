@@ -17,7 +17,6 @@
 
 package bisq.network.p2p;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.LocalhostNetworkNode;
 import bisq.network.p2p.network.NetworkNode;
@@ -52,7 +51,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(Config.TOR_CONTROL_PORT) int controlPort,
                                @Named(Config.TOR_CONTROL_PASSWORD) String password,
                                @Nullable @Named(Config.TOR_CONTROL_COOKIE_FILE) File cookieFile,
-                               @Named(NetworkOptionKeys.TOR_STREAM_ISOLATION) boolean streamIsolation,
+                               @Named(Config.TOR_STREAM_ISOLATION) boolean streamIsolation,
                                @Named(Config.TOR_CONTROL_USE_SAFE_COOKIE_AUTH) boolean useSafeCookieAuthentication ) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(port, networkProtoResolver) :

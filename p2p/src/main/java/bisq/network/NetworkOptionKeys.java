@@ -19,7 +19,6 @@ package bisq.network;
 
 public class NetworkOptionKeys {
     public static final String NETWORK_ID = "networkId";
-    public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
     public static final String MSG_THROTTLE_PER_SEC = "msgThrottlePerSec";
     public static final String MSG_THROTTLE_PER_10_SEC = "msgThrottlePer10Sec";
     public static final String SEND_MSG_THROTTLE_TRIGGER = "sendMsgThrottleTrigger";
