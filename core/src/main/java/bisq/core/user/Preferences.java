@@ -152,7 +152,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(Config.BTC_NODES) String btcNodesFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
-                       @Named(DaoOptionKeys.RPC_USER) String rpcUser,
+                       @Named(Config.RPC_USER) String rpcUser,
                        @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
                        @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
 
@@ -633,7 +633,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setRpcUser(String value) {
         // We only persist if we have not set the program argument
-        if (rpcUserFromOptions == null || rpcUserFromOptions.isEmpty()) {
+        if (!rpcUserFromOptions.isEmpty()) {
             prefPayload.setRpcUser(value);
             persist();
         }
@@ -779,7 +779,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public String getRpcUser() {
-        if (rpcUserFromOptions != null && !rpcUserFromOptions.isEmpty()) {
+        if (!rpcUserFromOptions.isEmpty()) {
             return rpcUserFromOptions;
         } else {
             return prefPayload.getRpcUser();

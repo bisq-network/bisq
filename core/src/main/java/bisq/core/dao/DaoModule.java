@@ -17,7 +17,6 @@
 
 package bisq.core.dao;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -224,7 +223,7 @@ public class DaoModule extends AppModule {
         bind(MyProofOfBurnListService.class).in(Singleton.class);
 
         // Options
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_USER));
+        bindConstant().annotatedWith(named(Config.RPC_USER)).to(config.getRpcUser());
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PASSWORD)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_PASSWORD));
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_HOST)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_HOST));
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PORT)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_PORT));

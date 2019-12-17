@@ -53,6 +53,7 @@ import bisq.core.util.validation.IntegerValidator;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
@@ -161,7 +162,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            FilterManager filterManager,
                            DaoFacade daoFacade,
                            @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
-                           @Named(DaoOptionKeys.RPC_USER) String rpcUser,
+                           @Named(Config.RPC_USER) String rpcUser,
                            @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
                            @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
         super(model);

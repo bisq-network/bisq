@@ -56,7 +56,7 @@ public class BisqEnvironment extends StandardEnvironment {
     @Setter
     protected boolean isBitcoinLocalhostNodeRunning;
 
-    protected final String rpcUser, rpcPassword,
+    protected final String rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated;
@@ -69,7 +69,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //DaoOptionKeys
-        rpcUser = getProperty(commandLineProperties, DaoOptionKeys.RPC_USER, "");
         rpcPassword = getProperty(commandLineProperties, DaoOptionKeys.RPC_PASSWORD, "");
         rpcHost = getProperty(commandLineProperties, DaoOptionKeys.RPC_HOST, "");
         rpcPort = getProperty(commandLineProperties, DaoOptionKeys.RPC_PORT, "");
@@ -98,7 +97,6 @@ public class BisqEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
-                setProperty(DaoOptionKeys.RPC_USER, rpcUser);
                 setProperty(DaoOptionKeys.RPC_PASSWORD, rpcPassword);
                 setProperty(DaoOptionKeys.RPC_HOST, rpcHost);
                 setProperty(DaoOptionKeys.RPC_PORT, rpcPort);
