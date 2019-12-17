@@ -17,7 +17,6 @@
 
 package bisq.core.app;
 
-import bisq.core.btc.BtcOptionKeys;
 import bisq.core.dao.DaoOptionKeys;
 
 import bisq.common.BisqException;
@@ -59,7 +58,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
-            numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
+            genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated;
 
     public BisqEnvironment(OptionSet options) {
@@ -84,7 +83,6 @@ public class BisqEnvironment extends StandardEnvironment {
         daoActivated = getProperty(commandLineProperties, DaoOptionKeys.DAO_ACTIVATED, "true");
 
         //BtcOptionKeys
-        numConnectionForBtc = getProperty(commandLineProperties, BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, "9");
 
         MutablePropertySources propertySources = getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -114,8 +112,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, genesisBlockHeight);
                 setProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY, genesisTotalSupply);
                 setProperty(DaoOptionKeys.DAO_ACTIVATED, daoActivated);
-
-                setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
             }
         });
     }

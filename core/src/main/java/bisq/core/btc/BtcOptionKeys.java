@@ -18,5 +18,4 @@
 package bisq.core.btc;
 
 public class BtcOptionKeys {
-    public static final String NUM_CONNECTIONS_FOR_BTC = "numConnectionForBtc";
 }

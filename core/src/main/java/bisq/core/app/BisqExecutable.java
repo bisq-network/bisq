@@ -17,7 +17,6 @@
 
 package bisq.core.app;
 
-import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -286,9 +285,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC,
-                format("Number of connections to the Bitcoin network (default: %s)", "9"))
-                .withRequiredArg();
 
         //RpcOptionKeys
         parser.accepts(DaoOptionKeys.RPC_USER,

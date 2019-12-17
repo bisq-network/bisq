@@ -63,12 +63,14 @@ public class Config {
     public static final String SOCKS5_DISCOVER_MODE = "socks5DiscoverMode";
     public static final String USE_ALL_PROVIDED_NODES = "useAllProvidedNodes";
     public static final String USER_AGENT = "userAgent";
+    public static final String NUM_CONNECTIONS_FOR_BTC = "numConnectionsForBtc";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     public static final int DEFAULT_INT = Integer.MIN_VALUE;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     public static final String DEFAULT_REGTEST_HOST = "localhost";
+    public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC = 9; // down from BitcoinJ default of 12
 
     public static File CURRENT_APP_DATA_DIR;
 
@@ -122,6 +124,7 @@ public class Config {
     private final String socks5DiscoverMode;
     private final boolean useAllProvidedNodes;
     private final String userAgent;
+    private final int numConnectionsForBtc;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -430,6 +433,12 @@ public class Config {
                         .withRequiredArg()
                         .defaultsTo("Bisq");
 
+        ArgumentAcceptingOptionSpec<Integer> numConnectionsForBtcOpt =
+                parser.accepts(NUM_CONNECTIONS_FOR_BTC, "Number of connections to the Bitcoin network")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(DEFAULT_NUM_CONNECTIONS_FOR_BTC);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -516,6 +525,7 @@ public class Config {
             this.socks5DiscoverMode = options.valueOf(socks5DiscoverModeOpt);
             this.useAllProvidedNodes = options.valueOf(useAllProvidedNodesOpt);
             this.userAgent = options.valueOf(userAgentOpt);
+            this.numConnectionsForBtc = options.valueOf(numConnectionsForBtcOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -774,5 +784,9 @@ public class Config {
 
     public String getUserAgent() {
         return userAgent;
+    }
+
+    public int getNumConnectionsForBtc() {
+        return numConnectionsForBtc;
     }
 }

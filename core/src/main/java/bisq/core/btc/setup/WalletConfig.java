@@ -116,7 +116,7 @@ public class WalletConfig extends AbstractIdleService {
     private final BisqWalletFactory walletFactory;
     private final Config config;
     private final String userAgent;
-    private int numConnectionForBtc;
+    private int numConnectionsForBtc;
 
     private volatile Wallet vBtcWallet;
     @Nullable
@@ -153,13 +153,13 @@ public class WalletConfig extends AbstractIdleService {
                         File directory,
                         Config config,
                         String userAgent,
-                        int numConnectionForBtc,
+                        int numConnectionsForBtc,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
         this.config = config;
         this.userAgent = userAgent;
-        this.numConnectionForBtc = numConnectionForBtc;
+        this.numConnectionsForBtc = numConnectionsForBtc;
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
@@ -438,7 +438,7 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                int maxConnections = Math.min(numConnectionForBtc, peerAddresses.length);
+                int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
                 log.info("We try to connect to {} btc nodes", maxConnections);
                 vPeerGroup.setMaxConnections(maxConnections);
                 vPeerGroup.setAddPeersFromAddressMessage(false);

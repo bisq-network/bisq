@@ -17,7 +17,6 @@
 
 package bisq.core.btc.setup;
 
-import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.exceptions.InvalidHostException;
 import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.model.AddressEntry;
@@ -107,8 +106,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // merge WalletsSetup with WalletConfig to one class.
 @Slf4j
 public class WalletsSetup {
-    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 9 nodes
-    public static final int DEFAULT_CONNECTIONS = 9;
 
     @Getter
     public final BooleanProperty walletsSetupFailed = new SimpleBooleanProperty();
@@ -124,7 +121,7 @@ public class WalletsSetup {
     private final Config config;
     private final BtcNodes btcNodes;
     private final String btcWalletFileName;
-    private final int numConnectionForBtc;
+    private final int numConnectionsForBtc;
     private final String userAgent;
     private final NetworkParameters params;
     private final File walletDir;
@@ -153,7 +150,7 @@ public class WalletsSetup {
                         @Named(Config.USER_AGENT) String userAgent,
                         @Named(Config.WALLET_DIR) File appDir,
                         @Named(Config.USE_ALL_PROVIDED_NODES) boolean useAllProvidedNodes,
-                        @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
+                        @Named(Config.NUM_CONNECTIONS_FOR_BTC) int numConnectionsForBtc,
                         @Named(Config.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.addressEntryList = addressEntryList;
@@ -161,7 +158,7 @@ public class WalletsSetup {
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.config = config;
         this.btcNodes = btcNodes;
-        this.numConnectionForBtc = numConnectionForBtc != null ? Integer.parseInt(numConnectionForBtc) : DEFAULT_CONNECTIONS;
+        this.numConnectionsForBtc = numConnectionsForBtc;
         this.useAllProvidedNodes = useAllProvidedNodes;
         this.userAgent = userAgent;
 
@@ -202,7 +199,7 @@ public class WalletsSetup {
                 walletDir,
                 config,
                 userAgent,
-                numConnectionForBtc,
+                numConnectionsForBtc,
                 btcWalletFileName,
                 BSQ_WALLET_FILE_NAME,
                 SPV_CHAIN_FILE_NAME) {

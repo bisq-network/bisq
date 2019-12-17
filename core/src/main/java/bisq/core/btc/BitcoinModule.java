@@ -82,7 +82,7 @@ public class BitcoinModule extends AppModule {
 
         bindConstant().annotatedWith(named(Config.BTC_NODES)).to(config.getBtcNodes());
         bindConstant().annotatedWith(named(Config.USER_AGENT)).to(config.getUserAgent());
-        bindConstant().annotatedWith(named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC));
+        bindConstant().annotatedWith(named(Config.NUM_CONNECTIONS_FOR_BTC)).to(config.getNumConnectionsForBtc());
         bindConstant().annotatedWith(named(Config.USE_ALL_PROVIDED_NODES)).to(config.isUseAllProvidedNodes());
         bindConstant().annotatedWith(named(Config.IGNORE_LOCAL_BTC_NODE)).to(config.isIgnoreLocalBtcNode());
         bindConstant().annotatedWith(Names.named(Config.SOCKS5_DISCOVER_MODE)).to(config.getSocks5DiscoverMode());
