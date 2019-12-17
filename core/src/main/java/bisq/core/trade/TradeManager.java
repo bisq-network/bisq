@@ -225,6 +225,7 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
+        failedTradesManager.setUnfailTradeCallback(this::unfailTrade);
     }
 
     @Override
@@ -298,20 +299,20 @@ public class TradeManager implements PersistedDataHost {
                         tradesWithoutDepositTx.add(trade);
                     }
 
-            try {
-                DelayedPayoutTxValidation.validatePayoutTx(trade,
-                        trade.getDelayedPayoutTx(),
-                        daoFacade,
-                        btcWalletService);
-            } catch (DelayedPayoutTxValidation.DonationAddressException |
-                    DelayedPayoutTxValidation.InvalidTxException |
-                    DelayedPayoutTxValidation.InvalidLockTimeException |
-                    DelayedPayoutTxValidation.MissingDelayedPayoutTxException e) {
-                // We move it to failed trades so it cannot be continued.
-                log.warn("We move the trade with ID '{}' to failed trades because of exception {}",
-                        trade.getId(), e.getMessage());
-                addTradeToFailedTradesList.add(trade);
-            }
+                    try {
+                        DelayedPayoutTxValidation.validatePayoutTx(trade,
+                                trade.getDelayedPayoutTx(),
+                                daoFacade,
+                                btcWalletService);
+                    } catch (DelayedPayoutTxValidation.DonationAddressException |
+                            DelayedPayoutTxValidation.InvalidTxException |
+                            DelayedPayoutTxValidation.InvalidLockTimeException |
+                            DelayedPayoutTxValidation.MissingDelayedPayoutTxException e) {
+                        // We move it to failed trades so it cannot be continued.
+                        log.warn("We move the trade with ID '{}' to failed trades because of exception {}",
+                                trade.getId(), e.getMessage());
+                        addTradeToFailedTradesList.add(trade);
+                    }
                 }
         );
 
@@ -600,6 +601,13 @@ public class TradeManager implements PersistedDataHost {
         failedTradesManager.add(trade);
 
         cleanUpAddressEntries();
+    }
+
+    // If trade still has funds locked up it might come back from failed trades
+    private void unfailTrade(Trade trade) {
+        if (!tradableList.contains(trade)) {
+            tradableList.add(trade);
+        }
     }
 
     // If trade is in preparation (if taker role: before taker fee is paid; both roles: before deposit published)

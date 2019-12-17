@@ -21,21 +21,30 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.Trade;
+
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
+import javafx.scene.Scene;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.event.EventHandler;
 
 import javafx.collections.transformation.SortedList;
 
@@ -53,6 +62,8 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn;
     private final TradeDetailsWindow tradeDetailsWindow;
     private SortedList<FailedTradesListItem> sortedList;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
 
     @Inject
     public FailedTradesView(FailedTradesViewModel model, TradeDetailsWindow tradeDetailsWindow) {
@@ -95,10 +106,28 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
+        keyEventEventHandler = keyEvent -> {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
+                new Popup().warning(Res.get("portfolio.failed.unfail"))
+                        .onAction(this::onUnfail)
+                        .show();
+            }
+        };
+
+    }
+
+    private void onUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        model.dataModel.unfailTrade(trade);
+
     }
 
     @Override
     protected void activate() {
+        scene = root.getScene();
+        if (scene != null) {
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
         sortedList = new SortedList<>(model.getList());
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -106,6 +135,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     protected void deactivate() {
+        if (scene != null) {
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
         sortedList.comparatorProperty().unbind();
     }
 

@@ -33,10 +33,13 @@ import com.google.inject.Inject;
 import javafx.collections.ObservableList;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lombok.Setter;
 
 public class FailedTradesManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
@@ -46,6 +49,8 @@ public class FailedTradesManager implements PersistedDataHost {
     private final BtcWalletService btcWalletService;
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
+    @Setter
+    private Consumer<Trade> unfailTradeCallback;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing,
@@ -95,5 +100,11 @@ public class FailedTradesManager implements PersistedDataHost {
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return failedTrades.stream()
                 .filter(Trade::isFundsLockedIn);
+    }
+
+    public void unfailTrade(Trade trade) {
+        if (unfailTradeCallback == null) return;
+        unfailTradeCallback.accept(trade);
+        failedTrades.remove(trade);
     }
 }
