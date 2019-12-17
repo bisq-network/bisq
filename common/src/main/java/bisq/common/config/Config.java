@@ -69,7 +69,6 @@ public class Config {
 
     // default data dir properties
     private final String defaultAppName;
-    private final File defaultUserDataDir;
     private final File defaultAppDataDir;
     private final File defaultConfigFile;
 
@@ -125,8 +124,8 @@ public class Config {
     }
 
     public Config(String defaultAppName, String[] args) throws HelpRequested {
+        File defaultUserDataDir = getDefaultUserDataDir();
         this.defaultAppName = defaultAppName;
-        this.defaultUserDataDir = getDefaultUserDataDir();
         this.defaultAppDataDir = new File(defaultUserDataDir, this.defaultAppName);
         this.defaultConfigFile = new File(defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
 
