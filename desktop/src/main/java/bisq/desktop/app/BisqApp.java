@@ -275,7 +275,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     injector.getInstance(SendAlertMessageWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
                     injector.getInstance(FilterWindow.class).show();
-                } else if (Utilities.isAltOrCtrlPressed(KeyCode.UP, keyEvent)) {
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.H, keyEvent)) {
                     log.warn("We re-published all proposalPayloads and blindVotePayloads to the P2P network.");
                     injector.getInstance(MissingDataRequestService.class).reRepublishAllGovernanceData();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.T, keyEvent)) {
