@@ -56,7 +56,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(port, networkProtoResolver) :
                 new TorNetworkNode(port, networkProtoResolver, streamIsolation,
-                        controlPort != Config.NULL_INT ?
+                        controlPort != Config.DEFAULT_INT ?
                                 new RunningTor(torDir, controlPort, password, cookieFile, useSafeCookieAuthentication) :
                                 new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses()));
     }

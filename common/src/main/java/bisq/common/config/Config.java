@@ -33,8 +33,6 @@ public class Config {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
-    public static final int NULL_INT = Integer.MIN_VALUE;
-
     public static final String APP_NAME = "appName";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
@@ -63,6 +61,7 @@ public class Config {
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
 
+    public static final int DEFAULT_INT = Integer.MIN_VALUE;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
     public static File CURRENT_APP_DATA_DIR;
@@ -437,7 +436,7 @@ public class Config {
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
-            this.torControlPort = options.has(torControlPortOpt) ? options.valueOf(torControlPortOpt) : NULL_INT;
+            this.torControlPort = options.has(torControlPortOpt) ? options.valueOf(torControlPortOpt) : DEFAULT_INT;
             this.torControlPassword = options.valueOf(torControlPasswordOpt);
             this.torControlCookieFile = options.has(torControlCookieFileOpt) ?
                     options.valueOf(torControlCookieFileOpt).toFile() : null;
