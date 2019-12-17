@@ -18,7 +18,6 @@
 package bisq.core.setup;
 
 import bisq.core.btc.model.AddressEntryList;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
@@ -42,8 +41,6 @@ import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 
 import java.util.ArrayList;
 import java.util.List;

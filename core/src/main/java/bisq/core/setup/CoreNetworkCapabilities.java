@@ -17,9 +17,6 @@
 
 package bisq.core.setup;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.DaoOptionKeys;
-
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.config.Config;

@@ -18,7 +18,6 @@
 package bisq.core.app;
 
 import bisq.common.BisqException;
-import bisq.common.config.Config;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -62,8 +61,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
-        //DaoOptionKeys
-
         MutablePropertySources propertySources = getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
