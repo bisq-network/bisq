@@ -284,8 +284,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg()
                 .ofType(boolean.class);
 
-        //BtcOptionKeys
-
         //RpcOptionKeys
         parser.accepts(DaoOptionKeys.RPC_USER,
                 "Bitcoind rpc username")

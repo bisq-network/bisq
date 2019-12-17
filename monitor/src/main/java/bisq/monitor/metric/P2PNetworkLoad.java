@@ -23,9 +23,6 @@ import bisq.monitor.Monitor;
 import bisq.monitor.Reporter;
 import bisq.monitor.ThreadGate;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.common.config.BaseCurrencyNetwork;
-import bisq.core.btc.BtcOptionKeys;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;

@@ -82,8 +82,6 @@ public class BisqEnvironment extends StandardEnvironment {
         genesisTotalSupply = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_TOTAL_SUPPLY, "-1");
         daoActivated = getProperty(commandLineProperties, DaoOptionKeys.DAO_ACTIVATED, "true");
 
-        //BtcOptionKeys
-
         MutablePropertySources propertySources = getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
