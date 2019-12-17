@@ -21,7 +21,6 @@ package bisq.core.dao;
  * Provides program argument options used in the DAO domain.
  */
 public class DaoOptionKeys {
-    public static final String RPC_BLOCK_NOTIFICATION_HOST = "rpcBlockNotificationHost";
 
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
     public static final String FULL_DAO_NODE = "fullDaoNode";

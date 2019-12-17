@@ -24,6 +24,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 
+import bisq.common.config.Config;
 import bisq.common.config.TestConfig;
 import bisq.common.storage.Storage;
 
@@ -58,7 +59,7 @@ public class PreferencesTest {
         Res.setBaseCurrencyName("Bitcoin");
 
         storage = mock(Storage.class);
-        preferences = new Preferences(storage, new TestConfig(), null, null, null, null, null, null);
+        preferences = new Preferences(storage, new TestConfig(), null, null, null, null, null, Config.UNSPECIFIED_PORT);
     }
 
     @Test

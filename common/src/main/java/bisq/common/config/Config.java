@@ -69,6 +69,7 @@ public class Config {
     public static final String RPC_HOST = "rpcHost";
     public static final String RPC_PORT = "rpcPort";
     public static final String RPC_BLOCK_NOTIFICATION_PORT = "rpcBlockNotificationPort";
+    public static final String RPC_BLOCK_NOTIFICATION_HOST = "rpcBlockNotificationHost";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -135,6 +136,7 @@ public class Config {
     private final String rpcHost;
     private final int rpcPort;
     private final int rpcBlockNotificationPort;
+    private final String rpcBlockNotificationHost;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -477,6 +479,12 @@ public class Config {
                         .ofType(int.class)
                         .defaultsTo(UNSPECIFIED_PORT);
 
+        ArgumentAcceptingOptionSpec<String> rpcBlockNotificationHostOpt =
+                parser.accepts(RPC_BLOCK_NOTIFICATION_HOST,
+                        "Bitcoind rpc accepted incoming host for block notifications")
+                        .withRequiredArg()
+                        .defaultsTo("");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -569,6 +577,7 @@ public class Config {
             this.rpcHost = options.valueOf(rpcHostOpt);
             this.rpcPort = options.valueOf(rpcPortOpt);
             this.rpcBlockNotificationPort = options.valueOf(rpcBlockNotificationPortOpt);
+            this.rpcBlockNotificationHost = options.valueOf(rpcBlockNotificationHostOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -851,5 +860,9 @@ public class Config {
 
     public int getRpcBlockNotificationPort() {
         return rpcBlockNotificationPort;
+    }
+
+    public String getRpcBlockNotificationHost() {
+        return rpcBlockNotificationHost;
     }
 }

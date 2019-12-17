@@ -17,7 +17,6 @@
 
 package bisq.core.dao.node.full;
 
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
@@ -96,7 +95,7 @@ public class RpcService {
                       @Named(Config.RPC_HOST) String rpcHost,
                       @Named(Config.RPC_PORT) int rpcPort,
                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockPort,
-                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
+                      @Named(Config.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
@@ -112,7 +111,7 @@ public class RpcService {
                         isTestnet ? 18332 :
                                 18443; // regtest
         boolean isBlockPortSet = rpcBlockPort != Config.UNSPECIFIED_PORT;
-        boolean isBlockHostSet = rpcBlockHost != null && !rpcBlockHost.isEmpty();
+        boolean isBlockHostSet = !rpcBlockHost.isEmpty();
         this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : 5125;
         this.rpcBlockHost = isBlockHostSet ? rpcBlockHost : "127.0.0.1";
     }
