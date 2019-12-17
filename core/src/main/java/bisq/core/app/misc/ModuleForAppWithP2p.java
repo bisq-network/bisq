@@ -49,14 +49,10 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 import org.springframework.core.env.Environment;
 
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 
 import java.io.File;
 
-import static bisq.common.config.Config.KEY_STORAGE_DIR;
-import static bisq.common.config.Config.REFERRAL_ID;
-import static bisq.common.config.Config.STORAGE_DIR;
-import static bisq.common.config.Config.USE_DEV_MODE;
+import static bisq.common.config.Config.*;
 import static com.google.inject.name.Names.named;
 
 public class ModuleForAppWithP2p extends AppModule {
@@ -85,9 +81,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.getStorageDir());
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());
 
-        Boolean useDevPrivilegeKeys = environment.getProperty(Config.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(Config.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
-
+        bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.isUseDevPrivilegeKeys());
         bind(boolean.class).annotatedWith(named(USE_DEV_MODE)).toInstance(config.isUseDevMode());
         bind(String.class).annotatedWith(named(REFERRAL_ID)).toInstance(config.getReferralId());
 

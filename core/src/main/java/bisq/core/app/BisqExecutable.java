@@ -268,12 +268,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
 
-        parser.accepts(Config.USE_DEV_PRIVILEGE_KEYS,
-                format("If that is true all the privileged features which requires a private key " +
-                        "to enable it are overridden by a dev key pair (This is for developers only!) (default: %s)", "false"))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
         parser.accepts(Config.REFERRAL_ID,
                 "Optional Referral ID (e.g. for API users or pro market makers)")
                 .withRequiredArg();

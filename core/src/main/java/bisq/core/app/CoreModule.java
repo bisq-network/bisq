@@ -77,7 +77,7 @@ public class CoreModule extends AppModule {
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class);
 
-        bind(boolean.class).annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).toInstance(config.isUseDevPrivilegeKeys());
+        bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.isUseDevPrivilegeKeys());
         bind(boolean.class).annotatedWith(named(USE_DEV_MODE)).toInstance(config.isUseDevMode());
         bind(String.class).annotatedWith(named(REFERRAL_ID)).toInstance(config.getReferralId());
 
