@@ -58,7 +58,7 @@ public class PreferencesTest {
         Res.setBaseCurrencyName("Bitcoin");
 
         storage = mock(Storage.class);
-        preferences = new Preferences(storage, new TestConfig(), null, null, null, null, null, null, null);
+        preferences = new Preferences(storage, new TestConfig(), null, null, null, null, null, null);
     }
 
     @Test

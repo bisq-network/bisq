@@ -65,6 +65,7 @@ public class Config {
     public static final String USER_AGENT = "userAgent";
     public static final String NUM_CONNECTIONS_FOR_BTC = "numConnectionsForBtc";
     public static final String RPC_USER = "rpcUser";
+    public static final String RPC_PASSWORD = "rpcPassword";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -127,6 +128,7 @@ public class Config {
     private final String userAgent;
     private final int numConnectionsForBtc;
     private final String rpcUser;
+    private final String rpcPassword;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -446,6 +448,11 @@ public class Config {
                         .withRequiredArg()
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<String> rpcPasswordOpt =
+                parser.accepts(RPC_PASSWORD, "Bitcoind rpc password")
+                        .withRequiredArg()
+                        .defaultsTo("");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -534,6 +541,7 @@ public class Config {
             this.userAgent = options.valueOf(userAgentOpt);
             this.numConnectionsForBtc = options.valueOf(numConnectionsForBtcOpt);
             this.rpcUser = options.valueOf(rpcUserOpt);
+            this.rpcPassword = options.valueOf(rpcPasswordOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -800,5 +808,9 @@ public class Config {
 
     public String getRpcUser() {
         return rpcUser;
+    }
+
+    public String getRpcPassword() {
+        return rpcPassword;
     }
 }

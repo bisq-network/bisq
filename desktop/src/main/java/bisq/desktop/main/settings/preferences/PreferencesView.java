@@ -163,7 +163,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            DaoFacade daoFacade,
                            @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                            @Named(Config.RPC_USER) String rpcUser,
-                           @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
+                           @Named(Config.RPC_PASSWORD) String rpcPassword,
                            @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
         super(model);
         this.preferences = preferences;
@@ -173,7 +173,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.daoFacade = daoFacade;
         daoOptionsSet = fullDaoNode != null && !fullDaoNode.isEmpty() &&
                 rpcUser != null && !rpcUser.isEmpty() &&
-                rpcPassword != null && !rpcPassword.isEmpty() &&
+                !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != null && !rpcBlockNotificationPort.isEmpty();
         this.displayStandbyModeFeature = Utilities.isOSX() || Utilities.isWindows();
     }

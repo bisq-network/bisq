@@ -21,7 +21,6 @@ package bisq.core.dao;
  * Provides program argument options used in the DAO domain.
  */
 public class DaoOptionKeys {
-    public static final String RPC_PASSWORD = "rpcPassword";
     public static final String RPC_PORT = "rpcPort";
     public static final String RPC_BLOCK_NOTIFICATION_PORT = "rpcBlockNotificationPort";
     public static final String RPC_BLOCK_NOTIFICATION_HOST = "rpcBlockNotificationHost";
