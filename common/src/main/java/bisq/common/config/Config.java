@@ -31,8 +31,6 @@ import static java.util.stream.Collectors.toList;
 
 public class Config {
 
-    private static final Logger log = LoggerFactory.getLogger(Config.class);
-
     public static final String APP_NAME = "appName";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
@@ -60,6 +58,8 @@ public class Config {
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
+
+    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     public static final int DEFAULT_INT = Integer.MIN_VALUE;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
