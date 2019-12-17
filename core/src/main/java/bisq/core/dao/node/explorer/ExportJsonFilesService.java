@@ -17,7 +17,6 @@
 
 package bisq.core.dao.node.explorer;
 
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.DaoState;
@@ -71,7 +70,7 @@ public class ExportJsonFilesService implements DaoSetupService {
     @Inject
     public ExportJsonFilesService(DaoStateService daoStateService,
                                   @Named(Config.STORAGE_DIR) File storageDir,
-                                  @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+                                  @Named(Config.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.daoStateService = daoStateService;
         this.storageDir = storageDir;
         this.dumpBlockchainData = dumpBlockchainData;

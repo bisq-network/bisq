@@ -57,7 +57,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected boolean isBitcoinLocalhostNodeRunning;
 
     protected final String
-            dumpBlockchainData, fullDaoNode,
+            fullDaoNode,
             genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated;
 
@@ -69,7 +69,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //DaoOptionKeys
-        dumpBlockchainData = getProperty(commandLineProperties, DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, "");
         fullDaoNode = getProperty(commandLineProperties, DaoOptionKeys.FULL_DAO_NODE, "");
         genesisTxId = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_TX_ID, "");
         genesisBlockHeight = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_BLOCK_HEIGHT, "-1");
@@ -92,7 +91,6 @@ public class BisqEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
-                setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
                 setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
                 setProperty(DaoOptionKeys.GENESIS_TX_ID, genesisTxId);
                 setProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, genesisBlockHeight);

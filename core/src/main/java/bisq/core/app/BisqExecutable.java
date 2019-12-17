@@ -285,12 +285,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //RpcOptionKeys
-        parser.accepts(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA,
-                format("If set to true the blockchain data from RPC requests to Bitcoin Core are " +
-                        "stored as json file in the data dir. (default: %s)", "false"))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
         parser.accepts(DaoOptionKeys.FULL_DAO_NODE,
                 "If set to true the node requests the blockchain data via RPC requests " +
                         "from Bitcoin Core and provide the validated BSQ txs to the network. " +
