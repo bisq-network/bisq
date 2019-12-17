@@ -75,6 +75,7 @@ public class Config {
     public static final String GENESIS_TX_ID = "genesisTxId";
     public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
+    public static final String DAO_ACTIVATED = "daoActivated";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -245,12 +246,6 @@ public class Config {
                         .ofType(String.class)
                         .describedAs("host[:port]")
                         .defaultsTo("");
-
-        ArgumentAcceptingOptionSpec<Boolean> daoActivatedOpt =
-                parser.accepts("daoActivated", "Developer flag. If true it enables dao phase 2 features.")
-                        .withRequiredArg()
-                        .ofType(Boolean.class)
-                        .defaultsTo(true);
 
         ArgumentAcceptingOptionSpec<String> logLevelOpt =
                 parser.accepts(LOG_LEVEL, "Set logging level")
@@ -521,6 +516,12 @@ public class Config {
                         .ofType(long.class)
                         .defaultsTo(-1L);
 
+        ArgumentAcceptingOptionSpec<Boolean> daoActivatedOpt =
+                parser.accepts(DAO_ACTIVATED, "Developer flag. If true it enables dao phase 2 features.")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(true);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -568,7 +569,6 @@ public class Config {
             BaseCurrencyNetwork.CURRENT_PARAMETERS = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
-            this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
@@ -619,6 +619,7 @@ public class Config {
             this.genesisTxId = options.valueOf(genesisTxIdOpt);
             this.genesisBlockHeight = options.valueOf(genesisBlockHeightOpt);
             this.genesisTotalSupply = options.valueOf(genesisTotalSupplyOpt);
+            this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -721,10 +722,6 @@ public class Config {
 
     public String getBitcoinRegtestHost() {
         return bitcoinRegtestHost;
-    }
-
-    public boolean isDaoActivated() {
-        return daoActivated;
     }
 
     public String getLogLevel() {
@@ -925,5 +922,9 @@ public class Config {
 
     public long getGenesisTotalSupply() {
         return genesisTotalSupply;
+    }
+
+    public boolean isDaoActivated() {
+        return daoActivated;
     }
 }

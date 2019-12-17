@@ -91,7 +91,6 @@ import bisq.common.config.Config;
 import org.springframework.core.env.Environment;
 
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 
 import static com.google.inject.name.Names.named;
 
@@ -226,8 +225,7 @@ public class DaoModule extends AppModule {
         bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_HOST)).to(config.getRpcBlockNotificationHost());
         bindConstant().annotatedWith(named(Config.DUMP_BLOCKCHAIN_DATA)).to(config.isDumpBlockchainData());
         bindConstant().annotatedWith(named(Config.FULL_DAO_NODE)).to(config.isFullDaoNode());
-
-        bind(Boolean.class).annotatedWith(Names.named(DaoOptionKeys.DAO_ACTIVATED)).toInstance(config.isDaoActivated());
+        bindConstant().annotatedWith(named(Config.DAO_ACTIVATED)).to(config.isDaoActivated());
     }
 }
 

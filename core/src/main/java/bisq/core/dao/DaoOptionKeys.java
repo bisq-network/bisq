@@ -22,5 +22,4 @@ package bisq.core.dao;
  */
 public class DaoOptionKeys {
 
-    public static final String DAO_ACTIVATED = "daoActivated";
 }

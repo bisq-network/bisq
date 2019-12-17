@@ -20,7 +20,6 @@ package bisq.core.app;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;
@@ -285,10 +284,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //RpcOptionKeys
-        parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
-                format("Developer flag. If true it enables dao phase 2 features. (default: %s)", "true"))
-                .withRequiredArg()
-                .ofType(boolean.class);
     }
 
     private void initAppDir(File appDataDir) {
