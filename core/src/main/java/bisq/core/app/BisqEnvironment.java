@@ -20,6 +20,7 @@ package bisq.core.app;
 import bisq.core.dao.DaoOptionKeys;
 
 import bisq.common.BisqException;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -57,7 +58,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected boolean isBitcoinLocalhostNodeRunning;
 
     protected final String
-            rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
+            rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated;
 
@@ -69,7 +70,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //DaoOptionKeys
-        rpcBlockNotificationPort = getProperty(commandLineProperties, DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, "");
         rpcBlockNotificationHost = getProperty(commandLineProperties, DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST, "");
         dumpBlockchainData = getProperty(commandLineProperties, DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, "");
         fullDaoNode = getProperty(commandLineProperties, DaoOptionKeys.FULL_DAO_NODE, "");
@@ -94,7 +94,6 @@ public class BisqEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
-                setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
                 setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST, rpcBlockNotificationHost);
                 setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
                 setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);

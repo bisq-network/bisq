@@ -41,7 +41,7 @@ public class PreferenceMakers {
             lookup.valueOf(config, new SameValueDonor<Config>(null)),
             lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<String>(null)),
             lookup.valueOf(referralID, new SameValueDonor<String>(null)),
-            null, null, null, null);
+            null, null, null, Config.UNSPECIFIED_PORT);
 
     public static final Preferences empty = make(a(Preferences));
 

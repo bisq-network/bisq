@@ -285,10 +285,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //RpcOptionKeys
-        parser.accepts(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT,
-                "Bitcoind rpc port for block notifications")
-                .withRequiredArg();
-
         parser.accepts(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST,
                 "Bitcoind rpc accepted incoming host for block notifications")
                 .withRequiredArg();

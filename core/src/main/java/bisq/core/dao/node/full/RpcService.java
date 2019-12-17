@@ -75,7 +75,7 @@ public class RpcService {
     private final String rpcPassword;
     private final String rpcHost;
     private final int rpcPort;
-    private final String rpcBlockPort;
+    private final int rpcBlockPort;
     private final String rpcBlockHost;
 
     private BtcdClient client;
@@ -95,7 +95,7 @@ public class RpcService {
     public RpcService(Preferences preferences,
                       @Named(Config.RPC_HOST) String rpcHost,
                       @Named(Config.RPC_PORT) int rpcPort,
-                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
+                      @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
@@ -111,9 +111,9 @@ public class RpcService {
                 isMainnet || isDaoBetaNet ? 8332 :
                         isTestnet ? 18332 :
                                 18443; // regtest
-        boolean isBlockPortSet = rpcBlockPort != null && !rpcBlockPort.isEmpty();
+        boolean isBlockPortSet = rpcBlockPort != Config.UNSPECIFIED_PORT;
         boolean isBlockHostSet = rpcBlockHost != null && !rpcBlockHost.isEmpty();
-        this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : "5125";
+        this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : 5125;
         this.rpcBlockHost = isBlockHostSet ? rpcBlockHost : "127.0.0.1";
     }
 
@@ -140,7 +140,7 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
                 nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
                 nodeConfig.setProperty("node.bitcoind.rpc.port", Integer.toString(rpcPort));
-                nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+                nodeConfig.setProperty("node.bitcoind.notification.block.port", Integer.toString(rpcBlockPort));
                 nodeConfig.setProperty("node.bitcoind.notification.block.host", rpcBlockHost);
                 nodeConfig.setProperty("node.bitcoind.notification.alert.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));
                 nodeConfig.setProperty("node.bitcoind.notification.wallet.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));

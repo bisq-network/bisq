@@ -135,7 +135,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final Storage<PreferencesPayload> storage;
     private final Config config;
     private final String btcNodesFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
-            rpcUserFromOptions, rpcPwFromOptions, blockNotifyPortFromOptions;
+            rpcUserFromOptions, rpcPwFromOptions;
+    private final int blockNotifyPortFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -154,7 +155,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                        @Named(Config.RPC_USER) String rpcUser,
                        @Named(Config.RPC_PASSWORD) String rpcPassword,
-                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
 
         this.storage = storage;
         this.config = config;
@@ -650,7 +651,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setBlockNotifyPort(int value) {
         // We only persist if we have not set the program argument
-        if (blockNotifyPortFromOptions == null || blockNotifyPortFromOptions.isEmpty()) {
+        if (blockNotifyPortFromOptions == Config.UNSPECIFIED_PORT) {
             prefPayload.setBlockNotifyPort(value);
             persist();
         }
@@ -794,9 +795,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public int getBlockNotifyPort() {
-        if (blockNotifyPortFromOptions != null && !blockNotifyPortFromOptions.isEmpty()) {
+        if (blockNotifyPortFromOptions != Config.UNSPECIFIED_PORT) {
             try {
-                return Integer.parseInt(blockNotifyPortFromOptions);
+                return blockNotifyPortFromOptions;
             } catch (Throwable ignore) {
                 return 0;
             }
