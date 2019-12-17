@@ -286,12 +286,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.SOCKS5_DISCOVER_MODE,
-                format("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
-                        " (comma separated, they get OR'd together). (default: %s)", "ALL"))
-                .withRequiredArg()
-                .describedAs("mode[,...]");
-
         parser.accepts(BtcOptionKeys.USE_ALL_PROVIDED_NODES,
                 "Set to true if connection of bitcoin nodes should include clear net nodes")
                 .withRequiredArg();

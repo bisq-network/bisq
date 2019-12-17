@@ -60,6 +60,7 @@ public class Config {
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
     public static final String IGNORE_LOCAL_BTC_NODE = "ignoreLocalBtcNode";
     public static final String BTC_NODES = "btcNodes";
+    public static final String SOCKS5_DISCOVER_MODE = "socks5DiscoverMode";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -116,6 +117,7 @@ public class Config {
     private final String btcNodes;
     private final boolean useTorForBtc;
     private final boolean useTorForBtcOptionSetExplicitly;
+    private final String socks5DiscoverMode;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -404,6 +406,13 @@ public class Config {
                         .ofType(Boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<String> socks5DiscoverModeOpt =
+                parser.accepts(SOCKS5_DISCOVER_MODE, "Specify discovery mode for Bitcoin nodes. " +
+                        "One or more of: [ADDR, DNS, ONION, ALL] (comma separated, they get OR'd together).")
+                        .withRequiredArg()
+                        .describedAs("mode[,...]")
+                        .defaultsTo("ALL");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -487,6 +496,7 @@ public class Config {
             this.btcNodes = options.valueOf(btcNodesOpt);
             this.useTorForBtc = options.valueOf(useTorForBtcOpt);
             this.useTorForBtcOptionSetExplicitly = options.has(useTorForBtcOpt);
+            this.socks5DiscoverMode = options.valueOf(socks5DiscoverModeOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -733,5 +743,9 @@ public class Config {
 
     public boolean isUseTorForBtcOptionSetExplicitly() {
         return useTorForBtcOptionSetExplicitly;
+    }
+
+    public String getSocks5DiscoverMode() {
+        return socks5DiscoverMode;
     }
 }

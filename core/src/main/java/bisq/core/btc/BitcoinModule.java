@@ -85,8 +85,7 @@ public class BitcoinModule extends AppModule {
         bindConstant().annotatedWith(named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_ALL_PROVIDED_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES));
         bindConstant().annotatedWith(named(Config.IGNORE_LOCAL_BTC_NODE)).to(config.isIgnoreLocalBtcNode());
-        String socks5DiscoverMode = environment.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
-        bind(String.class).annotatedWith(Names.named(BtcOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
+        bindConstant().annotatedWith(Names.named(Config.SOCKS5_DISCOVER_MODE)).to(config.getSocks5DiscoverMode());
         bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(PROVIDERS)).toInstance(config.getProviders());
 
         bind(AddressEntryList.class).in(Singleton.class);

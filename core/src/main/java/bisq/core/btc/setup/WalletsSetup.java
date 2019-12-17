@@ -154,7 +154,7 @@ public class WalletsSetup {
                         @Named(Config.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
                         @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
-                        @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
+                        @Named(Config.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.addressEntryList = addressEntryList;
         this.preferences = preferences;
