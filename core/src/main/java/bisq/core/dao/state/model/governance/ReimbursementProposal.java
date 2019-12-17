@@ -17,7 +17,6 @@
 
 package bisq.core.dao.state.model.governance;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalType;

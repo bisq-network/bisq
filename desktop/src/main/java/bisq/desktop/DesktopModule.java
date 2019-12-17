@@ -27,8 +27,6 @@ import bisq.core.locale.Res;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
@@ -38,9 +36,8 @@ import static bisq.common.config.Config.APP_NAME;
 
 public class DesktopModule extends AppModule {
 
-
-    public DesktopModule(Environment environment, Config config) {
-        super(environment, config);
+    public DesktopModule(Config config) {
+        super(config);
     }
 
     @Override

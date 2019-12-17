@@ -21,7 +21,6 @@ import bisq.desktop.app.BisqAppMain;
 import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.main.overlays.Overlay;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 

@@ -18,7 +18,6 @@
 package bisq.core.app.misc;
 
 import bisq.core.alert.AlertModule;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.TorSetup;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
@@ -46,8 +45,6 @@ import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Singleton;
 
 import java.io.File;
@@ -57,13 +54,12 @@ import static com.google.inject.name.Names.named;
 
 public class ModuleForAppWithP2p extends AppModule {
 
-    public ModuleForAppWithP2p(Environment environment, Config config) {
-        super(environment, config);
+    public ModuleForAppWithP2p(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
         bind(Config.class).toInstance(config);
 
         bind(KeyStorage.class).in(Singleton.class);
@@ -86,14 +82,14 @@ public class ModuleForAppWithP2p extends AppModule {
         bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.getReferralId());
 
         // ordering is used for shut down sequence
-        install(new TradeModule(environment, config));
-        install(new EncryptionServiceModule(environment, config));
-        install(new OfferModule(environment, config));
-        install(new P2PModule(environment, config));
-        install(new BitcoinModule(environment, config));
-        install(new DaoModule(environment, config));
-        install(new AlertModule(environment, config));
-        install(new FilterModule(environment, config));
+        install(new TradeModule(config));
+        install(new EncryptionServiceModule(config));
+        install(new OfferModule(config));
+        install(new P2PModule(config));
+        install(new BitcoinModule(config));
+        install(new DaoModule(config));
+        install(new AlertModule(config));
+        install(new FilterModule(config));
         bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
     }
 }

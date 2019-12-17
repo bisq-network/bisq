@@ -35,8 +35,6 @@ import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
@@ -53,8 +51,8 @@ import static com.google.inject.util.Providers.of;
 
 public class P2PModule extends AppModule {
 
-    public P2PModule(Environment environment, Config config) {
-        super(environment, config);
+    public P2PModule(Config config) {
+        super(config);
     }
 
     @Override

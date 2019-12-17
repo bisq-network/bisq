@@ -20,14 +20,12 @@ package bisq.core.presentation;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Singleton;
 
 public class CorePresentationModule extends AppModule {
 
-    public CorePresentationModule(Environment environment, Config config) {
-        super(environment, config);
+    public CorePresentationModule(Config config) {
+        super(config);
     }
 
     @Override

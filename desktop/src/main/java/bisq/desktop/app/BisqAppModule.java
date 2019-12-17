@@ -24,17 +24,15 @@ import bisq.core.app.CoreModule;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
-import org.springframework.core.env.Environment;
-
 public class BisqAppModule extends AppModule {
 
-    public BisqAppModule(Environment environment, Config config) {
-        super(environment, config);
+    public BisqAppModule(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
-        install(new CoreModule(environment, config));
-        install(new DesktopModule(environment, config));
+        install(new CoreModule(config));
+        install(new DesktopModule(config));
     }
 }

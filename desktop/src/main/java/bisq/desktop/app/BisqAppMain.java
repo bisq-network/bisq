@@ -104,7 +104,7 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected AppModule getModule() {
-        return new BisqAppModule(bisqEnvironment, config);
+        return new BisqAppModule(config);
     }
 
     @Override

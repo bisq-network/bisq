@@ -25,7 +25,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 

@@ -17,8 +17,6 @@
 
 package bisq.seednode;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.app.BisqExecutable;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
@@ -86,7 +84,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected AppModule getModule() {
-        return new ModuleForAppWithP2p(bisqEnvironment, config);
+        return new ModuleForAppWithP2p(config);
     }
 
     @Override

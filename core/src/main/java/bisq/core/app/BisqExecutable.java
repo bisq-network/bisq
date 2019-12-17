@@ -41,8 +41,6 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
 
-import org.springframework.core.env.JOptCommandLinePropertySource;
-
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -58,10 +56,6 @@ import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.app.BisqEnvironment.BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
-
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
@@ -76,7 +70,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected Injector injector;
     protected AppModule module;
-    protected BisqEnvironment bisqEnvironment;
     protected Config config;
 
     public BisqExecutable(String fullName, String scriptName, String appName, String version) {
@@ -129,8 +122,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doExecute(OptionSet options) {
-        bisqEnvironment = new BisqEnvironment(
-                new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
         configUserThread();
         CoreSetup.setup(config);
         addCapabilities();

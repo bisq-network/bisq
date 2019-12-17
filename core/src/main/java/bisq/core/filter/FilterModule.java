@@ -20,8 +20,6 @@ package bisq.core.filter;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Singleton;
 
 import static bisq.common.config.Config.IGNORE_DEV_MSG;
@@ -29,8 +27,8 @@ import static com.google.inject.name.Names.named;
 
 public class FilterModule extends AppModule {
 
-    public FilterModule(Environment environment, Config config) {
-        super(environment, config);
+    public FilterModule(Config config) {
+        super(config);
     }
 
     @Override

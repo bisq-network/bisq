@@ -20,8 +20,6 @@ package bisq.core.offer;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OfferModule extends AppModule {
 
-    public OfferModule(Environment environment, Config config) {
-        super(environment, config);
+    public OfferModule(Config config) {
+        super(config);
     }
 
     @Override

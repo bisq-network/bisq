@@ -95,7 +95,7 @@ public class BisqHeadlessAppMain extends BisqExecutable {
 
     @Override
     protected AppModule getModule() {
-        return new CoreModule(bisqEnvironment, config);
+        return new CoreModule(config);
     }
 
     @Override

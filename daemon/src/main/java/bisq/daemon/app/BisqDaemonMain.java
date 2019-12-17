@@ -75,7 +75,7 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
 
     @Override
     protected AppModule getModule() {
-        return new CoreModule(bisqEnvironment, config);
+        return new CoreModule(config);
     }
 
     @Override

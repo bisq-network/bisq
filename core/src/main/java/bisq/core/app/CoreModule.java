@@ -45,8 +45,6 @@ import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
-import org.springframework.core.env.Environment;
-
 import java.io.File;
 
 import static bisq.common.config.Config.*;
@@ -54,13 +52,12 @@ import static com.google.inject.name.Names.named;
 
 public class CoreModule extends AppModule {
 
-    public CoreModule(Environment environment, Config config) {
-        super(environment, config);
+    public CoreModule(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
         bind(Config.class).toInstance(config);
 
         bind(BridgeAddressProvider.class).to(Preferences.class);
@@ -83,15 +80,15 @@ public class CoreModule extends AppModule {
 
 
         // ordering is used for shut down sequence
-        install(new TradeModule(environment, config));
-        install(new EncryptionServiceModule(environment, config));
-        install(new OfferModule(environment, config));
-        install(new P2PModule(environment, config));
-        install(new BitcoinModule(environment, config));
-        install(new DaoModule(environment, config));
-        install(new AlertModule(environment, config));
-        install(new FilterModule(environment, config));
-        install(new CorePresentationModule(environment, config));
+        install(new TradeModule(config));
+        install(new EncryptionServiceModule(config));
+        install(new OfferModule(config));
+        install(new P2PModule(config));
+        install(new BitcoinModule(config));
+        install(new DaoModule(config));
+        install(new AlertModule(config));
+        install(new FilterModule(config));
+        install(new CorePresentationModule(config));
         bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
     }
 }

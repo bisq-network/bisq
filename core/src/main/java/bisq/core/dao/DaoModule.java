@@ -88,16 +88,14 @@ import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Singleton;
 
 import static com.google.inject.name.Names.named;
 
 public class DaoModule extends AppModule {
 
-    public DaoModule(Environment environment, Config config) {
-        super(environment, config);
+    public DaoModule(Config config) {
+        super(config);
     }
 
     @Override
