@@ -63,6 +63,7 @@ public class Config {
 
     public static final int DEFAULT_INT = Integer.MIN_VALUE;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
+    public static final String DEFAULT_REGTEST_HOST = "localhost";
 
     public static File CURRENT_APP_DATA_DIR;
 
@@ -205,7 +206,7 @@ public class Config {
                         .withRequiredArg()
                         .ofType(String.class)
                         .describedAs("host[:port]")
-                        .defaultsTo("localhost");
+                        .defaultsTo("");
 
         ArgumentAcceptingOptionSpec<Boolean> daoActivatedOpt =
                 parser.accepts("daoActivated", "Developer flag. If true it enables dao phase 2 features.")

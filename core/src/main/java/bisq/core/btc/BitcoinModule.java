@@ -66,7 +66,7 @@ public class BitcoinModule extends AppModule {
                     "104.248.31.39" :
                     config.getBaseCurrencyNetwork().isDaoRegTest() ?
                             "134.209.242.206" :
-                            RegTestHost.DEFAULT_HOST;
+                            Config.DEFAULT_REGTEST_HOST;
         }
 
         RegTestHost.HOST = regTestHost;

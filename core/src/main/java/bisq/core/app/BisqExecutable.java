@@ -18,7 +18,6 @@
 package bisq.core.app;
 
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.setup.RegTestHost;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -287,11 +286,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.REG_TEST_HOST,
-                format("Bitcoin regtest host when using BTC_REGTEST network (default: %s)", RegTestHost.DEFAULT_HOST))
-                .withRequiredArg()
-                .describedAs("host");
-
         parser.accepts(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE,
                 "If set to true a Bitcoin core node running locally will be ignored")
                 .withRequiredArg();
