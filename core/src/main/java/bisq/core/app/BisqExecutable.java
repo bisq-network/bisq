@@ -268,10 +268,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void customizeOptionParsing(OptionParser parser) {
 
-        parser.accepts(Config.REFERRAL_ID,
-                "Optional Referral ID (e.g. for API users or pro market makers)")
-                .withRequiredArg();
-
         //RpcOptionKeys
     }
 

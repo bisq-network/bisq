@@ -83,7 +83,7 @@ public class ModuleForAppWithP2p extends AppModule {
 
         bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.isUseDevPrivilegeKeys());
         bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.isUseDevMode());
-        bind(String.class).annotatedWith(named(REFERRAL_ID)).toInstance(config.getReferralId());
+        bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.getReferralId());
 
         // ordering is used for shut down sequence
         install(new TradeModule(environment, config));
