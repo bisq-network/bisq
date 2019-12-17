@@ -225,7 +225,7 @@ public class DaoModule extends AppModule {
         // Options
         bindConstant().annotatedWith(named(Config.RPC_USER)).to(config.getRpcUser());
         bindConstant().annotatedWith(named(Config.RPC_PASSWORD)).to(config.getRpcPassword());
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_HOST)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_HOST));
+        bindConstant().annotatedWith(named(Config.RPC_HOST)).to(config.getRpcHost());
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PORT)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_PORT));
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
                 .to(environment.getRequiredProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));

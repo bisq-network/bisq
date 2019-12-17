@@ -24,6 +24,7 @@ import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Utilities;
 
@@ -92,7 +93,7 @@ public class RpcService {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public RpcService(Preferences preferences,
-                      @Named(DaoOptionKeys.RPC_HOST) String rpcHost,
+                      @Named(Config.RPC_HOST) String rpcHost,
                       @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
@@ -100,7 +101,7 @@ public class RpcService {
         this.rpcPassword = preferences.getRpcPw();
 
         // mainnet is 8332, testnet 18332, regtest 18443
-        boolean isHostSet = rpcHost != null && !rpcHost.isEmpty();
+        boolean isHostSet = !rpcHost.isEmpty();
         boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
         boolean isMainnet = BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet();
         boolean isTestnet = BaseCurrencyNetwork.CURRENT_NETWORK.isTestnet();
