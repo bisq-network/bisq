@@ -17,7 +17,6 @@
 
 package bisq.core.user;
 
-import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoOptionKeys;
@@ -135,7 +134,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private final Storage<PreferencesPayload> storage;
     private final Config config;
-    private final String btcNodesFromOptions, useTorFlagFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
+    private final String btcNodesFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
             rpcUserFromOptions, rpcPwFromOptions, blockNotifyPortFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
@@ -151,7 +150,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public Preferences(Storage<PreferencesPayload> storage,
                        Config config,
                        @Named(Config.BTC_NODES) String btcNodesFromOptions,
-                       @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                        @Named(DaoOptionKeys.RPC_USER) String rpcUser,
@@ -162,7 +160,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.storage = storage;
         this.config = config;
         this.btcNodesFromOptions = btcNodesFromOptions;
-        this.useTorFlagFromOptions = useTorFlagFromOptions;
         this.referralIdFromOptions = referralId;
         this.fullDaoNodeFromOptions = fullDaoNode;
         this.rpcUserFromOptions = rpcUser;
@@ -270,12 +267,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         dontShowAgainMapAsObservable.putAll(getDontShowAgainMap());
 
         // Override settings with options if set
-        if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
-            if (useTorFlagFromOptions.equals("false"))
-                setUseTorForBitcoinJ(false);
-            else if (useTorFlagFromOptions.equals("true"))
-                setUseTorForBitcoinJ(true);
-        }
+        if (config.isUseTorForBtcOptionSetExplicitly())
+            setUseTorForBitcoinJ(config.isUseTorForBtc());
 
         if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty()) {
             if (getBitcoinNodes() != null && !getBitcoinNodes().equals(btcNodesFromOptions)) {
@@ -744,7 +737,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
         if ((!BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet()
                 || config.isLocalBitcoinNodeIsRunning())
-                && (useTorFlagFromOptions == null || useTorFlagFromOptions.isEmpty()))
+                && !config.isUseTorForBtcOptionSetExplicitly())
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

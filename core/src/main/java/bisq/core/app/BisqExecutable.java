@@ -286,10 +286,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC,
-                "If set to true BitcoinJ is routed over tor (socks 5 proxy).")
-                .withRequiredArg();
-
         parser.accepts(BtcOptionKeys.SOCKS5_DISCOVER_MODE,
                 format("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
                         " (comma separated, they get OR'd together). (default: %s)", "ALL"))

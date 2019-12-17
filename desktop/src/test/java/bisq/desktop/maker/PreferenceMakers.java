@@ -33,14 +33,12 @@ public class PreferenceMakers {
 
     public static final Property<bisq.core.user.Preferences, Storage> storage = new Property<>();
     public static final Property<Preferences, Config> config = new Property<>();
-    public static final Property<Preferences, String> btcNodesFromOptions = new Property<>();
     public static final Property<Preferences, String> useTorFlagFromOptions = new Property<>();
     public static final Property<Preferences, String> referralID = new Property<>();
 
     public static final Instantiator<Preferences> Preferences = lookup -> new Preferences(
             lookup.valueOf(storage, new SameValueDonor<Storage>(null)),
             lookup.valueOf(config, new SameValueDonor<Config>(null)),
-            lookup.valueOf(btcNodesFromOptions, new SameValueDonor<String>(null)),
             lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<String>(null)),
             lookup.valueOf(referralID, new SameValueDonor<String>(null)),
             null, null, null, null);
