@@ -222,6 +222,7 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
+        failedTradesManager.setUnfailTradeCallback(this::unfailTrade);
     }
 
     @Override
@@ -285,13 +286,13 @@ public class TradeManager implements PersistedDataHost {
                         removePreparedTradeList.add(trade);
                     }
 
-            if (trade.getDepositTx() == null) {
-                log.warn("Deposit tx for trader with ID {} is null at initPendingTrades. " +
-                                "This can happen for valid transaction in rare cases (e.g. after a SPV resync). " +
-                                "We leave it to the user to move the trade to failed trades if the problem persists.",
-                        trade.getId());
-                tradesWithoutDepositTx.add(trade);
-            }
+                    if (trade.getDepositTx() == null) {
+                        log.warn("Deposit tx for trader with ID {} is null at initPendingTrades. " +
+                                        "This can happen for valid transaction in rare cases (e.g. after a SPV resync). " +
+                                        "We leave it to the user to move the trade to failed trades if the problem persists.",
+                                trade.getId());
+                        tradesWithoutDepositTx.add(trade);
+                    }
                 }
         );
 
@@ -572,6 +573,13 @@ public class TradeManager implements PersistedDataHost {
         failedTradesManager.add(trade);
 
         cleanUpAddressEntries();
+    }
+
+    // If trade still has funds locked up it might come back from failed trades
+    private void unfailTrade(Trade trade) {
+        if (!tradableList.contains(trade)) {
+            tradableList.add(trade);
+        }
     }
 
     // If trade is in preparation (if taker role: before taker fee is paid; both roles: before deposit published)
