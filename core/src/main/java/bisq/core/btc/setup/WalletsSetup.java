@@ -150,7 +150,7 @@ public class WalletsSetup {
                         Socks5ProxyProvider socks5ProxyProvider,
                         Config config,
                         BtcNodes btcNodes,
-                        @Named(BtcOptionKeys.USER_AGENT) String userAgent,
+                        @Named(Config.USER_AGENT) String userAgent,
                         @Named(Config.WALLET_DIR) File appDir,
                         @Named(Config.USE_ALL_PROVIDED_NODES) boolean useAllProvidedNodes,
                         @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,

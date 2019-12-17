@@ -62,6 +62,7 @@ public class Config {
     public static final String BTC_NODES = "btcNodes";
     public static final String SOCKS5_DISCOVER_MODE = "socks5DiscoverMode";
     public static final String USE_ALL_PROVIDED_NODES = "useAllProvidedNodes";
+    public static final String USER_AGENT = "userAgent";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -120,6 +121,7 @@ public class Config {
     private final boolean useTorForBtcOptionSetExplicitly;
     private final String socks5DiscoverMode;
     private final boolean useAllProvidedNodes;
+    private final String userAgent;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -422,6 +424,12 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<String> userAgentOpt =
+                parser.accepts(USER_AGENT,
+                        "User agent at btc node connections")
+                        .withRequiredArg()
+                        .defaultsTo("Bisq");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -507,6 +515,7 @@ public class Config {
             this.useTorForBtcOptionSetExplicitly = options.has(useTorForBtcOpt);
             this.socks5DiscoverMode = options.valueOf(socks5DiscoverModeOpt);
             this.useAllProvidedNodes = options.valueOf(useAllProvidedNodesOpt);
+            this.userAgent = options.valueOf(userAgentOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -761,5 +770,9 @@ public class Config {
 
     public boolean isUseAllProvidedNodes() {
         return useAllProvidedNodes;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
     }
 }
