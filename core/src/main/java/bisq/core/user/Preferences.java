@@ -150,7 +150,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Inject
     public Preferences(Storage<PreferencesPayload> storage,
                        Config config,
-                       @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
+                       @Named(Config.BTC_NODES) String btcNodesFromOptions,
                        @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,

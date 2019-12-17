@@ -286,11 +286,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.BTC_NODES,
-                "Custom nodes used for BitcoinJ as comma separated IP addresses.")
-                .withRequiredArg()
-                .describedAs("ip[,...]");
-
         parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC,
                 "If set to true BitcoinJ is routed over tor (socks 5 proxy).")
                 .withRequiredArg();

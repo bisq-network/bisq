@@ -80,7 +80,7 @@ public class BitcoinModule extends AppModule {
 
         bind(File.class).annotatedWith(named(WALLET_DIR)).toInstance(config.getWalletDir());
 
-        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.BTC_NODES));
+        bindConstant().annotatedWith(named(Config.BTC_NODES)).to(config.getBtcNodes());
         bindConstant().annotatedWith(named(BtcOptionKeys.USER_AGENT)).to(environment.getRequiredProperty(BtcOptionKeys.USER_AGENT));
         bindConstant().annotatedWith(named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_ALL_PROVIDED_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES));
