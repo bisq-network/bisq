@@ -285,10 +285,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //RpcOptionKeys
-        parser.accepts(DaoOptionKeys.GENESIS_TX_ID,
-                "Genesis transaction ID when not using the hard coded one")
-                .withRequiredArg();
-
         parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
                 format("Genesis transaction block height when not using the hard coded one (default: %s)", "-1"))
                 .withRequiredArg();

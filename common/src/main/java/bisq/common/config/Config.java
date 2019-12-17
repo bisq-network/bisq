@@ -72,6 +72,7 @@ public class Config {
     public static final String RPC_BLOCK_NOTIFICATION_HOST = "rpcBlockNotificationHost";
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
     public static final String FULL_DAO_NODE = "fullDaoNode";
+    public static final String GENESIS_TX_ID = "genesisTxId";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -142,6 +143,7 @@ public class Config {
     private final boolean dumpBlockchainData;
     private final boolean fullDaoNode;
     private final boolean fullDaoNodeOptionSetExplicitly;
+    private final String genesisTxId;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -497,6 +499,11 @@ public class Config {
                         .ofType(Boolean.class)
                         .defaultsTo(DEFAULT_FULL_DAO_NODE);
 
+        ArgumentAcceptingOptionSpec<String> genesisTxIdOpt =
+                parser.accepts(GENESIS_TX_ID, "Genesis transaction ID when not using the hard coded one")
+                        .withRequiredArg()
+                        .defaultsTo("");
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -592,6 +599,7 @@ public class Config {
             this.dumpBlockchainData = options.valueOf(dumpBlockchainDataOpt);
             this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
             this.fullDaoNodeOptionSetExplicitly = options.has(fullDaoNodeOpt);
+            this.genesisTxId = options.valueOf(genesisTxIdOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -886,5 +894,9 @@ public class Config {
 
     public boolean isFullDaoNodeOptionSetExplicitly() {
         return fullDaoNodeOptionSetExplicitly;
+    }
+
+    public String getGenesisTxId() {
+        return genesisTxId;
     }
 }
