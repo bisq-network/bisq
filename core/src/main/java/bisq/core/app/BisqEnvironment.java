@@ -20,6 +20,7 @@ package bisq.core.app;
 import bisq.core.dao.DaoOptionKeys;
 
 import bisq.common.BisqException;
+import bisq.common.config.Config;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -57,7 +58,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected boolean isBitcoinLocalhostNodeRunning;
 
     protected final String
-            genesisBlockHeight, genesisTotalSupply,
+            genesisTotalSupply,
             daoActivated;
 
     public BisqEnvironment(OptionSet options) {
@@ -68,7 +69,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //DaoOptionKeys
-        genesisBlockHeight = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_BLOCK_HEIGHT, "-1");
         genesisTotalSupply = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_TOTAL_SUPPLY, "-1");
         daoActivated = getProperty(commandLineProperties, DaoOptionKeys.DAO_ACTIVATED, "true");
 
@@ -88,7 +88,6 @@ public class BisqEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
-                setProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, genesisBlockHeight);
                 setProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY, genesisTotalSupply);
                 setProperty(DaoOptionKeys.DAO_ACTIVATED, daoActivated);
             }

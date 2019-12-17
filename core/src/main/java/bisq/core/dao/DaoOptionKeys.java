@@ -22,7 +22,6 @@ package bisq.core.dao;
  */
 public class DaoOptionKeys {
 
-    public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
     public static final String DAO_ACTIVATED = "daoActivated";
 }

@@ -106,7 +106,7 @@ public class GenesisTxInfo {
 
     @Inject
     public GenesisTxInfo(@Named(Config.GENESIS_TX_ID) String genesisTxId,
-                         @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) Integer genesisBlockHeight,
+                         @Named(Config.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight,
                          @Named(DaoOptionKeys.GENESIS_TOTAL_SUPPLY) Long genesisTotalSupply) {
         BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
         boolean isMainnet = baseCurrencyNetwork.isMainnet();

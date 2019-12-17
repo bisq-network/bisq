@@ -199,9 +199,7 @@ public class DaoModule extends AppModule {
 
         // Genesis
         bindConstant().annotatedWith(named(Config.GENESIS_TX_ID)).to(config.getGenesisTxId());
-
-        Integer genesisBlockHeight = environment.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, Integer.class, -1);
-        bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
+        bindConstant().annotatedWith(named(Config.GENESIS_BLOCK_HEIGHT)).to(config.getGenesisBlockHeight());
 
         Long genesisTotalSupply = environment.getProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY, Long.class, -1L);
         bind(Long.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_TOTAL_SUPPLY)).toInstance(genesisTotalSupply);

@@ -73,6 +73,7 @@ public class Config {
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
     public static final String FULL_DAO_NODE = "fullDaoNode";
     public static final String GENESIS_TX_ID = "genesisTxId";
+    public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -144,6 +145,7 @@ public class Config {
     private final boolean fullDaoNode;
     private final boolean fullDaoNodeOptionSetExplicitly;
     private final String genesisTxId;
+    private final int genesisBlockHeight;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -504,6 +506,13 @@ public class Config {
                         .withRequiredArg()
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<Integer> genesisBlockHeightOpt =
+                parser.accepts(GENESIS_BLOCK_HEIGHT,
+                        "Genesis transaction block height when not using the hard coded one")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(-1);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -600,6 +609,7 @@ public class Config {
             this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
             this.fullDaoNodeOptionSetExplicitly = options.has(fullDaoNodeOpt);
             this.genesisTxId = options.valueOf(genesisTxIdOpt);
+            this.genesisBlockHeight = options.valueOf(genesisBlockHeightOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -898,5 +908,9 @@ public class Config {
 
     public String getGenesisTxId() {
         return genesisTxId;
+    }
+
+    public int getGenesisBlockHeight() {
+        return genesisBlockHeight;
     }
 }
