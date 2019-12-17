@@ -21,7 +21,6 @@ import bisq.core.btc.BtcOptionKeys;
 import bisq.core.dao.DaoOptionKeys;
 
 import bisq.network.NetworkOptionKeys;
-import bisq.network.p2p.network.ConnectionConfig;
 
 import bisq.common.BisqException;
 import bisq.common.config.BaseCurrencyNetwork;
@@ -66,7 +65,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, useTorForBtc, rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
-            daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
+            daoActivated;
 
     @Getter
     protected boolean ignoreLocalBtcNode;
@@ -79,11 +78,6 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //NetworkOptionKeys
-        msgThrottlePerSec = getProperty(commandLineProperties, NetworkOptionKeys.MSG_THROTTLE_PER_SEC, String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_SEC));
-        msgThrottlePer10Sec = getProperty(commandLineProperties, NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC, String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_10_SEC));
-        sendMsgThrottleTrigger = getProperty(commandLineProperties, NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER, String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER));
-        sendMsgThrottleSleep = getProperty(commandLineProperties, NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_SLEEP));
-
 
         //DaoOptionKeys
         rpcUser = getProperty(commandLineProperties, DaoOptionKeys.RPC_USER, "");
@@ -125,10 +119,6 @@ public class BisqEnvironment extends StandardEnvironment {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));
-                setProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC, msgThrottlePerSec);
-                setProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC, msgThrottlePer10Sec);
-                setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER, sendMsgThrottleTrigger);
-                setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, sendMsgThrottleSleep);
 
                 setProperty(DaoOptionKeys.RPC_USER, rpcUser);
                 setProperty(DaoOptionKeys.RPC_PASSWORD, rpcPassword);

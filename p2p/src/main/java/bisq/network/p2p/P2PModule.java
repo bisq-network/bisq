@@ -20,7 +20,6 @@ package bisq.network.p2p;
 import bisq.network.NetworkOptionKeys;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.network.Connection;
-import bisq.network.p2p.network.ConnectionConfig;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.Broadcaster;
@@ -74,7 +73,6 @@ public class P2PModule extends AppModule {
         bind(KeepAliveManager.class).in(Singleton.class);
         bind(Broadcaster.class).in(Singleton.class);
         bind(BanList.class).in(Singleton.class);
-        bind(ConnectionConfig.class).in(Singleton.class);
         bind(NetworkNode.class).toProvider(NetworkNodeProvider.class).in(Singleton.class);
         bind(Socks5ProxyProvider.class).in(Singleton.class);
 
@@ -100,10 +98,6 @@ public class P2PModule extends AppModule {
         bind(File.class).annotatedWith(named(TOR_CONTROL_COOKIE_FILE)).toProvider(of(config.getTorControlCookieFile()));
         bindConstant().annotatedWith(named(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)).to(config.isUseTorControlSafeCookieAuth());
         bindConstant().annotatedWith(named(TOR_STREAM_ISOLATION)).to(config.isTorStreamIsolation());
-        bindConstant().annotatedWith(named(NetworkOptionKeys.MSG_THROTTLE_PER_SEC)).to(environment.getRequiredProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC)).to(environment.getRequiredProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER)).to(environment.getRequiredProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP)).to(environment.getRequiredProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP));
         bindConstant().annotatedWith(named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE")).to(1000);
     }
 }

@@ -21,12 +21,17 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ch.qos.logback.classic.Level;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 public class Config {
+
+    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     public static final int NULL_INT = Integer.MIN_VALUE;
 
@@ -103,6 +108,10 @@ public class Config {
     private final File torControlCookieFile;
     private final boolean useTorControlSafeCookieAuth;
     private final boolean torStreamIsolation;
+    private final int msgThrottlePerSec;
+    private final int msgThrottlePer10Sec;
+    private final int sendMsgThrottleTrigger;
+    private final int sendMsgThrottleSleep;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -351,6 +360,32 @@ public class Config {
 
         OptionSpecBuilder torStreamIsolationOpt =
                 parser.accepts(TOR_STREAM_ISOLATION, "Use stream isolation for Tor [experimental!].");
+
+        ArgumentAcceptingOptionSpec<Integer> msgThrottlePerSecOpt =
+                parser.accepts("msgThrottlePerSec", "Message throttle per sec for connection class")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        // With PERMITTED_MESSAGE_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
+                        .defaultsTo(200);
+
+        ArgumentAcceptingOptionSpec<Integer> msgThrottlePer10SecOpt =
+                parser.accepts("msgThrottlePer10Sec", "Message throttle per 10 sec for connection class")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        // With PERMITTED_MESSAGE_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
+                        .defaultsTo(1000);
+
+        ArgumentAcceptingOptionSpec<Integer> sendMsgThrottleTriggerOpt =
+                parser.accepts("sendMsgThrottleTrigger", "Time in ms when we trigger a sleep if 2 messages are sent")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(20); // Time in ms when we trigger a sleep if 2 messages are sent
+
+        ArgumentAcceptingOptionSpec<Integer> sendMsgThrottleSleepOpt =
+                parser.accepts("sendMsgThrottleSleep", "Pause in ms to sleep if we get too many messages to send")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(50); // Pause in ms to sleep if we get too many messages to send
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -422,6 +457,15 @@ public class Config {
             this.maxConnections = options.valueOf(maxConnectionsOpt);
             this.socks5ProxyBtcAddress = options.valueOf(socks5ProxyBtcAddressOpt);
             this.socks5ProxyHttpAddress = options.valueOf(socks5ProxyHttpAddressOpt);
+            this.msgThrottlePerSec = options.valueOf(msgThrottlePerSecOpt);
+            this.msgThrottlePer10Sec = options.valueOf(msgThrottlePer10SecOpt);
+            this.sendMsgThrottleTrigger = options.valueOf(sendMsgThrottleTriggerOpt);
+            this.sendMsgThrottleSleep = options.valueOf(sendMsgThrottleSleepOpt);
+            // Preserve log output from now-removed ConnectionConfig class TODO: remove
+            log.info("ConnectionConfig{\n" +
+                            "    msgThrottlePerSec={},\n    msgThrottlePer10Sec={},\n" +
+                            "    sendMsgThrottleTrigger={},\n    sendMsgThrottleSleep={}\n}",
+                    msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -640,5 +684,21 @@ public class Config {
 
     public boolean isTorStreamIsolation() {
         return torStreamIsolation;
+    }
+
+    public int getMsgThrottlePerSec() {
+        return msgThrottlePerSec;
+    }
+
+    public int getMsgThrottlePer10Sec() {
+        return msgThrottlePer10Sec;
+    }
+
+    public int getSendMsgThrottleTrigger() {
+        return sendMsgThrottleTrigger;
+    }
+
+    public int getSendMsgThrottleSleep() {
+        return sendMsgThrottleSleep;
     }
 }
