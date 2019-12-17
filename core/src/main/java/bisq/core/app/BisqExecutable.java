@@ -285,10 +285,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //RpcOptionKeys
-        parser.accepts(DaoOptionKeys.GENESIS_TOTAL_SUPPLY,
-                format("Genesis total supply when not using the hard coded one (default: %s)", "-1"))
-                .withRequiredArg();
-
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
                 format("Developer flag. If true it enables dao phase 2 features. (default: %s)", "true"))
                 .withRequiredArg()
