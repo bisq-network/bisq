@@ -74,7 +74,7 @@ public class RpcService {
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcHost;
-    private final String rpcPort;
+    private final int rpcPort;
     private final String rpcBlockPort;
     private final String rpcBlockHost;
 
@@ -94,7 +94,7 @@ public class RpcService {
     @Inject
     public RpcService(Preferences preferences,
                       @Named(Config.RPC_HOST) String rpcHost,
-                      @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
+                      @Named(Config.RPC_PORT) int rpcPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
         this.rpcUser = preferences.getRpcUser();
@@ -102,15 +102,15 @@ public class RpcService {
 
         // mainnet is 8332, testnet 18332, regtest 18443
         boolean isHostSet = !rpcHost.isEmpty();
-        boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
+        boolean isPortSet = rpcPort != Config.UNSPECIFIED_PORT;
         boolean isMainnet = BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet();
         boolean isTestnet = BaseCurrencyNetwork.CURRENT_NETWORK.isTestnet();
         boolean isDaoBetaNet = BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet();
         this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
         this.rpcPort = isPortSet ? rpcPort :
-                isMainnet || isDaoBetaNet ? "8332" :
-                        isTestnet ? "18332" :
-                                "18443"; // regtest
+                isMainnet || isDaoBetaNet ? 8332 :
+                        isTestnet ? 18332 :
+                                18443; // regtest
         boolean isBlockPortSet = rpcBlockPort != null && !rpcBlockPort.isEmpty();
         boolean isBlockHostSet = rpcBlockHost != null && !rpcBlockHost.isEmpty();
         this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : "5125";
@@ -139,11 +139,11 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.rpc.auth_scheme", "Basic");
                 nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
                 nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
-                nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
+                nodeConfig.setProperty("node.bitcoind.rpc.port", Integer.toString(rpcPort));
                 nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
                 nodeConfig.setProperty("node.bitcoind.notification.block.host", rpcBlockHost);
-                nodeConfig.setProperty("node.bitcoind.notification.alert.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
-                nodeConfig.setProperty("node.bitcoind.notification.wallet.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
+                nodeConfig.setProperty("node.bitcoind.notification.alert.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));
+                nodeConfig.setProperty("node.bitcoind.notification.wallet.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));
 
                 nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
                 BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);

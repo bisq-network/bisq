@@ -67,10 +67,11 @@ public class Config {
     public static final String RPC_USER = "rpcUser";
     public static final String RPC_PASSWORD = "rpcPassword";
     public static final String RPC_HOST = "rpcHost";
+    public static final String RPC_PORT = "rpcPort";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
-    public static final int DEFAULT_INT = Integer.MIN_VALUE;
+    public static final int UNSPECIFIED_PORT = -1;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     public static final String DEFAULT_REGTEST_HOST = "localhost";
     public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC = 9; // down from BitcoinJ default of 12
@@ -131,6 +132,7 @@ public class Config {
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcHost;
+    private final int rpcPort;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -356,7 +358,8 @@ public class Config {
                         .availableUnless(TORRC_FILE, TORRC_OPTIONS)
                         .withRequiredArg()
                         .ofType(int.class)
-                        .describedAs("port");
+                        .describedAs("port")
+                        .defaultsTo(UNSPECIFIED_PORT);
 
         ArgumentAcceptingOptionSpec<String> torControlPasswordOpt =
                 parser.accepts(TOR_CONTROL_PASSWORD, "The password for controlling the already running Tor service.")
@@ -460,6 +463,12 @@ public class Config {
                         .withRequiredArg()
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<Integer> rpcPortOpt =
+                parser.accepts(RPC_PORT, "Bitcoind rpc port")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(UNSPECIFIED_PORT);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -512,7 +521,7 @@ public class Config {
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
-            this.torControlPort = options.has(torControlPortOpt) ? options.valueOf(torControlPortOpt) : DEFAULT_INT;
+            this.torControlPort = options.valueOf(torControlPortOpt);
             this.torControlPassword = options.valueOf(torControlPasswordOpt);
             this.torControlCookieFile = options.has(torControlCookieFileOpt) ?
                     options.valueOf(torControlCookieFileOpt).toFile() : null;
@@ -550,6 +559,7 @@ public class Config {
             this.rpcUser = options.valueOf(rpcUserOpt);
             this.rpcPassword = options.valueOf(rpcPasswordOpt);
             this.rpcHost = options.valueOf(rpcHostOpt);
+            this.rpcPort = options.valueOf(rpcPortOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -824,5 +834,9 @@ public class Config {
 
     public String getRpcHost() {
         return rpcHost;
+    }
+
+    public int getRpcPort() {
+        return rpcPort;
     }
 }
