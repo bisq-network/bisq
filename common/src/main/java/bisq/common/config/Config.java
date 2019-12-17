@@ -58,6 +58,7 @@ public class Config {
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
+    public static final String IGNORE_LOCAL_BTC_NODE = "ignoreLocalBtcNode";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -196,7 +197,8 @@ public class Config {
                         .defaultsTo(BaseCurrencyNetwork.BTC_MAINNET);
 
         ArgumentAcceptingOptionSpec<Boolean> ignoreLocalBtcNodeOpt =
-                parser.accepts("ignoreLocalBtcNode", "If set to true a Bitcoin Core node running locally will be ignored")
+                parser.accepts(IGNORE_LOCAL_BTC_NODE,
+                        "If set to true a Bitcoin Core node running locally will be ignored")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(false);

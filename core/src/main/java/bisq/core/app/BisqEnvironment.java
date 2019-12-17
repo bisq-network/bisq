@@ -64,9 +64,6 @@ public class BisqEnvironment extends StandardEnvironment {
             useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated;
 
-    @Getter
-    protected boolean ignoreLocalBtcNode;
-
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
                 options)));
@@ -94,8 +91,6 @@ public class BisqEnvironment extends StandardEnvironment {
         userAgent = getProperty(commandLineProperties, BtcOptionKeys.USER_AGENT, "Bisq");
         useAllProvidedNodes = getProperty(commandLineProperties, BtcOptionKeys.USE_ALL_PROVIDED_NODES, "false");
         numConnectionForBtc = getProperty(commandLineProperties, BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, "9");
-        ignoreLocalBtcNode = getProperty(commandLineProperties, BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, "false").equalsIgnoreCase("true");
-
 
         MutablePropertySources propertySources = getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -131,7 +126,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(BtcOptionKeys.USER_AGENT, userAgent);
                 setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
                 setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
-                setProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, String.valueOf(ignoreLocalBtcNode));
             }
         });
     }

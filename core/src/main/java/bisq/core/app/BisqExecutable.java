@@ -286,10 +286,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE,
-                "If set to true a Bitcoin core node running locally will be ignored")
-                .withRequiredArg();
-
         parser.accepts(BtcOptionKeys.BTC_NODES,
                 "Custom nodes used for BitcoinJ as comma separated IP addresses.")
                 .withRequiredArg()
