@@ -270,7 +270,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void customizeOptionParsing(OptionParser parser) {
-        //NetworkOptionKeys
 
         parser.accepts(Config.USE_DEV_PRIVILEGE_KEYS,
                 format("If that is true all the privileged features which requires a private key " +

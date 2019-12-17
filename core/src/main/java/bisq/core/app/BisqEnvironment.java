@@ -74,8 +74,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
-        //NetworkOptionKeys
-
         //DaoOptionKeys
         rpcUser = getProperty(commandLineProperties, DaoOptionKeys.RPC_USER, "");
         rpcPassword = getProperty(commandLineProperties, DaoOptionKeys.RPC_PASSWORD, "");
