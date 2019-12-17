@@ -113,14 +113,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("explorer.sqrrm.net (@sqrrm)", "https://explorer.sqrrm.net/tx.html?tx=", "https://explorer.sqrrm.net/Address.html?addr=")
     ));
 
-    private static final ArrayList<BlockChainExplorer> BSQ_BETA_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
-            new BlockChainExplorer("BSQ", "http://explorer.betanet.bisq.network/tx.html?tx=", "http://explorer.betanet.bisq.network/Address.html?addr=")
-    ));
-
-    private static final ArrayList<BlockChainExplorer> BSQ_TEST_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
-            new BlockChainExplorer("BSQ", "http://explorer.testnet.bisq.network/tx.html?tx=", "http://explorer.testnet.bisq.network/Address.html?addr=")
-    ));
-
     // payload is initialized so the default values are available for Property initialization.
     @Setter
     @Delegate(excludes = ExcludesDelegateMethods.class)
@@ -733,16 +725,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
     }
 
-    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers()
-    {
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        if (baseCurrencyNetwork.isMainnet())
-            return BSQ_MAIN_NET_EXPLORERS;
-        else if (baseCurrencyNetwork.isDaoBetaNet())
-            return BSQ_BETA_NET_EXPLORERS;
-        else // testnet
-            return BSQ_TEST_NET_EXPLORERS;
-    }
+    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers() { return BSQ_MAIN_NET_EXPLORERS; }
 
     public boolean showAgain(String key) {
         return !prefPayload.getDontShowAgainMap().containsKey(key) || !prefPayload.getDontShowAgainMap().get(key);
