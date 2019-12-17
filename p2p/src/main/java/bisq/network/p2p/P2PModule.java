@@ -17,7 +17,6 @@
 
 package bisq.network.p2p;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
@@ -86,8 +85,6 @@ public class P2PModule extends AppModule {
 
         bindConstant().annotatedWith(named(MAX_CONNECTIONS)).to(config.getMaxConnections());
 
-        Integer networkId = environment.getProperty(NetworkOptionKeys.NETWORK_ID, int.class, 1);
-        bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.NETWORK_ID)).toInstance(networkId);
         bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(BAN_LIST)).toInstance(config.getBanList());
         bindConstant().annotatedWith(named(SOCKS_5_PROXY_BTC_ADDRESS)).to(config.getSocks5ProxyBtcAddress());
         bindConstant().annotatedWith(named(SOCKS_5_PROXY_HTTP_ADDRESS)).to(config.getSocks5ProxyHttpAddress());

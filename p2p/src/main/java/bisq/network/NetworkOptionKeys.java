@@ -18,5 +18,4 @@
 package bisq.network;
 
 public class NetworkOptionKeys {
-    public static final String NETWORK_ID = "networkId";
 }

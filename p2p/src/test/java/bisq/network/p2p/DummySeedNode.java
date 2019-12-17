@@ -17,7 +17,6 @@
 
 package bisq.network.p2p;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.peers.BanList;
 
 import bisq.common.UserThread;
@@ -99,8 +98,8 @@ public class DummySeedNode {
                 String arg = arg1;
                 if (arg.startsWith("--"))
                     arg = arg.substring(2);
-                if (arg.startsWith(NetworkOptionKeys.NETWORK_ID)) {
-                    arg = arg.substring(NetworkOptionKeys.NETWORK_ID.length() + 1);
+                if (arg.startsWith("networkId")) {
+                    arg = arg.substring("networkId".length() + 1);
                     networkId = Integer.parseInt(arg);
                     log.debug("From processArgs: networkId=" + networkId);
                     checkArgument(networkId > -1 && networkId < 3,

@@ -20,10 +20,7 @@ package bisq.core.app;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.dao.DaoOptionKeys;
 
-import bisq.network.NetworkOptionKeys;
-
 import bisq.common.BisqException;
-import bisq.common.config.BaseCurrencyNetwork;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -118,8 +115,6 @@ public class BisqEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
-                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(BaseCurrencyNetwork.CURRENT_NETWORK.ordinal()));
-
                 setProperty(DaoOptionKeys.RPC_USER, rpcUser);
                 setProperty(DaoOptionKeys.RPC_PASSWORD, rpcPassword);
                 setProperty(DaoOptionKeys.RPC_HOST, rpcHost);
