@@ -59,7 +59,9 @@ public class PreferencesTest {
         Res.setBaseCurrencyName("Bitcoin");
 
         storage = mock(Storage.class);
-        preferences = new Preferences(storage, new TestConfig(), null, null, null, null, null, Config.UNSPECIFIED_PORT);
+        preferences = new Preferences(
+                storage, new TestConfig(), null, null, Config.DEFAULT_FULL_DAO_NODE,
+                null, null, Config.UNSPECIFIED_PORT);
     }
 
     @Test
@@ -135,7 +137,7 @@ public class PreferencesTest {
 
         preferences.readPersisted();
 
-        assertEquals("US Dollar (USD)",preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode());
+        assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode());
     }
 
 }

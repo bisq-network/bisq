@@ -285,12 +285,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //RpcOptionKeys
-        parser.accepts(DaoOptionKeys.FULL_DAO_NODE,
-                "If set to true the node requests the blockchain data via RPC requests " +
-                        "from Bitcoin Core and provide the validated BSQ txs to the network. " +
-                        "It requires that the other RPC properties are set as well.")
-                .withRequiredArg();
-
         parser.accepts(DaoOptionKeys.GENESIS_TX_ID,
                 "Genesis transaction ID when not using the hard coded one")
                 .withRequiredArg();

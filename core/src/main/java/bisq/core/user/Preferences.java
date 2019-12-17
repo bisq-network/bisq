@@ -19,7 +19,6 @@ package bisq.core.user;
 
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -134,9 +133,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private final Storage<PreferencesPayload> storage;
     private final Config config;
-    private final String btcNodesFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
+    private final String btcNodesFromOptions, referralIdFromOptions,
             rpcUserFromOptions, rpcPwFromOptions;
     private final int blockNotifyPortFromOptions;
+    private final boolean fullDaoNodeFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -152,7 +152,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        Config config,
                        @Named(Config.BTC_NODES) String btcNodesFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
-                       @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
+                       @Named(Config.FULL_DAO_NODE) boolean fullDaoNode,
                        @Named(Config.RPC_USER) String rpcUser,
                        @Named(Config.RPC_PASSWORD) String rpcPassword,
                        @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
@@ -625,7 +625,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setDaoFullNode(boolean value) {
         // We only persist if we have not set the program argument
-        if (fullDaoNodeFromOptions == null || fullDaoNodeFromOptions.isEmpty()) {
+        if (config.isFullDaoNodeOptionSetExplicitly()) {
             prefPayload.setDaoFullNode(value);
             persist();
         }
@@ -771,8 +771,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean isDaoFullNode() {
-        if (fullDaoNodeFromOptions != null && !fullDaoNodeFromOptions.isEmpty()) {
-            return fullDaoNodeFromOptions.toLowerCase().equals("true");
+        if (config.isFullDaoNodeOptionSetExplicitly()) {
+            return fullDaoNodeFromOptions;
         } else {
             return prefPayload.isDaoFullNode();
         }

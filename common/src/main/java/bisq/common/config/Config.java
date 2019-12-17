@@ -71,6 +71,7 @@ public class Config {
     public static final String RPC_BLOCK_NOTIFICATION_PORT = "rpcBlockNotificationPort";
     public static final String RPC_BLOCK_NOTIFICATION_HOST = "rpcBlockNotificationHost";
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
+    public static final String FULL_DAO_NODE = "fullDaoNode";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -78,6 +79,7 @@ public class Config {
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     public static final String DEFAULT_REGTEST_HOST = "localhost";
     public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC = 9; // down from BitcoinJ default of 12
+    public static final boolean DEFAULT_FULL_DAO_NODE = false;
 
     public static File CURRENT_APP_DATA_DIR;
 
@@ -99,7 +101,6 @@ public class Config {
     private final boolean ignoreLocalBtcNode;
     private final String bitcoinRegtestHost;
     private final boolean daoActivated;
-    private final boolean fullDaoNode;
     private final String logLevel;
     private final String referralId;
     private final boolean useDevMode;
@@ -139,6 +140,8 @@ public class Config {
     private final int rpcBlockNotificationPort;
     private final String rpcBlockNotificationHost;
     private final boolean dumpBlockchainData;
+    private final boolean fullDaoNode;
+    private final boolean fullDaoNodeOptionSetExplicitly;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -242,14 +245,6 @@ public class Config {
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(true);
-
-        ArgumentAcceptingOptionSpec<Boolean> fullDaoNodeOpt =
-                parser.accepts("fullDaoNode", "If set to true the node requests the blockchain data via RPC requests " +
-                        "from Bitcoin Core and provide the validated BSQ txs to the network. It requires that the " +
-                        "other RPC properties are set as well.")
-                        .withRequiredArg()
-                        .ofType(Boolean.class)
-                        .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<String> logLevelOpt =
                 parser.accepts(LOG_LEVEL, "Set logging level")
@@ -494,6 +489,14 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Boolean> fullDaoNodeOpt =
+                parser.accepts(FULL_DAO_NODE, "If set to true the node requests the blockchain data via RPC requests " +
+                        "from Bitcoin Core and provide the validated BSQ txs to the network. It requires that the " +
+                        "other RPC properties are set as well.")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(DEFAULT_FULL_DAO_NODE);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -542,7 +545,6 @@ public class Config {
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
-            this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
             this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
@@ -588,6 +590,8 @@ public class Config {
             this.rpcBlockNotificationPort = options.valueOf(rpcBlockNotificationPortOpt);
             this.rpcBlockNotificationHost = options.valueOf(rpcBlockNotificationHostOpt);
             this.dumpBlockchainData = options.valueOf(dumpBlockchainDataOpt);
+            this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
+            this.fullDaoNodeOptionSetExplicitly = options.has(fullDaoNodeOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -694,10 +698,6 @@ public class Config {
 
     public boolean isDaoActivated() {
         return daoActivated;
-    }
-
-    public boolean isFullDaoNode() {
-        return fullDaoNode;
     }
 
     public String getLogLevel() {
@@ -878,5 +878,13 @@ public class Config {
 
     public boolean isDumpBlockchainData() {
         return dumpBlockchainData;
+    }
+
+    public boolean isFullDaoNode() {
+        return fullDaoNode;
+    }
+
+    public boolean isFullDaoNodeOptionSetExplicitly() {
+        return fullDaoNodeOptionSetExplicitly;
     }
 }
