@@ -272,11 +272,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 "Optional Referral ID (e.g. for API users or pro market makers)")
                 .withRequiredArg();
 
-        parser.accepts(Config.USE_DEV_MODE,
-                format("Enables dev mode which is used for convenience for developer testing (default: %s)", "false"))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
         //RpcOptionKeys
     }
 

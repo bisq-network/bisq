@@ -82,7 +82,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());
 
         bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.isUseDevPrivilegeKeys());
-        bind(boolean.class).annotatedWith(named(USE_DEV_MODE)).toInstance(config.isUseDevMode());
+        bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.isUseDevMode());
         bind(String.class).annotatedWith(named(REFERRAL_ID)).toInstance(config.getReferralId());
 
         // ordering is used for shut down sequence
