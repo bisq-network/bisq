@@ -152,7 +152,7 @@ public class WalletsSetup {
                         BtcNodes btcNodes,
                         @Named(BtcOptionKeys.USER_AGENT) String userAgent,
                         @Named(Config.WALLET_DIR) File appDir,
-                        @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
+                        @Named(Config.USE_ALL_PROVIDED_NODES) boolean useAllProvidedNodes,
                         @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
                         @Named(Config.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
@@ -162,7 +162,7 @@ public class WalletsSetup {
         this.config = config;
         this.btcNodes = btcNodes;
         this.numConnectionForBtc = numConnectionForBtc != null ? Integer.parseInt(numConnectionForBtc) : DEFAULT_CONNECTIONS;
-        this.useAllProvidedNodes = "true".equals(useAllProvidedNodes);
+        this.useAllProvidedNodes = useAllProvidedNodes;
         this.userAgent = userAgent;
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);

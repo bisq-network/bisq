@@ -61,7 +61,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String rpcUser, rpcPassword,
             rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
-            useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
+            numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             daoActivated;
 
     public BisqEnvironment(OptionSet options) {
@@ -87,7 +87,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
         //BtcOptionKeys
         userAgent = getProperty(commandLineProperties, BtcOptionKeys.USER_AGENT, "Bisq");
-        useAllProvidedNodes = getProperty(commandLineProperties, BtcOptionKeys.USE_ALL_PROVIDED_NODES, "false");
         numConnectionForBtc = getProperty(commandLineProperties, BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, "9");
 
         MutablePropertySources propertySources = getPropertySources();
@@ -120,7 +119,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(DaoOptionKeys.DAO_ACTIVATED, daoActivated);
 
                 setProperty(BtcOptionKeys.USER_AGENT, userAgent);
-                setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
                 setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
             }
         });

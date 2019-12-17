@@ -286,10 +286,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .ofType(boolean.class);
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.USE_ALL_PROVIDED_NODES,
-                "Set to true if connection of bitcoin nodes should include clear net nodes")
-                .withRequiredArg();
-
         parser.accepts(BtcOptionKeys.USER_AGENT,
                 "User agent at btc node connections")
                 .withRequiredArg();

@@ -61,6 +61,7 @@ public class Config {
     public static final String IGNORE_LOCAL_BTC_NODE = "ignoreLocalBtcNode";
     public static final String BTC_NODES = "btcNodes";
     public static final String SOCKS5_DISCOVER_MODE = "socks5DiscoverMode";
+    public static final String USE_ALL_PROVIDED_NODES = "useAllProvidedNodes";
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -118,6 +119,7 @@ public class Config {
     private final boolean useTorForBtc;
     private final boolean useTorForBtcOptionSetExplicitly;
     private final String socks5DiscoverMode;
+    private final boolean useAllProvidedNodes;
 
     // properties derived from cli options, but not exposed as cli options themselves
     private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
@@ -413,6 +415,13 @@ public class Config {
                         .describedAs("mode[,...]")
                         .defaultsTo("ALL");
 
+        ArgumentAcceptingOptionSpec<Boolean> useAllProvidedNodesOpt =
+                parser.accepts(USE_ALL_PROVIDED_NODES,
+                        "Set to true if connection of bitcoin nodes should include clear net nodes")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         try {
             OptionSet cliOpts = parser.parse(args);
 
@@ -497,6 +506,7 @@ public class Config {
             this.useTorForBtc = options.valueOf(useTorForBtcOpt);
             this.useTorForBtcOptionSetExplicitly = options.has(useTorForBtcOpt);
             this.socks5DiscoverMode = options.valueOf(socks5DiscoverModeOpt);
+            this.useAllProvidedNodes = options.valueOf(useAllProvidedNodesOpt);
         } catch (OptionException ex) {
             throw new ConfigException(format("problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -747,5 +757,9 @@ public class Config {
 
     public String getSocks5DiscoverMode() {
         return socks5DiscoverMode;
+    }
+
+    public boolean isUseAllProvidedNodes() {
+        return useAllProvidedNodes;
     }
 }

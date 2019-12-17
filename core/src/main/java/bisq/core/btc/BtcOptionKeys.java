@@ -19,6 +19,5 @@ package bisq.core.btc;
 
 public class BtcOptionKeys {
     public static final String USER_AGENT = "userAgent";
-    public static final String USE_ALL_PROVIDED_NODES = "useAllProvidedNodes"; // We only use onion nodes if tor is enabled. That flag overrides that default behavior.
     public static final String NUM_CONNECTIONS_FOR_BTC = "numConnectionForBtc";
 }
