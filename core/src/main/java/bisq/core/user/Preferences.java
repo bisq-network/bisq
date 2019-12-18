@@ -233,10 +233,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                     throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
             }
 
-            // if no preference is set, randomly select a BSQ block explorer for the user
-            ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
-            setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
-
             prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
 
             prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
@@ -255,6 +251,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useAnimationsProperty.set(prefPayload.isUseAnimations());
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         cssThemeProperty.set(prefPayload.getCssTheme());
+
+        // if no valid block explorer is set, randomly select a valid BSQ block explorer
+        ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
+        BlockChainExplorer bsqExplorer = getBsqBlockChainExplorer();
+        if (bsqExplorer == null || bsqExplorers.contains(bsqExplorer) == false)
+            setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
