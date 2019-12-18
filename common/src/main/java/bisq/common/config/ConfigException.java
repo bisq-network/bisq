@@ -1,8 +1,10 @@
 package bisq.common.config;
 
-public class ConfigException extends RuntimeException {
+import bisq.common.BisqException;
 
-    public ConfigException(String message) {
-        super(message);
+public class ConfigException extends BisqException {
+
+    public ConfigException(String format, Object... args) {
+        super(format, args);
     }
 }

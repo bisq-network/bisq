@@ -621,11 +621,11 @@ public class Config {
             this.genesisTotalSupply = options.valueOf(genesisTotalSupplyOpt);
             this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
         } catch (OptionException ex) {
-            throw new ConfigException(format("problem parsing option '%s': %s",
+            throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),
                     ex.getCause() != null ?
                             ex.getCause().getMessage() :
-                            ex.getMessage()));
+                            ex.getMessage());
         }
 
         File btcNetworkDir = new File(appDataDir, baseCurrencyNetwork.name().toLowerCase());
