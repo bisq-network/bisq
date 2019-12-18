@@ -36,7 +36,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.config.BisqHelpFormatter;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigException;
-import bisq.common.config.HelpRequested;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
@@ -77,9 +76,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     public void execute(String[] args) {
         try {
             config = new Config(appName, args);
-        } catch (HelpRequested helpRequested) {
-            helpRequested.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
-            System.exit(EXIT_SUCCESS);
+            if (config.isHelpRequested()) {
+                config.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
+                System.exit(EXIT_SUCCESS);
+            }
         } catch (ConfigException ex) {
             System.err.println("error: " + ex.getMessage());
             System.exit(EXIT_FAILURE);

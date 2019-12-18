@@ -6,7 +6,7 @@ import java.io.UncheckedIOException;
 
 public class TestConfig extends Config {
 
-    public TestConfig() throws HelpRequested {
+    public TestConfig() {
         super(generateTestAppName());
     }
 

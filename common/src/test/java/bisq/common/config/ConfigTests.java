@@ -15,6 +15,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ConfigTests {
 
@@ -161,7 +162,7 @@ public class ConfigTests {
 
     @Test
     public void whenHelpOptionIsSet_thenHelpRequestedIsThrown() {
-        exceptionRule.expect(HelpRequested.class);
         new TestConfig("--help");
+        fail();
     }
 }

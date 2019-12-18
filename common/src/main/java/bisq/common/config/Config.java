@@ -4,6 +4,7 @@ import bisq.common.util.Utilities;
 
 import joptsimple.AbstractOptionSpec;
 import joptsimple.ArgumentAcceptingOptionSpec;
+import joptsimple.HelpFormatter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -17,6 +18,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 
 import java.util.List;
 import java.util.Optional;
@@ -93,6 +97,7 @@ public class Config {
     private final File defaultConfigFile;
 
     // cli options
+    private final boolean helpRequested;
     private final File configFile;
     private final String appName;
     private final File userDataDir;
@@ -157,17 +162,17 @@ public class Config {
     private final File storageDir;
     private final File keyStorageDir;
 
-    public Config(String defaultAppName) throws HelpRequested {
+    private final OptionParser parser = new OptionParser();
+
+    public Config(String defaultAppName) {
         this(defaultAppName, new String[]{});
     }
 
-    public Config(String defaultAppName, String[] args) throws HelpRequested {
+    public Config(String defaultAppName, String[] args) {
         File defaultUserDataDir = getDefaultUserDataDir();
         this.defaultAppName = defaultAppName;
         this.defaultAppDataDir = new File(defaultUserDataDir, this.defaultAppName);
         this.defaultConfigFile = new File(defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
-
-        OptionParser parser = new OptionParser();
 
         AbstractOptionSpec<Void> helpOpt =
                 parser.accepts("help", "Print this help text")
@@ -523,10 +528,6 @@ public class Config {
 
         try {
             OptionSet cliOpts = parser.parse(args);
-
-            if (cliOpts.has(helpOpt))
-                throw new HelpRequested(parser);
-
             CompositeOptionSet options = new CompositeOptionSet();
             options.addOptionSet(cliOpts);
 
@@ -558,6 +559,7 @@ public class Config {
                 configFileOpts.ifPresent(options::addOptionSet);
             }
 
+            this.helpRequested = options.has(helpOpt);
             this.configFile = configFile;
             this.nodePort = options.valueOf(nodePortOpt);
             this.bannedBtcNodes = options.valuesOf(bannedBtcNodesOpt);
@@ -656,6 +658,15 @@ public class Config {
         return Optional.of(configFileOpts);
     }
 
+    public void printHelp(OutputStream sink, HelpFormatter formatter) {
+        try {
+            parser.formatHelpWith(formatter);
+            parser.printHelpOn(sink);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
     public String getDefaultAppName() {
         return defaultAppName;
     }
@@ -677,6 +688,10 @@ public class Config {
 
     public File getDefaultConfigFile() {
         return defaultConfigFile;
+    }
+
+    public boolean isHelpRequested() {
+        return helpRequested;
     }
 
     public File getConfigFile() {
