@@ -34,7 +34,7 @@ public class ConfigFileReaderTests {
     public void whenFileDoesNotExist_thenGetLinesThrows() {
         assertTrue(file.delete());
 
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(ConfigException.class);
         exception.expectMessage(containsString("Config file"));
         exception.expectMessage(containsString("does not exist"));
 

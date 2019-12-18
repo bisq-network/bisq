@@ -44,7 +44,7 @@ class EnumValueConverter implements ValueConverter<Enum> {
      * given value, trying all case variations in the process.
      *
      * @return the matching enum label (if any)
-     * @throws IllegalArgumentException if no such label matching the given value is found.
+     * @throws ConfigException if no such label matching the given value is found.
      */
     @Override
     public Enum convert(String value) {
@@ -54,8 +54,8 @@ class EnumValueConverter implements ValueConverter<Enum> {
             if (result.isPresent())
                 return result.get();
         }
-        throw new IllegalArgumentException(String.format(
-                "No enum constant %s.{%s}", enumType.getSimpleName(), String.join("|", candidates)));
+        throw new ConfigException("Enum label %s.{%s} does not exist",
+                enumType.getSimpleName(), String.join("|", candidates));
     }
 
     @Override

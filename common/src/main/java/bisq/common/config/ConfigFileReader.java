@@ -8,7 +8,6 @@ import java.io.UncheckedIOException;
 
 import java.util.List;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 class ConfigFileReader {
@@ -21,10 +20,10 @@ class ConfigFileReader {
 
     public List<String> getLines() {
         if (!file.exists())
-            throw new IllegalArgumentException(format("Config file %s does not exist", file));
+            throw new ConfigException("Config file %s does not exist", file);
 
         if (!file.canRead())
-            throw new IllegalArgumentException(format("Config file %s is not readable", file));
+            throw new ConfigException("Config file %s is not readable", file);
 
         try {
             return Files.readAllLines(file.toPath()).stream()

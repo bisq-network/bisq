@@ -86,8 +86,13 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         } catch (HelpRequested helpRequested) {
             helpRequested.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
             System.exit(EXIT_SUCCESS);
-        } catch (Throwable ex) {
+        } catch (ConfigException ex) {
             System.err.println("error: " + ex.getMessage());
+            System.exit(EXIT_FAILURE);
+        } catch (Throwable ex) {
+            System.err.println("fault: An unexpected error occurred. " +
+                    "Please file a report at https://bisq.network/issues");
+            ex.printStackTrace(System.err);
             System.exit(EXIT_FAILURE);
         }
 

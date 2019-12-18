@@ -651,8 +651,8 @@ public class Config {
         OptionSet configFileOpts = parser.parse(optionLines);
         for (OptionSpec<?> disallowedOpt : disallowedOpts)
             if (configFileOpts.has(disallowedOpt))
-                throw new IllegalArgumentException(
-                        format("The '%s' option is disallowed in config files", disallowedOpt.options().get(0)));
+                throw new ConfigException("The '%s' option is disallowed in config files",
+                        disallowedOpt.options().get(0));
 
         return Optional.of(configFileOpts);
     }
