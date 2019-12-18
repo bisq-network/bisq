@@ -22,11 +22,10 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
-
-import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
