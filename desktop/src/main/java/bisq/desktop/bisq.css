@@ -128,6 +128,10 @@
     -fx-background-color: -bs-rd-error-red;
 }
 
+.jfx-progress-bar > .track {
+    -fx-background-color: -bs-progress-bar-track;
+}
+
 .jfx-spinner {
     -jfx-radius: 10;
 }
