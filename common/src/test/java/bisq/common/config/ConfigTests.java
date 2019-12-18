@@ -109,6 +109,13 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenUnrecognizedOptionIsSet_thenThrowConfigException() {
+        exceptionRule.expect(ConfigException.class);
+        exceptionRule.expectMessage("problem parsing option 'bogus': bogus is not a recognized option");
+        new TestConfig("--bogus");
+    }
+
+    @Test
     public void whenOptionFileArgumentDoesNotExist_thenThrowConfigException() {
         exceptionRule.expect(ConfigException.class);
         exceptionRule.expectMessage("problem parsing option 'torrcFile': File [/does/not/exist] does not exist");

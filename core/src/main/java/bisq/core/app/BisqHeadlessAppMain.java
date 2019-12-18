@@ -50,8 +50,8 @@ public class BisqHeadlessAppMain extends BisqExecutable {
     }
 
     @Override
-    protected void doExecute(OptionSet options) {
-        super.doExecute(options);
+    protected void doExecute() {
+        super.doExecute();
 
         keepRunning();
     }

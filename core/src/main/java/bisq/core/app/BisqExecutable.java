@@ -41,10 +41,6 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
 
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -61,7 +57,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
-    private static final String HELP_KEY = "help";
 
     private final String fullName;
     private final String scriptName;
@@ -79,8 +74,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         this.version = version;
     }
 
-    public void execute(String[] args) throws Exception {
-
+    public void execute(String[] args) {
         try {
             config = new Config(appName, args);
         } catch (HelpRequested helpRequested) {
@@ -98,35 +92,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         initAppDir(config.getAppDataDir());
 
-        OptionParser parser = new OptionParser();
-        parser.allowsUnrecognizedOptions();
-        parser.formatHelpWith(new BisqHelpFormatter(fullName, scriptName, version));
-        parser.accepts(HELP_KEY, "This help text").forHelp();
-
-        this.customizeOptionParsing(parser);
-
-        OptionSet options;
-        try {
-            options = parser.parse(args);
-            if (options.has(HELP_KEY)) {
-                parser.printHelpOn(System.out);
-                System.exit(EXIT_SUCCESS);
-                return;
-            }
-        } catch (OptionException ex) {
-            System.err.println("error: " + ex.getMessage());
-            System.exit(EXIT_FAILURE);
-            return;
-        }
-
-        this.doExecute(options);
+        doExecute();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void doExecute(OptionSet options) {
+    protected void doExecute() {
         configUserThread();
         CoreSetup.setup(config);
         addCapabilities();
@@ -255,16 +228,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             t.printStackTrace();
             System.exit(1);
         }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // customizeOptionParsing
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void customizeOptionParsing(OptionParser parser) {
-
-        //RpcOptionKeys
     }
 
     private void initAppDir(File appDataDir) {

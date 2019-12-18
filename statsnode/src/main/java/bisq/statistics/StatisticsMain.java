@@ -37,14 +37,14 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
         super("Bisq Statsnode", "bisq-statistics", "bisq_statistics", VERSION);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         log.info("Statistics.VERSION: " + VERSION);
         new StatisticsMain().execute(args);
     }
 
     @Override
-    protected void doExecute(OptionSet options) {
-        super.doExecute(options);
+    protected void doExecute() {
+        super.doExecute();
 
         checkMemory(config, this);
         CommonSetup.setup(this);

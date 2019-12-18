@@ -168,7 +168,6 @@ public class Config {
         this.defaultConfigFile = new File(defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
 
         OptionParser parser = new OptionParser();
-        parser.allowsUnrecognizedOptions();
 
         AbstractOptionSpec<Void> helpOpt =
                 parser.accepts("help", "Print this help text")

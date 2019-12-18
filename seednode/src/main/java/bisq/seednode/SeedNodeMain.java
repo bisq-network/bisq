@@ -45,8 +45,8 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     }
 
     @Override
-    protected void doExecute(OptionSet options) {
-        super.doExecute(options);
+    protected void doExecute() {
+        super.doExecute();
 
         checkMemory(config, this);
         startShutDownInterval(this);
