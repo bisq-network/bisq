@@ -25,8 +25,6 @@ import com.google.common.collect.Sets;
 
 import java.util.Set;
 
-import static org.springframework.util.StringUtils.collectionToDelimitedString;
-
 /**
  * A {@link joptsimple.ValueConverter} that supports case-insensitive conversion from
  * String to an enum label. Useful in conjunction with
@@ -57,7 +55,7 @@ class EnumValueConverter implements ValueConverter<Enum> {
                 return result.get();
         }
         throw new IllegalArgumentException(String.format(
-                "No enum constant %s.[%s]", enumType.getName(), collectionToDelimitedString(candidates, "|")));
+                "No enum constant %s.{%s}", enumType.getSimpleName(), String.join("|", candidates)));
     }
 
     @Override
