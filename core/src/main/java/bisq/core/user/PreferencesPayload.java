@@ -59,7 +59,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private List<CryptoCurrency> cryptoCurrencies = new ArrayList<>();
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
-    private BlockChainExplorer bsqBlockChainExplorer = Preferences.BSQ_MAIN_NET_EXPLORER;
+    private BlockChainExplorer bsqBlockChainExplorer;
     @Nullable
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
