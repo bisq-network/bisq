@@ -291,9 +291,9 @@ public class OfferUtil {
                 bsqFormatter);
     }
 
-    public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
-                                                            String userCurrencyCode, PriceFeedService priceFeedService,
-                                                            CoinFormatter bsqFormatter) {
+    private static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
+                                                             String userCurrencyCode, PriceFeedService priceFeedService,
+                                                             CoinFormatter bsqFormatter) {
         // We use the users currency derived from his selected country.
         // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
 
@@ -325,8 +325,7 @@ public class OfferUtil {
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
-                                                      String currencyCode,
-                                                      Preferences preferences) {
+                                                      String currencyCode) {
         Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());

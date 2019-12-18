@@ -152,8 +152,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                        @Named(DaoOptionKeys.RPC_USER) String rpcUser,
                        @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
-                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort,
-                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockNotificationHost) {
+                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
 
 
         this.storage = storage;
@@ -329,7 +328,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setCssTheme(boolean useDarkMode) {
-        this.cssThemeProperty.set(useDarkMode == true ? 1 : 0);
+        this.cssThemeProperty.set(useDarkMode ? 1 : 0);
     }
 
     public void addFiatCurrency(FiatCurrency tradeCurrency) {
@@ -339,8 +338,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void removeFiatCurrency(FiatCurrency tradeCurrency) {
         if (tradeCurrenciesAsObservable.size() > 1) {
-            if (fiatCurrenciesAsObservable.contains(tradeCurrency))
-                fiatCurrenciesAsObservable.remove(tradeCurrency);
+            fiatCurrenciesAsObservable.remove(tradeCurrency);
 
             if (prefPayload.getPreferredTradeCurrency() != null &&
                     prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
@@ -357,8 +355,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void removeCryptoCurrency(CryptoCurrency tradeCurrency) {
         if (tradeCurrenciesAsObservable.size() > 1) {
-            if (cryptoCurrenciesAsObservable.contains(tradeCurrency))
-                cryptoCurrenciesAsObservable.remove(tradeCurrency);
+            cryptoCurrenciesAsObservable.remove(tradeCurrency);
 
             if (prefPayload.getPreferredTradeCurrency() != null &&
                     prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
@@ -538,12 +535,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    public void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
+    private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         prefPayload.setBlockChainExplorerTestNet(blockChainExplorerTestNet);
         persist();
     }
 
-    public void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
+    private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         prefPayload.setBlockChainExplorerMainNet(blockChainExplorerMainNet);
         persist();
     }

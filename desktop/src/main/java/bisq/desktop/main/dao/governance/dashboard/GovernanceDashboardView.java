@@ -30,11 +30,8 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -50,7 +47,6 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
     private final DaoFacade daoFacade;
     private final PeriodService periodService;
     private final PhasesView phasesView;
-    private final CoinFormatter formatter;
 
     private int gridRow = 0;
     private TextField currentPhaseTextField, currentBlockHeightTextField, proposalTextField, blindVoteTextField, voteRevealTextField, voteResultTextField;
@@ -61,11 +57,10 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public GovernanceDashboardView(DaoFacade daoFacade, PeriodService periodService, PhasesView phasesView, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+    public GovernanceDashboardView(DaoFacade daoFacade, PeriodService periodService, PhasesView phasesView) {
         this.daoFacade = daoFacade;
         this.periodService = periodService;
         this.phasesView = phasesView;
-        this.formatter = formatter;
     }
 
     @Override
@@ -127,9 +122,9 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
             phase = periodService.getPhaseForHeight(height + 1);
         }
         currentPhaseTextField.setText(Res.get("dao.phase." + phase.name()));
-        proposalTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade, formatter));
-        blindVoteTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.BLIND_VOTE, daoFacade, formatter));
-        voteRevealTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.VOTE_REVEAL, daoFacade, formatter));
-        voteResultTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.RESULT, daoFacade, formatter));
+        proposalTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade));
+        blindVoteTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.BLIND_VOTE, daoFacade));
+        voteRevealTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.VOTE_REVEAL, daoFacade));
+        voteResultTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.RESULT, daoFacade));
     }
 }

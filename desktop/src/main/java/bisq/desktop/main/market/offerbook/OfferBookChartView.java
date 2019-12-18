@@ -592,7 +592,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                             offer,
                                             model.preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
 //                                    setAlignment(Pos.CENTER);
                                     setGraphic(peerInfoIcon);
