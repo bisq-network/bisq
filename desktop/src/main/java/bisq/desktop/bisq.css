@@ -2049,4 +2049,8 @@ textfield */
     -fx-text-fill: -bs-text-color;
 }
 
+.popover > .border {
+    -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
+    -fx-fill: -bs-background-color !important;
+}
 
