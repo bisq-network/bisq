@@ -30,8 +30,8 @@ public class BankUtil {
 
     // BankName
     @SuppressWarnings("SameReturnValue")
-    public static boolean isBankNameRequired(String countryCode) {
-        // Currently we always return true but let's keep that method to be more flexible in case we what to not show
+    public static boolean isBankNameRequired(@SuppressWarnings("unused") String countryCode) {
+        // Currently we always return true but let's keep that method to be more flexible in case we want to not show
         // it at some new payment method.
         return true;
          /*
