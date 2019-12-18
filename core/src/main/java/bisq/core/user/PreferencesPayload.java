@@ -59,6 +59,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private List<CryptoCurrency> cryptoCurrencies = new ArrayList<>();
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
+    @Nullable
     private BlockChainExplorer bsqBlockChainExplorer;
     @Nullable
     private String backupDirectory;
@@ -153,7 +154,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                         .collect(Collectors.toList()))
                 .setBlockChainExplorerMainNet((protobuf.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
                 .setBlockChainExplorerTestNet((protobuf.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
-                .setBsqBlockChainExplorer((protobuf.BlockChainExplorer) bsqBlockChainExplorer.toProtoMessage())
                 .setAutoSelectArbitrators(autoSelectArbitrators)
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setTacAccepted(tacAccepted)
@@ -203,6 +203,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
         Optional.ofNullable(rpcUser).ifPresent(builder::setRpcUser);
         Optional.ofNullable(rpcPw).ifPresent(builder::setRpcPw);
         Optional.ofNullable(takeOfferSelectedPaymentAccountId).ifPresent(builder::setTakeOfferSelectedPaymentAccountId);
+        Optional.ofNullable(bsqBlockChainExplorer).ifPresent(e -> builder.setBsqBlockChainExplorer((protobuf.BlockChainExplorer) e.toProtoMessage()));
 
         return protobuf.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
@@ -226,7 +227,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                                 .collect(Collectors.toList())),
                 BlockChainExplorer.fromProto(proto.getBlockChainExplorerMainNet()),
                 BlockChainExplorer.fromProto(proto.getBlockChainExplorerTestNet()),
-                BlockChainExplorer.fromProto(proto.getBsqBlockChainExplorer()),
+                proto.hasBsqBlockChainExplorer() ? BlockChainExplorer.fromProto(proto.getBsqBlockChainExplorer()) : null,
                 ProtoUtil.stringOrNullFromProto(proto.getBackupDirectory()),
                 proto.getAutoSelectArbitrators(),
                 Maps.newHashMap(proto.getDontShowAgainMapMap()),
