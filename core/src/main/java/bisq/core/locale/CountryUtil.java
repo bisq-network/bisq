@@ -44,6 +44,18 @@ public class CountryUtil {
         return list;
     }
 
+    public static List<Country> getAllRevolutCountries() {
+        List<Country> list = new ArrayList<>();
+        String[] codes = {"AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+                "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU", "MT", "NL",
+                "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",
+                "AU", "CA", "SG", "CH", "US"};
+        populateCountryListByCodes(list, codes);
+        list.sort((a, b) -> a.name.compareTo(b.name));
+
+        return list;
+    }
+
     public static List<Country> getAllSepaInstantEuroCountries() {
         return getAllSepaEuroCountries();
     }
