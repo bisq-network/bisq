@@ -247,7 +247,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.onTakeOffer(trade -> {
             this.trade = trade;
             trade.stateProperty().addListener(tradeStateListener);
-            applyTradeState(trade.getState());
+            applyTradeState();
             trade.errorMessageProperty().addListener(tradeErrorListener);
             applyTradeErrorMessage(trade.getErrorMessage());
             takeOfferCompleted.set(true);
@@ -486,7 +486,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
     }
 
-    private void applyTradeState(Trade.State tradeState) {
+    private void applyTradeState() {
         if (trade.isDepositPublished()) {
             if (trade.getDepositTx() != null) {
                 if (takeOfferSucceededHandler != null)
@@ -551,7 +551,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         };
         isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
 
-        tradeStateListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
+        tradeStateListener = (ov, oldValue, newValue) -> applyTradeState();
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
         connectionListener = new ConnectionListener() {

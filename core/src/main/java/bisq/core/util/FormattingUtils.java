@@ -157,7 +157,7 @@ public class FormattingUtils {
     }
 
     public static String formatPrice(Price price, boolean appendCurrencyCode) {
-        return formatPrice(price, fiatPriceFormat, true);
+        return formatPrice(price, fiatPriceFormat, appendCurrencyCode);
     }
 
     public static String formatPrice(Price price) {
@@ -279,7 +279,7 @@ public class FormattingUtils {
     }
 
     @NotNull
-    public static String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
+    public static String fillUpPlacesWithEmptyStrings(String formattedNumber, @SuppressWarnings("unused") int maxNumberOfDigits) {
         //FIXME: temporary deactivate adding spaces in front of numbers as we don't use a monospace font right now.
         /*int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
         for (int i = 0; i < numberOfPlacesToFill; i++) {

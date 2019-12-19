@@ -707,7 +707,7 @@ public class TradeWalletService {
         return delayedPayoutTx;
     }
 
-    public boolean verifiesDepositTxAndDelayedPayoutTx(Transaction depositTx,
+    public boolean verifiesDepositTxAndDelayedPayoutTx(@SuppressWarnings("unused") Transaction depositTx,
                                                        Transaction delayedPayoutTx) {
         // todo add more checks
         if (delayedPayoutTx.getLockTime() == 0) {
@@ -963,17 +963,17 @@ public class TradeWalletService {
     // Emergency payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction emergencySignAndPublishPayoutTxFrom2of2MultiSig(String depositTxHex,
-                                                                       Coin buyerPayoutAmount,
-                                                                       Coin sellerPayoutAmount,
-                                                                       Coin txFee,
-                                                                       String buyerAddressString,
-                                                                       String sellerAddressString,
-                                                                       String buyerPrivateKeyAsHex,
-                                                                       String sellerPrivateKeyAsHex,
-                                                                       String buyerPubKeyAsHex,
-                                                                       String sellerPubKeyAsHex,
-                                                                       TxBroadcaster.Callback callback)
+    public void emergencySignAndPublishPayoutTxFrom2of2MultiSig(String depositTxHex,
+                                                                Coin buyerPayoutAmount,
+                                                                Coin sellerPayoutAmount,
+                                                                Coin txFee,
+                                                                String buyerAddressString,
+                                                                String sellerAddressString,
+                                                                String buyerPrivateKeyAsHex,
+                                                                String sellerPrivateKeyAsHex,
+                                                                String buyerPubKeyAsHex,
+                                                                String sellerPubKeyAsHex,
+                                                                TxBroadcaster.Callback callback)
             throws AddressFormatException, TransactionVerificationException, WalletException {
         byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
@@ -1018,7 +1018,6 @@ public class TradeWalletService {
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
         broadcastTx(payoutTx, callback, 20);
-        return payoutTx;
     }
 
 
