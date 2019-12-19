@@ -128,6 +128,10 @@
     -fx-background-color: -bs-rd-error-red;
 }
 
+.jfx-progress-bar > .track {
+    -fx-background-color: -bs-progress-bar-track;
+}
+
 .jfx-spinner {
     -jfx-radius: 10;
 }
@@ -2049,4 +2053,8 @@ textfield */
     -fx-text-fill: -bs-text-color;
 }
 
+.popover > .border {
+    -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
+    -fx-fill: -bs-background-color !important;
+}
 
