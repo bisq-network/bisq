@@ -81,9 +81,6 @@ public class HyperlinkWithIcon extends Hyperlink {
 
         setContentDisplay(ContentDisplay.RIGHT);
         setGraphicTextGap(7.0);
-
-        //TODO: replace workaround of setting the style this way
-        tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.getStyleClass().add("tooltip-hyperlink-icon"));
     }
 
     public void clear() {
