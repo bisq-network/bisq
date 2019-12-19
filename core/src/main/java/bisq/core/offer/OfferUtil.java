@@ -60,7 +60,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This class holds utility methods for the creation of an Offer.
  * Most of these are extracted here because they are used both in the GUI and in the API.
  * <p>
- * Long-term there could be a GUI-agnostic OfferService which provides these and other functionalities to both the
+ * Long-term there could be a GUI-agnostic OfferService which provides these and other functionality to both the
  * GUI and the API.
  */
 @Slf4j
@@ -69,8 +69,8 @@ public class OfferUtil {
     /**
      * Given the direction, is this a BUY?
      *
-     * @param direction
-     * @return
+     * @param direction the offer direction
+     * @return {@code true} for an offer to buy BTC from the taker, {@code false} for an offer to sell BTC to the taker
      */
     public static boolean isBuyOffer(OfferPayload.Direction direction) {
         return direction == OfferPayload.Direction.BUY;
@@ -79,13 +79,13 @@ public class OfferUtil {
     /**
      * Returns the makerFee as Coin, this can be priced in BTC or BSQ.
      *
-     * @param bsqWalletService
-     * @param preferences          preferences are used to see if the user indicated a preference for paying fees in BTC
-     * @param amount
-     * @return
+     * @param bsqWalletService wallet service used to check if there is enough BSQ to pay the fee
+     * @param preferences      preferences are used to see if the user indicated a preference for paying fees in BTC
+     * @param amount           the amount of BTC to trade
+     * @return the maker fee for the given trade amount, or {@code null} if the amount is {@code null}
      */
     @Nullable
-    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, Coin amount) {
+    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, @Nullable Coin amount) {
         boolean isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
         return getMakerFee(isCurrencyForMakerFeeBtc, amount);
     }
@@ -93,9 +93,9 @@ public class OfferUtil {
     /**
      * Calculates the maker fee for the given amount, marketPrice and marketPriceMargin.
      *
-     * @param isCurrencyForMakerFeeBtc
-     * @param amount
-     * @return
+     * @param isCurrencyForMakerFeeBtc {@code true} to pay fee in BTC, {@code false} to pay fee in BSQ
+     * @param amount                   the amount of BTC to trade
+     * @return the maker fee for the given trade amount, or {@code null} if the amount is {@code null}
      */
     @Nullable
     public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount) {
@@ -111,14 +111,14 @@ public class OfferUtil {
      * Checks if the maker fee should be paid in BTC, this can be the case due to user preference or because the user
      * doesn't have enough BSQ.
      *
-     * @param preferences
-     * @param bsqWalletService
-     * @param amount
-     * @return
+     * @param preferences      preferences are used to see if the user indicated a preference for paying fees in BTC
+     * @param bsqWalletService wallet service used to check if there is enough BSQ to pay the fee
+     * @param amount           the amount of BTC to trade
+     * @return {@code true} if BTC is preferred or the trade amount is nonnull and there isn't enough BSQ for it
      */
     public static boolean isCurrencyForMakerFeeBtc(Preferences preferences,
                                                    BsqWalletService bsqWalletService,
-                                                   Coin amount) {
+                                                   @Nullable Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -127,9 +127,9 @@ public class OfferUtil {
     /**
      * Checks if the available BSQ balance is sufficient to pay for the offer's maker fee.
      *
-     * @param bsqWalletService
-     * @param amount
-     * @return
+     * @param bsqWalletService wallet service used to check if there is enough BSQ to pay the fee
+     * @param amount           the amount of BTC to trade
+     * @return {@code true} if the balance is sufficient, {@code false} otherwise
      */
     public static boolean isBsqForMakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount) {
         Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
