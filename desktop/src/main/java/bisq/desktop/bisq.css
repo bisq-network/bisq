@@ -838,6 +838,7 @@ textfield */
     -fx-border-width: 0px;
     -fx-underline: true;
     -fx-text-fill: -bs-rd-font-dark;
+    -fx-fill: -bs-rd-font-dark;
 }
 
 .hyperlink.no-underline {
@@ -846,6 +847,7 @@ textfield */
 
 .hyperlink:hover {
     -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
 }
 
 .hyperlink:hover,
