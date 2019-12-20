@@ -127,11 +127,25 @@ sudo -H -i -u "${ROOT_USER}" ufw default allow outgoing
 
 echo "[*] Starting Tor"
 sudo -H -i -u "${ROOT_USER}" systemctl start tor
+
 echo "[*] Starting Bitcoin"
 sudo -H -i -u "${ROOT_USER}" systemctl start bitcoin
 sudo -H -i -u "${ROOT_USER}" journalctl --no-pager --unit bitcoin
 sudo -H -i -u "${ROOT_USER}" tail "${BITCOIN_HOME}/debug.log"
+
+echo "[*] Adding notes to motd"
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo " " >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo "Bisq Seednode instructions:" >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo "https://github.com/bisq-network/bisq/tree/master/seednode" >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo " " >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo "How to check logs for Bisq-Seednode service:" >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo "sudo journalctl --no-pager --unit bisq-seednode" >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo " " >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo "How to restart Bisq-Seednode service:" >> /etc/motd'
+sudo -H -i -u "${ROOT_USER}" sh -c 'echo "sudo service bisq-seednode restart" >> /etc/motd'
+
 echo '[*] Done!'
+
 echo '  '
 echo '[*] DONT FORGET TO ENABLE FIREWALL!!!11'
 echo '[*] Follow all the README instructions!'
