@@ -131,4 +131,8 @@ echo "[*] Starting Bitcoin"
 sudo -H -i -u "${ROOT_USER}" systemctl start bitcoin
 sudo -H -i -u "${ROOT_USER}" journalctl --no-pager --unit bitcoin
 sudo -H -i -u "${ROOT_USER}" tail "${BITCOIN_HOME}/debug.log"
-echo "[*] Done!"
+echo '[*] Done!'
+echo '  '
+echo '[*] DONT FORGET TO ENABLE FIREWALL!!!11'
+echo '[*] Follow all the README instructions!'
+echo '  '
