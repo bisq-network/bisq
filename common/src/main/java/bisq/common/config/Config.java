@@ -33,6 +33,7 @@ import static java.util.stream.Collectors.toList;
 
 public class Config {
 
+    // option name constants typically used for @Named parameter injection
     public static final String APP_NAME = "appName";
     private static final String APP_DATA_DIR = "appDataDir";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
@@ -80,12 +81,16 @@ public class Config {
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
     public static final String DAO_ACTIVATED = "daoActivated";
 
+    // default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
-    static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
     public static final String DEFAULT_REGTEST_HOST = "localhost";
     public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC = 9; // down from BitcoinJ default of 12
     public static final boolean DEFAULT_FULL_DAO_NODE = false;
+    static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
+    // legacy mutable static field used to support opening bisq.log from
+    // Overlay.addReportErrorButtons. avoids the need to inject config into all Overlay
+    // subclasses. TODO: do the injection anyway
     public static File CURRENT_APP_DATA_DIR;
 
     // default data dir properties
@@ -94,9 +99,10 @@ public class Config {
     private final File defaultAppDataDir;
     private final File defaultConfigFile;
 
-    // cli options
+    // options supported only in the cli
     private final boolean helpRequested;
     private final File configFile;
+    // options supported in the cli and config file
     private final String appName;
     private final File userDataDir;
     private final File appDataDir;
@@ -153,14 +159,15 @@ public class Config {
     private final int genesisBlockHeight;
     private final long genesisTotalSupply;
 
-    // properties derived from cli options, but not exposed as cli options themselves
-    private boolean localBitcoinNodeIsRunning = false; // FIXME: eliminate mutable state
     private final File torDir;
     private final File walletDir;
     private final File storageDir;
     private final File keyStorageDir;
 
     private final OptionParser parser = new OptionParser();
+
+    // legacy mutable property TODO: move to new LocalBitcoinNode class
+    private boolean localBitcoinNodeIsRunning = false;
 
     public Config(String... args) {
         this(tempAppName(), tempUserDataDir(), args);
@@ -525,8 +532,9 @@ public class Config {
                         .defaultsTo(true);
 
         try {
-            OptionSet cliOpts = parser.parse(args);
             CompositeOptionSet options = new CompositeOptionSet();
+
+            OptionSet cliOpts = parser.parse(args);
             options.addOptionSet(cliOpts);
 
             File configFile = null;
@@ -547,8 +555,6 @@ public class Config {
                     options.valueOf(appDataDirOpt) :
                     new File(this.userDataDir, this.appName);
 
-            CURRENT_APP_DATA_DIR = appDataDir;
-
             if (!configFileHasBeenProcessed) {
                 configFile = cliHasConfigFileOpt && !configFile.isAbsolute() ?
                         new File(this.appDataDir, configFile.getPath()) : // TODO: test
@@ -564,8 +570,6 @@ public class Config {
             this.bannedPriceRelayNodes = options.valuesOf(bannedPriceRelayNodesOpt);
             this.bannedSeedNodes = options.valuesOf(bannedSeedNodesOpt);
             this.baseCurrencyNetwork = (BaseCurrencyNetwork) options.valueOf(baseCurrencyNetworkOpt);
-            BaseCurrencyNetwork.CURRENT_NETWORK = baseCurrencyNetwork;
-            BaseCurrencyNetwork.CURRENT_PARAMETERS = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.logLevel = options.valueOf(logLevelOpt);
@@ -630,6 +634,11 @@ public class Config {
         this.walletDir = btcNetworkDir;
         this.storageDir = new File(btcNetworkDir, "db");
         this.keyStorageDir = new File(btcNetworkDir, "keys");
+
+        // assign values to legacy mutable static fields
+        CURRENT_APP_DATA_DIR = appDataDir;
+        BaseCurrencyNetwork.CURRENT_NETWORK = baseCurrencyNetwork;
+        BaseCurrencyNetwork.CURRENT_PARAMETERS = baseCurrencyNetwork.getParameters();
     }
 
     private Optional<OptionSet> parseOptionsFrom(File file, OptionParser parser, OptionSpec<?>... disallowedOpts) {
@@ -660,9 +669,6 @@ public class Config {
         }
     }
 
-    public String getDefaultAppName() {
-        return defaultAppName;
-    }
 
     public static File getOsUserDataDir() {
         if (Utilities.isWindows())
@@ -691,6 +697,13 @@ public class Config {
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+
+    // == ACCESSORS ======================================================================
+
+    public String getDefaultAppName() {
+        return defaultAppName;
     }
 
     public File getDefaultUserDataDir() {
