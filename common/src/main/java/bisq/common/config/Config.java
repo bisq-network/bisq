@@ -34,6 +34,7 @@ import static java.util.stream.Collectors.toList;
 public class Config {
 
     public static final String APP_NAME = "appName";
+    private static final String APP_DATA_DIR = "appDataDir";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
     public static final String USE_DEV_MODE = "useDevMode";
@@ -176,8 +177,8 @@ public class Config {
                         .forHelp();
 
         ArgumentAcceptingOptionSpec<String> configFileOpt =
-                parser.accepts("configFile", "Specify configuration file. " +
-                        "Relative paths will be prefixed by appDataDir location.")
+                parser.accepts("configFile", format("Specify configuration file. " +
+                        "Relative paths will be prefixed by %s location.", APP_DATA_DIR))
                         .withRequiredArg()
                         .ofType(String.class)
                         .defaultsTo(DEFAULT_CONFIG_FILE_NAME);
@@ -195,7 +196,7 @@ public class Config {
                         .defaultsTo(this.defaultAppName);
 
         ArgumentAcceptingOptionSpec<File> appDataDirOpt =
-                parser.accepts("appDataDir", "Application data directory")
+                parser.accepts(APP_DATA_DIR, "Application data directory")
                         .withRequiredArg()
                         .ofType(File.class)
                         .defaultsTo(defaultAppDataDir);
