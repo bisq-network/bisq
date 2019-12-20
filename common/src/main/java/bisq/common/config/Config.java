@@ -14,6 +14,7 @@ import joptsimple.util.PathConverter;
 import joptsimple.util.PathProperties;
 import joptsimple.util.RegexMatcher;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -88,6 +89,7 @@ public class Config {
 
     // default data dir properties
     private final String defaultAppName;
+    private final File defaultUserDataDir;
     private final File defaultAppDataDir;
     private final File defaultConfigFile;
 
@@ -159,15 +161,15 @@ public class Config {
 
     private final OptionParser parser = new OptionParser();
 
-    public Config(String defaultAppName) {
-        this(defaultAppName, new String[]{});
+    public Config(String... args) {
+        this(tempAppName(), tempUserDataDir(), args);
     }
 
-    public Config(String defaultAppName, String[] args) {
-        File defaultUserDataDir = getDefaultUserDataDir();
+    public Config(String defaultAppName, File defaultUserDataDir, String... args) {
         this.defaultAppName = defaultAppName;
-        this.defaultAppDataDir = new File(defaultUserDataDir, this.defaultAppName);
-        this.defaultConfigFile = new File(defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
+        this.defaultUserDataDir = defaultUserDataDir;
+        this.defaultAppDataDir = new File(this.defaultUserDataDir, this.defaultAppName);
+        this.defaultConfigFile = new File(this.defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
 
         AbstractOptionSpec<Void> helpOpt =
                 parser.accepts("help", "Print this help text")
@@ -184,7 +186,7 @@ public class Config {
                 parser.accepts("userDataDir", "User data directory")
                         .withRequiredArg()
                         .ofType(File.class)
-                        .defaultsTo(defaultUserDataDir);
+                        .defaultsTo(this.defaultUserDataDir);
 
         ArgumentAcceptingOptionSpec<String> appNameOpt =
                 parser.accepts(APP_NAME, "Application name")
@@ -661,7 +663,7 @@ public class Config {
         return defaultAppName;
     }
 
-    public File getDefaultUserDataDir() {
+    public static File getOsUserDataDir() {
         if (Utilities.isWindows())
             return new File(System.getenv("APPDATA"));
 
@@ -670,6 +672,28 @@ public class Config {
 
         // *nix
         return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
+    }
+
+    private static File tempUserDataDir() {
+        try {
+            return Files.createTempDirectory("BisqTempUserData").toFile();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    private static String tempAppName() {
+        try {
+            File file = Files.createTempFile("Bisq", "Temp").toFile();
+            file.delete();
+            return file.toPath().getFileName().toString();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    public File getDefaultUserDataDir() {
+        return defaultUserDataDir;
     }
 
     public File getDefaultAppDataDir() {

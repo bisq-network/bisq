@@ -25,7 +25,6 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 
 import bisq.common.config.Config;
-import bisq.common.config.TestConfig;
 import bisq.common.storage.Storage;
 
 import javafx.collections.ObservableList;
@@ -60,7 +59,7 @@ public class PreferencesTest {
 
         storage = mock(Storage.class);
         preferences = new Preferences(
-                storage, new TestConfig(), null, null, Config.DEFAULT_FULL_DAO_NODE,
+                storage, new Config(), null, null, Config.DEFAULT_FULL_DAO_NODE,
                 null, null, Config.UNSPECIFIED_PORT);
     }
 

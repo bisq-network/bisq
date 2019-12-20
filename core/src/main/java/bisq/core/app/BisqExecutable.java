@@ -51,6 +51,8 @@ import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.config.Config.getOsUserDataDir;
+
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
@@ -75,7 +77,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     public void execute(String[] args) {
         try {
-            config = new Config(appName, args);
+            config = new Config(appName, getOsUserDataDir(), args);
             if (config.isHelpRequested()) {
                 config.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
                 System.exit(EXIT_SUCCESS);

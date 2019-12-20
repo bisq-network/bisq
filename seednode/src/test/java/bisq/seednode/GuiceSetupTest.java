@@ -5,7 +5,7 @@ import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.config.TestConfig;
+import bisq.common.config.Config;
 
 import com.google.inject.Guice;
 
@@ -17,7 +17,7 @@ public class GuiceSetupTest {
         Res.setup();
         CurrencyUtil.setup();
 
-        ModuleForAppWithP2p module = new ModuleForAppWithP2p(new TestConfig());
+        ModuleForAppWithP2p module = new ModuleForAppWithP2p(new Config());
         Guice.createInjector(module).getInstance(AppSetupWithP2PAndDAO.class);
     }
 }

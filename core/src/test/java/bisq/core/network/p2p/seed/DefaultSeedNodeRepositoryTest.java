@@ -20,7 +20,6 @@ package bisq.core.network.p2p.seed;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
-import bisq.common.config.TestConfig;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,7 +30,7 @@ public class DefaultSeedNodeRepositoryTest {
 
     @Test
     public void getSeedNodes() {
-        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new TestConfig());
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new Config());
         Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
     }
 
@@ -39,8 +38,8 @@ public class DefaultSeedNodeRepositoryTest {
     public void manualSeedNodes() {
         String seed1 = "asdf:8001";
         String seed2 = "fdsa:6001";
-        String seedNodes = format("--%s=%s,%s", Config.SEED_NODES, seed1, seed2);
-        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new TestConfig(seedNodes));
+        String seedNodesOption= format("--%s=%s,%s", Config.SEED_NODES, seed1, seed2);
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new Config(seedNodesOption));
         Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
         Assert.assertEquals(2, DUT.getSeedNodeAddresses().size());
         Assert.assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed1)));
