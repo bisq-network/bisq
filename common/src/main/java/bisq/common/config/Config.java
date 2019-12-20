@@ -25,9 +25,6 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 
 import static java.lang.String.format;
@@ -80,8 +77,6 @@ public class Config {
     public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
     public static final String DAO_ACTIVATED = "daoActivated";
-
-    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     public static final int UNSPECIFIED_PORT = -1;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
@@ -596,11 +591,6 @@ public class Config {
             this.msgThrottlePer10Sec = options.valueOf(msgThrottlePer10SecOpt);
             this.sendMsgThrottleTrigger = options.valueOf(sendMsgThrottleTriggerOpt);
             this.sendMsgThrottleSleep = options.valueOf(sendMsgThrottleSleepOpt);
-            // Preserve log output from now-removed ConnectionConfig class TODO: remove
-            log.info("ConnectionConfig{\n" +
-                            "    msgThrottlePerSec={},\n    msgThrottlePer10Sec={},\n" +
-                            "    sendMsgThrottleTrigger={},\n    sendMsgThrottleSleep={}\n}",
-                    msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep);
             this.btcNodes = options.valueOf(btcNodesOpt);
             this.useTorForBtc = options.valueOf(useTorForBtcOpt);
             this.useTorForBtcOptionSetExplicitly = options.has(useTorForBtcOpt);

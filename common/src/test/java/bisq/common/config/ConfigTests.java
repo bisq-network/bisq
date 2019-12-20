@@ -1,7 +1,9 @@
 package bisq.common.config;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import org.junit.Rule;
@@ -13,6 +15,7 @@ import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.isEmptyString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -164,5 +167,24 @@ public class ConfigTests {
     public void whenHelpOptionIsSet_thenHelpRequestedIsThrown() {
         new TestConfig("--help");
         fail();
+    }
+
+    @Test
+    public void whenConfigIsConstructed_thenNoConsoleOutputSideEffectsShouldOccur() {
+        PrintStream outOrig = System.out;
+        PrintStream errOrig = System.err;
+        ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
+        ByteArrayOutputStream errBytes = new ByteArrayOutputStream();
+        try (PrintStream outTest = new PrintStream(outBytes);
+             PrintStream errTest = new PrintStream(errBytes)) {
+            System.setOut(outTest);
+            System.setErr(errTest);
+            new Config();
+            assertThat(outBytes.toString(), isEmptyString());
+            assertThat(errBytes.toString(), isEmptyString());
+        } finally {
+            System.setOut(outOrig);
+            System.setErr(errOrig);
+        }
     }
 }
