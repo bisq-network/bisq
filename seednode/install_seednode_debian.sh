@@ -107,13 +107,13 @@ sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradl
 echo "[*] Installing Bisq init script"
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seednode/bisq-seednode.service" "${SYSTEMD_SERVICE_HOME}/bisq-seednode.service"
 sudo sed -i -e "s/__BISQ_REPO_NAME__/${BISQ_REPO_NAME}/" "${SYSTEMD_SERVICE_HOME}/bisq-seednode.service"
-sudo sed -i -e "s/__BISQ_HOME__/${BISQ_HOME}/" "${SYSTEMD_SERVICE_HOME}/bisq-seednode.service"
+sudo sed -i -e "s!__BISQ_HOME__!${BISQ_HOME}!" "${SYSTEMD_SERVICE_HOME}/bisq-seednode.service"
 
 echo "[*] Installing Bisq environment file with Bitcoin RPC credentials"
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seednode/bisq-seednode.env" "${SYSTEMD_ENV_HOME}/bisq-seednode.env"
 sudo sed -i -e "s/__BITCOIN_RPC_USER__/${BITCOIN_RPC_USER}/" "${SYSTEMD_ENV_HOME}/bisq-seednode.env"
 sudo sed -i -e "s/__BITCOIN_RPC_PASS__/${BITCOIN_RPC_PASS}/" "${SYSTEMD_ENV_HOME}/bisq-seednode.env"
-sudo sed -i -e "s/__BISQ_HOME__/${BISQ_HOME}/" "${SYSTEMD_ENV_HOME}/bisq-seednode.env"
+sudo sed -i -e "s!__BISQ_HOME__!${BISQ_HOME}!" "${SYSTEMD_ENV_HOME}/bisq-seednode.env"
 
 echo "[*] Updating systemd daemon configuration"
 sudo -H -i -u "${ROOT_USER}" systemctl daemon-reload
