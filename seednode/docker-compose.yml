@@ -49,6 +49,8 @@ services:
             context: ./docker/prod
             dockerfile: Dockerfile-collectd
         image: collectd
+        environment:
+            - ONION_ADDRESS=${ONION_ADDRESS}
         depends_on:
             - seednode
         networks:
