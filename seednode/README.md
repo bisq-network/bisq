@@ -48,7 +48,7 @@ sudo journalctl --unit bisq-seednode --follow
 
 After Bisq is fully synced, check your Bitcoin and Bisq onion hostnames:
 ```bash
-sudo bitcoin-cli -conf=/bitcoin/bitcoin.conf getnetworkinfo|grep address
+sudo -u bitcoin bitcoin-cli getnetworkinfo|grep address
 sudo cat /bisq/bisq-seednode/db/tor/hostname
 ```
 
