@@ -22,6 +22,7 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.util.Utilities;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -47,6 +48,7 @@ public class FileManager<T extends PersistableEnvelope> {
     private final Callable<Void> saveFileTask;
     private final AtomicReference<T> nextWrite;
     private final PersistenceProtoResolver persistenceProtoResolver;
+    private Path usedTempFilePath;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -199,8 +201,12 @@ public class FileManager<T extends PersistableEnvelope> {
             if (!dir.exists() && !dir.mkdir())
                 log.warn("make dir failed");
 
-            tempFile = File.createTempFile("temp", null, dir);
+            tempFile = usedTempFilePath != null
+                    ? FileUtil.createNewFile(usedTempFilePath)
+                    : File.createTempFile("temp", null, dir);
+            // Don't use a new temp file path each time, as that causes the delete-on-exit hook to leak memory:
             tempFile.deleteOnExit();
+
             fileOutputStream = new FileOutputStream(tempFile);
 
             log.debug("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
@@ -214,8 +220,12 @@ public class FileManager<T extends PersistableEnvelope> {
             // Close resources before replacing file with temp file because otherwise it causes problems on windows
             // when rename temp file
             fileOutputStream.close();
+
             FileUtil.renameFile(tempFile, storageFile);
+            usedTempFilePath = tempFile.toPath();
         } catch (Throwable t) {
+            // If an error occurred, don't attempt to reuse this path again, in case temp file cleanup fails.
+            usedTempFilePath = null;
             log.error("Error at saveToFile, storageFile=" + storageFile.toString(), t);
         } finally {
             if (tempFile != null && tempFile.exists()) {
