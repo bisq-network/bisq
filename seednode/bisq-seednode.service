@@ -6,7 +6,7 @@ After=network.target
 
 [Service]
 EnvironmentFile=/etc/default/bisq-seednode
-ExecStart=/home/bisq/bisq/bisq-seednode --appName=${BISQ_APP_NAME} --nodePort=${BISQ_NODE_PORT} --userDataDir=${BISQ_DATA_DIR} --maxConnections=${BISQ_MAX_CONNECTIONS} --maxMemory=${BISQ_MAX_MEMORY} --fullDaoNode=true --rpcUser=${BITCOIN_RPC_USERNAME} --rpcPassword=${BITCOIN_RPC_PASSWORD} --rpcPort=${BITCOIN_RPC_PORT} --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} --baseCurrencyNetwork=${BISQ_BASE_CURRENCY}
+ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode --appName=${BISQ_APP_NAME} --nodePort=${BISQ_NODE_PORT} --userDataDir=${BISQ_DATA_DIR} --maxConnections=${BISQ_MAX_CONNECTIONS} --maxMemory=${BISQ_MAX_MEMORY} --fullDaoNode=true --rpcUser=${BITCOIN_RPC_USERNAME} --rpcPassword=${BITCOIN_RPC_PASSWORD} --rpcPort=${BITCOIN_RPC_PORT} --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN}
 ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
 
@@ -17,7 +17,6 @@ PrivateTmp=true
 ProtectSystem=full
 NoNewPrivileges=true
 PrivateDevices=true
-MemoryDenyWriteExecute=false
 
 [Install]
 WantedBy=multi-user.target

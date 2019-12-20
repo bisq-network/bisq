@@ -1,0 +1,8 @@
+SOCKSPort 9050 # Default: Bind to localhost:9050 for local connections.
+Log notice syslog
+RunAsDaemon 1
+ControlPort 9051
+CookieAuthentication 1
+CookieAuthFileGroupReadable 1
+DataDirectoryGroupReadable 1
+KeepalivePeriod 42
