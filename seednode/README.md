@@ -19,7 +19,7 @@ The following OS are known to work well:
 
 Start with a clean Ubuntu 18.04 LTS server installation, and run the script
 ```bash
-curl https://github.com/bisq-network/bisq/seednode/install_seednode_debian.sh | sudo bash
+curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/seednode/install_seednode_debian.sh | sudo bash
 ```
 
 This will install and configure Tor, Bitcoin, and Bisq-Seednode services to start on boot.
