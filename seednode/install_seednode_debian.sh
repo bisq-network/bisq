@@ -25,7 +25,7 @@ BITCOIN_REPO_TAG=v0.19.0.1
 BITCOIN_HOME=/bitcoin
 BITCOIN_USER=bitcoin
 BITCOIN_GROUP=bitcoin
-BITCOIN_PKG="libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb-dev"
+BITCOIN_PKG="libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb-dev libssl-dev"
 
 TOR_PKG="tor"
 TOR_USER=debian-tor
