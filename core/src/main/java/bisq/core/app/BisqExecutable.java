@@ -29,7 +29,6 @@ import bisq.core.trade.TradeManager;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.BisqException;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.DevEnv;
@@ -42,12 +41,6 @@ import bisq.common.setup.GracefulShutDownHandler;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import java.io.File;
-import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,8 +84,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             ex.printStackTrace(System.err);
             System.exit(EXIT_FAILURE);
         }
-
-        initAppDir(config.getAppDataDir());
 
         doExecute();
     }
@@ -229,21 +220,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             log.error("App shutdown failed with exception");
             t.printStackTrace();
             System.exit(1);
-        }
-    }
-
-    private void initAppDir(File appDataDir) {
-        Path dir = appDataDir.toPath();
-        if (Files.exists(dir)) {
-            if (!Files.isWritable(dir))
-                throw new BisqException("Application data directory '%s' is not writeable", dir);
-            else
-                return;
-        }
-        try {
-            Files.createDirectories(dir);
-        } catch (IOException ex) {
-            throw new BisqException(ex, "Application data directory '%s' could not be created", dir);
         }
     }
 }

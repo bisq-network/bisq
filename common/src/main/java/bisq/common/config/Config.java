@@ -551,9 +551,9 @@ public class Config {
 
             this.appName = options.valueOf(appNameOpt);
             this.userDataDir = options.valueOf(userDataDirOpt);
-            this.appDataDir = options.has(appDataDirOpt) ?
+            this.appDataDir = mkAppDataDir(options.has(appDataDirOpt) ?
                     options.valueOf(appDataDirOpt) :
-                    new File(this.userDataDir, this.appName);
+                    new File(this.userDataDir, this.appName));
 
             if (!configFileHasBeenProcessed) {
                 configFile = cliHasConfigFileOpt && !configFile.isAbsolute() ?
@@ -626,14 +626,12 @@ public class Config {
                             ex.getMessage());
         }
 
-        File btcNetworkDir = new File(appDataDir, baseCurrencyNetwork.name().toLowerCase());
-        if (!btcNetworkDir.exists())
-            btcNetworkDir.mkdir();
-
-        this.torDir = new File(btcNetworkDir, "tor");
-        this.walletDir = btcNetworkDir;
-        this.storageDir = new File(btcNetworkDir, "db");
-        this.keyStorageDir = new File(btcNetworkDir, "keys");
+        // properties derived from options but not exposed as options themselves
+        File btcNetworkDir = mkdir(appDataDir, baseCurrencyNetwork.name().toLowerCase());
+        this.keyStorageDir = mkdir(btcNetworkDir, "keys");
+        this.storageDir = mkdir(btcNetworkDir, "db");
+        this.torDir = mkdir(btcNetworkDir, "tor");
+        this.walletDir = mkdir(btcNetworkDir, "wallet");
 
         // assign values to legacy mutable static fields
         CURRENT_APP_DATA_DIR = appDataDir;
@@ -670,6 +668,8 @@ public class Config {
     }
 
 
+    // == STATIC UTILS ===================================================================
+
     public static File getOsUserDataDir() {
         if (Utilities.isWindows())
             return new File(System.getenv("APPDATA"));
@@ -697,6 +697,39 @@ public class Config {
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+    /**
+     * Creates {@value APP_DATA_DIR} including any nonexistent parent directories.
+     * Does nothing if the directory already exists.
+     * @return the given directory, now guaranteed to exist
+     */
+    private static File mkAppDataDir(File appDataDir) {
+        Path path = appDataDir.toPath();
+        try {
+            Files.createDirectories(path);
+        } catch (IOException ex) {
+            throw new ConfigException(ex, "Application data directory '%s' could not be created", path);
+        }
+        return appDataDir;
+    }
+
+    /**
+     * Creates child directory assuming parent directories already exist.
+     * Does nothing if the directory already exists.
+     * @return the child directory, now guaranteed to exist
+     */
+    private static File mkdir(File parent, String child) {
+        File dir = new File(parent, child);
+        if (!dir.exists()) {
+            Path path = dir.toPath();
+            try {
+                Files.createDirectory(path);
+            } catch (IOException ex) {
+                throw new ConfigException(ex, "Directory '%s' could not be created", path);
+            }
+        }
+        return dir;
     }
 
 

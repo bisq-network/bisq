@@ -82,6 +82,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static bisq.common.util.Preconditions.checkDir;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -162,7 +163,7 @@ public class WalletConfig extends AbstractIdleService {
         this.numConnectionsForBtc = numConnectionsForBtc;
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
-        this.directory = checkNotNull(directory);
+        this.directory = checkDir(directory);
         this.btcWalletFileName = checkNotNull(btcWalletFileName);
         this.bsqWalletFileName = bsqWalletFileName;
         this.spvChainFileName = spvChainFileName;
@@ -365,11 +366,6 @@ public class WalletConfig extends AbstractIdleService {
     protected void startUp() throws Exception {
         // Runs in a separate thread.
         Context.propagate(context);
-        if (!directory.exists()) {
-            if (!directory.mkdirs()) {
-                throw new IOException("Could not create directory " + directory.getAbsolutePath());
-            }
-        }
         log.info("Wallet directory: {}", directory);
         try {
             File chainFile = new File(directory, spvChainFileName);

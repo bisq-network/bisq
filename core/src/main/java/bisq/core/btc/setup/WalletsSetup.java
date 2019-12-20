@@ -148,7 +148,7 @@ public class WalletsSetup {
                         Config config,
                         BtcNodes btcNodes,
                         @Named(Config.USER_AGENT) String userAgent,
-                        @Named(Config.WALLET_DIR) File appDir,
+                        @Named(Config.WALLET_DIR) File walletDir,
                         @Named(Config.USE_ALL_PROVIDED_NODES) boolean useAllProvidedNodes,
                         @Named(Config.NUM_CONNECTIONS_FOR_BTC) int numConnectionsForBtc,
                         @Named(Config.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
@@ -161,12 +161,11 @@ public class WalletsSetup {
         this.numConnectionsForBtc = numConnectionsForBtc;
         this.useAllProvidedNodes = useAllProvidedNodes;
         this.userAgent = userAgent;
-
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
+        this.walletDir = walletDir;
 
         btcWalletFileName = "bisq_" + config.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
         params = BaseCurrencyNetwork.CURRENT_PARAMETERS;
-        walletDir = new File(appDir, "wallet");
         PeerGroup.setIgnoreHttpSeeds(true);
     }
 

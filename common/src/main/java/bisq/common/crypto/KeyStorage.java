@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.common.util.Preconditions.checkDir;
+
 // TODO: use a password protection for key storage
 @Singleton
 public class KeyStorage {
@@ -92,8 +94,7 @@ public class KeyStorage {
 
     @Inject
     public KeyStorage(@Named(Config.KEY_STORAGE_DIR) File storageDir) {
-        storageDir.mkdirs();
-        this.storageDir = storageDir;
+        this.storageDir = checkDir(storageDir);
     }
 
     public boolean allKeyFilesExist() {

@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import static bisq.common.util.Preconditions.checkDir;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -71,7 +72,7 @@ public class Storage<T extends PersistableEnvelope> {
     public Storage(@Named(Config.STORAGE_DIR) File dir,
                    PersistenceProtoResolver persistenceProtoResolver,
                    CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
-        this.dir = dir;
+        this.dir = checkDir(dir);
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
     }

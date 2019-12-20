@@ -1,6 +1,7 @@
 package bisq.common.config;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,6 +15,7 @@ import org.junit.rules.ExpectedException;
 
 import static bisq.common.config.Config.DEFAULT_CONFIG_FILE_NAME;
 import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.contains;
@@ -185,5 +187,25 @@ public class ConfigTests {
             System.setOut(outOrig);
             System.setErr(errOrig);
         }
+    }
+
+    @Test
+    public void whenConfigIsConstructed_thenAppDataDirAndSubdirsAreCreated() {
+        Config config = new Config();
+        assertTrue(config.getAppDataDir().exists());
+        assertTrue(config.getKeyStorageDir().exists());
+        assertTrue(config.getStorageDir().exists());
+        assertTrue(config.getTorDir().exists());
+        assertTrue(config.getWalletDir().exists());
+    }
+
+    @Test
+    public void whenAppDataDirCannotBeCreated_thenConfigExceptionIsThrown() throws IOException {
+        // set a userDataDir that is actually a file so appDataDir cannot be created
+        File aFile = Files.createTempFile("A", "File").toFile();
+        exceptionRule.expect(ConfigException.class);
+        exceptionRule.expectMessage(containsString("Application data directory"));
+        exceptionRule.expectMessage(containsString("could not be created"));
+        new Config("--userDataDir=" + aFile);
     }
 }

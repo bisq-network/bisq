@@ -21,9 +21,8 @@ import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.storage.FileUtil;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.nio.file.Paths;
@@ -35,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.common.util.Preconditions.checkDir;
+
 @Slf4j
 @Singleton
 public class TorSetup {
@@ -42,7 +43,7 @@ public class TorSetup {
 
     @Inject
     public TorSetup(@Named(Config.TOR_DIR) File torDir) {
-        this.torDir = torDir;
+        this.torDir = checkDir(torDir);
     }
 
     public void cleanupTorFiles() {
