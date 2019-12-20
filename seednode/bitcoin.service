@@ -1,0 +1,22 @@
+[Unit]
+Description=Bitcoind
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/bitcoind -daemon -printtoconsole -pid=/bitcoin/bitcoind.pid
+ExecStop=/usr/local/bin/bitcoin-cli stop
+
+Type=forking
+PIDFile=/bitcoin/bitcoind.pid
+Restart=on-failure
+
+User=bitcoin
+Group=bitcoin
+
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target
