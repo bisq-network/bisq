@@ -148,8 +148,11 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     }
 
     public void onReorganize() {
-        unconfirmedBsqChangeOutputList.clear();
-        persist();
+        reset();
+    }
+
+    public void onSpvResync() {
+        reset();
     }
 
     public void onTransactionConfidenceChanged(Transaction tx) {
@@ -189,6 +192,11 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
                     unconfirmedBsqChangeOutputList.remove(txOutput);
                     persist();
                 });
+    }
+
+    private void reset() {
+        unconfirmedBsqChangeOutputList.clear();
+        persist();
     }
 
     private void persist() {
