@@ -21,7 +21,6 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
-import bisq.core.CoreApi;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
@@ -37,12 +36,6 @@ import javafx.application.Platform;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
-
-
-import bisq.grpc.BisqGrpcServer;
-
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
     private BisqApp application;
@@ -50,11 +43,6 @@ public class BisqAppMain extends BisqExecutable {
     public BisqAppMain() {
         super("Bisq Desktop", "bisq-desktop", Version.VERSION);
     }
-
-    /* @Nullable
-     private BisqHttpApiServer bisqHttpApiServer;*/
-    @Nullable
-    private BisqGrpcServer bisqGrpcServer;
 
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
@@ -142,21 +130,11 @@ public class BisqAppMain extends BisqExecutable {
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-       /* if (runWithHttpApi()) {
-            bisqHttpApiServer = new BisqHttpApiServer();
-        }*/
-
+        /*
         if (runWithGrpcApi()) {
             CoreApi coreApi = injector.getInstance(CoreApi.class);
             bisqGrpcServer = new BisqGrpcServer(coreApi);
         }
-    }
-
-    private boolean runWithHttpApi() {
-        return bisqEnvironment.getDesktopWithHttpApi().toLowerCase().equals("true");
-    }
-
-    private boolean runWithGrpcApi() {
-        return bisqEnvironment.getDesktopWithGrpcApi().toLowerCase().equals("true");
+        */
     }
 }
