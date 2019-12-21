@@ -35,20 +35,20 @@ TOR_HOME=/etc/tor
 #####
 
 echo "[*] Updating apt repo sources"
-sudo -H -i -u "${ROOT_USER}" apt-get update -q
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get update -q
 
 echo "[*] Upgrading OS packages"
-sudo -H -i -u "${ROOT_USER}" apt-get upgrade -q -y
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq -y
 
 echo "[*] Installing base packages"
-sudo -H -i -u "${ROOT_USER}" apt-get install -q -y ${ROOT_PKG}
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${ROOT_PKG}
 
 echo "[*] Cloning Bisq repo"
 sudo -H -i -u "${ROOT_USER}" git config --global advice.detachedHead false
 sudo -H -i -u "${ROOT_USER}" git clone --branch "${BISQ_REPO_TAG}" "${BISQ_REPO_URL}" "${ROOT_HOME}/${BISQ_REPO_NAME}"
 
 echo "[*] Installing Tor"
-sudo -H -i -u "${ROOT_USER}" apt-get install -q -y ${TOR_PKG}
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${TOR_PKG}
 
 echo "[*] Installing Tor configuration"
 sudo -H -i -u "${ROOT_USER}" install -c -m 644 "${ROOT_HOME}/${BISQ_REPO_NAME}/seednode/torrc" "${TOR_HOME}/torrc"
@@ -57,7 +57,7 @@ echo "[*] Creating Bitcoin user with Tor access"
 sudo -H -i -u "${ROOT_USER}" useradd -d "${BITCOIN_HOME}" -G "${TOR_GROUP}" "${BITCOIN_USER}"
 
 echo "[*] Installing Bitcoin build dependencies"
-sudo -H -i -u "${ROOT_USER}" apt-get install -q -y ${BITCOIN_PKG}
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${BITCOIN_PKG}
 
 echo "[*] Creating Bitcoin homedir"
 sudo -H -i -u "${ROOT_USER}" mkdir "${BITCOIN_HOME}"
