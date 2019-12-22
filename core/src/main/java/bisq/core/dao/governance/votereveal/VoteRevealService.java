@@ -38,8 +38,6 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
-import bisq.network.p2p.P2PService;
-
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -81,7 +79,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     private final MyVoteListService myVoteListService;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final P2PService p2PService;
     private final WalletsManager walletsManager;
 
     @Getter
@@ -99,7 +96,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                              MyVoteListService myVoteListService,
                              BsqWalletService bsqWalletService,
                              BtcWalletService btcWalletService,
-                             P2PService p2PService,
                              WalletsManager walletsManager) {
         this.daoStateService = daoStateService;
         this.blindVoteListService = blindVoteListService;
@@ -107,7 +103,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         this.myVoteListService = myVoteListService;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
-        this.p2PService = p2PService;
         this.walletsManager = walletsManager;
     }
 
@@ -243,7 +238,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             publishTx(voteRevealTx);
 
             // We don't want to wait for a successful broadcast to avoid issues if the broadcast succeeds delayed or at
-            // next startup but the tx was actually broadcasted.
+            // next startup but the tx was actually broadcast.
             myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
         } catch (IOException | WalletException | TransactionVerificationException
                 | InsufficientMoneyException e) {
@@ -258,7 +253,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         walletsManager.publishAndCommitBsqTx(voteRevealTx, TxType.VOTE_REVEAL, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("voteRevealTx successfully broadcasted.");
+                log.info("voteRevealTx successfully broadcast.");
                 voteRevealTxPublishedListeners.forEach(l -> l.onVoteRevealTxPublished(transaction.getHashAsString()));
             }
 

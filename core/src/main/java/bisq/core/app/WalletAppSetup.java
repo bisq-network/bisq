@@ -23,14 +23,12 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
@@ -60,7 +58,6 @@ public class WalletAppSetup {
     private final WalletsSetup walletsSetup;
     private final BisqEnvironment bisqEnvironment;
     private final Preferences preferences;
-    private final CoinFormatter formatter;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> btcInfoBinding;
@@ -84,13 +81,11 @@ public class WalletAppSetup {
     public WalletAppSetup(WalletsManager walletsManager,
                           WalletsSetup walletsSetup,
                           BisqEnvironment bisqEnvironment,
-                          Preferences preferences,
-                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+                          Preferences preferences) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.bisqEnvironment = bisqEnvironment;
         this.preferences = preferences;
-        this.formatter = formatter;
         this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
     }
 
@@ -156,9 +151,7 @@ public class WalletAppSetup {
                     return result;
 
                 });
-        btcInfoBinding.subscribe((observable, oldValue, newValue) -> {
-            getBtcInfo().set(newValue);
-        });
+        btcInfoBinding.subscribe((observable, oldValue, newValue) -> getBtcInfo().set(newValue));
 
         walletsSetup.initialize(null,
                 () -> {

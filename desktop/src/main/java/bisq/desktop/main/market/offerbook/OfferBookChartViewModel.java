@@ -38,12 +38,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import com.google.common.math.LongMath;
 
@@ -85,7 +81,6 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final ObservableList<OfferListItem> topBuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<OfferListItem> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
-    private final CoinFormatter formatter;
     private int selectedTabIndex;
     public final IntegerProperty maxPlacesForBuyPrice = new SimpleIntegerProperty();
     public final IntegerProperty maxPlacesForBuyVolume = new SimpleIntegerProperty();
@@ -96,15 +91,13 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
-    public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
-                                   AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+    OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
+                            AccountAgeWitnessService accountAgeWitnessService, Navigation navigation) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
-        this.formatter = formatter;
         this.accountAgeWitnessService = accountAgeWitnessService;
 
         String code = preferences.getOfferBookChartScreenCurrencyCode();

@@ -29,7 +29,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -43,8 +42,8 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -87,7 +86,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private final WalletsSetup walletsSetup;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private AccountAgeWitnessService accountAgeWitnessService;
@@ -148,7 +146,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public TakeOfferViewModel(TakeOfferDataModel dataModel,
                               BtcValidator btcValidator,
                               P2PService p2PService,
-                              WalletsSetup walletsSetup,
                               Preferences preferences,
                               PriceFeedService priceFeedService,
                               AccountAgeWitnessService accountAgeWitnessService,
@@ -160,7 +157,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.walletsSetup = walletsSetup;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
@@ -283,7 +279,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     .show();
             return false;
         }
-
     }
 
     public void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {

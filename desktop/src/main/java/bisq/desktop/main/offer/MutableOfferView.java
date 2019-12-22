@@ -45,7 +45,6 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -125,7 +124,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     public static final String BUYER_SECURITY_DEPOSIT_NEWS = "buyerSecurityDepositNews0.9.5";
     protected final Navigation navigation;
     private final Preferences preferences;
-    private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -183,7 +181,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     public MutableOfferView(M model,
                             Navigation navigation,
                             Preferences preferences,
-                            Transitions transitions,
                             OfferDetailsWindow offerDetailsWindow,
                             CoinFormatter btcFormatter,
                             BsqFormatter bsqFormatter) {
@@ -191,7 +188,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         this.navigation = navigation;
         this.preferences = preferences;
-        this.transitions = transitions;
         this.offerDetailsWindow = offerDetailsWindow;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;

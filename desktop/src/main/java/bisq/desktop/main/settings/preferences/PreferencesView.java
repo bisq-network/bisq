@@ -48,7 +48,6 @@ import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
-import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.UserThread;
@@ -124,7 +123,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
-    private final CoinFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
@@ -161,7 +159,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            AssetService assetService,
                            FilterManager filterManager,
                            DaoFacade daoFacade,
-                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                            @Named(DaoOptionKeys.RPC_USER) String rpcUser,
                            @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
@@ -172,7 +169,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
-        this.formatter = formatter;
         daoOptionsSet = fullDaoNode != null && !fullDaoNode.isEmpty() &&
                 rpcUser != null && !rpcUser.isEmpty() &&
                 rpcPassword != null && !rpcPassword.isEmpty() &&

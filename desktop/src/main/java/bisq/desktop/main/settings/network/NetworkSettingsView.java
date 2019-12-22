@@ -36,7 +36,6 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
@@ -45,7 +44,6 @@ import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import javafx.fxml.FXML;
 
@@ -112,7 +110,6 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     private final BisqEnvironment bisqEnvironment;
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final ClockWatcher clockWatcher;
-    private final CoinFormatter formatter;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
 
@@ -142,8 +139,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                                FilterManager filterManager,
                                BisqEnvironment bisqEnvironment,
                                TorNetworkSettingsWindow torNetworkSettingsWindow,
-                               ClockWatcher clockWatcher,
-                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+                               ClockWatcher clockWatcher) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
@@ -153,7 +149,6 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         this.bisqEnvironment = bisqEnvironment;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.clockWatcher = clockWatcher;
-        this.formatter = formatter;
     }
 
     public void initialize() {
@@ -279,7 +274,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
-                            UserThread.runAfter(BisqApp.getShutDownHandler()::run, 500, TimeUnit.MILLISECONDS);
+                            UserThread.runAfter(BisqApp.getShutDownHandler(), 500, TimeUnit.MILLISECONDS);
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(() -> useTorForBtcJCheckBox.setSelected(!selected))
@@ -464,7 +459,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         p2pPeersTableView.getItems().forEach(P2pNetworkListItem::cleanup);
         p2pNetworkListItems.clear();
         p2pNetworkListItems.setAll(p2PService.getNetworkNode().getAllConnections().stream()
-                .map(connection -> new P2pNetworkListItem(connection, clockWatcher, formatter))
+                .map(connection -> new P2pNetworkListItem(connection, clockWatcher))
                 .collect(Collectors.toList()));
     }
 
