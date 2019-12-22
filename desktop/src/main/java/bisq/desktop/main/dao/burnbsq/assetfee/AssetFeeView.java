@@ -35,8 +35,8 @@ import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.app.DevEnv;
@@ -195,7 +195,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         });
 
         updateList();
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
         updateButtonState();
 
         feeAmountInputTextField.resetValidation();
@@ -273,7 +273,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                 .map(statefulAsset -> new AssetListItem(statefulAsset, bsqFormatter))
                 /*.sorted(Comparator.comparing(AssetListItem::getNameAndCode))*/
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
     }
 
     private void updateButtonState() {

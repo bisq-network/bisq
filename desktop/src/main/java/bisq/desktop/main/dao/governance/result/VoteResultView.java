@@ -85,6 +85,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -460,10 +461,13 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         GridPane.setRowIndex(cyclesTableView, gridRow);
         GridPane.setMargin(cyclesTableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, -15, -10));
         GridPane.setColumnSpan(cyclesTableView, 2);
+        GridPane.setVgrow(cyclesTableView, Priority.SOMETIMES);
         root.getChildren().add(cyclesTableView);
 
         cyclesTableView.setItems(sortedCycleListItemList);
         sortedCycleListItemList.comparatorProperty().bind(cyclesTableView.comparatorProperty());
+
+
     }
 
 
@@ -487,6 +491,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         GridPane.setRowIndex(proposalsTableView, gridRow);
         GridPane.setMargin(proposalsTableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, 0, -10));
         GridPane.setColumnSpan(proposalsTableView, 2);
+        GridPane.setVgrow(proposalsTableView, Priority.ALWAYS);
         root.getChildren().add(proposalsTableView);
 
         proposalsTableView.setItems(sortedProposalList);
@@ -513,7 +518,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         isVoteIncludedInResult,
                         bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 6);
+        GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 100);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
