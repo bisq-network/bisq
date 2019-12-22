@@ -718,7 +718,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o -> o.getProposal().getTxId()));
+        column.setComparator(Comparator.comparing(ProposalListItem::getProposalOwnerName));
         votesTableView.getColumns().add(column);
 
 
@@ -742,7 +742,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
+        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getType().getDisplayName()));
         votesTableView.getColumns().add(column);
 
 
@@ -793,6 +793,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 };
             }
         });
+        column.setSortable(false);
         votesTableView.getColumns().add(column);
 
 
