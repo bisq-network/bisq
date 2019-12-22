@@ -122,6 +122,10 @@ public class ProposalListItem {
         return evaluatedProposal.isAccepted() ? AwesomeIcon.OK_SIGN : AwesomeIcon.BAN_CIRCLE;
     }
 
+    public boolean isAccepted() {
+        return evaluatedProposal.isAccepted();
+    }
+
     public String getColorStyleClass() {
         return evaluatedProposal.isAccepted() ? "dao-accepted-icon" : "dao-rejected-icon";
     }
@@ -130,11 +134,29 @@ public class ProposalListItem {
         return ProposalListItem.getProposalDetails(evaluatedProposal, bsqFormatter);
     }
 
+    public String getThresholdAsString() {
+        return (evaluatedProposal.getProposalVoteResult().getThreshold() / 100D) + "%";
+    }
+
+    public long getThreshold() {
+        return evaluatedProposal.getProposalVoteResult().getThreshold();
+    }
+
+    public String getQuorumAsString() {
+        return bsqFormatter.formatCoinWithCode(Coin.valueOf(evaluatedProposal.getProposalVoteResult().getQuorum()));
+    }
+
+    public long getQuorum() {
+        return evaluatedProposal.getProposalVoteResult().getQuorum();
+    }
+
     private static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
         return getProposalDetails(evaluatedProposal, bsqFormatter, true);
     }
 
-    private static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter, boolean useDisplayString) {
+    private static String getProposalDetails(EvaluatedProposal evaluatedProposal,
+                                             BsqFormatter bsqFormatter,
+                                             boolean useDisplayString) {
         Proposal proposal = evaluatedProposal.getProposal();
         switch (proposal.getType()) {
             case COMPENSATION_REQUEST:

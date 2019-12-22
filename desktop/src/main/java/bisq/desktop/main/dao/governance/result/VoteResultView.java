@@ -651,7 +651,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         TableColumn<ProposalListItem, ProposalListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
-        column.setMinWidth(190);
+        column.setMinWidth(160);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -678,35 +678,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         votesTableView.getSortOrder().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.proposalOwnerName"));
-        column.setMinWidth(80);
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-                    @Override
-                    public TableCell<ProposalListItem, ProposalListItem> call(
-                            TableColumn<ProposalListItem, ProposalListItem> column) {
-                        return new TableCell<>() {
-
-                            @Override
-                            public void updateItem(final ProposalListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null) {
-                                    item.setTableRow(getTableRow());
-                                    setText(item.getProposalOwnerName());
-                                } else {
-                                    setText("");
-                                }
-                            }
-                        };
-                    }
-                });
-        column.setComparator(Comparator.comparing(ProposalListItem::getProposalOwnerName));
-        votesTableView.getColumns().add(column);
-
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.proposal.table.header.link"));
-        column.setMinWidth(100);
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.nameLink"));
+        column.setMinWidth(130);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
@@ -722,10 +695,19 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    final Proposal proposal = item.getProposal();
-                                    field = new ExternalHyperlink(proposal.getLink());
-                                    field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
-                                    field.setTooltip(new Tooltip(proposal.getLink()));
+                                    Proposal proposal = item.getProposal();
+                                    String link = proposal.getLink();
+                                    String proposalOwnerName = item.getProposalOwnerName();
+                                    String[] tokens = link.split("/");
+                                    String nameLink = proposalOwnerName;
+                                    if (tokens.length > 0) {
+                                        String proposalNr = tokens[tokens.length - 1];
+                                        nameLink += " (#" + proposalNr + ")";
+                                    }
+
+                                    field = new ExternalHyperlink(nameLink);
+                                    field.setOnAction(event -> GUIUtil.openWebPage(link));
+                                    field.setTooltip(new Tooltip(proposalOwnerName + " (" + link + ")"));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -765,7 +747,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.details"));
-        column.setMinWidth(180);
+        column.setMinWidth(100);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -789,7 +771,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.myVote"));
-        column.setMinWidth(70);
+        column.setMinWidth(60);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -814,8 +796,56 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         votesTableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.result"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.threshold"));
+        column.setMinWidth(80);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ProposalListItem, ProposalListItem> call(
+                            TableColumn<ProposalListItem, ProposalListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ProposalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getThresholdAsString());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(ProposalListItem::getThreshold));
+        votesTableView.getColumns().add(column);
+
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.quorum"));
         column.setMinWidth(90);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ProposalListItem, ProposalListItem> call(
+                            TableColumn<ProposalListItem, ProposalListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ProposalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getQuorumAsString());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(ProposalListItem::getQuorum));
+        votesTableView.getColumns().add(column);
+
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.result"));
+        column.setMinWidth(80);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -840,6 +870,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 };
             }
         });
+        column.setComparator(Comparator.comparing(ProposalListItem::isAccepted));
         votesTableView.getColumns().add(column);
     }
 
