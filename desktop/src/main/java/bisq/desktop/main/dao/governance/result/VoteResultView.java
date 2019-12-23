@@ -652,7 +652,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.setMinWidth(160);
-        column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
@@ -680,7 +679,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.nameLink"));
         column.setMinWidth(130);
-        column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -718,7 +716,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(ProposalListItem::getProposalOwnerName));
+        column.setComparator(Comparator.comparing((evaluatedProposal -> evaluatedProposal.getProposal().getName().toLowerCase())));
         votesTableView.getColumns().add(column);
 
 
@@ -766,7 +764,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(ProposalListItem::getDetails));
+        // We sort by issued amount
+        column.setComparator(Comparator.comparing(ProposalListItem::getIssuedAmount));
         votesTableView.getColumns().add(column);
 
 

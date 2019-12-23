@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.governance.result;
 
 import bisq.desktop.util.FormBuilder;
 
+import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.CompensationProposal;
@@ -132,6 +133,15 @@ public class ProposalListItem {
 
     public String getDetails() {
         return ProposalListItem.getProposalDetails(evaluatedProposal, bsqFormatter);
+    }
+
+    public long getIssuedAmount() {
+        if (evaluatedProposal.getProposal().getType() == ProposalType.COMPENSATION_REQUEST) {
+            CompensationProposal compensationProposal = (CompensationProposal) proposal;
+            Coin requestedBsq = evaluatedProposal.isAccepted() ? compensationProposal.getRequestedBsq() : Coin.ZERO;
+            return requestedBsq.value;
+        }
+        return 0;
     }
 
     public String getThresholdAsString() {
