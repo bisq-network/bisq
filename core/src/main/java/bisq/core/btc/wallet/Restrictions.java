@@ -18,11 +18,8 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.payment.PaymentAccount;
 
 import org.bitcoinj.core.Coin;
-
-import javax.annotation.Nullable;
 
 public class Restrictions {
     private static Coin MIN_TRADE_AMOUNT;
@@ -53,15 +50,15 @@ public class Restrictions {
         return MIN_TRADE_AMOUNT;
     }
 
-    public static double getDefaultBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
+    public static double getDefaultBuyerSecurityDepositAsPercent() {
         return 0.15; // 15% of trade amount.
     }
 
-    public static double getMinBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
+    public static double getMinBuyerSecurityDepositAsPercent() {
         return 0.15; // 15% of trade amount.
     }
 
-    public static double getMaxBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
+    public static double getMaxBuyerSecurityDepositAsPercent() {
         return 0.5; // 50% of trade amount. For a 1 BTC trade it is about 3500 USD @ 7000 USD/BTC
     }
 

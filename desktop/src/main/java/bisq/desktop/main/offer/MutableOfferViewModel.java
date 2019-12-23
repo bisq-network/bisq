@@ -51,9 +51,9 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -878,7 +878,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             InputValidator.ValidationResult result = securityDepositValidator.validate(buyerSecurityDeposit.get());
             buyerSecurityDepositValidationResult.set(result);
             if (result.isValid) {
-                double defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDepositAsPercent(getPaymentAccount());
+                double defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDepositAsPercent();
                 String key = "buyerSecurityDepositIsLowerAsDefault";
                 double depositAsDouble = ParsingUtils.parsePercentStringToDouble(buyerSecurityDeposit.get());
                 if (preferences.showAgain(key) && depositAsDouble < defaultSecurityDeposit) {
@@ -1139,7 +1139,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (buyerSecurityDeposit.get() != null && !buyerSecurityDeposit.get().isEmpty()) {
             dataModel.setBuyerSecurityDeposit(ParsingUtils.parsePercentStringToDouble(buyerSecurityDeposit.get()));
         } else {
-            dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent(getPaymentAccount()));
+            dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent());
         }
     }
 

@@ -500,8 +500,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent, PaymentAccount paymentAccount) {
-        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount);
-        double min = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent();
+        double min = Restrictions.getMinBuyerSecurityDepositAsPercent();
 
         if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
             prefPayload.setBuyerSecurityDepositAsPercentForCrypto(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
@@ -746,12 +746,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         double value = PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount) ?
                 prefPayload.getBuyerSecurityDepositAsPercentForCrypto() : prefPayload.getBuyerSecurityDepositAsPercent();
 
-        if (value < Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount)) {
-            value = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+        if (value < Restrictions.getMinBuyerSecurityDepositAsPercent()) {
+            value = Restrictions.getMinBuyerSecurityDepositAsPercent();
             setBuyerSecurityDepositAsPercent(value, paymentAccount);
         }
 
-        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent(paymentAccount) : value;
+        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent() : value;
     }
 
     //TODO remove and use isPayFeeInBtc instead

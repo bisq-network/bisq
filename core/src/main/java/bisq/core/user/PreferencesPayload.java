@@ -21,7 +21,6 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 
@@ -122,9 +121,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String rpcPw;
     @Nullable
     private String takeOfferSelectedPaymentAccountId;
-    private double buyerSecurityDepositAsPercent = getDefaultBuyerSecurityDepositAsPercent(null);
+    private double buyerSecurityDepositAsPercent = getDefaultBuyerSecurityDepositAsPercent();
     private int ignoreDustThreshold = 600;
-    private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
+    private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent();
     private int blockNotifyPort;
     private boolean tacAcceptedV120;
 

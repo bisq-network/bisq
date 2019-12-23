@@ -132,9 +132,9 @@ class EditOfferDataModel extends MutableOfferDataModel {
         // by percentage than the restriction. We can't determine the percentage originally entered at offer
         // creation, so just use the default value as it doesn't matter anyway.
         double buyerSecurityDepositPercent = CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount());
-        if (buyerSecurityDepositPercent > Restrictions.getMaxBuyerSecurityDepositAsPercent(this.paymentAccount)
+        if (buyerSecurityDepositPercent > Restrictions.getMaxBuyerSecurityDepositAsPercent()
                 && offer.getBuyerSecurityDeposit().value == Restrictions.getMinBuyerSecurityDepositAsCoin().value)
-            buyerSecurityDeposit.set(Restrictions.getDefaultBuyerSecurityDepositAsPercent(this.paymentAccount));
+            buyerSecurityDeposit.set(Restrictions.getDefaultBuyerSecurityDepositAsPercent());
         else
             buyerSecurityDeposit.set(buyerSecurityDepositPercent);
 
