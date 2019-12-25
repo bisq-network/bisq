@@ -105,7 +105,7 @@ public abstract class BitcoinAverage extends ExchangeRateProvider {
     }
 
     private Map<String, BitcoinAverageTicker> getTickersKeyedByCurrencyPair() {
-        if (symbolSet == "local")
+        if (symbolSet.equals("local"))
             return restTemplate.exchange(
                 RequestEntity
                     .get(UriComponentsBuilder
