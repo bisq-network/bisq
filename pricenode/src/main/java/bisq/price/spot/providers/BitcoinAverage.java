@@ -105,29 +105,26 @@ public abstract class BitcoinAverage extends ExchangeRateProvider {
     }
 
     private Map<String, BitcoinAverageTicker> getTickersKeyedByCurrencyPair() {
-        if (symbolSet.equals("local"))
-            return restTemplate.exchange(
-                RequestEntity
-                    .get(UriComponentsBuilder
-                        // fetch only these currencies from local symbolset: "USD", "EUR"
-                        .fromUriString("https://apiv2.bitcoinaverage.com/indices/{symbol-set}/ticker/all?crypto=BTC&fiat=USD,EUR")
-                        .buildAndExpand(symbolSet)
-                        .toUri())
-                    .header("X-signature", getAuthSignature())
-                    .build(),
-                BitcoinAverageTickers.class
-            ).getBody().getTickers();
-        else
-            return restTemplate.exchange(
-                RequestEntity
-                    .get(UriComponentsBuilder
-                        .fromUriString("https://apiv2.bitcoinaverage.com/indices/{symbol-set}/ticker/all?crypto=BTC")
-                        .buildAndExpand(symbolSet)
-                        .toUri())
-                    .header("X-signature", getAuthSignature())
-                    .build(),
-                BitcoinAverageTickers.class
-            ).getBody().getTickers();
+        String uriString = "https://apiv2.bitcoinaverage.com/indices/{symbol-set}/ticker/all?crypto=BTC";
+        
+        /**
+         * Target fiat currencies in the local symbol set: "USD", "EUR"
+         */       
+        if (symbolSet.equals("local")) {
+            String fiat = "USD,EUR";
+            uriString.concat("&fiat=" + fiat);
+        }
+    
+        return restTemplate.exchange(
+            RequestEntity
+                .get(UriComponentsBuilder
+                    .fromUriString(uriString)
+                    .buildAndExpand(symbolSet)
+                    .toUri())
+                .header("X-signature", getAuthSignature())
+                .build(),
+            BitcoinAverageTickers.class
+        ).getBody().getTickers();
     }
 
     protected String getAuthSignature() {
