@@ -6,6 +6,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
@@ -40,11 +41,13 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
     final List<CheckBox> euroCountryCheckBoxes = new ArrayList<>();
     final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
     private TextField currencyTextField;
-    private ComboBox<TradeCurrency> currencyComboBox;
     InputTextField ibanInputTextField;
+
+    private FiatCurrency euroCurrency = CurrencyUtil.getFiatCurrency("EUR").get();
 
     GeneralSepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        paymentAccount.setSingleTradeCurrency(euroCurrency);
     }
 
     @Override
@@ -71,23 +74,11 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
         countryComboBox.setOnAction(e -> {
             Country selectedItem = countryComboBox.getSelectionModel().getSelectedItem();
             paymentAccount.setCountry(selectedItem);
-            TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(selectedItem.code);
-            setupCurrency(selectedItem, currency);
 
             updateCountriesSelection(euroCountryCheckBoxes);
             updateCountriesSelection(nonEuroCountryCheckBoxes);
             updateFromInputs();
         });
-    }
-
-    void updateCurrencyFormElements(CountryBasedPaymentAccount paymentAccount) {
-        TradeCurrency currency = CurrencyUtil.getFiatCurrency("EUR").get();
-        currencyTextField.setVisible(true);
-        currencyTextField.setManaged(true);
-        currencyComboBox.setVisible(false);
-        currencyComboBox.setManaged(false);
-        paymentAccount.setSingleTradeCurrency(currency);
-        currencyTextField.setText(Res.get("payment.currencyWithSymbol", currency.getNameAndCode()));
     }
 
     void addCountriesGrid(String title, List<CheckBox> checkBoxList,
@@ -106,19 +97,17 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
 
         hBox.setSpacing(10);
         ComboBox<Country> countryComboBox = new JFXComboBox<>();
-        currencyComboBox = new JFXComboBox<>();
         currencyTextField = new JFXTextField("");
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);
         currencyTextField.setFocusTraversable(false);
         currencyTextField.setMinWidth(300);
 
-        currencyTextField.setVisible(false);
-        currencyTextField.setManaged(false);
-        currencyComboBox.setVisible(false);
-        currencyComboBox.setManaged(false);
+        currencyTextField.setVisible(true);
+        currencyTextField.setManaged(true);
+        currencyTextField.setText(Res.get("payment.currencyWithSymbol", euroCurrency.getNameAndCode()));
 
-        hBox.getChildren().addAll(countryComboBox, currencyTextField, currencyComboBox);
+        hBox.getChildren().addAll(countryComboBox, currencyTextField);
 
         addTopLabelWithVBox(gridPane, ++gridRow, Res.get("payment.bank.country"), hBox, 0);
 
@@ -136,8 +125,6 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
         });
         return countryComboBox;
     }
-
-    abstract void setupCurrency(Country country, TradeCurrency currency);
 
     abstract void updateCountriesSelection(List<CheckBox> checkBoxList);
 
