@@ -135,9 +135,7 @@ public class SepaForm extends GeneralSepaForm {
 
     @Override
     void setupCurrency(Country country, TradeCurrency currency) {
-        final boolean isSepaCountry = CountryUtil.getAllSepaEuroCountries().contains(country);
-
-        updateCurrencyFormElements(currency, isSepaCountry, sepaAccount);
+        updateCurrencyFormElements(sepaAccount);
     }
 
     private void addEuroCountriesGrid() {

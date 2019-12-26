@@ -25,8 +25,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-import javafx.collections.FXCollections;
-
 import javafx.util.StringConverter;
 
 import java.util.ArrayList;
@@ -82,39 +80,14 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
         });
     }
 
-    void updateCurrencyFormElements(TradeCurrency currency, boolean isSepaCountry, CountryBasedPaymentAccount paymentAccount) {
-        if (isSepaCountry) {
-            currencyTextField.setVisible(true);
-            currencyTextField.setManaged(true);
-            currencyComboBox.setVisible(false);
-            currencyComboBox.setManaged(false);
-            paymentAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText(Res.get("payment.currencyWithSymbol", currency.getNameAndCode()));
-        } else {
-            currencyComboBox.setVisible(true);
-            currencyComboBox.setManaged(true);
-            currencyTextField.setVisible(false);
-            currencyTextField.setManaged(false);
-            currencyComboBox.setItems(FXCollections.observableArrayList(currency,
-                    CurrencyUtil.getFiatCurrency("EUR").get()));
-            currencyComboBox.setOnAction(e2 -> {
-                paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
-                updateCountriesSelection(euroCountryCheckBoxes);
-                autoFillNameTextField();
-            });
-            currencyComboBox.setConverter(new StringConverter<>() {
-                @Override
-                public String toString(TradeCurrency currency) {
-                    return currency != null ? currency.getNameAndCode() : Res.get("shared.na");
-                }
-
-                @Override
-                public TradeCurrency fromString(String string) {
-                    return null;
-                }
-            });
-            currencyComboBox.getSelectionModel().select(0);
-        }
+    void updateCurrencyFormElements(CountryBasedPaymentAccount paymentAccount) {
+        TradeCurrency currency = CurrencyUtil.getFiatCurrency("EUR").get();
+        currencyTextField.setVisible(true);
+        currencyTextField.setManaged(true);
+        currencyComboBox.setVisible(false);
+        currencyComboBox.setManaged(false);
+        paymentAccount.setSingleTradeCurrency(currency);
+        currencyTextField.setText(Res.get("payment.currencyWithSymbol", currency.getNameAndCode()));
     }
 
     void addCountriesGrid(String title, List<CheckBox> checkBoxList,
