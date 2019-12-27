@@ -82,8 +82,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
         new Popup().warning(Res.get("shared.askConfirmDeleteAccount"))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
-                    boolean isPaymentAccountUsed = deleteAccountFromModel(paymentAccount);
-                    if (!isPaymentAccountUsed)
+                    boolean success = deleteAccountFromModel(paymentAccount);
+                    if (success)
                         removeSelectAccountForm();
                     else
                         UserThread.runAfter(() -> new Popup().warning(

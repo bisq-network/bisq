@@ -20,14 +20,9 @@ package bisq.desktop.main.account.content.altcoinaccounts;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CryptoCurrency;
-import bisq.core.locale.FiatCurrency;
-import bisq.core.locale.TradeCurrency;
-import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.TradeManager;
+import bisq.core.payment.PaymentAccountManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
@@ -43,16 +38,14 @@ import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 class AltCoinAccountsDataModel extends ActivatableDataModel {
 
+    private final PaymentAccountManager paymentAccountManager;
     private final User user;
     private final Preferences preferences;
-    private final OpenOfferManager openOfferManager;
-    private final TradeManager tradeManager;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "AltcoinPaymentAccounts";
@@ -60,18 +53,13 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
 
     @Inject
-    public AltCoinAccountsDataModel(User user,
+    public AltCoinAccountsDataModel(PaymentAccountManager paymentAccountManager, User user,
                                     Preferences preferences,
-                                    OpenOfferManager openOfferManager,
-                                    TradeManager tradeManager,
-                                    AccountAgeWitnessService accountAgeWitnessService,
                                     PersistenceProtoResolver persistenceProtoResolver,
                                     CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+        this.paymentAccountManager = paymentAccountManager;
         this.user = user;
         this.preferences = preferences;
-        this.openOfferManager = openOfferManager;
-        this.tradeManager = tradeManager;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
         setChangeListener = change -> fillAndSortPaymentAccounts();
@@ -88,7 +76,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
             paymentAccounts.setAll(user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> paymentAccount.getPaymentMethod().isAsset())
                     .collect(Collectors.toList()));
-            paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
+            paymentAccounts.sort(Comparator.comparing(PaymentAccount::getCreationDate));
         }
     }
 
@@ -103,41 +91,11 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
-        TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
-        if (singleTradeCurrency != null) {
-            if (singleTradeCurrency instanceof FiatCurrency)
-                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
-            else
-                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
-        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
-            tradeCurrencies.stream().forEach(tradeCurrency -> {
-                if (tradeCurrency instanceof FiatCurrency)
-                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
-                else
-                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
-            });
-        }
-
-        user.addPaymentAccount(paymentAccount);
-
-        if (!(paymentAccount instanceof AssetAccount))
-            accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
+        paymentAccountManager.addPaymentAccount(paymentAccount);
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
-        boolean isPaymentAccountUsed = openOfferManager.getObservableList().stream()
-                .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
-                .findAny()
-                .isPresent();
-        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTradableList().stream()
-                .filter(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
-                        paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
-                .findAny()
-                .isPresent();
-        if (!isPaymentAccountUsed)
-            user.removePaymentAccount(paymentAccount);
-        return isPaymentAccountUsed;
+        return paymentAccountManager.removePaymentAccount(paymentAccount);
     }
 
     public void onSelectAccount(PaymentAccount paymentAccount) {
@@ -146,9 +104,10 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
-            ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
+            ArrayList<PaymentAccount> accounts = user.getPaymentAccounts()
+                    .stream()
                     .filter(paymentAccount -> paymentAccount instanceof AssetAccount)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toCollection(ArrayList::new));
             GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedDatabaseFilesHandler);
         }
     }
