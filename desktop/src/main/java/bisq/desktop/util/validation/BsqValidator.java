@@ -78,17 +78,19 @@ public class BsqValidator extends AltcoinValidator {
         }
 
         if (result.isValid) {
-            result = validateIfNotZero(input)
-                    .and(validateIfNotNegative(input))
-                    .and(validateIfNotExceedsMaxValue(input));
+            result = result.andValidation(input,
+                        this::validateIfNotZero,
+                        this::validateIfNotNegative,
+                        this::validateIfNotExceedsMaxValue);
         }
 
         if (result.isValid) {
-            result = validateIfNotFractionalBtcValue(input)
-                    .and(validateIfNotExceedsMaxBtcValue(input))
-                    .and(validateIfSufficientAvailableBalance(input))
-                    .and(validateIfAboveDust(input))
-                    .and(validateIfNotBelowMinValue(input));
+            result = result.andValidation(input,
+                        this::validateIfNotFractionalBtcValue,
+                        this::validateIfNotExceedsMaxBtcValue,
+                        this::validateIfSufficientAvailableBalance,
+                        this::validateIfAboveDust,
+                        this::validateIfNotBelowMinValue);
         }
 
         return result;
