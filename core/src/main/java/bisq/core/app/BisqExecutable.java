@@ -61,6 +61,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.prefs.Preferences;
+
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +79,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     private final String fullName;
     private final String scriptName;
     private final String version;
+	
+	private final Preferences prefs;
 
     protected Injector injector;
     protected AppModule module;
@@ -86,6 +90,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         this.fullName = fullName;
         this.scriptName = scriptName;
         this.version = version;
+		
+		this.prefs = Preferences.userRoot().node("Bisq");
     }
 
     public static boolean setupInitialOptionParser(String[] args) throws IOException {
@@ -186,6 +192,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             // we only tried to load some config until now, so no graceful shutdown is required
             System.exit(1);
         }
+		bisqEnvironment.daoActivatedInPrefs = Boolean.toString(prefs.getBoolean("ActivateDAO", false));
+		bisqEnvironment.daoActivatedInOptions = bisqEnvironment.daoActivated;
     }
 
     protected void configCoreSetup(OptionSet options) {
@@ -235,7 +243,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
-        DevEnv.setDaoActivated(BisqEnvironment.isDaoActivated(bisqEnvironment));
+        DevEnv.setDaoActivated(BisqEnvironment.isDaoActivated());
     }
 
     protected void setupPersistedDataHosts(Injector injector) {
@@ -575,7 +583,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
-                format("Developer flag. If true it enables dao phase 2 features. (default: %s)", "true"))
+                format("Developer flag. If true it enables dao phase 2 features."))
                 .withRequiredArg()
                 .ofType(boolean.class);
     }

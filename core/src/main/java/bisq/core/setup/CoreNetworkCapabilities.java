@@ -43,7 +43,7 @@ public class CoreNetworkCapabilities {
                 Capability.TRADE_STATISTICS_HASH_UPDATE
         );
 
-        if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
+        if (BisqEnvironment.isDaoActivated()) {
             maybeApplyDaoFullMode(bisqEnvironment);
         }
     }

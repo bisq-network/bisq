@@ -78,20 +78,19 @@ public class NewsView extends ActivatableView<HBox, Void> {
         daoTestnetDescription.getStyleClass().add("dao-news-content");
 
         rowIndex = addInfoSection(gridPane, rowIndex, Res.get("dao.news.DAOOnTestnet.firstSection.title"),
-                Res.get("dao.news.DAOOnTestnet.firstSection.content"),
-                "https://docs.bisq.network/getting-started-dao.html#switch-to-testnet-mode");
+                Res.get("dao.news.DAOOnTestnet.firstSection.content"), "https://docs.bisq.network/");
         rowIndex = addInfoSection(gridPane, rowIndex, Res.get("dao.news.DAOOnTestnet.secondSection.title"),
                 Res.get("dao.news.DAOOnTestnet.secondSection.content"),
-                "https://docs.bisq.network/getting-started-dao.html#acquire-some-bsq");
+                "https://docs.bisq.network/getting-started-dao.html#obtain-bsq");
         rowIndex = addInfoSection(gridPane, rowIndex, Res.get("dao.news.DAOOnTestnet.thirdSection.title"),
                 Res.get("dao.news.DAOOnTestnet.thirdSection.content"),
-                "https://docs.bisq.network/getting-started-dao.html#participate-in-a-voting-cycle");
+                "https://docs.bisq.network/dao.html#user-guides");
         rowIndex = addInfoSection(gridPane, rowIndex, Res.get("dao.news.DAOOnTestnet.fourthSection.title"),
                 Res.get("dao.news.DAOOnTestnet.fourthSection.content"),
                 "https://docs.bisq.network/getting-started-dao.html#explore-a-bsq-block-explorer");
 
         Hyperlink hyperlink = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("dao.news.DAOOnTestnet.readMoreLink"),
-                "https://bisq.network/docs/dao");
+                "https://docs.bisq.network/dao-user-reference.html");
         hyperlink.getStyleClass().add("dao-news-link");
 
         return gridPane;
@@ -104,12 +103,13 @@ public class NewsView extends ActivatableView<HBox, Void> {
         titleLabel.getStyleClass().add("dao-news-section-header");
         Label contentLabel = addMultilineLabel(gridPane, ++rowIndex, content, -Layout.FLOATING_LABEL_DISTANCE, 370);
         contentLabel.getStyleClass().add("dao-news-section-content");
-
+ 
         Hyperlink link = addHyperlinkWithIcon(gridPane, ++rowIndex, "Read More", linkURL);
-        link.getStyleClass().add("dao-news-section-link");
+	    link.getStyleClass().add("dao-news-section-link");
         GridPane.setMargin(link, new Insets(0, 0, 29, 0));
-
+		
         return rowIndex;
+		
     }
 
     private AnchorPane createBisqDAOContent() {
@@ -147,7 +147,7 @@ public class NewsView extends ActivatableView<HBox, Void> {
         Button requestNowButton = addPrimaryActionButton(pastContributorsPane, ++rowIndex, Res.get("dao.news.pastContribution.requestNow"), 0);
         requestNowButton.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(requestNowButton, Priority.ALWAYS);
-        requestNowButton.setOnAction(e -> GUIUtil.openWebPage("https://bisq.network/docs/dao/genesis"));
+        requestNowButton.setOnAction(e -> GUIUtil.openWebPage("https://docs.bisq.network/compensation.html"));
 
         anchorPane.getChildren().addAll(bisqDAOPane, pastContributorsPane);
 

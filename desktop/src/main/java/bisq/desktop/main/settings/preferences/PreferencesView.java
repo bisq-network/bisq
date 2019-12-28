@@ -113,12 +113,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
     /*referralIdInputTextField,*/
     rpcUserTextField, blockNotifyPortTextField;
-    private ToggleButton isDaoFullNodeToggleButton;
+    private ToggleButton isDaoFullNodeToggleButton, isDaoActivatedToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
     private ChangeListener<Boolean> transactionFeeFocusedListener;
-    private final Preferences preferences;
+    private final bisq.core.user.Preferences preferences;
     private final FeeService feeService;
     //private final ReferralIdService referralIdService;
     private final AssetService assetService;
@@ -149,6 +149,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoOptionsSet;
     private final boolean displayStandbyModeFeature;
+	
+	private final java.util.prefs.Preferences prefs;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -178,6 +180,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 rpcPassword != null && !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != null && !rpcBlockNotificationPort.isEmpty();
         this.displayStandbyModeFeature = Utilities.isOSX() || Utilities.isWindows();
+		
+		prefs = java.util.prefs.Preferences.userRoot().node("Bisq");
     }
 
     @Override
@@ -193,6 +197,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         allFiatCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies());
         allFiatCurrencies.removeAll(fiatCurrencies);
 
+		initializeExtraOptions();
         initializeGeneralOptions();
         initializeSeparator();
         initializeDisplayCurrencies();
@@ -209,6 +214,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
         allCryptoCurrencies.removeAll(cryptoCurrencies);
 
+		activateExtraOptions();
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();
@@ -218,6 +224,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     protected void deactivate() {
+		deactivateExtraOptions();
         deactivateGeneralOptions();
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
@@ -228,10 +235,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Initialize
     ///////////////////////////////////////////////////////////////////////////////////////////
+	private void initializeExtraOptions() {
+		TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 1, Res.get("setting.preferences.extra"));
+		isDaoActivatedToggleButton = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.extra.dao"));
+	}
 
     private void initializeGeneralOptions() {
         int titledGroupBgRowSpan = displayStandbyModeFeature ? 8 : 7;
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
         userLanguageComboBox = addComboBox(root, gridRow,
@@ -635,6 +646,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
     ///////////////////////////////////////////////////////////////////////////////////////////
+	private void activateExtraOptions() {
+        isDaoActivatedToggleButton.setSelected(prefs.getBoolean("ActivateDAO", false));
+        isDaoActivatedToggleButton.setOnAction(e -> prefs.putBoolean("ActivateDAO", isDaoActivatedToggleButton.isSelected()));
+	}
 
     private void activateGeneralOptions() {
        /* List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
@@ -936,6 +951,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Deactivate
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+	private void deactivateExtraOptions() {
+        isDaoActivatedToggleButton.setOnAction(null);
+    }
 
     private void deactivateGeneralOptions() {
         //selectBaseCurrencyNetworkComboBox.setOnAction(null);
