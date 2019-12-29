@@ -647,7 +647,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     // Activate
     ///////////////////////////////////////////////////////////////////////////////////////////
 	private void activateExtraOptions() {
-        isDaoActivatedToggleButton.setSelected(prefs.getBoolean("ActivateDAO", false));
+        isDaoActivatedToggleButton.setSelected(prefs.getBoolean("ActivateDAO", true));
         isDaoActivatedToggleButton.setOnAction(e -> prefs.putBoolean("ActivateDAO", isDaoActivatedToggleButton.isSelected()));
 	}
 

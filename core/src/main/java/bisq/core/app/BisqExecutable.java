@@ -76,11 +76,13 @@ import static java.lang.String.format;
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
+    private static final boolean isBisq = false;
+
     private final String fullName;
     private final String scriptName;
     private final String version;
 	
-	private final Preferences prefs;
+	private static Preferences prefs = Preferences.userRoot().node("Bisq");;
 
     protected Injector injector;
     protected AppModule module;
@@ -89,12 +91,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     public BisqExecutable(String fullName, String scriptName, String version) {
         this.fullName = fullName;
         this.scriptName = scriptName;
-        this.version = version;
-		
-		this.prefs = Preferences.userRoot().node("Bisq");
+        this.version = version;		
     }
+	
+	public static boolean setupInitialOptionParser(String[] args) throws IOException {
+		return setupInitialOptionParser(args, isBisq);
+	}
 
-    public static boolean setupInitialOptionParser(String[] args) throws IOException {
+    public static boolean setupInitialOptionParser(String[] args, boolean isBisq) throws IOException {
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
         OptionParser parser = new OptionParser();
@@ -117,7 +121,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             return false;
         }
         BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
-
+		
+		// Check if Bisq app first run
+        if (isBisq && !Files.exists(Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY))))
+			prefs.putBoolean("ActivateDAO", false);
+		
         // need to call that before BisqAppMain().execute(args)
         BisqExecutable.initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
         return true;
@@ -192,8 +200,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             // we only tried to load some config until now, so no graceful shutdown is required
             System.exit(1);
         }
-		bisqEnvironment.daoActivatedInPrefs = Boolean.toString(prefs.getBoolean("ActivateDAO", false));
-		bisqEnvironment.daoActivatedInOptions = bisqEnvironment.daoActivated;
+		bisqEnvironment.daoActivatedInPrefs = Boolean.toString(prefs.getBoolean("ActivateDAO", true));
+		bisqEnvironment.daoActivatedInOptions = bisqEnvironment.getProperty(DaoOptionKeys.DAO_ACTIVATED);
     }
 
     protected void configCoreSetup(OptionSet options) {
