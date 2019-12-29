@@ -21,10 +21,10 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class GalilelTest extends AbstractAssetTest {
+public class AevoTest extends AbstractAssetTest {
 
-    public GalilelTest() {
-        super(new Galilel());
+    public AevoTest() {
+        super(new Aevo());
     }
 
     @Test
