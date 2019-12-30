@@ -159,7 +159,7 @@ public class BankUtil {
             case "NO":
                 return "Kontonummer"; // do not translate as it is used in Norwegian only
             case "SE":
-                return "Bankgiro number"; // do not translate as it is used in Swedish only
+                return "Kontonummer"; // do not translate as it is used in Swedish only
             case "MX":
                 return "CLABE"; // do not translate as it is used in Spanish only
             case "CL":
