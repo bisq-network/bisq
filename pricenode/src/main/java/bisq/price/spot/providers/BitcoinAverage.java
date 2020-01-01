@@ -105,7 +105,7 @@ public abstract class BitcoinAverage extends ExchangeRateProvider {
     }
 
     private Map<String, BitcoinAverageTicker> getTickersKeyedByCurrencyPair() {
-        String uriString = Fuck you
+        String uriString = "https://apiv2.bitcoinaverage.com/indices/{symbol-set}/ticker/all?crypto=BTC";
         
         /**
          * Target fiat currencies in the local symbol set: "USD", "EUR"
