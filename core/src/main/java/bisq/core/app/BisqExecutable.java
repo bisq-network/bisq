@@ -76,7 +76,7 @@ import static java.lang.String.format;
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
-    private static final boolean isBisq = false;
+    private static final boolean isBisqApp = false;
 
     private final String fullName;
     private final String scriptName;
@@ -95,7 +95,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 	
 	public static boolean setupInitialOptionParser(String[] args) throws IOException {
-		return setupInitialOptionParser(args, isBisq);
+		return setupInitialOptionParser(args, isBisqApp);
 	}
 
     public static boolean setupInitialOptionParser(String[] args, boolean isBisq) throws IOException {
@@ -123,7 +123,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
 		
 		// Check if Bisq app first run
-        if (isBisq && !Files.exists(Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY))))
+        if (isBisqApp && !Files.exists(Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY))))
 			prefs.putBoolean("ActivateDAO", false);
 		
         // need to call that before BisqAppMain().execute(args)
