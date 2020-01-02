@@ -33,6 +33,7 @@ import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
+import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileNotificationService;
@@ -170,6 +171,7 @@ public class BisqSetup {
     private final ClockWatcher clockWatcher;
     private final FeeService feeService;
     private final DaoSetup daoSetup;
+    private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final BisqEnvironment bisqEnvironment;
@@ -256,6 +258,7 @@ public class BisqSetup {
                      ClockWatcher clockWatcher,
                      FeeService feeService,
                      DaoSetup daoSetup,
+                     UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
                      EncryptionService encryptionService,
                      KeyRing keyRing,
                      BisqEnvironment bisqEnvironment,
@@ -302,6 +305,7 @@ public class BisqSetup {
         this.clockWatcher = clockWatcher;
         this.feeService = feeService;
         this.daoSetup = daoSetup;
+        this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
         this.bisqEnvironment = bisqEnvironment;
@@ -448,6 +452,11 @@ public class BisqSetup {
         if (preferences.isResyncSpvRequested()) {
             try {
                 walletsSetup.reSyncSPVChain();
+
+                // In case we had an unconfirmed change output we reset the unconfirmedBsqChangeOutputList so that
+                // after a SPV resync we do not have any dangling BSQ utxos in that list which would cause an incorrect
+                // BSQ balance state after the SPV resync.
+                unconfirmedBsqChangeOutputListService.onSpvResync();
             } catch (IOException e) {
                 log.error(e.toString());
                 e.printStackTrace();
