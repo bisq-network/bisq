@@ -241,7 +241,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
         return new AssetsForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
-                inputValidator, root, gridRow, formatter, assetService, filterManager, preferences);
+                inputValidator, root, gridRow, formatter, assetService, filterManager);
     }
 
     private void removeNewAccountForm() {

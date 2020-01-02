@@ -35,7 +35,6 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.validation.AltCoinAddressValidator;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -65,7 +64,6 @@ public class AssetsForm extends PaymentMethodForm {
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AssetService assetService;
     private final FilterManager filterManager;
-    private final Preferences preferences;
 
     private InputTextField addressInputTextField;
     private CheckBox tradeInstantCheckBox;
@@ -88,14 +86,12 @@ public class AssetsForm extends PaymentMethodForm {
                       int gridRow,
                       CoinFormatter formatter,
                       AssetService assetService,
-                      FilterManager filterManager,
-                      Preferences preferences) {
+                      FilterManager filterManager) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.assetAccount = (AssetAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;
         this.filterManager = filterManager;
-        this.preferences = preferences;
 
         tradeInstant = paymentAccount instanceof InstantCryptoCurrencyAccount;
     }
@@ -207,9 +203,8 @@ public class AssetsForm extends PaymentMethodForm {
         currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
         currencyComboBox.setButtonCell(getComboBoxButtonCell(Res.get("payment.select.altcoin"), currencyComboBox));
 
-        currencyComboBox.getEditor().focusedProperty().addListener(observable -> {
-            currencyComboBox.setPromptText("");
-        });
+        currencyComboBox.getEditor().focusedProperty().addListener(observable ->
+                currencyComboBox.setPromptText(""));
 
         ((AutocompleteComboBox<TradeCurrency>) currencyComboBox).setAutocompleteItems(
                 CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));

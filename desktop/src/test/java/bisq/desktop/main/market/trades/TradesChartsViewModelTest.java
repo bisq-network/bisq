@@ -27,7 +27,6 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
@@ -111,7 +110,7 @@ public class TradesChartsViewModelTest {
     public void setup() throws IOException {
         tradeStatisticsManager = mock(TradeStatisticsManager.class);
         model = new TradesChartsViewModel(tradeStatisticsManager, mock(Preferences.class), mock(PriceFeedService.class),
-                mock(Navigation.class), mock(ImmutableCoinFormatter.class));
+                mock(Navigation.class));
         dir = File.createTempFile("temp_tests1", "");
         //noinspection ResultOfMethodCallIgnored
         dir.delete();
@@ -181,7 +180,7 @@ public class TradesChartsViewModelTest {
         // Trade EUR
         model.selectedTradeCurrencyProperty.setValue(new FiatCurrency("EUR"));
 
-        ArrayList<Trade> trades = new ArrayList<Trade>();
+        ArrayList<Trade> trades = new ArrayList<>();
 
         // Set predetermined time to use as "now" during test
         Date test_time = dateFormat.parse("2018-01-01T00:00:05");  // Monday
@@ -197,9 +196,7 @@ public class TradesChartsViewModelTest {
         trades.add(new Trade("2018-01-01T00:00:02", "1", "110", "EUR"));
         Set<TradeStatistics2> set = new HashSet<>();
         trades.forEach(t ->
-                {
-                    set.add(new TradeStatistics2(offer, Price.parse(t.cc, t.price), Coin.parseCoin(t.size), t.date, null, null));
-                }
+                set.add(new TradeStatistics2(offer, Price.parse(t.cc, t.price), Coin.parseCoin(t.size), t.date, null, null))
         );
         ObservableSet<TradeStatistics2> tradeStats = FXCollections.observableSet(set);
 

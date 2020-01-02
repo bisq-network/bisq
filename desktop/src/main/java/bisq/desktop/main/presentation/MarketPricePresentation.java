@@ -31,12 +31,10 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
@@ -66,7 +64,6 @@ import lombok.Getter;
 @Singleton
 public class MarketPricePresentation {
     private final Preferences preferences;
-    private final CoinFormatter formatter;
     private final PriceFeedService priceFeedService;
     @Getter
     private final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
@@ -93,11 +90,9 @@ public class MarketPricePresentation {
     public MarketPricePresentation(BtcWalletService btcWalletService,
                                    PriceFeedService priceFeedService,
                                    Preferences preferences,
-                                   FeeService feeService,
-                                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+                                   FeeService feeService) {
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
-        this.formatter = formatter;
 
         TxIdTextField.setPreferences(preferences);
 
@@ -247,10 +242,10 @@ public class MarketPricePresentation {
 
     public StringProperty getMarketPrice(String currencyCode) {
         SimpleStringProperty marketPrice = new SimpleStringProperty(Res.get("shared.na"));
-        try {
-            marketPrice.set(String.valueOf(priceFeedService.getMarketPrice(currencyCode).getPrice()));
-        } catch (NullPointerException e) {
-            // Market price is not available yet
+        MarketPrice marketPriceValue = priceFeedService.getMarketPrice(currencyCode);
+        // Market price might not be available yet:
+        if (marketPriceValue != null) {
+            marketPrice.set(String.valueOf(marketPriceValue.getPrice()));
         }
         return marketPrice;
     }

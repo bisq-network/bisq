@@ -30,14 +30,20 @@ import bisq.asset.coins.BSQ;
 
 import bisq.common.app.DevEnv;
 
+import com.google.common.base.Suppliers;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Currency;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,26 +61,26 @@ public class CurrencyUtil {
     private static final AssetRegistry assetRegistry = new AssetRegistry();
 
     private static String baseCurrencyCode = "BTC";
-    private static List<FiatCurrency> allSortedFiatCurrencies;
-    private static List<CryptoCurrency> allSortedCryptoCurrencies;
+
+    private static Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
+            CurrencyUtil::createFiatCurrencyMap)::get;
+    private static Supplier<Map<String, CryptoCurrency>> cryptoCurrencyMapSupplier = Suppliers.memoize(
+            CurrencyUtil::createCryptoCurrencyMap)::get;
 
     public static void setBaseCurrencyCode(String baseCurrencyCode) {
         CurrencyUtil.baseCurrencyCode = baseCurrencyCode;
     }
 
-    public static List<FiatCurrency> getAllSortedFiatCurrencies() {
-        if (Objects.isNull(allSortedFiatCurrencies))
-            allSortedFiatCurrencies = createAllSortedFiatCurrenciesList();
-
-        return allSortedFiatCurrencies;
+    public static Collection<FiatCurrency> getAllSortedFiatCurrencies() {
+        return fiatCurrencyMapSupplier.get().values();
     }
 
-    private static List<FiatCurrency> createAllSortedFiatCurrenciesList() {
+    private static Map<String, FiatCurrency> createFiatCurrencyMap() {
         return CountryUtil.getAllCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.code))
                 .distinct()
                 .sorted(TradeCurrency::compareTo)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(TradeCurrency::getCode, Function.identity(), (x, y) -> x, LinkedHashMap::new));
     }
 
     public static List<FiatCurrency> getMainFiatCurrencies() {
@@ -94,23 +100,20 @@ public class CurrencyUtil {
         FiatCurrency defaultFiatCurrency =
                 defaultTradeCurrency instanceof FiatCurrency ? (FiatCurrency) defaultTradeCurrency : null;
         if (defaultFiatCurrency != null && list.contains(defaultFiatCurrency)) {
-            //noinspection SuspiciousMethodCalls
             list.remove(defaultTradeCurrency);
             list.add(0, defaultFiatCurrency);
         }
         return list;
     }
 
-    public static List<CryptoCurrency> getAllSortedCryptoCurrencies() {
-        if (allSortedCryptoCurrencies == null)
-            allSortedCryptoCurrencies = createAllSortedCryptoCurrenciesList();
-        return allSortedCryptoCurrencies;
+    public static Collection<CryptoCurrency> getAllSortedCryptoCurrencies() {
+        return cryptoCurrencyMapSupplier.get().values();
     }
 
-    private static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
+    private static Map<String, CryptoCurrency> createCryptoCurrencyMap() {
         return getSortedAssetStream()
                 .map(CurrencyUtil::assetToCryptoCurrency)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(TradeCurrency::getCode, Function.identity(), (x, y) -> x, LinkedHashMap::new));
     }
 
     public static Stream<Asset> getSortedAssetStream() {
@@ -320,10 +323,9 @@ public class CurrencyUtil {
     }
 
     public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
-        return getAllSortedFiatCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+        return Optional.ofNullable(fiatCurrencyMapSupplier.get().get(currencyCode));
     }
 
-    @SuppressWarnings("WeakerAccess")
     /**
      * We return true if it is BTC or any of our currencies available in the assetRegistry.
      * For removed assets it would fail as they are not found but we don't want to conclude that they are fiat then.
@@ -361,16 +363,16 @@ public class CurrencyUtil {
     }
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
-        return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+        return Optional.ofNullable(cryptoCurrencyMapSupplier.get().get(currencyCode));
     }
 
     public static Optional<TradeCurrency> getTradeCurrency(String currencyCode) {
         Optional<FiatCurrency> fiatCurrencyOptional = getFiatCurrency(currencyCode);
-        if (isFiatCurrency(currencyCode) && fiatCurrencyOptional.isPresent())
+        if (fiatCurrencyOptional.isPresent() && isFiatCurrency(currencyCode))
             return Optional.of(fiatCurrencyOptional.get());
 
         Optional<CryptoCurrency> cryptoCurrencyOptional = getCryptoCurrency(currencyCode);
-        if (isCryptoCurrency(currencyCode) && cryptoCurrencyOptional.isPresent())
+        if (cryptoCurrencyOptional.isPresent() && isCryptoCurrency(currencyCode))
             return Optional.of(cryptoCurrencyOptional.get());
 
         return Optional.empty();
