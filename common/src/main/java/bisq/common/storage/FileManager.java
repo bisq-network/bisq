@@ -22,8 +22,7 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.util.Utilities;
 
-import com.google.common.util.concurrent.CycleDetectingLockFactory;
-
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -37,7 +36,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +48,7 @@ public class FileManager<T extends PersistableEnvelope> {
     private final Callable<Void> saveFileTask;
     private final AtomicReference<T> nextWrite;
     private final PersistenceProtoResolver persistenceProtoResolver;
-    private final ReentrantLock writeLock = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW).newReentrantLock("writeLock");
+    private Path usedTempFilePath;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -87,9 +85,9 @@ public class FileManager<T extends PersistableEnvelope> {
             }
             return null;
         };
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            UserThread.execute(FileManager.this::shutDown);
-        }, "FileManager.ShutDownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() ->
+                UserThread.execute(FileManager.this::shutDown), "FileManager.ShutDownHook")
+        );
     }
 
 
@@ -203,29 +201,33 @@ public class FileManager<T extends PersistableEnvelope> {
             if (!dir.exists() && !dir.mkdir())
                 log.warn("make dir failed");
 
-            tempFile = File.createTempFile("temp", null, dir);
+            tempFile = usedTempFilePath != null
+                    ? FileUtil.createNewFile(usedTempFilePath)
+                    : File.createTempFile("temp", null, dir);
+            // Don't use a new temp file path each time, as that causes the delete-on-exit hook to leak memory:
             tempFile.deleteOnExit();
+
             fileOutputStream = new FileOutputStream(tempFile);
 
             log.debug("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
-            writeLock.lock();
             protoPersistable.writeDelimitedTo(fileOutputStream);
 
             // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
             // to not write through to physical media for at least a few seconds, but this is the best we can do.
             fileOutputStream.flush();
             fileOutputStream.getFD().sync();
-            writeLock.unlock();
 
             // Close resources before replacing file with temp file because otherwise it causes problems on windows
             // when rename temp file
             fileOutputStream.close();
+
             FileUtil.renameFile(tempFile, storageFile);
+            usedTempFilePath = tempFile.toPath();
         } catch (Throwable t) {
+            // If an error occurred, don't attempt to reuse this path again, in case temp file cleanup fails.
+            usedTempFilePath = null;
             log.error("Error at saveToFile, storageFile=" + storageFile.toString(), t);
         } finally {
-            if (writeLock.isLocked())
-                writeLock.unlock();
             if (tempFile != null && tempFile.exists()) {
                 log.warn("Temp file still exists after failed save. We will delete it now. storageFile=" + storageFile);
                 if (!tempFile.delete())
