@@ -82,6 +82,7 @@ import bisq.common.proto.ProtobufferException;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.RejectMessage;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -703,49 +704,78 @@ public class BisqSetup {
         balances.onAllServicesInitialized();
 
         walletAppSetup.getRejectedTxException().addListener((observable, oldValue, newValue) -> {
-            // We delay as we might get the rejected tx error before we have completed the create offer protocol
-            UserThread.runAfter(() -> {
-                if (rejectedTxErrorMessageHandler != null && newValue != null && newValue.getTxId() != null) {
-                    String txId = newValue.getTxId();
-                    openOfferManager.getObservableList().stream()
-                            .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
-                            .forEach(openOffer -> {
-                                // We delay to avoid concurrent modification exceptions
-                                UserThread.runAfter(() -> {
-                                    openOffer.getOffer().setErrorMessage(newValue.getMessage());
-                                    rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
-                                    openOfferManager.removeOpenOffer(openOffer, () -> {
-                                        log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
-                                                "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
-                                    }, log::warn);
-                                }, 1);
-                            });
+            if (newValue == null || newValue.getTxId() == null) {
+                return;
+            }
 
-                    tradeManager.getTradableList().stream()
-                            .filter(trade -> trade.getOffer() != null)
-                            .forEach(trade -> {
-                                String details = null;
-                                if (txId.equals(trade.getDepositTxId())) {
-                                    details = Res.get("popup.warning.trade.txRejected.deposit");
-                                }
-                                if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
-                                    details = Res.get("popup.warning.trade.txRejected.tradeFee");
-                                }
+            RejectMessage rejectMessage = newValue.getRejectMessage();
+            log.warn("We received reject message: {}", rejectMessage);
 
-                                if (details != null) {
+            // TODO: Find out which reject messages are critical and which not.
+            // We got a report where a "tx already known" message caused a failed trade but the deposit tx was valid.
+            // To avoid such false positives we only handle reject messages which we consider clearly critical.
+
+            switch (rejectMessage.getReasonCode()) {
+                case OBSOLETE:
+                case DUPLICATE:
+                case NONSTANDARD:
+                case CHECKPOINT:
+                case OTHER:
+                    // We ignore those cases to avoid that not critical reject messages trigger a failed trade.
+                    log.warn("We ignore that reject message as it is likely not critical.");
+                    break;
+                case MALFORMED:
+                case INVALID:
+                case DUST:
+                case INSUFFICIENTFEE:
+                    // We delay as we might get the rejected tx error before we have completed the create offer protocol
+                    log.warn("We handle that reject message as it is likely critical.");
+                    UserThread.runAfter(() -> {
+                        String txId = newValue.getTxId();
+                        openOfferManager.getObservableList().stream()
+                                .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
+                                .forEach(openOffer -> {
                                     // We delay to avoid concurrent modification exceptions
-                                    String finalDetails = details;
                                     UserThread.runAfter(() -> {
-                                        trade.setErrorMessage(newValue.getMessage());
-                                        rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
-                                                finalDetails, trade.getShortId(), txId));
-                                        tradeManager.addTradeToFailedTrades(trade);
+                                        openOffer.getOffer().setErrorMessage(newValue.getMessage());
+                                        if (rejectedTxErrorMessageHandler != null) {
+                                            rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
+                                        }
+                                        openOfferManager.removeOpenOffer(openOffer, () -> {
+                                            log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
+                                                    "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
+                                        }, log::warn);
                                     }, 1);
-                                }
-                            });
-                }
-            }, 3);
+                                });
+
+                        tradeManager.getTradableList().stream()
+                                .filter(trade -> trade.getOffer() != null)
+                                .forEach(trade -> {
+                                    String details = null;
+                                    if (txId.equals(trade.getDepositTxId())) {
+                                        details = Res.get("popup.warning.trade.txRejected.deposit");
+                                    }
+                                    if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
+                                        details = Res.get("popup.warning.trade.txRejected.tradeFee");
+                                    }
+
+                                    if (details != null) {
+                                        // We delay to avoid concurrent modification exceptions
+                                        String finalDetails = details;
+                                        UserThread.runAfter(() -> {
+                                            trade.setErrorMessage(newValue.getMessage());
+                                            if (rejectedTxErrorMessageHandler != null) {
+                                                rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
+                                                        finalDetails, trade.getShortId(), txId));
+                                            }
+                                            tradeManager.addTradeToFailedTrades(trade);
+                                        }, 1);
+                                    }
+                                });
+                    }, 3);
+            }
         });
+
 
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
