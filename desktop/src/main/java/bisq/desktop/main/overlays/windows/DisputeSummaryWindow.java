@@ -389,68 +389,70 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void applyCustomAmounts(InputTextField inputTextField, boolean oldFocusValue, boolean newFocusValue) {
         // We only apply adjustments at focus out, otherwise we cannot enter certain values if we update at each
         // keystroke.
-        if (oldFocusValue && !newFocusValue) {
-            Contract contract = dispute.getContract();
-            boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
-            // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
-            // mediated payout. For Refund agent cases we do not have that restriction.
-            Coin minRefundAtDispute = isMediationDispute ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
-
-            Offer offer = new Offer(contract.getOfferPayload());
-            Coin totalAvailable = contract.getTradeAmount()
-                    .add(offer.getBuyerSecurityDeposit())
-                    .add(offer.getSellerSecurityDeposit());
-            Coin availableForPayout = totalAvailable.subtract(minRefundAtDispute);
-
-            Coin enteredAmount = ParsingUtils.parseToCoin(inputTextField.getText(), formatter);
-            if (enteredAmount.compareTo(minRefundAtDispute) < 0) {
-                enteredAmount = minRefundAtDispute;
-                inputTextField.setText(formatter.formatCoin(enteredAmount));
-            }
-            if (enteredAmount.isPositive() && !Restrictions.isAboveDust(enteredAmount)) {
-                enteredAmount = Restrictions.getMinNonDustOutput();
-                inputTextField.setText(formatter.formatCoin(enteredAmount));
-            }
-            if (enteredAmount.compareTo(availableForPayout) > 0) {
-                enteredAmount = availableForPayout;
-                inputTextField.setText(formatter.formatCoin(enteredAmount));
-            }
-            Coin counterPartAsCoin = totalAvailable.subtract(enteredAmount);
-            String formattedCounterPartAmount = formatter.formatCoin(counterPartAsCoin);
-            Coin buyerAmount;
-            Coin sellerAmount;
-            if (inputTextField == buyerPayoutAmountInputTextField) {
-                buyerAmount = enteredAmount;
-                sellerAmount = counterPartAsCoin;
-                Coin sellerAmountFromField = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
-                Coin totalAmountFromFields = enteredAmount.add(sellerAmountFromField);
-                // RefundAgent can enter less then available
-                if (isMediationDispute ||
-                        totalAmountFromFields.compareTo(totalAvailable) > 0) {
-                    sellerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
-                } else {
-                    sellerAmount = sellerAmountFromField;
-                }
-            } else {
-                sellerAmount = enteredAmount;
-                buyerAmount = counterPartAsCoin;
-                Coin buyerAmountFromField = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
-                Coin totalAmountFromFields = enteredAmount.add(buyerAmountFromField);
-                // RefundAgent can enter less then available
-                if (isMediationDispute ||
-                        totalAmountFromFields.compareTo(totalAvailable) > 0) {
-                    buyerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
-                } else {
-                    buyerAmount = buyerAmountFromField;
-                }
-            }
-
-            disputeResult.setBuyerPayoutAmount(buyerAmount);
-            disputeResult.setSellerPayoutAmount(sellerAmount);
-            disputeResult.setWinner(buyerAmount.compareTo(sellerAmount) > 0 ?
-                    DisputeResult.Winner.BUYER :
-                    DisputeResult.Winner.SELLER);
+        if (!oldFocusValue || newFocusValue) {
+            return;
         }
+
+        Contract contract = dispute.getContract();
+        boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
+        // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
+        // mediated payout. For Refund agent cases we do not have that restriction.
+        Coin minRefundAtDispute = isMediationDispute ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
+
+        Offer offer = new Offer(contract.getOfferPayload());
+        Coin totalAvailable = contract.getTradeAmount()
+                .add(offer.getBuyerSecurityDeposit())
+                .add(offer.getSellerSecurityDeposit());
+        Coin availableForPayout = totalAvailable.subtract(minRefundAtDispute);
+
+        Coin enteredAmount = ParsingUtils.parseToCoin(inputTextField.getText(), formatter);
+        if (enteredAmount.compareTo(minRefundAtDispute) < 0) {
+            enteredAmount = minRefundAtDispute;
+            inputTextField.setText(formatter.formatCoin(enteredAmount));
+        }
+        if (enteredAmount.isPositive() && !Restrictions.isAboveDust(enteredAmount)) {
+            enteredAmount = Restrictions.getMinNonDustOutput();
+            inputTextField.setText(formatter.formatCoin(enteredAmount));
+        }
+        if (enteredAmount.compareTo(availableForPayout) > 0) {
+            enteredAmount = availableForPayout;
+            inputTextField.setText(formatter.formatCoin(enteredAmount));
+        }
+        Coin counterPartAsCoin = totalAvailable.subtract(enteredAmount);
+        String formattedCounterPartAmount = formatter.formatCoin(counterPartAsCoin);
+        Coin buyerAmount;
+        Coin sellerAmount;
+        if (inputTextField == buyerPayoutAmountInputTextField) {
+            buyerAmount = enteredAmount;
+            sellerAmount = counterPartAsCoin;
+            Coin sellerAmountFromField = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
+            Coin totalAmountFromFields = enteredAmount.add(sellerAmountFromField);
+            // RefundAgent can enter less then available
+            if (isMediationDispute ||
+                    totalAmountFromFields.compareTo(totalAvailable) > 0) {
+                sellerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
+            } else {
+                sellerAmount = sellerAmountFromField;
+            }
+        } else {
+            sellerAmount = enteredAmount;
+            buyerAmount = counterPartAsCoin;
+            Coin buyerAmountFromField = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
+            Coin totalAmountFromFields = enteredAmount.add(buyerAmountFromField);
+            // RefundAgent can enter less then available
+            if (isMediationDispute ||
+                    totalAmountFromFields.compareTo(totalAvailable) > 0) {
+                buyerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
+            } else {
+                buyerAmount = buyerAmountFromField;
+            }
+        }
+
+        disputeResult.setBuyerPayoutAmount(buyerAmount);
+        disputeResult.setSellerPayoutAmount(sellerAmount);
+        disputeResult.setWinner(buyerAmount.compareTo(sellerAmount) > 0 ?
+                DisputeResult.Winner.BUYER :
+                DisputeResult.Winner.SELLER);
     }
 
     private void addPayoutAmountTextFields() {
