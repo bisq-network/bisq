@@ -252,7 +252,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         cssThemeProperty.set(prefPayload.getCssTheme());
 
-        // if no valid block explorer is set, randomly select a valid BSQ block explorer
+        // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
+        ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
+        BlockChainExplorer btcExplorer = getBlockChainExplorer();
+        if (btcExplorer == null || btcExplorers.contains(btcExplorer) == false)
+            setBlockChainExplorer(btcExplorers.get(0));
+
+        // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
         ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
         BlockChainExplorer bsqExplorer = getBsqBlockChainExplorer();
         if (bsqExplorer == null || bsqExplorers.contains(bsqExplorer) == false)
