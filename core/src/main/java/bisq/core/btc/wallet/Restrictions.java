@@ -27,6 +27,9 @@ public class Restrictions {
     // For the seller we use a fixed one as there is no way the seller can cancel the trade
     // To make it editable would just increase complexity.
     private static Coin SELLER_SECURITY_DEPOSIT;
+    // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
+    // mediated payout. For Refund agent cases we do not have that restriction.
+    private static Coin MIN_REFUND_AT_MEDIATED_DISPUTE;
 
     public static Coin getMinNonDustOutput() {
         if (minNonDustOutput == null)
@@ -79,5 +82,12 @@ public class Restrictions {
         if (SELLER_SECURITY_DEPOSIT == null)
             SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.006"); // 0.006 BTC about 42 USD @ 7000 USD/BTC
         return SELLER_SECURITY_DEPOSIT;
+    }
+
+    // This value must not be lower than MIN_BUYER_SECURITY_DEPOSIT or SELLER_SECURITY_DEPOSIT
+    public static Coin getMinRefundAtMediatedDispute() {
+        if (MIN_REFUND_AT_MEDIATED_DISPUTE == null)
+            MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.003"); // 0.003 BTC about 21 USD @ 7000 USD/BTC
+        return MIN_REFUND_AT_MEDIATED_DISPUTE;
     }
 }
