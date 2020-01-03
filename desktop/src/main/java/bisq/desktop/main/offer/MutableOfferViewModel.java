@@ -606,6 +606,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
 
         securityDepositValidator.setPaymentAccount(dataModel.paymentAccount);
+        validateAndSetBuyerSecurityDepositToModel();
         buyerSecurityDeposit.set(FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
         buyerSecurityDepositLabel.set(getSecurityDepositLabel());
 
@@ -1140,6 +1141,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             dataModel.setBuyerSecurityDeposit(ParsingUtils.parsePercentStringToDouble(buyerSecurityDeposit.get()));
         } else {
             dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent());
+        }
+    }
+
+    private void validateAndSetBuyerSecurityDepositToModel() {
+        // If the security deposit in the model is not valid percent
+        String value = FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get());
+        if (!securityDepositValidator.validate(value).isValid) {
+            dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent(getPaymentAccount()));
         }
     }
 
