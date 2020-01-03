@@ -82,7 +82,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blockstream.info", "https://blockstream.info/tx/", "https://blockstream.info/address/"),
             new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/address/"),
-            new BlockChainExplorer("Blockstream.info + Mempool.space", "https://mempool.space/tx/", "https://blockstream.info/address/"),
+            new BlockChainExplorer("mempool.space", "https://mempool.space/tx/", "https://mempool.space/explorer/address/"),
+            new BlockChainExplorer("mempool.space Tor V2", "http://mempooltxrqf4re5.onion/tx/", "http://mempooltxrqf4re5.onion/explorer/address/"),
             new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
             new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
             new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/btc/tx/", "https://live.blockcypher.com/btc/address/"),
@@ -251,7 +252,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         cssThemeProperty.set(prefPayload.getCssTheme());
 
-        // if no valid block explorer is set, randomly select a valid BSQ block explorer
+        // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
+        ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
+        BlockChainExplorer btcExplorer = getBlockChainExplorer();
+        if (btcExplorer == null || btcExplorers.contains(btcExplorer) == false)
+            setBlockChainExplorer(btcExplorers.get(0));
+
+        // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
         ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
         BlockChainExplorer bsqExplorer = getBsqBlockChainExplorer();
         if (bsqExplorer == null || bsqExplorers.contains(bsqExplorer) == false)
