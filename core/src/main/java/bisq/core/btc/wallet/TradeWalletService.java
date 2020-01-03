@@ -42,7 +42,6 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
@@ -120,12 +119,22 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @param reservedForTradeAddress From where we want to spend the transaction fee. Used also as change reservedForTradeAddress.
-     * @param useSavingsWallet
-     * @param tradingFee              The amount of the trading fee.
-     * @param feeReceiverAddresses    The reservedForTradeAddress of the receiver of the trading fee.   @return The broadcasted transaction
-     * @throws InsufficientMoneyException
-     * @throws AddressFormatException
+     * Create a BTC trading fee transaction for the maker or taker of an offer. The first output of the tx is for the
+     * fee receiver. The second output is the reserve of the trade. There is an optional third output for change.
+     *
+     * @param fundingAddress          the provided source of funds in case the savings wallet is not used
+     * @param reservedForTradeAddress the address of the trade reserve
+     * @param changeAddress           the change address to use in case of overpayment or use of the savings wallet
+     * @param reservedFundsForOffer   the amount to reserve for the trade
+     * @param useSavingsWallet        {@code true} to use the savings wallet, {@code false} to use the funding address
+     * @param tradingFee              the amount of the trading fee
+     * @param txFee                   the mining fee for this transaction
+     * @param feeReceiverAddress      the address of the receiver of the trading fee
+     * @param doBroadcast             {@code true} to broadcast the transaction, {@code false} otherwise
+     * @param callback                an optional callback to use when broadcasting the transaction
+     * @return the optionally broadcast transaction
+     * @throws InsufficientMoneyException if the request could not be completed due to not enough balance
+     * @throws AddressFormatException if the fee receiver base58 address doesn't parse or its checksum is invalid
      */
     public Transaction createBtcTradingFeeTx(Address fundingAddress,
                                              Address reservedForTradeAddress,
@@ -134,13 +143,13 @@ public class TradeWalletService {
                                              boolean useSavingsWallet,
                                              Coin tradingFee,
                                              Coin txFee,
-                                             String feeReceiverAddresses,
+                                             String feeReceiverAddress,
                                              boolean doBroadcast,
                                              @Nullable TxBroadcaster.Callback callback) throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
         SendRequest sendRequest = null;
         try {
-            tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddresses));
+            tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddress));
             // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
             tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -278,15 +287,14 @@ public class TradeWalletService {
 
 
     /**
-     * The taker creates a dummy transaction to get the input(s) and optional change output for the amount and the takersAddress for that trade.
-     * That will be used to send to the maker for creating the deposit transaction.
+     * The taker creates a dummy transaction to get the input(s) and optional change output for the amount and the
+     * taker's address for that trade. That will be used to send to the maker for creating the deposit transaction.
      *
-     *
-     * @param takeOfferFeeTx The take offer fee tx
-     * @param inputAmount   Amount of takers input
-     * @param txFee         Mining fee
-     * @return A data container holding the inputs, the output value and address
-     * @throws TransactionVerificationException
+     * @param takeOfferFeeTx the take offer fee tx
+     * @param inputAmount    amount of takers input
+     * @param txFee          mining fee
+     * @return a data container holding the inputs, the output value and address
+     * @throws TransactionVerificationException if there was an unexpected problem with the created dummy tx
      */
     public InputsAndChangeOutput takerCreatesDepositTxInputs(Transaction takeOfferFeeTx,
                                                              Coin inputAmount,
@@ -397,21 +405,22 @@ public class TradeWalletService {
     /**
      * The maker creates the deposit transaction using the takers input(s) and optional output and signs his input(s).
      *
-     * @param makerIsBuyer              The flag indicating if we are in the maker as buyer role or the opposite.
-     * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
-     * @param makerInputAmount          The input amount of the maker.
-     * @param msOutputAmount            The output amount to our MS output.
-     * @param takerRawTransactionInputs Raw data for the connected outputs for all inputs of the taker (normally 1 input)
-     * @param takerChangeOutputValue    Optional taker change output value
-     * @param takerChangeAddressString  Optional taker change address
-     * @param makerAddress              The maker's address.
-     * @param makerChangeAddress        The maker's change address.
-     * @param buyerPubKey               The public key of the buyer.
-     * @param sellerPubKey              The public key of the seller.
-     * @return A data container holding the serialized transaction and the maker raw inputs
-     * @throws SigningException
-     * @throws TransactionVerificationException
-     * @throws WalletException
+     * @param makerIsBuyer              the flag indicating if we are in the maker as buyer role or the opposite
+     * @param contractHash              the hash of the contract to be added to the OP_RETURN output
+     * @param makerInputAmount          the input amount of the maker
+     * @param msOutputAmount            the output amount to our MS output
+     * @param takerRawTransactionInputs raw data for the connected outputs for all inputs of the taker (normally 1 input)
+     * @param takerChangeOutputValue    optional taker change output value
+     * @param takerChangeAddressString  optional taker change address
+     * @param makerAddress              the maker's address
+     * @param makerChangeAddress        the maker's change address
+     * @param buyerPubKey               the public key of the buyer
+     * @param sellerPubKey              the public key of the seller
+     * @return a data container holding the serialized transaction and the maker raw inputs
+     * @throws SigningException if there was an unexpected problem signing (one of) the input(s) from the maker's wallet
+     * @throws AddressFormatException if the taker base58 change address doesn't parse or its checksum is invalid
+     * @throws TransactionVerificationException if there was an unexpected problem with the deposit tx or its signature(s)
+     * @throws WalletException if the maker's wallet is null or there was an error choosing deposit tx input(s) from it
      */
     private PreparedDepositTxAndMakerInputs makerCreatesDepositTx(boolean makerIsBuyer,
                                                                   byte[] contractHash,
@@ -536,16 +545,17 @@ public class TradeWalletService {
     /**
      * The taker signs the deposit transaction he received from the maker and publishes it.
      *
-     * @param takerIsSeller             The flag indicating if we are in the taker as seller role or the opposite.
-     * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
-     * @param makersDepositTxSerialized The prepared deposit transaction signed by the maker.
-     * @param buyerInputs               The connected outputs for all inputs of the buyer.
-     * @param sellerInputs              The connected outputs for all inputs of the seller.
-     * @param buyerPubKey               The public key of the buyer.
-     * @param sellerPubKey              The public key of the seller.
-     * @throws SigningException
-     * @throws TransactionVerificationException
-     * @throws WalletException
+     * @param takerIsSeller             the flag indicating if we are in the taker as seller role or the opposite
+     * @param contractHash              the hash of the contract to be added to the OP_RETURN output
+     * @param makersDepositTxSerialized the prepared deposit transaction signed by the maker
+     * @param buyerInputs               the connected outputs for all inputs of the buyer
+     * @param sellerInputs              the connected outputs for all inputs of the seller
+     * @param buyerPubKey               the public key of the buyer
+     * @param sellerPubKey              the public key of the seller
+     * @throws SigningException if (one of) the taker input(s) was of an unrecognized type for signing
+     * @throws TransactionVerificationException if a maker input wasn't signed, their MultiSig script or contract hash
+     * doesn't match the taker's, or there was an unexpected problem with the final deposit tx or its signatures
+     * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
                                            byte[] contractHash,
@@ -560,7 +570,7 @@ public class TradeWalletService {
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
 
-        // Check if maker's Multisig script is identical to the takers
+        // Check if maker's MultiSig script is identical to the takers
         Script p2SHMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
         if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(p2SHMultiSigOutputScript)) {
             throw new TransactionVerificationException("Maker's p2SHMultiSigOutputScript does not match to takers p2SHMultiSigOutputScript");
@@ -630,7 +640,9 @@ public class TradeWalletService {
     }
 
 
-    public void sellerAsMakerFinalizesDepositTx(Transaction myDepositTx, Transaction takersDepositTx, int numTakersInputs)
+    public void sellerAsMakerFinalizesDepositTx(Transaction myDepositTx,
+                                                Transaction takersDepositTx,
+                                                int numTakersInputs)
             throws TransactionVerificationException, AddressFormatException {
 
         // We add takers signature from his inputs and add it to out tx which was already signed earlier.
@@ -731,17 +743,17 @@ public class TradeWalletService {
     /**
      * Seller signs payout transaction, buyer has not signed yet.
      *
-     * @param depositTx                 Deposit transaction
-     * @param buyerPayoutAmount         Payout amount for buyer
-     * @param sellerPayoutAmount        Payout amount for seller
-     * @param buyerPayoutAddressString  Address for buyer
-     * @param sellerPayoutAddressString Address for seller
+     * @param depositTx                 deposit transaction
+     * @param buyerPayoutAmount         payout amount for buyer
+     * @param sellerPayoutAmount        payout amount for seller
+     * @param buyerPayoutAddressString  address for buyer
+     * @param sellerPayoutAddressString address for seller
      * @param multiSigKeyPair           DeterministicKey for MultiSig from seller
-     * @param buyerPubKey               The public key of the buyer.
-     * @param sellerPubKey              The public key of the seller.
+     * @param buyerPubKey               the public key of the buyer
+     * @param sellerPubKey              the public key of the seller
      * @return DER encoded canonical signature
-     * @throws AddressFormatException
-     * @throws TransactionVerificationException
+     * @throws AddressFormatException if the buyer or seller base58 address doesn't parse or its checksum is invalid
+     * @throws TransactionVerificationException if there was an unexpected problem with the payout tx or its signature
      */
     public byte[] buyerSignsPayoutTx(Transaction depositTx,
                                      Coin buyerPayoutAmount,
@@ -770,21 +782,21 @@ public class TradeWalletService {
 
 
     /**
-     * Buyer creates and signs payout transaction and adds signature of seller to complete the transaction
+     * Seller creates and signs payout transaction and adds signature of buyer to complete the transaction.
      *
-     * @param depositTx                 Deposit transaction
-     * @param buyerSignature            DER encoded canonical signature of seller
-     * @param buyerPayoutAmount         Payout amount for buyer
-     * @param sellerPayoutAmount        Payout amount for seller
-     * @param buyerPayoutAddressString  Address for buyer
-     * @param sellerPayoutAddressString Address for seller
-     * @param multiSigKeyPair           Buyer's keypair for MultiSig
-     * @param buyerPubKey               The public key of the buyer.
-     * @param sellerPubKey              The public key of the seller.
-     * @return The payout transaction
-     * @throws AddressFormatException
-     * @throws TransactionVerificationException
-     * @throws WalletException
+     * @param depositTx                 deposit transaction
+     * @param buyerSignature            DER encoded canonical signature of buyer
+     * @param buyerPayoutAmount         payout amount for buyer
+     * @param sellerPayoutAmount        payout amount for seller
+     * @param buyerPayoutAddressString  address for buyer
+     * @param sellerPayoutAddressString address for seller
+     * @param multiSigKeyPair           seller's key pair for MultiSig
+     * @param buyerPubKey               the public key of the buyer
+     * @param sellerPubKey              the public key of the seller
+     * @return the payout transaction
+     * @throws AddressFormatException if the buyer or seller base58 address doesn't parse or its checksum is invalid
+     * @throws TransactionVerificationException if there was an unexpected problem with the payout tx or its signatures
+     * @throws WalletException if the seller's wallet is null or structurally inconsistent
      */
     public Transaction sellerSignsAndFinalizesPayoutTx(Transaction depositTx,
                                                        byte[] buyerSignature,
@@ -894,22 +906,22 @@ public class TradeWalletService {
     // Atm it is still used by ArbitrationManager.
 
     /**
-     * A trader who got the signed tx from the arbitrator finalizes the payout tx
+     * A trader who got the signed tx from the arbitrator finalizes the payout tx.
      *
-     * @param depositTxSerialized    Serialized deposit tx
+     * @param depositTxSerialized    serialized deposit tx
      * @param arbitratorSignature    DER encoded canonical signature of arbitrator
-     * @param buyerPayoutAmount      Payout amount of the buyer
-     * @param sellerPayoutAmount     Payout amount of the seller
-     * @param buyerAddressString     The address of the buyer.
-     * @param sellerAddressString    The address of the seller.
-     * @param tradersMultiSigKeyPair The keypair for the MultiSig of the trader who calls that method
-     * @param buyerPubKey            The public key of the buyer.
-     * @param sellerPubKey           The public key of the seller.
-     * @param arbitratorPubKey       The public key of the arbitrator.
-     * @return The completed payout tx
-     * @throws AddressFormatException
-     * @throws TransactionVerificationException
-     * @throws WalletException
+     * @param buyerPayoutAmount      payout amount of the buyer
+     * @param sellerPayoutAmount     payout amount of the seller
+     * @param buyerAddressString     the address of the buyer
+     * @param sellerAddressString    the address of the seller
+     * @param tradersMultiSigKeyPair the key pair for the MultiSig of the trader who calls that method
+     * @param buyerPubKey            the public key of the buyer
+     * @param sellerPubKey           the public key of the seller
+     * @param arbitratorPubKey       the public key of the arbitrator
+     * @return the completed payout tx
+     * @throws AddressFormatException if the buyer or seller base58 address doesn't parse or its checksum is invalid
+     * @throws TransactionVerificationException if there was an unexpected problem with the payout tx or its signature
+     * @throws WalletException if the trade wallet is null or structurally inconsistent
      */
     public Transaction traderSignAndFinalizeDisputedPayoutTx(byte[] depositTxSerialized,
                                                              byte[] arbitratorSignature,
@@ -1041,11 +1053,11 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @param txId The transaction ID of the transaction we want to lookup
-     * @return Returns local existing wallet transaction
-     * @throws VerificationException
+     * Returns the local existing wallet transaction with the given ID, or {@code null} if missing.
+     *
+     * @param txId the transaction ID of the transaction we want to lookup
      */
-    public Transaction getWalletTx(Sha256Hash txId) throws VerificationException {
+    public Transaction getWalletTx(Sha256Hash txId) {
         checkNotNull(wallet);
         return wallet.getTransaction(txId);
     }
