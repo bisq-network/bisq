@@ -10,6 +10,9 @@ ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode --appName=${BISQ_APP_NA
 ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
 
+ExecStartPre=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mount -t tmpfs none -o size=812M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
+ExecStopPost=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
+
 User=bisq
 Group=bisq
 
