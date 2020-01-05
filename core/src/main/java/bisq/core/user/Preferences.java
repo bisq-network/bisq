@@ -110,7 +110,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     ));
 
     public static final ArrayList<BlockChainExplorer> BSQ_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("bsq.wiz.biz (@wiz)", "https://bsq.wiz.biz/tx.html?tx=", "https://bsq.wiz.biz/Address.html?addr="),
+            new BlockChainExplorer("bsq.ninja (@wiz)", "https://bsq.ninja/tx.html?tx=", "https://bsq.ninja/Address.html?addr="),
             new BlockChainExplorer("explorer.sqrrm.net (@sqrrm)", "https://explorer.sqrrm.net/tx.html?tx=", "https://explorer.sqrrm.net/Address.html?addr=")
     ));
 
