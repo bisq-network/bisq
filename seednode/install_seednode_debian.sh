@@ -15,13 +15,13 @@ SYSTEMD_ENV_HOME=/etc/default
 
 BISQ_REPO_URL=https://github.com/bisq-network/bisq
 BISQ_REPO_NAME=bisq
-BISQ_REPO_TAG=v1.2.4
+BISQ_REPO_TAG=$(curl -s https://api.github.com/repos/bisq-network/bisq/releases/latest|grep tag_name|head -1|cut -d '"' -f4)
 BISQ_HOME=/bisq
 BISQ_USER=bisq
 
 BITCOIN_REPO_URL=https://github.com/bitcoin/bitcoin
 BITCOIN_REPO_NAME=bitcoin
-BITCOIN_REPO_TAG=v0.19.0.1
+BITCOIN_REPO_TAG=$(curl -s https://api.github.com/repos/bitcoin/bitcoin/releases/latest|grep tag_name|head -1|cut -d '"' -f4)
 BITCOIN_HOME=/bitcoin
 BITCOIN_USER=bitcoin
 BITCOIN_GROUP=bitcoin
