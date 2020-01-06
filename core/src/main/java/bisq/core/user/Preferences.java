@@ -112,7 +112,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public static final ArrayList<BlockChainExplorer> BSQ_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("bsq.ninja (@wiz)", "https://bsq.ninja/tx.html?tx=", "https://bsq.ninja/Address.html?addr="),
             new BlockChainExplorer("bsq.sqrrm.net (@sqrrm)", "https://bsq.sqrrm.net/tx.html?tx=", "https://bsq.sqrrm.net/Address.html?addr="),
-            new BlockChainExplorer("bsq.bisq.services (@devinbileck)", "https://bsq.bisq.services/tx.html?tx=", "https://bsq.bisq.services/Address.html?addr=")
+            new BlockChainExplorer("bsq.bisq.services (@devinbileck)", "https://bsq.bisq.services/tx.html?tx=", "https://bsq.bisq.services/Address.html?addr="),
+            new BlockChainExplorer("bsq.vante.me (@mrosseel)", "https://bsq.vante.me/tx.html?tx=", "https://bsq.vante.me/Address.html?addr=")
     ));
 
     // payload is initialized so the default values are available for Property initialization.
