@@ -662,12 +662,12 @@ public class GUIUtil {
         }
     }
 
-    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, Coin minFee, String feeType) {
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, Coin minFee) {
         String result = " (" + getPercentage(fee, tradeAmount) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
 
         if (!fee.isGreaterThan(minFee)) {
-            result += " - " + Res.get("guiUtil.minValue", feeType);
+            result = " " + Res.get("guiUtil.requiredMinimum");
         }
 
         return result;
