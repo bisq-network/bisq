@@ -148,6 +148,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     private final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
+    final BooleanProperty isMinBuyerSecurityDeposit = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new SimpleObjectProperty<>();
@@ -300,6 +301,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     dataModel.calculateVolume();
                     dataModel.calculateTotalToPay();
                 }
+                updateBuyerSecurityDeposit();
                 updateButtonDisableState();
             }
         };
@@ -1200,6 +1202,18 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         }
 
         isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());
+    }
+
+    private void updateBuyerSecurityDeposit() {
+        isMinBuyerSecurityDeposit.set(dataModel.isMinBuyerSecurityDeposit());
+
+        if (dataModel.isMinBuyerSecurityDeposit()) {
+            buyerSecurityDepositLabel.set(Res.get("createOffer.minSecurityDepositUsed"));
+            buyerSecurityDeposit.set(btcFormatter.formatCoin(Restrictions.getMinBuyerSecurityDepositAsCoin()));
+        } else {
+            buyerSecurityDepositLabel.set(getSecurityDepositLabel());
+            buyerSecurityDeposit.set(FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
+        }
     }
 
     private void updateButtonDisableState() {
