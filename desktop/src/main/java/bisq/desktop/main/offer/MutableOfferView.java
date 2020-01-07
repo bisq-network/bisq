@@ -144,7 +144,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private FundsTextField totalToPayTextField;
     private Label amountDescriptionLabel, priceCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescription, tradeFeeDescriptionLabel,
-            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel, buyerSecurityDepositLabel;
+            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel, buyerSecurityDepositLabel,
+            buyerSecurityDepositPercentageLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -159,7 +160,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
             priceAsPercentageFocusedListener, getShowWalletFundedNotificationListener,
-            tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener;
+            tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener,
+            isMinBuyerSecurityDepositListener;
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
     private ChangeListener<Number> marketPriceAvailableListener;
@@ -825,6 +827,18 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 tradeFeeInBsqToggle.setVisible(newValue);
             }
         };
+
+        isMinBuyerSecurityDepositListener = ((observable, oldValue, newValue) -> {
+            if (newValue) {
+                // show BTC
+                buyerSecurityDepositPercentageLabel.setText(Res.getBaseCurrencyCode());
+                buyerSecurityDepositInputTextField.setDisable(true);
+            } else {
+                // show %
+                buyerSecurityDepositPercentageLabel.setText("%");
+                buyerSecurityDepositInputTextField.setDisable(false);
+            }
+        });
     }
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
@@ -862,6 +876,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.volume.addListener(volumeListener);
         model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
         model.buyerSecurityDepositInBTC.addListener(buyerSecurityDepositInBTCListener);
+        model.isMinBuyerSecurityDeposit.addListener(isMinBuyerSecurityDepositListener);
 
         tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
@@ -897,6 +912,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.buyerSecurityDepositInBTC.removeListener(buyerSecurityDepositInBTCListener);
         tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().removeListener(tradeFeeInBsqToggleListener);
+        model.isMinBuyerSecurityDeposit.removeListener(isMinBuyerSecurityDepositListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -1105,7 +1121,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 Res.get("createOffer.securityDeposit.prompt"));
         buyerSecurityDepositInfoInputTextField = tuple.second;
         buyerSecurityDepositInputTextField = buyerSecurityDepositInfoInputTextField.getInputTextField();
-        Label buyerSecurityDepositPercentageLabel = tuple.third;
+        buyerSecurityDepositPercentageLabel = tuple.third;
         // getEditableValueBox delivers BTC, so we overwrite it with %
         buyerSecurityDepositPercentageLabel.setText("%");
 

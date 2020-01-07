@@ -29,6 +29,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -39,6 +40,7 @@ import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
@@ -707,7 +709,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get());
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(),
+                        dataModel.getAmount().get(),
+                        Restrictions.getMinBuyerSecurityDepositAsCoin());
     }
 
     public String getSecurityDepositWithCode() {
@@ -719,7 +723,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         final String takerFee = getFormatterForTakerFee().formatCoinWithCode(takerFeeAsCoin);
         if (dataModel.isCurrencyForTakerFeeBtc())
-            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get());
+            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(),
+                    FeeService.getMinTakerFee(dataModel.isCurrencyForTakerFeeBtc()));
         else
             return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
     }
@@ -743,7 +748,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTotalTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get());
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(),
+                        Coin.ZERO);
 
     }
 

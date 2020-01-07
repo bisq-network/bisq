@@ -48,6 +48,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -147,6 +148,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     private final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
+    final BooleanProperty isMinBuyerSecurityDeposit = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new SimpleObjectProperty<>();
@@ -299,6 +301,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     dataModel.calculateVolume();
                     dataModel.calculateTotalToPay();
                 }
+                updateBuyerSecurityDeposit();
                 updateButtonDisableState();
             }
         };
@@ -970,7 +973,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get());
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(),
+                        dataModel.getAmount().get(),
+                        Restrictions.getMinBuyerSecurityDepositAsCoin());
     }
 
     public String getSecurityDepositWithCode() {
@@ -982,7 +987,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);
         if (dataModel.isCurrencyForMakerFeeBtc())
-            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get());
+            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(),
+                    FeeService.getMinMakerFee(dataModel.isCurrencyForMakerFeeBtc()));
         else
             return makerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(makerFeeAsCoin)) + ")";
     }
@@ -1018,7 +1024,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get());
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), Coin.ZERO);
 
     }
 
@@ -1196,17 +1202,33 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());
     }
 
+    private void updateBuyerSecurityDeposit() {
+        isMinBuyerSecurityDeposit.set(dataModel.isMinBuyerSecurityDeposit());
+
+        if (dataModel.isMinBuyerSecurityDeposit()) {
+            buyerSecurityDepositLabel.set(Res.get("createOffer.minSecurityDepositUsed"));
+            buyerSecurityDeposit.set(btcFormatter.formatCoin(Restrictions.getMinBuyerSecurityDepositAsCoin()));
+        } else {
+            buyerSecurityDepositLabel.set(getSecurityDepositLabel());
+            buyerSecurityDeposit.set(FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
+        }
+    }
+
     private void updateButtonDisableState() {
         log.debug("updateButtonDisableState");
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid &&
                 isBtcInputValid(minAmount.get()).isValid &&
                 isPriceInputValid(price.get()).isValid &&
-                securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid &&
                 dataModel.getPrice().get() != null &&
                 dataModel.getPrice().get().getValue() != 0 &&
                 isVolumeInputValid(volume.get()).isValid &&
                 isVolumeInputValid(DisplayUtils.formatVolume(dataModel.getMinVolume().get())).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
+
+        // validating the percentage deposit value only makes sense if it is actually used
+        if (!dataModel.isMinBuyerSecurityDeposit()) {
+            inputDataValid = inputDataValid && securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid;
+        }
 
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();

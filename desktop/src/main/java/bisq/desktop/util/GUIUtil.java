@@ -49,10 +49,10 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
@@ -662,9 +662,15 @@ public class GUIUtil {
         }
     }
 
-    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount) {
-        return " (" + getPercentage(fee, tradeAmount) +
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, Coin minFee) {
+        String result = " (" + getPercentage(fee, tradeAmount) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
+
+        if (!fee.isGreaterThan(minFee)) {
+            result = " " + Res.get("guiUtil.requiredMinimum");
+        }
+
+        return result;
     }
 
     public static String getPercentage(Coin part, Coin total) {
