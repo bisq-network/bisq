@@ -1221,12 +1221,16 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid &&
                 isBtcInputValid(minAmount.get()).isValid &&
                 isPriceInputValid(price.get()).isValid &&
-                securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid &&
                 dataModel.getPrice().get() != null &&
                 dataModel.getPrice().get().getValue() != 0 &&
                 isVolumeInputValid(volume.get()).isValid &&
                 isVolumeInputValid(DisplayUtils.formatVolume(dataModel.getMinVolume().get())).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
+
+        // validating the percentage deposit value only makes sense if it is actually used
+        if (!dataModel.isMinBuyerSecurityDeposit()) {
+            inputDataValid = inputDataValid && securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid;
+        }
 
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
