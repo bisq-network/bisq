@@ -118,7 +118,7 @@ public class GUIUtilTest {
         Coin fee = make(a(CoinMaker.Coin).but(with(satoshis, 20000L)));
         Coin min = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
 
-        assertEquals(" (0.02% of trade amount)", GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, min, Res.get("shared.tradeFee")));
+        assertEquals(" (0.02% of trade amount)", GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, min));
     }
 
     @Test
@@ -127,8 +127,8 @@ public class GUIUtilTest {
         Coin fee = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
         Coin min = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
 
-        assertEquals(" (0.01% of trade amount) - minimum trading fee is used",
-                GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, min, Res.get("shared.tradeFee")));
+        assertEquals(" (required minimum)",
+                GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, min));
     }
 
     @Test
@@ -137,6 +137,6 @@ public class GUIUtilTest {
         Coin fee = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
 
         assertEquals(" (0.01% of trade amount)",
-                GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, Coin.ZERO, ""));
+                GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, Coin.ZERO));
     }
 }

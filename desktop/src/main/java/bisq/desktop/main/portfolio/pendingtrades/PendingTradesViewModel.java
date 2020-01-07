@@ -294,7 +294,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if (trade != null && trade.getTradeAmount() != null) {
             Coin txFee = dataModel.getTxFee();
             String percentage = GUIUtil.getPercentageOfTradeAmount(txFee, trade.getTradeAmount(),
-                    Coin.ZERO, "");
+                    Coin.ZERO);
             return btcFormatter.formatCoinWithCode(txFee) + percentage;
         } else {
             return "";
@@ -312,7 +312,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         FeeService.getMinTakerFee(true);
 
                 String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(),
-                        minTradeFee, Res.get("shared.tradeFee"));
+                        minTradeFee);
                 return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
             } else {
                 return bsqFormatter.formatCoinWithCode(dataModel.getTradeFeeAsBsq());
@@ -336,8 +336,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
             String percentage = GUIUtil.getPercentageOfTradeAmount(securityDeposit,
                     trade.getTradeAmount(),
-                    minSecurityDeposit,
-                    Res.get("shared.securityDepositLowerCase"));
+                    minSecurityDeposit);
             return btcFormatter.formatCoinWithCode(securityDeposit) + percentage;
         } else {
             return "";
