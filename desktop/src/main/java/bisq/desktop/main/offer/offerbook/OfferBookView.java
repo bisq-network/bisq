@@ -37,6 +37,7 @@ import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -1002,11 +1003,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         iconView.setId("image-remove");
                                         title = Res.get("shared.remove");
                                         button.setId(null);
+                                        button.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
                                         boolean isSellOffer = offer.getDirection() == OfferPayload.Direction.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
+                                        button.setStyle("-fx-text-fill: white");
                                         if (isSellOffer) {
                                             title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                                                     Res.get("offerbook.takeOfferToBuy", offer.getOfferPayload().getBaseCurrencyCode()) :

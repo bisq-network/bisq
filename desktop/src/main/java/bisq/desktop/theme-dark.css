@@ -127,6 +127,7 @@
     -bs-progress-bar-track: #272728;
     -bs-chart-tick: rgba(255, 255, 255, 0.7);
     -bs-chart-lines: rgba(0, 0, 0, 0.3);
+    -bs-white: white;
 }
 
 /* list view */

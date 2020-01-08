@@ -1645,12 +1645,12 @@ textfield */
 #buy-button-big {
     -fx-font-size: 1em;
     -fx-background-color: -bs-buy;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
 }
 
 #buy-button {
     -fx-background-color: -bs-buy;
-    -fx-text-fill: white !important;
+    -fx-text-fill: -bs-white;
 }
 
 #buy-button-big:hover, #buy-button:hover,
@@ -1660,13 +1660,13 @@ textfield */
 
 #sell-button-big {
     -fx-background-color: -bs-sell;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
     -fx-font-size: 1em;
 }
 
 #sell-button {
     -fx-background-color: -bs-sell;
-    -fx-text-fill: white !important;
+    -fx-text-fill: -bs-white;
 }
 
 #sell-button-big:hover, #sell-button:hover,
