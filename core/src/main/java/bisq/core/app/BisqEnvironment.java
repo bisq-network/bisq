@@ -94,6 +94,9 @@ public class BisqEnvironment extends StandardEnvironment {
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
     public static final String BISQ_APP_DIR_PROPERTY_SOURCE_NAME = "bisqAppDirProperties";
     public static final String BISQ_DEFAULT_PROPERTY_SOURCE_NAME = "bisqDefaultProperties";
+	
+	public static String daoActivatedInPrefs = "false";
+	public static String daoActivatedInOptions = "false";
 
     private static String staticAppDataDir;
 
@@ -160,13 +163,11 @@ public class BisqEnvironment extends StandardEnvironment {
 
         return Paths.get(userDataDir, appName).toString();
     }
-
-    // Util to set isDaoActivated to true if either set as program argument or we run testnet or regtest.
-    // Can be removed once DAO is live.
-    public static boolean isDaoActivated(Environment environment) {
-        Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, true);
+    // Util to set isDaoActivated to true if set or we run testnet or regtest.
+    public static boolean isDaoActivated() {
+        boolean daoActivated = daoActivatedInOptions.isEmpty() ? daoActivatedInPrefs.equals("true") : daoActivatedInOptions.equals("true");
         BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        return daoActivatedFromOptions || !baseCurrencyNetwork.isMainnet();
+        return daoActivated || !baseCurrencyNetwork.isMainnet();
     }
 
 
@@ -259,7 +260,7 @@ public class BisqEnvironment extends StandardEnvironment {
         genesisTxId = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_TX_ID, "");
         genesisBlockHeight = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_BLOCK_HEIGHT, "-1");
         genesisTotalSupply = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_TOTAL_SUPPLY, "-1");
-        daoActivated = getProperty(commandLineProperties, DaoOptionKeys.DAO_ACTIVATED, "true");
+        daoActivated = getProperty(commandLineProperties, DaoOptionKeys.DAO_ACTIVATED, "");
 
         //BtcOptionKeys
         btcNodes = getProperty(commandLineProperties, BtcOptionKeys.BTC_NODES, "");

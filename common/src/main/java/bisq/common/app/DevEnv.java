@@ -51,7 +51,7 @@ public class DevEnv {
         DevEnv.devMode = devMode;
     }
 
-    private static boolean daoActivated = true;
+    private static boolean daoActivated = false;
 
     public static boolean isDaoActivated() {
         return daoActivated;
