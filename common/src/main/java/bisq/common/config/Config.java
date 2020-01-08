@@ -30,6 +30,7 @@ import java.util.Optional;
 
 import ch.qos.logback.classic.Level;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -90,10 +91,7 @@ public class Config {
     public static final boolean DEFAULT_FULL_DAO_NODE = false;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
-    // legacy mutable static field used to support opening bisq.log from
-    // Overlay.addReportErrorButtons. avoids the need to inject config into all Overlay
-    // subclasses. TODO: do the injection anyway
-    public static File CURRENT_APP_DATA_DIR;
+    private static File APP_DATA_DIR_VALUE;
     private static BaseCurrencyNetwork BASE_CURRENCY_NETWORK_VALUE = BaseCurrencyNetwork.BTC_MAINNET;
 
     // default data dir properties
@@ -239,6 +237,7 @@ public class Config {
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
 
+        //noinspection rawtypes
         ArgumentAcceptingOptionSpec<Enum> baseCurrencyNetworkOpt =
                 parser.accepts(BASE_CURRENCY_NETWORK, "Base currency network")
                         .withRequiredArg()
@@ -638,8 +637,7 @@ public class Config {
         this.torDir = mkdir(btcNetworkDir, "tor");
         this.walletDir = mkdir(btcNetworkDir, "wallet");
 
-        // assign values to legacy mutable static fields
-        CURRENT_APP_DATA_DIR = appDataDir;
+        APP_DATA_DIR_VALUE = appDataDir;
         BASE_CURRENCY_NETWORK_VALUE = baseCurrencyNetwork;
     }
 
@@ -740,6 +738,23 @@ public class Config {
     // == STATIC ACCESSORS ======================================================================
 
     /**
+     * Static accessor that returns the same value as the non-static
+     * {@link #getAppDataDir()} method. For use only in the {@code Overlay} class, where
+     * because of its large number of subclasses, injecting the Guice-managed
+     * {@link Config} class is not worth the effort. {@link #getAppDataDir()} should be
+     * favored in all other cases.
+     * @throws NullPointerException if the static value has not yet been assigned, i.e. if
+     * the Guice-managed {@link Config} class has not yet been instantiated elsewhere.
+     * This should never be the case, as Guice wiring always happens before any
+     * {@code Overlay} class is instantiated.
+     */
+    public static File appDataDir() {
+        return checkNotNull(APP_DATA_DIR_VALUE, "The static appDataDir has not yet " +
+                "been assigned. A Config instance must be instantiated (usually by " +
+                "Guice) before calling this method.");
+    }
+
+    /**
      * Static accessor that returns either the default base currency network value of
      * {@link BaseCurrencyNetwork#BTC_MAINNET} or the value assigned via the
      * {@value BASE_CURRENCY_NETWORK} option. The non-static
@@ -763,6 +778,7 @@ public class Config {
     public static NetworkParameters baseCurrencyNetworkParameters() {
         return BASE_CURRENCY_NETWORK_VALUE.getParameters();
     }
+
 
     // == ACCESSORS ======================================================================
 

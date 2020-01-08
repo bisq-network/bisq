@@ -843,7 +843,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> {
             try {
-                File dataDir = Config.CURRENT_APP_DATA_DIR;
+                File dataDir = Config.appDataDir();
                 File logFile = new File(dataDir, "bisq.log");
                 Utilities.openFile(logFile);
             } catch (IOException e) {
