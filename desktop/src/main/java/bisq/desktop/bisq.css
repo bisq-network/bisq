@@ -1650,7 +1650,7 @@ textfield */
 
 #buy-button {
     -fx-background-color: -bs-buy;
-    -fx-text-fill: white;
+    -fx-text-fill: white !important;
 }
 
 #buy-button-big:hover, #buy-button:hover,
@@ -1666,7 +1666,7 @@ textfield */
 
 #sell-button {
     -fx-background-color: -bs-sell;
-    -fx-text-fill: white;
+    -fx-text-fill: white !important;
 }
 
 #sell-button-big:hover, #sell-button:hover,
