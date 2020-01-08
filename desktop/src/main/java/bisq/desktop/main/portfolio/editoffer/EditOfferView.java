@@ -196,7 +196,6 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
         cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
-        cancelButton.setId("cancel-button");
         cancelButton.setOnAction(event -> close());
         editOfferConfirmationBox.getChildren().add(cancelButton);
 
