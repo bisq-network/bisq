@@ -1294,7 +1294,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 Res.get("shared.distanceInPercent"));
         percentagePriceDescription = priceAsPercentageInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, percentagePriceDescription);
+        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, percentagePriceDescription, "small-icon-label");
 
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
@@ -1367,7 +1367,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, "");
         priceDescriptionLabel = priceInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel);
+        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel, "small-icon-label");
 
         editOfferElements.add(priceDescriptionLabel);
         fixedPriceBox = priceInputBoxTuple.second;

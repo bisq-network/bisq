@@ -2045,16 +2045,27 @@ public class FormBuilder {
     // Icons
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label) {
+    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label, String style) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             final Text textIcon = MaterialDesignIconFactory.get().createIcon(icon, iconSize);
             textIcon.setOpacity(0.7);
+            if (style != null) {
+                textIcon.getStyleClass().add(style);
+            }
             label.setContentDisplay(ContentDisplay.LEFT);
             label.setGraphic(textIcon);
             return textIcon;
         } else {
             throw new IllegalArgumentException("Not supported icon type");
         }
+    }
+
+    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label) {
+        return getIconForLabel(icon, iconSize, label, null);
+    }
+
+    public static Text getSmallIconForLabel(GlyphIcons icon, Label label, String style) {
+        return getIconForLabel(icon, "0.769em", label, style);
     }
 
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {

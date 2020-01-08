@@ -1106,7 +1106,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 Res.get("takeOffer.amountPriceBox.priceDescription"));
         priceDescriptionLabel = priceInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel);
+        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel, "small-icon-label");
 
         VBox priceBox = priceInputBoxTuple.second;
 
@@ -1145,7 +1145,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 Res.get("shared.distanceInPercent"));
         priceAsPercentageDescription = priceAsPercentageInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, priceAsPercentageDescription);
+        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, priceAsPercentageDescription, "small-icon-label");
 
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
