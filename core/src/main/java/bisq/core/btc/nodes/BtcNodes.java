@@ -73,6 +73,9 @@ public class BtcNodes {
                         // sgeisler
                         new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "@sgeisler"),
 
+                        // m52go
+                        new BtcNode("btc.bisq.cc", "4nnuyxm5k5tlyjq3.onion", "167.71.168.194", BtcNode.DEFAULT_PORT, "@m52go"),
+
                         // wiz
                         new BtcNode("node100.hnl.wiz.biz", "22tg6ufbwz6o3l2u.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
                         new BtcNode("node130.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
