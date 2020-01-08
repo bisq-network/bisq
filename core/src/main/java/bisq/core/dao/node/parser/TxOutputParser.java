@@ -24,7 +24,7 @@ import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -412,8 +412,8 @@ class TxOutputParser {
     }
 
     private int getActivateHardFork1Height() {
-        return BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET :
-                BaseCurrencyNetwork.CURRENT_NETWORK.isTestnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET :
+        return Config.baseCurrencyNetwork().isMainnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET :
+                Config.baseCurrencyNetwork().isTestnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET :
                         ACTIVATE_HARD_FORK_1_HEIGHT_REGTEST;
     }
 

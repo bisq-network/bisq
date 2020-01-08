@@ -4,6 +4,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 public class AdvancedCashValidatorTest {
     @Before
     public void setup() {
-        final BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
+        final BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
         Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());

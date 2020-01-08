@@ -20,7 +20,7 @@ package bisq.core.trade.protocol.tasks.maker;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class MakerSetsLockTime extends TradeTask {
 
             // 10 days for altcoins, 20 days for other payment methods
             int delay = processModel.getOffer().getPaymentMethod().isAsset() ? 144 * 10 : 144 * 20;
-            if (BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest()) {
+            if (Config.baseCurrencyNetwork().isRegtest()) {
                 delay = 5;
             }
 

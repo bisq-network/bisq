@@ -19,7 +19,7 @@ package bisq.core.dao.governance.param;
 
 import bisq.core.locale.Res;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.proto.ProtoUtil;
 
 import lombok.Getter;
@@ -106,9 +106,9 @@ public enum Param {
     // the time locked payout tx in case the traders do not cooperate. Will be likely a donation address (Bisq, Tor,...)
     // but can be also a burner address if we prefer to burn the BTC
     @SuppressWarnings("SpellCheckingInspection")
-    RECIPIENT_BTC_ADDRESS(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
-            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // daoBetaNet
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isTestnet() ? "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
+    RECIPIENT_BTC_ADDRESS(Config.baseCurrencyNetwork().isMainnet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
+            Config.baseCurrencyNetwork().isDaoBetaNet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // daoBetaNet
+                    Config.baseCurrencyNetwork().isTestnet() ? "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
                             "2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w", // regtest or DAO testnet (regtest)
             ParamType.ADDRESS),
 
@@ -136,73 +136,73 @@ public enum Param {
     // For testnet we want to have a short cycle of about a week (1012 blocks)
     // For regtest we use very short periods
     PHASE_UNDEFINED("0", ParamType.BLOCK),
-    PHASE_PROPOSAL(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ?
+    PHASE_PROPOSAL(Config.baseCurrencyNetwork().isMainnet() ?
             "3601" :    // mainnet; 24 days
-            BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest() ?
+            Config.baseCurrencyNetwork().isRegtest() ?
                     "4" :       // regtest
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ?
+                    Config.baseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
-                            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ?
+                            Config.baseCurrencyNetwork().isDaoRegTest() ?
                                     "134" :      // dao regtest; 0.93 days
                                     "380",       // testnet or dao testnet (server side regtest); 2.6 days
             ParamType.BLOCK, 2, 2),
-    PHASE_BREAK1(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ?
+    PHASE_BREAK1(Config.baseCurrencyNetwork().isMainnet() ?
             "149" :     // mainnet; 1 day
-            BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest() ?
+            Config.baseCurrencyNetwork().isRegtest() ?
                     "1" :       // regtest
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ?
+                    Config.baseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
-                            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ?
+                            Config.baseCurrencyNetwork().isDaoRegTest() ?
                                     "10" :      // dao regtest
                                     "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 2, 2),
-    PHASE_BLIND_VOTE(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ?
+    PHASE_BLIND_VOTE(Config.baseCurrencyNetwork().isMainnet() ?
             "451" :     // mainnet; 3 days
-            BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest() ?
+            Config.baseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ?
+                    Config.baseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
-                            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ?
+                            Config.baseCurrencyNetwork().isDaoRegTest() ?
                                     "134" :      // dao regtest; 0.93 days
                                     "300",      // testnet or dao testnet (server side regtest); 2 days
             ParamType.BLOCK, 2, 2),
-    PHASE_BREAK2(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ?
+    PHASE_BREAK2(Config.baseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
-            BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest() ?
+            Config.baseCurrencyNetwork().isRegtest() ?
                     "1" :       // regtest
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ?
+                    Config.baseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
-                            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ?
+                            Config.baseCurrencyNetwork().isDaoRegTest() ?
                                     "10" :      // dao regtest
                                     "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 2, 2),
-    PHASE_VOTE_REVEAL(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ?
+    PHASE_VOTE_REVEAL(Config.baseCurrencyNetwork().isMainnet() ?
             "451" :     // mainnet; 3 days
-            BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest() ?
+            Config.baseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ?
+                    Config.baseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
-                            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ?
+                            Config.baseCurrencyNetwork().isDaoRegTest() ?
                                     "132" :      // dao regtest; 0.93 days
                                     "300",      // testnet or dao testnet (server side regtest); 2 days
             ParamType.BLOCK, 2, 2),
-    PHASE_BREAK3(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ?
+    PHASE_BREAK3(Config.baseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
-            BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest() ?
+            Config.baseCurrencyNetwork().isRegtest() ?
                     "1" :       // regtest
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ?
+                    Config.baseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
-                            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ?
+                            Config.baseCurrencyNetwork().isDaoRegTest() ?
                                     "10" :      // dao regtest
                                     "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 2, 2),
-    PHASE_RESULT(BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ?
+    PHASE_RESULT(Config.baseCurrencyNetwork().isMainnet() ?
             "10" :      // mainnet
-            BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest() ?
+            Config.baseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
-                    BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet() ?
+                    Config.baseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
-                            BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ?
+                            Config.baseCurrencyNetwork().isDaoRegTest() ?
                                     "2" :      // dao regtest
                                     "2",        // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 2, 2);

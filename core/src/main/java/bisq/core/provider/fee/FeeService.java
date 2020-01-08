@@ -22,7 +22,7 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.UserThread;
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.util.Tuple2;
 
@@ -117,7 +117,7 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        minFeePerByte = BaseCurrencyNetwork.CURRENT_NETWORK.getDefaultMinFeePerByte();
+        minFeePerByte = Config.baseCurrencyNetwork().getDefaultMinFeePerByte();
 
         requestFees();
 

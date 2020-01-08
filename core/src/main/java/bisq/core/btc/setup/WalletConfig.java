@@ -21,7 +21,6 @@ import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.app.Version;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 
 import org.bitcoinj.core.BlockChain;
@@ -238,8 +237,8 @@ public class WalletConfig extends AbstractIdleService {
 
         // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
         // if local btc node is not synced with our dao testnet master node.
-        if (BaseCurrencyNetwork.CURRENT_NETWORK.isDaoRegTest() ||
-                BaseCurrencyNetwork.CURRENT_NETWORK.isDaoTestNet() ||
+        if (Config.baseCurrencyNetwork().isDaoRegTest() ||
+                Config.baseCurrencyNetwork().isDaoTestNet() ||
                 !config.isLocalBitcoinNodeIsRunning())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 

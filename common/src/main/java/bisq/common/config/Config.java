@@ -2,6 +2,8 @@ package bisq.common.config;
 
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.NetworkParameters;
+
 import joptsimple.AbstractOptionSpec;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.HelpFormatter;
@@ -92,6 +94,7 @@ public class Config {
     // Overlay.addReportErrorButtons. avoids the need to inject config into all Overlay
     // subclasses. TODO: do the injection anyway
     public static File CURRENT_APP_DATA_DIR;
+    private static BaseCurrencyNetwork BASE_CURRENCY_NETWORK_VALUE = BaseCurrencyNetwork.BTC_MAINNET;
 
     // default data dir properties
     private final String defaultAppName;
@@ -111,6 +114,7 @@ public class Config {
     private final List<String> bannedPriceRelayNodes;
     private final List<String> bannedSeedNodes;
     private final BaseCurrencyNetwork baseCurrencyNetwork;
+    private final NetworkParameters baseCurrencyNetworkParameters;
     private final boolean ignoreLocalBtcNode;
     private final String bitcoinRegtestHost;
     private final boolean daoActivated;
@@ -570,6 +574,7 @@ public class Config {
             this.bannedPriceRelayNodes = options.valuesOf(bannedPriceRelayNodesOpt);
             this.bannedSeedNodes = options.valuesOf(bannedSeedNodesOpt);
             this.baseCurrencyNetwork = (BaseCurrencyNetwork) options.valueOf(baseCurrencyNetworkOpt);
+            this.baseCurrencyNetworkParameters = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.logLevel = options.valueOf(logLevelOpt);
@@ -635,8 +640,7 @@ public class Config {
 
         // assign values to legacy mutable static fields
         CURRENT_APP_DATA_DIR = appDataDir;
-        BaseCurrencyNetwork.CURRENT_NETWORK = baseCurrencyNetwork;
-        BaseCurrencyNetwork.CURRENT_PARAMETERS = baseCurrencyNetwork.getParameters();
+        BASE_CURRENCY_NETWORK_VALUE = baseCurrencyNetwork;
     }
 
     private Optional<OptionSet> parseOptionsFrom(File file, OptionParser parser, OptionSpec<?>... disallowedOpts) {
@@ -733,6 +737,33 @@ public class Config {
     }
 
 
+    // == STATIC ACCESSORS ======================================================================
+
+    /**
+     * Static accessor that returns either the default base currency network value of
+     * {@link BaseCurrencyNetwork#BTC_MAINNET} or the value assigned via the
+     * {@value BASE_CURRENCY_NETWORK} option. The non-static
+     * {@link #getBaseCurrencyNetwork()} accessor should be favored whenever possible and
+     * this static accessor should be used only in code locations where it is infeasible
+     * or too cumbersome to inject the normal Guice-managed singleton {@link Config}
+     * instance.
+     */
+    public static BaseCurrencyNetwork baseCurrencyNetwork() {
+        return BASE_CURRENCY_NETWORK_VALUE;
+    }
+
+    /**
+     * Static accessor that returns the value of
+     * {@code baseCurrencyNetwork().getParameters()} for convenience and to avoid violating
+     * the <a href="https://en.wikipedia.org/wiki/Law_of_Demeter">Law of Demeter</a>. The
+     * non-static {@link #getBaseCurrencyNetwork()} method should be favored whenever
+     * possible.
+     * @see #baseCurrencyNetwork()
+     */
+    public static NetworkParameters baseCurrencyNetworkParameters() {
+        return BASE_CURRENCY_NETWORK_VALUE.getParameters();
+    }
+
     // == ACCESSORS ======================================================================
 
     public String getDefaultAppName() {
@@ -789,6 +820,10 @@ public class Config {
 
     public BaseCurrencyNetwork getBaseCurrencyNetwork() {
         return baseCurrencyNetwork;
+    }
+
+    public NetworkParameters getBaseCurrencyNetworkParameters() {
+        return baseCurrencyNetworkParameters;
     }
 
     public boolean isIgnoreLocalBtcNode() {

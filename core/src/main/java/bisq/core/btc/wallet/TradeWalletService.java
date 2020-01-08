@@ -29,7 +29,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -93,7 +93,7 @@ public class TradeWalletService {
     public TradeWalletService(WalletsSetup walletsSetup, Preferences preferences) {
         this.walletsSetup = walletsSetup;
         this.preferences = preferences;
-        this.params = BaseCurrencyNetwork.CURRENT_PARAMETERS;
+        this.params = Config.baseCurrencyNetworkParameters();
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
             wallet = walletsSetup.getBtcWallet();

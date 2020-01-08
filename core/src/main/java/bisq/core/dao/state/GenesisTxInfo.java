@@ -106,7 +106,7 @@ public class GenesisTxInfo {
     public GenesisTxInfo(@Named(Config.GENESIS_TX_ID) String genesisTxId,
                          @Named(Config.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight,
                          @Named(Config.GENESIS_TOTAL_SUPPLY) long genesisTotalSupply) {
-        BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         boolean isMainnet = baseCurrencyNetwork.isMainnet();
         boolean isTestnet = baseCurrencyNetwork.isTestnet();
         boolean isDaoTestNet = baseCurrencyNetwork.isDaoTestNet();

@@ -32,9 +32,6 @@ public enum BaseCurrencyNetwork {
     BTC_DAO_BETANET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"), // mainnet test genesis
     BTC_DAO_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"); // server side regtest after v0.9.5, had breaking code changes so we started over again
 
-    public static BaseCurrencyNetwork CURRENT_NETWORK = BTC_MAINNET;
-    public static NetworkParameters CURRENT_PARAMETERS = CURRENT_NETWORK.getParameters();
-
     @Getter
     private final NetworkParameters parameters;
     @Getter

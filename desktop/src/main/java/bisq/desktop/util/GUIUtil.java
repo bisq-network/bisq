@@ -58,7 +58,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
@@ -692,7 +692,7 @@ public class GUIUtil {
 
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
-        final String currencyName = BaseCurrencyNetwork.CURRENT_NETWORK.getCurrencyName();
+        final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
         new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
@@ -702,7 +702,7 @@ public class GUIUtil {
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BaseCurrencyNetwork.CURRENT_PARAMETERS,
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(Config.baseCurrencyNetworkParameters(),
                         address), amount, label, null) :
                 "";
     }

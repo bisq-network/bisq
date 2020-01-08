@@ -202,7 +202,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Override
     public void readPersisted() {
         PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 100);
-        BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
@@ -367,7 +367,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
-        if (BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet())
+        if (Config.baseCurrencyNetwork().isMainnet())
             setBlockChainExplorerMainNet(blockChainExplorer);
         else
             setBlockChainExplorerTestNet(blockChainExplorer);
@@ -688,7 +688,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
-        BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return prefPayload.getBlockChainExplorerMainNet();
@@ -707,7 +707,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return BTC_MAIN_NET_EXPLORERS;
@@ -735,7 +735,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet,
         // unless the useTorForBtc parameter is explicitly provided.
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
-        if ((!BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet()
+        if ((!Config.baseCurrencyNetwork().isMainnet()
                 || config.isLocalBitcoinNodeIsRunning())
                 && !config.isUseTorForBtcOptionSetExplicitly())
             return false;
@@ -767,7 +767,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public long getWithdrawalTxFeeInBytes() {
-        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), BaseCurrencyNetwork.CURRENT_NETWORK.getDefaultMinFeePerByte());
+        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), Config.baseCurrencyNetwork().getDefaultMinFeePerByte());
     }
 
     public boolean isDaoFullNode() {

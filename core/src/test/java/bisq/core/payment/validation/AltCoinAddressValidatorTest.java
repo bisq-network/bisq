@@ -23,6 +23,7 @@ import bisq.core.locale.Res;
 import bisq.asset.AssetRegistry;
 
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.junit.Test;
 
@@ -35,7 +36,7 @@ public class AltCoinAddressValidatorTest {
     public void test() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator(new AssetRegistry());
 
-        BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.CURRENT_NETWORK;
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         String currencyCode = baseCurrencyNetwork.getCurrencyCode();
         Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());

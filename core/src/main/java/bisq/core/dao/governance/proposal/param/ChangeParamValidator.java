@@ -31,7 +31,7 @@ import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
@@ -213,7 +213,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
     }
 
     private void validateBlockValue(int currentParamValueAsBlock, int inputValueAsBlock, Param param) throws ParamValidationException {
-        boolean isMainnet = BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet();
+        boolean isMainnet = Config.baseCurrencyNetwork().isMainnet();
         switch (param) {
             case LOCK_TIME_TRADE_PAYOUT:
                 break;

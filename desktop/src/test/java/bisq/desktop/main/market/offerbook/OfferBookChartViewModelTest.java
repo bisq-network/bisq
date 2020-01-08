@@ -26,7 +26,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.ImmutableCoinFormatter;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -49,7 +49,7 @@ import static org.mockito.Mockito.when;
 
 public class OfferBookChartViewModelTest {
 
-    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(BaseCurrencyNetwork.CURRENT_PARAMETERS.getMonetaryFormat());
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
     @Before
     public void setUp() {

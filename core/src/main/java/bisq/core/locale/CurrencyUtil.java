@@ -28,6 +28,7 @@ import bisq.asset.coins.BSQ;
 
 import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import com.google.common.base.Suppliers;
 
@@ -54,7 +55,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class CurrencyUtil {
 
     public static void setup() {
-        setBaseCurrencyCode(BaseCurrencyNetwork.CURRENT_NETWORK.getCurrencyCode());
+        setBaseCurrencyCode(Config.baseCurrencyNetwork().getCurrencyCode());
     }
 
     private static final AssetRegistry assetRegistry = new AssetRegistry();
@@ -118,8 +119,8 @@ public class CurrencyUtil {
     public static Stream<Asset> getSortedAssetStream() {
         return assetRegistry.stream()
                 .filter(CurrencyUtil::assetIsNotBaseCurrency)
-                .filter(asset -> isNotBsqOrBsqTradingActivated(asset, BaseCurrencyNetwork.CURRENT_NETWORK, DevEnv.isDaoTradingActivated()))
-                .filter(asset -> assetMatchesNetworkIfMainnet(asset, BaseCurrencyNetwork.CURRENT_NETWORK))
+                .filter(asset -> isNotBsqOrBsqTradingActivated(asset, Config.baseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
+                .filter(asset -> assetMatchesNetworkIfMainnet(asset, Config.baseCurrencyNetwork()))
                 .sorted(Comparator.comparing(Asset::getName));
     }
 

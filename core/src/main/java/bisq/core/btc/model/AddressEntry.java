@@ -17,7 +17,7 @@
 
 package bisq.core.btc.model;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -174,7 +174,7 @@ public final class AddressEntry implements PersistablePayload {
     @Nullable
     public Address getAddress() {
         if (address == null && keyPair != null)
-            address = keyPair.toAddress(BaseCurrencyNetwork.CURRENT_PARAMETERS);
+            address = keyPair.toAddress(Config.baseCurrencyNetworkParameters());
         return address;
     }
 

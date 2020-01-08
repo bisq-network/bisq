@@ -33,7 +33,6 @@ import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
@@ -165,7 +164,7 @@ public class WalletsSetup {
         this.walletDir = walletDir;
 
         btcWalletFileName = "bisq_" + config.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
-        params = BaseCurrencyNetwork.CURRENT_PARAMETERS;
+        params = Config.baseCurrencyNetworkParameters();
         PeerGroup.setIgnoreHttpSeeds(true);
     }
 

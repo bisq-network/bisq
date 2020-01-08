@@ -22,7 +22,6 @@ import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Utilities;
@@ -102,9 +101,9 @@ public class RpcService {
         // mainnet is 8332, testnet 18332, regtest 18443
         boolean isHostSet = !rpcHost.isEmpty();
         boolean isPortSet = rpcPort != Config.UNSPECIFIED_PORT;
-        boolean isMainnet = BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet();
-        boolean isTestnet = BaseCurrencyNetwork.CURRENT_NETWORK.isTestnet();
-        boolean isDaoBetaNet = BaseCurrencyNetwork.CURRENT_NETWORK.isDaoBetaNet();
+        boolean isMainnet = Config.baseCurrencyNetwork().isMainnet();
+        boolean isTestnet = Config.baseCurrencyNetwork().isTestnet();
+        boolean isDaoBetaNet = Config.baseCurrencyNetwork().isDaoBetaNet();
         this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet || isDaoBetaNet ? 8332 :

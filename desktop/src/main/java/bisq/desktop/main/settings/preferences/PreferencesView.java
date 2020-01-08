@@ -51,7 +51,6 @@ import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -273,7 +272,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
                     int withdrawalTxFeePerByte = Integer.parseInt(transactionFeeInputTextField.getText());
-                    final long minFeePerByte = BaseCurrencyNetwork.CURRENT_NETWORK.getDefaultMinFeePerByte();
+                    final long minFeePerByte = Config.baseCurrencyNetwork().getDefaultMinFeePerByte();
                     if (withdrawalTxFeePerByte < minFeePerByte) {
                         new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerByte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);

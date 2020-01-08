@@ -44,7 +44,7 @@ import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
@@ -71,7 +71,7 @@ import static org.mockito.Mockito.when;
 public class CreateOfferViewModelTest {
 
     private CreateOfferViewModel model;
-    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(BaseCurrencyNetwork.CURRENT_PARAMETERS.getMonetaryFormat());
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
     @Before
     public void setUp() {

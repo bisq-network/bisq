@@ -31,7 +31,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -220,9 +220,9 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     private void rePublishMyProposalsOnceWellConnected() {
         // We republish at each startup at any block during the cycle. We filter anyway for valid blind votes
         // of that cycle so it is 1 blind vote getting rebroadcast at each startup to my neighbors.
-        int minPeers = BaseCurrencyNetwork.CURRENT_NETWORK.isMainnet() ? 4 : 1;
+        int minPeers = Config.baseCurrencyNetwork().isMainnet() ? 4 : 1;
         if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
-                BaseCurrencyNetwork.CURRENT_NETWORK.isRegtest()) {
+                Config.baseCurrencyNetwork().isRegtest()) {
             myProposalList.stream()
                     .filter(proposal -> periodService.isTxInPhaseAndCycle(proposal.getTxId(),
                             DaoPhase.Phase.PROPOSAL,

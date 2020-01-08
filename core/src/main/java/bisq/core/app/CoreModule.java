@@ -38,7 +38,6 @@ import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.app.AppModule;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.PubKeyRingProvider;
@@ -66,7 +65,7 @@ public class CoreModule extends AppModule {
 
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.getStorageDir());
 
-        CoinFormatter btcFormatter = new ImmutableCoinFormatter(BaseCurrencyNetwork.CURRENT_PARAMETERS.getMonetaryFormat());
+        CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.getBaseCurrencyNetworkParameters().getMonetaryFormat());
         bind(CoinFormatter.class).annotatedWith(named(FormattingUtils.BTC_FORMATTER_KEY)).toInstance(btcFormatter);
 
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());

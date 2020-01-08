@@ -26,7 +26,7 @@ import bisq.asset.Asset;
 import bisq.asset.AssetRegistry;
 
 import bisq.common.app.DevEnv;
-import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import com.google.inject.Inject;
 
@@ -56,7 +56,7 @@ public final class AltCoinAddressValidator extends InputValidator {
             return validationResult;
 
         Optional<Asset> optionalAsset = CurrencyUtil.findAsset(assetRegistry, currencyCode,
-                BaseCurrencyNetwork.CURRENT_NETWORK, DevEnv.isDaoTradingActivated());
+                Config.baseCurrencyNetwork(), DevEnv.isDaoTradingActivated());
         if (optionalAsset.isPresent()) {
             Asset asset = optionalAsset.get();
             AddressValidationResult result = asset.validateAddress(input);
