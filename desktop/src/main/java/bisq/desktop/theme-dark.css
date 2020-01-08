@@ -107,11 +107,11 @@
 
     -bs-toggle-selected: #25b135;
     -bs-warning: #db6300;
-    -bs-buy: #2ea33c;
+    -bs-buy: #006600;
     -bs-buy-focus: black;
     -bs-buy-hover: #237b2d;
     -bs-buy-transparent: rgba(46, 163, 60, 0.3);
-    -bs-sell: #ee6563;
+    -bs-sell: #660000;
     -bs-sell-focus: #090202;
     -bs-sell-hover: #b42522;
     -bs-sell-transparent: rgba(216, 52, 49, 0.3);
@@ -125,6 +125,8 @@
     -bs-green-soft: derive(-bs-rd-green, 60%);
     -bs-red-soft: derive(-bs-rd-error-red, 60%);
     -bs-progress-bar-track: #272728;
+    -bs-chart-tick: rgba(255, 255, 255, 0.7);
+    -bs-chart-lines: rgba(0, 0, 0, 0.3);
 }
 
 /* list view */
@@ -209,13 +211,6 @@
     -fx-border-color: -bs-color-gray-2;
 }
 
-#sell-button, #sell-button-big {
-    -fx-background-color: #660000 !important;
-}
-#buy-button, #buy-button-big {
-    -fx-background-color: #006600 !important;
-}
-
 .wallet-seed-words {
     -fx-text-fill: -bs-color-gray-6;
 }
@@ -234,12 +229,12 @@
     -fx-border-color: transparent transparent transparent transparent;
 }
 #charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
-    -fx-tick-label-fill: rgba(255,255,255,0.7);
+    -fx-tick-label-fill: -bs-chart-tick;
 }
 .chart-horizontal-grid-lines,
 .chart-horizontal-zero-line, .chart-vertical-zero-line,
 .axis-tick-mark, .axis-minor-tick-mark {
-    -fx-stroke: rgba(0,0,0,0.3);
+    -fx-stroke: -bs-chart-lines;
 }
 
 /* scrollbars */
