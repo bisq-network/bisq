@@ -31,7 +31,6 @@ public class LanguageUtil {
     private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de", // German
-            "el", // Greek
             "es", // Spanish
             "pt", // Portuguese
             "pt-BR", // Portuguese (Brazil)
@@ -45,6 +44,7 @@ public class LanguageUtil {
             "fa" // Persian
             /*
             // not translated yet
+            "el", // Greek
             "sr-Latn-RS", // Serbian [Latin] (Serbia)
             "hu", // Hungarian
             "ro", // Romanian
