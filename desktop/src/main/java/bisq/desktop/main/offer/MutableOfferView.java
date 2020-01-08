@@ -156,7 +156,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             priceAsPercentageValueCurrencyBox, volumeValueCurrencyBox, priceValueCurrencyBox,
             minAmountValueCurrencyBox, advancedOptionsBox, paymentGroupBox;
 
-    private Subscription isWaitingForFundsSubscription, balanceSubscription, cancelButton2StyleSubscription;
+    private Subscription isWaitingForFundsSubscription, balanceSubscription;
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
             priceAsPercentageFocusedListener, getShowWalletFundedNotificationListener,
@@ -662,15 +662,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             waitingForFundsLabel.setManaged(isWaitingForFunds);
         });
 
-        cancelButton2StyleSubscription = EasyBind.subscribe(placeOfferButton.visibleProperty(),
-                isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
-
         balanceSubscription = EasyBind.subscribe(model.getDataModel().getBalance(), balanceTextField::setBalance);
     }
 
     private void removeSubscriptions() {
         isWaitingForFundsSubscription.unsubscribe();
-        cancelButton2StyleSubscription.unsubscribe();
         balanceSubscription.unsubscribe();
     }
 
@@ -1294,7 +1290,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 Res.get("shared.distanceInPercent"));
         percentagePriceDescription = priceAsPercentageInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, percentagePriceDescription);
+        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, percentagePriceDescription, "small-icon-label");
 
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
@@ -1367,7 +1363,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, "");
         priceDescriptionLabel = priceInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel);
+        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel, "small-icon-label");
 
         editOfferElements.add(priceDescriptionLabel);
         fixedPriceBox = priceInputBoxTuple.second;

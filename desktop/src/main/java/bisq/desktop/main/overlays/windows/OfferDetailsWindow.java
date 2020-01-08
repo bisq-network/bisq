@@ -385,7 +385,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         Button cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
-        cancelButton.setId("cancel-button");
         cancelButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(Runnable::run);
             hide();
