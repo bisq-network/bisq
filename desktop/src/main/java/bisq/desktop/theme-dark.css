@@ -248,11 +248,17 @@
 .scroll-bar:vertical .thumb:hover {
     -fx-background-color: -bs-color-gray-5;
 }
+
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
     -fx-background-color: -bs-color-gray-4;
 }
+
 .scroll-bar:vertical:focused,
 .scroll-bar:horizontal:focused {
     -fx-background-color: transparent, -bs-color-gray-4, -bs-color-gray-4;
+}
+
+.small-icon-label {
+    -fx-fill: -bs-text-color;
 }
