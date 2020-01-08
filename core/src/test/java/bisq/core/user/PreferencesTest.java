@@ -17,6 +17,7 @@
 
 package bisq.core.user;
 
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
@@ -58,8 +59,10 @@ public class PreferencesTest {
         Res.setBaseCurrencyName("Bitcoin");
 
         storage = mock(Storage.class);
+        Config config = new Config();
+        LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(config.getBaseCurrencyNetworkParameters().getPort());
         preferences = new Preferences(
-                storage, new Config(), null, null, Config.DEFAULT_FULL_DAO_NODE,
+                storage, config, localBitcoinNode, null, null, Config.DEFAULT_FULL_DAO_NODE,
                 null, null, Config.UNSPECIFIED_PORT);
     }
 

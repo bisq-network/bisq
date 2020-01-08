@@ -41,6 +41,7 @@ import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.BisqSetup;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.common.config.Config;
@@ -118,6 +119,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @Getter
     private final PriceFeedService priceFeedService;
     private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
     private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
@@ -158,6 +160,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          FeeService feeService,
                          PriceFeedService priceFeedService,
                          Config config,
+                         LocalBitcoinNode localBitcoinNode,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
                          CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
@@ -179,6 +182,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.tacWindow = tacWindow;
         this.priceFeedService = priceFeedService;
         this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
@@ -436,7 +440,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (walletsSetup.numPeersProperty().get() == 0) {
-                        if (config.isLocalBitcoinNodeIsRunning())
+                        if (localBitcoinNode.isDetected())
                             getWalletServiceErrorMsg().set(Res.get("mainView.networkWarning.localhostBitcoinLost", Res.getBaseCurrencyName().toLowerCase()));
                         else
                             getWalletServiceErrorMsg().set(Res.get("mainView.networkWarning.allConnectionsLost", Res.getBaseCurrencyName().toLowerCase()));

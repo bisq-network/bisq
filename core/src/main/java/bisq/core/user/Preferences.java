@@ -17,6 +17,7 @@
 
 package bisq.core.user;
 
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
@@ -133,6 +134,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private final Storage<PreferencesPayload> storage;
     private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
     private final String btcNodesFromOptions, referralIdFromOptions,
             rpcUserFromOptions, rpcPwFromOptions;
     private final int blockNotifyPortFromOptions;
@@ -150,6 +152,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Inject
     public Preferences(Storage<PreferencesPayload> storage,
                        Config config,
+                       LocalBitcoinNode localBitcoinNode,
                        @Named(Config.BTC_NODES) String btcNodesFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
                        @Named(Config.FULL_DAO_NODE) boolean fullDaoNode,
@@ -159,6 +162,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         this.storage = storage;
         this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.btcNodesFromOptions = btcNodesFromOptions;
         this.referralIdFromOptions = referralId;
         this.fullDaoNodeFromOptions = fullDaoNode;
@@ -736,7 +740,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // unless the useTorForBtc parameter is explicitly provided.
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
         if ((!Config.baseCurrencyNetwork().isMainnet()
-                || config.isLocalBitcoinNodeIsRunning())
+                || localBitcoinNode.isDetected())
                 && !config.isUseTorForBtcOptionSetExplicitly())
             return false;
         else

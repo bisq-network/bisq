@@ -168,9 +168,6 @@ public class Config {
 
     private final OptionParser parser = new OptionParser();
 
-    // legacy mutable property TODO: move to new LocalBitcoinNode class
-    private boolean localBitcoinNodeIsRunning = false;
-
     public Config(String... args) {
         this(tempAppName(), tempUserDataDir(), args);
     }
@@ -852,14 +849,6 @@ public class Config {
 
     public String getLogLevel() {
         return logLevel;
-    }
-
-    public boolean isLocalBitcoinNodeIsRunning() {
-        return localBitcoinNodeIsRunning;
-    }
-
-    public void setLocalBitcoinNodeIsRunning(boolean value) {
-        this.localBitcoinNodeIsRunning = value;
     }
 
     public String getReferralId() {

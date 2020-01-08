@@ -18,6 +18,7 @@
 package bisq.core.btc.setup;
 
 import bisq.core.btc.exceptions.InvalidHostException;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
@@ -118,6 +119,7 @@ public class WalletsSetup {
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
     private final BtcNodes btcNodes;
     private final String btcWalletFileName;
     private final int numConnectionsForBtc;
@@ -145,6 +147,7 @@ public class WalletsSetup {
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
                         Config config,
+                        LocalBitcoinNode localBitcoinNode,
                         BtcNodes btcNodes,
                         @Named(Config.USER_AGENT) String userAgent,
                         @Named(Config.WALLET_DIR) File walletDir,
@@ -156,6 +159,7 @@ public class WalletsSetup {
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.btcNodes = btcNodes;
         this.numConnectionsForBtc = numConnectionsForBtc;
         this.useAllProvidedNodes = useAllProvidedNodes;
@@ -196,6 +200,7 @@ public class WalletsSetup {
                 socks5Proxy,
                 walletDir,
                 config,
+                localBitcoinNode,
                 userAgent,
                 numConnectionsForBtc,
                 btcWalletFileName,
@@ -273,7 +278,7 @@ public class WalletsSetup {
                     return;
                 }
             }
-        } else if (config.isLocalBitcoinNodeIsRunning()) {
+        } else if (localBitcoinNode.isDetected()) {
             walletConfig.setMinBroadcastConnections(1);
             walletConfig.setPeerNodesForLocalHost();
         } else {

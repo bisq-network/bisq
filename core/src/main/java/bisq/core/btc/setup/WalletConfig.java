@@ -17,6 +17,7 @@
 
 package bisq.core.btc.setup;
 
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
@@ -115,6 +116,7 @@ public class WalletConfig extends AbstractIdleService {
     private final Socks5Proxy socks5Proxy;
     private final BisqWalletFactory walletFactory;
     private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
     private final String userAgent;
     private int numConnectionsForBtc;
 
@@ -152,12 +154,14 @@ public class WalletConfig extends AbstractIdleService {
                         Socks5Proxy socks5Proxy,
                         File directory,
                         Config config,
+                        LocalBitcoinNode localBitcoinNode,
                         String userAgent,
                         int numConnectionsForBtc,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
         this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.userAgent = userAgent;
         this.numConnectionsForBtc = numConnectionsForBtc;
         this.context = new Context(params);
@@ -239,7 +243,7 @@ public class WalletConfig extends AbstractIdleService {
         // if local btc node is not synced with our dao testnet master node.
         if (Config.baseCurrencyNetwork().isDaoRegTest() ||
                 Config.baseCurrencyNetwork().isDaoTestNet() ||
-                !config.isLocalBitcoinNodeIsRunning())
+                !localBitcoinNode.isDetected())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;

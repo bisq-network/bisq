@@ -47,6 +47,7 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 import java.io.File;
 
 import static bisq.common.config.Config.*;
+import static bisq.core.btc.nodes.LocalBitcoinNode.LOCAL_BITCOIN_NODE_PORT;
 import static com.google.inject.name.Names.named;
 
 public class CoreModule extends AppModule {
@@ -76,6 +77,9 @@ public class CoreModule extends AppModule {
         bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.isUseDevPrivilegeKeys());
         bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.isUseDevMode());
         bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.getReferralId());
+
+        bindConstant().annotatedWith(named(LOCAL_BITCOIN_NODE_PORT))
+                .to(config.getBaseCurrencyNetworkParameters().getPort());
 
 
         // ordering is used for shut down sequence

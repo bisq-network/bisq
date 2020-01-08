@@ -26,6 +26,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
@@ -90,8 +91,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import com.google.common.net.InetAddresses;
-
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
@@ -105,9 +104,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 
 import org.spongycastle.crypto.params.KeyParameter;
-
-import java.net.InetSocketAddress;
-import java.net.Socket;
 
 import java.io.IOException;
 
@@ -130,6 +126,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Singleton
 public class BisqSetup {
+
     public interface BisqSetupListener {
         default void onInitP2pNetwork() {
             log.info("onInitP2pNetwork");
@@ -192,6 +189,8 @@ public class BisqSetup {
     private final TorSetup torSetup;
     private final TradeLimits tradeLimits;
     private final CoinFormatter formatter;
+    private final LocalBitcoinNode localBitcoinNode;
+
     @Setter
     @Nullable
     private Consumer<Runnable> displayTacHandler;
@@ -281,8 +280,8 @@ public class BisqSetup {
                      AssetService assetService,
                      TorSetup torSetup,
                      TradeLimits tradeLimits,
-                     @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
-
+                     @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                     LocalBitcoinNode localBitcoinNode) {
 
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;
@@ -329,6 +328,7 @@ public class BisqSetup {
         this.torSetup = torSetup;
         this.tradeLimits = tradeLimits;
         this.formatter = formatter;
+        this.localBitcoinNode = localBitcoinNode;
     }
 
 
@@ -348,18 +348,18 @@ public class BisqSetup {
     }
 
     private void step2() {
-        checkIfLocalHostNodeIsRunning();
+        detectLocalBitcoinNode(this::step3);
     }
 
     private void step3() {
         torSetup.cleanupTorFiles();
-        readMapsFromResources();
+        readMapsFromResources(this::step4);
         checkCryptoSetup();
         checkForCorrectOSArchitecture();
     }
 
     private void step4() {
-        startP2pNetworkAndWallet();
+        startP2pNetworkAndWallet(this::step5);
     }
 
     private void step5() {
@@ -482,33 +482,20 @@ public class BisqSetup {
         }
     }
 
-    private void checkIfLocalHostNodeIsRunning() {
+    private void detectLocalBitcoinNode(Runnable nextStep) {
         BaseCurrencyNetwork baseCurrencyNetwork = config.getBaseCurrencyNetwork();
-        // For DAO testnet we ignore local btc node
-        if (baseCurrencyNetwork.isDaoRegTest() || baseCurrencyNetwork.isDaoTestNet() ||
-                config.isIgnoreLocalBtcNode()) {
-            step3();
-        } else {
-            new Thread(() -> {
-                try (Socket socket = new Socket()) {
-                    socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
-                            baseCurrencyNetwork.getParameters().getPort()), 5000);
-                    log.info("Localhost Bitcoin node detected.");
-                    UserThread.execute(() -> {
-                        config.setLocalBitcoinNodeIsRunning(true);
-                        step3();
-                    });
-                } catch (Throwable e) {
-                    UserThread.execute(BisqSetup.this::step3);
-                }
-            }, "checkIfLocalHostNodeIsRunningThread").start();
+        if (config.isIgnoreLocalBtcNode() || baseCurrencyNetwork.isDaoRegTest() || baseCurrencyNetwork.isDaoTestNet()) {
+            nextStep.run();
+            return;
         }
+
+        localBitcoinNode.detectAndRun(nextStep);
     }
 
-    private void readMapsFromResources() {
+    private void readMapsFromResources(Runnable nextStep) {
         SetupUtils.readFromResources(p2PService.getP2PDataStorage(), config).addListener((observable, oldValue, newValue) -> {
             if (newValue)
-                step4();
+                nextStep.run();
         });
     }
 
@@ -542,7 +529,7 @@ public class BisqSetup {
         }, "checkCryptoThread").start();
     }
 
-    private void startP2pNetworkAndWallet() {
+    private void startP2pNetworkAndWallet(Runnable nextStep) {
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             // TODO that seems to be called too often if Tor takes longer to start up...
             if (newValue && !p2pNetworkReady.get() && displayTorNetworkSettingsHandler != null)
@@ -572,7 +559,7 @@ public class BisqSetup {
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
-        if (!preferences.getUseTorForBitcoinJ() || config.isLocalBitcoinNodeIsRunning()) {
+        if (!preferences.getUseTorForBitcoinJ() || localBitcoinNode.isDetected()) {
             initWallet();
         }
 
@@ -588,7 +575,7 @@ public class BisqSetup {
                 walletInitialized.removeListener(walletInitializedListener);
                 if (displayTorNetworkSettingsHandler != null)
                     displayTorNetworkSettingsHandler.accept(false);
-                step5();
+                nextStep.run();
             }
         });
     }
@@ -875,7 +862,7 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, config.isLocalBitcoinNodeIsRunning());
+        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.isDetected());
     }
 
     private void maybeShowAccountSigningStateInfo() {
