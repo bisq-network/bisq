@@ -6,7 +6,21 @@ After=bitcoin.service
 
 [Service]
 EnvironmentFile=/etc/default/bisq-seednode.env
-ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode --appName=${BISQ_APP_NAME} --nodePort=${BISQ_NODE_PORT} --userDataDir=${BISQ_HOME} --maxConnections=${BISQ_MAX_CONNECTIONS} --maxMemory=${BISQ_MAX_MEMORY} --fullDaoNode=true --rpcUser=${BITCOIN_RPC_USERNAME} --rpcPassword=${BITCOIN_RPC_PASSWORD} --rpcPort=${BITCOIN_RPC_PORT} --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN}
+
+ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
+          --fullDaoNode=true \
+          --userDataDir=${BISQ_HOME} \
+          --appName=${BISQ_APP_NAME} \
+          --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
+          --maxConnections=${BISQ_MAX_CONNECTIONS} \
+          --maxMemory=${BISQ_MAX_MEMORY} \
+          --rpcUser=${BITCOIN_RPC_USERNAME} \
+          --rpcPassword=${BITCOIN_RPC_PASSWORD} \
+          --rpcPort=${BITCOIN_RPC_PORT} \
+          --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} \
+          --nodePort=${BISQ_NODE_PORT} \
+          --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
+
 ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
 
