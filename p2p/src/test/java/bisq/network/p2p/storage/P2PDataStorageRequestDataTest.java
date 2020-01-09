@@ -94,7 +94,7 @@ public class P2PDataStorageRequestDataTest {
     // TESTCASE: P2PDataStorage with no entries returns an empty PreliminaryGetDataRequest
     @Test
     public void buildPreliminaryGetDataRequest_EmptyP2PDataStore() {
-        PreliminaryGetDataRequest getDataRequest = this.testState.mockedStorage.buildPreliminaryGetDataRequest(1);
+        PreliminaryGetDataRequest getDataRequest = this.testState.mockedStorage.buildPreliminaryGetDataRequest(1, false);
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSupportedCapabilities(), Capabilities.app);
@@ -105,7 +105,7 @@ public class P2PDataStorageRequestDataTest {
     @Test
     public void buildGetUpdatedDataRequest_EmptyP2PDataStore() {
         GetUpdatedDataRequest getDataRequest =
-                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1);
+                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1, false);
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSenderNodeAddress(), this.localNodeAddress);
@@ -127,7 +127,7 @@ public class P2PDataStorageRequestDataTest {
         this.testState.mockedStorage.addProtectedStorageEntry(toAdd3, this.localNodeAddress, null);
         this.testState.mockedStorage.addProtectedStorageEntry(toAdd4, this.localNodeAddress, null);
 
-        PreliminaryGetDataRequest getDataRequest = this.testState.mockedStorage.buildPreliminaryGetDataRequest(1);
+        PreliminaryGetDataRequest getDataRequest = this.testState.mockedStorage.buildPreliminaryGetDataRequest(1, false);
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSupportedCapabilities(), Capabilities.app);
@@ -156,7 +156,7 @@ public class P2PDataStorageRequestDataTest {
         this.testState.mockedStorage.addProtectedStorageEntry(toAdd4, this.localNodeAddress, null);
 
         GetUpdatedDataRequest getDataRequest =
-                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1);
+                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1, false);
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSenderNodeAddress(), this.localNodeAddress);

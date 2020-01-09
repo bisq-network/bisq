@@ -344,6 +344,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 log.trace("requestDataHandshake with outbound connection failed.\n\tnodeAddress={}\n\t" +
                                         "ErrorMessage={}", nodeAddress, errorMessage);
 
+                                onIncomplete();
+                            }
+
+                            @Override
+                            public void onIncomplete() {
+                                // TODO: Not obvious that this is the best way to retry in the event of incomplete data.
                                 peerManager.handleConnectionFault(nodeAddress);
                                 handlerMap.remove(nodeAddress);
 

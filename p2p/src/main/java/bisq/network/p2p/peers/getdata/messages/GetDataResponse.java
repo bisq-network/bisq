@@ -49,6 +49,9 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     // We added that in v 0.6 and the fromProto code will create an empty HashSet if it doesn't exist
     private final Set<PersistableNetworkPayload> persistableNetworkPayloadSet;
 
+    private final Set<Long> unrecognizedShortKeys;
+    private final int estimatedRemainingDeltaSize;
+
     private final int requestNonce;
     private final boolean isGetUpdatedDataResponse;
     private final Capabilities supportedCapabilities;
@@ -56,12 +59,16 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     public GetDataResponse(@NotNull Set<ProtectedStorageEntry> dataSet,
                            @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                            int requestNonce,
-                           boolean isGetUpdatedDataResponse) {
+                           boolean isGetUpdatedDataResponse,
+                           @NotNull Set<Long> unrecognizedShortKeys,
+                           int estimatedRemainingDeltaSize) {
         this(dataSet,
                 persistableNetworkPayloadSet,
                 requestNonce,
                 isGetUpdatedDataResponse,
                 Capabilities.app,
+                unrecognizedShortKeys,
+                estimatedRemainingDeltaSize,
                 Version.getP2PMessageVersion());
     }
 
@@ -74,6 +81,8 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                             int requestNonce,
                             boolean isGetUpdatedDataResponse,
                             @NotNull Capabilities supportedCapabilities,
+                            @NotNull Set<Long> unrecognizedShortKeys,
+                            int estimatedRemainingDeltaSize,
                             int messageVersion) {
         super(messageVersion);
 
@@ -82,6 +91,8 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
         this.requestNonce = requestNonce;
         this.isGetUpdatedDataResponse = isGetUpdatedDataResponse;
         this.supportedCapabilities = supportedCapabilities;
+        this.unrecognizedShortKeys = unrecognizedShortKeys;
+        this.estimatedRemainingDeltaSize = estimatedRemainingDeltaSize;
     }
 
     @Override
@@ -102,7 +113,9 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
-                .addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities));
+                .addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities))
+                .addAllUnrecognizedShortKeys(unrecognizedShortKeys)
+                .setEstimatedRemainingDeltaSize(estimatedRemainingDeltaSize);
 
         protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetDataResponse(builder)
@@ -115,21 +128,21 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                                             NetworkProtoResolver resolver,
                                             int messageVersion) {
         log.info("Received a GetDataResponse with {} kB", proto.getSerializedSize() / 1000d);
-        Set<ProtectedStorageEntry> dataSet = new HashSet<>(
-                proto.getDataSetList().stream()
-                        .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
-                        .collect(Collectors.toSet()));
+        Set<ProtectedStorageEntry> dataSet = proto.getDataSetList().stream()
+                .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
+                .collect(Collectors.toCollection(HashSet::new));
 
-        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = new HashSet<>(
-                proto.getPersistableNetworkPayloadItemsList().stream()
-                                .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
-                                .collect(Collectors.toSet()));
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = proto.getPersistableNetworkPayloadItemsList().stream()
+                .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
+                .collect(Collectors.toCollection(HashSet::new));
 
         return new GetDataResponse(dataSet,
                 persistableNetworkPayloadSet,
                 proto.getRequestNonce(),
                 proto.getIsGetUpdatedDataResponse(),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
+                new HashSet<>(proto.getUnrecognizedShortKeysList()),
+                proto.getEstimatedRemainingDeltaSize(),
                 messageVersion);
     }
 }

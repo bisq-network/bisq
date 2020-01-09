@@ -181,7 +181,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         List<NetworkEnvelope> result = new ArrayList<>();
 
         Random random = new Random();
-        result.add(new PreliminaryGetDataRequest(random.nextInt(), hashes));
+        result.add(new PreliminaryGetDataRequest(random.nextInt(), hashes, null));
 
         return result;
     }

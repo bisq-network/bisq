@@ -94,6 +94,7 @@ message PreliminaryGetDataRequest {
     int32 nonce = 21;
     repeated bytes excluded_keys = 2;
     repeated int32 supported_capabilities = 3;
+    KeySetDelta excluded_short_keys = 4;
 }
 
 message GetDataResponse {
@@ -102,12 +103,23 @@ message GetDataResponse {
     repeated StorageEntryWrapper data_set = 3;
     repeated int32 supported_capabilities = 4;
     repeated PersistableNetworkPayload persistable_network_payload_items = 5;
+    repeated sfixed64 unrecognized_short_keys = 6;
+    int32 estimated_remaining_delta_size = 7;
 }
 
 message GetUpdatedDataRequest {
     NodeAddress sender_node_address = 1;
     int32 nonce = 2;
     repeated bytes excluded_keys = 3;
+    KeySetDelta excluded_short_keys = 4;
+}
+
+message KeySetDelta {
+    bytes salt = 1;
+    sfixed64 short_key_lower_bound = 2;
+    sfixed64 short_key_upper_bound = 3;
+    repeated int32 size_exponents = 4;
+    repeated sfixed64 concatenated_tables = 5;
 }
 
 // peers

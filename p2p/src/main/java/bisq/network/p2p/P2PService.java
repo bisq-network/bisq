@@ -622,7 +622,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         Set<Peer> allPeers = peerManager.getPersistedPeers();
         allPeers.addAll(peerManager.getReportedPeers());
-        allPeers.addAll(peerManager.getLivePeers(null));
+        allPeers.addAll(peerManager.getLivePeers());
         // We might have multiple entries of the same peer without the supportedCapabilities field set if we received
         // it from old versions, so we filter those.
         Optional<Peer> optionalPeer = allPeers.stream()

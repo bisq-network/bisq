@@ -154,7 +154,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         List<NetworkEnvelope> result = new ArrayList<>();
 
         Random random = new Random();
-        result.add(new PreliminaryGetDataRequest(random.nextInt(), hashes));
+        result.add(new PreliminaryGetDataRequest(random.nextInt(), hashes, null));
 
         result.add(new GetDaoStateHashesRequest(daostateheight, random.nextInt()));
 

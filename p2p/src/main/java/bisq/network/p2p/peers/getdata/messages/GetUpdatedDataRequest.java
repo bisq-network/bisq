@@ -19,6 +19,7 @@ package bisq.network.p2p.peers.getdata.messages;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendersNodeAddressMessage;
+import bisq.network.p2p.peers.getdata.KeySetDelta;
 
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
@@ -27,6 +28,7 @@ import protobuf.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,10 +46,12 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
 
     public GetUpdatedDataRequest(NodeAddress senderNodeAddress,
                                  int nonce,
-                                 Set<byte[]> excludedKeys) {
+                                 Set<byte[]> excludedKeys,
+                                 KeySetDelta excludedShortKeys) {
         this(senderNodeAddress,
                 nonce,
                 excludedKeys,
+                excludedShortKeys,
                 Version.getP2PMessageVersion());
     }
 
@@ -59,10 +63,12 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
     private GetUpdatedDataRequest(NodeAddress senderNodeAddress,
                                   int nonce,
                                   Set<byte[]> excludedKeys,
+                                  KeySetDelta excludedShortKeys,
                                   int messageVersion) {
         super(messageVersion,
                 nonce,
-                excludedKeys);
+                excludedKeys,
+                excludedShortKeys);
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetUpdatedDataRequest");
         this.senderNodeAddress = senderNodeAddress;
     }
@@ -76,6 +82,8 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
 
+        Optional.ofNullable(excludedShortKeys).ifPresent(e -> builder.setExcludedShortKeys(e.toProtoMessage()));
+
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
                 .build();
@@ -88,6 +96,7 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
+                KeySetDelta.fromProto(proto.getExcludedShortKeys()),
                 messageVersion);
     }
 }

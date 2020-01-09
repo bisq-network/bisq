@@ -39,7 +39,8 @@ public class CoreNetworkCapabilities {
                 Capability.MEDIATION,
                 Capability.SIGNED_ACCOUNT_AGE_WITNESS,
                 Capability.REFUND_AGENT,
-                Capability.TRADE_STATISTICS_HASH_UPDATE
+                Capability.TRADE_STATISTICS_HASH_UPDATE,
+                Capability.GET_DATA_KEY_SET_DELTA
         );
 
         if (config.daoActivated) {

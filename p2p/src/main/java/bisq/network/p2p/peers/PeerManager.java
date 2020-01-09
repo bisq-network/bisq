@@ -656,14 +656,18 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 .ifPresent(connection -> connection.shutDown(closeConnectionReason));
     }
 
+    public Set<Peer> getLivePeers() {
+        return getLivePeers(null);
+    }
+
     // Delivers the live peers from the last 30 min (MAX_AGE_LIVE_PEERS)
     // We include older peers to avoid risks for network partitioning
     public Set<Peer> getLivePeers(NodeAddress excludedNodeAddress) {
         int oldNumLatestLivePeers = latestLivePeers.size();
-        Set<Peer> currentLivePeers = new HashSet<>(getConnectedReportedPeers().stream()
+        Set<Peer> currentLivePeers = getConnectedReportedPeers().stream()
                 .filter(e -> !isSeedNode(e))
                 .filter(e -> !e.getNodeAddress().equals(excludedNodeAddress))
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toCollection(HashSet::new));
         latestLivePeers.addAll(currentLivePeers);
         long maxAge = new Date().getTime() - MAX_AGE_LIVE_PEERS;
         latestLivePeers = latestLivePeers.stream()

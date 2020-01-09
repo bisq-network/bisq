@@ -71,7 +71,9 @@ public class P2PDataStorageProcessGetDataResponse {
                 new HashSet<>(protectedStorageEntries),
                 new HashSet<>(persistableNetworkPayloads),
                 1,
-                false);
+                false,
+                new HashSet<>(),
+                0);
     }
 
     /**

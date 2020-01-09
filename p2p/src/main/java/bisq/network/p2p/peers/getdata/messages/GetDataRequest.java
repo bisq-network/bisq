@@ -18,6 +18,7 @@
 package bisq.network.p2p.peers.getdata.messages;
 
 import bisq.network.p2p.ExtendedDataSizePermission;
+import bisq.network.p2p.peers.getdata.KeySetDelta;
 
 import bisq.common.proto.network.NetworkEnvelope;
 
@@ -34,12 +35,15 @@ public abstract class GetDataRequest extends NetworkEnvelope implements Extended
     protected final int nonce;
     // Keys for ProtectedStorageEntry items to be excluded from the request because the peer has them already
     protected final Set<byte[]> excludedKeys;
+    protected final KeySetDelta excludedShortKeys;
 
     public GetDataRequest(int messageVersion,
                           int nonce,
-                          Set<byte[]> excludedKeys) {
+                          Set<byte[]> excludedKeys,
+                          KeySetDelta excludedShortKeys) {
         super(messageVersion);
         this.nonce = nonce;
         this.excludedKeys = excludedKeys;
+        this.excludedShortKeys = excludedShortKeys;
     }
 }

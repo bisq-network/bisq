@@ -25,6 +25,7 @@ import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
+import bisq.network.p2p.peers.getdata.KeySetDelta;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
@@ -74,11 +75,15 @@ import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.math.DoubleMath;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
 
 import java.time.Clock;
+
+import java.math.RoundingMode;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -89,6 +94,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -96,7 +102,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -117,6 +126,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public static final int CHECK_TTL_INTERVAL_SEC = 60;
 
     private boolean initialRequestApplied = false;
+    private int estimatedOutOfSyncKeySetSize = 2000;
 
     private final Broadcaster broadcaster;
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
@@ -194,37 +204,50 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * Returns a PreliminaryGetDataRequest that can be sent to a peer node to request missing Payload data.
      */
-    public PreliminaryGetDataRequest buildPreliminaryGetDataRequest(int nonce) {
-        return new PreliminaryGetDataRequest(nonce, this.getKnownPayloadHashes());
+    public PreliminaryGetDataRequest buildPreliminaryGetDataRequest(int nonce, boolean useKeySetDelta) {
+        if (useKeySetDelta) {
+            return new PreliminaryGetDataRequest(nonce, Set.of(), getKnownPayloadShortKeys());
+        }
+        return new PreliminaryGetDataRequest(nonce, this.getKnownPayloadHashes(), null);
     }
 
     /**
      * Returns a GetUpdatedDataRequest that can be sent to a peer node to request missing Payload data.
      */
-    public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
-        return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
+    public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce, boolean useKeySetDelta) {
+        if (useKeySetDelta) {
+            return new GetUpdatedDataRequest(senderNodeAddress, nonce, Set.of(), getKnownPayloadShortKeys());
+        }
+        return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes(), null);
+    }
+
+    private Stream<ByteArray> getKnownPayloadHashStream() {
+        // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
+        // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
+        // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
+        // miss that event if we do not load the full set or use some delta handling.
+        Stream<ByteArray> excludedKeys = appendOnlyDataStoreService.getMap().keySet().parallelStream();
+
+        Stream<ByteArray> excludedKeysFromPersistedEntryMap = map.keySet().parallelStream();
+
+        return Stream.concat(excludedKeys, excludedKeysFromPersistedEntryMap);
     }
 
     /**
      * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
      */
     private Set<byte[]> getKnownPayloadHashes() {
-        // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
-        // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
-        // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
-        // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys = this.appendOnlyDataStoreService.getMap().keySet().stream()
+        return getKnownPayloadHashStream()
                 .map(e -> e.bytes)
                 .collect(Collectors.toSet());
+    }
 
-        Set<byte[]> excludedKeysFromPersistedEntryMap = this.map.keySet()
-                .stream()
-                .map(e -> e.bytes)
-                .collect(Collectors.toSet());
+    private KeySetDelta getKnownPayloadShortKeys() {
+        return getKnownPayloadShortKeys(new KeySetDelta.DeltaParams(estimatedOutOfSyncKeySetSize * 5L / 4));
+    }
 
-        excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
-
-        return excludedKeys;
+    private KeySetDelta getKnownPayloadShortKeys(KeySetDelta.DeltaParams params) {
+        return getKnownPayloadHashStream().collect(KeySetDelta.toKeySetDelta(params));
     }
 
     /**
@@ -234,23 +257,22 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     static private <T extends NetworkPayload> Set<T> filterKnownHashes(
             Map<ByteArray, T> toFilter,
             Function<T, ? extends NetworkPayload> objToPayload,
-            Set<ByteArray> knownHashes,
+            Predicate<ByteArray> isIncluded,
             Capabilities peerCapabilities,
             int maxEntries,
-            AtomicBoolean outTruncated) {
+            AtomicInteger outTruncatedCount) {
 
         AtomicInteger limit = new AtomicInteger(maxEntries);
 
-        Set<T> filteredResults = toFilter.entrySet().stream()
-                .filter(e -> !knownHashes.contains(e.getKey()))
+        Set<T> filteredResults = toFilter.entrySet().parallelStream()
+                .filter(e -> isIncluded.test(e.getKey()))
                 .filter(e -> limit.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
                 .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
                         objToPayload.apply(networkPayload)))
                 .collect(Collectors.toSet());
 
-        if (limit.get() < 0)
-            outTruncated.set(true);
+        outTruncatedCount.set(Math.max(-limit.get(), 0));
 
         return filteredResults;
     }
@@ -265,32 +287,79 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             AtomicBoolean outProtectedStorageEntryOutputTruncated,
             Capabilities peerCapabilities) {
 
-        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
-                P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+        Predicate<ByteArray> isIncluded;
+        Set<Long> remainingShortKeys;
+        double filteredFraction;
+        double estimatedRemaining;
+
+        KeySetDelta delta = getDataRequest.getExcludedShortKeys();
+        if (delta != null) {
+            delta.xorAll(getKnownPayloadShortKeys(delta.getParams()));
+
+            Optional<Set<Long>> decodedShortKeys = delta.decode();
+            if (!decodedShortKeys.isPresent()) {
+                return buildDecodeFailureResponse(getDataRequest, delta);
+            }
+
+            ToLongFunction<ByteArray> hashFunction = KeySetDelta.hashFunction(delta.getParams().getSalt());
+
+            remainingShortKeys = Sets.newConcurrentHashSet(decodedShortKeys.get());
+            isIncluded = key -> remainingShortKeys.remove(hashFunction.applyAsLong(key));
+            filteredFraction = 0x1.0p-64 + (delta.getParams().getUpperBound() * 0x1.0p-64 - delta.getParams().getLowerBound() * 0x1.0p-64);
+            estimatedRemaining = decodedShortKeys.get().size() * (1 / filteredFraction - 1);
+        } else {
+            Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
+                    P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+
+            remainingShortKeys = Set.of();
+            isIncluded = key -> !excludedKeysAsByteArray.contains(key);
+            filteredFraction = 1.0;
+            estimatedRemaining = 0.0;
+        }
+
+        AtomicInteger persistableTruncatedCount = new AtomicInteger();
+        AtomicInteger protectedTruncatedCount = new AtomicInteger();
 
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
                         this.appendOnlyDataStoreService.getMap(),
                         Function.identity(),
-                        excludedKeysAsByteArray,
+                        isIncluded,
                         peerCapabilities,
                         maxEntriesPerType,
-                        outPersistableNetworkPayloadOutputTruncated);
+                        persistableTruncatedCount);
 
         Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
                 filterKnownHashes(
                         this.map,
                         ProtectedStorageEntry::getProtectedStoragePayload,
-                        excludedKeysAsByteArray,
+                        isIncluded,
                         peerCapabilities,
                         maxEntriesPerType,
-                        outProtectedStorageEntryOutputTruncated);
+                        protectedTruncatedCount);
+
+        outPersistableNetworkPayloadOutputTruncated.set(persistableTruncatedCount.get() > 0);
+        outProtectedStorageEntryOutputTruncated.set(protectedTruncatedCount.get() > 0);
+
+        estimatedRemaining += (persistableTruncatedCount.get() + protectedTruncatedCount.get()) / filteredFraction;
 
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
                 filteredPersistableNetworkPayloads,
                 getDataRequest.getNonce(),
-                getDataRequest instanceof GetUpdatedDataRequest);
+                getDataRequest instanceof GetUpdatedDataRequest,
+                remainingShortKeys,
+                DoubleMath.roundToInt(Math.min(estimatedRemaining, Integer.MAX_VALUE), RoundingMode.CEILING));
+    }
+
+    private GetDataResponse buildDecodeFailureResponse(GetDataRequest request, KeySetDelta delta) {
+        return new GetDataResponse(
+                Set.of(),
+                Set.of(),
+                request.getNonce(),
+                request instanceof GetUpdatedDataRequest,
+                Set.of(),
+                DoubleMath.roundToInt(Math.min(delta.estimateUnfilteredDeltaSize(), Integer.MAX_VALUE), RoundingMode.CEILING));
     }
 
     /**
@@ -320,8 +389,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * Processes a GetDataResponse message and updates internal state. Does not broadcast updates to the P2P network
      * or domain listeners.
+     *
+     * @return {@code true} if the response data set is complete, {@code false} if there are still un-synced items
      */
-    public void processGetDataResponse(GetDataResponse getDataResponse, NodeAddress sender) {
+    public boolean processGetDataResponse(GetDataResponse getDataResponse, NodeAddress sender) {
         final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
 
@@ -345,7 +416,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 // We only apply it once from first response
                 if (!initialRequestApplied) {
                     addPersistableNetworkPayloadFromInitialRequest(e);
-
                 }
             } else {
                 // We don't broadcast here as we are only connected to the seed node and would be pointless
@@ -355,10 +425,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("Processing {} persistableNetworkPayloads took {} ms.",
                 persistableNetworkPayloadSet.size(), this.clock.millis() - ts2);
 
+        if ((estimatedOutOfSyncKeySetSize = getDataResponse.getEstimatedRemainingDeltaSize()) > 0) {
+            log.info("Incomplete data in response. Expecting approximately {} more items.", estimatedOutOfSyncKeySetSize);
+            return false;
+        }
+
         // We only process PersistableNetworkPayloads implementing ProcessOncePersistableNetworkPayload once. It can cause performance
         // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
         // startup.
         initialRequestApplied = true;
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -384,10 +460,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Batch processing can cause performance issues, so do all of the removes first, then update the listeners
         // to let them know about the removes.
-        toRemoveList.forEach(toRemoveItem -> {
-            log.debug("We found an expired data entry. We remove the protectedData:\n\t" +
-                    Utilities.toTruncatedString(toRemoveItem.getValue()));
-        });
+        toRemoveList.forEach(toRemoveItem ->
+                log.debug("We found an expired data entry. We remove the protectedData:\n\t" +
+                        Utilities.toTruncatedString(toRemoveItem.getValue())));
         removeFromMapAndDataStore(toRemoveList);
 
         if (sequenceNumberMap.size() > this.maxSequenceNumberMapSizeBeforePurge)

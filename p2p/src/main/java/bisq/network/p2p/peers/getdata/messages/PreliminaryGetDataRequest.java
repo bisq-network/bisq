@@ -19,6 +19,7 @@ package bisq.network.p2p.peers.getdata.messages;
 
 import bisq.network.p2p.AnonymousMessage;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
+import bisq.network.p2p.peers.getdata.KeySetDelta;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
@@ -28,6 +29,7 @@ import protobuf.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,8 +46,9 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     private final Capabilities supportedCapabilities;
 
     public PreliminaryGetDataRequest(int nonce,
-                                     @NotNull Set<byte[]> excludedKeys) {
-        this(nonce, excludedKeys, Capabilities.app, Version.getP2PMessageVersion());
+                                     @NotNull Set<byte[]> excludedKeys,
+                                     KeySetDelta excludedShortKeys) {
+        this(nonce, excludedKeys, Capabilities.app, excludedShortKeys, Version.getP2PMessageVersion());
     }
 
 
@@ -56,8 +59,9 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     private PreliminaryGetDataRequest(int nonce,
                                       @NotNull Set<byte[]> excludedKeys,
                                       @NotNull Capabilities supportedCapabilities,
+                                      KeySetDelta excludedShortKeys,
                                       int messageVersion) {
-        super(messageVersion, nonce, excludedKeys);
+        super(messageVersion, nonce, excludedKeys, excludedShortKeys);
 
         this.supportedCapabilities = supportedCapabilities;
     }
@@ -71,6 +75,8 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
 
+        Optional.ofNullable(excludedShortKeys).ifPresent(e -> builder.setExcludedShortKeys(e.toProtoMessage()));
+
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setPreliminaryGetDataRequest(builder)
                 .build();
@@ -83,6 +89,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
         return new PreliminaryGetDataRequest(proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
+                KeySetDelta.fromProto(proto.getExcludedShortKeys()),
                 messageVersion);
     }
 }

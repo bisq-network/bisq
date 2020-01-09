@@ -25,6 +25,7 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
+import bisq.network.p2p.peers.peerexchange.Peer;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -32,6 +33,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capability;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 
@@ -44,6 +46,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,6 +75,8 @@ class RequestDataHandler implements MessageListener {
 
     public interface Listener {
         void onComplete();
+
+        void onIncomplete();
 
         @SuppressWarnings("UnusedParameters")
         void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
@@ -116,12 +122,18 @@ class RequestDataHandler implements MessageListener {
     void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest) {
         peersNodeAddress = nodeAddress;
         if (!stopped) {
+            boolean useKeySetDelta = Stream.<Supplier<Set<Peer>>>of(
+                    peerManager::getPersistedPeers, peerManager::getReportedPeers, peerManager::getLivePeers)
+                    .flatMap(s -> s.get().stream())
+                    .filter(peer -> peer.getNodeAddress().equals(nodeAddress))
+                    .anyMatch(peer -> peer.getCapabilities().containsAll(Capability.GET_DATA_KEY_SET_DELTA));
+
             GetDataRequest getDataRequest;
 
             if (isPreliminaryDataRequest)
-                getDataRequest = dataStorage.buildPreliminaryGetDataRequest(nonce);
+                getDataRequest = dataStorage.buildPreliminaryGetDataRequest(nonce, useKeySetDelta);
             else
-                getDataRequest = dataStorage.buildGetUpdatedDataRequest(networkNode.getNodeAddress(), nonce);
+                getDataRequest = dataStorage.buildGetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, useKeySetDelta);
 
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -196,11 +208,16 @@ class RequestDataHandler implements MessageListener {
                             return;
                         }
 
-                        dataStorage.processGetDataResponse(getDataResponse,
-                                connection.getPeersNodeAddressOptional().get());
+                        if (dataStorage.processGetDataResponse(getDataResponse,
+                                connection.getPeersNodeAddressOptional().get())) {
 
-                        cleanup();
-                        listener.onComplete();
+                            cleanup();
+                            listener.onComplete();
+                        } else {
+                            log.info("We did not get complete data in the response. Keep retrying until we have everything.");
+                            cleanup();
+                            listener.onIncomplete();
+                        }
                         // firstRequest = false;
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +

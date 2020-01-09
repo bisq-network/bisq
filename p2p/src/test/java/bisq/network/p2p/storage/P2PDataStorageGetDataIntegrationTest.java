@@ -79,7 +79,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         ProtectedStorageEntry onSeedNode = getProtectedStorageEntry();
         seedNode.addProtectedStorageEntry(onSeedNode, null, null);
 
-        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1);
+        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1, false);
 
         GetDataResponse getDataResponse = seedNode.buildGetDataResponse(
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
@@ -109,7 +109,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         clientNodeTestState.simulateRestart();
         clientNode = clientNodeTestState.mockedStorage;
 
-        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1);
+        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1, false);
 
         GetDataResponse getDataResponse = seedNode.buildGetDataResponse(
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
@@ -142,7 +142,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         clientNodeTestState.simulateRestart();
         clientNode = clientNodeTestState.mockedStorage;
 
-        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1);
+        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1, false);
 
         GetDataResponse getDataResponse = seedNode.buildGetDataResponse(
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
@@ -178,7 +178,7 @@ public class P2PDataStorageGetDataIntegrationTest {
         seedNode.remove(getProtectedStorageEntry(
                 ownerKeys.getPublic(), protectedStoragePayload, 2), null);
 
-        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1);
+        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1, false);
 
         GetDataResponse getDataResponse = seedNode.buildGetDataResponse(
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());

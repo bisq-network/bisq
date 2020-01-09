@@ -467,7 +467,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
 
         @Override
         GetDataRequest buildGetDataRequest(int nonce, Set<byte[]> knownKeys) {
-            return new PreliminaryGetDataRequest(nonce, knownKeys);
+            return new PreliminaryGetDataRequest(nonce, knownKeys, null);
         }
     }
 
@@ -475,7 +475,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
 
         @Override
         GetDataRequest buildGetDataRequest(int nonce, Set<byte[]> knownKeys) {
-            return new GetUpdatedDataRequest(new NodeAddress("peer", 10), nonce, knownKeys);
+            return new GetUpdatedDataRequest(new NodeAddress("peer", 10), nonce, knownKeys, null);
         }
     }
 }
