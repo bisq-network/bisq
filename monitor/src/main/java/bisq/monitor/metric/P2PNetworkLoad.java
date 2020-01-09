@@ -126,7 +126,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             // boot up P2P node
             File storageDir = torHiddenServiceDir;
             try {
-                Config config = new Config("bisq-monitor");
+                Config config = new Config();
                 CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = new CorruptedDatabaseFilesHandler();
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());

@@ -34,8 +34,15 @@ import static java.util.stream.Collectors.toList;
 public class Config {
 
     // option name constants typically used for @Named parameter injection
+    public static final String HELP = "help";
     public static final String APP_NAME = "appName";
-    private static final String APP_DATA_DIR = "appDataDir";
+    public static final String APP_DATA_DIR = "appDataDir";
+    public static final String USER_DATA_DIR = "userDataDir";
+    public static final String CONFIG_FILE = "configFile";
+    public static final String MAX_MEMORY = "maxMemory";
+    public static final String BANNED_BTC_NODES = "bannedBtcNodes";
+    public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
+    public static final String BANNED_SEED_NODES = "bannedSeedNodes";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
     public static final String USE_DEV_MODE = "useDevMode";
@@ -55,6 +62,7 @@ public class Config {
     public static final String MAX_CONNECTIONS = "maxConnections";
     public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
+    public static final String USE_TOR_FOR_BTC = "useTorForBtc";
     public static final String TORRC_FILE = "torrcFile";
     public static final String TORRC_OPTIONS = "torrcOptions";
     public static final String TOR_CONTROL_PORT = "torControlPort";
@@ -62,7 +70,12 @@ public class Config {
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
+    public static final String MSG_THROTTLE_PER_SEC = "msgThrottlePerSec";
+    public static final String MSG_THROTTLE_PER_10_SEC = "msgThrottlePer10Sec";
+    public static final String SEND_MSG_THROTTLE_TRIGGER = "sendMsgThrottleTrigger";
+    public static final String SEND_MSG_THROTTLE_SLEEP = "sendMsgThrottleSleep";
     public static final String IGNORE_LOCAL_BTC_NODE = "ignoreLocalBtcNode";
+    public static final String BITCOIN_REGTEST_HOST = "bitcoinRegtestHost";
     public static final String BTC_NODES = "btcNodes";
     public static final String SOCKS5_DISCOVER_MODE = "socks5DiscoverMode";
     public static final String USE_ALL_PROVIDED_NODES = "useAllProvidedNodes";
@@ -176,18 +189,18 @@ public class Config {
         this.defaultConfigFile = absoluteConfigFile(defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
 
         AbstractOptionSpec<Void> helpOpt =
-                parser.accepts("help", "Print this help text")
+                parser.accepts(HELP, "Print this help text")
                         .forHelp();
 
         ArgumentAcceptingOptionSpec<String> configFileOpt =
-                parser.accepts("configFile", format("Specify configuration file. " +
+                parser.accepts(CONFIG_FILE, format("Specify configuration file. " +
                         "Relative paths will be prefixed by %s location.", APP_DATA_DIR))
                         .withRequiredArg()
                         .ofType(String.class)
                         .defaultsTo(DEFAULT_CONFIG_FILE_NAME);
 
         ArgumentAcceptingOptionSpec<File> userDataDirOpt =
-                parser.accepts("userDataDir", "User data directory")
+                parser.accepts(USER_DATA_DIR, "User data directory")
                         .withRequiredArg()
                         .ofType(File.class)
                         .defaultsTo(this.defaultUserDataDir);
@@ -211,21 +224,21 @@ public class Config {
                         .defaultsTo(9999);
 
         ArgumentAcceptingOptionSpec<String> bannedBtcNodesOpt =
-                parser.accepts("bannedBtcNodes", "List Bitcoin nodes to ban")
+                parser.accepts(BANNED_BTC_NODES, "List Bitcoin nodes to ban")
                         .withRequiredArg()
                         .ofType(String.class)
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
 
         ArgumentAcceptingOptionSpec<String> bannedPriceRelayNodesOpt =
-                parser.accepts("bannedPriceRelayNodes", "List Bisq price nodes to ban")
+                parser.accepts(BANNED_PRICE_RELAY_NODES, "List Bisq price nodes to ban")
                         .withRequiredArg()
                         .ofType(String.class)
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
 
         ArgumentAcceptingOptionSpec<String> bannedSeedNodesOpt =
-                parser.accepts("bannedSeedNodes", "List Bisq seed nodes to ban")
+                parser.accepts(BANNED_SEED_NODES, "List Bisq seed nodes to ban")
                         .withRequiredArg()
                         .ofType(String.class)
                         .withValuesSeparatedBy(',')
@@ -247,7 +260,7 @@ public class Config {
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<String> bitcoinRegtestHostOpt =
-                parser.accepts("bitcoinRegtestHost", "Bitcoin Core node when using BTC_REGTEST network")
+                parser.accepts(BITCOIN_REGTEST_HOST, "Bitcoin Core node when using BTC_REGTEST network")
                         .withRequiredArg()
                         .ofType(String.class)
                         .describedAs("host[:port]")
@@ -287,7 +300,7 @@ public class Config {
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Integer> maxMemoryOpt =
-                parser.accepts("maxMemory", "Max. permitted memory (used only by headless versions)")
+                parser.accepts(MAX_MEMORY, "Max. permitted memory (used only by headless versions)")
                         .withRequiredArg()
                         .ofType(int.class)
                         .defaultsTo(1200);
@@ -393,27 +406,27 @@ public class Config {
                 parser.accepts(TOR_STREAM_ISOLATION, "Use stream isolation for Tor [experimental!].");
 
         ArgumentAcceptingOptionSpec<Integer> msgThrottlePerSecOpt =
-                parser.accepts("msgThrottlePerSec", "Message throttle per sec for connection class")
+                parser.accepts(MSG_THROTTLE_PER_SEC, "Message throttle per sec for connection class")
                         .withRequiredArg()
                         .ofType(int.class)
                         // With PERMITTED_MESSAGE_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
                         .defaultsTo(200);
 
         ArgumentAcceptingOptionSpec<Integer> msgThrottlePer10SecOpt =
-                parser.accepts("msgThrottlePer10Sec", "Message throttle per 10 sec for connection class")
+                parser.accepts(MSG_THROTTLE_PER_10_SEC, "Message throttle per 10 sec for connection class")
                         .withRequiredArg()
                         .ofType(int.class)
                         // With PERMITTED_MESSAGE_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
                         .defaultsTo(1000);
 
         ArgumentAcceptingOptionSpec<Integer> sendMsgThrottleTriggerOpt =
-                parser.accepts("sendMsgThrottleTrigger", "Time in ms when we trigger a sleep if 2 messages are sent")
+                parser.accepts(SEND_MSG_THROTTLE_TRIGGER, "Time in ms when we trigger a sleep if 2 messages are sent")
                         .withRequiredArg()
                         .ofType(int.class)
                         .defaultsTo(20); // Time in ms when we trigger a sleep if 2 messages are sent
 
         ArgumentAcceptingOptionSpec<Integer> sendMsgThrottleSleepOpt =
-                parser.accepts("sendMsgThrottleSleep", "Pause in ms to sleep if we get too many messages to send")
+                parser.accepts(SEND_MSG_THROTTLE_SLEEP, "Pause in ms to sleep if we get too many messages to send")
                         .withRequiredArg()
                         .ofType(int.class)
                         .defaultsTo(50); // Pause in ms to sleep if we get too many messages to send
@@ -425,7 +438,7 @@ public class Config {
                         .defaultsTo("");
 
         ArgumentAcceptingOptionSpec<Boolean> useTorForBtcOpt =
-                parser.accepts("useTorForBtc", "If set to true BitcoinJ is routed over tor (socks 5 proxy).")
+                parser.accepts(USE_TOR_FOR_BTC, "If set to true BitcoinJ is routed over tor (socks 5 proxy).")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(false);
@@ -535,7 +548,7 @@ public class Config {
             options.addOptionSet(cliOpts);
 
             File configFile = null;
-            OptionSpec<?>[] disallowedOpts = new OptionSpec<?>[] { helpOpt, configFileOpt };
+            OptionSpec<?>[] disallowedOpts = new OptionSpec<?>[]{helpOpt, configFileOpt};
             final boolean cliHasConfigFileOpt = cliOpts.has(configFileOpt);
             boolean configFileHasBeenProcessed = false;
             if (cliHasConfigFileOpt) {

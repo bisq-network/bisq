@@ -38,7 +38,7 @@ public class DefaultSeedNodeRepositoryTest {
     public void manualSeedNodes() {
         String seed1 = "asdf:8001";
         String seed2 = "fdsa:6001";
-        String seedNodesOption= format("--%s=%s,%s", Config.SEED_NODES, seed1, seed2);
+        String seedNodesOption = format("--%s=%s,%s", Config.SEED_NODES, seed1, seed2);
         DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new Config(seedNodesOption));
         Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
         Assert.assertEquals(2, DUT.getSeedNodeAddresses().size());

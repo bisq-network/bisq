@@ -12,7 +12,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static bisq.common.config.Config.DEFAULT_CONFIG_FILE_NAME;
+import static bisq.common.config.Config.*;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -43,7 +43,7 @@ public class ConfigTests {
 
     @Test
     public void whenAppNameOptionIsSet_thenAppNamePropertyDiffersFromDefaultAppNameProperty() {
-        Config config = new Config("--appName=My-Bisq");
+        Config config = configWithOpts(opt(APP_NAME, "My-Bisq"));
         assertThat(config.getAppName(), equalTo("My-Bisq"));
         assertThat(config.getAppName(), not(equalTo(config.getDefaultAppName())));
     }
@@ -59,7 +59,7 @@ public class ConfigTests {
 
     @Test
     public void whenAppNameOptionIsSet_thenDataDirPropertiesReflectItsValue() {
-        Config config = new Config("--appName=My-Bisq");
+        Config config = configWithOpts(opt(APP_NAME, "My-Bisq"));
         assertThat(config.getAppName(), equalTo("My-Bisq"));
         assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
         assertThat(config.getAppDataDir(), equalTo(new File(config.getUserDataDir(), "My-Bisq")));
@@ -69,7 +69,7 @@ public class ConfigTests {
     @Test
     public void whenAppDataDirOptionIsSet_thenDataDirPropertiesReflectItsValue() throws IOException {
         File appDataDir = Files.createTempDirectory("myapp").toFile();
-        Config config = new Config("--appDataDir=" + appDataDir);
+        Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir));
         assertThat(config.getAppName(), equalTo(config.getDefaultAppName()));
         assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
         assertThat(config.getAppDataDir(), equalTo(appDataDir));
@@ -79,7 +79,7 @@ public class ConfigTests {
     @Test
     public void whenUserDataDirOptionIsSet_thenDataDirPropertiesReflectItsValue() throws IOException {
         File userDataDir = Files.createTempDirectory("myuserdata").toFile();
-        Config config = new Config("--userDataDir=" + userDataDir);
+        Config config = configWithOpts(opt(USER_DATA_DIR, userDataDir));
         assertThat(config.getAppName(), equalTo(config.getDefaultAppName()));
         assertThat(config.getUserDataDir(), equalTo(userDataDir));
         assertThat(config.getAppDataDir(), equalTo(new File(userDataDir, config.getDefaultAppName())));
@@ -89,7 +89,7 @@ public class ConfigTests {
     @Test
     public void whenAppNameAndAppDataDirOptionsAreSet_thenDataDirPropertiesReflectTheirValues() throws IOException {
         File appDataDir = Files.createTempDirectory("myapp").toFile();
-        Config config = new Config("--appName=My-Bisq", "--appDataDir=" + appDataDir);
+        Config config = configWithOpts(opt(APP_NAME, "My-Bisq"), opt(APP_DATA_DIR, appDataDir));
         assertThat(config.getAppName(), equalTo("My-Bisq"));
         assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
         assertThat(config.getAppDataDir(), equalTo(appDataDir));
@@ -100,9 +100,9 @@ public class ConfigTests {
     public void whenOptionIsSetAtCommandLineAndInConfigFile_thenCommandLineValueTakesPrecedence() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
         try (PrintWriter writer = new PrintWriter(configFile)) {
-            writer.println("appName=Bisq-configFileValue");
+            writer.println(new ConfigFileOption(APP_NAME, "Bisq-configFileValue"));
         }
-        Config config = new Config("--appName=Bisq-commandLineValue");
+        Config config = configWithOpts(opt(APP_NAME, "Bisq-commandLineValue"));
         assertThat(config.getAppName(), equalTo("Bisq-commandLineValue"));
     }
 
@@ -110,38 +110,38 @@ public class ConfigTests {
     public void whenUnrecognizedOptionIsSet_thenConfigExceptionIsThrown() {
         exceptionRule.expect(ConfigException.class);
         exceptionRule.expectMessage("problem parsing option 'bogus': bogus is not a recognized option");
-        new Config("--bogus");
+        configWithOpts(opt("bogus"));
     }
 
     @Test
     public void whenOptionFileArgumentDoesNotExist_thenConfigExceptionIsThrown() {
         exceptionRule.expect(ConfigException.class);
         exceptionRule.expectMessage("problem parsing option 'torrcFile': File [/does/not/exist] does not exist");
-        new Config("--torrcFile=/does/not/exist");
+        configWithOpts(opt(TORRC_FILE, "/does/not/exist"));
     }
 
     @Test
     public void whenConfigFileOptionIsSetToNonExistentFile_thenConfigExceptionIsThrown() {
         exceptionRule.expect(ConfigException.class);
         exceptionRule.expectMessage("The specified config file '/no/such/bisq.properties' does not exist");
-        new Config("--configFile=/no/such/bisq.properties");
+        configWithOpts(opt(CONFIG_FILE, "/no/such/bisq.properties"));
     }
 
     @Test
     public void whenConfigFileOptionIsSetInConfigFile_thenConfigExceptionIsThrown() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
         try (PrintWriter writer = new PrintWriter(configFile)) {
-            writer.println("configFile=/tmp/other.bisq.properties");
+            writer.println(new ConfigFileOption(CONFIG_FILE, "/tmp/other.bisq.properties"));
         }
         exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage("The 'configFile' option is disallowed in config files");
-        new Config("--configFile=" + configFile.getAbsolutePath());
+        exceptionRule.expectMessage(format("The '%s' option is disallowed in config files", CONFIG_FILE));
+        configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
     }
 
     @Test
     public void whenConfigFileOptionIsSetToExistingFile_thenConfigFilePropertyReflectsItsValue() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
-        Config config = new Config("--configFile=" + configFile.getAbsolutePath());
+        Config config = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
         assertThat(config.getConfigFile(), equalTo(configFile));
     }
 
@@ -150,7 +150,7 @@ public class ConfigTests {
         File configFile = Files.createTempFile("my-bisq", ".properties").toFile();
         File appDataDir = configFile.getParentFile();
         String relativeConfigFilePath = configFile.getName();
-        Config config = new Config("--appDataDir=" + appDataDir, "--configFile=" + relativeConfigFilePath);
+        Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir), opt(CONFIG_FILE, relativeConfigFilePath));
         assertThat(config.getConfigFile(), equalTo(configFile));
     }
 
@@ -158,9 +158,9 @@ public class ConfigTests {
     public void whenAppNameIsSetInConfigFile_thenDataDirPropertiesReflectItsValue() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
         try (PrintWriter writer = new PrintWriter(configFile)) {
-            writer.println("appName=My-Bisq");
+            writer.println(new ConfigFileOption(APP_NAME, "My-Bisq"));
         }
-        Config config = new Config("--configFile=" + configFile.getAbsolutePath());
+        Config config = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
         assertThat(config.getAppName(), equalTo("My-Bisq"));
         assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
         assertThat(config.getAppDataDir(), equalTo(new File(config.getUserDataDir(), config.getAppName())));
@@ -169,14 +169,14 @@ public class ConfigTests {
 
     @Test
     public void whenBannedBtcNodesOptionIsSet_thenBannedBtcNodesPropertyReturnsItsValue() {
-        Config config = new Config("--bannedBtcNodes=foo.onion:8333,bar.onion:8333");
+        Config config = configWithOpts(opt(BANNED_BTC_NODES, "foo.onion:8333,bar.onion:8333"));
         assertThat(config.getBannedBtcNodes(), contains("foo.onion:8333", "bar.onion:8333"));
     }
 
     @Test
     public void whenHelpOptionIsSet_thenIsHelpRequestedIsTrue() {
         assertFalse(new Config().isHelpRequested());
-        assertTrue(new Config("--help").isHelpRequested());
+        assertTrue(configWithOpts(opt(HELP)).isHelpRequested());
     }
 
     @Test
@@ -215,6 +215,43 @@ public class ConfigTests {
         exceptionRule.expect(ConfigException.class);
         exceptionRule.expectMessage(containsString("Application data directory"));
         exceptionRule.expectMessage(containsString("could not be created"));
-        new Config("--userDataDir=" + aFile);
+        configWithOpts(opt(USER_DATA_DIR, aFile));
+    }
+
+
+    // == TESTING FACILITIES ===========================================================
+
+    static Config configWithOpts(Opt... opts) {
+        String[] args = new String[opts.length];
+        for (int i = 0; i < opts.length; i++)
+            args[i] = opts[i].toString();
+        return new Config(args);
+    }
+
+    static Opt opt(String name) {
+        return new Opt(name);
+    }
+
+    static Opt opt(String name, Object arg) {
+        return new Opt(name, arg.toString());
+    }
+
+    static class Opt {
+        private final String name;
+        private final String arg;
+
+        public Opt(String name) {
+            this(name, null);
+        }
+
+        public Opt(String name, String arg) {
+            this.name = name;
+            this.arg = arg;
+        }
+
+        @Override
+        public String toString() {
+            return format("--%s%s", name, arg != null ? ("=" + arg) : "");
+        }
     }
 }
