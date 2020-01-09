@@ -121,9 +121,10 @@ public class ConfigTests {
     }
 
     @Test
-    public void whenConfigFileOptionIsSetToNonExistentFile_thenConfFilePropertyFallsBackToDefaultValue() {
-        Config config = new Config("--configFile=/tmp/bogus.properties");
-        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), DEFAULT_CONFIG_FILE_NAME)));
+    public void whenConfigFileOptionIsSetToNonExistentFile_thenConfigExceptionIsThrown() {
+        exceptionRule.expect(ConfigException.class);
+        exceptionRule.expectMessage("The specified config file '/no/such/bisq.properties' does not exist");
+        new Config("--configFile=/no/such/bisq.properties");
     }
 
     @Test
@@ -145,9 +146,12 @@ public class ConfigTests {
     }
 
     @Test
-    public void whenConfigFileOptionIsSetToRelativePath_thenThePathIsPrefixedByAppDataDir() {
-        Config config = new Config("--configFile=my-bisq.properties");
-        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), "my-bisq.properties")));
+    public void whenConfigFileOptionIsSetToRelativePath_thenThePathIsPrefixedByAppDataDir() throws IOException {
+        File configFile = Files.createTempFile("my-bisq", ".properties").toFile();
+        File appDataDir = configFile.getParentFile();
+        String relativeConfigFilePath = configFile.getName();
+        Config config = new Config("--appDataDir=" + appDataDir, "--configFile=" + relativeConfigFilePath);
+        assertThat(config.getConfigFile(), equalTo(configFile));
     }
 
     @Test

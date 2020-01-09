@@ -25,9 +25,6 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -35,8 +32,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 public class Config {
-
-    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     // option name constants typically used for @Named parameter injection
     public static final String APP_NAME = "appName";
@@ -649,12 +644,8 @@ public class Config {
 
     private Optional<OptionSet> parseOptionsFrom(File configFile, OptionSpec<?>[] disallowedOpts) {
         if (!configFile.exists()) {
-            // The default config file is optional; return silently if it does not exist.
-            // But if a non-default config file path has been specified and does not exist,
-            // issue a warning first.
             if (!configFile.equals(absoluteConfigFile(appDataDir, DEFAULT_CONFIG_FILE_NAME)))
-                log.warn("The specified config file '{}' does not exist.", configFile);
-
+                throw new ConfigException("The specified config file '%s' does not exist.", configFile);
             return Optional.empty();
         }
 
