@@ -98,12 +98,6 @@ public class ConfigTests {
     }
 
     @Test
-    public void whenConfFileOptionIsSetToNonExistentFile_thenConfFilePropertyFallsBackToDefaultValue() {
-        Config config = new Config("--configFile=/tmp/bogus.properties");
-        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), DEFAULT_CONFIG_FILE_NAME)));
-    }
-
-    @Test
     public void whenOptionIsSetAtCommandLineAndInConfigFile_thenCommandLineValueTakesPrecedence() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
         try (PrintWriter writer = new PrintWriter(configFile)) {
@@ -125,6 +119,12 @@ public class ConfigTests {
         exceptionRule.expect(ConfigException.class);
         exceptionRule.expectMessage("problem parsing option 'torrcFile': File [/does/not/exist] does not exist");
         new Config("--torrcFile=/does/not/exist");
+    }
+
+    @Test
+    public void whenConfigFileOptionIsSetToNonExistentFile_thenConfFilePropertyFallsBackToDefaultValue() {
+        Config config = new Config("--configFile=/tmp/bogus.properties");
+        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
