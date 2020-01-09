@@ -1,7 +1,6 @@
 package bisq.common.config;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -143,6 +142,12 @@ public class ConfigTests {
         File configFile = File.createTempFile("bisq", "properties");
         Config config = new Config("--configFile=" + configFile.getAbsolutePath());
         assertThat(config.getConfigFile(), equalTo(configFile));
+    }
+
+    @Test
+    public void whenConfigFileOptionIsSetToRelativePath_thenThePathIsPrefixedByAppDataDir() {
+        Config config = new Config("--configFile=my-bisq.properties");
+        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), "my-bisq.properties")));
     }
 
     @Test

@@ -25,6 +25,9 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ch.qos.logback.classic.Level;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,6 +35,8 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 public class Config {
+
+    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     // option name constants typically used for @Named parameter injection
     public static final String APP_NAME = "appName";
@@ -172,8 +177,8 @@ public class Config {
     public Config(String defaultAppName, File defaultUserDataDir, String... args) {
         this.defaultAppName = defaultAppName;
         this.defaultUserDataDir = defaultUserDataDir;
-        this.defaultAppDataDir = new File(this.defaultUserDataDir, this.defaultAppName);
-        this.defaultConfigFile = new File(this.defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
+        this.defaultAppDataDir = new File(defaultUserDataDir, defaultAppName);
+        this.defaultConfigFile = absoluteConfigFile(defaultAppDataDir, DEFAULT_CONFIG_FILE_NAME);
 
         AbstractOptionSpec<Void> helpOpt =
                 parser.accepts("help", "Print this help text")
@@ -535,14 +540,17 @@ public class Config {
             options.addOptionSet(cliOpts);
 
             File configFile = null;
+            OptionSpec<?>[] disallowedOpts = new OptionSpec<?>[] { helpOpt, configFileOpt };
             final boolean cliHasConfigFileOpt = cliOpts.has(configFileOpt);
             boolean configFileHasBeenProcessed = false;
             if (cliHasConfigFileOpt) {
                 configFile = new File(cliOpts.valueOf(configFileOpt));
-                Optional<OptionSet> configFileOpts = parseOptionsFrom(configFile, parser, helpOpt, configFileOpt);
-                if (configFileOpts.isPresent()) {
-                    options.addOptionSet(configFileOpts.get());
-                    configFileHasBeenProcessed = true;
+                if (configFile.isAbsolute()) {
+                    Optional<OptionSet> configFileOpts = parseOptionsFrom(configFile, disallowedOpts);
+                    if (configFileOpts.isPresent()) {
+                        options.addOptionSet(configFileOpts.get());
+                        configFileHasBeenProcessed = true;
+                    }
                 }
             }
 
@@ -550,13 +558,13 @@ public class Config {
             this.userDataDir = options.valueOf(userDataDirOpt);
             this.appDataDir = mkAppDataDir(options.has(appDataDirOpt) ?
                     options.valueOf(appDataDirOpt) :
-                    new File(this.userDataDir, this.appName));
+                    new File(userDataDir, appName));
 
             if (!configFileHasBeenProcessed) {
                 configFile = cliHasConfigFileOpt && !configFile.isAbsolute() ?
-                        new File(this.appDataDir, configFile.getPath()) : // TODO: test
-                        new File(this.appDataDir, DEFAULT_CONFIG_FILE_NAME);
-                Optional<OptionSet> configFileOpts = parseOptionsFrom(configFile, parser, helpOpt, configFileOpt);
+                        absoluteConfigFile(appDataDir, configFile.getPath()) :
+                        absoluteConfigFile(appDataDir, DEFAULT_CONFIG_FILE_NAME);
+                Optional<OptionSet> configFileOpts = parseOptionsFrom(configFile, disallowedOpts);
                 configFileOpts.ifPresent(options::addOptionSet);
             }
 
@@ -635,11 +643,22 @@ public class Config {
         BASE_CURRENCY_NETWORK_VALUE = baseCurrencyNetwork;
     }
 
-    private Optional<OptionSet> parseOptionsFrom(File file, OptionParser parser, OptionSpec<?>... disallowedOpts) {
-        if (!file.isAbsolute() || !file.exists())
-            return Optional.empty();
+    private static File absoluteConfigFile(File parentDir, String relativeConfigFilePath) {
+        return new File(parentDir, relativeConfigFilePath);
+    }
 
-        ConfigFileReader configFileReader = new ConfigFileReader(file);
+    private Optional<OptionSet> parseOptionsFrom(File configFile, OptionSpec<?>[] disallowedOpts) {
+        if (!configFile.exists()) {
+            // The default config file is optional; return silently if it does not exist.
+            // But if a non-default config file path has been specified and does not exist,
+            // issue a warning first.
+            if (!configFile.equals(absoluteConfigFile(appDataDir, DEFAULT_CONFIG_FILE_NAME)))
+                log.warn("The specified config file '{}' does not exist.", configFile);
+
+            return Optional.empty();
+        }
+
+        ConfigFileReader configFileReader = new ConfigFileReader(configFile);
         String[] optionLines = configFileReader.getOptionLines().stream()
                 .map(o -> "--" + o) // prepend dashes expected by jopt parser below
                 .collect(toList())
