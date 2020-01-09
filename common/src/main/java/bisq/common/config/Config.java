@@ -48,10 +48,11 @@ public class Config {
     // Option name constants
     public static final String HELP = "help";
     public static final String APP_NAME = "appName";
-    public static final String APP_DATA_DIR = "appDataDir";
     public static final String USER_DATA_DIR = "userDataDir";
+    public static final String APP_DATA_DIR = "appDataDir";
     public static final String CONFIG_FILE = "configFile";
     public static final String MAX_MEMORY = "maxMemory";
+    public static final String LOG_LEVEL = "logLevel";
     public static final String BANNED_BTC_NODES = "bannedBtcNodes";
     public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     public static final String BANNED_SEED_NODES = "bannedSeedNodes";
@@ -66,7 +67,6 @@ public class Config {
     public static final String DUMP_STATISTICS = "dumpStatistics";
     public static final String IGNORE_DEV_MSG = "ignoreDevMsg";
     public static final String PROVIDERS = "providers";
-    public static final String LOG_LEVEL = "logLevel";
     public static final String SEED_NODES = "seedNodes";
     public static final String BAN_LIST = "banList";
     public static final String NODE_PORT = "nodePort";
@@ -134,6 +134,8 @@ public class Config {
     private final File userDataDir;
     private final File appDataDir;
     private final int nodePort;
+    private final int maxMemory;
+    private final String logLevel;
     private final List<String> bannedBtcNodes;
     private final List<String> bannedPriceRelayNodes;
     private final List<String> bannedSeedNodes;
@@ -142,12 +144,10 @@ public class Config {
     private final boolean ignoreLocalBtcNode;
     private final String bitcoinRegtestHost;
     private final boolean daoActivated;
-    private final String logLevel;
     private final String referralId;
     private final boolean useDevMode;
     private final boolean useDevPrivilegeKeys;
     private final boolean dumpStatistics;
-    private final int maxMemory;
     private final boolean ignoreDevMsg;
     private final List<String> providers;
     private final List<String> seedNodes;
@@ -246,17 +246,17 @@ public class Config {
                         .ofType(String.class)
                         .defaultsTo(DEFAULT_CONFIG_FILE_NAME);
 
-        ArgumentAcceptingOptionSpec<File> userDataDirOpt =
-                parser.accepts(USER_DATA_DIR, "User data directory")
-                        .withRequiredArg()
-                        .ofType(File.class)
-                        .defaultsTo(this.defaultUserDataDir);
-
         ArgumentAcceptingOptionSpec<String> appNameOpt =
                 parser.accepts(APP_NAME, "Application name")
                         .withRequiredArg()
                         .ofType(String.class)
                         .defaultsTo(this.defaultAppName);
+
+        ArgumentAcceptingOptionSpec<File> userDataDirOpt =
+                parser.accepts(USER_DATA_DIR, "User data directory")
+                        .withRequiredArg()
+                        .ofType(File.class)
+                        .defaultsTo(this.defaultUserDataDir);
 
         ArgumentAcceptingOptionSpec<File> appDataDirOpt =
                 parser.accepts(APP_DATA_DIR, "Application data directory")
@@ -269,6 +269,19 @@ public class Config {
                         .withRequiredArg()
                         .ofType(Integer.class)
                         .defaultsTo(9999);
+
+        ArgumentAcceptingOptionSpec<Integer> maxMemoryOpt =
+                parser.accepts(MAX_MEMORY, "Max. permitted memory (used only by headless versions)")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(1200);
+
+        ArgumentAcceptingOptionSpec<String> logLevelOpt =
+                parser.accepts(LOG_LEVEL, "Set logging level")
+                        .withRequiredArg()
+                        .ofType(String.class)
+                        .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE")
+                        .defaultsTo(Level.INFO.levelStr);
 
         ArgumentAcceptingOptionSpec<String> bannedBtcNodesOpt =
                 parser.accepts(BANNED_BTC_NODES, "List Bitcoin nodes to ban")
@@ -313,13 +326,6 @@ public class Config {
                         .describedAs("host[:port]")
                         .defaultsTo("");
 
-        ArgumentAcceptingOptionSpec<String> logLevelOpt =
-                parser.accepts(LOG_LEVEL, "Set logging level")
-                        .withRequiredArg()
-                        .ofType(String.class)
-                        .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE")
-                        .defaultsTo(Level.INFO.levelStr);
-
         ArgumentAcceptingOptionSpec<String> referralIdOpt =
                 parser.accepts(REFERRAL_ID, "Optional Referral ID (e.g. for API users or pro market makers)")
                         .withRequiredArg()
@@ -345,12 +351,6 @@ public class Config {
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
-
-        ArgumentAcceptingOptionSpec<Integer> maxMemoryOpt =
-                parser.accepts(MAX_MEMORY, "Max. permitted memory (used only by headless versions)")
-                        .withRequiredArg()
-                        .ofType(int.class)
-                        .defaultsTo(1200);
 
         ArgumentAcceptingOptionSpec<Boolean> ignoreDevMsgOpt =
                 parser.accepts(IGNORE_DEV_MSG, "If set to true all signed " +
@@ -639,6 +639,8 @@ public class Config {
             this.helpRequested = options.has(helpOpt);
             this.configFile = configFile;
             this.nodePort = options.valueOf(nodePortOpt);
+            this.maxMemory = options.valueOf(maxMemoryOpt);
+            this.logLevel = options.valueOf(logLevelOpt);
             this.bannedBtcNodes = options.valuesOf(bannedBtcNodesOpt);
             this.bannedPriceRelayNodes = options.valuesOf(bannedPriceRelayNodesOpt);
             this.bannedSeedNodes = options.valuesOf(bannedSeedNodesOpt);
@@ -646,7 +648,6 @@ public class Config {
             this.baseCurrencyNetworkParameters = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
-            this.logLevel = options.valueOf(logLevelOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
             this.torControlPort = options.valueOf(torControlPortOpt);
@@ -659,7 +660,6 @@ public class Config {
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
             this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
-            this.maxMemory = options.valueOf(maxMemoryOpt);
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
