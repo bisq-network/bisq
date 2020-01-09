@@ -14,11 +14,14 @@ ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
           --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
           --maxConnections=${BISQ_MAX_CONNECTIONS} \
           --maxMemory=${BISQ_MAX_MEMORY} \
+          --nodePort=${BISQ_NODE_PORT} \
+          --btcNodes=${BITCOIN_P2P_HOST}:${BITCOIN_P2P_PORT} \
+          --rpcBlockNotificationHost=${BITCOIN_RPC_BLOCKNOTIFY_HOST} \
+          --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} \
+          --rpcHost=${BITCOIN_RPC_HOST} \
+          --rpcPort=${BITCOIN_RPC_PORT} \
           --rpcUser=${BITCOIN_RPC_USERNAME} \
           --rpcPassword=${BITCOIN_RPC_PASSWORD} \
-          --rpcPort=${BITCOIN_RPC_PORT} \
-          --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} \
-          --nodePort=${BISQ_NODE_PORT} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
 
 ExecStop=/bin/kill -TERM ${MAINPID}
