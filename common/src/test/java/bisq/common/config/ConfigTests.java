@@ -30,7 +30,7 @@ public class ConfigTests {
 
     // Note: "DataDirProperties" in the test method names below represent the group of
     // configuration options that influence the location of a Bisq node's data directory.
-    // These options include appName, userDataDir, appDataDir, and configFile
+    // These options include appName, userDataDir, appDataDir and configFile
 
     @Test
     public void whenNoArgCtorIsCalled_thenDefaultAppNameIsSetToTempValue() {
@@ -219,7 +219,7 @@ public class ConfigTests {
     }
 
 
-    // == TESTING FACILITIES ===========================================================
+    // == TEST SUPPORT FACILITIES ========================================================
 
     static Config configWithOpts(Opt... opts) {
         String[] args = new String[opts.length];

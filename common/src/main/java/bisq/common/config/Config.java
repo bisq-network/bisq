@@ -31,9 +31,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
+/**
+ * Parses and provides access to all Bisq configuration options specified at the command
+ * line and/or via the {@value DEFAULT_CONFIG_FILE_NAME} config file, including any
+ * default values. Constructing a {@link Config} instance is generally side-effect free,
+ * with one key exception being that {@value APP_DATA_DIR} and its subdirectories will
+ * be created if they do not already exist. Care is taken to avoid inadvertent creation or
+ * modification of the actual system user data directory and/or the production Bisq
+ * application data directory. Calling code must explicitly specify these values; they are
+ * never assumed.
+ * @see #Config(String...)
+ * @see #Config(String, File, String...)
+ */
 public class Config {
 
-    // option name constants typically used for @Named parameter injection
+    // Option name constants
     public static final String HELP = "help";
     public static final String APP_NAME = "appName";
     public static final String APP_DATA_DIR = "appDataDir";
@@ -94,26 +106,30 @@ public class Config {
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
     public static final String DAO_ACTIVATED = "daoActivated";
 
-    // default values for certain options
+    // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
     public static final String DEFAULT_REGTEST_HOST = "localhost";
     public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC = 9; // down from BitcoinJ default of 12
     public static final boolean DEFAULT_FULL_DAO_NODE = false;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
+    // Static fields that provide access to Config properties in locations where injecting
+    // a Config instance is not feasible. See Javadoc for corresponding static accessors.
     private static File APP_DATA_DIR_VALUE;
     private static BaseCurrencyNetwork BASE_CURRENCY_NETWORK_VALUE = BaseCurrencyNetwork.BTC_MAINNET;
 
-    // default data dir properties
+    // Default "data dir properties", i.e. properties that can determine the location of
+    // Bisq's application data directory (appDataDir)
     private final String defaultAppName;
     private final File defaultUserDataDir;
     private final File defaultAppDataDir;
     private final File defaultConfigFile;
 
-    // options supported only in the cli
+    // Options supported only at the command-line interface (cli)
     private final boolean helpRequested;
     private final File configFile;
-    // options supported in the cli and config file
+
+    // Options supported both at the cli and in the config file
     private final String appName;
     private final File userDataDir;
     private final File appDataDir;
@@ -171,17 +187,48 @@ public class Config {
     private final int genesisBlockHeight;
     private final long genesisTotalSupply;
 
+    // Properties derived from options but not exposed as options themselves
     private final File torDir;
     private final File walletDir;
     private final File storageDir;
     private final File keyStorageDir;
 
+    // The parser that will be used to parse both cli and config file options
     private final OptionParser parser = new OptionParser();
 
+    /**
+     * Create a new {@link Config} instance using a randomly-generated default
+     * {@value APP_NAME} and a newly-created temporary directory as the default
+     * {@value USER_DATA_DIR} along with any command line arguments. This constructor is
+     * primarily useful in test code, where no references or modifications should be made
+     * to the actual system user data directory and/or real Bisq application data
+     * directory. Most production use cases will favor calling the
+     * {@link #Config(String, File, String...)} constructor directly.
+     * @param args zero or more command line arguments in the form "--optName=optValue"
+     * @throws ConfigException if any problems are encountered during option parsing
+     * @see #Config(String, File, String...)
+     */
     public Config(String... args) {
-        this(tempAppName(), tempUserDataDir(), args);
+        this(randomAppName(), tempUserDataDir(), args);
     }
 
+    /**
+     * Create a new {@link Config} instance with the given default {@value APP_NAME} and
+     * {@value USER_DATA_DIR} values along with any command line arguments, typically
+     * those supplied via a Bisq application's main() method.
+     * <p/>
+     * This constructor performs all parsing of command line options and config file
+     * options, assuming the default config file exists or a custom config file has been
+     * specified via the {@value CONFIG_FILE} option and exists. For any options that
+     * are present both at the command line and in the config file, the command line value
+     * will take precedence. Note that the {@value HELP} and {@value CONFIG_FILE} options
+     * are supported only at the command line and are disallowed within the config file
+     * itself.
+     * @param defaultAppName typically "Bisq" or similar
+     * @param defaultUserDataDir typically the OS-specific user data directory location
+     * @param args zero or more command line arguments in the form "--optName=optValue"
+     * @throws ConfigException if any problems are encountered during option parsing
+     */
     public Config(String defaultAppName, File defaultUserDataDir, String... args) {
         this.defaultAppName = defaultAppName;
         this.defaultUserDataDir = defaultUserDataDir;
@@ -544,9 +591,12 @@ public class Config {
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
+            // Parse command line options
             OptionSet cliOpts = parser.parse(args);
             options.addOptionSet(cliOpts);
 
+            // Parse config file specified at the command line only if it was specified as
+            // an absolute path. Otherwise, the config file will be processed later below.
             File configFile = null;
             OptionSpec<?>[] disallowedOpts = new OptionSpec<?>[]{helpOpt, configFileOpt};
             final boolean cliHasConfigFileOpt = cliOpts.has(configFileOpt);
@@ -562,12 +612,20 @@ public class Config {
                 }
             }
 
+            // Assign values to the following "data dir properties". If a
+            // relatively-pathed config file was specified at the command line, any
+            // entries it has for these options will be ignored, as it has not been
+            // processed yet.
             this.appName = options.valueOf(appNameOpt);
             this.userDataDir = options.valueOf(userDataDirOpt);
             this.appDataDir = mkAppDataDir(options.has(appDataDirOpt) ?
                     options.valueOf(appDataDirOpt) :
                     new File(userDataDir, appName));
 
+            // If the config file has not yet been processed, either because a relative
+            // path was provided at the command line, or because no value was provided at
+            // the command line, attempt to process the file now, falling back to the
+            // default config file location if none was specified at the command line.
             if (!configFileHasBeenProcessed) {
                 configFile = cliHasConfigFileOpt && !configFile.isAbsolute() ?
                         absoluteConfigFile(appDataDir, configFile.getPath()) :
@@ -576,6 +634,8 @@ public class Config {
                 configFileOpts.ifPresent(options::addOptionSet);
             }
 
+            // Assign all remaining properties, with command line options taking
+            // precedence over those provided in the config file (if any)
             this.helpRequested = options.has(helpOpt);
             this.configFile = configFile;
             this.nodePort = options.valueOf(nodePortOpt);
@@ -640,13 +700,14 @@ public class Config {
                             ex.getMessage());
         }
 
-        // properties derived from options but not exposed as options themselves
+        // Create all appDataDir subdirectories and assign to their respective properties
         File btcNetworkDir = mkdir(appDataDir, baseCurrencyNetwork.name().toLowerCase());
         this.keyStorageDir = mkdir(btcNetworkDir, "keys");
         this.storageDir = mkdir(btcNetworkDir, "db");
         this.torDir = mkdir(btcNetworkDir, "tor");
         this.walletDir = mkdir(btcNetworkDir, "wallet");
 
+        // Assign values to special-case static fields
         APP_DATA_DIR_VALUE = appDataDir;
         BASE_CURRENCY_NETWORK_VALUE = baseCurrencyNetwork;
     }
@@ -689,15 +750,7 @@ public class Config {
 
     // == STATIC UTILS ===================================================================
 
-    private static File tempUserDataDir() {
-        try {
-            return Files.createTempDirectory("BisqTempUserData").toFile();
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
-
-    private static String tempAppName() {
+    private static String randomAppName() {
         try {
             File file = Files.createTempFile("Bisq", "Temp").toFile();
             file.delete();
@@ -707,9 +760,17 @@ public class Config {
         }
     }
 
+    private static File tempUserDataDir() {
+        try {
+            return Files.createTempDirectory("BisqTempUserData").toFile();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
     /**
-     * Creates {@value APP_DATA_DIR} including any nonexistent parent directories.
-     * Does nothing if the directory already exists.
+     * Creates {@value APP_DATA_DIR} including any nonexistent parent directories. Does
+     * nothing if the directory already exists.
      * @return the given directory, now guaranteed to exist
      */
     private static File mkAppDataDir(File appDataDir) {
@@ -723,8 +784,8 @@ public class Config {
     }
 
     /**
-     * Creates child directory assuming parent directories already exist.
-     * Does nothing if the directory already exists.
+     * Creates child directory assuming parent directories already exist. Does nothing if
+     * the directory already exists.
      * @return the child directory, now guaranteed to exist
      */
     private static File mkdir(File parent, String child) {

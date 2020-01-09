@@ -7,6 +7,16 @@ import joptsimple.OptionSpec;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Composes multiple JOptSimple {@link OptionSet} instances such that calls to
+ * {@link #valueOf(OptionSpec)} and co will search all instances in the order they were
+ * added and return any value explicitly set, otherwise returning the default value for
+ * the given option or null if no default has been set. The API found here loosely
+ * emulates the {@link OptionSet} API without going through the unnecessary work of
+ * actually extending it. In practice, this class is used to compose options provided at
+ * the command line with those provided via config file, such that those provided at the
+ * command line take precedence over those provided in the config file.
+ */
 class CompositeOptionSet {
 
     private final List<OptionSet> optionSets = new ArrayList<>();
