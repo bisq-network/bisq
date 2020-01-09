@@ -1,7 +1,5 @@
 package bisq.common.config;
 
-import bisq.common.util.Utilities;
-
 import org.bitcoinj.core.NetworkParameters;
 
 import joptsimple.AbstractOptionSpec;
@@ -18,7 +16,6 @@ import joptsimple.util.RegexMatcher;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
@@ -668,17 +665,6 @@ public class Config {
 
 
     // == STATIC UTILS ===================================================================
-
-    public static File getOsUserDataDir() {
-        if (Utilities.isWindows())
-            return new File(System.getenv("APPDATA"));
-
-        if (Utilities.isOSX())
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
-
-        // *nix
-        return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
-    }
 
     private static File tempUserDataDir() {
         try {
