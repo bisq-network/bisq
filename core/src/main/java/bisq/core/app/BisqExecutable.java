@@ -74,7 +74,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     public void execute(String[] args) {
         try {
             config = new Config(appName, osUserDataDir(), args);
-            if (config.isHelpRequested()) {
+            if (config.helpRequested) {
                 config.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
                 System.exit(EXIT_SUCCESS);
             }
@@ -148,8 +148,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void setupDevEnv() {
-        DevEnv.setDevMode(config.isUseDevMode());
-        DevEnv.setDaoActivated(config.isDaoActivated());
+        DevEnv.setDevMode(config.useDevMode);
+        DevEnv.setDaoActivated(config.daoActivated);
     }
 
     protected void setupPersistedDataHosts(Injector injector) {

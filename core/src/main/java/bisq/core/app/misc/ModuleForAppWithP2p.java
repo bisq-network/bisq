@@ -75,15 +75,15 @@ public class ModuleForAppWithP2p extends AppModule {
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
 
-        bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.getStorageDir());
-        bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());
+        bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
+        bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);
 
-        bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.isUseDevPrivilegeKeys());
-        bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.isUseDevMode());
-        bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.getReferralId());
+        bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.useDevPrivilegeKeys);
+        bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.useDevMode);
+        bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.referralId);
 
         bindConstant().annotatedWith(named(LOCAL_BITCOIN_NODE_PORT))
-                .to(config.getBaseCurrencyNetworkParameters().getPort());
+                .to(config.baseCurrencyNetworkParameters.getPort());
 
         // ordering is used for shut down sequence
         install(new TradeModule(config));

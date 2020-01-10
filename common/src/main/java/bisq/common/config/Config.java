@@ -40,6 +40,15 @@ import static java.util.stream.Collectors.toList;
  * modification of the actual system user data directory and/or the production Bisq
  * application data directory. Calling code must explicitly specify these values; they are
  * never assumed.
+ * <p/>
+ * Note that this class deviates from typical JavaBean conventions in that fields
+ * representing configuration options are public and have no corresponding accessor
+ * ("getter") method. This is because all such fields are final and therefore not subject
+ * to modification by calling code and because eliminating the accessor methods means
+ * eliminating hundreds of lines of boilerplate code and one less touchpoint to deal with
+ * when adding or modifying options. Furthermore, while accessor methods are often useful
+ * when mocking an object in a testing context, this class is designed for testability
+ * without needing to be mocked. See {@code ConfigTests} for examples.
  * @see #Config(String...)
  * @see #Config(String, File, String...)
  */
@@ -120,78 +129,78 @@ public class Config {
 
     // Default "data dir properties", i.e. properties that can determine the location of
     // Bisq's application data directory (appDataDir)
-    private final String defaultAppName;
-    private final File defaultUserDataDir;
-    private final File defaultAppDataDir;
-    private final File defaultConfigFile;
+    public final String defaultAppName;
+    public final File defaultUserDataDir;
+    public final File defaultAppDataDir;
+    public final File defaultConfigFile;
 
     // Options supported only at the command-line interface (cli)
-    private final boolean helpRequested;
-    private final File configFile;
+    public final boolean helpRequested;
+    public final File configFile;
 
     // Options supported both at the cli and in the config file
-    private final String appName;
-    private final File userDataDir;
-    private final File appDataDir;
-    private final int nodePort;
-    private final int maxMemory;
-    private final String logLevel;
-    private final List<String> bannedBtcNodes;
-    private final List<String> bannedPriceRelayNodes;
-    private final List<String> bannedSeedNodes;
-    private final BaseCurrencyNetwork baseCurrencyNetwork;
-    private final NetworkParameters baseCurrencyNetworkParameters;
-    private final boolean ignoreLocalBtcNode;
-    private final String bitcoinRegtestHost;
-    private final boolean daoActivated;
-    private final String referralId;
-    private final boolean useDevMode;
-    private final boolean useDevPrivilegeKeys;
-    private final boolean dumpStatistics;
-    private final boolean ignoreDevMsg;
-    private final List<String> providers;
-    private final List<String> seedNodes;
-    private final List<String> banList;
-    private final boolean useLocalhostForP2P;
-    private final int maxConnections;
-    private final String socks5ProxyBtcAddress;
-    private final String socks5ProxyHttpAddress;
-    private final File torrcFile;
-    private final String torrcOptions;
-    private final int torControlPort;
-    private final String torControlPassword;
-    private final File torControlCookieFile;
-    private final boolean useTorControlSafeCookieAuth;
-    private final boolean torStreamIsolation;
-    private final int msgThrottlePerSec;
-    private final int msgThrottlePer10Sec;
-    private final int sendMsgThrottleTrigger;
-    private final int sendMsgThrottleSleep;
-    private final String btcNodes;
-    private final boolean useTorForBtc;
-    private final boolean useTorForBtcOptionSetExplicitly;
-    private final String socks5DiscoverMode;
-    private final boolean useAllProvidedNodes;
-    private final String userAgent;
-    private final int numConnectionsForBtc;
-    private final String rpcUser;
-    private final String rpcPassword;
-    private final String rpcHost;
-    private final int rpcPort;
-    private final int rpcBlockNotificationPort;
-    private final String rpcBlockNotificationHost;
-    private final boolean dumpBlockchainData;
-    private final boolean fullDaoNode;
-    private final boolean fullDaoNodeOptionSetExplicitly;
-    private final String genesisTxId;
-    private final int genesisBlockHeight;
-    private final long genesisTotalSupply;
+    public final String appName;
+    public final File userDataDir;
+    public final File appDataDir;
+    public final int nodePort;
+    public final int maxMemory;
+    public final String logLevel;
+    public final List<String> bannedBtcNodes;
+    public final List<String> bannedPriceRelayNodes;
+    public final List<String> bannedSeedNodes;
+    public final BaseCurrencyNetwork baseCurrencyNetwork;
+    public final NetworkParameters baseCurrencyNetworkParameters;
+    public final boolean ignoreLocalBtcNode;
+    public final String bitcoinRegtestHost;
+    public final boolean daoActivated;
+    public final String referralId;
+    public final boolean useDevMode;
+    public final boolean useDevPrivilegeKeys;
+    public final boolean dumpStatistics;
+    public final boolean ignoreDevMsg;
+    public final List<String> providers;
+    public final List<String> seedNodes;
+    public final List<String> banList;
+    public final boolean useLocalhostForP2P;
+    public final int maxConnections;
+    public final String socks5ProxyBtcAddress;
+    public final String socks5ProxyHttpAddress;
+    public final File torrcFile;
+    public final String torrcOptions;
+    public final int torControlPort;
+    public final String torControlPassword;
+    public final File torControlCookieFile;
+    public final boolean useTorControlSafeCookieAuth;
+    public final boolean torStreamIsolation;
+    public final int msgThrottlePerSec;
+    public final int msgThrottlePer10Sec;
+    public final int sendMsgThrottleTrigger;
+    public final int sendMsgThrottleSleep;
+    public final String btcNodes;
+    public final boolean useTorForBtc;
+    public final boolean useTorForBtcOptionSetExplicitly;
+    public final String socks5DiscoverMode;
+    public final boolean useAllProvidedNodes;
+    public final String userAgent;
+    public final int numConnectionsForBtc;
+    public final String rpcUser;
+    public final String rpcPassword;
+    public final String rpcHost;
+    public final int rpcPort;
+    public final int rpcBlockNotificationPort;
+    public final String rpcBlockNotificationHost;
+    public final boolean dumpBlockchainData;
+    public final boolean fullDaoNode;
+    public final boolean fullDaoNodeOptionSetExplicitly;
+    public final String genesisTxId;
+    public final int genesisBlockHeight;
+    public final long genesisTotalSupply;
 
     // Properties derived from options but not exposed as options themselves
-    private final File torDir;
-    private final File walletDir;
-    private final File storageDir;
-    private final File keyStorageDir;
+    public final File torDir;
+    public final File walletDir;
+    public final File storageDir;
+    public final File keyStorageDir;
 
     // The parser that will be used to parse both cli and config file options
     private final OptionParser parser = new OptionParser();
@@ -806,9 +815,9 @@ public class Config {
 
     /**
      * Static accessor that returns the same value as the non-static
-     * {@link #getAppDataDir()} method. For use only in the {@code Overlay} class, where
+     * {@link #appDataDir} property. For use only in the {@code Overlay} class, where
      * because of its large number of subclasses, injecting the Guice-managed
-     * {@link Config} class is not worth the effort. {@link #getAppDataDir()} should be
+     * {@link Config} class is not worth the effort. {@link #appDataDir} should be
      * favored in all other cases.
      * @throws NullPointerException if the static value has not yet been assigned, i.e. if
      * the Guice-managed {@link Config} class has not yet been instantiated elsewhere.
@@ -825,7 +834,7 @@ public class Config {
      * Static accessor that returns either the default base currency network value of
      * {@link BaseCurrencyNetwork#BTC_MAINNET} or the value assigned via the
      * {@value BASE_CURRENCY_NETWORK} option. The non-static
-     * {@link #getBaseCurrencyNetwork()} accessor should be favored whenever possible and
+     * {@link #baseCurrencyNetwork} property should be favored whenever possible and
      * this static accessor should be used only in code locations where it is infeasible
      * or too cumbersome to inject the normal Guice-managed singleton {@link Config}
      * instance.
@@ -838,278 +847,11 @@ public class Config {
      * Static accessor that returns the value of
      * {@code baseCurrencyNetwork().getParameters()} for convenience and to avoid violating
      * the <a href="https://en.wikipedia.org/wiki/Law_of_Demeter">Law of Demeter</a>. The
-     * non-static {@link #getBaseCurrencyNetwork()} method should be favored whenever
+     * non-static {@link #baseCurrencyNetwork} property should be favored whenever
      * possible.
      * @see #baseCurrencyNetwork()
      */
     public static NetworkParameters baseCurrencyNetworkParameters() {
         return BASE_CURRENCY_NETWORK_VALUE.getParameters();
-    }
-
-
-    // == ACCESSORS ======================================================================
-
-    public String getDefaultAppName() {
-        return defaultAppName;
-    }
-
-    public File getDefaultUserDataDir() {
-        return defaultUserDataDir;
-    }
-
-    public File getDefaultAppDataDir() {
-        return defaultAppDataDir;
-    }
-
-    public File getDefaultConfigFile() {
-        return defaultConfigFile;
-    }
-
-    public boolean isHelpRequested() {
-        return helpRequested;
-    }
-
-    public File getConfigFile() {
-        return configFile;
-    }
-
-    public String getAppName() {
-        return appName;
-    }
-
-    public File getUserDataDir() {
-        return userDataDir;
-    }
-
-    public File getAppDataDir() {
-        return appDataDir;
-    }
-
-    public int getNodePort() {
-        return nodePort;
-    }
-
-    public List<String> getBannedBtcNodes() {
-        return bannedBtcNodes;
-    }
-
-    public List<String> getBannedPriceRelayNodes() {
-        return bannedPriceRelayNodes;
-    }
-
-    public List<String> getBannedSeedNodes() {
-        return bannedSeedNodes;
-    }
-
-    public BaseCurrencyNetwork getBaseCurrencyNetwork() {
-        return baseCurrencyNetwork;
-    }
-
-    public NetworkParameters getBaseCurrencyNetworkParameters() {
-        return baseCurrencyNetworkParameters;
-    }
-
-    public boolean isIgnoreLocalBtcNode() {
-        return ignoreLocalBtcNode;
-    }
-
-    public String getBitcoinRegtestHost() {
-        return bitcoinRegtestHost;
-    }
-
-    public String getLogLevel() {
-        return logLevel;
-    }
-
-    public String getReferralId() {
-        return referralId;
-    }
-
-    public boolean isUseDevMode() {
-        return useDevMode;
-    }
-
-    public File getTorDir() {
-        return torDir;
-    }
-
-    public File getWalletDir() {
-        return walletDir;
-    }
-
-    public File getStorageDir() {
-        return storageDir;
-    }
-
-    public File getKeyStorageDir() {
-        return keyStorageDir;
-    }
-
-    public boolean isUseDevPrivilegeKeys() {
-        return useDevPrivilegeKeys;
-    }
-
-    public boolean isDumpStatistics() {
-        return dumpStatistics;
-    }
-
-    public int getMaxMemory() {
-        return maxMemory;
-    }
-
-    public boolean isIgnoreDevMsg() {
-        return ignoreDevMsg;
-    }
-
-    public List<String> getProviders() {
-        return providers;
-    }
-
-    public List<String> getSeedNodes() {
-        return seedNodes;
-    }
-
-    public List<String> getBanList() {
-        return banList;
-    }
-
-    public boolean isUseLocalhostForP2P() {
-        return useLocalhostForP2P;
-    }
-
-    public int getMaxConnections() {
-        return maxConnections;
-    }
-
-    public String getSocks5ProxyBtcAddress() {
-        return socks5ProxyBtcAddress;
-    }
-
-    public String getSocks5ProxyHttpAddress() {
-        return socks5ProxyHttpAddress;
-    }
-
-    public File getTorrcFile() {
-        return torrcFile;
-    }
-
-    public String getTorrcOptions() {
-        return torrcOptions;
-    }
-
-    public int getTorControlPort() {
-        return torControlPort;
-    }
-
-    public String getTorControlPassword() {
-        return torControlPassword;
-    }
-
-    public File getTorControlCookieFile() {
-        return torControlCookieFile;
-    }
-
-    public boolean isUseTorControlSafeCookieAuth() {
-        return useTorControlSafeCookieAuth;
-    }
-
-    public boolean isTorStreamIsolation() {
-        return torStreamIsolation;
-    }
-
-    public int getMsgThrottlePerSec() {
-        return msgThrottlePerSec;
-    }
-
-    public int getMsgThrottlePer10Sec() {
-        return msgThrottlePer10Sec;
-    }
-
-    public int getSendMsgThrottleTrigger() {
-        return sendMsgThrottleTrigger;
-    }
-
-    public int getSendMsgThrottleSleep() {
-        return sendMsgThrottleSleep;
-    }
-
-    public String getBtcNodes() {
-        return btcNodes;
-    }
-
-    public boolean isUseTorForBtc() {
-        return useTorForBtc;
-    }
-
-    public boolean isUseTorForBtcOptionSetExplicitly() {
-        return useTorForBtcOptionSetExplicitly;
-    }
-
-    public String getSocks5DiscoverMode() {
-        return socks5DiscoverMode;
-    }
-
-    public boolean isUseAllProvidedNodes() {
-        return useAllProvidedNodes;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public int getNumConnectionsForBtc() {
-        return numConnectionsForBtc;
-    }
-
-    public String getRpcUser() {
-        return rpcUser;
-    }
-
-    public String getRpcPassword() {
-        return rpcPassword;
-    }
-
-    public String getRpcHost() {
-        return rpcHost;
-    }
-
-    public int getRpcPort() {
-        return rpcPort;
-    }
-
-    public int getRpcBlockNotificationPort() {
-        return rpcBlockNotificationPort;
-    }
-
-    public String getRpcBlockNotificationHost() {
-        return rpcBlockNotificationHost;
-    }
-
-    public boolean isDumpBlockchainData() {
-        return dumpBlockchainData;
-    }
-
-    public boolean isFullDaoNode() {
-        return fullDaoNode;
-    }
-
-    public boolean isFullDaoNodeOptionSetExplicitly() {
-        return fullDaoNodeOptionSetExplicitly;
-    }
-
-    public String getGenesisTxId() {
-        return genesisTxId;
-    }
-
-    public int getGenesisBlockHeight() {
-        return genesisBlockHeight;
-    }
-
-    public long getGenesisTotalSupply() {
-        return genesisTotalSupply;
-    }
-
-    public boolean isDaoActivated() {
-        return daoActivated;
     }
 }

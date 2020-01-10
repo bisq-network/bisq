@@ -136,7 +136,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     }
 
     protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
-        int maxMemory = config.getMaxMemory();
+        int maxMemory = config.maxMemory;
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
             if (!stopped) {
@@ -183,7 +183,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         gracefulShutDownHandler.gracefulShutDown(() -> {
             //noinspection finally
             try {
-                final String[] tokens = config.getAppDataDir().getPath().split("_");
+                final String[] tokens = config.appDataDir.getPath().split("_");
                 String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
                 RestartUtil.restartApplication(logPath);
             } catch (IOException e) {

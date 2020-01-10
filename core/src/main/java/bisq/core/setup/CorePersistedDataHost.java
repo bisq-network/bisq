@@ -65,7 +65,7 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(RefundDisputeListService.class));
         persistedDataHosts.add(injector.getInstance(P2PService.class));
 
-        if (injector.getInstance(Config.class).isDaoActivated()) {
+        if (injector.getInstance(Config.class).daoActivated) {
             persistedDataHosts.add(injector.getInstance(BallotListService.class));
             persistedDataHosts.add(injector.getInstance(MyBlindVoteListService.class));
             persistedDataHosts.add(injector.getInstance(MyVoteListService.class));

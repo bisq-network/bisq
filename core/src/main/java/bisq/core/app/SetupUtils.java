@@ -80,7 +80,7 @@ public class SetupUtils {
         BooleanProperty result = new SimpleBooleanProperty();
         new Thread(() -> {
             // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
-            final BaseCurrencyNetwork baseCurrencyNetwork = config.getBaseCurrencyNetwork();
+            final BaseCurrencyNetwork baseCurrencyNetwork = config.baseCurrencyNetwork;
             final String postFix = "_" + baseCurrencyNetwork.name();
             long ts = new Date().getTime();
             p2PDataStorage.readFromResources(postFix);

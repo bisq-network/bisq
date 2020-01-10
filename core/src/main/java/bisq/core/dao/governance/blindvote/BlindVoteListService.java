@@ -75,7 +75,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
         this.blindVoteStorageService = blindVoteStorageService;
         this.blindVoteValidator = blindVoteValidator;
 
-        if (config.isDaoActivated())
+        if (config.daoActivated)
             appendOnlyDataStoreService.addService(blindVoteStorageService);
     }
 

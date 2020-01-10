@@ -47,6 +47,6 @@ public class DesktopModule extends AppModule {
         bind(ResourceBundle.class).toInstance(Res.getResourceBundle());
         bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
 
-        bindConstant().annotatedWith(Names.named(APP_NAME)).to(config.getAppName());
+        bindConstant().annotatedWith(Names.named(APP_NAME)).to(config.appName);
     }
 }

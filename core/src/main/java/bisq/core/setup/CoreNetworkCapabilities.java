@@ -42,7 +42,7 @@ public class CoreNetworkCapabilities {
                 Capability.TRADE_STATISTICS_HASH_UPDATE
         );
 
-        if (config.isDaoActivated()) {
+        if (config.daoActivated) {
             maybeApplyDaoFullMode(config);
         }
     }
@@ -51,7 +51,7 @@ public class CoreNetworkCapabilities {
         // If we set dao full mode at the preferences view we add the capability there. We read the preferences a
         // bit later than we call that method so we have to add DAO_FULL_NODE Capability at preferences as well to
         // be sure it is set in both cases.
-        if (config.isFullDaoNode()) {
+        if (config.fullDaoNode) {
             log.info("Set Capability.DAO_FULL_NODE");
             Capabilities.app.addAll(Capability.DAO_FULL_NODE);
         } else {

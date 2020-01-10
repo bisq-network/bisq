@@ -169,7 +169,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
-        daoOptionsSet = config.isFullDaoNodeOptionSetExplicitly() &&
+        daoOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
                 !rpcUser.isEmpty() &&
                 !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != Config.UNSPECIFIED_PORT;

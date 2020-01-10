@@ -44,7 +44,7 @@ public abstract class AppSetup {
         this.keyRing = keyRing;
         this.config = config;
 
-        Version.setBaseCryptoNetworkId(this.config.getBaseCurrencyNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(this.config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
     }
 

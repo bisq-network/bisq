@@ -71,7 +71,7 @@ public class ProvidersRepository {
 
         Collections.shuffle(DEFAULT_NODES);
 
-        applyBannedNodes(config.getBannedPriceRelayNodes());
+        applyBannedNodes(config.bannedPriceRelayNodes);
     }
 
     public void applyBannedNodes(@Nullable List<String> bannedNodes) {
@@ -94,7 +94,7 @@ public class ProvidersRepository {
             baseUrl = providerList.get(index);
             index++;
 
-            if (providerList.size() == 1 && config.getBaseCurrencyNetwork().isMainnet())
+            if (providerList.size() == 1 && config.baseCurrencyNetwork.isMainnet())
                 log.warn("We only have one provider");
         } else {
             baseUrl = "";

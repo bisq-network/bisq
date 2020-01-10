@@ -167,7 +167,7 @@ public class WalletsSetup {
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
         this.walletDir = walletDir;
 
-        btcWalletFileName = "bisq_" + config.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
+        btcWalletFileName = "bisq_" + config.baseCurrencyNetwork.getCurrencyCode() + ".wallet";
         params = Config.baseCurrencyNetworkParameters();
         PeerGroup.setIgnoreHttpSeeds(true);
     }

@@ -35,7 +35,7 @@ public class ConfigTests {
     @Test
     public void whenNoArgCtorIsCalled_thenDefaultAppNameIsSetToTempValue() {
         Config config = new Config();
-        String defaultAppName = config.getDefaultAppName();
+        String defaultAppName = config.defaultAppName;
         String regex = "Bisq\\d{2,}Temp";
         assertTrue(format("Temp app name '%s' failed to match '%s'", defaultAppName, regex),
                 defaultAppName.matches(regex));
@@ -44,56 +44,56 @@ public class ConfigTests {
     @Test
     public void whenAppNameOptionIsSet_thenAppNamePropertyDiffersFromDefaultAppNameProperty() {
         Config config = configWithOpts(opt(APP_NAME, "My-Bisq"));
-        assertThat(config.getAppName(), equalTo("My-Bisq"));
-        assertThat(config.getAppName(), not(equalTo(config.getDefaultAppName())));
+        assertThat(config.appName, equalTo("My-Bisq"));
+        assertThat(config.appName, not(equalTo(config.defaultAppName)));
     }
 
     @Test
     public void whenNoOptionsAreSet_thenDataDirPropertiesEqualDefaultValues() {
         Config config = new Config();
-        assertThat(config.getAppName(), equalTo(config.getDefaultAppName()));
-        assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
-        assertThat(config.getAppDataDir(), equalTo(config.getDefaultAppDataDir()));
-        assertThat(config.getConfigFile(), equalTo(config.getDefaultConfigFile()));
+        assertThat(config.appName, equalTo(config.defaultAppName));
+        assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
+        assertThat(config.appDataDir, equalTo(config.defaultAppDataDir));
+        assertThat(config.configFile, equalTo(config.defaultConfigFile));
     }
 
     @Test
     public void whenAppNameOptionIsSet_thenDataDirPropertiesReflectItsValue() {
         Config config = configWithOpts(opt(APP_NAME, "My-Bisq"));
-        assertThat(config.getAppName(), equalTo("My-Bisq"));
-        assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
-        assertThat(config.getAppDataDir(), equalTo(new File(config.getUserDataDir(), "My-Bisq")));
-        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.appName, equalTo("My-Bisq"));
+        assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
+        assertThat(config.appDataDir, equalTo(new File(config.userDataDir, "My-Bisq")));
+        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
     public void whenAppDataDirOptionIsSet_thenDataDirPropertiesReflectItsValue() throws IOException {
         File appDataDir = Files.createTempDirectory("myapp").toFile();
         Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir));
-        assertThat(config.getAppName(), equalTo(config.getDefaultAppName()));
-        assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
-        assertThat(config.getAppDataDir(), equalTo(appDataDir));
-        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.appName, equalTo(config.defaultAppName));
+        assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
+        assertThat(config.appDataDir, equalTo(appDataDir));
+        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
     public void whenUserDataDirOptionIsSet_thenDataDirPropertiesReflectItsValue() throws IOException {
         File userDataDir = Files.createTempDirectory("myuserdata").toFile();
         Config config = configWithOpts(opt(USER_DATA_DIR, userDataDir));
-        assertThat(config.getAppName(), equalTo(config.getDefaultAppName()));
-        assertThat(config.getUserDataDir(), equalTo(userDataDir));
-        assertThat(config.getAppDataDir(), equalTo(new File(userDataDir, config.getDefaultAppName())));
-        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.appName, equalTo(config.defaultAppName));
+        assertThat(config.userDataDir, equalTo(userDataDir));
+        assertThat(config.appDataDir, equalTo(new File(userDataDir, config.defaultAppName)));
+        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
     public void whenAppNameAndAppDataDirOptionsAreSet_thenDataDirPropertiesReflectTheirValues() throws IOException {
         File appDataDir = Files.createTempDirectory("myapp").toFile();
         Config config = configWithOpts(opt(APP_NAME, "My-Bisq"), opt(APP_DATA_DIR, appDataDir));
-        assertThat(config.getAppName(), equalTo("My-Bisq"));
-        assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
-        assertThat(config.getAppDataDir(), equalTo(appDataDir));
-        assertThat(config.getConfigFile(), equalTo(new File(config.getAppDataDir(), DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.appName, equalTo("My-Bisq"));
+        assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
+        assertThat(config.appDataDir, equalTo(appDataDir));
+        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
@@ -103,7 +103,7 @@ public class ConfigTests {
             writer.println(new ConfigFileOption(APP_NAME, "Bisq-configFileValue"));
         }
         Config config = configWithOpts(opt(APP_NAME, "Bisq-commandLineValue"));
-        assertThat(config.getAppName(), equalTo("Bisq-commandLineValue"));
+        assertThat(config.appName, equalTo("Bisq-commandLineValue"));
     }
 
     @Test
@@ -142,7 +142,7 @@ public class ConfigTests {
     public void whenConfigFileOptionIsSetToExistingFile_thenConfigFilePropertyReflectsItsValue() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
         Config config = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
-        assertThat(config.getConfigFile(), equalTo(configFile));
+        assertThat(config.configFile, equalTo(configFile));
     }
 
     @Test
@@ -151,7 +151,7 @@ public class ConfigTests {
         File appDataDir = configFile.getParentFile();
         String relativeConfigFilePath = configFile.getName();
         Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir), opt(CONFIG_FILE, relativeConfigFilePath));
-        assertThat(config.getConfigFile(), equalTo(configFile));
+        assertThat(config.configFile, equalTo(configFile));
     }
 
     @Test
@@ -161,22 +161,22 @@ public class ConfigTests {
             writer.println(new ConfigFileOption(APP_NAME, "My-Bisq"));
         }
         Config config = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
-        assertThat(config.getAppName(), equalTo("My-Bisq"));
-        assertThat(config.getUserDataDir(), equalTo(config.getDefaultUserDataDir()));
-        assertThat(config.getAppDataDir(), equalTo(new File(config.getUserDataDir(), config.getAppName())));
-        assertThat(config.getConfigFile(), equalTo(configFile));
+        assertThat(config.appName, equalTo("My-Bisq"));
+        assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
+        assertThat(config.appDataDir, equalTo(new File(config.userDataDir, config.appName)));
+        assertThat(config.configFile, equalTo(configFile));
     }
 
     @Test
     public void whenBannedBtcNodesOptionIsSet_thenBannedBtcNodesPropertyReturnsItsValue() {
         Config config = configWithOpts(opt(BANNED_BTC_NODES, "foo.onion:8333,bar.onion:8333"));
-        assertThat(config.getBannedBtcNodes(), contains("foo.onion:8333", "bar.onion:8333"));
+        assertThat(config.bannedBtcNodes, contains("foo.onion:8333", "bar.onion:8333"));
     }
 
     @Test
     public void whenHelpOptionIsSet_thenIsHelpRequestedIsTrue() {
-        assertFalse(new Config().isHelpRequested());
-        assertTrue(configWithOpts(opt(HELP)).isHelpRequested());
+        assertFalse(new Config().helpRequested);
+        assertTrue(configWithOpts(opt(HELP)).helpRequested);
     }
 
     @Test
@@ -201,11 +201,11 @@ public class ConfigTests {
     @Test
     public void whenConfigIsConstructed_thenAppDataDirAndSubdirsAreCreated() {
         Config config = new Config();
-        assertTrue(config.getAppDataDir().exists());
-        assertTrue(config.getKeyStorageDir().exists());
-        assertTrue(config.getStorageDir().exists());
-        assertTrue(config.getTorDir().exists());
-        assertTrue(config.getWalletDir().exists());
+        assertTrue(config.appDataDir.exists());
+        assertTrue(config.keyStorageDir.exists());
+        assertTrue(config.storageDir.exists());
+        assertTrue(config.torDir.exists());
+        assertTrue(config.walletDir.exists());
     }
 
     @Test

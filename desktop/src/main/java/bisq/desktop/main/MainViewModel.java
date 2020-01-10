@@ -374,7 +374,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setShowPopupIfInvalidBtcConfigHandler(this::showPopupIfInvalidBtcConfig);
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
-                .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.getAppDataDir()))
+                .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()
                 .show());
 

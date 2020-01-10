@@ -483,8 +483,8 @@ public class BisqSetup {
     }
 
     private void detectLocalBitcoinNode(Runnable nextStep) {
-        BaseCurrencyNetwork baseCurrencyNetwork = config.getBaseCurrencyNetwork();
-        if (config.isIgnoreLocalBtcNode() || baseCurrencyNetwork.isDaoRegTest() || baseCurrencyNetwork.isDaoTestNet()) {
+        BaseCurrencyNetwork baseCurrencyNetwork = config.baseCurrencyNetwork;
+        if (config.ignoreLocalBtcNode || baseCurrencyNetwork.isDaoRegTest() || baseCurrencyNetwork.isDaoTestNet()) {
             nextStep.run();
             return;
         }

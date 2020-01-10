@@ -35,6 +35,6 @@ public class AlertModule extends AppModule {
     protected final void configure() {
         bind(AlertManager.class).in(Singleton.class);
         bind(PrivateNotificationManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(IGNORE_DEV_MSG)).to(config.isIgnoreDevMsg());
+        bindConstant().annotatedWith(named(IGNORE_DEV_MSG)).to(config.ignoreDevMsg);
     }
 }

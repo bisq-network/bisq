@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Detects whether a Bitcoin node is running on localhost.
- * @see bisq.common.config.Config#isIgnoreLocalBtcNode()
+ * @see bisq.common.config.Config#ignoreLocalBtcNode
  */
 public class LocalBitcoinNode {
 

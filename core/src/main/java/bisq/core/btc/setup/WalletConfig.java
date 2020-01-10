@@ -229,7 +229,7 @@ public class WalletConfig extends AbstractIdleService {
 
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
             // We don't use tor mode if we have a local node running
-            BlockingClientManager blockingClientManager = config.isIgnoreLocalBtcNode() ?
+            BlockingClientManager blockingClientManager = config.ignoreLocalBtcNode ?
                     new BlockingClientManager() :
                     new BlockingClientManager(proxySocketFactory);
 

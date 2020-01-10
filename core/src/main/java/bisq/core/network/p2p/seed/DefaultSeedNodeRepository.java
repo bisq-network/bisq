@@ -55,15 +55,15 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     private void reload() {
         try {
             // see if there are any seed nodes configured manually
-            if (!config.getSeedNodes().isEmpty()) {
+            if (!config.seedNodes.isEmpty()) {
                 cache.clear();
-                config.getSeedNodes().forEach(s -> cache.add(new NodeAddress(s)));
+                config.seedNodes.forEach(s -> cache.add(new NodeAddress(s)));
 
                 return;
             }
 
             // else, we fetch the seed nodes from our resources
-            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(config.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
+            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(config.baseCurrencyNetwork.name().toLowerCase() + ENDING);
             BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
 
             // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
@@ -81,7 +81,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             });
 
             // filter
-            cache.removeAll(config.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
+            cache.removeAll(config.bannedSeedNodes.stream().map(NodeAddress::new).collect(Collectors.toSet()));
 
             log.info("Seed nodes: {}", cache);
         } catch (Throwable t) {

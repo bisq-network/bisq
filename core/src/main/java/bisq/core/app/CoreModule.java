@@ -64,22 +64,22 @@ public class CoreModule extends AppModule {
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
 
-        bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.getStorageDir());
+        bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
 
-        CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.getBaseCurrencyNetworkParameters().getMonetaryFormat());
+        CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.baseCurrencyNetworkParameters.getMonetaryFormat());
         bind(CoinFormatter.class).annotatedWith(named(FormattingUtils.BTC_FORMATTER_KEY)).toInstance(btcFormatter);
 
-        bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.getKeyStorageDir());
+        bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class);
 
-        bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.isUseDevPrivilegeKeys());
-        bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.isUseDevMode());
-        bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.getReferralId());
+        bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.useDevPrivilegeKeys);
+        bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.useDevMode);
+        bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.referralId);
 
         bindConstant().annotatedWith(named(LOCAL_BITCOIN_NODE_PORT))
-                .to(config.getBaseCurrencyNetworkParameters().getPort());
+                .to(config.baseCurrencyNetworkParameters.getPort());
 
 
         // ordering is used for shut down sequence

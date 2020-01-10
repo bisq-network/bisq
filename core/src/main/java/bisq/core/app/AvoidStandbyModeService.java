@@ -86,7 +86,7 @@ public class AvoidStandbyModeService {
             InputStream inputStream = null;
             try {
                 inputStream = getClass().getClassLoader().getResourceAsStream("prevent-app-nap-silent-sound.aiff");
-                File soundFile = new File(config.getAppDataDir(), "prevent-app-nap-silent-sound.aiff");
+                File soundFile = new File(config.appDataDir, "prevent-app-nap-silent-sound.aiff");
                 if (!soundFile.exists()) {
                     outputStream = new FileOutputStream(soundFile);
                     IOUtils.copy(inputStream, outputStream);

@@ -271,8 +271,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         dontShowAgainMapAsObservable.putAll(getDontShowAgainMap());
 
         // Override settings with options if set
-        if (config.isUseTorForBtcOptionSetExplicitly())
-            setUseTorForBitcoinJ(config.isUseTorForBtc());
+        if (config.useTorForBtcOptionSetExplicitly)
+            setUseTorForBitcoinJ(config.useTorForBtc);
 
         if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty()) {
             if (getBitcoinNodes() != null && !getBitcoinNodes().equals(btcNodesFromOptions)) {
@@ -629,7 +629,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setDaoFullNode(boolean value) {
         // We only persist if we have not set the program argument
-        if (config.isFullDaoNodeOptionSetExplicitly()) {
+        if (config.fullDaoNodeOptionSetExplicitly) {
             prefPayload.setDaoFullNode(value);
             persist();
         }
@@ -741,7 +741,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
         if ((!Config.baseCurrencyNetwork().isMainnet()
                 || localBitcoinNode.isDetected())
-                && !config.isUseTorForBtcOptionSetExplicitly())
+                && !config.useTorForBtcOptionSetExplicitly)
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();
@@ -775,7 +775,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean isDaoFullNode() {
-        if (config.isFullDaoNodeOptionSetExplicitly()) {
+        if (config.fullDaoNodeOptionSetExplicitly) {
             return fullDaoNodeFromOptions;
         } else {
             return prefPayload.isDaoFullNode();

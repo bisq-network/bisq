@@ -75,7 +75,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     private BackupView(Preferences preferences, Config config) {
         super();
         this.preferences = preferences;
-        dataDir = new File(config.getAppDataDir().getPath());
+        dataDir = new File(config.appDataDir.getPath());
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
 

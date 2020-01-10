@@ -55,6 +55,6 @@ public class TradeModule extends AppModule {
         bind(SignedWitnessStorageService.class).in(Singleton.class);
         bind(ReferralIdService.class).in(Singleton.class);
         bind(AssetTradeActivityCheck.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(DUMP_STATISTICS)).to(config.isDumpStatistics());
+        bindConstant().annotatedWith(named(DUMP_STATISTICS)).to(config.dumpStatistics);
     }
 }

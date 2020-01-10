@@ -42,7 +42,7 @@ public class CoreSetup {
         Res.setup();
         CurrencyUtil.setup();
 
-        Version.setBaseCryptoNetworkId(config.getBaseCurrencyNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
 
         try {
@@ -56,10 +56,10 @@ public class CoreSetup {
     }
 
     private static void setupLog(Config config) {
-        String logPath = Paths.get(config.getAppDataDir().getPath(), "bisq").toString();
+        String logPath = Paths.get(config.appDataDir.getPath(), "bisq").toString();
         Log.setup(logPath);
         log.info("\n\n\nLog files under: " + logPath);
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(config.getLogLevel()));
+        Log.setLevel(Level.toLevel(config.logLevel));
     }
 }

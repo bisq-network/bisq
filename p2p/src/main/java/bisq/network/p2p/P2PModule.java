@@ -75,24 +75,24 @@ public class P2PModule extends AppModule {
 
         requestStaticInjection(Connection.class);
 
-        bindConstant().annotatedWith(Names.named(USE_LOCALHOST_FOR_P2P)).to(config.isUseLocalhostForP2P());
+        bindConstant().annotatedWith(Names.named(USE_LOCALHOST_FOR_P2P)).to(config.useLocalhostForP2P);
 
-        bind(File.class).annotatedWith(named(TOR_DIR)).toInstance(config.getTorDir());
+        bind(File.class).annotatedWith(named(TOR_DIR)).toInstance(config.torDir);
 
-        bind(int.class).annotatedWith(Names.named(NODE_PORT)).toInstance(config.getNodePort());
+        bind(int.class).annotatedWith(Names.named(NODE_PORT)).toInstance(config.nodePort);
 
-        bindConstant().annotatedWith(named(MAX_CONNECTIONS)).to(config.getMaxConnections());
+        bindConstant().annotatedWith(named(MAX_CONNECTIONS)).to(config.maxConnections);
 
-        bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(BAN_LIST)).toInstance(config.getBanList());
-        bindConstant().annotatedWith(named(SOCKS_5_PROXY_BTC_ADDRESS)).to(config.getSocks5ProxyBtcAddress());
-        bindConstant().annotatedWith(named(SOCKS_5_PROXY_HTTP_ADDRESS)).to(config.getSocks5ProxyHttpAddress());
-        bind(File.class).annotatedWith(named(TORRC_FILE)).toProvider(of(config.getTorrcFile())); // allow null value
-        bindConstant().annotatedWith(named(TORRC_OPTIONS)).to(config.getTorrcOptions());
-        bindConstant().annotatedWith(named(TOR_CONTROL_PORT)).to(config.getTorControlPort());
-        bindConstant().annotatedWith(named(TOR_CONTROL_PASSWORD)).to(config.getTorControlPassword());
-        bind(File.class).annotatedWith(named(TOR_CONTROL_COOKIE_FILE)).toProvider(of(config.getTorControlCookieFile()));
-        bindConstant().annotatedWith(named(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)).to(config.isUseTorControlSafeCookieAuth());
-        bindConstant().annotatedWith(named(TOR_STREAM_ISOLATION)).to(config.isTorStreamIsolation());
+        bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(BAN_LIST)).toInstance(config.banList);
+        bindConstant().annotatedWith(named(SOCKS_5_PROXY_BTC_ADDRESS)).to(config.socks5ProxyBtcAddress);
+        bindConstant().annotatedWith(named(SOCKS_5_PROXY_HTTP_ADDRESS)).to(config.socks5ProxyHttpAddress);
+        bind(File.class).annotatedWith(named(TORRC_FILE)).toProvider(of(config.torrcFile)); // allow null value
+        bindConstant().annotatedWith(named(TORRC_OPTIONS)).to(config.torrcOptions);
+        bindConstant().annotatedWith(named(TOR_CONTROL_PORT)).to(config.torControlPort);
+        bindConstant().annotatedWith(named(TOR_CONTROL_PASSWORD)).to(config.torControlPassword);
+        bind(File.class).annotatedWith(named(TOR_CONTROL_COOKIE_FILE)).toProvider(of(config.torControlCookieFile));
+        bindConstant().annotatedWith(named(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)).to(config.useTorControlSafeCookieAuth);
+        bindConstant().annotatedWith(named(TOR_STREAM_ISOLATION)).to(config.torStreamIsolation);
         bindConstant().annotatedWith(named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE")).to(1000);
     }
 }

@@ -195,9 +195,9 @@ public class DaoModule extends AppModule {
         bind(RepublishGovernanceDataHandler.class).in(Singleton.class);
 
         // Genesis
-        bindConstant().annotatedWith(named(Config.GENESIS_TX_ID)).to(config.getGenesisTxId());
-        bindConstant().annotatedWith(named(Config.GENESIS_BLOCK_HEIGHT)).to(config.getGenesisBlockHeight());
-        bindConstant().annotatedWith(named(Config.GENESIS_TOTAL_SUPPLY)).to(config.getGenesisTotalSupply());
+        bindConstant().annotatedWith(named(Config.GENESIS_TX_ID)).to(config.genesisTxId);
+        bindConstant().annotatedWith(named(Config.GENESIS_BLOCK_HEIGHT)).to(config.genesisBlockHeight);
+        bindConstant().annotatedWith(named(Config.GENESIS_TOTAL_SUPPLY)).to(config.genesisTotalSupply);
 
         // Bonds
         bind(LockupTxService.class).in(Singleton.class);
@@ -215,15 +215,15 @@ public class DaoModule extends AppModule {
         bind(MyProofOfBurnListService.class).in(Singleton.class);
 
         // Options
-        bindConstant().annotatedWith(named(Config.RPC_USER)).to(config.getRpcUser());
-        bindConstant().annotatedWith(named(Config.RPC_PASSWORD)).to(config.getRpcPassword());
-        bindConstant().annotatedWith(named(Config.RPC_HOST)).to(config.getRpcHost());
-        bindConstant().annotatedWith(named(Config.RPC_PORT)).to(config.getRpcPort());
-        bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_PORT)).to(config.getRpcBlockNotificationPort());
-        bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_HOST)).to(config.getRpcBlockNotificationHost());
-        bindConstant().annotatedWith(named(Config.DUMP_BLOCKCHAIN_DATA)).to(config.isDumpBlockchainData());
-        bindConstant().annotatedWith(named(Config.FULL_DAO_NODE)).to(config.isFullDaoNode());
-        bindConstant().annotatedWith(named(Config.DAO_ACTIVATED)).to(config.isDaoActivated());
+        bindConstant().annotatedWith(named(Config.RPC_USER)).to(config.rpcUser);
+        bindConstant().annotatedWith(named(Config.RPC_PASSWORD)).to(config.rpcPassword);
+        bindConstant().annotatedWith(named(Config.RPC_HOST)).to(config.rpcHost);
+        bindConstant().annotatedWith(named(Config.RPC_PORT)).to(config.rpcPort);
+        bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_PORT)).to(config.rpcBlockNotificationPort);
+        bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_HOST)).to(config.rpcBlockNotificationHost);
+        bindConstant().annotatedWith(named(Config.DUMP_BLOCKCHAIN_DATA)).to(config.dumpBlockchainData);
+        bindConstant().annotatedWith(named(Config.FULL_DAO_NODE)).to(config.fullDaoNode);
+        bindConstant().annotatedWith(named(Config.DAO_ACTIVATED)).to(config.daoActivated);
     }
 }
 

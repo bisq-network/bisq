@@ -292,7 +292,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
             scanner.close();
             final String hashOfJar = sb.toString();
 
-            Path path = Paths.get(config.getAppDataDir().getPath(), fileDescriptor.getFileName());
+            Path path = Paths.get(config.appDataDir.getPath(), fileDescriptor.getFileName());
             final String target = path.toString();
             try (PrintWriter writer = new PrintWriter(target, "UTF-8")) {
                 writer.println(hashOfJar);

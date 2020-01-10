@@ -115,7 +115,7 @@ public class FilterManager {
         this.keyRing = keyRing;
         this.user = user;
         this.preferences = preferences;
-        this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
+        this.configFileEditor = new ConfigFileEditor(config.configFile);
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
         pubKeyAsHex = useDevPrivilegeKeys ?

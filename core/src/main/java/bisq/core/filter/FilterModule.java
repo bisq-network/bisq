@@ -34,6 +34,6 @@ public class FilterModule extends AppModule {
     @Override
     protected final void configure() {
         bind(FilterManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(IGNORE_DEV_MSG)).to(config.isIgnoreDevMsg());
+        bindConstant().annotatedWith(named(IGNORE_DEV_MSG)).to(config.ignoreDevMsg);
     }
 }
