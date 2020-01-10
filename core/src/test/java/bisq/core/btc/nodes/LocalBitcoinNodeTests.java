@@ -3,7 +3,6 @@ package bisq.core.btc.nodes;
 import java.net.ServerSocket;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,37 +16,28 @@ public class LocalBitcoinNodeTests {
 
     private AtomicBoolean called = new AtomicBoolean(false);
     private Runnable callback = () -> called.set(true);
-    private int port;
+    private ServerSocket socket;
     private LocalBitcoinNode localBitcoinNode;
 
     @Before
     public void setUp() throws IOException {
-        // Find an available port
-        try (ServerSocket socket = new ServerSocket(0)) {
-            port = socket.getLocalPort();
-        }
-        localBitcoinNode = new LocalBitcoinNode(port);
+        // Bind to and listen on an available port
+        socket = new ServerSocket(0);
+        localBitcoinNode = new LocalBitcoinNode(socket.getLocalPort());
     }
 
     @Test
     public void whenLocalBitcoinNodeIsDetected_thenCallbackGetsRun_andIsDetectedReturnsTrue() {
-        // Listen on the port, indicating that the local bitcoin node is running
-        new Thread(() -> {
-            try (ServerSocket socket = new ServerSocket(port)){
-                socket.accept();
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
-        }).start();
-
+        // Continue listening on the port, indicating the local Bitcoin node is running
         localBitcoinNode.detectAndRun(callback);
         assertTrue(called.get());
         assertTrue(localBitcoinNode.isDetected());
     }
 
     @Test
-    public void whenLocalBitcoinNodeIsNotDetected_thenCallbackGetsRun_andIsDetectedReturnsFalse() {
-        // Leave port unbound, indicating that no local Bitcoin node is running
+    public void whenLocalBitcoinNodeIsNotDetected_thenCallbackGetsRun_andIsDetectedReturnsFalse() throws IOException {
+        // Stop listening on the port, indicating the local Bitcoin node is not running
+        socket.close();
         localBitcoinNode.detectAndRun(callback);
         assertTrue(called.get());
         assertFalse(localBitcoinNode.isDetected());
