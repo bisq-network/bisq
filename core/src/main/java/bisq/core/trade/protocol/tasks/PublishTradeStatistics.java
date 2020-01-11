@@ -83,7 +83,7 @@ public class PublishTradeStatistics extends TradeTask {
                         trade.getTradePrice(),
                         trade.getTradeAmount(),
                         trade.getDate(),
-                        trade.getDepositTx().getHashAsString(),
+                        "0000000000000000000000000000000000000000000000000000000000000000", // don't publish TXID for privacy
                         extraDataMap);
                 processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
             }
