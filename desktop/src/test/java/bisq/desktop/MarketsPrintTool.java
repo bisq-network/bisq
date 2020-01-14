@@ -21,8 +21,8 @@ import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
@@ -37,14 +37,14 @@ public class MarketsPrintTool {
         // <option value="onion_btc">DeepOnion (ONION)</option>
         // <option value="btc_bhd">Bahraini Dinar (BHD)</option>
 
-        final List<FiatCurrency> allSortedFiatCurrencies = CurrencyUtil.getAllSortedFiatCurrencies();
+        final Collection<FiatCurrency> allSortedFiatCurrencies = CurrencyUtil.getAllSortedFiatCurrencies();
         final Stream<MarketCurrency> fiatStream = allSortedFiatCurrencies.stream()
                 .filter(e -> !e.getCurrency().getCurrencyCode().equals("BSQ"))
                 .filter(e -> !e.getCurrency().getCurrencyCode().equals("BTC"))
                 .map(e -> new MarketCurrency("btc_" + e.getCode().toLowerCase(), e.getName(), e.getCode()))
                 .distinct();
 
-        final List<CryptoCurrency> allSortedCryptoCurrencies = CurrencyUtil.getAllSortedCryptoCurrencies();
+        final Collection<CryptoCurrency> allSortedCryptoCurrencies = CurrencyUtil.getAllSortedCryptoCurrencies();
         final Stream<MarketCurrency> cryptoStream = allSortedCryptoCurrencies.stream()
                 .filter(e -> !e.getCode().equals("BTC"))
                 .map(e -> new MarketCurrency(e.getCode().toLowerCase() + "_btc", e.getName(), e.getCode()))

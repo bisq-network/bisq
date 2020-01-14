@@ -726,9 +726,8 @@ public class AccountAgeWitnessService {
             final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
             switch (getAccountAgeCategory(accountSignAge)) {
                 case TWO_MONTHS_OR_MORE:
-                    return SignState.PEER_SIGNER;
                 case ONE_TO_TWO_MONTHS:
-                    return SignState.PEER_LIMIT_LIFTED;
+                    return SignState.PEER_SIGNER;
                 case LESS_ONE_MONTH:
                     return SignState.PEER_INITIAL;
                 case UNVERIFIED:

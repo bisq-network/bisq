@@ -24,7 +24,6 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.offer.MutableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -64,8 +63,13 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private EditOfferView(EditOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter, BsqFormatter bsqFormatter) {
-        super(model, navigation, preferences, transitions, offerDetailsWindow, btcFormatter, bsqFormatter);
+    private EditOfferView(EditOfferViewModel model,
+                          Navigation navigation,
+                          Preferences preferences,
+                          OfferDetailsWindow offerDetailsWindow,
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                          BsqFormatter bsqFormatter) {
+        super(model, navigation, preferences, offerDetailsWindow, btcFormatter, bsqFormatter);
     }
 
     @Override
@@ -192,7 +196,6 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
         cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
-        cancelButton.setId("cancel-button");
         cancelButton.setOnAction(event -> close());
         editOfferConfirmationBox.getChildren().add(cancelButton);
 

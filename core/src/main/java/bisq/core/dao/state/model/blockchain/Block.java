@@ -24,11 +24,11 @@ import bisq.common.proto.persistable.PersistablePayload;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
-import lombok.Value;
 
 /**
  * The Block which gets persisted in the DaoState. During parsing transactions can be
@@ -44,8 +44,8 @@ import lombok.Value;
  *
  */
 @EqualsAndHashCode(callSuper = true)
-@Value
 public final class Block extends BaseBlock implements PersistablePayload, ImmutableDaoStateModel {
+    // We do not expose txs with a Lombok getter. We cannot make it immutable as we add transactions during parsing.
     private final List<Tx> txs;
 
     public Block(int height, long time, String hash, String previousBlockHash) {
@@ -91,6 +91,17 @@ public final class Block extends BaseBlock implements PersistablePayload, Immuta
                 proto.getHash(),
                 proto.getPreviousBlockHash(),
                 txs);
+    }
+
+    public void addTx(Tx tx) {
+        txs.add(tx);
+    }
+
+    // We want to guarantee that no client can modify the list. We use unmodifiableList and not ImmutableList as
+    // we want that clients reflect any change to the source list. Also ImmutableList is more expensive as it
+    // creates a copy.
+    public List<Tx> getTxs() {
+        return Collections.unmodifiableList(txs);
     }
 
     @Override

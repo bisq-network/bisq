@@ -23,9 +23,13 @@ public class CssTheme {
     public static final int CSS_THEME_LIGHT = 0;
     public static final int CSS_THEME_DARK = 1;
 
+    private static int currentCSSTheme;
+
     public static void loadSceneStyles(Scene scene, int cssTheme) {
         String cssThemeFolder = "/bisq/desktop/";
         String cssThemeFile = "";
+
+        currentCSSTheme = cssTheme;
 
         switch (cssTheme) {
 
@@ -40,13 +44,18 @@ public class CssTheme {
         }
 
         scene.getStylesheets().setAll(
-            // load base styles first
-            cssThemeFolder + "bisq.css",
-            cssThemeFolder + "images.css",
-            cssThemeFolder + "CandleStickChart.css",
+                // load base styles first
+                cssThemeFolder + "bisq.css",
+                cssThemeFolder + "images.css",
+                cssThemeFolder + "CandleStickChart.css",
 
-            // load theme last to allow override
-            cssThemeFolder + cssThemeFile
+                // load theme last to allow override
+                cssThemeFolder + cssThemeFile
         );
     }
+
+    public static boolean isDarkTheme() {
+        return currentCSSTheme == CSS_THEME_DARK;
+    }
+
 }

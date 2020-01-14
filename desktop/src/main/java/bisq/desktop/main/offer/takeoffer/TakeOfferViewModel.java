@@ -29,7 +29,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -40,11 +40,12 @@ import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -87,7 +88,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private final WalletsSetup walletsSetup;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private AccountAgeWitnessService accountAgeWitnessService;
@@ -148,7 +148,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public TakeOfferViewModel(TakeOfferDataModel dataModel,
                               BtcValidator btcValidator,
                               P2PService p2PService,
-                              WalletsSetup walletsSetup,
                               Preferences preferences,
                               PriceFeedService priceFeedService,
                               AccountAgeWitnessService accountAgeWitnessService,
@@ -160,7 +159,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.walletsSetup = walletsSetup;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
@@ -247,7 +245,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.onTakeOffer(trade -> {
             this.trade = trade;
             trade.stateProperty().addListener(tradeStateListener);
-            applyTradeState(trade.getState());
+            applyTradeState();
             trade.errorMessageProperty().addListener(tradeErrorListener);
             applyTradeErrorMessage(trade.getErrorMessage());
             takeOfferCompleted.set(true);
@@ -283,7 +281,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     .show();
             return false;
         }
-
     }
 
     public void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
@@ -486,7 +483,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
     }
 
-    private void applyTradeState(Trade.State tradeState) {
+    private void applyTradeState() {
         if (trade.isDepositPublished()) {
             if (trade.getDepositTx() != null) {
                 if (takeOfferSucceededHandler != null)
@@ -551,7 +548,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         };
         isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
 
-        tradeStateListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
+        tradeStateListener = (ov, oldValue, newValue) -> applyTradeState();
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
         connectionListener = new ConnectionListener() {
@@ -712,7 +709,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get());
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(),
+                        dataModel.getAmount().get(),
+                        Restrictions.getMinBuyerSecurityDepositAsCoin());
     }
 
     public String getSecurityDepositWithCode() {
@@ -724,7 +723,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         final String takerFee = getFormatterForTakerFee().formatCoinWithCode(takerFeeAsCoin);
         if (dataModel.isCurrencyForTakerFeeBtc())
-            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get());
+            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(),
+                    FeeService.getMinTakerFee(dataModel.isCurrencyForTakerFeeBtc()));
         else
             return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
     }
@@ -748,7 +748,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTotalTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get());
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(),
+                        Coin.ZERO);
 
     }
 

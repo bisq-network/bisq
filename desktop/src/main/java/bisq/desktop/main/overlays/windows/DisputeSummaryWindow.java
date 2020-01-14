@@ -45,10 +45,10 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
-import bisq.core.util.coin.CoinFormatter;
-import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -122,7 +122,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ChangeListener<Boolean> customRadioButtonSelectedListener;
     private ChangeListener<Toggle> reasonToggleSelectionListener;
     private InputTextField buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField;
-    private ChangeListener<String> buyerPayoutAmountListener, sellerPayoutAmountListener;
+    private ChangeListener<Boolean> buyerPayoutAmountListener, sellerPayoutAmountListener;
     private CheckBox isLoserPublisherCheckBox;
     private ChangeListener<Toggle> tradeAmountToggleGroupListener;
 
@@ -337,16 +337,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         tradeAmountToggleGroupListener = (observable, oldValue, newValue) -> applyPayoutAmounts(newValue);
         tradeAmountToggleGroup.selectedToggleProperty().addListener(tradeAmountToggleGroupListener);
 
-        buyerPayoutAmountListener = (observable1, oldValue1, newValue1) -> applyCustomAmounts(buyerPayoutAmountInputTextField);
-        sellerPayoutAmountListener = (observable1, oldValue1, newValue1) -> applyCustomAmounts(sellerPayoutAmountInputTextField);
+        buyerPayoutAmountListener = (observable, oldValue, newValue) -> applyCustomAmounts(buyerPayoutAmountInputTextField, oldValue, newValue);
+        sellerPayoutAmountListener = (observable, oldValue, newValue) -> applyCustomAmounts(sellerPayoutAmountInputTextField, oldValue, newValue);
 
         customRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
             buyerPayoutAmountInputTextField.setEditable(newValue);
             sellerPayoutAmountInputTextField.setEditable(newValue);
 
             if (newValue) {
-                buyerPayoutAmountInputTextField.textProperty().addListener(buyerPayoutAmountListener);
-                sellerPayoutAmountInputTextField.textProperty().addListener(sellerPayoutAmountListener);
+                buyerPayoutAmountInputTextField.focusedProperty().addListener(buyerPayoutAmountListener);
+                sellerPayoutAmountInputTextField.focusedProperty().addListener(sellerPayoutAmountListener);
             } else {
                 removePayoutAmountListeners();
             }
@@ -356,10 +356,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void removePayoutAmountListeners() {
         if (buyerPayoutAmountInputTextField != null && buyerPayoutAmountListener != null)
-            buyerPayoutAmountInputTextField.textProperty().removeListener(buyerPayoutAmountListener);
+            buyerPayoutAmountInputTextField.focusedProperty().removeListener(buyerPayoutAmountListener);
 
         if (sellerPayoutAmountInputTextField != null && sellerPayoutAmountListener != null)
-            sellerPayoutAmountInputTextField.textProperty().removeListener(sellerPayoutAmountListener);
+            sellerPayoutAmountInputTextField.focusedProperty().removeListener(sellerPayoutAmountListener);
 
     }
 
@@ -373,6 +373,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount);
+
+        if (!totalAmount.isPositive()) {
+            return false;
+        }
+
         if (getDisputeManager(dispute) instanceof RefundManager) {
             // We allow to spend less in case of RefundAgent
             return totalAmount.compareTo(available) <= 0;
@@ -381,26 +386,39 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
-    private void applyCustomAmounts(InputTextField inputTextField) {
+    private void applyCustomAmounts(InputTextField inputTextField, boolean oldFocusValue, boolean newFocusValue) {
+        // We only apply adjustments at focus out, otherwise we cannot enter certain values if we update at each
+        // keystroke.
+        if (!oldFocusValue || newFocusValue) {
+            return;
+        }
+
         Contract contract = dispute.getContract();
+        boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
+        // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
+        // mediated payout. For Refund agent cases we do not have that restriction.
+        Coin minRefundAtDispute = isMediationDispute ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
+
         Offer offer = new Offer(contract.getOfferPayload());
-        Coin available = contract.getTradeAmount()
+        Coin totalAvailable = contract.getTradeAmount()
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
+        Coin availableForPayout = totalAvailable.subtract(minRefundAtDispute);
+
         Coin enteredAmount = ParsingUtils.parseToCoin(inputTextField.getText(), formatter);
-        if (enteredAmount.isNegative()) {
-            enteredAmount = Coin.ZERO;
+        if (enteredAmount.compareTo(minRefundAtDispute) < 0) {
+            enteredAmount = minRefundAtDispute;
             inputTextField.setText(formatter.formatCoin(enteredAmount));
         }
         if (enteredAmount.isPositive() && !Restrictions.isAboveDust(enteredAmount)) {
             enteredAmount = Restrictions.getMinNonDustOutput();
             inputTextField.setText(formatter.formatCoin(enteredAmount));
         }
-        if (enteredAmount.compareTo(available) > 0) {
-            enteredAmount = available;
+        if (enteredAmount.compareTo(availableForPayout) > 0) {
+            enteredAmount = availableForPayout;
             inputTextField.setText(formatter.formatCoin(enteredAmount));
         }
-        Coin counterPartAsCoin = available.subtract(enteredAmount);
+        Coin counterPartAsCoin = totalAvailable.subtract(enteredAmount);
         String formattedCounterPartAmount = formatter.formatCoin(counterPartAsCoin);
         Coin buyerAmount;
         Coin sellerAmount;
@@ -410,8 +428,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             Coin sellerAmountFromField = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
             Coin totalAmountFromFields = enteredAmount.add(sellerAmountFromField);
             // RefundAgent can enter less then available
-            if (getDisputeManager(dispute) instanceof MediationManager ||
-                    totalAmountFromFields.compareTo(available) > 0) {
+            if (isMediationDispute ||
+                    totalAmountFromFields.compareTo(totalAvailable) > 0) {
                 sellerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
             } else {
                 sellerAmount = sellerAmountFromField;
@@ -422,8 +440,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             Coin buyerAmountFromField = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
             Coin totalAmountFromFields = enteredAmount.add(buyerAmountFromField);
             // RefundAgent can enter less then available
-            if (getDisputeManager(dispute) instanceof MediationManager ||
-                    totalAmountFromFields.compareTo(available) > 0) {
+            if (isMediationDispute ||
+                    totalAmountFromFields.compareTo(totalAvailable) > 0) {
                 buyerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
             } else {
                 buyerAmount = buyerAmountFromField;
@@ -735,25 +753,31 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin buyerSecurityDeposit = offer.getBuyerSecurityDeposit();
         Coin sellerSecurityDeposit = offer.getSellerSecurityDeposit();
         Coin tradeAmount = contract.getTradeAmount();
+
+        boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
+        // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
+        // mediated payout. For Refund agent cases we do not have that restriction.
+        Coin minRefundAtDispute = isMediationDispute ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
+        Coin maxPayoutAmount = tradeAmount
+                .add(buyerSecurityDeposit)
+                .add(sellerSecurityDeposit)
+                .subtract(minRefundAtDispute);
+
         if (selectedTradeAmountToggle == buyerGetsTradeAmountRadioButton) {
             disputeResult.setBuyerPayoutAmount(tradeAmount.add(buyerSecurityDeposit));
             disputeResult.setSellerPayoutAmount(sellerSecurityDeposit);
             disputeResult.setWinner(DisputeResult.Winner.BUYER);
         } else if (selectedTradeAmountToggle == buyerGetsAllRadioButton) {
-            disputeResult.setBuyerPayoutAmount(tradeAmount
-                    .add(buyerSecurityDeposit)
-                    .add(sellerSecurityDeposit));
-            disputeResult.setSellerPayoutAmount(Coin.ZERO);
+            disputeResult.setBuyerPayoutAmount(maxPayoutAmount);
+            disputeResult.setSellerPayoutAmount(minRefundAtDispute);
             disputeResult.setWinner(DisputeResult.Winner.BUYER);
         } else if (selectedTradeAmountToggle == sellerGetsTradeAmountRadioButton) {
             disputeResult.setBuyerPayoutAmount(buyerSecurityDeposit);
             disputeResult.setSellerPayoutAmount(tradeAmount.add(sellerSecurityDeposit));
             disputeResult.setWinner(DisputeResult.Winner.SELLER);
         } else if (selectedTradeAmountToggle == sellerGetsAllRadioButton) {
-            disputeResult.setBuyerPayoutAmount(Coin.ZERO);
-            disputeResult.setSellerPayoutAmount(tradeAmount
-                    .add(sellerSecurityDeposit)
-                    .add(buyerSecurityDeposit));
+            disputeResult.setBuyerPayoutAmount(minRefundAtDispute);
+            disputeResult.setSellerPayoutAmount(maxPayoutAmount);
             disputeResult.setWinner(DisputeResult.Winner.SELLER);
         }
 
@@ -774,17 +798,26 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         buyerPayoutAmountInputTextField.setText(formatter.formatCoin(buyerPayoutAmount));
         sellerPayoutAmountInputTextField.setText(formatter.formatCoin(sellerPayoutAmount));
 
+        boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
+        // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
+        // mediated payout. For Refund agent cases we do not have that restriction.
+        Coin minRefundAtDispute = isMediationDispute ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
+        Coin maxPayoutAmount = tradeAmount
+                .add(buyerSecurityDeposit)
+                .add(sellerSecurityDeposit)
+                .subtract(minRefundAtDispute);
+
         if (buyerPayoutAmount.equals(tradeAmount.add(buyerSecurityDeposit)) &&
                 sellerPayoutAmount.equals(sellerSecurityDeposit)) {
             buyerGetsTradeAmountRadioButton.setSelected(true);
-        } else if (buyerPayoutAmount.equals(tradeAmount.add(buyerSecurityDeposit).add(sellerSecurityDeposit)) &&
-                sellerPayoutAmount.equals(Coin.ZERO)) {
+        } else if (buyerPayoutAmount.equals(maxPayoutAmount) &&
+                sellerPayoutAmount.equals(minRefundAtDispute)) {
             buyerGetsAllRadioButton.setSelected(true);
         } else if (sellerPayoutAmount.equals(tradeAmount.add(sellerSecurityDeposit))
                 && buyerPayoutAmount.equals(buyerSecurityDeposit)) {
             sellerGetsTradeAmountRadioButton.setSelected(true);
-        } else if (sellerPayoutAmount.equals(tradeAmount.add(buyerSecurityDeposit).add(sellerSecurityDeposit))
-                && buyerPayoutAmount.equals(Coin.ZERO)) {
+        } else if (sellerPayoutAmount.equals(maxPayoutAmount)
+                && buyerPayoutAmount.equals(minRefundAtDispute)) {
             sellerGetsAllRadioButton.setSelected(true);
         } else {
             customRadioButton.setSelected(true);

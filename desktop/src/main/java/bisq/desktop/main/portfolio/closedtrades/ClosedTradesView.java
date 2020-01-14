@@ -40,18 +40,15 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.bitcoinj.core.Coin;
-
-import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
@@ -115,14 +112,12 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
-                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
-        this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 

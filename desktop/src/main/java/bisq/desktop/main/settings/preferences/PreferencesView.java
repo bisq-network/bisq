@@ -48,7 +48,6 @@ import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
-import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.UserThread;
@@ -102,6 +101,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     // not supported yet
     //private ComboBox<String> btcDenominationComboBox;
     private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
+    private ComboBox<BlockChainExplorer> bsqBlockChainExplorerComboBox;
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
@@ -123,7 +123,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
-    private final CoinFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
@@ -132,6 +131,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private Button resetDontShowAgainButton, resyncDaoButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
     private ObservableList<BlockChainExplorer> blockExplorers;
+    private ObservableList<BlockChainExplorer> bsqBlockChainExplorers;
     private ObservableList<String> languageCodes;
     private ObservableList<Country> countries;
     private ObservableList<FiatCurrency> fiatCurrencies;
@@ -159,7 +159,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            AssetService assetService,
                            FilterManager filterManager,
                            DaoFacade daoFacade,
-                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                            @Named(DaoOptionKeys.RPC_USER) String rpcUser,
                            @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
@@ -170,7 +169,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
-        this.formatter = formatter;
         daoOptionsSet = fullDaoNode != null && !fullDaoNode.isEmpty() &&
                 rpcUser != null && !rpcUser.isEmpty() &&
                 rpcPassword != null && !rpcPassword.isEmpty() &&
@@ -181,6 +179,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     @Override
     public void initialize() {
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
+        bsqBlockChainExplorers = FXCollections.observableArrayList(preferences.getBsqBlockChainExplorers());
         languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
         countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
         fiatCurrencies = preferences.getFiatCurrenciesAsObservable();
@@ -237,10 +236,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 Res.get("shared.country"));
         userCountryComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.country"), userCountryComboBox,
                 false));
+
         blockChainExplorerComboBox = addComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer"));
         blockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer"),
                 blockChainExplorerComboBox, false));
+
+        bsqBlockChainExplorerComboBox = addComboBox(root, ++gridRow,
+                Res.get("setting.preferences.explorer.bsq"));
+        bsqBlockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer.bsq"),
+                bsqBlockChainExplorerComboBox, false));
 
         Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
@@ -732,6 +737,21 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
 
+        bsqBlockChainExplorerComboBox.setItems(bsqBlockChainExplorers);
+        bsqBlockChainExplorerComboBox.getSelectionModel().select(preferences.getBsqBlockChainExplorer());
+        bsqBlockChainExplorerComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(BlockChainExplorer bsqBlockChainExplorer) {
+                return bsqBlockChainExplorer.name;
+            }
+
+            @Override
+            public BlockChainExplorer fromString(String string) {
+                return null;
+            }
+        });
+        bsqBlockChainExplorerComboBox.setOnAction(e -> preferences.setBsqBlockChainExplorer(bsqBlockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
+
         deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()));
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
@@ -918,6 +938,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         userLanguageComboBox.setOnAction(null);
         userCountryComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);
+        bsqBlockChainExplorerComboBox.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);

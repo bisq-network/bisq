@@ -383,8 +383,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(trade -> {
                     new Popup().warning(Res.get("popup.warning.trade.depositTxNull", trade.getShortId()))
-                            .actionButtonText(Res.get("popup.warning.trade.depositTxNull.moveToFailedTrades"))
-                            .onAction(() -> tradeManager.addTradeToFailedTrades(trade))
+                            .actionButtonText(Res.get("popup.warning.trade.depositTxNull.shutDown"))
+                            .onAction(() -> BisqApp.getShutDownHandler().run())
+                            .secondaryActionButtonText(Res.get("popup.warning.trade.depositTxNull.moveToFailedTrades"))
+                            .onSecondaryAction(() -> tradeManager.addTradeToFailedTrades(trade))
                             .show();
                 });
             }

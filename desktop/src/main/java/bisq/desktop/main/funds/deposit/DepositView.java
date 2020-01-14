@@ -34,7 +34,6 @@ import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -123,7 +122,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Inject
     private DepositView(BtcWalletService walletService,
-                        FeeService feeService,
                         Preferences preferences,
                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.walletService = walletService;

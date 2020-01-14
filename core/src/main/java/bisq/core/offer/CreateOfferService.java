@@ -201,8 +201,7 @@ public class CreateOfferService {
         Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService,
                 referralIdService,
                 paymentAccount,
-                currencyCode,
-                preferences);
+                currencyCode);
 
         OfferUtil.validateOfferData(filterManager,
                 p2PService,

@@ -36,13 +36,9 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -56,7 +52,6 @@ import org.bitcoinj.wallet.listeners.WalletEventListener;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -83,16 +78,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.text.DateFormat;
-
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -112,7 +99,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final BtcWalletService btcWalletService;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final CoinFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -129,7 +115,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private TransactionsView(BtcWalletService btcWalletService,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
                              OfferDetailsWindow offerDetailsWindow,
@@ -137,7 +122,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.btcWalletService = btcWalletService;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
-        this.formatter = formatter;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.offerDetailsWindow = offerDetailsWindow;
@@ -218,6 +202,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         };
 
         keyEventEventHandler = event -> {
+            // Not intended to be public to users as the feature is not well tested
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
                 if (revertTxColumn.isVisible()) {
                     confidenceColumn.getStyleClass().remove("last-column");
@@ -225,8 +210,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     confidenceColumn.getStyleClass().add("last-column");
                 }
                 revertTxColumn.setVisible(!revertTxColumn.isVisible());
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.A, event))
-                showStatisticsPopup();
+            }
         };
 
         exportButton.updateText(Res.get("shared.exportCSV"));
@@ -556,101 +540,5 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             }
         }
     }
-
-    // This method is not intended for the public so we don't translate here
-    private void showStatisticsPopup() {
-        Map<Long, List<Coin>> map = new HashMap<>();
-        Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
-        displayedTransactions.forEach(item -> {
-            Coin amountAsCoin = item.getAmountAsCoin();
-            List<Coin> amounts;
-            long key = amountAsCoin.getValue();
-            if (!map.containsKey(key)) {
-                amounts = new ArrayList<>();
-                map.put(key, amounts);
-            } else {
-                amounts = map.get(key);
-            }
-            amounts.add(amountAsCoin);
-
-            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
-            String day = dateFormatter.format(item.getDate());
-
-            // TODO fee is dynamic now
-            Coin txFee = Coin.valueOf(20_000);
-            Coin createOfferFee = Coin.valueOf(50_000);
-            Coin takeOfferFee = Coin.valueOf(100_000);
-
-            if (!dataByDayMap.containsKey(day)) {
-                int numOffers = 0;
-                int numTrades = 0;
-                if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
-                    numOffers++;
-                else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
-                    numTrades++;
-
-                dataByDayMap.put(day, new Tuple4<>(item.getDate(), 1, numOffers, numTrades));
-            } else {
-                Tuple4<Date, Integer, Integer, Integer> tuple = dataByDayMap.get(day);
-                int prev = tuple.second;
-                int numOffers = tuple.third;
-                int numTrades = tuple.fourth;
-                if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
-                    numOffers++;
-                else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
-                    numTrades++;
-
-                dataByDayMap.put(day, new Tuple4<>(tuple.first, ++prev, numOffers, numTrades));
-            }
-        });
-
-        StringBuilder stringBuilder = new StringBuilder();
-        map.forEach((key, value) -> {
-            // This is not intended for the public so we don't translate here
-            stringBuilder.append("No. of transactions for amount ").
-                    append(formatter.formatCoinWithCode(Coin.valueOf(key))).
-                    append(": ").
-                    append(value.size()).
-                    append("\n");
-        });
-
-        List<Tuple4<String, Date, Integer, Tuple2<Integer, Integer>>> sortedDataByDayList = dataByDayMap.entrySet().stream().
-                map(e -> {
-                    Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
-                    return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.fourth));
-                }).sorted((o1, o2) -> o2.second.compareTo(o1.second))
-                .collect(Collectors.toList());
-        StringBuilder transactionsByDayStringBuilder = new StringBuilder();
-        StringBuilder offersStringBuilder = new StringBuilder();
-        StringBuilder tradesStringBuilder = new StringBuilder();
-        StringBuilder allStringBuilder = new StringBuilder();
-        // This is not intended for the public so we don't translate here
-        allStringBuilder.append(Res.get("shared.date")).append(";").append("Offers").append(";").append("Trades").append("\n");
-        sortedDataByDayList.forEach(tuple4 -> {
-            offersStringBuilder.append(tuple4.fourth.first).append(",");
-            tradesStringBuilder.append(tuple4.fourth.second).append(",");
-            allStringBuilder.append(tuple4.first).append(";").append(tuple4.fourth.first).append(";").append(tuple4.fourth.second).append("\n");
-            transactionsByDayStringBuilder.append("\n").
-                    append(tuple4.first).
-                    append(": ").
-                    append(tuple4.third).
-                    append(" (Offers: ").
-                    append(tuple4.fourth.first).
-                    append(" / Trades: ").
-                    append(tuple4.fourth.second).
-                    append(")");
-        });
-        // This is not intended for the public so we don't translate here
-        String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
-        new Popup().headLine("Statistical info")
-                .information(message)
-                .actionButtonText("Copy")
-                .onAction(() -> Utilities.copyToClipboard(message +
-                        "\n\nCSV (Offers):\n" + offersStringBuilder.toString() +
-                        "\n\nCSV (Trades):\n" + tradesStringBuilder.toString() +
-                        "\n\nCSV (all):\n" + allStringBuilder.toString()))
-                .show();
-    }
-
 }
 

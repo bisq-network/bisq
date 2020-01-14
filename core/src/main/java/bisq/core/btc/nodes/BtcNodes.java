@@ -64,18 +64,21 @@ public class BtcNodes {
                         new BtcNode("btc1.sqrrm.net", "3r44ddzjitznyahw.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "@sqrrm"),
                         new BtcNode("btc2.sqrrm.net", "i3a5xtzfm4xwtybd.onion", "81.171.22.143", BtcNode.DEFAULT_PORT, "@sqrrm"),
 
-                        // KanoczTomas - temp disabled until he returns
-                        // new BtcNode("btc.ispol.sk", "mbm6ffx6j5ygi2ck.onion", "193.58.196.212", BtcNode.DEFAULT_PORT, "@KanoczTomas"),
+                        // KanoczTomas
+                        new BtcNode("btc.ispol.sk", "mbm6ffx6j5ygi2ck.onion", "193.58.196.212", BtcNode.DEFAULT_PORT, "@KanoczTomas"),
 
                         // Devin Bileck
                         new BtcNode("btc1.dnsalias.net", "lva54pnbq2nsmjyr.onion", "165.227.34.198", BtcNode.DEFAULT_PORT, "@devinbileck"),
 
-                        // sgeisler
-                        new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "@sgeisler"),
+                        // sgeisler - temporarily disabled due to recent uptime falling below acceptable threshold
+                        // new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "@sgeisler"),
+
+                        // m52go
+                        new BtcNode("btc.bisq.cc", "4nnuyxm5k5tlyjq3.onion", "167.71.168.194", BtcNode.DEFAULT_PORT, "@m52go"),
 
                         // wiz
-                        new BtcNode("node100.hnl.wiz.biz", "22tg6ufbwz6o3l2u.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
-                        new BtcNode("node130.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node130.hnl.wiz.biz", "22tg6ufbwz6o3l2u.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node140.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
 
                         // others
                         new BtcNode("btc.jochen-hoenicke.de", "sslnjjhnmwllysv4.onion", "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke")

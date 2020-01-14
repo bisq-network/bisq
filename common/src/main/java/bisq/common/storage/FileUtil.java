@@ -23,6 +23,7 @@ import com.google.common.io.Files;
 
 import org.apache.commons.io.FileUtils;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -184,5 +185,13 @@ public class FileUtil {
 
     public static void copyDirectory(File source, File destination) throws IOException {
         FileUtils.copyDirectory(source, destination);
+    }
+
+    static File createNewFile(Path path) throws IOException {
+        File file = path.toFile();
+        if (!file.createNewFile()) {
+            throw new IOException("There already exists a file with path: " + path);
+        }
+        return file;
     }
 }

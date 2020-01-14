@@ -176,7 +176,7 @@ public abstract class PaymentMethodForm {
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
             tradeCurrency = paymentAccount instanceof AssetAccount ?
-                    CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
+                    CurrencyUtil.getAllSortedCryptoCurrencies().iterator().next() :
                     CurrencyUtil.getDefaultTradeCurrency();
 
 

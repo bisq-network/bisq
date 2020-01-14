@@ -38,8 +38,8 @@ import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -191,7 +191,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
 
         updateList();
         GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 2, 4);
-        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 10);
+        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 100);
         updateButtonState();
     }
 
@@ -271,7 +271,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         allItemsObservableList.setAll(proofOfBurnService.getProofOfBurnTxList().stream()
                 .map(tx -> new ProofOfBurnListItem(tx, proofOfBurnService, bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 10);
+        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 100);
     }
 
     private void updateButtonState() {

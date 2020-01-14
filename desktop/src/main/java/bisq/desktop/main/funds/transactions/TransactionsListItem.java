@@ -34,8 +34,6 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.coin.CoinFormatter;
 
-import bisq.common.crypto.PubKeyRing;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -89,7 +87,6 @@ class TransactionsListItem {
                          BsqWalletService bsqWalletService,
                          TransactionAwareTradable transactionAwareTradable,
                          DaoFacade daoFacade,
-                         PubKeyRing pubKeyRing,
                          CoinFormatter formatter,
                          long ignoreDustThreshold) {
         this.btcWalletService = btcWalletService;

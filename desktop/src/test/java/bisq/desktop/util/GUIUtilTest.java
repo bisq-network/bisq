@@ -23,6 +23,9 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.CoinMaker;
+
 import javafx.util.StringConverter;
 
 import java.util.HashMap;
@@ -35,6 +38,11 @@ import org.junit.Test;
 
 import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
 import static bisq.desktop.maker.TradeCurrencyMakers.euro;
+import static com.natpryce.makeiteasy.MakeItEasy.a;
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
+import static org.bitcoinj.core.CoinMaker.oneBitcoin;
+import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -102,5 +110,33 @@ public class GUIUtilTest {
 
         assertEquals("https://www.github.com", captor.getValue().toString());
 */
+    }
+
+    @Test
+    public void percentageOfTradeAmount_higherFeeAsMin() {
+
+        Coin fee = make(a(CoinMaker.Coin).but(with(satoshis, 20000L)));
+        Coin min = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
+
+        assertEquals(" (0.02% of trade amount)", GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, min));
+    }
+
+    @Test
+    public void percentageOfTradeAmount_minFee() {
+
+        Coin fee = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
+        Coin min = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
+
+        assertEquals(" (required minimum)",
+                GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, min));
+    }
+
+    @Test
+    public void percentageOfTradeAmount_minFeeZERO() {
+
+        Coin fee = make(a(CoinMaker.Coin).but(with(satoshis, 10000L)));
+
+        assertEquals(" (0.01% of trade amount)",
+                GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, Coin.ZERO));
     }
 }
