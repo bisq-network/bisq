@@ -82,7 +82,6 @@ import java.util.function.Function;
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
     private final boolean useDevPrivilegeKeys;
     private final OfferDetailsWindow offerDetailsWindow;
-    private final CoinFormatter formatter;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     @FXML
@@ -119,20 +118,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-    }
-
-    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparing(Function<Tradable, T> keyExtractor) {
-        return Comparator.comparing(
-                o -> o.getTradable() != null ? keyExtractor.apply(o.getTradable()) : null,
-                Comparator.nullsFirst(Comparator.naturalOrder())
-        );
-    }
-
-    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparingAsTrade(Function<Trade, T> keyExtractor) {
-        return Comparator.comparing(
-                o -> o.getTradable() instanceof Trade ? keyExtractor.apply((Trade) o.getTradable()) : null,
-                Comparator.nullsFirst(Comparator.naturalOrder())
-        );
     }
 
     @Override
@@ -216,36 +201,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 return 0;
         });
 
-        makerMiningFeeColumn.setComparator(new Comparator<ClosedTradableListItem>() {
-            @Override
-            public int compare(ClosedTradableListItem o1, ClosedTradableListItem o2) {
-                return model.getMakerMiningFee(o1).compareTo(model.getMakerMiningFee(o2));
-            }
-        });
+        makerMiningFeeColumn.setComparator(Comparator.comparing(model::getMakerMiningFee));
         makerMiningFeeColumn.setSortType(TableColumn.SortType.ASCENDING);
 
-        takerMiningFeeColumn.setComparator(new Comparator<ClosedTradableListItem>() {
-            @Override
-            public int compare(ClosedTradableListItem o1, ClosedTradableListItem o2) {
-                return model.getTakerMiningFee(o1).compareTo(model.getTakerMiningFee(o2));
-            }
-        });
+        takerMiningFeeColumn.setComparator(Comparator.comparing(model::getTakerMiningFee));
         takerMiningFeeColumn.setSortType(TableColumn.SortType.ASCENDING);
 
-        makerTradingFeeColumn.setComparator(new Comparator<ClosedTradableListItem>() {
-            @Override
-            public int compare(ClosedTradableListItem o1, ClosedTradableListItem o2) {
-                return model.getMakerTradingFee(o1).compareTo(model.getMakerTradingFee(o2));
-            }
-        });
+        makerTradingFeeColumn.setComparator(Comparator.comparing(model::getMakerTradingFee));
         makerTradingFeeColumn.setSortType(TableColumn.SortType.ASCENDING);
 
-        takerTradingFeeColumn.setComparator(new Comparator<ClosedTradableListItem>() {
-            @Override
-            public int compare(ClosedTradableListItem o1, ClosedTradableListItem o2) {
-                return model.getTakerTradingFee(o1).compareTo(model.getTakerTradingFee(o2));
-            }
-        });
+        takerTradingFeeColumn.setComparator(Comparator.comparing(model::getTakerTradingFee));
         takerTradingFeeColumn.setSortType(TableColumn.SortType.ASCENDING);
 
         buyerSecurityDepositColumn.setComparator((o1, o2) -> {

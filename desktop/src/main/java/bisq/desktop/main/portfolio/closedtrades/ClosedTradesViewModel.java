@@ -21,8 +21,6 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 
-import bisq.common.crypto.KeyRing;
-
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -44,17 +42,14 @@ import java.util.stream.Collectors;
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
     final AccountAgeWitnessService accountAgeWitnessService;
     private final CoinFormatter formatter;
-    final private KeyRing keyRing;
 
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
                                  AccountAgeWitnessService accountAgeWitnessService,
-                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
-                                 KeyRing keyRing) {
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
-        this.keyRing = keyRing;
     }
 
     public ObservableList<ClosedTradableListItem> getList() {
@@ -143,20 +138,6 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return formatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
         else
             return "";
-    }
-
-    String isBuyerMakerAndSellerTaker(ClosedTradableListItem item) {
-        if (item == null)
-            return "";
-        Tradable tradable = item.getTradable();
-        boolean flag = false;
-        String result = "";
-        if (tradable.getOffer() != null) {
-            flag = tradable.getOffer().isMyOffer(keyRing);
-            return flag ? Res.get("shared.maker", tradable.getOffer().getCurrencyCode()) : Res.get("shared.taker", tradable.getOffer().getCurrencyCode());
-        } else {
-            return "";
-        }
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
