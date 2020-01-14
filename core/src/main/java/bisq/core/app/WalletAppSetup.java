@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.btc.exceptions.InvalidHostException;
 import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
@@ -92,6 +93,7 @@ public class WalletAppSetup {
     void init(@Nullable Consumer<String> chainFileLockedExceptionHandler,
               @Nullable Consumer<String> spvFileCorruptedHandler,
               @Nullable Runnable showFirstPopupIfResyncSPVRequestedHandler,
+              @Nullable Runnable showPopupIfInvalidBtcConfigHandler,
               Runnable walletPasswordHandler,
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
@@ -169,7 +171,13 @@ public class WalletAppSetup {
                         }
                     }
                 },
-                walletServiceException::set);
+                exception -> {
+                    if (exception instanceof InvalidHostException && showPopupIfInvalidBtcConfigHandler != null) {
+                        showPopupIfInvalidBtcConfigHandler.run();
+                    } else {
+                        walletServiceException.set(exception);
+                    }
+                });
     }
 
     private String getBtcNetworkAsString() {

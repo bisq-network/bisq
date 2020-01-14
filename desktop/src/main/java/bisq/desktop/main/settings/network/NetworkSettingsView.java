@@ -27,6 +27,7 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.nodes.BtcNodes;
@@ -128,7 +129,6 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     private ToggleGroup bitcoinPeersToggleGroup;
     private BtcNodes.BitcoinNodesOption selectedBitcoinNodesOption;
     private ChangeListener<Toggle> bitcoinPeersToggleGroupListener;
-    private ChangeListener<String> btcNodesInputTextFieldListener;
     private ChangeListener<Filter> filterPropertyListener;
 
     @Inject
@@ -225,24 +225,26 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
             selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
         }
-        if (!btcNodes.useProvidedBtcNodes()) {
-            selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PUBLIC;
-            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
-        }
 
         selectBitcoinPeersToggle();
         onBitcoinPeersToggleSelected(false);
 
         bitcoinPeersToggleGroupListener = (observable, oldValue, newValue) -> {
             selectedBitcoinNodesOption = (BtcNodes.BitcoinNodesOption) newValue.getUserData();
-            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
             onBitcoinPeersToggleSelected(true);
         };
 
-        btcNodesInputTextFieldListener = (observable, oldValue, newValue) -> preferences.setBitcoinNodes(newValue);
+        btcNodesInputTextField.setPromptText(Res.get("settings.net.ips"));
+        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
+        btcNodesInputTextField.setValidator(regexValidator);
+        btcNodesInputTextField.setErrorMessage(Res.get("validation.invalidAddressList"));
         btcNodesInputTextFieldFocusListener = (observable, oldValue, newValue) -> {
-            if (oldValue && !newValue)
+            if (oldValue && !newValue
+                    && !btcNodesInputTextField.getText().equals(preferences.getBitcoinNodes())
+                    && btcNodesInputTextField.validate()) {
+                preferences.setBitcoinNodes(btcNodesInputTextField.getText());
                 showShutDownPopup();
+            }
         };
         filterPropertyListener = (observable, oldValue, newValue) -> {
             applyPreventPublicBtcNetwork();
@@ -311,9 +313,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         p2pPeersTableView.setItems(p2pSortedList);
 
         btcNodesInputTextField.setText(preferences.getBitcoinNodes());
-        btcNodesInputTextField.setPromptText(Res.get("settings.net.ips"));
 
-        btcNodesInputTextField.textProperty().addListener(btcNodesInputTextFieldListener);
         btcNodesInputTextField.focusedProperty().addListener(btcNodesInputTextFieldFocusListener);
 
         openTorSettingsButton.setOnAction(e -> torNetworkSettingsWindow.show());
@@ -347,7 +347,6 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         p2pSortedList.comparatorProperty().unbind();
         p2pPeersTableView.getItems().forEach(P2pNetworkListItem::cleanup);
         btcNodesInputTextField.focusedProperty().removeListener(btcNodesInputTextFieldFocusListener);
-        btcNodesInputTextField.textProperty().removeListener(btcNodesInputTextFieldListener);
 
         openTorSettingsButton.setOnAction(null);
     }
@@ -390,49 +389,64 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         useCustomNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
         usePublicNodesRadio.setDisable(bitcoinLocalhostNodeRunning || isPreventPublicBtcNetwork());
 
+        BtcNodes.BitcoinNodesOption currentBitcoinNodesOption = BtcNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+
         switch (selectedBitcoinNodesOption) {
             case CUSTOM:
                 btcNodesInputTextField.setDisable(false);
                 btcNodesLabel.setDisable(false);
-                if (calledFromUser && !btcNodesInputTextField.getText().isEmpty()) {
-                    if (isPreventPublicBtcNetwork()) {
-                        new Popup().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
-                                .onAction(() -> {
-                                    UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
-                                }).show();
-                    } else {
-                        showShutDownPopup();
+                if (!btcNodesInputTextField.getText().isEmpty()
+                        && btcNodesInputTextField.validate()
+                        && currentBitcoinNodesOption != BtcNodes.BitcoinNodesOption.CUSTOM) {
+                    preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                    if (calledFromUser) {
+                        if (isPreventPublicBtcNetwork()) {
+                            new Popup().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
+                                    .onAction(() -> {
+                                        UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
+                                    }).show();
+                        } else {
+                            showShutDownPopup();
+                        }
                     }
                 }
                 break;
             case PUBLIC:
                 btcNodesInputTextField.setDisable(true);
                 btcNodesLabel.setDisable(true);
-                if (calledFromUser)
-                    new Popup()
-                            .warning(Res.get("settings.net.warn.usePublicNodes"))
-                            .actionButtonText(Res.get("settings.net.warn.usePublicNodes.useProvided"))
-                            .onAction(() -> {
-                                UserThread.runAfter(() -> {
-                                    selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
-                                    preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
-                                    selectBitcoinPeersToggle();
-                                    onBitcoinPeersToggleSelected(false);
-                                }, 300, TimeUnit.MILLISECONDS);
-                            })
-                            .closeButtonText(Res.get("settings.net.warn.usePublicNodes.usePublic"))
-                            .onClose(() -> {
-                                UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
-                            })
-                            .show();
+                if (currentBitcoinNodesOption != BtcNodes.BitcoinNodesOption.PUBLIC) {
+                    preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                    if (calledFromUser) {
+                        new Popup()
+                                .warning(Res.get("settings.net.warn.usePublicNodes"))
+                                .actionButtonText(Res.get("settings.net.warn.usePublicNodes.useProvided"))
+                                .onAction(() -> {
+                                    UserThread.runAfter(() -> {
+                                        selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
+                                        preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                                        selectBitcoinPeersToggle();
+                                        onBitcoinPeersToggleSelected(false);
+                                    }, 300, TimeUnit.MILLISECONDS);
+                                })
+                                .closeButtonText(Res.get("settings.net.warn.usePublicNodes.usePublic"))
+                                .onClose(() -> {
+                                    UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
+                                })
+                                .show();
+                    }
+                }
                 break;
             default:
             case PROVIDED:
                 if (btcNodes.useProvidedBtcNodes()) {
                     btcNodesInputTextField.setDisable(true);
                     btcNodesLabel.setDisable(true);
-                    if (calledFromUser)
-                        showShutDownPopup();
+                    if (currentBitcoinNodesOption != BtcNodes.BitcoinNodesOption.PROVIDED) {
+                        preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                        if (calledFromUser) {
+                            showShutDownPopup();
+                        }
+                    }
                 } else {
                     selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PUBLIC;
                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());

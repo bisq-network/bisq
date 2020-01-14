@@ -222,6 +222,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Consumer<PrivateNotificationPayload> displayPrivateNotificationHandler;
+    @Setter
+    @Nullable
+    private Runnable showPopupIfInvalidBtcConfigHandler;
 
     @Getter
     final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
@@ -545,9 +548,9 @@ public class BisqSetup {
         };
 
         Timer startupTimeout = UserThread.runAfter(() -> {
-            if (p2PNetworkSetup.p2pNetworkFailed.get()) {
-                // Skip this timeout action if the p2p network setup failed
-                // since a p2p network error prompt will be shown containing the error message
+            if (p2PNetworkSetup.p2pNetworkFailed.get() || walletsSetup.walletsSetupFailed.get()) {
+                // Skip this timeout action if the p2p network or wallet setup failed
+                // since an error prompt will be shown containing the error message
                 return;
             }
             log.warn("startupTimeout called");
@@ -614,6 +617,7 @@ public class BisqSetup {
         walletAppSetup.init(chainFileLockedExceptionHandler,
                 spvFileCorruptedHandler,
                 showFirstPopupIfResyncSPVRequestedHandler,
+                showPopupIfInvalidBtcConfigHandler,
                 walletPasswordHandler,
                 () -> {
                     if (allBasicServicesInitialized) {
