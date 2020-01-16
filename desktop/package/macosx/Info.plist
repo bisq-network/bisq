@@ -55,7 +55,7 @@
         <key>CFBundlePackageType</key>
         <string>APPL</string>
 
-        <!-- macos will manage light/dark title bar automatically -->
+        <!-- macOS will manage light/dark title bar automatically -->
         <key>NSRequiresAquaSystemAppearance</key>
         <false/>
     </dict>
