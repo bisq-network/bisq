@@ -580,10 +580,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
                         offer.getCurrencyCode(), offer.getMirroredDirection());
                 new Popup()
-                        .warning(Res.get("offerbook.warning.tradeLimitNotMatching",
-                                DisplayUtils.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),
+                        .warning(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
                                 formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
-                                formatter.formatCoinWithCode(offer.getMinAmount())))
+                                Res.get("offerbook.warning.newVersionAnnouncement")))
                         .show();
             } else {
                 log.warn("We don't found a payment account but got called the isInsufficientTradeLimit case. That must not happen.");
