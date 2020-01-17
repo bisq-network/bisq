@@ -17,8 +17,6 @@
 
 package bisq.common.crypto;
 
-import bisq.common.util.Utilities;
-
 import javax.crypto.Cipher;
 
 import java.security.NoSuchAlgorithmException;

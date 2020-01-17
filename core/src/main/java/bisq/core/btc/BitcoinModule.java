@@ -37,7 +37,6 @@ import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 
 import java.io.File;
 
@@ -83,7 +82,7 @@ public class BitcoinModule extends AppModule {
         bindConstant().annotatedWith(named(Config.NUM_CONNECTIONS_FOR_BTC)).to(config.numConnectionsForBtc);
         bindConstant().annotatedWith(named(Config.USE_ALL_PROVIDED_NODES)).to(config.useAllProvidedNodes);
         bindConstant().annotatedWith(named(Config.IGNORE_LOCAL_BTC_NODE)).to(config.ignoreLocalBtcNode);
-        bindConstant().annotatedWith(Names.named(Config.SOCKS5_DISCOVER_MODE)).to(config.socks5DiscoverMode);
+        bindConstant().annotatedWith(named(Config.SOCKS5_DISCOVER_MODE)).to(config.socks5DiscoverMode);
         bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(PROVIDERS)).toInstance(config.providers);
 
         bind(AddressEntryList.class).in(Singleton.class);

@@ -37,7 +37,6 @@ import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 
 import java.time.Clock;
 
@@ -75,11 +74,11 @@ public class P2PModule extends AppModule {
 
         requestStaticInjection(Connection.class);
 
-        bindConstant().annotatedWith(Names.named(USE_LOCALHOST_FOR_P2P)).to(config.useLocalhostForP2P);
+        bindConstant().annotatedWith(named(USE_LOCALHOST_FOR_P2P)).to(config.useLocalhostForP2P);
 
         bind(File.class).annotatedWith(named(TOR_DIR)).toInstance(config.torDir);
 
-        bind(int.class).annotatedWith(Names.named(NODE_PORT)).toInstance(config.nodePort);
+        bind(int.class).annotatedWith(named(NODE_PORT)).toInstance(config.nodePort);
 
         bindConstant().annotatedWith(named(MAX_CONNECTIONS)).to(config.maxConnections);
 
