@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
 
 
 
@@ -65,7 +66,6 @@ import io.grpc.StatusRuntimeException;
  */
 @Slf4j
 public class BisqGrpcClient {
-    private static BisqGrpcClient instance;
 
     private final ManagedChannel channel;
     private final GetVersionGrpc.GetVersionBlockingStub getVersionStub;
@@ -76,10 +76,9 @@ public class BisqGrpcClient {
     private final GetPaymentAccountsGrpc.GetPaymentAccountsBlockingStub getPaymentAccountsStub;
     private final PlaceOfferGrpc.PlaceOfferBlockingStub placeOfferBlockingStub;
     private final CorePersistenceProtoResolver corePersistenceProtoResolver;
-    private final CoreNetworkProtoResolver coreNetworkProtoResolver;
 
     public static void main(String[] args) throws Exception {
-        instance = new BisqGrpcClient("localhost", 8888);
+        new BisqGrpcClient("localhost", 8888);
     }
 
     private BisqGrpcClient(String host, int port) {
@@ -176,6 +175,8 @@ public class BisqGrpcClient {
                         stopServer();
                         result = "Server stopped";
                         break;
+                    default:
+                        result = format("Unknown command '%s'", command);
                 }
 
                 // First response is rather slow (300 ms) but following responses are fast (3-5 ms).
@@ -199,7 +200,7 @@ public class BisqGrpcClient {
         placeOfferBlockingStub = PlaceOfferGrpc.newBlockingStub(channel);
         stopServerStub = StopServerGrpc.newBlockingStub(channel);
 
-        coreNetworkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
+        CoreNetworkProtoResolver coreNetworkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
         //TODO
         corePersistenceProtoResolver = new CorePersistenceProtoResolver(null, coreNetworkProtoResolver, null, null);
     }
