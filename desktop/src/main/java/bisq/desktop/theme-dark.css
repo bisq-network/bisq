@@ -128,6 +128,10 @@
     -bs-chart-tick: rgba(255, 255, 255, 0.7);
     -bs-chart-lines: rgba(0, 0, 0, 0.3);
     -bs-white: white;
+
+    /* dao chart colors */
+    -bs-chart-dao-line1: -bs-color-green-5;
+    -bs-chart-dao-line2: -bs-color-blue-2;
 }
 
 /* list view */
