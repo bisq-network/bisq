@@ -19,6 +19,7 @@ build
 .project
 .settings
 *.java.hsp
+*.java.hsw
 *.~ava
 /bundles
 /bisq-*
