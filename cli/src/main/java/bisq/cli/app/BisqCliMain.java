@@ -130,7 +130,7 @@ public class BisqCliMain {
                         result = paymentAccounts.toString();
                         break;
                     case "placeOffer":
-                        // test input: placeOffer CNY BUY 750000000 true -0.2251 1000000 500000 0.12 5a972121-c30a-4b0e-b519-b17b63795d16
+                        // test input: placeOffer CNY BUY 750000000 true -0.2251 1000000 500000 0.15 5a972121-c30a-4b0e-b519-b17b63795d16
                         // payment accountId and currency need to be adopted
 
                         // We expect 9 params
