@@ -44,11 +44,6 @@ public class BisqAppMain extends BisqExecutable {
         super("Bisq Desktop", "bisq-desktop", Version.VERSION);
     }
 
-    /* @Nullable
-     private BisqHttpApiServer bisqHttpApiServer;*/
-    /* @Nullable
-    private BisqGrpcServer bisqGrpcServer;
-    */
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
             // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
@@ -135,20 +130,11 @@ public class BisqAppMain extends BisqExecutable {
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-       /* if (runWithHttpApi()) {
-            bisqHttpApiServer = new BisqHttpApiServer();
-        }*/
         /*
         if (runWithGrpcApi()) {
-            bisqGrpcServer = new BisqGrpcServer();
-        }*/
-    }
-
-    private boolean runWithHttpApi() {
-        return bisqEnvironment.getDesktopWithHttpApi().toLowerCase().equals("true");
-    }
-
-    private boolean runWithGrpcApi() {
-        return bisqEnvironment.getDesktopWithGrpcApi().toLowerCase().equals("true");
+            CoreApi coreApi = injector.getInstance(CoreApi.class);
+            bisqGrpcServer = new BisqGrpcServer(coreApi);
+        }
+        */
     }
 }

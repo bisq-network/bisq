@@ -15,14 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.app;
+package bisq.daemon.app;
+
+import bisq.core.app.BisqExecutable;
+import bisq.core.app.BisqHeadlessAppMain;
+import bisq.core.app.BisqSetup;
+import bisq.core.app.CoreModule;
+import bisq.core.grpc.BisqGrpcServer;
+import bisq.core.grpc.CoreApi;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
-import bisq.common.app.Version;
 import bisq.common.setup.CommonSetup;
-
-import joptsimple.OptionSet;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -32,28 +36,16 @@ import java.util.concurrent.ThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqHeadlessAppMain extends BisqExecutable {
-    protected HeadlessApp headlessApp;
-
-    public BisqHeadlessAppMain() {
-        super("Bisq Daemon", "bisqd", Version.VERSION);
-    }
+public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.BisqSetupListener {
 
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
             // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
             // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-            Thread.currentThread().setContextClassLoader(BisqHeadlessAppMain.class.getClassLoader());
+            Thread.currentThread().setContextClassLoader(BisqDaemonMain.class.getClassLoader());
 
-            new BisqHeadlessAppMain().execute(args);
+            new BisqDaemonMain().execute(args);
         }
-    }
-
-    @Override
-    protected void doExecute(OptionSet options) {
-        super.doExecute(options);
-
-        keepRunning();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +63,8 @@ public class BisqHeadlessAppMain extends BisqExecutable {
 
     @Override
     protected void launchApplication() {
-        headlessApp = new BisqHeadlessApp();
-        CommonSetup.setup(BisqHeadlessAppMain.this.headlessApp);
+        headlessApp = new BisqDaemon();
+        CommonSetup.setup(BisqDaemonMain.this.headlessApp);
 
         UserThread.execute(this::onApplicationLaunched);
     }
@@ -81,11 +73,6 @@ public class BisqHeadlessAppMain extends BisqExecutable {
     protected void onApplicationLaunched() {
         super.onApplicationLaunched();
         headlessApp.setGracefulShutDownHandler(this);
-    }
-
-    @Override
-    public void onSetupComplete() {
-        log.info("onSetupComplete");
     }
 
 
@@ -114,12 +101,11 @@ public class BisqHeadlessAppMain extends BisqExecutable {
         onApplicationStarted();
     }
 
-    private void keepRunning() {
-        while (true) {
-            try {
-                Thread.sleep(Long.MAX_VALUE);
-            } catch (InterruptedException ignore) {
-            }
-        }
+    @Override
+    protected void onApplicationStarted() {
+        super.onApplicationStarted();
+
+        CoreApi coreApi = injector.getInstance(CoreApi.class);
+        new BisqGrpcServer(coreApi);
     }
 }

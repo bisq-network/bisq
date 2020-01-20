@@ -15,33 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.app;
+package bisq.daemon.app;
 
-import bisq.desktop.DesktopModule;
+import bisq.core.app.BisqHeadlessApp;
 
-import bisq.core.app.CoreModule;
-
-import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
-
-public class BisqAppModule extends AppModule {
-
-    public BisqAppModule(Environment environment) {
-        super(environment);
-    }
-
-    @Override
-    protected void configure() {
-        install(coreModule());
-        install(desktopModule());
-    }
-
-    private CoreModule coreModule() {
-        return new CoreModule(environment);
-    }
-
-    private DesktopModule desktopModule() {
-        return new DesktopModule(environment);
-    }
+public class BisqDaemon extends BisqHeadlessApp {
 }

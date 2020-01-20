@@ -18,8 +18,6 @@
 package bisq.core.app;
 
 public class AppOptionKeys {
-    public static final String DESKTOP_WITH_HTTP_API = "desktopWithHttpApi";
-    public static final String DESKTOP_WITH_GRPC_API = "desktopWithGrpcApi";
     public static final String APP_NAME_KEY = "appName";
     public static final String USER_DATA_DIR_KEY = "userDataDir";
     public static final String APP_DATA_DIR_KEY = "appDataDir";
