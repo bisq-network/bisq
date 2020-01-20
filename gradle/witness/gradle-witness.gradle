@@ -78,7 +78,6 @@ dependencyVerification {
         'org.bitcoinj:orchid:f836325cfa0466a011cb755c9b0fee6368487a2352eb45f4306ad9e4c18de080',
         'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
         'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
-        'org.codehaus.mojo:animal-sniffer-annotations:92654f493ecfec52082e76354f0ebf87648dc3d5cec2e3c3cdb947c016747a53',
         'org.fxmisc.easybind:easybind:666af296dda6de68751668a62661571b5238ac6f1c07c8a204fc6f902b222aaf',
         'org.jetbrains.kotlin:kotlin-stdlib-common:6c91dea17d7dce5f0b550c3de3305767e5fb46247b6d1eb7eca0ca1fe18458de',
         'org.jetbrains.kotlin:kotlin-stdlib-jdk7:25e2409aba0ec37d2fd7c77727d7835b511879de8d9bf4862af0b493aabbe39e',

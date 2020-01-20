@@ -259,13 +259,16 @@ configure(project(':core')) {
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation("io.grpc:grpc-protobuf:$grpcVersion") {
             exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
         }
         implementation("io.grpc:grpc-stub:$grpcVersion") {
             exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
         }
         compileOnly "javax.annotation:javax.annotation-api:1.2"
         runtimeOnly ("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
         }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -309,9 +312,11 @@ configure(project(':cli')) {
         compile project(':core')
         implementation("io.grpc:grpc-core:$grpcVersion") {
             exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
         }
         implementation("io.grpc:grpc-stub:$grpcVersion") {
             exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
         }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -458,9 +463,6 @@ configure(project(':daemon')) {
 
     dependencies {
         compile project(':core')
-        implementation("io.grpc:grpc-stub:$grpcVersion") {
-            exclude(module: 'guava')
-        }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:1.2"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
