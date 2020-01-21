@@ -37,11 +37,13 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -94,6 +96,7 @@ import javafx.util.Callback;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
@@ -213,6 +216,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 new Popup().warning(Res.get("portfolio.pending.removeFailedTrade"))
                         .onAction(model.dataModel::onMoveToFailedTrades)
                         .show();
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, keyEvent)) {
+                model.dataModel.refreshTradeState();
             }
         };
 
@@ -455,7 +460,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             });
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CellFactories

@@ -75,6 +75,8 @@ message NetworkEnvelope {
         DelayedPayoutTxSignatureResponse delayed_payout_tx_signature_response = 47;
         DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
         PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
+
+        RefreshTradeStateRequest refresh_trade_state_request = 50;
     }
 }
 
@@ -319,6 +321,12 @@ message MediatedPayoutTxSignatureMessage {
     string trade_id = 3;
     bytes tx_signature = 2;
     NodeAddress sender_node_address = 4;
+}
+
+message RefreshTradeStateRequest {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
 }
 
 // dispute
