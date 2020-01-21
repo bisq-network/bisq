@@ -64,10 +64,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Value
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
 
-    //We don't support arbitrators anymore so this entry will be only for pre v1.2. trades
-    @Deprecated
-    public static final String ARBITRATOR_ADDRESS = "arbAddr";
-
     public static final String MEDIATOR_ADDRESS = "medAddr";
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
 

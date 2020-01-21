@@ -42,14 +42,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class DisputeAgentSelection {
-
-    public static <T extends DisputeAgent> T getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
-                                                                    DisputeAgentManager<T> disputeAgentManager) {
-        return getLeastUsedDisputeAgent(tradeStatisticsManager,
-                disputeAgentManager,
-                TradeStatistics2.ARBITRATOR_ADDRESS);
-    }
-
     public static <T extends DisputeAgent> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
                                                                   DisputeAgentManager<T> disputeAgentManager) {
         return getLeastUsedDisputeAgent(tradeStatisticsManager,
