@@ -70,9 +70,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A candlestick chart is a style of bar-chart used primarily to describe price movements of a security, derivative,
  * or currency over time.
@@ -81,7 +78,6 @@ import org.slf4j.LoggerFactory;
  * extra value property using a CandleStickExtraValues object.
  */
 public class CandleStickChart extends XYChart<Number, Number> {
-    private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
 
     private final StringConverter<Number> priceStringConverter;
 
@@ -162,8 +158,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
     @Override
     protected void dataItemAdded(XYChart.Series<Number, Number> series, int itemIndex, XYChart.Data<Number, Number> item) {
         Node candle = createCandle(getData().indexOf(series), item, itemIndex);
-        if (getPlotChildren().contains(candle))
-            getPlotChildren().remove(candle);
+        getPlotChildren().remove(candle);
 
         if (shouldAnimate()) {
             candle.setOpacity(0);
@@ -195,10 +190,14 @@ public class CandleStickChart extends XYChart<Number, Number> {
             // fade out old candle
             FadeTransition ft = new FadeTransition(Duration.millis(500), node);
             ft.setToValue(0);
-            ft.setOnFinished((ActionEvent actionEvent) -> getPlotChildren().remove(node));
+            ft.setOnFinished((ActionEvent actionEvent) -> {
+                getPlotChildren().remove(node);
+                removeDataItemFromDisplay(series, item);
+            });
             ft.play();
         } else {
             getPlotChildren().remove(node);
+            removeDataItemFromDisplay(series, item);
         }
     }
 
@@ -206,7 +205,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
     protected void seriesAdded(XYChart.Series<Number, Number> series, int seriesIndex) {
         // handle any data already in series
         for (int j = 0; j < series.getData().size(); j++) {
-            XYChart.Data item = series.getData().get(j);
+            XYChart.Data<Number, Number> item = series.getData().get(j);
             Node candle = createCandle(seriesIndex, item, j);
 
             if (!getPlotChildren().contains(candle)) {
@@ -256,12 +255,16 @@ public class CandleStickChart extends XYChart<Number, Number> {
                 ft.setOnFinished((ActionEvent actionEvent) -> {
                     getPlotChildren().remove(seriesPath);
                     seriesPath.getElements().clear();
+                    removeSeriesFromDisplay(series);
                 });
                 ft.play();
             } else {
                 getPlotChildren().remove(seriesPath);
                 seriesPath.getElements().clear();
+                removeSeriesFromDisplay(series);
             }
+        } else {
+            removeSeriesFromDisplay(series);
         }
     }
 
@@ -273,7 +276,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
      * @param itemIndex   The index of the data item in the series
      * @return New candle node to represent the give data item
      */
-    private Node createCandle(int seriesIndex, final XYChart.Data item, int itemIndex) {
+    private Node createCandle(int seriesIndex, final XYChart.Data<Number, Number> item, int itemIndex) {
         Node candle = item.getNode();
         // check if candle has already been created
         if (candle instanceof Candle) {
