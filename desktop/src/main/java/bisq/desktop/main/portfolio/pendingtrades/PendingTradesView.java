@@ -31,7 +31,6 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.messages.ChatMessage;
@@ -45,6 +44,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -141,7 +141,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
-                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                             @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;

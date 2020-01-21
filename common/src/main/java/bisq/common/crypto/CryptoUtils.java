@@ -17,6 +17,9 @@
 
 package bisq.common.crypto;
 
+import javax.crypto.Cipher;
+
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.X509EncodedKeySpec;
@@ -36,5 +39,12 @@ public class CryptoUtils {
         byte[] bytes = new byte[size];
         new SecureRandom().nextBytes(bytes);
         return bytes;
+    }
+
+    public static void checkCryptoPolicySetup() throws NoSuchAlgorithmException, LimitedKeyStrengthException {
+        if (Cipher.getMaxAllowedKeyLength("AES") > 128)
+            log.debug("Congratulations, you have unlimited key length support!");
+        else
+            throw new LimitedKeyStrengthException();
     }
 }

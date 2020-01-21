@@ -21,9 +21,9 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import com.google.protobuf.Message;
+import bisq.common.util.CollectionUtils;
 
-import org.springframework.util.CollectionUtils;
+import com.google.protobuf.Message;
 
 import org.apache.commons.lang3.ArrayUtils;
 

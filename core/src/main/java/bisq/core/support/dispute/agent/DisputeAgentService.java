@@ -17,7 +17,6 @@
 
 package bisq.core.support.dispute.agent;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.filter.FilterManager;
 
 import bisq.network.p2p.NodeAddress;
@@ -25,6 +24,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.HashMapChangedListener;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Utilities;
@@ -62,7 +62,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
                                 ResultHandler resultHandler,
                                 ErrorMessageHandler errorMessageHandler) {
         log.debug("addDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
-        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ||
+        if (!Config.baseCurrencyNetwork().isMainnet() ||
                 !Utilities.encodeToHex(disputeAgent.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
             boolean result = p2PService.addProtectedStorageEntry(disputeAgent);
             if (result) {

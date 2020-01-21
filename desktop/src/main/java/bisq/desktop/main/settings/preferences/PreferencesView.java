@@ -30,10 +30,8 @@ import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.RegexValidator;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Country;
@@ -53,6 +51,7 @@ import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
@@ -160,20 +159,20 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            AssetService assetService,
                            FilterManager filterManager,
                            DaoFacade daoFacade,
-                           @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
-                           @Named(DaoOptionKeys.RPC_USER) String rpcUser,
-                           @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
-                           @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
+                           Config config,
+                           @Named(Config.RPC_USER) String rpcUser,
+                           @Named(Config.RPC_PASSWORD) String rpcPassword,
+                           @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
-        daoOptionsSet = fullDaoNode != null && !fullDaoNode.isEmpty() &&
-                rpcUser != null && !rpcUser.isEmpty() &&
-                rpcPassword != null && !rpcPassword.isEmpty() &&
-                rpcBlockNotificationPort != null && !rpcBlockNotificationPort.isEmpty();
+        daoOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
+                !rpcUser.isEmpty() &&
+                !rpcPassword.isEmpty() &&
+                rpcBlockNotificationPort != Config.UNSPECIFIED_PORT;
         this.displayStandbyModeFeature = Utilities.isOSX() || Utilities.isWindows();
     }
 
@@ -273,7 +272,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
                     int withdrawalTxFeePerByte = Integer.parseInt(transactionFeeInputTextField.getText());
-                    final long minFeePerByte = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte();
+                    final long minFeePerByte = Config.baseCurrencyNetwork().getDefaultMinFeePerByte();
                     if (withdrawalTxFeePerByte < minFeePerByte) {
                         new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerByte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);
@@ -650,7 +649,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 .collect(Collectors.toList());
         selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
         selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
-        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());*/
+        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BaseCurrencyNetwork.CURRENT_VALUE);*/
 
         boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
         useCustomFee.setSelected(useCustomWithdrawalTxFee);
@@ -920,7 +919,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
    /* private void onSelectNetwork() {
-        if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
+        if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BaseCurrencyNetwork.CURRENT_VALUE)
             selectNetwork();
     }
 
@@ -932,7 +931,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 })
                 .actionButtonText(Res.get("shared.shutDown"))
                 .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork()))
+                .onClose(() -> selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BaseCurrencyNetwork.CURRENT_VALUE))
                 .show();
     }*/
 

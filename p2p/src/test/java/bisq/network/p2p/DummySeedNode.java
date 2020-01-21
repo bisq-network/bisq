@@ -17,13 +17,12 @@
 
 package bisq.network.p2p;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.peers.BanList;
 
-import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -99,25 +98,25 @@ public class DummySeedNode {
                 String arg = arg1;
                 if (arg.startsWith("--"))
                     arg = arg.substring(2);
-                if (arg.startsWith(NetworkOptionKeys.NETWORK_ID)) {
-                    arg = arg.substring(NetworkOptionKeys.NETWORK_ID.length() + 1);
+                if (arg.startsWith("networkId")) {
+                    arg = arg.substring("networkId".length() + 1);
                     networkId = Integer.parseInt(arg);
                     log.debug("From processArgs: networkId=" + networkId);
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
                     Version.setBaseCryptoNetworkId(networkId);
-                } else if (arg.startsWith(NetworkOptionKeys.MAX_CONNECTIONS)) {
-                    arg = arg.substring(NetworkOptionKeys.MAX_CONNECTIONS.length() + 1);
+                } else if (arg.startsWith(Config.MAX_CONNECTIONS)) {
+                    arg = arg.substring(Config.MAX_CONNECTIONS.length() + 1);
                     maxConnections = Integer.parseInt(arg);
                     log.debug("From processArgs: maxConnections=" + maxConnections);
                     checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
-                } else if (arg.startsWith(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)) {
-                    arg = arg.substring(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P.length() + 1);
+                } else if (arg.startsWith(Config.USE_LOCALHOST_FOR_P2P)) {
+                    arg = arg.substring(Config.USE_LOCALHOST_FOR_P2P.length() + 1);
                     checkArgument(arg.equals("true") || arg.equals("false"));
                     useLocalhostForP2P = ("true").equals(arg);
                     log.debug("From processArgs: useLocalhostForP2P=" + useLocalhostForP2P);
-                } else if (arg.startsWith(CommonOptionKeys.LOG_LEVEL_KEY)) {
-                    arg = arg.substring(CommonOptionKeys.LOG_LEVEL_KEY.length() + 1);
+                } else if (arg.startsWith(Config.LOG_LEVEL)) {
+                    arg = arg.substring(Config.LOG_LEVEL.length() + 1);
                     logLevel = Level.toLevel(arg.toUpperCase());
                     log.debug("From processArgs: logLevel=" + logLevel);
                 } else if (arg.startsWith(SEED_NODES_LIST)) {
@@ -133,8 +132,8 @@ public class DummySeedNode {
                     });
                     log.debug("From processArgs: progArgSeedNodes=" + progArgSeedNodes);
                     progArgSeedNodes.remove(mySeedNodeAddress);
-                } else if (arg.startsWith(NetworkOptionKeys.BAN_LIST)) {
-                    arg = arg.substring(NetworkOptionKeys.BAN_LIST.length() + 1);
+                } else if (arg.startsWith(Config.BAN_LIST)) {
+                    arg = arg.substring(Config.BAN_LIST.length() + 1);
                     checkArgument(arg.contains(":") && arg.split(":").length > 1 && arg.split(":")[1].length() > 3,
                             "Wrong program argument " + arg);
                     List<String> list = Arrays.asList(arg.split(","));

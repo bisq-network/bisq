@@ -17,13 +17,12 @@
 
 package bisq.core.setup;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.CommonOptionKeys;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import java.net.URISyntaxException;
@@ -37,14 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreSetup {
 
-    public static void setup(BisqEnvironment bisqEnvironment) {
-        setupLog(bisqEnvironment);
-        CoreNetworkCapabilities.setSupportedCapabilities(bisqEnvironment);
+    public static void setup(Config config) {
+        setupLog(config);
+        CoreNetworkCapabilities.setSupportedCapabilities(config);
         Res.setup();
         CurrencyUtil.setup();
-        bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
 
-        Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
 
         try {
@@ -57,11 +55,11 @@ public class CoreSetup {
         }
     }
 
-    private static void setupLog(BisqEnvironment bisqEnvironment) {
-        String logPath = Paths.get(bisqEnvironment.getAppDataDir(), "bisq").toString();
+    private static void setupLog(Config config) {
+        String logPath = Paths.get(config.appDataDir.getPath(), "bisq").toString();
         Log.setup(logPath);
         log.info("\n\n\nLog files under: " + logPath);
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(config.logLevel));
     }
 }

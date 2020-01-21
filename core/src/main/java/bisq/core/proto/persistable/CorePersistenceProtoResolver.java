@@ -47,6 +47,7 @@ import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadList;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
+import bisq.common.config.Config;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.NavigationPath;
@@ -77,7 +78,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     @Inject
     public CorePersistenceProtoResolver(Provider<BtcWalletService> btcWalletService,
                                         NetworkProtoResolver networkProtoResolver,
-                                        @Named(Storage.STORAGE_DIR) File storageDir,
+                                        @Named(Config.STORAGE_DIR) File storageDir,
                                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.btcWalletService = btcWalletService;
         this.networkProtoResolver = networkProtoResolver;

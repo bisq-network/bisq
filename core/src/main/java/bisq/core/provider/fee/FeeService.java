@@ -17,12 +17,12 @@
 
 package bisq.core.provider.fee;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.util.Tuple2;
 
@@ -117,7 +117,7 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        minFeePerByte = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte();
+        minFeePerByte = Config.baseCurrencyNetwork().getDefaultMinFeePerByte();
 
         requestFees();
 

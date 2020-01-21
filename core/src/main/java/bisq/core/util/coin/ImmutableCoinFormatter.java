@@ -17,15 +17,12 @@
 
 package bisq.core.util.coin;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

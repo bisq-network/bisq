@@ -17,6 +17,8 @@
 
 package bisq.core.app;
 
+import bisq.common.config.BisqHelpFormatter;
+
 import joptsimple.OptionParser;
 
 import java.net.URISyntaxException;

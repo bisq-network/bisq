@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.app;
+package bisq.common.config;
 
 import joptsimple.HelpFormatter;
 import joptsimple.OptionDescriptor;

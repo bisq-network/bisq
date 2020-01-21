@@ -17,7 +17,6 @@
 
 package bisq.core.offer;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
@@ -28,10 +27,10 @@ import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.JsonFileManager;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import javax.inject.Named;
@@ -79,8 +78,8 @@ public class OfferBookService {
     public OfferBookService(P2PService p2PService,
                             PriceFeedService priceFeedService,
                             FilterManager filterManager,
-                            @Named(Storage.STORAGE_DIR) File storageDir,
-                            @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+                            @Named(Config.STORAGE_DIR) File storageDir,
+                            @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;

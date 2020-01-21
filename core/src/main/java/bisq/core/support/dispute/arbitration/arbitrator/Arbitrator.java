@@ -23,11 +23,10 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
-
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.blindvote;
 
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
@@ -31,8 +30,9 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.config.Config;
+
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -68,14 +68,14 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
                                 BlindVoteStorageService blindVoteStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
                                 BlindVoteValidator blindVoteValidator,
-                                @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
+                                Config config) {
         this.daoStateService = daoStateService;
         this.p2PService = p2PService;
         this.periodService = periodService;
         this.blindVoteStorageService = blindVoteStorageService;
         this.blindVoteValidator = blindVoteValidator;
 
-        if (daoActivated)
+        if (config.daoActivated)
             appendOnlyDataStoreService.addService(blindVoteStorageService);
     }
 

@@ -24,9 +24,9 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.alert.Alert;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import com.google.common.base.Joiner;
@@ -71,6 +71,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWindow> {
     private final Alert alert;
+    private final Config config;
     private Optional<DownloadTask> downloadTaskOptional;
     private VerifyTask verifyTask;
     private ProgressBar progressBar;
@@ -81,9 +82,9 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisplayUpdateDownloadWindow(Alert alert) {
+    public DisplayUpdateDownloadWindow(Alert alert, Config config) {
         this.alert = alert;
-
+        this.config = config;
         this.type = Type.Attention;
     }
 
@@ -291,7 +292,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
             scanner.close();
             final String hashOfJar = sb.toString();
 
-            Path path = Paths.get(BisqEnvironment.getStaticAppDataDir(), fileDescriptor.getFileName());
+            Path path = Paths.get(config.appDataDir.getPath(), fileDescriptor.getFileName());
             final String target = path.toString();
             try (PrintWriter writer = new PrintWriter(target, "UTF-8")) {
                 writer.println(hashOfJar);

@@ -17,7 +17,17 @@
 
 package bisq.common;
 
-public class CommonOptionKeys {
-    public static final String LOG_LEVEL_KEY = "logLevel";
-    public static final String USE_DEV_MODE = "useDevMode";
+public class BisqException extends RuntimeException {
+
+    public BisqException(Throwable cause) {
+        super(cause);
+    }
+
+    public BisqException(String format, Object... args) {
+        super(String.format(format, args));
+    }
+
+    public BisqException(Throwable cause, String format, Object... args) {
+        super(String.format(format, args), cause);
+    }
 }

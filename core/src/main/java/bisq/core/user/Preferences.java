@@ -17,13 +17,9 @@
 
 package bisq.core.user;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
-import bisq.core.btc.BtcOptionKeys;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -37,6 +33,8 @@ import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
@@ -135,9 +133,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final ObservableMap<String, Boolean> dontShowAgainMapAsObservable = FXCollections.observableHashMap();
 
     private final Storage<PreferencesPayload> storage;
-    private final BisqEnvironment bisqEnvironment;
-    private final String btcNodesFromOptions, useTorFlagFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
-            rpcUserFromOptions, rpcPwFromOptions, blockNotifyPortFromOptions;
+    private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
+    private final String btcNodesFromOptions, referralIdFromOptions,
+            rpcUserFromOptions, rpcPwFromOptions;
+    private final int blockNotifyPortFromOptions;
+    private final boolean fullDaoNodeFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -150,20 +151,19 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @SuppressWarnings("WeakerAccess")
     @Inject
     public Preferences(Storage<PreferencesPayload> storage,
-                       BisqEnvironment bisqEnvironment,
-                       @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
-                       @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions,
-                       @Named(AppOptionKeys.REFERRAL_ID) String referralId,
-                       @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
-                       @Named(DaoOptionKeys.RPC_USER) String rpcUser,
-                       @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
-                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
-
+                       Config config,
+                       LocalBitcoinNode localBitcoinNode,
+                       @Named(Config.BTC_NODES) String btcNodesFromOptions,
+                       @Named(Config.REFERRAL_ID) String referralId,
+                       @Named(Config.FULL_DAO_NODE) boolean fullDaoNode,
+                       @Named(Config.RPC_USER) String rpcUser,
+                       @Named(Config.RPC_PASSWORD) String rpcPassword,
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
 
         this.storage = storage;
-        this.bisqEnvironment = bisqEnvironment;
+        this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.btcNodesFromOptions = btcNodesFromOptions;
-        this.useTorFlagFromOptions = useTorFlagFromOptions;
         this.referralIdFromOptions = referralId;
         this.fullDaoNodeFromOptions = fullDaoNode;
         this.rpcUserFromOptions = rpcUser;
@@ -206,7 +206,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Override
     public void readPersisted() {
         PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 100);
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
@@ -271,12 +271,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         dontShowAgainMapAsObservable.putAll(getDontShowAgainMap());
 
         // Override settings with options if set
-        if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
-            if (useTorFlagFromOptions.equals("false"))
-                setUseTorForBitcoinJ(false);
-            else if (useTorFlagFromOptions.equals("true"))
-                setUseTorForBitcoinJ(true);
-        }
+        if (config.useTorForBtcOptionSetExplicitly)
+            setUseTorForBitcoinJ(config.useTorForBtc);
 
         if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty()) {
             if (getBitcoinNodes() != null && !getBitcoinNodes().equals(btcNodesFromOptions)) {
@@ -304,7 +300,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         // We set the capability in CoreNetworkCapabilities if the program argument is set.
         // If we have set it in the preferences view we handle it here.
-        CoreNetworkCapabilities.maybeApplyDaoFullMode(bisqEnvironment);
+        CoreNetworkCapabilities.maybeApplyDaoFullMode(config);
 
         initialReadDone = true;
         persist();
@@ -375,7 +371,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
-        if (BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
+        if (Config.baseCurrencyNetwork().isMainnet())
             setBlockChainExplorerMainNet(blockChainExplorer);
         else
             setBlockChainExplorerTestNet(blockChainExplorer);
@@ -633,7 +629,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setDaoFullNode(boolean value) {
         // We only persist if we have not set the program argument
-        if (fullDaoNodeFromOptions == null || fullDaoNodeFromOptions.isEmpty()) {
+        if (config.fullDaoNodeOptionSetExplicitly) {
             prefPayload.setDaoFullNode(value);
             persist();
         }
@@ -641,7 +637,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setRpcUser(String value) {
         // We only persist if we have not set the program argument
-        if (rpcUserFromOptions == null || rpcUserFromOptions.isEmpty()) {
+        if (!rpcUserFromOptions.isEmpty()) {
             prefPayload.setRpcUser(value);
             persist();
         }
@@ -651,7 +647,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setRpcPw(String value) {
         // We only persist if we have not set the program argument
-        if (rpcPwFromOptions == null || rpcPwFromOptions.isEmpty()) {
+        if (rpcPwFromOptions.isEmpty()) {
             prefPayload.setRpcPw(value);
             persist();
         }
@@ -659,7 +655,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setBlockNotifyPort(int value) {
         // We only persist if we have not set the program argument
-        if (blockNotifyPortFromOptions == null || blockNotifyPortFromOptions.isEmpty()) {
+        if (blockNotifyPortFromOptions == Config.UNSPECIFIED_PORT) {
             prefPayload.setBlockNotifyPort(value);
             persist();
         }
@@ -696,7 +692,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return prefPayload.getBlockChainExplorerMainNet();
@@ -715,7 +711,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return BTC_MAIN_NET_EXPLORERS;
@@ -743,9 +739,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet,
         // unless the useTorForBtc parameter is explicitly provided.
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
-        if ((!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
-                || bisqEnvironment.isBitcoinLocalhostNodeRunning())
-                && (useTorFlagFromOptions == null || useTorFlagFromOptions.isEmpty()))
+        if ((!Config.baseCurrencyNetwork().isMainnet()
+                || localBitcoinNode.isDetected())
+                && !config.useTorForBtcOptionSetExplicitly)
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();
@@ -775,19 +771,19 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public long getWithdrawalTxFeeInBytes() {
-        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte());
+        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), Config.baseCurrencyNetwork().getDefaultMinFeePerByte());
     }
 
     public boolean isDaoFullNode() {
-        if (fullDaoNodeFromOptions != null && !fullDaoNodeFromOptions.isEmpty()) {
-            return fullDaoNodeFromOptions.toLowerCase().equals("true");
+        if (config.fullDaoNodeOptionSetExplicitly) {
+            return fullDaoNodeFromOptions;
         } else {
             return prefPayload.isDaoFullNode();
         }
     }
 
     public String getRpcUser() {
-        if (rpcUserFromOptions != null && !rpcUserFromOptions.isEmpty()) {
+        if (!rpcUserFromOptions.isEmpty()) {
             return rpcUserFromOptions;
         } else {
             return prefPayload.getRpcUser();
@@ -795,7 +791,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public String getRpcPw() {
-        if (rpcPwFromOptions != null && !rpcPwFromOptions.isEmpty()) {
+        if (!rpcPwFromOptions.isEmpty()) {
             return rpcPwFromOptions;
         } else {
             return prefPayload.getRpcPw();
@@ -803,9 +799,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public int getBlockNotifyPort() {
-        if (blockNotifyPortFromOptions != null && !blockNotifyPortFromOptions.isEmpty()) {
+        if (blockNotifyPortFromOptions != Config.UNSPECIFIED_PORT) {
             try {
-                return Integer.parseInt(blockNotifyPortFromOptions);
+                return blockNotifyPortFromOptions;
             } catch (Throwable ignore) {
                 return 0;
             }

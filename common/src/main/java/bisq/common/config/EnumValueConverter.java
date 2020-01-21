@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.util.joptsimple;
+package bisq.common.config;
 
 import joptsimple.ValueConverter;
 
@@ -25,14 +25,13 @@ import com.google.common.collect.Sets;
 
 import java.util.Set;
 
-import static org.springframework.util.StringUtils.collectionToDelimitedString;
-
 /**
  * A {@link joptsimple.ValueConverter} that supports case-insensitive conversion from
- * String to an enum label. Useful in conjunction with {@link joptsimple.ArgumentAcceptingOptionSpec#ofType(Class)}
- * when the type in question is an enum.
+ * String to an enum label. Useful in conjunction with
+ * {@link joptsimple.ArgumentAcceptingOptionSpec#ofType(Class)} when the type in question
+ * is an enum.
  */
-public class EnumValueConverter implements ValueConverter<Enum> {
+class EnumValueConverter implements ValueConverter<Enum> {
 
     private final Class<? extends Enum> enumType;
 
@@ -45,7 +44,7 @@ public class EnumValueConverter implements ValueConverter<Enum> {
      * given value, trying all case variations in the process.
      *
      * @return the matching enum label (if any)
-     * @throws IllegalArgumentException if no such label matching the given value is found.
+     * @throws ConfigException if no such label matching the given value is found.
      */
     @Override
     public Enum convert(String value) {
@@ -55,8 +54,8 @@ public class EnumValueConverter implements ValueConverter<Enum> {
             if (result.isPresent())
                 return result.get();
         }
-        throw new IllegalArgumentException(String.format(
-                "No enum constant %s.[%s]", enumType.getName(), collectionToDelimitedString(candidates, "|")));
+        throw new ConfigException("Enum label %s.{%s} does not exist",
+                enumType.getSimpleName(), String.join("|", candidates));
     }
 
     @Override

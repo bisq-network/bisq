@@ -17,13 +17,14 @@
 
 package bisq.core.btc.setup;
 
+import bisq.common.config.Config;
+
 public enum RegTestHost {
 
     NONE,
     LOCALHOST,
     REMOTE_HOST;
 
-    public static final String DEFAULT_HOST = "localhost";
-    public static String HOST = DEFAULT_HOST;
+    public static String HOST = Config.DEFAULT_REGTEST_HOST;
 
 }

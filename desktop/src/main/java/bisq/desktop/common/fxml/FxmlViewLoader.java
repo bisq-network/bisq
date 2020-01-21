@@ -23,8 +23,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewFactory;
 import bisq.desktop.common.view.ViewLoader;
 
-import org.springframework.core.annotation.AnnotationUtils;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -36,8 +34,9 @@ import java.io.IOException;
 
 import java.util.ResourceBundle;
 
+import java.lang.annotation.Annotation;
+
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.springframework.core.annotation.AnnotationUtils.getDefaultValue;
 
 @Singleton
 public class FxmlViewLoader implements ViewLoader {
@@ -53,7 +52,7 @@ public class FxmlViewLoader implements ViewLoader {
 
     @SuppressWarnings("unchecked")
     public View load(Class<? extends View> viewClass) {
-        FxmlView fxmlView = AnnotationUtils.getAnnotation(viewClass, FxmlView.class);
+        FxmlView fxmlView = viewClass.getAnnotation(FxmlView.class);
 
         final Class<? extends FxmlView.PathConvention> convention;
         final Class<? extends FxmlView.PathConvention> defaultConvention =
@@ -112,5 +111,21 @@ public class FxmlViewLoader implements ViewLoader {
         }
     }
 
+    /**
+     * Copied and adapted from Spring Framework v4.3.6's AnnotationUtils#defaultValue
+     * method in order to make it possible to drop Bisq's dependency on Spring altogether.
+     */
+    @SuppressWarnings("SameParameterValue")
+    private static Object getDefaultValue(Class<? extends Annotation> annotationType, String attributeName) {
+        if (annotationType == null || attributeName == null || attributeName.length() == 0) {
+            return null;
+        }
+        try {
+            return annotationType.getDeclaredMethod(attributeName).getDefaultValue();
+        }
+        catch (Exception ex) {
+            return null;
+        }
+    }
 }
 

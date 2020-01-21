@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.desktop.app.BisqAppMain;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
@@ -24,7 +25,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -83,7 +83,7 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
     @Override
     protected void addHeadLine() {
 
-        Label versionNumber = new AutoTooltipLabel(BisqEnvironment.DEFAULT_APP_NAME + " v1.2");
+        Label versionNumber = new AutoTooltipLabel(BisqAppMain.DEFAULT_APP_NAME + " v1.2");
         versionNumber.getStyleClass().add("news-version");
         HBox.setHgrow(versionNumber, Priority.ALWAYS);
         versionNumber.setMaxWidth(Double.MAX_VALUE);

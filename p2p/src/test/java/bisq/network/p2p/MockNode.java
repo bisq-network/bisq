@@ -32,7 +32,10 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
+import java.nio.file.Files;
+
 import java.io.File;
+import java.io.IOException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -53,10 +56,11 @@ public class MockNode {
     @Getter
     public int maxConnections;
 
-    public MockNode(int maxConnections) {
+    public MockNode(int maxConnections) throws IOException {
         this.maxConnections = maxConnections;
         networkNode = mock(NetworkNode.class);
-        Storage<PeerList> storage = new Storage<>(mock(File.class), mock(PersistenceProtoResolver.class), mock(CorruptedDatabaseFilesHandler.class));
+        File storageDir = Files.createTempDirectory("storage").toFile();
+        Storage<PeerList> storage = new Storage<>(storageDir, mock(PersistenceProtoResolver.class), mock(CorruptedDatabaseFilesHandler.class));
         peerManager = new PeerManager(networkNode, mock(SeedNodeRepository.class), new ClockWatcher(), maxConnections, storage);
         connections = new HashSet<>();
         when(networkNode.getAllConnections()).thenReturn(connections);

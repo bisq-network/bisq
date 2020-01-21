@@ -85,7 +85,6 @@ dependencyVerification {
         'org.jetbrains.kotlin:kotlin-stdlib:6ea3d0921b26919b286f05cbdb906266666a36f9a7c096197114f7495708ffbc',
         'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
         'org.slf4j:slf4j-api:3a4cd4969015f3beb4b5b4d81dbafc01765fb60b8a439955ca64d8476fef553e',
-        'org.springframework:spring-core:c451e8417adb2ffb2445636da5e44a2f59307c4100037a1fe387c3fba4f29b52',
         'org.tukaani:xz:a594643d73cc01928cf6ca5ce100e094ea9d73af760a5d4fb6b75fa673ecec96',
     ]
 }

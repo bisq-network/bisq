@@ -17,7 +17,7 @@
 
 package bisq.core.locale;
 
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
 
 import bisq.asset.Asset;
 import bisq.asset.AssetRegistry;

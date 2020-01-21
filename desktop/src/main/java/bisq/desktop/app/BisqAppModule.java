@@ -22,26 +22,17 @@ import bisq.desktop.DesktopModule;
 import bisq.core.app.CoreModule;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 public class BisqAppModule extends AppModule {
 
-    public BisqAppModule(Environment environment) {
-        super(environment);
+    public BisqAppModule(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
-        install(coreModule());
-        install(desktopModule());
-    }
-
-    private CoreModule coreModule() {
-        return new CoreModule(environment);
-    }
-
-    private DesktopModule desktopModule() {
-        return new DesktopModule(environment);
+        install(new CoreModule(config));
+        install(new DesktopModule(config));
     }
 }

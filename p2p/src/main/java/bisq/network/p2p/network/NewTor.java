@@ -33,25 +33,27 @@ import org.berndpruenster.netlayer.tor.Torrc;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 /**
  * This class creates a brand new instance of the Tor onion router.
- * 
+ *
  * When asked, the class checks, whether command line parameters such as
  * --torrcFile and --torrcOptions are set and if so, takes these settings into
  * account. Then, a fresh set of Tor binaries is installed and Tor is launched.
  * Finally, a {@link Tor} instance is returned for further use.
- * 
+ *
  * @author Florian Reimair
  *
  */
 @Slf4j
 public class NewTor extends TorMode {
 
-    private final String torrcFile;
+    private final File torrcFile;
     private final String torrcOptions;
     private final Collection<String> bridgeEntries;
 
-    public NewTor(File torWorkingDirectory, String torrcFile, String torrcOptions, Collection<String> bridgeEntries) {
+    public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, Collection<String> bridgeEntries) {
         super(torWorkingDirectory);
         this.torrcFile = torrcFile;
         this.torrcOptions = torrcOptions;
@@ -68,9 +70,9 @@ public class NewTor extends TorMode {
         Torrc override = null;
 
         // check if the user wants to provide his own torrc file
-        if (!"".equals(torrcFile)) {
+        if (torrcFile != null) {
             try {
-                override = new Torrc(new FileInputStream(new File(torrcFile)));
+                override = new Torrc(new FileInputStream(torrcFile));
             } catch (IOException e) {
                 log.error("custom torrc file not found ('{}'). Proceeding with defaults.", torrcFile);
             }

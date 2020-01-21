@@ -17,7 +17,6 @@
 
 package bisq.daemon.app;
 
-import bisq.core.app.BisqExecutable;
 import bisq.core.app.BisqHeadlessAppMain;
 import bisq.core.app.BisqSetup;
 import bisq.core.app.CoreModule;
@@ -39,13 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.BisqSetupListener {
 
     public static void main(String[] args) throws Exception {
-        if (BisqExecutable.setupInitialOptionParser(args)) {
-            // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
-            // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-            Thread.currentThread().setContextClassLoader(BisqDaemonMain.class.getClassLoader());
-
-            new BisqDaemonMain().execute(args);
-        }
+        new BisqDaemonMain().execute(args);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +75,7 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
 
     @Override
     protected AppModule getModule() {
-        return new CoreModule(bisqEnvironment);
+        return new CoreModule(config);
     }
 
     @Override

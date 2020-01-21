@@ -42,6 +42,7 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.app.HasCapabilities;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -87,10 +88,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
 
-import static bisq.network.p2p.network.ConnectionConfig.MSG_THROTTLE_PER_10_SEC;
-import static bisq.network.p2p.network.ConnectionConfig.MSG_THROTTLE_PER_SEC;
-import static bisq.network.p2p.network.ConnectionConfig.SEND_MSG_THROTTLE_SLEEP;
-import static bisq.network.p2p.network.ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -118,7 +115,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private static ConnectionConfig connectionConfig;
+    private static Config config;
 
     // Leaving some constants package-private for tests to know limits.
     private static final int PERMITTED_MESSAGE_SIZE = 200 * 1024;                       // 200 kb
@@ -144,10 +141,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // holder of state shared between InputHandler and Connection
     @Getter
     private final Statistic statistic;
-    private final int msgThrottlePer10Sec;
-    private final int msgThrottlePerSec;
-    private final int sendMsgThrottleTrigger;
-    private final int sendMsgThrottleSleep;
 
     // set in init
     private SynchronizedProtoOutputStream protoOutputStream;
@@ -188,13 +181,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         this.connectionListener = connectionListener;
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();
-
-        if (connectionConfig == null)
-            connectionConfig = new ConnectionConfig(MSG_THROTTLE_PER_SEC, MSG_THROTTLE_PER_10_SEC, SEND_MSG_THROTTLE_TRIGGER, SEND_MSG_THROTTLE_SLEEP);
-        msgThrottlePerSec = connectionConfig.getMsgThrottlePerSec();
-        msgThrottlePer10Sec = connectionConfig.getMsgThrottlePer10Sec();
-        sendMsgThrottleTrigger = connectionConfig.getSendMsgThrottleTrigger();
-        sendMsgThrottleSleep = connectionConfig.getSendMsgThrottleSleep();
 
         addMessageListener(messageListener);
 
@@ -276,10 +262,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     // Throttle outbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
-                    if (elapsed < sendMsgThrottleTrigger) {
+                    if (elapsed < config.sendMsgThrottleTrigger) {
                         log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
                                         "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
-                                sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
+                                config.sendMsgThrottleTrigger, config.sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
                                 networkEnvelope.getClass().getSimpleName());
 
                         // check if BundleOfEnvelopes is supported
@@ -292,7 +278,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     queueOfBundles.add(new BundleOfEnvelopes());
 
                                     // - and schedule it for sending
-                                    lastSendTimeStamp += sendMsgThrottleSleep;
+                                    lastSendTimeStamp += config.sendMsgThrottleSleep;
 
                                     bundleSender.schedule(() -> {
                                         if (!stopped) {
@@ -316,7 +302,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                             return;
                         }
 
-                        Thread.sleep(sendMsgThrottleSleep);
+                        Thread.sleep(config.sendMsgThrottleSleep);
                     }
 
                     lastSendTimeStamp = now;
@@ -389,10 +375,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         messageTimeStamps.add(now);
 
         // clean list
-        while (messageTimeStamps.size() > msgThrottlePer10Sec)
+        while (messageTimeStamps.size() > config.msgThrottlePer10Sec)
             messageTimeStamps.remove(0);
 
-        return violatesThrottleLimit(now, 1, msgThrottlePerSec) || violatesThrottleLimit(now, 10, msgThrottlePer10Sec);
+        return violatesThrottleLimit(now, 1, config.msgThrottlePerSec) ||
+                violatesThrottleLimit(now, 10, config.msgThrottlePer10Sec);
     }
 
     private boolean violatesThrottleLimit(long now, int seconds, int messageCountLimit) {

@@ -20,7 +20,7 @@ package bisq.desktop.app;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.exceptions.BisqException;
+import bisq.common.BisqException;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;

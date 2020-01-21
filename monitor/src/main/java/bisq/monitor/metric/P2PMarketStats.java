@@ -21,7 +21,7 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
 import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.offer.OfferPayload;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.trade.statistics.TradeStatistics2Store;

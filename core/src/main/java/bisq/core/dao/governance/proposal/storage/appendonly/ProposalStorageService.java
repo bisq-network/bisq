@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
+import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
 import javax.inject.Named;
@@ -42,7 +43,7 @@ public class ProposalStorageService extends MapStoreService<ProposalStore, Persi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalStorageService(@Named(Storage.STORAGE_DIR) File storageDir,
+    public ProposalStorageService(@Named(Config.STORAGE_DIR) File storageDir,
                                   Storage<ProposalStore> persistableNetworkPayloadMapStorage) {
         super(storageDir, persistableNetworkPayloadMapStorage);
     }

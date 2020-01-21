@@ -17,17 +17,16 @@
 
 package bisq.core.setup;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.DaoOptionKeys;
-
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.config.Config;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CoreNetworkCapabilities {
-    static void setSupportedCapabilities(BisqEnvironment bisqEnvironment) {
+
+    static void setSupportedCapabilities(Config config) {
         Capabilities.app.addAll(
                 Capability.TRADE_STATISTICS,
                 Capability.TRADE_STATISTICS_2,
@@ -43,17 +42,16 @@ public class CoreNetworkCapabilities {
                 Capability.TRADE_STATISTICS_HASH_UPDATE
         );
 
-        if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
-            maybeApplyDaoFullMode(bisqEnvironment);
+        if (config.daoActivated) {
+            maybeApplyDaoFullMode(config);
         }
     }
 
-    public static void maybeApplyDaoFullMode(BisqEnvironment bisqEnvironment) {
+    public static void maybeApplyDaoFullMode(Config config) {
         // If we set dao full mode at the preferences view we add the capability there. We read the preferences a
         // bit later than we call that method so we have to add DAO_FULL_NODE Capability at preferences as well to
         // be sure it is set in both cases.
-        String isFullDaoNode = bisqEnvironment.getProperty(DaoOptionKeys.FULL_DAO_NODE, String.class, "false");
-        if (isFullDaoNode != null && !isFullDaoNode.isEmpty() && isFullDaoNode.toLowerCase().equals("true")) {
+        if (config.fullDaoNode) {
             log.info("Set Capability.DAO_FULL_NODE");
             Capabilities.app.addAll(Capability.DAO_FULL_NODE);
         } else {

@@ -22,6 +22,8 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.InboundConnection;
 
+import java.io.IOException;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +43,7 @@ public class PeerManagerTest {
     private int maxConnectionsNonDirect;
 
     @Before
-    public void Setup() {
+    public void setUp() throws IOException {
         node = new MockNode(2);
         maxConnectionsPeer = Math.max(4, (int) Math.round(node.getMaxConnections() * 1.3));
         maxConnectionsNonDirect = Math.max(8, (int) Math.round(node.getMaxConnections() * 1.7));

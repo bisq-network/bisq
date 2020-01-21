@@ -17,7 +17,6 @@ import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.AvoidStandbyModeService;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.P2PNetworkSetup;
 import bisq.core.app.TorSetup;
 import bisq.core.app.WalletAppSetup;
@@ -53,6 +52,7 @@ import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
@@ -60,8 +60,6 @@ import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
-
-import org.springframework.mock.env.MockPropertySource;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -82,7 +80,7 @@ public class GuiceSetupTest {
         Res.setup();
         CurrencyUtil.setup();
 
-        injector = Guice.createInjector(new BisqAppModule(new BisqEnvironment(new MockPropertySource())));
+        injector = Guice.createInjector(new BisqAppModule(new Config()));
     }
 
     @Test

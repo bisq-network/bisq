@@ -37,105 +37,61 @@ import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
-import bisq.common.crypto.KeyStorage;
+import bisq.common.config.Config;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.Storage;
-
-import org.springframework.core.env.Environment;
-
-import com.google.inject.name.Names;
 
 import java.io.File;
 
+import static bisq.common.config.Config.*;
+import static bisq.core.btc.nodes.LocalBitcoinNode.LOCAL_BITCOIN_NODE_PORT;
 import static com.google.inject.name.Names.named;
 
 public class CoreModule extends AppModule {
 
-    public CoreModule(Environment environment) {
-        super(environment);
+    public CoreModule(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
+        bind(Config.class).toInstance(config);
 
         bind(BridgeAddressProvider.class).to(Preferences.class);
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
 
-        File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
-        bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
+        bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
 
-        CoinFormatter btcFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
+        CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.baseCurrencyNetworkParameters.getMonetaryFormat());
         bind(CoinFormatter.class).annotatedWith(named(FormattingUtils.BTC_FORMATTER_KEY)).toInstance(btcFormatter);
 
-        File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
-        bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
+        bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class);
 
-        Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
+        bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.useDevPrivilegeKeys);
+        bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.useDevMode);
+        bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.referralId);
 
-        Boolean useDevMode = environment.getProperty(CommonOptionKeys.USE_DEV_MODE, Boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(CommonOptionKeys.USE_DEV_MODE)).toInstance(useDevMode);
-
-        String referralId = environment.getProperty(AppOptionKeys.REFERRAL_ID, String.class, "");
-        bind(String.class).annotatedWith(Names.named(AppOptionKeys.REFERRAL_ID)).toInstance(referralId);
+        bindConstant().annotatedWith(named(LOCAL_BITCOIN_NODE_PORT))
+                .to(config.baseCurrencyNetworkParameters.getPort());
 
 
         // ordering is used for shut down sequence
-        install(tradeModule());
-        install(encryptionServiceModule());
-        install(offerModule());
-        install(p2pModule());
-        install(bitcoinModule());
-        install(daoModule());
-        install(alertModule());
-        install(filterModule());
-        install(corePresentationModule());
+        install(new TradeModule(config));
+        install(new EncryptionServiceModule(config));
+        install(new OfferModule(config));
+        install(new P2PModule(config));
+        install(new BitcoinModule(config));
+        install(new DaoModule(config));
+        install(new AlertModule(config));
+        install(new FilterModule(config));
+        install(new CorePresentationModule(config));
         bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
-    }
-
-    private TradeModule tradeModule() {
-        return new TradeModule(environment);
-    }
-
-    private EncryptionServiceModule encryptionServiceModule() {
-        return new EncryptionServiceModule(environment);
-    }
-
-    private AlertModule alertModule() {
-        return new AlertModule(environment);
-    }
-
-    private FilterModule filterModule() {
-        return new FilterModule(environment);
-    }
-
-    private OfferModule offerModule() {
-        return new OfferModule(environment);
-    }
-
-    private P2PModule p2pModule() {
-        return new P2PModule(environment);
-    }
-
-    private BitcoinModule bitcoinModule() {
-        return new BitcoinModule(environment);
-    }
-
-    private DaoModule daoModule() {
-        return new DaoModule(environment);
-    }
-
-    private CorePresentationModule corePresentationModule() {
-        return new CorePresentationModule(environment);
     }
 }

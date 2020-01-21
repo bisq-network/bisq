@@ -17,13 +17,12 @@
 
 package bisq.core.dao.node.full;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Utilities;
 
@@ -73,8 +72,8 @@ public class RpcService {
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcHost;
-    private final String rpcPort;
-    private final String rpcBlockPort;
+    private final int rpcPort;
+    private final int rpcBlockPort;
     private final String rpcBlockHost;
 
     private BtcdClient client;
@@ -92,27 +91,27 @@ public class RpcService {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public RpcService(Preferences preferences,
-                      @Named(DaoOptionKeys.RPC_HOST) String rpcHost,
-                      @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
-                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
-                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
+                      @Named(Config.RPC_HOST) String rpcHost,
+                      @Named(Config.RPC_PORT) int rpcPort,
+                      @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockPort,
+                      @Named(Config.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
         // mainnet is 8332, testnet 18332, regtest 18443
-        boolean isHostSet = rpcHost != null && !rpcHost.isEmpty();
-        boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
-        boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
-        boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
-        boolean isDaoBetaNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet();
+        boolean isHostSet = !rpcHost.isEmpty();
+        boolean isPortSet = rpcPort != Config.UNSPECIFIED_PORT;
+        boolean isMainnet = Config.baseCurrencyNetwork().isMainnet();
+        boolean isTestnet = Config.baseCurrencyNetwork().isTestnet();
+        boolean isDaoBetaNet = Config.baseCurrencyNetwork().isDaoBetaNet();
         this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
         this.rpcPort = isPortSet ? rpcPort :
-                isMainnet || isDaoBetaNet ? "8332" :
-                        isTestnet ? "18332" :
-                                "18443"; // regtest
-        boolean isBlockPortSet = rpcBlockPort != null && !rpcBlockPort.isEmpty();
-        boolean isBlockHostSet = rpcBlockHost != null && !rpcBlockHost.isEmpty();
-        this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : "5125";
+                isMainnet || isDaoBetaNet ? 8332 :
+                        isTestnet ? 18332 :
+                                18443; // regtest
+        boolean isBlockPortSet = rpcBlockPort != Config.UNSPECIFIED_PORT;
+        boolean isBlockHostSet = !rpcBlockHost.isEmpty();
+        this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : 5125;
         this.rpcBlockHost = isBlockHostSet ? rpcBlockHost : "127.0.0.1";
     }
 
@@ -138,11 +137,11 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.rpc.auth_scheme", "Basic");
                 nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
                 nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
-                nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
-                nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+                nodeConfig.setProperty("node.bitcoind.rpc.port", Integer.toString(rpcPort));
+                nodeConfig.setProperty("node.bitcoind.notification.block.port", Integer.toString(rpcBlockPort));
                 nodeConfig.setProperty("node.bitcoind.notification.block.host", rpcBlockHost);
-                nodeConfig.setProperty("node.bitcoind.notification.alert.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
-                nodeConfig.setProperty("node.bitcoind.notification.wallet.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
+                nodeConfig.setProperty("node.bitcoind.notification.alert.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));
+                nodeConfig.setProperty("node.bitcoind.notification.wallet.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));
 
                 nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
                 BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);

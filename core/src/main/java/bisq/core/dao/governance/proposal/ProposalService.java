@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.proposal;
 
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
@@ -40,6 +39,8 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
+
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
@@ -96,7 +97,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                            ProtectedDataStoreService protectedDataStoreService,
                            DaoStateService daoStateService,
                            ProposalValidatorProvider validatorProvider,
-                           @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
+                           @Named(Config.DAO_ACTIVATED) boolean daoActivated) {
         this.p2PService = p2PService;
         this.periodService = periodService;
         this.daoStateService = daoStateService;

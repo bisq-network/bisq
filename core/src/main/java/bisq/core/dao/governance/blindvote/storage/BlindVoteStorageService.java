@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
+import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
 import javax.inject.Named;
@@ -48,7 +49,7 @@ public class BlindVoteStorageService extends MapStoreService<BlindVoteStore, Per
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BlindVoteStorageService(@Named(Storage.STORAGE_DIR) File storageDir,
+    public BlindVoteStorageService(@Named(Config.STORAGE_DIR) File storageDir,
                                    Storage<BlindVoteStore> persistableNetworkPayloadMapStorage) {
         super(storageDir, persistableNetworkPayloadMapStorage);
     }
