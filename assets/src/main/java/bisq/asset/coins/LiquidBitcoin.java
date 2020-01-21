@@ -17,9 +17,11 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
+@AltCoinAccountDisclaimer("account.altcoin.popup.liquidbitcoin.msg")
 public class LiquidBitcoin extends Coin {
 
     public LiquidBitcoin() {
