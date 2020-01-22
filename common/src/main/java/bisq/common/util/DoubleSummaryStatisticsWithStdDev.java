@@ -54,7 +54,7 @@ public class DoubleSummaryStatisticsWithStdDev extends DoubleSummaryStatistics {
         sumOfSquares = velvel;
     }
 
-    private final double getSumOfSquares() {
+    private double getSumOfSquares() {
         // Better error bounds to add both terms as the final sum of squares
         double tmp = sumOfSquares + sumOfSquaresCompensation;
         if (Double.isNaN(tmp) && Double.isInfinite(simpleSumOfSquares))
@@ -67,18 +67,16 @@ public class DoubleSummaryStatisticsWithStdDev extends DoubleSummaryStatistics {
             return tmp;
     }
 
-    private final double getVariance() {
+    private double getVariance() {
         double sumOfSquares = getSumOfSquares();
         long count = getCount();
         double mean = getAverage();
-        double variance = (sumOfSquares / count) - (mean * mean);
-        return variance;
+        return (sumOfSquares / count) - (mean * mean);
     }
 
     public final double getStandardDeviation() {
         double variance = getVariance();
-        double stdDev = Math.sqrt(variance);
-        return stdDev;
+        return Math.sqrt(variance);
     }
 
 }

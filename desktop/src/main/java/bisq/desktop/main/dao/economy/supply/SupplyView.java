@@ -107,7 +107,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
             totalBurntFeeAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
             totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalAmountOfInvalidatedBsqTextField;
     private XYChart.Series<Number, Number> seriesBSQIssued, seriesBSQBurnt, seriesBSQBurntMA;
-    private ListChangeListener changeListenerBSQBurnt;
+    private ListChangeListener<XYChart.Data<Number, Number>> changeListenerBSQBurnt;
     private NumberAxis yAxisBSQBurnt;
 
     private ToggleButton zoomToInliersSlide;
@@ -259,6 +259,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         return chart;
     }
 
+    @SuppressWarnings("unchecked")
     private Node createBSQBurntChart(
             XYChart.Series<Number, Number> seriesBSQBurnt,
             XYChart.Series<Number, Number> seriesBSQBurntMA
@@ -321,7 +322,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     }
 
     private StringConverter<Number> getTimestampTickLabelFormatter(String datePattern) {
-        return new StringConverter<Number>() {
+        return new StringConverter<>() {
             @Override
             public String toString(Number timestamp) {
                 LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(timestamp.longValue(),
@@ -337,7 +338,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     }
 
     private StringConverter<Number> BSQPriceTickLabelFormatter =
-            new StringConverter<Number>() {
+            new StringConverter<>() {
                 @Override
                 public String toString(Number marketPrice) {
                     return bsqFormatter.formatBSQSatoshisWithCode(marketPrice.longValue());
@@ -443,7 +444,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         seriesBSQBurntMA.getData().clear();
 
         Comparator<Number> compareXChronology =
-                (x1, x2) -> x1.intValue() - x2.intValue();
+                Comparator.comparingInt(Number::intValue);
 
         Comparator<XYChart.Data<Number, Number>> compareXyDataChronology =
                 (xyData1, xyData2) ->
@@ -456,8 +457,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 .sorted(compareXyDataChronology)
                 .collect(Collectors.toList());
 
-        var burntBsqXValues = sortedUpdatedBurntBsq.stream().map(xyData -> xyData.getXValue());
-        var burntBsqYValues = sortedUpdatedBurntBsq.stream().map(xyData -> xyData.getYValue());
+        var burntBsqXValues = sortedUpdatedBurntBsq.stream().map(XYChart.Data::getXValue);
+        var burntBsqYValues = sortedUpdatedBurntBsq.stream().map(XYChart.Data::getYValue);
 
         var maPeriod = 15;
         var burntBsqMAYValues =
@@ -466,7 +467,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                         maPeriod);
 
         BiFunction<Number, Double, XYChart.Data<Number, Number>> xyToXyData =
-                (xValue, yValue) -> new XYChart.Data<Number, Number>(xValue, yValue);
+                XYChart.Data::new;
 
         List<XYChart.Data<Number, Number>> burntBsqMA =
                 zip(burntBsqXValues, burntBsqMAYValues, xyToXyData)
@@ -572,8 +573,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                         );
                     }
                 };
-        var isParallel = false;
-        var stream = StreamSupport.stream(spliterator, isParallel);
-        return stream;
+        return StreamSupport.stream(spliterator, false);
     }
 }

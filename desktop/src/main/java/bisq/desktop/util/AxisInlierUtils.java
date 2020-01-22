@@ -24,6 +24,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 
 import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
@@ -36,26 +37,24 @@ public class AxisInlierUtils {
      * ObservableList. On event, it triggers a recalculation of a provided
      * axis' range so as to zoom in on inliers.
      */
-    public static ListChangeListener getListenerThatZoomsToInliers(
+    public static ListChangeListener<XYChart.Data<Number, Number>> getListenerThatZoomsToInliers(
             NumberAxis axis,
             int maxNumberOfTicks,
             double percentToTrim,
             double howManyStdDevsConstituteOutlier
     ) {
-        ListChangeListener listener =
-                change -> {
-                    boolean axisHasBeenInitialized = axis != null;
-                    if (axisHasBeenInitialized) {
-                        zoomToInliers(
-                                axis,
-                                change.getList(),
-                                maxNumberOfTicks,
-                                percentToTrim,
-                                howManyStdDevsConstituteOutlier
-                        );
-                    }
-                };
-        return listener;
+        return change -> {
+            boolean axisHasBeenInitialized = axis != null;
+            if (axisHasBeenInitialized) {
+                zoomToInliers(
+                        axis,
+                        change.getList(),
+                        maxNumberOfTicks,
+                        percentToTrim,
+                        howManyStdDevsConstituteOutlier
+                );
+            }
+        };
     }
 
     /* Applies the inlier range to the axis bounds and sets an appropriate tick-unit.
@@ -64,7 +63,7 @@ public class AxisInlierUtils {
      */
     public static void zoomToInliers(
             NumberAxis yAxis,
-            List<XYChart.Data<Number, Number>> xyValues,
+            ObservableList<? extends XYChart.Data<Number, Number>> xyValues,
             int maxNumberOfTicks,
             double percentToTrim,
             double howManyStdDevsConstituteOutlier
@@ -82,7 +81,7 @@ public class AxisInlierUtils {
         applyRange(yAxis, maxNumberOfTicks, inlierRange);
     }
 
-    private static List<Double> extractYValues(List<XYChart.Data<Number, Number>> xyValues) {
+    private static List<Double> extractYValues(ObservableList<? extends XYChart.Data<Number, Number>> xyValues) {
         return xyValues
                 .stream()
                 .map(xyData -> (double) xyData.getYValue())
@@ -110,7 +109,7 @@ public class AxisInlierUtils {
         var inlierMin = inlierStatistics.getMin();
         var inlierMax = inlierStatistics.getMax();
 
-        return new Tuple2(inlierMin, inlierMax);
+        return new Tuple2<>(inlierMin, inlierMax);
     }
 
     private static boolean withinBounds(Tuple2<Double, Double> bounds, double number) {
@@ -149,7 +148,7 @@ public class AxisInlierUtils {
         var inlierLowerThreshold = mean - (stdDev * howManyStdDevsConstituteOutlier);
         var inlierUpperThreshold = mean + (stdDev * howManyStdDevsConstituteOutlier);
 
-        return new Tuple2(inlierLowerThreshold, inlierUpperThreshold);
+        return new Tuple2<>(inlierLowerThreshold, inlierUpperThreshold);
     }
 
     /* Sorts the data and discards given percentage from the left and right sides each.
@@ -172,7 +171,7 @@ public class AxisInlierUtils {
             return numbers;
         }
         if (totalPercentTrim == 100) {
-            return Collections.<Double>emptyList();
+            return Collections.emptyList();
         }
 
         if (numbers.isEmpty()) {
@@ -209,7 +208,7 @@ public class AxisInlierUtils {
             throw new IllegalArgumentException(
                     "The lower bound must be a smaller number than the upper bound");
         }
-        if (boundsWidth == 0 || boundsWidth == Double.NaN) {
+        if (boundsWidth == 0 || Double.isNaN(boundsWidth)) {
             // less than 2 unique data-points: recalculating axis range doesn't make sense
             return;
         }
@@ -222,13 +221,10 @@ public class AxisInlierUtils {
         // If one of the ends of the range weren't zero,
         // additional logic would be needed to make ticks "round".
         // Of course, many, if not most, charts benefit from having 0 on the axis.
-        var shouldKeepZeroWithinRange = true;
-        if (shouldKeepZeroWithinRange) {
-            if (lowerBound > 0) {
-                lowerBound = 0d;
-            } else if (upperBound < 0) {
-                upperBound = 0d;
-            }
+        if (lowerBound > 0) {
+            lowerBound = 0d;
+        } else if (upperBound < 0) {
+            upperBound = 0d;
         }
 
         axis.setLowerBound(lowerBound);
@@ -256,8 +252,7 @@ public class AxisInlierUtils {
             throw new IllegalArgumentException("maxNumberOfTicks must be a positive number");
         }
         var width = getBoundsWidth(bounds);
-        var referenceTickUnit = (double) width / maxNumberOfTicks;
-        return referenceTickUnit;
+        return width / maxNumberOfTicks;
     }
 
     /* Extracted from cern.extjfx.chart.DefaultTickUnitSupplier (licensed Apache 2.0).
@@ -310,7 +305,6 @@ public class AxisInlierUtils {
     private static double getBoundsWidth(Tuple2<Double, Double> bounds) {
         var lowerBound = bounds.first;
         var upperBound = bounds.second;
-        var width = Math.abs(upperBound - lowerBound);
-        return width;
+        return Math.abs(upperBound - lowerBound);
     }
 }

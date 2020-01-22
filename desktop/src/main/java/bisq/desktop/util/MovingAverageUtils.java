@@ -46,14 +46,12 @@ public class MovingAverageUtils {
         Stream<Double> averages =
                 windows.map(window ->
                         window
-                                .mapToDouble(number -> number.doubleValue())
+                                .mapToDouble(Number::doubleValue)
                                 .summaryStatistics()
                                 .getAverage()
                 );
 
-        var withLagCompensation = prependLagCompensation(averages, period);
-
-        return withLagCompensation;
+        return prependLagCompensation(averages, period);
     }
 
     /* Given a period of for example 3, prepends a sequence of 2 NaNs.
