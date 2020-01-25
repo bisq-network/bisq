@@ -3,6 +3,8 @@
 [Unit]
 Description=Bisq Seed Node
 After=bitcoin.service
+Requires=bitcoin.service
+BindsTo=bitcoin.service
 
 [Service]
 EnvironmentFile=/etc/default/bisq-seednode.env
