@@ -12,7 +12,7 @@ HiddenServiceStatistics 0
 AvoidDiskWrites 1
 
 MaxClientCircuitsPending 64
-CircuitBuildTimeout 5
 KeepalivePeriod 2
+#CircuitBuildTimeout 5
 #NewCircuitPeriod 15
 #NumEntryGuards 8
