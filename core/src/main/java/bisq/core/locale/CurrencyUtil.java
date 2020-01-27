@@ -78,8 +78,8 @@ public class CurrencyUtil {
     private static Map<String, FiatCurrency> createFiatCurrencyMap() {
         return CountryUtil.getAllCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.code))
-                .distinct()
                 .sorted(TradeCurrency::compareTo)
+                .distinct()
                 .collect(Collectors.toMap(TradeCurrency::getCode, Function.identity(), (x, y) -> x, LinkedHashMap::new));
     }
 
