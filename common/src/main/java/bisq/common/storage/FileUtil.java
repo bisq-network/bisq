@@ -22,6 +22,7 @@ import bisq.common.util.Utilities;
 import com.google.common.io.Files;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -80,7 +82,7 @@ public class FileUtil {
             if (files != null) {
                 List<File> filesList = Arrays.asList(files);
                 if (filesList.size() > numMaxBackupFiles) {
-                    filesList.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
+                    filesList.sort(Comparator.comparing(File::getName));
                     File file = filesList.get(0);
                     if (file.isFile()) {
                         if (!file.delete())
@@ -155,15 +157,12 @@ public class FileUtil {
     }
 
     public static void resourceToFile(String resourcePath, File destinationFile) throws ResourceNotFoundException, IOException {
-        InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(resourcePath);
-        if (inputStream == null)
-            throw new ResourceNotFoundException(resourcePath);
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(destinationFile)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                fileOutputStream.write(buffer, 0, bytesRead);
+        try (InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(resourcePath)) {
+            if (inputStream == null) {
+                throw new ResourceNotFoundException(resourcePath);
+            }
+            try (FileOutputStream fileOutputStream = new FileOutputStream(destinationFile)) {
+                IOUtils.copy(inputStream, fileOutputStream);
             }
         }
     }
