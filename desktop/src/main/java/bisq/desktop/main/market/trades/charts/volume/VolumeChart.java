@@ -18,9 +18,10 @@
 package bisq.desktop.main.market.trades.charts.volume;
 
 import bisq.desktop.main.market.trades.charts.CandleData;
-import bisq.desktop.main.market.trades.charts.price.CandleStickChart;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
@@ -36,11 +37,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class VolumeChart extends XYChart<Number, Number> {
-    private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
 
     private final StringConverter<Number> toolTipStringConverter;
 
@@ -91,8 +88,7 @@ public class VolumeChart extends XYChart<Number, Number> {
     @Override
     protected void dataItemAdded(XYChart.Series<Number, Number> series, int itemIndex, XYChart.Data<Number, Number> item) {
         Node volumeBar = createCandle(getData().indexOf(series), item, itemIndex);
-        if (getPlotChildren().contains(volumeBar))
-            getPlotChildren().remove(volumeBar);
+        getPlotChildren().remove(volumeBar);
 
         if (shouldAnimate()) {
             volumeBar.setOpacity(0);
@@ -111,17 +107,21 @@ public class VolumeChart extends XYChart<Number, Number> {
         if (shouldAnimate()) {
             FadeTransition ft = new FadeTransition(Duration.millis(500), node);
             ft.setToValue(0);
-            ft.setOnFinished((ActionEvent actionEvent) -> getPlotChildren().remove(node));
+            ft.setOnFinished((ActionEvent actionEvent) -> {
+                getPlotChildren().remove(node);
+                removeDataItemFromDisplay(series, item);
+            });
             ft.play();
         } else {
             getPlotChildren().remove(node);
+            removeDataItemFromDisplay(series, item);
         }
     }
 
     @Override
     protected void seriesAdded(XYChart.Series<Number, Number> series, int seriesIndex) {
         for (int j = 0; j < series.getData().size(); j++) {
-            XYChart.Data item = series.getData().get(j);
+            XYChart.Data<Number, Number> item = series.getData().get(j);
             Node volumeBar = createCandle(seriesIndex, item, j);
             if (shouldAnimate()) {
                 volumeBar.setOpacity(0);
@@ -148,9 +148,14 @@ public class VolumeChart extends XYChart<Number, Number> {
                 getPlotChildren().remove(volumeBar);
             }
         }
+        if (shouldAnimate()) {
+            new Timeline(new KeyFrame(Duration.millis(500), event -> removeSeriesFromDisplay(series))).play();
+        } else {
+            removeSeriesFromDisplay(series);
+        }
     }
 
-    private Node createCandle(int seriesIndex, final XYChart.Data item, int itemIndex) {
+    private Node createCandle(int seriesIndex, final XYChart.Data<Number, Number> item, int itemIndex) {
         Node volumeBar = item.getNode();
         if (volumeBar instanceof VolumeBar) {
             ((VolumeBar) volumeBar).setSeriesAndDataStyleClasses("series" + seriesIndex, "data" + itemIndex);
