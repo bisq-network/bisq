@@ -1387,6 +1387,7 @@ message Trade {
     NodeAddress refund_agent_node_address = 33;
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;
+    int64 last_refresh_request_date = 36;
 }
 
 message BuyerAsMakerTrade {

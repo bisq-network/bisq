@@ -238,8 +238,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     // Ask counterparty to resend last action (in case message was lost)
     public void refreshTradeState() {
         Trade trade = getTrade();
-        if (trade == null) return;
+        if (trade == null || !trade.allowedRefresh()) return;
 
+        trade.logRefresh();
         NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
 
         RefreshTradeStateRequest refreshReq = new RefreshTradeStateRequest(UUID.randomUUID().toString(),

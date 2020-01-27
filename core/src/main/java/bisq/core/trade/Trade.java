@@ -76,6 +76,8 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.time.temporal.ChronoUnit;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
@@ -418,6 +420,10 @@ public abstract class Trade implements Tradable, Model {
     private RefundResultState refundResultState = RefundResultState.UNDEFINED_REFUND_RESULT;
     transient final private ObjectProperty<RefundResultState> refundResultStateProperty = new SimpleObjectProperty<>(refundResultState);
 
+    // Added in v1.2.6
+    @Getter
+    @Setter
+    private long lastRefreshRequestDate;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -502,7 +508,8 @@ public abstract class Trade implements Tradable, Model {
                 .addAllChatMessage(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()))
-                .setLockTime(lockTime);
+                .setLockTime(lockTime)
+                .setLastRefreshRequestDate(lastRefreshRequestDate);
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -557,6 +564,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setRefundResultState(RefundResultState.fromProto(proto.getRefundResultState()));
         trade.setDelayedPayoutTxBytes(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxBytes()));
         trade.setLockTime(proto.getLockTime());
+        trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -1051,6 +1059,19 @@ public abstract class Trade implements Tradable, Model {
         return arbitratorBtcPubKey;
     }
 
+    public boolean allowedRefresh() {
+        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + ChronoUnit.DAYS.getDuration().toMillis();
+        if (!allowRefresh) {
+            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
+        }
+        return allowRefresh;
+    }
+
+    public void logRefresh() {
+        var time = new Date().getTime();
+        log.debug("Log refresh at {}", time);
+        lastRefreshRequestDate = time;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -1160,6 +1181,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundAgentPubKeyRing=" + refundAgentPubKeyRing +
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
+                ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
                 "\n}";
     }
 }
