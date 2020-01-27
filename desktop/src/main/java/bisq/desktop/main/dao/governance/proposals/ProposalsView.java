@@ -854,6 +854,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                                     iconButton.setStyle("-fx-cursor: default;");
                                 }
                                 setGraphic(iconButton);
+                            } else {
+                                setGraphic(null);
                             }
                         } else {
                             setGraphic(null);
