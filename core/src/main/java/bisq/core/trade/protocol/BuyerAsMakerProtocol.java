@@ -100,7 +100,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle((RefreshTradeStateRequest) tradeMessage, peerNodeAddress);
+            handle();
         }
     }
 
@@ -150,9 +150,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                () -> {
-                    handleTaskRunnerSuccess(tradeMessage, "handle DelayedPayoutTxSignatureRequest");
-                },
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle DelayedPayoutTxSignatureRequest"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
         taskRunner.addTasks(
                 BuyerProcessDelayedPayoutTxSignatureRequest.class,
@@ -167,9 +165,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                () -> {
-                    handleTaskRunnerSuccess(tradeMessage, "handle DepositTxAndDelayedPayoutTxMessage");
-                },
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle DepositTxAndDelayedPayoutTxMessage"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
         taskRunner.addTasks(
                 BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
@@ -179,7 +175,21 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
-    private void handle(RefreshTradeStateRequest tradeMessage, NodeAddress peerNodeAddress) {
+    private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle PayoutTxPublishedMessage"),
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+
+        taskRunner.addTasks(
+                BuyerProcessPayoutTxPublishedMessage.class
+        );
+        taskRunner.run();
+    }
+
+    private void handle() {
         log.debug("handle RefreshTradeStateRequest called");
         // Resend CounterCurrencyTransferStartedMessage if it hasn't been acked yet and counterparty asked for a refresh
         if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT &&
@@ -226,25 +236,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handling
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle PayoutTxPublishedMessage"),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                BuyerProcessPayoutTxPublishedMessage.class
-        );
-        taskRunner.run();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Message dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -262,7 +253,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle((RefreshTradeStateRequest) tradeMessage, sender);
+            handle();
         }
     }
 }
