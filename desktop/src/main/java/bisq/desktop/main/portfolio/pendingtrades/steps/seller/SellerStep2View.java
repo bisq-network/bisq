@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -24,10 +25,22 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.F2FAccountPayload;
+import bisq.core.trade.Trade;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
+import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SellerStep2View extends TradeStepView {
+
+    private AutoTooltipButton refreshButton;
+    private Timer timer;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -41,12 +54,52 @@ public class SellerStep2View extends TradeStepView {
     protected void addContent() {
         addTradeInfoBlock();
         addInfoBlock();
+        checkNotNull(model.dataModel.getTrade(), "No trade found");
+        checkNotNull(model.dataModel.getTrade().getOffer(), "No offer found");
         if (model.dataModel.getSellersPaymentAccountPayload() instanceof F2FAccountPayload) {
             addTitledGroupBg(gridPane, ++gridRow, 4,
                     Res.get("portfolio.pending.step2_seller.f2fInfo.headline"), Layout.COMPACT_GROUP_DISTANCE);
             gridRow = F2FForm.addFormForBuyer(gridPane, --gridRow, model.dataModel.getSellersPaymentAccountPayload(),
                     model.dataModel.getTrade().getOffer(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
         }
+        refreshButton = (AutoTooltipButton) addButtonAfterGroup(gridPane, ++gridRow,
+                Res.get("portfolio.pending.step2_seller.refresh"));
+        refreshButton.setOnAction(event -> onRefreshButton());
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
+        activateRefreshButton();
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+        deActivateRefreshButtonTimer();
+    }
+
+    private void activateRefreshButton() {
+        checkNotNull(model.dataModel.getTrade(), "No trade found");
+        var timeToNextRefresh =
+                model.dataModel.getTrade().getLastRefreshRequestDate() + Trade.REFRESH_INTERVAL - new Date().getTime();
+        if (timeToNextRefresh <= 0) {
+            refreshButton.setDisable(false);
+        } else {
+            refreshButton.setDisable(true);
+            timer = UserThread.runAfter(this::activateRefreshButton, timeToNextRefresh, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void deActivateRefreshButtonTimer() {
+        if (timer != null) {
+            timer.stop();
+        }
+    }
+
+    private void onRefreshButton() {
+        model.dataModel.refreshTradeState();
+        activateRefreshButton();
     }
 
 

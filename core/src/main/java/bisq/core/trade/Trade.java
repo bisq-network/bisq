@@ -101,6 +101,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public abstract class Trade implements Tradable, Model {
 
+    public static final long REFRESH_INTERVAL = ChronoUnit.DAYS.getDuration().toMillis();
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -453,6 +455,7 @@ public abstract class Trade implements Tradable, Model {
         takerFeeAsLong = takerFee.value;
         takeOfferDate = new Date().getTime();
         processModel = new ProcessModel();
+        lastRefreshRequestDate = takeOfferDate;
     }
 
 
@@ -1060,7 +1063,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean allowedRefresh() {
-        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + ChronoUnit.DAYS.getDuration().toMillis();
+        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + REFRESH_INTERVAL;
         if (!allowRefresh) {
             log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
         }
