@@ -47,10 +47,10 @@ public class SecurityDepositValidator extends NumberValidator {
 
         if (result.isValid) {
             result = result.andValidation(input,
-                        this::validateIfNotZero,
-                        this::validateIfNotNegative,
-                        this::validateIfNotTooLowPercentageValue,
-                        this::validateIfNotTooHighPercentageValue);
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotTooLowPercentageValue,
+                    this::validateIfNotTooHighPercentageValue);
         }
         return result;
     }

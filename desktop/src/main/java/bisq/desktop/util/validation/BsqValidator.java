@@ -19,9 +19,9 @@ package bisq.desktop.util.validation;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Coin;
 
@@ -79,18 +79,18 @@ public class BsqValidator extends AltcoinValidator {
 
         if (result.isValid) {
             result = result.andValidation(input,
-                        this::validateIfNotZero,
-                        this::validateIfNotNegative,
-                        this::validateIfNotExceedsMaxValue);
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotExceedsMaxValue);
         }
 
         if (result.isValid) {
             result = result.andValidation(input,
-                        this::validateIfNotFractionalBtcValue,
-                        this::validateIfNotExceedsMaxBtcValue,
-                        this::validateIfSufficientAvailableBalance,
-                        this::validateIfAboveDust,
-                        this::validateIfNotBelowMinValue);
+                    this::validateIfNotFractionalBtcValue,
+                    this::validateIfNotExceedsMaxBtcValue,
+                    this::validateIfSufficientAvailableBalance,
+                    this::validateIfAboveDust,
+                    this::validateIfNotBelowMinValue);
         }
 
         return result;

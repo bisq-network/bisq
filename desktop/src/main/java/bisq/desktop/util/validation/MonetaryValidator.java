@@ -42,10 +42,10 @@ public abstract class MonetaryValidator extends NumberValidator {
 
         if (result.isValid) {
             result = result.andValidation(input,
-                        this::validateIfNotZero,
-                        this::validateIfNotNegative,
-                        this::validateIfNotExceedsMinValue,
-                        this::validateIfNotExceedsMaxValue);
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotExceedsMinValue,
+                    this::validateIfNotExceedsMaxValue);
         }
 
         return result;

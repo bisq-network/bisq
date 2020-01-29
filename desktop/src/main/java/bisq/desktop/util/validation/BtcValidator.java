@@ -67,13 +67,13 @@ public class BtcValidator extends NumberValidator {
 
         if (result.isValid) {
             result = result.andValidation(input,
-                        this::validateIfNotZero,
-                        this::validateIfNotNegative,
-                        this::validateIfNotFractionalBtcValue,
-                        this::validateIfNotExceedsMaxTradeLimit,
-                        this::validateIfNotExceedsMaxBtcValue,
-                        this::validateIfNotUnderMinValue,
-                        this::validateIfAboveDust);
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotFractionalBtcValue,
+                    this::validateIfNotExceedsMaxTradeLimit,
+                    this::validateIfNotExceedsMaxBtcValue,
+                    this::validateIfNotUnderMinValue,
+                    this::validateIfAboveDust);
         }
 
         return result;

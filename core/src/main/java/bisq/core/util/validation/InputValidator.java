@@ -74,11 +74,11 @@ public class InputValidator {
             If any function validation result is false, it short circuits
             as in && (and) operation.
         */
-        public ValidationResult andValidation(String input, Validator... validators){
+        public ValidationResult andValidation(String input, Validator... validators) {
             ValidationResult result = null;
-            for(Validator validator : validators){
+            for (Validator validator : validators) {
                 result = validator.apply(input);
-                if(!result.isValid)
+                if (!result.isValid)
                     return result;
             }
             return result;
