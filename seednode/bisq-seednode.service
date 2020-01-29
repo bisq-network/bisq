@@ -3,11 +3,30 @@
 [Unit]
 Description=Bisq Seed Node
 After=bitcoin.service
+Requires=bitcoin.service
+BindsTo=bitcoin.service
 
 [Service]
 EnvironmentFile=/etc/default/bisq-seednode.env
-ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode --appName=${BISQ_APP_NAME} --nodePort=${BISQ_NODE_PORT} --userDataDir=${BISQ_HOME} --maxConnections=${BISQ_MAX_CONNECTIONS} --maxMemory=${BISQ_MAX_MEMORY} --fullDaoNode=true --rpcUser=${BITCOIN_RPC_USERNAME} --rpcPassword=${BITCOIN_RPC_PASSWORD} --rpcPort=${BITCOIN_RPC_PORT} --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN}
-ExecStop=/bin/kill -TERM ${MAINPID}
+
+ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
+          --fullDaoNode=true \
+          --userDataDir=${BISQ_HOME} \
+          --appName=${BISQ_APP_NAME} \
+          --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
+          --maxConnections=${BISQ_MAX_CONNECTIONS} \
+          --maxMemory=${BISQ_MAX_MEMORY} \
+          --nodePort=${BISQ_NODE_PORT} \
+          --btcNodes=${BITCOIN_P2P_HOST}:${BITCOIN_P2P_PORT} \
+          --rpcBlockNotificationHost=${BITCOIN_RPC_BLOCKNOTIFY_HOST} \
+          --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} \
+          --rpcHost=${BITCOIN_RPC_HOST} \
+          --rpcPort=${BITCOIN_RPC_PORT} \
+          --rpcUser=${BITCOIN_RPC_USERNAME} \
+          --rpcPassword=${BITCOIN_RPC_PASSWORD} \
+          --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
+
+ExecStop=/bin/kill -9 ${MAINPID}
 Restart=on-failure
 
 ExecStartPre=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mount -t tmpfs none -o size=812M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
