@@ -21,6 +21,8 @@ import bisq.core.locale.Res;
 
 import java.math.BigInteger;
 
+import java.util.function.Function;
+
 public class InputValidator {
 
     public ValidationResult validate(String input) {
@@ -61,6 +63,25 @@ public class InputValidator {
                     "isValid=" + isValid +
                     ", errorMessage='" + errorMessage + '\'' +
                     '}';
+        }
+
+        public interface Validator extends Function<String, ValidationResult> {
+
+        }
+
+        /*
+            This function validates the input with array of validator functions.
+            If any function validation result is false, it short circuits
+            as in && (and) operation.
+        */
+        public ValidationResult andValidation(String input, Validator... validators) {
+            ValidationResult result = null;
+            for (Validator validator : validators) {
+                result = validator.apply(input);
+                if (!result.isValid)
+                    return result;
+            }
+            return result;
         }
     }
 
