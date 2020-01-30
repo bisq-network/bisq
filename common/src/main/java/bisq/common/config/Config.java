@@ -114,6 +114,7 @@ public class Config {
     public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
     public static final String DAO_ACTIVATED = "daoActivated";
+    public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -195,6 +196,7 @@ public class Config {
     public final String genesisTxId;
     public final int genesisBlockHeight;
     public final long genesisTotalSupply;
+    public final boolean dumpDelayedPayoutTxs;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -597,6 +599,12 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(true);
 
+        ArgumentAcceptingOptionSpec<Boolean> dumpDelayedPayoutTxsOpt =
+                parser.accepts(DUMP_DELAYED_PAYOUT_TXS, "Dump delayed payout transactions to file")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -701,6 +709,7 @@ public class Config {
             this.genesisBlockHeight = options.valueOf(genesisBlockHeightOpt);
             this.genesisTotalSupply = options.valueOf(genesisTotalSupplyOpt);
             this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
+            this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),
