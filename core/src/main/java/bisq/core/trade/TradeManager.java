@@ -64,6 +64,7 @@ import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.storage.JsonFileManager;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
@@ -88,6 +89,8 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
+
+import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -145,6 +148,7 @@ public class TradeManager implements PersistedDataHost {
     @Getter
     private final ObservableList<Trade> tradesWithoutDepositTx = FXCollections.observableArrayList();
     private final boolean dumpDelayedPayoutTxs;
+    private final JsonFileManager jsonFileManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,6 +176,7 @@ public class TradeManager implements PersistedDataHost {
                         DaoFacade daoFacade,
                         ClockWatcher clockWatcher,
                         Storage<TradableList<Trade>> storage,
+                        @Named(Config.STORAGE_DIR) File storageDir,
                         @Named(Config.DUMP_DELAYED_PAYOUT_TXS) boolean dumpDelayedPayoutTxs) {
         this.user = user;
         this.keyRing = keyRing;
@@ -228,6 +233,9 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
+
+        jsonFileManager = new JsonFileManager(storageDir);
+
     }
 
     @Override
@@ -786,11 +794,24 @@ public class TradeManager implements PersistedDataHost {
         tradableList.persist();
     }
 
+    @SuppressWarnings("InnerClassMayBeStatic")
+    class DelayedPayoutHash {
+        String tradeId;
+        String delayedPayoutTx;
+        DelayedPayoutHash(String tradeId, String delayedPayoutTx) {
+            this.tradeId = tradeId;
+            this.delayedPayoutTx = delayedPayoutTx;
+        }
+    }
+
     private void maybeDumpDelayedPayoutTxs() {
         if (!dumpDelayedPayoutTxs)
             return;
 
-        tradableList.forEach(trade -> log.info("Load trade {} delayedTxHash {}", trade.getId(),
-                Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes())));
+        var delayedPayoutHashes = tradableList.stream()
+                .map(trade -> new DelayedPayoutHash(trade.getId(),
+                        Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes())))
+                .collect(Collectors.toList());
+        jsonFileManager.writeToDisc(Utilities.objectToJson(delayedPayoutHashes), "delayed_payout_txs");
     }
 }
