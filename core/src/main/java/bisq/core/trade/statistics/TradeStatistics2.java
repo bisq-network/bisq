@@ -25,8 +25,8 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
-import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
@@ -46,6 +46,7 @@ import org.bitcoinj.utils.Fiat;
 import com.google.common.base.Charsets;
 
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,12 +65,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Value
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
 
-    //We don't support arbitrators anymore so this entry will be only for pre v1.2. trades
-    @Deprecated
-    public static final String ARBITRATOR_ADDRESS = "arbAddr";
-
     public static final String MEDIATOR_ADDRESS = "medAddr";
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
+
+    public static final Date CUT_OFF_DATE_FOR_DEPOSIT_TX_ID = Utilities.getUTCDate(2019, GregorianCalendar.FEBRUARY, 13);
 
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
@@ -86,6 +85,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     // tradeDate is different for both peers so we ignore it for hash
     @JsonExclude
     private final long tradeDate;
+    @Nullable
     private final String depositTxId;
 
     // Hash get set in constructor from json of all the other data fields (with hash = null).
@@ -141,7 +141,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                             long tradePrice,
                             long tradeAmount,
                             long tradeDate,
-                            String depositTxId,
+                            @Nullable String depositTxId,
                             @Nullable byte[] hash,
                             @Nullable Map<String, String> extraDataMap) {
         this.direction = direction;
@@ -185,9 +185,9 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                 .setTradePrice(tradePrice)
                 .setTradeAmount(tradeAmount)
                 .setTradeDate(tradeDate)
-                .setDepositTxId(depositTxId)
                 .setHash(ByteString.copyFrom(hash));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
         return builder;
     }
 
@@ -215,7 +215,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                 proto.getTradePrice(),
                 proto.getTradeAmount(),
                 proto.getTradeDate(),
-                proto.getDepositTxId(),
+                null, // We don't want to expose this anymore
                 null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
@@ -282,7 +282,8 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
         // Since the trade wasn't executed it's better to filter it out to avoid it having an undue influence on the
         // BSQ trade stats.
         boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
-        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade && !depositTxId.isEmpty();
+        boolean depositTxIdValid = depositTxId == null || (tradeDate < CUT_OFF_DATE_FOR_DEPOSIT_TX_ID.getTime() && !depositTxId.isEmpty());
+        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade && depositTxIdValid;
     }
 
     @Override

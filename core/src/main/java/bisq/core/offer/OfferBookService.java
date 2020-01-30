@@ -33,9 +33,8 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.JsonFileManager;
 import bisq.common.util.Utilities;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
@@ -88,30 +87,26 @@ public class OfferBookService {
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-                protectedStorageEntries.forEach(protectedStorageEntry -> {
-                    offerBookChangedListeners.stream().forEach(listener -> {
-                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
-                            OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
-                            Offer offer = new Offer(offerPayload);
-                            offer.setPriceFeedService(priceFeedService);
-                            listener.onAdded(offer);
-                        }
-                    });
-                });
+                protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
+                        OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
+                        Offer offer = new Offer(offerPayload);
+                        offer.setPriceFeedService(priceFeedService);
+                        listener.onAdded(offer);
+                    }
+                }));
             }
 
             @Override
             public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-                protectedStorageEntries.forEach(protectedStorageEntry -> {
-                    offerBookChangedListeners.stream().forEach(listener -> {
-                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
-                            OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
-                            Offer offer = new Offer(offerPayload);
-                            offer.setPriceFeedService(priceFeedService);
-                            listener.onRemoved(offer);
-                        }
-                    });
-                });
+                protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
+                        OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
+                        Offer offer = new Offer(offerPayload);
+                        offer.setPriceFeedService(priceFeedService);
+                        listener.onRemoved(offer);
+                    }
+                }));
             }
         });
 
@@ -241,8 +236,7 @@ public class OfferBookService {
                                 offer.getId(),
                                 offer.isUseMarketBasedPrice(),
                                 offer.getMarketPriceMargin(),
-                                offer.getPaymentMethod(),
-                                offer.getOfferFeePaymentTxId()
+                                offer.getPaymentMethod()
                         );
                     } catch (Throwable t) {
                         // In case an offer was corrupted with null values we ignore it
