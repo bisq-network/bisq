@@ -18,8 +18,10 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -55,7 +57,7 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-
+import javafx.scene.layout.VBox;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -93,6 +95,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
     private PasswordTextField passwordTextField;
+    private InputTextField visiblePasswordTextField;
+    private AutoTooltipCheckBox showPasswordCheckBox;
     private Button forgotPasswordButton;
     private Button restoreButton;
     private TextArea seedWordsTextArea;
@@ -157,8 +161,11 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     @Override
     protected void cleanup() {
-        if (passwordTextField != null)
+        if (passwordTextField != null) {
             passwordTextField.textProperty().removeListener(changeListener);
+            visiblePasswordTextField.textProperty().removeListener(changeListener);
+            showPasswordCheckBox.setOnMouseClicked(null);
+        }
 
         if (seedWordsValidChangeListener != null) {
             seedWordsValid.removeListener(seedWordsValidChangeListener);
@@ -190,11 +197,35 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addInputFields() {
-        passwordTextField = addPasswordTextField(gridPane, ++rowIndex, Res.get("password.enterPassword"), Layout.FLOATING_LABEL_DISTANCE);
-        GridPane.setColumnSpan(passwordTextField, 1);
-        GridPane.setHalignment(passwordTextField, HPos.LEFT);
+        VBox vbox = new VBox();
+    	vbox.setSpacing(15);
+    	vbox.setPadding(new Insets(30, 30, 30, 30));
+    	vbox.setAlignment(Pos.CENTER_LEFT);
+        passwordTextField = new PasswordTextField();
+        passwordTextField.setLabelFloat(true);
+        passwordTextField.setPromptText(Res.get("password.enterPassword"));
+        passwordTextField.setMinWidth(560);
+        visiblePasswordTextField = new InputTextField();
+        visiblePasswordTextField.setLabelFloat(true);
+        visiblePasswordTextField.setPromptText(Res.get("password.enterPassword"));
+        visiblePasswordTextField.setMinWidth(560);
+        showPasswordCheckBox = new AutoTooltipCheckBox(Res.get("password.showPassword"));
+        
+        vbox.getChildren().addAll(passwordTextField, visiblePasswordTextField, showPasswordCheckBox);
+        GridPane.setHalignment(vbox, HPos.LEFT);
+        GridPane.setRowIndex(vbox, ++rowIndex);
+        GridPane.setMargin(vbox, new Insets(15, 10, 10, 15));
+        gridPane.getChildren().add(vbox);
+        
+        passwordTextField.managedProperty().bind(showPasswordCheckBox.selectedProperty().not());
+        passwordTextField.visibleProperty().bind(showPasswordCheckBox.selectedProperty().not());
+        visiblePasswordTextField.managedProperty().bind(showPasswordCheckBox.selectedProperty());
+        visiblePasswordTextField.visibleProperty().bind(showPasswordCheckBox.selectedProperty());
+        visiblePasswordTextField.textProperty().bindBidirectional(passwordTextField.textProperty());
+
         changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(!passwordTextField.validate());
         passwordTextField.textProperty().addListener(changeListener);
+        visiblePasswordTextField.textProperty().addListener(changeListener);
     }
 
     @Override
