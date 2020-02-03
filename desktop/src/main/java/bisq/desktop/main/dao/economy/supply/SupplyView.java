@@ -89,7 +89,6 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 
 
-
 import java.sql.Date;
 
 @FxmlView
@@ -106,9 +105,13 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField,
             totalBurntFeeAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
             totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalAmountOfInvalidatedBsqTextField;
-    private XYChart.Series<Number, Number> seriesBSQIssued, seriesBSQBurnt, seriesBSQBurntMA;
-    private ListChangeListener<XYChart.Data<Number, Number>> changeListenerBSQBurnt;
-    private NumberAxis yAxisBSQBurnt;
+    private XYChart.Series<Number, Number> seriesBSQIssuedMonthly, seriesBSQBurntMonthly, seriesBSQBurntDaily,
+            seriesBSQBurntDailyMA;
+
+    private XYChart.Series<Number, Number> seriesBSQIssuedMonthly2;
+
+    private ListChangeListener changeListenerBSQBurntDaily;
+    private NumberAxis yAxisBSQBurntDaily;
 
     private ToggleButton zoomToInliersSlide;
     private boolean isZoomingToInliers = false;
@@ -139,6 +142,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         ADJUSTERS.put(MONTH, TemporalAdjusters.firstDayOfMonth());
         ADJUSTERS.put(DAY, TemporalAdjusters.ofDateAdjuster(d -> d));
 
+        initializeSeries();
+
+        createSupplyIncreasedVsDecreasedInformation();
         createSupplyIncreasedInformation();
         createSupplyReducedInformation();
 
@@ -182,11 +188,65 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void initializeSeries() {
+        // We can use the same labels for daily and monthly series
+        var issuedLabel = Res.get("dao.factsAndFigures.supply.issued");
+        var burntLabel = Res.get("dao.factsAndFigures.supply.burnt");
+
+        seriesBSQIssuedMonthly = new XYChart.Series<>();
+        var issuedMonthlyLabel = issuedLabel;
+        seriesBSQIssuedMonthly.setName(issuedMonthlyLabel);
+
+        // Because Series cannot be reused in multiple charts, we create a
+        // "second" Series and populate it at the same time as the original.
+        // Some other solutions: https://stackoverflow.com/questions/49770442
+        seriesBSQIssuedMonthly2 = new XYChart.Series<>();
+        seriesBSQIssuedMonthly2.setName(issuedMonthlyLabel);
+
+        seriesBSQBurntMonthly = new XYChart.Series<>();
+        var burntMonthlyLabel = burntLabel;
+        seriesBSQBurntMonthly.setName(burntMonthlyLabel);
+
+        seriesBSQBurntDaily = new XYChart.Series<>();
+        var burntDailyLabel = burntLabel;
+        seriesBSQBurntDaily.setName(burntDailyLabel);
+
+        seriesBSQBurntDailyMA = new XYChart.Series<>();
+        var burntMALabel = Res.get("dao.factsAndFigures.supply.burntMovingAverage");
+        seriesBSQBurntDailyMA.setName(burntMALabel);
+    }
+
+    private void createSupplyIncreasedVsDecreasedInformation() {
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.factsAndFigures.supply.issuedVsBurnt"));
+
+        var chart = createBSQIssuedVsBurntChart(seriesBSQIssuedMonthly, seriesBSQBurntMonthly);
+
+        var chartPane = wrapInChartPane(chart);
+
+        addToTopMargin(chartPane, Layout.COMPACT_FIRST_ROW_DISTANCE);
+
+        root.getChildren().add(chartPane);
+    }
+
+    private void addToTopMargin(Node child, double amount) {
+        var margin = GridPane.getMargin(child);
+
+        var new_insets =
+            new Insets(
+                    margin.getTop() + amount,
+                    margin.getRight(),
+                    margin.getBottom(),
+                    margin.getLeft()
+                    );
+
+        GridPane.setMargin(child, new_insets);
+    }
+
     private void createSupplyIncreasedInformation() {
-        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.factsAndFigures.supply.issued"));
+        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.factsAndFigures.supply.issued"), Layout.GROUP_DISTANCE);
 
         Tuple3<Label, TextField, VBox> genesisAmountTuple = addTopLabelReadOnlyTextField(root, gridRow,
-                Res.get("dao.factsAndFigures.supply.genesisIssueAmount"), Layout.FIRST_ROW_DISTANCE);
+                Res.get("dao.factsAndFigures.supply.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         genesisIssueAmountTextField = genesisAmountTuple.second;
         GridPane.setColumnSpan(genesisAmountTuple.third, 2);
 
@@ -195,17 +255,14 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         reimbursementAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.supply.reimbursementAmount")).second;
 
-
-        seriesBSQIssued = new XYChart.Series<>();
-
-        var chart = createBSQIssuedChart(seriesBSQIssued);
+        var chart = createBSQIssuedChart(seriesBSQIssuedMonthly2);
 
         var chartPane = wrapInChartPane(chart);
         root.getChildren().add(chartPane);
     }
 
     private void createSupplyReducedInformation() {
-        addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.factsAndFigures.supply.burnt"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.factsAndFigures.supply.burnt"), Layout.GROUP_DISTANCE);
 
         totalBurntFeeAmountTextField = addTopLabelReadOnlyTextField(root, gridRow,
                 Res.get("dao.factsAndFigures.supply.burntAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
@@ -215,10 +272,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         var buttonTitle = Res.get("dao.factsAndFigures.supply.burntZoomToInliers");
         zoomToInliersSlide = addSlideToggleButton(root, ++gridRow, buttonTitle);
 
-        seriesBSQBurnt = new XYChart.Series<>();
-        seriesBSQBurntMA = new XYChart.Series<>();
-
-        var chart = createBSQBurntChart(seriesBSQBurnt, seriesBSQBurntMA);
+        var chart = createBSQBurntChart(seriesBSQBurntDaily, seriesBSQBurntDailyMA);
 
         var chartPane = wrapInChartPane(chart);
         root.getChildren().add(chartPane);
@@ -241,6 +295,36 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 Res.get("dao.factsAndFigures.supply.totalConfiscatedAmount")).second;
     }
 
+    private Node createBSQIssuedVsBurntChart(
+            XYChart.Series<Number, Number> seriesBSQIssuedMonthly,
+            XYChart.Series<Number, Number> seriesBSQBurntMonthly
+    ) {
+        Supplier<NumberAxis> makeXAxis = () -> {
+            NumberAxis xAxis = new NumberAxis();
+            configureAxis(xAxis);
+            xAxis.setTickLabelFormatter(getTimestampTickLabelFormatter("MMM uu"));
+            return xAxis;
+        };
+
+        Supplier<NumberAxis> makeYAxis = () -> {
+            NumberAxis yAxis = new NumberAxis();
+            configureYAxis(yAxis);
+            yAxis.setTickLabelFormatter(BSQPriceTickLabelFormatter);
+            return yAxis;
+        };
+
+        var chart = new LineChart<>(makeXAxis.get(), makeYAxis.get());
+
+        configureChart(chart);
+        chart.setCreateSymbols(false);
+
+        chart.getData().addAll(seriesBSQIssuedMonthly, seriesBSQBurntMonthly);
+
+        chart.setLegendVisible(true);
+
+        return chart;
+    }
+
     private Node createBSQIssuedChart(XYChart.Series<Number, Number> series) {
         NumberAxis xAxis = new NumberAxis();
         configureAxis(xAxis);
@@ -251,9 +335,10 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         yAxis.setTickLabelFormatter(BSQPriceTickLabelFormatter);
 
         AreaChart<Number, Number> chart = new AreaChart<>(xAxis, yAxis);
-        configureChart(chart);
 
-        series.setName(Res.get("dao.factsAndFigures.supply.issued"));
+        configureChart(chart);
+        chart.setCreateSymbols(false);
+
         chart.getData().add(series);
 
         return chart;
@@ -261,8 +346,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     @SuppressWarnings("unchecked")
     private Node createBSQBurntChart(
-            XYChart.Series<Number, Number> seriesBSQBurnt,
-            XYChart.Series<Number, Number> seriesBSQBurntMA
+            XYChart.Series<Number, Number> seriesBSQBurntDaily,
+            XYChart.Series<Number, Number> seriesBSQBurntDailyMA
     ) {
         Supplier<NumberAxis> makeXAxis = () -> {
             NumberAxis xAxis = new NumberAxis();
@@ -278,20 +363,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
             return yAxis;
         };
 
-        seriesBSQBurnt.setName(Res.get("dao.factsAndFigures.supply.burnt"));
-
-        var burntMALabel = Res.get("dao.factsAndFigures.supply.burntMovingAverage");
-        seriesBSQBurntMA.setName(burntMALabel);
-
         var yAxis = makeYAxis.get();
         initializeChangeListener(yAxis);
 
         var chart = new LineChart<>(makeXAxis.get(), yAxis);
 
-        chart.getData().addAll(seriesBSQBurnt, seriesBSQBurntMA);
-
         configureChart(chart);
         chart.setCreateSymbols(false);
+
+        chart.getData().addAll(seriesBSQBurntDaily, seriesBSQBurntDailyMA);
+
         chart.setLegendVisible(true);
 
         return chart;
@@ -299,10 +380,10 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     private void initializeChangeListener(NumberAxis axis) {
         // Keep a class-scope reference. Needed for switching between inliers-only and full chart.
-        yAxisBSQBurnt = axis;
+        yAxisBSQBurntDaily = axis;
 
-        changeListenerBSQBurnt = AxisInlierUtils.getListenerThatZoomsToInliers(
-                yAxisBSQBurnt, chartMaxNumberOfTicks, chartPercentToTrim, chartHowManyStdDevsConstituteOutlier);
+        changeListenerBSQBurntDaily = AxisInlierUtils.getListenerThatZoomsToInliers(
+                yAxisBSQBurntDaily, chartMaxNumberOfTicks, chartPercentToTrim, chartHowManyStdDevsConstituteOutlier);
     }
 
     private void configureYAxis(NumberAxis axis) {
@@ -406,42 +487,97 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     }
 
     private void updateChartSeries() {
-        var updatedBurntBsq = updateBSQBurnt();
-        updateBSQBurntMA(updatedBurntBsq);
-        updateBSQIssued();
+        var sortedBurntTxs = getSortedBurntTxs();
+
+        var updatedBurntBsqDaily = updateBSQBurntDaily(sortedBurntTxs);
+        updateBSQBurntDailyMA(updatedBurntBsqDaily);
+
+        updateBSQBurntMonthly(sortedBurntTxs);
+
+        updateBSQIssuedMonthly();
     }
 
-    private List<XYChart.Data<Number, Number>> updateBSQBurnt() {
-        seriesBSQBurnt.getData().clear();
-
+    private List<Tx> getSortedBurntTxs() {
         Set<Tx> burntTxs = new HashSet<>(daoStateService.getBurntFeeTxs());
         burntTxs.addAll(daoStateService.getInvalidTxs());
 
-        Map<LocalDate, List<Tx>> burntBsqByDay = burntTxs.stream()
+        List<Tx> sortedBurntTxs = burntTxs.stream()
                 .sorted(Comparator.comparing(Tx::getTime))
-                .collect(Collectors.groupingBy(item -> new Date(item.getTime()).toLocalDate()
-                        .with(ADJUSTERS.get(DAY))));
-
-        List<XYChart.Data<Number, Number>> updatedBurntBsq = burntBsqByDay.keySet().stream()
-                .map(date -> {
-                    ZonedDateTime zonedDateTime = date.atStartOfDay(ZoneId.systemDefault());
-                    return new XYChart.Data<Number, Number>(
-                            zonedDateTime.toInstant().getEpochSecond(),
-                            burntBsqByDay.get(date)
-                                    .stream()
-                                    .mapToDouble(Tx::getBurntBsq)
-                                    .sum()
-                    );
-                })
                 .collect(Collectors.toList());
 
-        seriesBSQBurnt.getData().setAll(updatedBurntBsq);
-
-        return updatedBurntBsq;
+        return sortedBurntTxs;
     }
 
-    private void updateBSQBurntMA(List<XYChart.Data<Number, Number>> updatedBurntBsq) {
-        seriesBSQBurntMA.getData().clear();
+    private List<XYChart.Data<Number, Number>> updateBSQBurntDaily(List<Tx> sortedBurntTxs) {
+        seriesBSQBurntDaily.getData().clear();
+
+        var burntBsqByDay =
+                sortedBurntTxs
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                tx ->
+                                        new Date(tx.getTime())
+                                                .toLocalDate()
+                                                .with(ADJUSTERS.get(DAY))
+                        ));
+
+        List<XYChart.Data<Number, Number>> updatedBurntBsqDaily =
+                burntBsqByDay
+                        .keySet()
+                        .stream()
+                        .map(date ->
+                        {
+                            ZonedDateTime zonedDateTime = date.atStartOfDay(ZoneId.systemDefault());
+                            return new XYChart.Data<Number, Number>(
+                                    zonedDateTime.toInstant().getEpochSecond(),
+                                    burntBsqByDay.get(date)
+                                            .stream()
+                                            .mapToDouble(Tx::getBurntBsq)
+                                            .sum()
+                            );
+                        })
+                        .collect(Collectors.toList());
+
+        seriesBSQBurntDaily.getData().setAll(updatedBurntBsqDaily);
+
+        return updatedBurntBsqDaily;
+    }
+
+    private void updateBSQBurntMonthly(List<Tx> sortedBurntTxs) {
+        seriesBSQBurntMonthly.getData().clear();
+
+        var burntBsqByMonth =
+                sortedBurntTxs
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                tx ->
+                                        new Date(tx.getTime())
+                                                .toLocalDate()
+                                                .with(ADJUSTERS.get(MONTH))
+                        ));
+
+        List<XYChart.Data<Number, Number>> updatedBurntBsqMonthly =
+                burntBsqByMonth
+                        .keySet()
+                        .stream()
+                        .map(date ->
+                        {
+                            ZonedDateTime zonedDateTime = date.atStartOfDay(ZoneId.systemDefault());
+                            return new XYChart.Data<Number, Number>(
+                                    zonedDateTime.toInstant().getEpochSecond(),
+                                    burntBsqByMonth.get(date)
+                                            .stream()
+                                            .mapToDouble(Tx::getBurntBsq)
+                                            .sum()
+                            );
+                        })
+                        .collect(Collectors.toList());
+
+        seriesBSQBurntMonthly.getData().setAll(updatedBurntBsqMonthly);
+    }
+
+    private void updateBSQBurntDailyMA(List<XYChart.Data<Number, Number>> updatedBurntBsq) {
+        seriesBSQBurntDailyMA.getData().clear();
 
         Comparator<Number> compareXChronology =
                 Comparator.comparingInt(Number::intValue);
@@ -474,12 +610,10 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                         .filter(xyData -> Double.isFinite(xyData.getYValue().doubleValue()))
                         .collect(Collectors.toList());
 
-        seriesBSQBurntMA.getData().setAll(burntBsqMA);
+        seriesBSQBurntDailyMA.getData().setAll(burntBsqMA);
     }
 
-    private void updateBSQIssued() {
-        seriesBSQIssued.getData().clear();
-
+    private void updateBSQIssuedMonthly() {
         Stream<Issuance> bsqByCompensation = daoStateService.getIssuanceSet(IssuanceType.COMPENSATION).stream()
                 .sorted(Comparator.comparing(Issuance::getChainHeight));
 
@@ -493,14 +627,17 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         List<XYChart.Data<Number, Number>> updatedAddedBSQ = bsqAddedByVote.keySet().stream()
                 .map(date -> {
                     ZonedDateTime zonedDateTime = date.atStartOfDay(ZoneId.systemDefault());
-                    return new XYChart.Data<Number, Number>(zonedDateTime.toInstant().getEpochSecond(), bsqAddedByVote.get(date)
-                            .stream()
-                            .mapToDouble(Issuance::getAmount)
-                            .sum());
+                    return new XYChart.Data<Number, Number>(
+                            zonedDateTime.toInstant().getEpochSecond(),
+                            bsqAddedByVote.get(date)
+                                    .stream()
+                                    .mapToDouble(Issuance::getAmount)
+                                    .sum());
                 })
                 .collect(Collectors.toList());
 
-        seriesBSQIssued.getData().setAll(updatedAddedBSQ);
+        seriesBSQIssuedMonthly.getData().setAll(updatedAddedBSQ);
+        seriesBSQIssuedMonthly2.getData().setAll(updatedAddedBSQ);
     }
 
     private void activateButtons() {
@@ -522,7 +659,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     }
 
     private void activateZoomingToInliers() {
-        seriesBSQBurnt.getData().addListener(changeListenerBSQBurnt);
+        seriesBSQBurntDaily.getData().addListener(changeListenerBSQBurntDaily);
 
         // Initial zoom has to be triggered manually; otherwise, it
         // would be triggered only on a change event in the series
@@ -530,16 +667,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     }
 
     private void deactivateZoomingToInliers() {
-        seriesBSQBurnt.getData().removeListener(changeListenerBSQBurnt);
+        seriesBSQBurntDaily.getData().removeListener(changeListenerBSQBurntDaily);
 
         // Reactivate automatic ranging
-        yAxisBSQBurnt.autoRangingProperty().set(true);
+        yAxisBSQBurntDaily.autoRangingProperty().set(true);
     }
 
     private void triggerZoomToInliers() {
-        var xyValues = seriesBSQBurnt.getData();
+        var xyValues = seriesBSQBurntDaily.getData();
         AxisInlierUtils.zoomToInliers(
-                yAxisBSQBurnt,
+                yAxisBSQBurntDaily,
                 xyValues,
                 chartMaxNumberOfTicks,
                 chartPercentToTrim,
