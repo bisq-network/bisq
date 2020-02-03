@@ -31,6 +31,7 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
@@ -217,7 +218,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                 proto.getTradePrice(),
                 proto.getTradeAmount(),
                 proto.getTradeDate(),
-                null, // We don't want to expose this anymore
+                ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()),
                 null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
