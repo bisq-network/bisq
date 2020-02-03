@@ -222,7 +222,24 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         var chart = createBSQIssuedVsBurntChart(seriesBSQIssuedMonthly, seriesBSQBurntMonthly);
 
         var chartPane = wrapInChartPane(chart);
+
+        addToTopMargin(chartPane, Layout.FIRST_ROW_DISTANCE);
+
         root.getChildren().add(chartPane);
+    }
+
+    private void addToTopMargin(Node child, double amount) {
+        var margin = GridPane.getMargin(child);
+
+        var new_insets =
+            new Insets(
+                    margin.getTop() + amount,
+                    margin.getRight(),
+                    margin.getBottom(),
+                    margin.getLeft()
+                    );
+
+        GridPane.setMargin(child, new_insets);
     }
 
     private void createSupplyIncreasedInformation() {
