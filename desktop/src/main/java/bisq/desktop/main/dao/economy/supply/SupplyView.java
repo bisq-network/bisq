@@ -223,7 +223,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         var chartPane = wrapInChartPane(chart);
 
-        addToTopMargin(chartPane, Layout.FIRST_ROW_DISTANCE);
+        addToTopMargin(chartPane, Layout.COMPACT_FIRST_ROW_DISTANCE);
 
         root.getChildren().add(chartPane);
     }
