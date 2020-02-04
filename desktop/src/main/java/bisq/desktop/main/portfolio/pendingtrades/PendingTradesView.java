@@ -213,6 +213,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 new Popup().warning(Res.get("portfolio.pending.removeFailedTrade"))
                         .onAction(model.dataModel::onMoveToFailedTrades)
                         .show();
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, keyEvent)) {
+                model.dataModel.refreshTradeState();
             }
         };
 
@@ -455,7 +457,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             });
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CellFactories
