@@ -1,8 +1,10 @@
 package bisq.core.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -10,28 +12,34 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DisplayPropertiesCleaner {
+public class DisplayPropertiesCheckTest {
 	
-	static Logger LOGGER = LoggerFactory.getLogger(DisplayPropertiesCleaner.class);
-
-	public static void main(String[] args) {
-		DisplayPropertiesCleaner cleaner = new DisplayPropertiesCleaner();
-		try {
-			cleaner.process();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+	static Logger LOGGER = LoggerFactory.getLogger(DisplayPropertiesCheckTest.class);
 	
-	private void process() throws Exception {
+	@Ignore
+	@Test
+	public void testPrune() throws Exception {
 		File baseDirectory = new File("../");
 		Properties propertyEntries = new Properties();
+		FileInputStream in = new FileInputStream("./src/test/java/bisq/core/util/DisplayPropertiesCheckTest.ignorelist");
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		
+		List<String> ignorePatternList = new ArrayList<>(); 
+		String line;
+		while ((line = reader.readLine()) != null) {
+			ignorePatternList.add(line.trim());
+		}
+		reader.close();
+		in.close();
+		
 		File propertiesFilePruned = new File("./src/main/resources/i18n/displayStrings.pruned.properties");
 		File propertiesFile = new File("./src/main/resources/i18n/displayStrings.properties");
 		Files.copy(propertiesFile.toPath(), propertiesFilePruned.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -43,17 +51,17 @@ public class DisplayPropertiesCleaner {
 		Scanner scanner;
 		Pattern pattern;
 		int count = 0;
-		for(Object key : propertyEntries.keySet()) {
+		for (Object key : propertyEntries.keySet().stream().filter(prop -> !keyMatches(prop, ignorePatternList)).collect(Collectors.toList())) {
 			pattern = Pattern.compile(String.valueOf(key));
 			boolean found = false;
 			for (File file : files) {
 				scanner = new Scanner(file);
 				found = scanner.findWithinHorizon(pattern, 0) != null;
-				if(found) {
+				if (found) {
 					break;
 				}
 			}
-			if(!found) {
+			if (!found) {
 				count++;
 				removePropertiesEntry(propertiesFilePruned, (String) key);
 				unusedKeyList.add((String) key);
@@ -65,20 +73,31 @@ public class DisplayPropertiesCleaner {
 		
 	}
 	
+	private boolean keyMatches(Object key, List<String> ignorePatternList) {
+		boolean flag = false;
+		for (String pattern : ignorePatternList) {
+			flag = key != null && key.toString().matches(pattern);
+			if (flag) {
+				LOGGER.info("IGNORED: '" + key + "' matches regex pattern => " + pattern);
+				break;
+			}
+		}
+		return flag;
+	}
+	
 	private void removePropertiesEntry(File propertiesFile, String key) throws IOException {
 		List<String> lines = FileUtils.readLines(propertiesFile);
 		List<String> updatedLines = new ArrayList<>();
 		boolean flag = false;
-		for(String line : lines) {
-			if(!flag) {
-				if(!line.startsWith(key)) {
+		for (String line : lines) {
+			if (!flag) {
+				if (!line.matches("^" + key + "\\s*=")) {
 					updatedLines.add(line);
-				} else {
-					//TODO Trigger flag to remove subsequent lines with no "=" (to handle values spanning multiple lines)
-					flag = true;
+				} else {			
+					flag = true;// Trigger flag to remove subsequent lines to handle value spanning multiple lines
 				}
 			} else {
-				if(line.contains("=")) {
+				if (line.matches("^.*=") || line.startsWith("#")) {// Key-value entry or comment
 					flag = false;
 					updatedLines.add(line);
 				}

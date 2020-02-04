@@ -1,0 +1,10 @@
+message[.]state[.].*
+dao[.]param[.].*
+dao[.]phase[.].*
+dao[.]bond[.]bondState[.].*
+dao[.]bond[.]lockupReason[.].*
+dao[.]bond[.]bondedRoleType[.].*
+dao[.]assetState[.].*
+dao[.]proposal[.]type[.].*
+dao[.]tx[.]type[.]enum[.].*
+.*[_]SHORT
