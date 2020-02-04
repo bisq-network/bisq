@@ -31,6 +31,7 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
@@ -53,6 +54,8 @@ import java.util.Optional;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -63,7 +66,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Value
-public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
+public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload, Comparable<TradeStatistics2> {
 
     public static final String MEDIATOR_ADDRESS = "medAddr";
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
@@ -215,7 +218,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                 proto.getTradePrice(),
                 proto.getTradeAmount(),
                 proto.getTradeDate(),
-                null, // We don't want to expose this anymore
+                ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()),
                 null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
@@ -282,8 +285,28 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
         // Since the trade wasn't executed it's better to filter it out to avoid it having an undue influence on the
         // BSQ trade stats.
         boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
-        boolean depositTxIdValid = depositTxId == null || (tradeDate < CUT_OFF_DATE_FOR_DEPOSIT_TX_ID.getTime() && !depositTxId.isEmpty());
+        boolean depositTxIdValid = depositTxId == null || !depositTxId.isEmpty();
         return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade && depositTxIdValid;
+    }
+
+    // TODO: Can be removed as soon as everyone uses v1.2.6+
+    @Override
+    public int compareTo(@NotNull TradeStatistics2 o) {
+        if (direction.equals(o.direction) &&
+                baseCurrency.equals(o.baseCurrency) &&
+                counterCurrency.equals(o.counterCurrency) &&
+                offerPaymentMethod.equals(o.offerPaymentMethod) &&
+                offerDate == o.offerDate &&
+                offerUseMarketBasedPrice == o.offerUseMarketBasedPrice &&
+                offerAmount == o.offerAmount &&
+                offerMinAmount == o.offerMinAmount &&
+                offerId.equals(o.offerId) &&
+                tradePrice == o.tradePrice &&
+                tradeAmount == o.tradeAmount) {
+            return 0;
+        }
+
+        return -1;
     }
 
     @Override

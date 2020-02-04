@@ -36,6 +36,7 @@ public class TradeStatistics2Maker {
 
     public static final Property<TradeStatistics2, Date> date = new Property<>();
     public static final Property<TradeStatistics2, String> depositTxId = new Property<>();
+    public static final Property<TradeStatistics2, Coin> tradeAmount = new Property<>();
 
     public static final Instantiator<TradeStatistics2> TradeStatistic2 = lookup -> {
         Calendar calendar = Calendar.getInstance();
@@ -81,7 +82,7 @@ public class TradeStatistics2Maker {
                         null,
                         0),
                 Price.valueOf("BTC", 100000L),
-                Coin.SATOSHI,
+                lookup.valueOf(tradeAmount, Coin.SATOSHI),
                 lookup.valueOf(date, new Date(calendar.getTimeInMillis())),
                 lookup.valueOf(depositTxId, "123456"),
                 Collections.emptyMap());

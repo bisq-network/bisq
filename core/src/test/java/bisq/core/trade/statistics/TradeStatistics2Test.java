@@ -17,24 +17,19 @@
 
 package bisq.core.trade.statistics;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import org.junit.Test;
 
-import static bisq.core.trade.statistics.TradeStatistics2Maker.date;
 import static bisq.core.trade.statistics.TradeStatistics2Maker.dayZeroTrade;
 import static bisq.core.trade.statistics.TradeStatistics2Maker.depositTxId;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static com.natpryce.makeiteasy.MakeItEasy.withNull;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
 public class TradeStatistics2Test {
 
     @Test
-    public void isValid_WithDepositTxIdBeforeCutOffDate() {
+    public void isValid_WithDepositTxId() {
 
         TradeStatistics2 tradeStatistic = make(dayZeroTrade);
 
@@ -42,20 +37,8 @@ public class TradeStatistics2Test {
     }
 
     @Test
-    public void isValid_Not_WithDepositTxIdAfterCutOffDate() {
-        TradeStatistics2 tradeStatistic = make(dayZeroTrade.but(
-                with(date, DateUtils.addDays(TradeStatistics2.CUT_OFF_DATE_FOR_DEPOSIT_TX_ID, 1))
-        ));
-
-        assertFalse(tradeStatistic.isValid());
-    }
-
-    @Test
-    public void isValid_WithEmptyDepositTxIdAfterCutOffDate() {
-        TradeStatistics2 tradeStatistic = make(dayZeroTrade.but(
-                with(date, DateUtils.addDays(TradeStatistics2.CUT_OFF_DATE_FOR_DEPOSIT_TX_ID, 1)),
-                withNull(depositTxId)
-        ));
+    public void isValid_WithEmptyDepositTxId() {
+        TradeStatistics2 tradeStatistic = make(dayZeroTrade.but(withNull(depositTxId)));
 
         assertTrue(tradeStatistic.isValid());
     }
