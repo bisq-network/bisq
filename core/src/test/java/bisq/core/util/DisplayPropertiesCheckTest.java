@@ -1,5 +1,7 @@
 package bisq.core.util;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,7 +26,7 @@ public class DisplayPropertiesCheckTest {
 	
 	static Logger LOGGER = LoggerFactory.getLogger(DisplayPropertiesCheckTest.class);
 	
-	@Ignore
+//	@Ignore
 	@Test
 	public void testPrune() throws Exception {
 		File baseDirectory = new File("../");
@@ -91,18 +93,20 @@ public class DisplayPropertiesCheckTest {
 		boolean flag = false;
 		for (String line : lines) {
 			if (!flag) {
-				if (!line.matches("^" + key + "\\s*=")) {
+				if (!line.replace(" ", "").startsWith(key + "=")) {
 					updatedLines.add(line);
 				} else {			
-					flag = true;// Trigger flag to remove subsequent lines to handle value spanning multiple lines
+					LOGGER.info("SKIPPING: '" + key + "'");
+					flag = line.endsWith("\\") ? true : false;
 				}
 			} else {
-				if (line.matches("^.*=") || line.startsWith("#")) {// Key-value entry or comment
-					flag = false;
-					updatedLines.add(line);
-				}
+				LOGGER.info("SKIPPING (MULTILINE): '" + key + "'");
+				flag = line.endsWith("\\") ? true : false;
 			}
 		}
+		
+		assertTrue(lines.size() > updatedLines.size());
+		
 		FileUtils.writeLines(propertiesFile, updatedLines, false);
 	}
 
