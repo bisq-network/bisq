@@ -42,7 +42,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SellerStep2View extends TradeStepView {
 
-    private Button refreshButton;
     private GridPane refreshButtonPane;
     private Timer timer;
 
@@ -76,7 +75,7 @@ public class SellerStep2View extends TradeStepView {
                 Res.get("portfolio.pending.step2_seller.refresh"), Layout.COMPACT_GROUP_DISTANCE);
         addMultilineLabel(refreshButtonPane, 1, Res.get("portfolio.pending.step2_seller.refreshInfo"),
                 Layout.COMPACT_FIRST_ROW_DISTANCE);
-        refreshButton = addButtonAfterGroup(refreshButtonPane, 2, Res.get("portfolio.pending.step2_seller.refresh"));
+        Button refreshButton = addButtonAfterGroup(refreshButtonPane, 2, Res.get("portfolio.pending.step2_seller.refresh"));
         refreshButton.setOnAction(event -> onRefreshButton());
 
         GridPane.setRowIndex(refreshButtonPane, ++gridRow);
