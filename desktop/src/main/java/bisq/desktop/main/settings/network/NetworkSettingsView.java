@@ -350,8 +350,10 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     }
 
     private boolean isPreventPublicBtcNetwork() {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().isPreventPublicBtcNetwork();
+        return true;
+        //TODO: re-enable it if we are able to check for core nodes that have the correct configuration
+//        return filterManager.getFilter() != null &&
+//                filterManager.getFilter().isPreventPublicBtcNetwork();
     }
 
     private void selectBitcoinPeersToggle() {
