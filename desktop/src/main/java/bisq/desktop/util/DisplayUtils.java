@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DisplayUtils {
     private final static int scale = 3;
-    private static final MonetaryFormat fiatVolumeFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
+    private static final MonetaryFormat fiatVolumeFormat = new MonetaryFormat().shift(0).minDecimals(0).repeatOptionalDecimals(0, 0);
 
     public static String formatDateTime(Date date) {
         return FormattingUtils.formatDateTime(date, true);

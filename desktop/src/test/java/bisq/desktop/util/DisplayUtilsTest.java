@@ -49,9 +49,9 @@ public class DisplayUtilsTest {
 
     @Test
     public void testFormatVolume() {
-        assertEquals("1.00", DisplayUtils.formatVolume(make(btcUsdOffer), true, 4));
-        assertEquals("100.00", DisplayUtils.formatVolume(make(usdVolume)));
-        assertEquals("1774.62", DisplayUtils.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
+        assertEquals("1", DisplayUtils.formatVolume(make(btcUsdOffer), true, 4));
+        assertEquals("100", DisplayUtils.formatVolume(make(usdVolume)));
+        assertEquals("1775", DisplayUtils.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
     }
 
     @Test
