@@ -2,6 +2,7 @@ package bisq.core.btc.nodes;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
  * Detects whether a Bitcoin node is running on localhost.
  * @see bisq.common.config.Config#ignoreLocalBtcNode
  */
+@Singleton
 public class LocalBitcoinNode {
 
     public static final String LOCAL_BITCOIN_NODE_PORT = "localBitcoinNodePort";
