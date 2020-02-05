@@ -29,8 +29,8 @@ import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.RegexValidator;
 
-import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
@@ -246,9 +246,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                 showShutDownPopup();
             }
         };
-        filterPropertyListener = (observable, oldValue, newValue) -> {
-            applyPreventPublicBtcNetwork();
-        };
+        filterPropertyListener = (observable, oldValue, newValue) -> applyPreventPublicBtcNetwork();
 
         //TODO sorting needs other NetworkStatisticListItem as columns type
        /* creationDateColumn.setComparator((o1, o2) ->
@@ -352,8 +350,10 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     }
 
     private boolean isPreventPublicBtcNetwork() {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().isPreventPublicBtcNetwork();
+        return true;
+        //TODO: re-enable it if we are able to check for core nodes that have the correct configuration
+//        return filterManager.getFilter() != null &&
+//                filterManager.getFilter().isPreventPublicBtcNetwork();
     }
 
     private void selectBitcoinPeersToggle() {
@@ -402,9 +402,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                     if (calledFromUser) {
                         if (isPreventPublicBtcNetwork()) {
                             new Popup().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
-                                    .onAction(() -> {
-                                        UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
-                                    }).show();
+                                    .onAction(() -> UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS)).show();
                         } else {
                             showShutDownPopup();
                         }
@@ -420,18 +418,14 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                         new Popup()
                                 .warning(Res.get("settings.net.warn.usePublicNodes"))
                                 .actionButtonText(Res.get("settings.net.warn.usePublicNodes.useProvided"))
-                                .onAction(() -> {
-                                    UserThread.runAfter(() -> {
-                                        selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
-                                        preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
-                                        selectBitcoinPeersToggle();
-                                        onBitcoinPeersToggleSelected(false);
-                                    }, 300, TimeUnit.MILLISECONDS);
-                                })
+                                .onAction(() -> UserThread.runAfter(() -> {
+                                    selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
+                                    preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                                    selectBitcoinPeersToggle();
+                                    onBitcoinPeersToggleSelected(false);
+                                }, 300, TimeUnit.MILLISECONDS))
                                 .closeButtonText(Res.get("settings.net.warn.usePublicNodes.usePublic"))
-                                .onClose(() -> {
-                                    UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
-                                })
+                                .onClose(() -> UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS))
                                 .show();
                     }
                 }
