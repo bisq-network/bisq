@@ -44,7 +44,6 @@ import bisq.core.app.BisqSetup;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.common.config.Config;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -67,6 +66,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
@@ -352,7 +352,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .show());
         bisqSetup.setDisplayLocalhostHandler(key -> {
             if (!DevEnv.isDevMode()) {
-                Overlay popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
+                Overlay popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg") +
+                        Res.get("popup.bitcoinLocalhostNode.additionalRequirements"))
                         .dontShowAgainId(key);
                 popup.setDisplayOrderPriority(5);
                 popupQueue.add(popup);
