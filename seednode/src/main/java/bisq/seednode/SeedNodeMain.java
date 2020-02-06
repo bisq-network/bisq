@@ -26,13 +26,11 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.setup.CommonSetup;
 
-import joptsimple.OptionSet;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.2.5";
+    private static final String VERSION = "1.2.6";
     private SeedNode seedNode;
 
     public SeedNodeMain() {
