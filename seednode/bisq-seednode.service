@@ -25,6 +25,7 @@ ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
           --rpcUser=${BITCOIN_RPC_USERNAME} \
           --rpcPassword=${BITCOIN_RPC_PASSWORD} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
+          --dumpStatistics=${BISQ_DUMP_STATISTICS} \
 
 ExecStop=/bin/kill -9 ${MAINPID}
 Restart=on-failure
