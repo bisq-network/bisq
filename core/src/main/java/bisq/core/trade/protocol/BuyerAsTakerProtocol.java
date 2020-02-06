@@ -197,6 +197,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 PublishTradeStatistics.class
         );
         taskRunner.run();
+        processModel.logTrade(buyerAsTakerTrade);
     }
 
     private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {

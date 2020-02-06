@@ -329,7 +329,7 @@ public class ProcessModel implements Model, PersistablePayload {
         return p2PService.getAddress();
     }
 
-    public void setPaymentStartedAckMessage(AckMessage ackMessage) {
+    void setPaymentStartedAckMessage(AckMessage ackMessage) {
         if (ackMessage.isSuccess()) {
             setPaymentStartedMessageState(MessageState.ACKNOWLEDGED);
         } else {
@@ -355,5 +355,9 @@ public class ProcessModel implements Model, PersistablePayload {
 
     private void setPubKeyRing(PubKeyRing pubKeyRing) {
         this.pubKeyRing = pubKeyRing;
+    }
+
+    void logTrade(Trade trade) {
+        accountAgeWitnessService.witnessDebugLog(trade, null);
     }
 }
