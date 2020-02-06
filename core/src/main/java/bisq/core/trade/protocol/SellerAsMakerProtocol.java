@@ -140,9 +140,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> {
-                    handleTaskRunnerSuccess(tradeMessage, "DepositTxPublishedMessage");
-                },
+                () -> handleTaskRunnerSuccess(tradeMessage, "DepositTxPublishedMessage"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
@@ -174,6 +172,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 PublishTradeStatistics.class
         );
         taskRunner.run();
+        processModel.logTrade(sellerAsMakerTrade);
     }
 
 

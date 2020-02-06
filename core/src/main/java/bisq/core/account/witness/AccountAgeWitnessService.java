@@ -74,6 +74,8 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -735,5 +737,64 @@ public class AccountAgeWitnessService {
                     return SignState.UNSIGNED;
             }
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Debug logs
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    private String getWitnessDebugLog(PaymentAccountPayload paymentAccountPayload,
+                                      PubKeyRing pubKeyRing) {
+        Optional<AccountAgeWitness> accountAgeWitness = findWitness(paymentAccountPayload, pubKeyRing);
+        if (!accountAgeWitness.isPresent()) {
+            byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
+            byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
+                    pubKeyRing.getSignaturePubKeyBytes()));
+            return "No accountAgeWitness found for paymentAccountPayload with hash " + Utilities.bytesAsHexString(hash);
+        }
+
+        SignState signState = getSignState(accountAgeWitness.get());
+        return signState.name() + " " + signState.getPresentation() +
+                "\n" + accountAgeWitness.toString();
+    }
+
+    public void witnessDebugLog(Trade trade, @Nullable AccountAgeWitness myWitness) {
+        // Log to find why accounts sometimes don't get signed as expected
+        // TODO: Demote to debug or remove once account signing is working ok
+        checkNotNull(trade.getContract());
+        checkNotNull(trade.getContract().getBuyerPaymentAccountPayload());
+        boolean checkingSignTrade = true;
+        boolean isBuyer = trade.getContract().isMyRoleBuyer(keyRing.getPubKeyRing());
+        if (myWitness == null) {
+            myWitness = isBuyer ?
+                    getMyWitness(trade.getContract().getBuyerPaymentAccountPayload()) :
+                    getMyWitness(trade.getContract().getSellerPaymentAccountPayload());
+            checkingSignTrade = false;
+        }
+        boolean isSignWitnessTrade = accountIsSigner(myWitness) &&
+                !peerHasSignedWitness(trade) &&
+                tradeAmountIsSufficient(trade.getTradeAmount());
+        log.info("AccountSigning: " +
+                        "\ntradeId: {}" +
+                        "\nis buyer: {}" +
+                        "\nbuyer account age witness info: {}" +
+                        "\nseller account age witness info: {}" +
+                        "\nchecking for sign trade: {}" +
+                        "\nis myWitness signer: {}" +
+                        "\npeer has signed witness: {}" +
+                        "\ntrade amount: {}" +
+                        "\ntrade amount is sufficient: {}" +
+                        "\nisSignWitnessTrade: {}",
+                trade.getId(),
+                isBuyer,
+                getWitnessDebugLog(trade.getContract().getBuyerPaymentAccountPayload(),
+                        trade.getContract().getBuyerPubKeyRing()),
+                getWitnessDebugLog(trade.getContract().getSellerPaymentAccountPayload(),
+                        trade.getContract().getSellerPubKeyRing()),
+                checkingSignTrade, // Following cases added to use same logic as in seller signing check
+                accountIsSigner(myWitness),
+                peerHasSignedWitness(trade),
+                trade.getTradeAmount(),
+                tradeAmountIsSufficient(trade.getTradeAmount()),
+                isSignWitnessTrade);
     }
 }
