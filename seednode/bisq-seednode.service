@@ -3,8 +3,8 @@
 [Unit]
 Description=Bisq Seed Node
 After=bitcoin.service
-Requires=bitcoin.service
-BindsTo=bitcoin.service
+#Requires=bitcoin.service
+#BindsTo=bitcoin.service
 
 [Service]
 EnvironmentFile=/etc/default/bisq-seednode.env
@@ -22,8 +22,8 @@ ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
           --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} \
           --rpcHost=${BITCOIN_RPC_HOST} \
           --rpcPort=${BITCOIN_RPC_PORT} \
-          --rpcUser=${BITCOIN_RPC_USERNAME} \
-          --rpcPassword=${BITCOIN_RPC_PASSWORD} \
+          --rpcUser=${BITCOIN_RPC_USER} \
+          --rpcPassword=${BITCOIN_RPC_PASS} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
           --dumpStatistics=${BISQ_DUMP_STATISTICS} \
 
