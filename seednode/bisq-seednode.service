@@ -10,7 +10,7 @@ BindsTo=bitcoin.service
 EnvironmentFile=/etc/default/bisq-seednode.env
 
 ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
-          --fullDaoNode=true \
+          --fullDaoNode=${BISQ_DAO_FULLNODE} \
           --userDataDir=${BISQ_HOME} \
           --appName=${BISQ_APP_NAME} \
           --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
