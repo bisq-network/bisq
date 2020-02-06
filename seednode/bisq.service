@@ -1,15 +1,15 @@
-# install in /etc/systemd/system/bisq-seednode.service
+# install in /etc/systemd/system/bisq.service
 
 [Unit]
-Description=Bisq Seed Node
+Description=Bisq Node
 After=bitcoin.service
 #Requires=bitcoin.service
 #BindsTo=bitcoin.service
 
 [Service]
-EnvironmentFile=/etc/default/bisq-seednode.env
+EnvironmentFile=/etc/default/bisq.env
 
-ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
+ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/__BISQ_APP_NAME__ \
           --fullDaoNode=${BISQ_DAO_FULLNODE} \
           --userDataDir=${BISQ_HOME} \
           --appName=${BISQ_APP_NAME} \
