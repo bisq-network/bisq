@@ -764,13 +764,14 @@ public class AccountAgeWitnessService {
         checkNotNull(trade.getContract().getBuyerPaymentAccountPayload());
         boolean checkingSignTrade = true;
         boolean isBuyer = trade.getContract().isMyRoleBuyer(keyRing.getPubKeyRing());
-        if (myWitness == null) {
-            myWitness = isBuyer ?
+        AccountAgeWitness witness = myWitness;
+        if (witness == null) {
+            witness = isBuyer ?
                     getMyWitness(trade.getContract().getBuyerPaymentAccountPayload()) :
                     getMyWitness(trade.getContract().getSellerPaymentAccountPayload());
             checkingSignTrade = false;
         }
-        boolean isSignWitnessTrade = accountIsSigner(myWitness) &&
+        boolean isSignWitnessTrade = accountIsSigner(witness) &&
                 !peerHasSignedWitness(trade) &&
                 tradeAmountIsSufficient(trade.getTradeAmount());
         log.info("AccountSigning: " +
@@ -791,7 +792,7 @@ public class AccountAgeWitnessService {
                 getWitnessDebugLog(trade.getContract().getSellerPaymentAccountPayload(),
                         trade.getContract().getSellerPubKeyRing()),
                 checkingSignTrade, // Following cases added to use same logic as in seller signing check
-                accountIsSigner(myWitness),
+                accountIsSigner(witness),
                 peerHasSignedWitness(trade),
                 trade.getTradeAmount(),
                 tradeAmountIsSufficient(trade.getTradeAmount()),
