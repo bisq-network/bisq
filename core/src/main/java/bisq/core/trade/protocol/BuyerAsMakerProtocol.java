@@ -173,6 +173,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 PublishTradeStatistics.class
         );
         taskRunner.run();
+        processModel.logTrade(buyerAsMakerTrade);
     }
 
     private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
