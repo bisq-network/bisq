@@ -1,16 +1,16 @@
-# install in /etc/systemd/system/bisq-seednode.service
+# install in /etc/systemd/system/bisq.service
 
 [Unit]
-Description=Bisq Seed Node
+Description=Bisq Node
 After=bitcoin.service
-Requires=bitcoin.service
-BindsTo=bitcoin.service
+#Requires=bitcoin.service
+#BindsTo=bitcoin.service
 
 [Service]
-EnvironmentFile=/etc/default/bisq-seednode.env
+EnvironmentFile=/etc/default/bisq.env
 
-ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
-          --fullDaoNode=true \
+ExecStart=/bin/sh __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
+          --fullDaoNode=${BISQ_DAO_FULLNODE} \
           --userDataDir=${BISQ_HOME} \
           --appName=${BISQ_APP_NAME} \
           --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
@@ -22,9 +22,10 @@ ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/bisq-seednode \
           --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} \
           --rpcHost=${BITCOIN_RPC_HOST} \
           --rpcPort=${BITCOIN_RPC_PORT} \
-          --rpcUser=${BITCOIN_RPC_USERNAME} \
-          --rpcPassword=${BITCOIN_RPC_PASSWORD} \
+          --rpcUser=${BITCOIN_RPC_USER} \
+          --rpcPassword=${BITCOIN_RPC_PASS} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
+          --dumpStatistics=${BISQ_DUMP_STATISTICS} \
 
 ExecStop=/bin/kill -9 ${MAINPID}
 Restart=on-failure
