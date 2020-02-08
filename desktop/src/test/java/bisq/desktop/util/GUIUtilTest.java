@@ -22,8 +22,12 @@ import bisq.desktop.util.validation.RegexValidator;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Price;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
+import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
@@ -51,7 +55,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
 @Ignore
 public class GUIUtilTest {
 
@@ -65,7 +68,7 @@ public class GUIUtilTest {
 
     @Test
     public void testTradeCurrencyConverter() {
-        Map<String, Integer> offerCounts = new HashMap<String, Integer>() {{
+        Map<String, Integer> offerCounts = new HashMap<>() {{
             put("BTC", 11);
             put("EUR", 10);
         }};
@@ -80,7 +83,7 @@ public class GUIUtilTest {
     }
 
     @Test
-    public void testOpenURLWithCampaignParameters() throws Exception {
+    public void testOpenURLWithCampaignParameters() {
         Preferences preferences = mock(Preferences.class);
         DontShowAgainLookup.setPreferences(preferences);
         GUIUtil.setPreferences(preferences);
@@ -101,7 +104,7 @@ public class GUIUtilTest {
     }
 
     @Test
-    public void testOpenURLWithoutCampaignParameters() throws Exception {
+    public void testOpenURLWithoutCampaignParameters() {
         Preferences preferences = mock(Preferences.class);
         DontShowAgainLookup.setPreferences(preferences);
         GUIUtil.setPreferences(preferences);
@@ -141,6 +144,18 @@ public class GUIUtilTest {
 
         assertFalse(regexValidator.validate("12.34.56.788").isValid);
         assertFalse(regexValidator.validate("12.34.56.78:").isValid);
+    }
+
+    @Test
+    public void testGetBsqInUsd() {
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        when(priceFeedService.getMarketPrice("USD"))
+                .thenReturn(new MarketPrice("USD", 12345.6789, 0, true));
+
+        Coin oneBsq = Coin.valueOf(100);
+        Price avgPrice = Price.valueOf("BSQ", 10000);
+
+        assertEquals("1.23 USD", GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, new BsqFormatter()));
     }
 
     @Test

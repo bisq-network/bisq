@@ -949,7 +949,7 @@ public class GUIUtil {
         showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
-    public static void setFitToRowsForTableView(TableView tableView,
+    public static void setFitToRowsForTableView(TableView<?> tableView,
                                                 int rowHeight,
                                                 int headerHeight,
                                                 int minNumRows,
@@ -1100,7 +1100,7 @@ public class GUIUtil {
         Volume bsqAmountAsVolume = Volume.parse(bsqAmountAsString, "BSQ");
         Coin requiredBtc = bsqPrice.getAmountByVolume(bsqAmountAsVolume);
         Volume volumeByAmount = usdPrice.getVolumeByAmount(requiredBtc);
-        return DisplayUtils.formatVolumeWithCode(volumeByAmount);
+        return DisplayUtils.formatAverageVolumeWithCode(volumeByAmount);
     }
 
     public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {

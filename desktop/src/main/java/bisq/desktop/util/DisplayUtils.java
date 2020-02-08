@@ -116,6 +116,10 @@ public class DisplayUtils {
         return formatVolume(volume, FIAT_VOLUME_FORMAT, true);
     }
 
+    static String formatAverageVolumeWithCode(Volume volume) {
+        return formatVolume(volume, FIAT_VOLUME_FORMAT.minDecimals(2), true);
+    }
+
     public static String formatVolumeLabel(String currencyCode) {
         return formatVolumeLabel(currencyCode, "");
     }
