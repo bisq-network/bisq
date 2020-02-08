@@ -79,7 +79,7 @@ if [ "${BITCOIN_INSTALL}" = true ];then
 	sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${BITCOIN_PKG}
 
 	echo "[*] Creating Bitcoin homedir"
-	sudo -H -i -u "${ROOT_USER}" mkdir "${BITCOIN_HOME}"
+	sudo -H -i -u "${ROOT_USER}" mkdir -p "${BITCOIN_HOME}"
 	sudo -H -i -u "${ROOT_USER}" chown "${BITCOIN_USER}":"${BITCOIN_GROUP}" ${BITCOIN_HOME}
 	sudo -H -i -u "${BITCOIN_USER}" ln -s . .bitcoin
 
@@ -112,7 +112,7 @@ echo "[*] Creating Bisq user with Tor access"
 sudo -H -i -u "${ROOT_USER}" useradd -d "${BISQ_HOME}" -G "${TOR_GROUP}" "${BISQ_USER}"
 
 echo "[*] Creating Bisq homedir"
-sudo -H -i -u "${ROOT_USER}" mkdir "${BISQ_HOME}"
+sudo -H -i -u "${ROOT_USER}" mkdir -p "${BISQ_HOME}"
 sudo -H -i -u "${ROOT_USER}" chown "${BISQ_USER}":"${BISQ_GROUP}" ${BISQ_HOME}
 
 echo "[*] Moving Bisq repo"
