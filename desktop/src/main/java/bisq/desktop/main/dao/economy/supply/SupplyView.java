@@ -61,6 +61,7 @@ import javafx.collections.ListChangeListener;
 
 import javafx.util.StringConverter;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -88,9 +89,6 @@ import static bisq.desktop.util.FormBuilder.addSlideToggleButton;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 
-
-import java.sql.Date;
-
 @FxmlView
 public class SupplyView extends ActivatableView<GridPane, Void> implements DaoStateListener {
 
@@ -110,7 +108,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     private XYChart.Series<Number, Number> seriesBSQIssuedMonthly2;
 
-    private ListChangeListener changeListenerBSQBurntDaily;
+    private ListChangeListener<XYChart.Data<Number, Number>> changeListenerBSQBurntDaily;
     private NumberAxis yAxisBSQBurntDaily;
 
     private ToggleButton zoomToInliersSlide;
@@ -194,22 +192,19 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         var burntLabel = Res.get("dao.factsAndFigures.supply.burnt");
 
         seriesBSQIssuedMonthly = new XYChart.Series<>();
-        var issuedMonthlyLabel = issuedLabel;
-        seriesBSQIssuedMonthly.setName(issuedMonthlyLabel);
+        seriesBSQIssuedMonthly.setName(issuedLabel);
 
         // Because Series cannot be reused in multiple charts, we create a
         // "second" Series and populate it at the same time as the original.
         // Some other solutions: https://stackoverflow.com/questions/49770442
         seriesBSQIssuedMonthly2 = new XYChart.Series<>();
-        seriesBSQIssuedMonthly2.setName(issuedMonthlyLabel);
+        seriesBSQIssuedMonthly2.setName(issuedLabel);
 
         seriesBSQBurntMonthly = new XYChart.Series<>();
-        var burntMonthlyLabel = burntLabel;
-        seriesBSQBurntMonthly.setName(burntMonthlyLabel);
+        seriesBSQBurntMonthly.setName(burntLabel);
 
         seriesBSQBurntDaily = new XYChart.Series<>();
-        var burntDailyLabel = burntLabel;
-        seriesBSQBurntDaily.setName(burntDailyLabel);
+        seriesBSQBurntDaily.setName(burntLabel);
 
         seriesBSQBurntDailyMA = new XYChart.Series<>();
         var burntMALabel = Res.get("dao.factsAndFigures.supply.burntMovingAverage");
@@ -223,21 +218,20 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         var chartPane = wrapInChartPane(chart);
 
-        addToTopMargin(chartPane, Layout.COMPACT_FIRST_ROW_DISTANCE);
+        addToTopMargin(chartPane);
 
         root.getChildren().add(chartPane);
     }
 
-    private void addToTopMargin(Node child, double amount) {
+    private void addToTopMargin(Node child) {
         var margin = GridPane.getMargin(child);
 
-        var new_insets =
-            new Insets(
-                    margin.getTop() + amount,
-                    margin.getRight(),
-                    margin.getBottom(),
-                    margin.getLeft()
-                    );
+        var new_insets = new Insets(
+                margin.getTop() + Layout.COMPACT_FIRST_ROW_DISTANCE,
+                margin.getRight(),
+                margin.getBottom(),
+                margin.getLeft()
+        );
 
         GridPane.setMargin(child, new_insets);
     }
@@ -318,7 +312,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         configureChart(chart);
         chart.setCreateSymbols(false);
 
-        chart.getData().addAll(seriesBSQIssuedMonthly, seriesBSQBurntMonthly);
+        chart.getData().addAll(List.of(seriesBSQIssuedMonthly, seriesBSQBurntMonthly));
 
         chart.setLegendVisible(true);
 
@@ -344,7 +338,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         return chart;
     }
 
-    @SuppressWarnings("unchecked")
     private Node createBSQBurntChart(
             XYChart.Series<Number, Number> seriesBSQBurntDaily,
             XYChart.Series<Number, Number> seriesBSQBurntDailyMA
@@ -371,7 +364,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         configureChart(chart);
         chart.setCreateSymbols(false);
 
-        chart.getData().addAll(seriesBSQBurntDaily, seriesBSQBurntDailyMA);
+        chart.getData().addAll(List.of(seriesBSQBurntDaily, seriesBSQBurntDailyMA));
 
         chart.setLegendVisible(true);
 
@@ -501,11 +494,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         Set<Tx> burntTxs = new HashSet<>(daoStateService.getBurntFeeTxs());
         burntTxs.addAll(daoStateService.getInvalidTxs());
 
-        List<Tx> sortedBurntTxs = burntTxs.stream()
+        return burntTxs.stream()
                 .sorted(Comparator.comparing(Tx::getTime))
                 .collect(Collectors.toList());
-
-        return sortedBurntTxs;
     }
 
     private List<XYChart.Data<Number, Number>> updateBSQBurntDaily(List<Tx> sortedBurntTxs) {
@@ -515,18 +506,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 sortedBurntTxs
                         .stream()
                         .collect(Collectors.groupingBy(
-                                tx ->
-                                        new Date(tx.getTime())
-                                                .toLocalDate()
-                                                .with(ADJUSTERS.get(DAY))
+                                tx -> Instant.ofEpochMilli(tx.getTime()).atZone(ZoneId.systemDefault())
+                                        .toLocalDate()
+                                        .with(ADJUSTERS.get(DAY))
                         ));
 
         List<XYChart.Data<Number, Number>> updatedBurntBsqDaily =
                 burntBsqByDay
                         .keySet()
                         .stream()
-                        .map(date ->
-                        {
+                        .map(date -> {
                             ZonedDateTime zonedDateTime = date.atStartOfDay(ZoneId.systemDefault());
                             return new XYChart.Data<Number, Number>(
                                     zonedDateTime.toInstant().getEpochSecond(),
@@ -550,18 +539,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 sortedBurntTxs
                         .stream()
                         .collect(Collectors.groupingBy(
-                                tx ->
-                                        new Date(tx.getTime())
-                                                .toLocalDate()
-                                                .with(ADJUSTERS.get(MONTH))
+                                tx -> Instant.ofEpochMilli(tx.getTime()).atZone(ZoneId.systemDefault())
+                                        .toLocalDate()
+                                        .with(ADJUSTERS.get(MONTH))
                         ));
 
         List<XYChart.Data<Number, Number>> updatedBurntBsqMonthly =
                 burntBsqByMonth
                         .keySet()
                         .stream()
-                        .map(date ->
-                        {
+                        .map(date -> {
                             ZonedDateTime zonedDateTime = date.atStartOfDay(ZoneId.systemDefault());
                             return new XYChart.Data<Number, Number>(
                                     zonedDateTime.toInstant().getEpochSecond(),
@@ -603,7 +590,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                         maPeriod);
 
         BiFunction<Number, Double, XYChart.Data<Number, Number>> xyToXyData =
-                XYChart.Data::new;
+                XYChart.Data<Number, Number>::new;
 
         List<XYChart.Data<Number, Number>> burntBsqMA =
                 zip(burntBsqXValues, burntBsqMAYValues, xyToXyData)
@@ -621,7 +608,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 .sorted(Comparator.comparing(Issuance::getChainHeight));
 
         Map<LocalDate, List<Issuance>> bsqAddedByVote = Stream.concat(bsqByCompensation, bsqByReimbursement)
-                .collect(Collectors.groupingBy(item -> new Date(daoFacade.getBlockTime(item.getChainHeight())).toLocalDate()
+                .collect(Collectors.groupingBy(item -> Instant.ofEpochMilli(daoFacade.getBlockTime(item.getChainHeight()))
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
                         .with(ADJUSTERS.get(MONTH))));
 
         List<XYChart.Data<Number, Number>> updatedAddedBSQ = bsqAddedByVote.keySet().stream()
@@ -686,7 +675,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     // When Guava version is bumped to at least 21.0,
     // can be replaced with com.google.common.collect.Streams.zip
-    public static <L, R, T> Stream<T> zip(
+    private static <L, R, T> Stream<T> zip(
             Stream<L> leftStream,
             Stream<R> rightStream,
             BiFunction<L, R, T> combiner
