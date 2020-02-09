@@ -74,8 +74,10 @@ public class BtcNodes {
                         new BtcNode("btc.bisq.cc", "4nnuyxm5k5tlyjq3.onion", "167.71.168.194", BtcNode.DEFAULT_PORT, "@m52go"),
 
                         // wiz
-                        new BtcNode("node130.hnl.wiz.biz", "22tg6ufbwz6o3l2u.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
-                        new BtcNode("node140.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz")
+                        new BtcNode("node100.wiz.network", "m3yqzythryowgedc.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node130.wiz.network", "22tg6ufbwz6o3l2u.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node140.wiz.network", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node150.wiz.network", "zyhtr2ffbzn5yeg3.onion", "103.99.168.150", BtcNode.DEFAULT_PORT, "@wiz")
                 ) :
                 new ArrayList<>();
     }
