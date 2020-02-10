@@ -159,7 +159,6 @@ public class TradeStatisticsManager {
         private TradeStatistics2 tradeStatistics;
 
         public WrapperTradeStatistics2(TradeStatistics2 tradeStatistics) {
-
             this.tradeStatistics = tradeStatistics;
         }
 
