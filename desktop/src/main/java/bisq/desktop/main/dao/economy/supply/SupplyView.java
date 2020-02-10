@@ -78,8 +78,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Spliterators.AbstractSpliterator;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -601,6 +603,11 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     }
 
     private void updateBSQIssuedMonthly() {
+        Function<Integer, LocalDate> blockTimeFn = memoize(height ->
+                Instant.ofEpochMilli(daoFacade.getBlockTime(height)).atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                        .with(ADJUSTERS.get(MONTH)));
+
         Stream<Issuance> bsqByCompensation = daoStateService.getIssuanceSet(IssuanceType.COMPENSATION).stream()
                 .sorted(Comparator.comparing(Issuance::getChainHeight));
 
@@ -608,10 +615,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 .sorted(Comparator.comparing(Issuance::getChainHeight));
 
         Map<LocalDate, List<Issuance>> bsqAddedByVote = Stream.concat(bsqByCompensation, bsqByReimbursement)
-                .collect(Collectors.groupingBy(item -> Instant.ofEpochMilli(daoFacade.getBlockTime(item.getChainHeight()))
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()
-                        .with(ADJUSTERS.get(MONTH))));
+                .collect(Collectors.groupingBy(blockTimeFn.compose(Issuance::getChainHeight)));
 
         List<XYChart.Data<Number, Number>> updatedAddedBSQ = bsqAddedByVote.keySet().stream()
                 .map(date -> {
@@ -700,5 +704,10 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                     }
                 };
         return StreamSupport.stream(spliterator, false);
+    }
+
+    private static <T, R> Function<T, R> memoize(Function<T, R> fn) {
+        Map<T, R> map = new ConcurrentHashMap<>();
+        return x -> map.computeIfAbsent(x, fn);
     }
 }
