@@ -32,6 +32,7 @@ public class ConfigFileReaderTests {
 
     @Test
     public void whenFileDoesNotExist_thenGetLinesThrows() {
+        writer.close();
         assertTrue(file.delete());
 
         exception.expect(ConfigException.class);

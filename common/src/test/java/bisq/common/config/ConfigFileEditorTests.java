@@ -29,6 +29,7 @@ public class ConfigFileEditorTests {
 
     @Test
     public void whenFileDoesNotExist_thenSetOptionCreatesItAndAppendsOneLine() {
+        writer.close();
         assertTrue(file.delete());
 
         editor.setOption("opt1", "val1");
@@ -111,6 +112,7 @@ public class ConfigFileEditorTests {
 
     @Test
     public void whenFileDoesNotExist_thenClearOptionIsNoOp() {
+        writer.close();
         assertTrue(file.delete());
         editor.clearOption("opt1");
         assertFalse(file.exists());
