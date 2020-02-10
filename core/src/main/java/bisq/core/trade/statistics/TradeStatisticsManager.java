@@ -40,6 +40,7 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -81,6 +82,9 @@ public class TradeStatisticsManager {
         Set<TradeStatistics2> collect = tradeStatistics2StorageService.getMap().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
+                .map(WrapperTradeStatistics2::new)
+                .distinct()
+                .map(WrapperTradeStatistics2::unwrap)
                 .filter(TradeStatistics2::isValid)
                 .collect(Collectors.toSet());
         observableTradeStatisticsSet.addAll(collect);
@@ -148,6 +152,31 @@ public class TradeStatisticsManager {
             TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
             list.toArray(array);
             jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
+        }
+    }
+
+    static class WrapperTradeStatistics2 {
+        private TradeStatistics2 tradeStatistics;
+
+        public WrapperTradeStatistics2(TradeStatistics2 tradeStatistics) {
+            this.tradeStatistics = tradeStatistics;
+        }
+
+        public TradeStatistics2 unwrap() {
+            return this.tradeStatistics;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            var wrapper = (WrapperTradeStatistics2) obj;
+            return Objects.equals(tradeStatistics.getOfferId(), wrapper.tradeStatistics.getOfferId());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tradeStatistics.getOfferId());
         }
     }
 }
