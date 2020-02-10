@@ -120,7 +120,7 @@ public class ConfigTests {
             filepath = "C:\\does\\not\\exist";
         }
         exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage(String.format("problem parsing option 'torrcFile': File [%s] does not exist", filepath));
+        exceptionRule.expectMessage(format("problem parsing option 'torrcFile': File [%s] does not exist", filepath));
         configWithOpts(opt(TORRC_FILE, filepath));
     }
 
@@ -131,7 +131,7 @@ public class ConfigTests {
             filepath = "C:\\no\\such\\bisq.properties";
         }
         exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage(String.format("The specified config file '%s' does not exist", filepath));
+        exceptionRule.expectMessage(format("The specified config file '%s' does not exist", filepath));
         configWithOpts(opt(CONFIG_FILE, filepath));
     }
 
