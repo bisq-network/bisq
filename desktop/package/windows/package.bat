@@ -119,7 +119,7 @@ if not exist "%package_dir%\windows\Bisq-%version%.exe" (
 )
 
 echo Signing executable with default Code Signing Certificate
-call "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /v /fd SHA256 /a "Bisq-%version%.exe"
+call "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /v /fd SHA256 /a "%package_dir%\windows\Bisq-%version%.exe"
 
 echo SHA256 of %package_dir%\windows\Bisq-%version%.exe:
 for /F "delims=" %%h in ('certutil -hashfile "%package_dir%\windows\Bisq-%version%.exe" SHA256 ^| findstr -i -v "SHA256" ^| findstr -i -v "certutil"') do (set hash=%%h)
