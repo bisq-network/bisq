@@ -165,6 +165,12 @@ public class GUIUtilTest {
         // fqdn addresses
         assertTrue(regexValidator.validate("example.com").isValid);
         assertTrue(regexValidator.validate("mynode.local:8333").isValid);
+        assertTrue(regexValidator.validate("foo.example.com,bar.example.com").isValid);
+        assertTrue(regexValidator.validate("foo.example.com:8333,bar.example.com:8333").isValid);
+
+        assertFalse(regexValidator.validate("mynode.local:65536").isValid);
+        assertFalse(regexValidator.validate("-example.com").isValid);
+        assertFalse(regexValidator.validate("example-.com").isValid);
     }
 
     @Test
