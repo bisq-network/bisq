@@ -115,16 +115,24 @@ public class ConfigTests {
 
     @Test
     public void whenOptionFileArgumentDoesNotExist_thenConfigExceptionIsThrown() {
+        String filepath = "/does/not/exist";
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            filepath = "C:\\does\\not\\exist";
+        }
         exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage("problem parsing option 'torrcFile': File [/does/not/exist] does not exist");
-        configWithOpts(opt(TORRC_FILE, "/does/not/exist"));
+        exceptionRule.expectMessage(format("problem parsing option 'torrcFile': File [%s] does not exist", filepath));
+        configWithOpts(opt(TORRC_FILE, filepath));
     }
 
     @Test
     public void whenConfigFileOptionIsSetToNonExistentFile_thenConfigExceptionIsThrown() {
+        String filepath = "/no/such/bisq.properties";
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            filepath = "C:\\no\\such\\bisq.properties";
+        }
         exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage("The specified config file '/no/such/bisq.properties' does not exist");
-        configWithOpts(opt(CONFIG_FILE, "/no/such/bisq.properties"));
+        exceptionRule.expectMessage(format("The specified config file '%s' does not exist", filepath));
+        configWithOpts(opt(CONFIG_FILE, filepath));
     }
 
     @Test

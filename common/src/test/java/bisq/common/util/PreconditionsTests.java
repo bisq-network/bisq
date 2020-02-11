@@ -27,8 +27,12 @@ public class PreconditionsTests {
 
     @Test
     public void whenDirDoesNotExist_thenThrow() {
+        String filepath = "/does/not/exist";
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            filepath = "C:\\does\\not\\exist";
+        }
         exceptionRule.expect(IllegalArgumentException.class);
-        exceptionRule.expectMessage(equalTo("Directory '/does/not/exist' does not exist"));
-        checkDir(new File("/does/not/exist"));
+        exceptionRule.expectMessage(equalTo(String.format("Directory '%s' does not exist", filepath)));
+        checkDir(new File(filepath));
     }
 }
