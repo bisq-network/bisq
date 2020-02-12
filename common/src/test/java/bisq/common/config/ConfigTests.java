@@ -114,6 +114,17 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenUnrecognizedOptionIsSetInConfigFile_thenNoExceptionIsThrown() throws IOException {
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption("bogusOption", "bogusValue"));
+            writer.println(new ConfigFileOption(APP_NAME, "BisqTest"));
+        }
+        Config config = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertThat(config.appName, equalTo("BisqTest"));
+    }
+
+    @Test
     public void whenOptionFileArgumentDoesNotExist_thenConfigExceptionIsThrown() {
         exceptionRule.expect(ConfigException.class);
         exceptionRule.expectMessage("problem parsing option 'torrcFile': File [/does/not/exist] does not exist");
