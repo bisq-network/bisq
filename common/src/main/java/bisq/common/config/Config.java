@@ -612,6 +612,12 @@ public class Config {
             OptionSet cliOpts = parser.parse(args);
             options.addOptionSet(cliOpts);
 
+            // Option parsing is strict at the command line, but we relax it now for any
+            // subsequent config file processing. This is for compatibility with pre-1.2.6
+            // versions that allowed unrecognized options in the bisq.properties config
+            // file and because it follows suit with Bitcoin Core's config file behavior.
+            parser.allowsUnrecognizedOptions();
+
             // Parse config file specified at the command line only if it was specified as
             // an absolute path. Otherwise, the config file will be processed later below.
             File configFile = null;

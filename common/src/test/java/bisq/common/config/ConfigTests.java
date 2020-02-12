@@ -114,6 +114,17 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenUnrecognizedOptionIsSetInConfigFile_thenNoExceptionIsThrown() throws IOException {
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption("bogusOption", "bogusValue"));
+            writer.println(new ConfigFileOption(APP_NAME, "BisqTest"));
+        }
+        Config config = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertThat(config.appName, equalTo("BisqTest"));
+    }
+
+    @Test
     public void whenOptionFileArgumentDoesNotExist_thenConfigExceptionIsThrown() {
         String filepath = "/does/not/exist";
         if (System.getProperty("os.name").startsWith("Windows")) {
