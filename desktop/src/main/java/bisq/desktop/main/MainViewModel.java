@@ -305,6 +305,16 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             else
                 torNetworkSettingsWindow.hide();
         });
+        bisqSetup.setDisplayLocalNodeMisconfigurationHandler(
+                (Runnable continueWithoutLocalNode) ->
+                new Popup()
+                .hideCloseButton()
+                .warning(Res.get("popup.warning.localNodeMisconfigured.explanation"))
+                .useShutDownButton()
+                .secondaryActionButtonText(Res.get("popup.warning.localNodeMisconfigured.continueWithoutLocalNode"))
+                .onSecondaryAction(continueWithoutLocalNode)
+                .show()
+                );
         bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup().warning(msg)
                 .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
                 .onAction(() -> GUIUtil.reSyncSPVChain(preferences))
@@ -441,10 +451,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (walletsSetup.numPeersProperty().get() == 0) {
-                        if (localBitcoinNode.isDetected())
-                            getWalletServiceErrorMsg().set(Res.get("mainView.networkWarning.localhostBitcoinLost", Res.getBaseCurrencyName().toLowerCase()));
+                        if (localBitcoinNode.isUsable().get())
+                            getWalletServiceErrorMsg().set(
+                                    Res.get("mainView.networkWarning.localhostBitcoinLost", Res.getBaseCurrencyName().toLowerCase()));
                         else
-                            getWalletServiceErrorMsg().set(Res.get("mainView.networkWarning.allConnectionsLost", Res.getBaseCurrencyName().toLowerCase()));
+                            getWalletServiceErrorMsg().set(
+                                    Res.get("mainView.networkWarning.allConnectionsLost", Res.getBaseCurrencyName().toLowerCase()));
                     } else {
                         getWalletServiceErrorMsg().set(null);
                     }

@@ -736,11 +736,24 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean getUseTorForBitcoinJ() {
-        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet,
+        // We override the useTorForBitcoinJ and set it to false if we found a usable localhost node or if we are not on mainnet,
         // unless the useTorForBtc parameter is explicitly provided.
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
+
+        // TODO bug. Non-critical, apparently.
+        // Sometimes this method, which queries LocalBitcoinNode for whether or not there's a
+        // usable local Bitcoin node, is called before LocalBitcoinNode has performed its
+        // checks. This was noticed when LocalBitcoinNode was refactored to return
+        // Optional<Boolean> istead of boolean, an empty Optional signifying that the relevant
+        // check has not yet been performed.
+        //
+        // To keep the method's behaviour unchanged, until a fix is implemented, we use
+        // Optional.orElse(false). Here 'false' normally means that the checks were performed
+        // and a suitable local Bitcoin node wasn't found.
+        var usableLocalNodePresent = localBitcoinNode.isUsable().orElse(false);
+
         if ((!Config.baseCurrencyNetwork().isMainnet()
-                || localBitcoinNode.isDetected())
+                || usableLocalNodePresent)
                 && !config.useTorForBtcOptionSetExplicitly)
             return false;
         else
