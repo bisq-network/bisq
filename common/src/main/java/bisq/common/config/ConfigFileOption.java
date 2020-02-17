@@ -20,7 +20,7 @@ class ConfigFileOption {
 
         String[] tokens = clean(option).split("=");
         String name = tokens[0].trim();
-        String arg = tokens[1].trim();
+        String arg = tokens.length > 1 ? tokens[1].trim() : "";
         return new ConfigFileOption(name, arg);
     }
 
