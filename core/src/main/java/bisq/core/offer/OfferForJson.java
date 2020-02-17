@@ -90,7 +90,7 @@ public class OfferForJson {
         this.currencyCode = currencyCode;
         this.minAmount = minAmount.value;
         this.amount = amount.value;
-        this.price = price != null ? price.getValue() : 0;
+        this.price = price.getValue();
         this.date = date.getTime();
         this.id = id;
         this.useMarketBasedPrice = useMarketBasedPrice;
