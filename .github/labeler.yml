@@ -1,3 +1,0 @@
-# Add 'in:altcoins' and 'is:no-priority' to any file changes within 'assets' folder
-in:altcoins: assets/*
-is:no-priority: assets/*
