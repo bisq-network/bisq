@@ -76,8 +76,6 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.time.temporal.ChronoUnit;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
@@ -100,8 +98,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Trade implements Tradable, Model {
-
-    public static final long REFRESH_INTERVAL = ChronoUnit.DAYS.getDuration().toMillis();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -426,6 +422,8 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     @Setter
     private long lastRefreshRequestDate;
+    @Getter
+    private long refreshInterval;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -456,6 +454,7 @@ public abstract class Trade implements Tradable, Model {
         takeOfferDate = new Date().getTime();
         processModel = new ProcessModel();
         lastRefreshRequestDate = takeOfferDate;
+        refreshInterval = offer.getPaymentMethod().getMaxTradePeriod() / 5;
     }
 
 
@@ -1063,7 +1062,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean allowedRefresh() {
-        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + REFRESH_INTERVAL;
+        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
         if (!allowRefresh) {
             log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
         }
