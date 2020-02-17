@@ -7,6 +7,7 @@ After=bitcoin.service
 #BindsTo=bitcoin.service
 
 [Service]
+SyslogIdentifier=bisq
 EnvironmentFile=/etc/default/bisq.env
 
 ExecStart=/bin/sh __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
