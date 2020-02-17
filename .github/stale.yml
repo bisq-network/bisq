@@ -12,6 +12,7 @@ exemptLabels:
     - $BSQ bounty
     - good first issue
     - Epic
+    - a:feature
 # Label to use when marking an issue as stale
 staleLabel: was:dropped
 # Comment to post when marking an issue as stale. Set to `false` to disable
