@@ -5,10 +5,10 @@
         <!-- See: https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html -->
 
         <key>CFBundleVersion</key>
-        <string>1.2.6</string>
+        <string>1.2.7</string>
 
         <key>CFBundleShortVersionString</key>
-        <string>1.2.6</string>
+        <string>1.2.7</string>
 
         <key>CFBundleExecutable</key>
         <string>Bisq</string>
@@ -54,9 +54,5 @@
 
         <key>CFBundlePackageType</key>
         <string>APPL</string>
-
-        <!-- macOS will manage light/dark title bar automatically -->
-        <key>NSRequiresAquaSystemAppearance</key>
-        <false/>
     </dict>
 </plist>
