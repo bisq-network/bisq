@@ -33,4 +33,13 @@ public class ConfigFileOptionTests {
         assertThat(option.arg, equalTo("example.com:8080"));
         assertThat(option.toString(), equalTo("host1=example.com:8080"));
     }
+
+    @Test
+    public void whenOptionHasNoValue_thenItSetsEmptyValue() {
+        String value = "host1=";
+        ConfigFileOption option = ConfigFileOption.parse(value);
+        assertThat(option.name, equalTo("host1"));
+        assertThat(option.arg, equalTo(""));
+        assertThat(option.toString(), equalTo("host1="));
+    }
 }
