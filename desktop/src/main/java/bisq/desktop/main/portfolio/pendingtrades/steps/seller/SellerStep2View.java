@@ -99,8 +99,10 @@ public class SellerStep2View extends TradeStepView {
 
     private void activateRefreshButton() {
         checkNotNull(model.dataModel.getTrade(), "No trade found");
+
+        Trade trade = model.dataModel.getTrade();
         var timeToNextRefresh =
-                model.dataModel.getTrade().getLastRefreshRequestDate() + Trade.REFRESH_INTERVAL - new Date().getTime();
+                trade.getLastRefreshRequestDate() + trade.getRefreshInterval() - new Date().getTime();
         if (timeToNextRefresh <= 0) {
             refreshButtonPane.setVisible(true);
         } else {
