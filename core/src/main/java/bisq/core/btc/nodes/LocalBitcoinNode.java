@@ -231,7 +231,7 @@ public class LocalBitcoinNode {
                 peerVersionMessageFuture.set(peer.getPeerVersionMessage());
             }
             public void onFailure(Throwable thr) {
-                ;
+                // No action
             }
         };
         Futures.addCallback(
