@@ -13,6 +13,7 @@ exemptLabels:
     - good first issue
     - Epic
     - a:feature
+    - is:priority
 # Label to use when marking an issue as stale
 staleLabel: was:dropped
 # Comment to post when marking an issue as stale. Set to `false` to disable
