@@ -148,7 +148,7 @@ public class LocalBitcoinNode {
     }
 
     private void handleHandshakeAttempt(Optional<VersionMessage> optionalVersionMessage) {
-        if (optionalVersionMessage.isEmpty()) {
+        if (!optionalVersionMessage.isPresent()) {
             detected = Optional.of(false);
             wellConfigured = Optional.of(false);
             log.info("No local Bitcoin node detected on port {},"
