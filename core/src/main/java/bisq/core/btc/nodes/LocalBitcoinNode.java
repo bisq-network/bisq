@@ -87,7 +87,9 @@ public class LocalBitcoinNode {
         // i.e. is it fine to just always use MainNetParams?
         var networkParameters = new MainNetParams();
 
-        var context = new Context(networkParameters);
+        // We must construct a BitcoinJ Context before using BitcoinJ.
+        // We don't keep a reference, because it's automatically kept in a thread local storage.
+        new Context(networkParameters);
 
         var ourVersionMessage = new VersionMessage(networkParameters, 0);
 
@@ -229,6 +231,7 @@ public class LocalBitcoinNode {
                 peerVersionMessageFuture.set(peer.getPeerVersionMessage());
             }
             public void onFailure(Throwable thr) {
+                ;
             }
         };
         Futures.addCallback(
