@@ -8,6 +8,7 @@ BISQ_REPO_URL=https://raw.githubusercontent.com/bisq-network/bisq
 BISQ_REPO_TAG=master
 ROOT_USER=root
 ROOT_GROUP=root
+ROOT_HOME=~root
 ROOT_PKG="nginx collectd openssl"
 
 SYSTEMD_ENV_HOME=/etc/default
