@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "[*] Bisq Server Monitoring installation script"
@@ -9,7 +9,7 @@ BISQ_REPO_TAG=master
 ROOT_USER=root
 ROOT_GROUP=root
 ROOT_HOME=~root
-ROOT_PKG="nginx collectd openssl"
+ROOT_PKG=(nginx collectd openssl)
 
 SYSTEMD_ENV_HOME=/etc/default
 
@@ -25,11 +25,11 @@ echo "[*] Upgrading OS packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq -y
 
 echo "[*] Installing base packages"
-sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${ROOT_PKG}
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${ROOT_PKG[@]}
 
 echo "[*] Preparing Bisq init script for monitoring"
 # remove stuff it it is there already
-sudo -H -i -u "${ROOT_USER}" sed -i -e 's/ -Dcom.sun.management.jmxremote //g' -e 's/-Dcom.sun.management.jmxremote.local.only=true//g' -e 's/ -Dcom.sun.management.jmxremote.host=127.0.0.1//g' -e 's/ -Dcom.sun.management.jmxremote.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.rmi.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.ssl=false//g' -e 's/ -Dcom.sun.management.jmxremote.authenticate=false//g' "${SYSTEMD_ENV_HOME}/bisq.env"
+sudo -H -i -u "${ROOT_USER}" sed -i -e 's/-Dcom.sun.management.jmxremote //g' -e 's/-Dcom.sun.management.jmxremote.local.only=true//g' -e 's/ -Dcom.sun.management.jmxremote.host=127.0.0.1//g' -e 's/ -Dcom.sun.management.jmxremote.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.rmi.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.ssl=false//g' -e 's/ -Dcom.sun.management.jmxremote.authenticate=false//g' "${SYSTEMD_ENV_HOME}/bisq.env"
 sudo -H -i -u "${ROOT_USER}" sed -i -e '/JAVA_OPTS/ s/"$/ -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true -Dcom.sun.management.jmxremote.port=6969 -Dcom.sun.management.jmxremote.rmi.port=6969 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"/' "${SYSTEMD_ENV_HOME}/bisq.env"
 
 echo "[*] Seeding entropy from /dev/urandom"
