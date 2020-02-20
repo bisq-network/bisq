@@ -4,7 +4,8 @@ set -e
 echo "[*] Bisq Server Monitoring installation script"
 
 ##### change paths if necessary for your system
-
+BISQ_REPO_URL=https://raw.githubusercontent.com/bisq-network/bisq
+BISQ_REPO_TAG=master
 ROOT_USER=root
 ROOT_GROUP=root
 ROOT_PKG="nginx collectd openssl"
@@ -23,20 +24,22 @@ echo "[*] Upgrading OS packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq -y
 
 echo "[*] Installing base packages"
-sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y "${ROOT_PKG}"
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${ROOT_PKG}
 
 echo "[*] Preparing Bisq init script for monitoring"
 # remove stuff it it is there already
-sudo -H -i -u "${ROOT_USER}" sed -i 's/ -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.host=127.0.0.1 -Dcom.sun.management.jmxremote.port=6969 -Dcom.sun.management.jmxremote.rmi.port=6969 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false//' "${SYSTEMD_ENV_HOME}/bisq.env"
+sudo -H -i -u "${ROOT_USER}" sed -i -e 's/ -Dcom.sun.management.jmxremote //g' -e 's/-Dcom.sun.management.jmxremote.local.only=true//g' -e 's/ -Dcom.sun.management.jmxremote.host=127.0.0.1//g' -e 's/ -Dcom.sun.management.jmxremote.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.rmi.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.ssl=false//g' -e 's/ -Dcom.sun.management.jmxremote.authenticate=false//g' "${SYSTEMD_ENV_HOME}/bisq.env"
 sudo -H -i -u "${ROOT_USER}" sed -i -e '/JAVA_OPTS/ s/"$/ -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true -Dcom.sun.management.jmxremote.port=6969 -Dcom.sun.management.jmxremote.rmi.port=6969 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"/' "${SYSTEMD_ENV_HOME}/bisq.env"
 
+echo "[*] Seeding entropy from /dev/urandom"
+sudo -H -i -u "${ROOT_USER}" /bin/sh -c "head -1500 /dev/urandom > ${ROOT_HOME}/.rnd"
 echo "[*] Installing Nginx config"
 sudo -H -i -u "${ROOT_USER}" openssl req -x509 -nodes -newkey rsa:2048 -keyout /etc/nginx/cert.key -out /etc/nginx/cert.crt -subj="/O=Bisq/OU=Bisq Infrastructure/CN=$onionaddress"
-curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/nginx.conf > /tmp/nginx.conf
+curl -s "${BISQ_REPO_URL}/${BISQ_REPO_TAG}/monitor/nginx.conf" > /tmp/nginx.conf
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 /tmp/nginx.conf /etc/nginx/nginx.conf
 
 echo "[*] Installing collectd config"
-curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/collectd.conf > /tmp/collectd.conf
+curl -s "${BISQ_REPO_URL}/${BISQ_REPO_TAG}/monitor/collectd.conf" > /tmp/collectd.conf
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 /tmp/collectd.conf /etc/collectd/collectd.conf
 sudo -H -i -u "${ROOT_USER}" sed -i -e "s/__ONION_ADDRESS__/$onionaddress/" /etc/collectd/collectd.conf
 
