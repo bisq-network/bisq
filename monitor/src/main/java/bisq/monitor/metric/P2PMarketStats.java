@@ -20,38 +20,25 @@ package bisq.monitor.metric;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
-import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.common.config.BaseCurrencyNetwork;
+
 import bisq.core.offer.OfferPayload;
-import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.trade.statistics.TradeStatistics2Store;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.Storage;
-
-import java.io.File;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,10 +51,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
-    private static final String DATABASE_DIR = "run.dbDir";
-
-    private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
-
     final Map<NodeAddress, Statistics<Counter>> versionBucketsPerHost = new ConcurrentHashMap<>();
 
     /**
@@ -85,13 +68,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private class MyStatistics implements Statistics<Counter> {
-        private final Map<String, Counter> buckets = new HashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new MyStatistics();
-        }
+    private class MyStatistics extends Statistics<Counter> {
 
         @Override
         public synchronized void log(Object message) {
@@ -105,25 +82,9 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
                 buckets.get(market).increment();
             }
         }
-
-        @Override
-        public Map<String, Counter> values() {
-            return buckets;
-        }
-
-        @Override
-        public void reset() {
-            buckets.clear();
-        }
     }
 
-    private class VersionsStatistics implements Statistics<Counter> {
-        private final Map<String, Counter> buckets = new HashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new VersionsStatistics();
-        }
+    private class VersionsStatistics extends Statistics<Counter> {
 
         @Override
         public void log(Object message) {
@@ -137,43 +98,10 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
                 buckets.get(version).increment();
             }
         }
-
-        @Override
-        public Map<String, Counter> values() {
-            return buckets;
-        }
-
-        @Override
-        public void reset() {
-            buckets.clear();
-        }
     }
 
     public P2PMarketStats(Reporter graphiteReporter) {
         super(graphiteReporter);
-
-        statistics = new MyStatistics();
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
-
-        if (hashes.isEmpty() && configuration.getProperty(DATABASE_DIR) != null) {
-            File dir = new File(configuration.getProperty(DATABASE_DIR));
-            String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
-            try {
-                Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
-                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.initAndGetPersistedWithFileName(TradeStatistics2Store.class.getSimpleName() + networkPostfix, 0);
-                hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.initAndGetPersistedWithFileName(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix, 0);
-                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-            } catch (NullPointerException e) {
-                // in case there is no store file
-                log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
-            }
-        }
     }
 
     @Override
@@ -205,8 +133,8 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
         if (networkEnvelope instanceof GetDataResponse) {
 
-            Statistics result = this.statistics.create();
-            VersionsStatistics versions = new VersionsStatistics();
+            Statistics result = new MyStatistics();
+            Statistics versions = new VersionsStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();

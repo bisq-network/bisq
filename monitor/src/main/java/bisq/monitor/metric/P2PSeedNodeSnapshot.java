@@ -81,11 +81,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
-    private static final String DATABASE_DIR = "run.dbDir";
 
-    Statistics statistics;
     final Map<NodeAddress, Statistics<Set<Integer>>> bucketsPerHost = new ConcurrentHashMap<>();
-    protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private int daostateheight = 594000;
     private int proposalheight = daostateheight;
     private int blindvoteheight = daostateheight;
@@ -93,14 +90,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     /**
      * Use a counter to do statistics.
      */
-    private class MyStatistics implements Statistics<Set<Integer>> {
-
-        private final Map<String, Set<Integer>> buckets = new HashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new MyStatistics();
-        }
+    private class MyStatistics extends Statistics<Set<Integer>> {
 
         @Override
         public synchronized void log(Object message) {
@@ -111,43 +101,10 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             buckets.putIfAbsent(className, new HashSet<>());
             buckets.get(className).add(message.hashCode());
         }
-
-        @Override
-        public Map<String, Set<Integer>> values() {
-            return buckets;
-        }
-
-        @Override
-        public synchronized void reset() {
-            buckets.clear();
-        }
     }
 
     public P2PSeedNodeSnapshot(Reporter reporter) {
         super(reporter);
-
-        statistics = new MyStatistics();
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
-
-        if (hashes.isEmpty() && configuration.getProperty(DATABASE_DIR) != null) {
-            File dir = new File(configuration.getProperty(DATABASE_DIR));
-            String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
-            try {
-                Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
-                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.initAndGetPersistedWithFileName(TradeStatistics2Store.class.getSimpleName() + networkPostfix, 0);
-                hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.initAndGetPersistedWithFileName(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix, 0);
-                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-            } catch (NullPointerException e) {
-                // in case there is no store file
-                log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
-            }
-        }
     }
 
     protected List<NetworkEnvelope> getRequests() {
@@ -280,14 +237,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private class DaoStatistics implements Statistics<Tuple> {
-
-        Map<String, Tuple> buckets = new ConcurrentHashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new DaoStatistics();
-        }
+    private class DaoStatistics extends Statistics<Tuple> {
 
         @Override
         public void log(Object message) {
@@ -299,16 +249,6 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
             buckets.putIfAbsent(className, new Tuple(last.getHeight(), last.getHash()));
         }
-
-        @Override
-        public Map<String, Tuple> values() {
-            return buckets;
-        }
-
-        @Override
-        public void reset() {
-            buckets.clear();
-        }
     }
 
     private Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
@@ -319,7 +259,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
         if (networkEnvelope instanceof GetDataResponse) {
 
-            Statistics result = this.statistics.create();
+            Statistics result = new MyStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
