@@ -61,6 +61,15 @@ macOS:
 /Applications/Bisq.app/Contents/MacOS/Bisq --seedNodes=foo.onion:8000 --btcNodes=foo.onion:8333
 ```
 
+### Monitoring
+
+If you run a main seednode, you also are obliged to activate the monitoring feed by running
+
+```bash
+curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh | sudo bash
+```
+Follow the instruction given by the script and report your certificate to the seednode group!
+
 ### Upgrading
 
 To upgrade your seednode to a new tag, for example v1.2.5
