@@ -186,6 +186,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
         addMessageListener(messageListener);
 
+        if (config == null) {
+            config = new Config();
+        }
+
         this.networkProtoResolver = networkProtoResolver;
         init(peersNodeAddress);
     }
