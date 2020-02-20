@@ -17,7 +17,6 @@
 
 package bisq.monitor.metric;
 
-import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
 
@@ -52,6 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     final Map<NodeAddress, Statistics<Counter>> versionBucketsPerHost = new ConcurrentHashMap<>();
+    final Map<NodeAddress, Statistics<Aggregator>> offerVolumeBucketsPerHost = new ConcurrentHashMap<>();
 
     /**
      * Efficient way to count occurrences.
@@ -68,18 +68,46 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private class MyStatistics extends Statistics<Counter> {
+    /**
+     * Efficient way to aggregate numbers.
+     */
+    private class Aggregator {
+        private long value = 0;
+
+        synchronized long value() {
+            return value;
+        }
+
+        synchronized void add(long amount) {
+            value += amount;
+        }
+    }
+
+    private class OfferCountStatistics extends Statistics<Counter> {
 
         @Override
         public synchronized void log(Object message) {
 
-            if(message instanceof OfferPayload) {
+            if (message instanceof OfferPayload) {
                 OfferPayload currentMessage = (OfferPayload) message;
                 // For logging different data types
                 String market = currentMessage.getDirection() + "." + currentMessage.getBaseCurrencyCode() + "_" + currentMessage.getCounterCurrencyCode();
 
                 buckets.putIfAbsent(market, new Counter());
                 buckets.get(market).increment();
+            }
+        }
+    }
+
+    private class OfferVolumeStatistics extends Statistics<Aggregator> {
+        @Override
+        public synchronized void log(Object message) {
+            if (message instanceof OfferPayload) {
+                OfferPayload currentMessage = (OfferPayload) message;
+                String market = currentMessage.getDirection() + "." + currentMessage.getBaseCurrencyCode() + "_" + currentMessage.getCounterCurrencyCode();
+
+                buckets.putIfAbsent(market, new Aggregator());
+                buckets.get(market).add(currentMessage.getAmount());
             }
         }
     }
@@ -117,9 +145,13 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     @Override
     protected void report() {
         Map<String, String> report = new HashMap<>();
-        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((market, numberOfOffers) -> report.put(OnionParser.prettyPrint(host) + "." + market, String.valueOf(((Counter) numberOfOffers).value()))));
+        bucketsPerHost.values().stream().findFirst().ifPresent(nodeAddressStatisticsEntry -> nodeAddressStatisticsEntry.values().forEach((market, numberOfOffers) -> report.put(market, String.valueOf(((Counter) numberOfOffers).value()))));
+        reporter.report(report, getName() + ".offerCount");
 
-        reporter.report(report, getName());
+        // do offerbook volume statistics
+        report.clear();
+        offerVolumeBucketsPerHost.values().stream().findFirst().ifPresent(aggregatorStatistics -> aggregatorStatistics.values().forEach((market, numberOfOffers) -> report.put(market, String.valueOf(numberOfOffers.value()))));
+        reporter.report(report, getName() + ".volume");
 
         // do version statistics
         report.clear();
@@ -133,7 +165,8 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
         if (networkEnvelope instanceof GetDataResponse) {
 
-            Statistics result = new MyStatistics();
+            Statistics offerCount = new OfferCountStatistics();
+            Statistics offerVolume = new OfferVolumeStatistics();
             Statistics versions = new VersionsStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
@@ -145,7 +178,8 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
                     return;
                 }
 
-                result.log(protectedStoragePayload);
+                offerCount.log(protectedStoragePayload);
+                offerVolume.log(protectedStoragePayload);
                 versions.log(protectedStoragePayload);
             });
 
@@ -159,7 +193,8 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
                 hashes.add(persistableNetworkPayload.getHash());
             });
 
-            bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), result);
+            bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offerCount);
+            offerVolumeBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offerVolume);
             versionBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), versions);
             return true;
         }
