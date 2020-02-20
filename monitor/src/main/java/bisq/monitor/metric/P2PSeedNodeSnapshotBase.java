@@ -24,7 +24,10 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.ThreadGate;
 
+import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
+import bisq.core.proto.persistable.CorePersistenceProtoResolver;
+import bisq.core.trade.statistics.TradeStatistics2Store;
 
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
@@ -33,7 +36,11 @@ import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.TorNetworkNode;
 
+import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.storage.Storage;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -42,10 +49,18 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.time.Clock;
 
+import java.io.File;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,28 +80,53 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
-    Statistics statistics;
+    private static final String DATABASE_DIR = "run.dbDir";
     final Map<NodeAddress, Statistics<?>> bucketsPerHost = new ConcurrentHashMap<>();
     private final ThreadGate gate = new ThreadGate();
+    protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
 
     /**
      * Statistics Interface for use with derived classes.
      *
      * @param <T> the value type of the statistics implementation
      */
-    protected interface Statistics<T> {
+    protected abstract class Statistics<T> {
+        protected final Map<String, T> buckets = new HashMap<>();
 
-        Statistics create();
+        abstract void log(Object message);
 
-        void log(Object message);
+        Map<String, T> values() {
+            return buckets;
+        }
 
-        Map<String, T> values();
-
-        void reset();
+        void reset() {
+            buckets.clear();
+        }
     }
 
     public P2PSeedNodeSnapshotBase(Reporter reporter) {
         super(reporter);
+    }
+
+    @Override
+    public void configure(Properties properties) {
+        super.configure(properties);
+
+        if (hashes.isEmpty() && configuration.getProperty(DATABASE_DIR) != null) {
+            File dir = new File(configuration.getProperty(DATABASE_DIR));
+            String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
+            try {
+                Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
+                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.initAndGetPersistedWithFileName(TradeStatistics2Store.class.getSimpleName() + networkPostfix, 0);
+                hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
+
+                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.initAndGetPersistedWithFileName(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix, 0);
+                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
+            } catch (NullPointerException e) {
+                // in case there is no store file
+                log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
+            }
+        }
     }
 
     @Override

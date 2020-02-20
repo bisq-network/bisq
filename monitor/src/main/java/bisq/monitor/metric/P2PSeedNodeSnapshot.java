@@ -21,26 +21,27 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
 import bisq.core.account.witness.AccountAgeWitnessStore;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetStateHashesResponse;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.trade.statistics.TradeStatistics3Store;
+import bisq.core.trade.statistics.TradeStatistics2Store;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
+import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
-import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.storage.Storage;
 
 import java.net.MalformedURLException;
 
@@ -80,11 +81,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
-    private static final String DATABASE_DIR = "run.dbDir";
 
-    Statistics statistics;
     final Map<NodeAddress, Statistics<Set<Integer>>> bucketsPerHost = new ConcurrentHashMap<>();
-    protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private int daostateheight = 594000;
     private int proposalheight = daostateheight;
     private int blindvoteheight = daostateheight;
@@ -92,14 +90,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     /**
      * Use a counter to do statistics.
      */
-    private class MyStatistics implements Statistics<Set<Integer>> {
-
-        private final Map<String, Set<Integer>> buckets = new HashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new MyStatistics();
-        }
+    private class MyStatistics extends Statistics<Set<Integer>> {
 
         @Override
         public synchronized void log(Object message) {
@@ -110,43 +101,10 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             buckets.putIfAbsent(className, new HashSet<>());
             buckets.get(className).add(message.hashCode());
         }
-
-        @Override
-        public Map<String, Set<Integer>> values() {
-            return buckets;
-        }
-
-        @Override
-        public synchronized void reset() {
-            buckets.clear();
-        }
     }
 
     public P2PSeedNodeSnapshot(Reporter reporter) {
         super(reporter);
-
-        statistics = new MyStatistics();
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
-
-        if (hashes.isEmpty() && configuration.getProperty(DATABASE_DIR) != null) {
-            File dir = new File(configuration.getProperty(DATABASE_DIR));
-            String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
-            try {
-                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(dir, new CorePersistenceProtoResolver(null, null), null);
-                TradeStatistics3Store tradeStatistics3Store = (TradeStatistics3Store) persistenceManager.getPersisted(TradeStatistics3Store.class.getSimpleName() + networkPostfix);
-                hashes.addAll(tradeStatistics3Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) persistenceManager.getPersisted(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix);
-                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-            } catch (NullPointerException e) {
-                // in case there is no store file
-                log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
-            }
-        }
     }
 
     protected List<NetworkEnvelope> getRequests() {
@@ -190,21 +148,21 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
         //   - calculate diffs
         messagesPerHost.forEach(
-                (host, statistics) -> {
-                    statistics.values().forEach((messageType, set) -> {
-                        try {
-                            report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                    String.valueOf(set.size() - referenceValues.get(messageType).size()));
-                        } catch (MalformedURLException | NullPointerException ignore) {
-                            log.error("we should never have gotten here", ignore);
-                        }
-                    });
+            (host, statistics) -> {
+                statistics.values().forEach((messageType, set) -> {
                     try {
-                        report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
-                    } catch (MalformedURLException ignore) {
-                        log.error("we should never got here");
+                        report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
+                                String.valueOf(set.size() - referenceValues.get(messageType).size()));
+                    } catch (MalformedURLException | NullPointerException ignore) {
+                        log.error("we should never have gotten here", ignore);
                     }
                 });
+                try {
+                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
+                } catch (MalformedURLException ignore) {
+                    log.error("we should never got here");
+                }
+            });
 
         // cleanup for next run
         bucketsPerHost.forEach((host, statistics) -> statistics.reset());
@@ -233,9 +191,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
 
             //   - update queried height
-            if (type.contains("DaoState"))
+            if(type.contains("DaoState"))
                 daostateheight = oldest - 20;
-            else if (type.contains("Proposal"))
+            else if(type.contains("Proposal"))
                 proposalheight = oldest - 20;
             else
                 blindvoteheight = oldest - 20;
@@ -255,6 +213,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
             List<ByteBuffer> states = hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(byteBufferIntegerEntry -> byteBufferIntegerEntry.getKey()).collect(Collectors.toList());
             hitcount.clear();
+
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
 
             //   - report reference head
@@ -278,14 +237,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private class DaoStatistics implements Statistics<Tuple> {
-
-        Map<String, Tuple> buckets = new ConcurrentHashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new DaoStatistics();
-        }
+    private class DaoStatistics extends Statistics<Tuple> {
 
         @Override
         public void log(Object message) {
@@ -297,16 +249,6 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
             buckets.putIfAbsent(className, new Tuple(last.getHeight(), last.getHash()));
         }
-
-        @Override
-        public Map<String, Tuple> values() {
-            return buckets;
-        }
-
-        @Override
-        public void reset() {
-            buckets.clear();
-        }
     }
 
     private Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
@@ -317,7 +259,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
         if (networkEnvelope instanceof GetDataResponse) {
 
-            Statistics result = this.statistics.create();
+            Statistics result = new MyStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
