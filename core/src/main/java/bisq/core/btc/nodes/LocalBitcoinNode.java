@@ -37,7 +37,9 @@ import org.slf4j.LoggerFactory;
  * methods that perform relevant checks and cache the result (methods that start with "check"),
  * and methods that query that cache (methods that start with "is"). The querying methods return
  * an Optional<Boolean>, whose emptiness shows if the relevant check is pending, and whose
- * contents show the result of the check.
+ * contents show the result of the check. Method/s starting with "safeIs" are provided to be
+ * used where the calling code was not refactored to handle Optionals (see
+ * {@code LocalBitcoinNode#handleUnsafeQuery}).
  * @see bisq.common.config.Config#ignoreLocalBtcNode
  */
 @Singleton
@@ -319,5 +321,38 @@ public class LocalBitcoinNode {
 
     public Optional<Boolean> isWellConfigured() {
         return wellConfigured;
+    }
+
+    /**
+     * A "safe" variant, which, in case LocalBitcoinNode checks were
+     * not performed, reverts to legacy behaviour and logs an error message. See
+     * {@code LocalBitcoinNode#handleUnsafeQuery}.
+     */
+    public boolean safeIsUsable() {
+        return handleUnsafeQuery(isUsable());
+    }
+
+    private boolean handleUnsafeQuery(Optional<Boolean> opt) {
+        return opt.orElseGet(() -> {
+            /* Returning false when checks haven't been performed yet is what the behaviour
+             * was before we switched to using Optionals. More specifically, the only query
+             * method at the time, isDetected(), would return false in such a case. We are
+             * relatively confident that the previous behaviour doesn't cause fatal bugs,
+             * so, in case LocalBitcoinNode is queried too early, we revert to it, instead
+             * of letting Optional.empty().get() throw an exception. The advantage over
+             * plain booleans then is that we can log the below error message (with
+             * stacktrace).
+             */
+            var whenChecksNotFinished = false;
+
+            var throwable = new Throwable("LocalBitcoinNode was queried before it was ready");
+
+            log.error("Unexpectedly queried LocalBitcoinNode before its checks were performed."
+                    + " This should never happen."
+                    + " Please report this on Bisq's issue tracker, including the following stacktrace:",
+                    throwable);
+
+            return whenChecksNotFinished;
+        });
     }
 }

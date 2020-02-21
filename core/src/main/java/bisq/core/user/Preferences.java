@@ -746,11 +746,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // checks. This was noticed when LocalBitcoinNode was refactored to return
         // Optional<Boolean> istead of boolean, an empty Optional signifying that the relevant
         // check has not yet been performed.
-        //
-        // To keep the method's behaviour unchanged, until a fix is implemented, we use
-        // Optional.orElse(false). Here 'false' normally means that the checks were performed
-        // and a suitable local Bitcoin node wasn't found.
-        var usableLocalNodePresent = localBitcoinNode.isUsable().orElse(false);
+        var usableLocalNodePresent = localBitcoinNode.safeIsUsable();
 
         if ((!Config.baseCurrencyNetwork().isMainnet()
                 || usableLocalNodePresent)
