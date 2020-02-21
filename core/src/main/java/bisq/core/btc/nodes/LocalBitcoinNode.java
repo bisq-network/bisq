@@ -7,6 +7,7 @@ import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.core.listeners.PeerDisconnectedEventListener;
 import org.bitcoinj.net.NioClient;
+import org.bitcoinj.net.NioClientManager;
 import org.bitcoinj.params.MainNetParams;
 
 import javax.inject.Inject;
@@ -30,6 +31,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
 
 /**
  * Detects whether a Bitcoin node is running on localhost and whether it is well configured
@@ -195,7 +198,15 @@ public class LocalBitcoinNode {
             return Optional.empty();
         }
 
+        /* We temporarily silence BitcoinJ NioClient's and NioClientManager's loggers,
+         * because when a local Bitcoin node is not found they pollute console output
+         * with "connection refused" error messages.
+         */
+        var originalNioClientLoggerLevel = silence(NioClient.class);
+        var originalNioClientManagerLoggerLevel = silence(NioClientManager.class);
+
         NioClient client;
+
         try {
             log.info("Initiating attempt to connect to and handshake with a local "
                     + "Bitcoin node (which may or may not be running) on port {}.",
@@ -221,7 +232,25 @@ public class LocalBitcoinNode {
         peer.close();
         client.closeConnection();
 
+        restoreLoggerLevel(NioClient.class, originalNioClientLoggerLevel);
+        restoreLoggerLevel(NioClientManager.class, originalNioClientManagerLoggerLevel);
+
         return optionalPeerVersionMessage;
+    }
+
+    private static Level silence(Class klass) {
+        var logger = getLogger(klass);
+        var originalLevel = logger.getLevel();
+        logger.setLevel(Level.OFF);
+        return originalLevel;
+    }
+
+    private static void restoreLoggerLevel(Class klass, Level originalLevel) {
+        getLogger(klass).setLevel(originalLevel);
+    }
+
+    private static ch.qos.logback.classic.Logger getLogger(Class klass) {
+        return (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(klass);
     }
 
     private ListenableFuture<VersionMessage> getVersionMessage(Peer peer) {
