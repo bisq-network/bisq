@@ -54,6 +54,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     final Map<NodeAddress, Statistics<Aggregator>> offerVolumeBucketsPerHost = new ConcurrentHashMap<>();
     final Map<NodeAddress, Statistics<List<Long>>> offerVolumeDistributionBucketsPerHost = new ConcurrentHashMap<>();
     final Map<NodeAddress, Statistics<Map<NodeAddress, Counter>>> offersPerTraderBucketsPerHost = new ConcurrentHashMap<>();
+    final Map<NodeAddress, Statistics<Map<NodeAddress, Aggregator>>> volumePerTraderBucketsPerHost = new ConcurrentHashMap<>();
 
     /**
      * Efficient way to count occurrences.
@@ -143,6 +144,21 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         }
     }
 
+    private class VolumePerTraderStatistics extends Statistics<Map<NodeAddress, Aggregator>> {
+
+        @Override
+        public synchronized void log(Object message) {
+            if (message instanceof OfferPayload) {
+                OfferPayload currentMessage = (OfferPayload) message;
+                String market = currentMessage.getDirection() + "." + currentMessage.getBaseCurrencyCode() + "_" + currentMessage.getCounterCurrencyCode();
+
+                buckets.putIfAbsent(market, new HashMap<>());
+                buckets.get(market).putIfAbsent(currentMessage.getOwnerNodeAddress(), new Aggregator());
+                buckets.get(market).get(currentMessage.getOwnerNodeAddress()).add(currentMessage.getAmount());
+            }
+        }
+    }
+
     private class VersionsStatistics extends Statistics<Counter> {
 
         @Override
@@ -221,6 +237,25 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         }));
         reporter.report(report, getName() + ".offersPerTrader");
 
+        // do volume per trader
+        report.clear();
+        // - get a data set
+        volumePerTraderBucketsPerHost.values().stream().findFirst().ifPresent(mapStatistics -> mapStatistics.values().forEach((market, stuff) -> {
+            List<Long> volumePerTrader = stuff.values().stream().map(Aggregator::value).collect(Collectors.toList());
+
+            // - get most active trader
+            double max = volumePerTrader.stream().max(Long::compareTo).get() + 0.01;
+
+            // - create histogram
+            volumePerTrader.stream().collect(
+                    Collectors.groupingBy(aLong -> aLong == max ? (int) numberOfBins - 1 : (int) Math.floor(aLong / (max / numberOfBins)), Collectors.counting())).
+                    forEach((integer, integer2) -> report.put(market + ".bin_" + integer, String.valueOf(integer2)));
+
+            report.put(market + ".number_of_traders", String.valueOf(stuff.size()));
+            report.put(market + ".number_of_bins", String.valueOf((int) numberOfBins));
+        }));
+        reporter.report(report, getName() + ".volumePerTrader");
+
         // do version statistics
         report.clear();
         versionBucketsPerHost.values().stream().findAny().get().values().forEach((version, numberOfOccurrences) -> report.put(version, String.valueOf(numberOfOccurrences.value())));
@@ -237,6 +272,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
             Statistics offerVolume = new OfferVolumeStatistics();
             Statistics offerVolumeDistribution = new OfferVolumeDistributionStatistics();
             Statistics offersPerTrader = new OffersPerTraderStatistics();
+            Statistics volumePerTrader = new VolumePerTraderStatistics();
             Statistics versions = new VersionsStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
@@ -252,6 +288,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
                 offerVolume.log(protectedStoragePayload);
                 offerVolumeDistribution.log(protectedStoragePayload);
                 offersPerTrader.log(protectedStoragePayload);
+                volumePerTrader.log(protectedStoragePayload);
                 versions.log(protectedStoragePayload);
             });
 
@@ -269,6 +306,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
             offerVolumeBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offerVolume);
             offerVolumeDistributionBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offerVolumeDistribution);
             offersPerTraderBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offersPerTrader);
+            volumePerTraderBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), volumePerTrader);
             versionBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), versions);
             return true;
         }
