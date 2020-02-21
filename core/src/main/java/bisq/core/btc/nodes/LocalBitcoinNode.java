@@ -35,14 +35,14 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 
 /**
- * Detects whether a Bitcoin node is running on localhost and whether it is well configured
- * (meaning it's not pruning and has bloom filters enabled). The class is split into
- * methods that perform relevant checks and cache the result (methods that start with "check"),
- * and methods that query that cache (methods that start with "is"). The querying methods return
- * an Optional<Boolean>, whose emptiness shows if the relevant check is pending, and whose
- * contents show the result of the check. Method/s starting with "safeIs" are provided to be
- * used where the calling code was not refactored to handle Optionals (see
- * {@code LocalBitcoinNode#handleUnsafeQuery}).
+ * Detects whether a Bitcoin node is running on localhost and whether it is well
+ * configured (meaning it's not pruning and has bloom filters enabled). The class is
+ * split into methods that perform relevant checks and cache the result (methods that
+ * start with "check"), and methods that query that cache (methods that start with "is").
+ * The querying methods return an Optional<Boolean>, whose emptiness shows if the
+ * relevant check is pending, and whose contents show the result of the check. Method/s
+ * starting with "safeIs" are provided to be used where the calling code was not
+ * refactored to handle Optionals (see {@code LocalBitcoinNode#handleUnsafeQuery}).
  * @see bisq.common.config.Config#ignoreLocalBtcNode
  */
 @Singleton
@@ -62,14 +62,10 @@ public class LocalBitcoinNode {
         this.port = port;
     }
 
-    /**
-     * Creates an NioClient that is expected to only be used to coerce a VersionMessage out of a
-     * local Bitcoin node and be closed right after.
+    /* Creates an NioClient that is expected to only be used to coerce a VersionMessage
+     * out of a local Bitcoin node and be closed right after.
      */
-
-    private static NioClient createClient(
-            Peer peer, int port, int connectionTimeout
-    ) throws IOException {
+    private static NioClient createClient(Peer peer, int port, int connectionTimeout) throws IOException {
         InetSocketAddress serverAddress =
                 new InetSocketAddress(InetAddress.getLocalHost(), port);
 
@@ -80,20 +76,16 @@ public class LocalBitcoinNode {
         return client;
     }
 
-    /**
-     * Creates a Peer that is expected to only be used to coerce a VersionMessage out of a
+    /* Creates a Peer that is expected to only be used to coerce a VersionMessage out of a
      * local Bitcoin node and be closed right after.
      */
-
-    private static Peer createLocalPeer(
-            int port
-    ) throws UnknownHostException {
+    private static Peer createLocalPeer(int port) throws UnknownHostException {
         // TODO: what's the effect of NetworkParameters on handshake?
         // i.e. is it fine to just always use MainNetParams?
         var networkParameters = new MainNetParams();
 
-        // We must construct a BitcoinJ Context before using BitcoinJ.
-        // We don't keep a reference, because it's automatically kept in a thread local storage.
+        // We must construct a BitcoinJ Context before using BitcoinJ. We don't keep a
+        // reference, because it's automatically kept in a thread local storage.
         new Context(networkParameters);
 
         var ourVersionMessage = new VersionMessage(networkParameters, 0);
@@ -113,18 +105,16 @@ public class LocalBitcoinNode {
         return notPruning && supportsAndAllowsBloomFilters;
     }
 
-    /**
-     * Method backported from upstream bitcoinj: at the time of writing, our version is
+    /* Method backported from upstream bitcoinj: at the time of writing, our version is
      * not BIP111-aware.
      * Source routines and data can be found in Bitcoinj under:
      * core/src/main/java/org/bitcoinj/core/VersionMessage.java
      * and
      * core/src/main/java/org/bitcoinj/core/NetworkParameters.java
      */
-
     private static boolean isBloomFilteringSupportedAndEnabled(VersionMessage versionMessage) {
-        // A service bit that denotes whether the peer supports BIP37 bloom filters or not.
-        // The service bit is defined in BIP111.
+        // A service bit that denotes whether the peer supports BIP37 bloom filters or
+        // not. The service bit is defined in BIP111.
         int NODE_BLOOM = 1 << 2;
 
         int BLOOM_FILTERS_BIP37_PROTOCOL_VERSION = 70000;
@@ -143,10 +133,9 @@ public class LocalBitcoinNode {
     }
 
     /**
-     * Initiates detection and configuration checks. The results are cached so that the public
-     * methods isUsable, isDetected, isWellConfigured don't trigger a recheck.
+     * Initiates detection and configuration checks. The results are cached so that the
+     * public methods isUsable, isDetected, isWellConfigured don't trigger a recheck.
      */
-
     public boolean checkUsable() {
         var optionalVersionMessage = attemptHandshakeForVersionMessage();
         handleHandshakeAttempt(optionalVersionMessage);
@@ -181,14 +170,14 @@ public class LocalBitcoinNode {
         }
     }
 
-    /** Performs a blocking Bitcoin protocol handshake, which includes exchanging version messages and acks.
-     *  Its purpose is to check if a local Bitcoin node is running, and, if it is, check its advertised
-     *  configuration. The returned Optional is empty, if a local peer wasn't found, or if handshake failed
-     *  for some reason.  This method could be noticably simplified, by turning connection failure callback
-     *  into a future and using a first-future-to-complete type of construct, but I couldn't find a
-     *  ready-made implementation.
+    /* Performs a blocking Bitcoin protocol handshake, which includes exchanging version
+     * messages and acks. Its purpose is to check if a local Bitcoin node is running,
+     * and, if it is, check its advertised configuration. The returned Optional is empty,
+     * if a local peer wasn't found, or if handshake failed for some reason. This method
+     * could be noticably simplified, by turning connection failure callback into a
+     * future and using a first-future-to-complete type of construct, but I couldn't find
+     * a ready-made implementation.
      */
-
     private Optional<VersionMessage> attemptHandshakeForVersionMessage() {
         Peer peer;
         try {
@@ -276,8 +265,9 @@ public class LocalBitcoinNode {
                         var peerVersionMessageAlreadyReceived =
                                 peerVersionMessageFuture.isDone();
                         if (peerVersionMessageAlreadyReceived) {
-                            // This method is called whether or not the handshake was successful.
-                            // In case it was successful, we don't want to do anything here.
+                            // This method is called whether or not the handshake was
+                            // successful. In case it was successful, we don't want to do
+                            // anything here.
                             return;
                         }
                         // In some cases Peer will self-disconnect after receiving
@@ -308,7 +298,6 @@ public class LocalBitcoinNode {
      * meaning it's been detected and its configuration satisfied our checks; or, in
      * the case that it is empty, it signifies that the checks have not yet completed.
      */
-
     public Optional<Boolean> isUsable() {
         // If a node is found to be well configured, it implies that it was also detected,
         // so this is query is enough to show if the relevant checks were performed and if
@@ -320,7 +309,6 @@ public class LocalBitcoinNode {
      * Returns an Optional<Boolean> that, when not empty, tells you whether the local node
      * was detected, but misconfigured.
      */
-
     public Optional<Boolean> isDetectedButMisconfigured() {
         return isDetected().flatMap(goodDetect ->
                 isWellConfigured().map(goodConfig ->
@@ -332,8 +320,8 @@ public class LocalBitcoinNode {
      * Returns an optional, which is empty in case detection has not yet completed, or
      * which contains a Boolean, in case detection has been performed, which signifies
      * whether or not a Bitcoin node was running on localhost at the time the checks were
-     * performed. No further monitoring is performed, so if the node goes up or down in the
-     * meantime, this method will continue to return its original value. See
+     * performed. No further monitoring is performed, so if the node goes up or down in
+     * the meantime, this method will continue to return its original value. See
      * {@code MainViewModel#setupBtcNumPeersWatcher} to understand how disconnection and
      * reconnection of the local Bitcoin node is actually handled.
      */
@@ -343,11 +331,10 @@ public class LocalBitcoinNode {
 
     /**
      * Returns an optional whose emptiness signifies whether or not configuration checks
-     * have been performed, and its Boolean contents whether the local node's configuration
-     * satisfied our checks at the time they were performed. We check if the local node is
-     * not pruning and has bloom filters enabled.
+     * have been performed, and its Boolean contents whether the local node's
+     * configuration satisfied our checks at the time they were performed. We check if the
+     * local node is not pruning and has bloom filters enabled.
      */
-
     public Optional<Boolean> isWellConfigured() {
         return wellConfigured;
     }
