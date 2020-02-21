@@ -250,7 +250,7 @@ public class DisplayUtils {
         String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         String feeInFiatAsString;
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
-            feeInFiatAsString = formatVolumeWithCode(optionalFeeInFiat.get());
+            feeInFiatAsString = formatAverageVolumeWithCode(optionalFeeInFiat.get());
         } else {
             feeInFiatAsString = Res.get("shared.na");
         }
