@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +53,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     final Map<NodeAddress, Statistics<Counter>> versionBucketsPerHost = new ConcurrentHashMap<>();
     final Map<NodeAddress, Statistics<Aggregator>> offerVolumeBucketsPerHost = new ConcurrentHashMap<>();
+    final Map<NodeAddress, Statistics<List<Long>>> offerVolumeDistributionBucketsPerHost = new ConcurrentHashMap<>();
 
     /**
      * Efficient way to count occurrences.
@@ -112,6 +114,20 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         }
     }
 
+    private class OfferVolumeDistributionStatistics extends Statistics<List<Long>> {
+
+        @Override
+        public synchronized void log(Object message) {
+            if (message instanceof OfferPayload) {
+                OfferPayload currentMessage = (OfferPayload) message;
+                String market = currentMessage.getDirection() + "." + currentMessage.getBaseCurrencyCode() + "_" + currentMessage.getCounterCurrencyCode();
+
+                buckets.putIfAbsent(market, new ArrayList<>());
+                buckets.get(market).add(currentMessage.getAmount());
+            }
+        }
+    }
+
     private class VersionsStatistics extends Statistics<Counter> {
 
         @Override
@@ -153,6 +169,23 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         offerVolumeBucketsPerHost.values().stream().findFirst().ifPresent(aggregatorStatistics -> aggregatorStatistics.values().forEach((market, numberOfOffers) -> report.put(market, String.valueOf(numberOfOffers.value()))));
         reporter.report(report, getName() + ".volume");
 
+        // do the offer vs volume histogram
+        report.clear();
+        int numberOfBins = 5;
+        // - get a data set
+        offerVolumeDistributionBucketsPerHost.values().stream().findFirst().ifPresent(listStatistics -> listStatistics.values().forEach((market, offers) -> {
+            // - get biggest offer
+            Long max = offers.stream().max(Long::compareTo).get();
+
+            // - create histogram
+            offers.stream().collect(
+                    Collectors.groupingBy(aLong -> aLong == max ? (int) numberOfBins - 1 : (int) Math.floor(aLong / (max / numberOfBins)), Collectors.counting())).
+                    forEach((integer, integer2) -> report.put(market + ".bin_" + integer, String.valueOf(integer2)));
+
+            report.put(market + ".number_of_bins", String.valueOf((int) numberOfBins));
+        }));
+        reporter.report(report, getName() + ".volume-per-offer-distribution");
+
         // do version statistics
         report.clear();
         versionBucketsPerHost.values().stream().findAny().get().values().forEach((version, numberOfOccurrences) -> report.put(version, String.valueOf(numberOfOccurrences.value())));
@@ -167,6 +200,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
             Statistics offerCount = new OfferCountStatistics();
             Statistics offerVolume = new OfferVolumeStatistics();
+            Statistics offerVolumeDistribution = new OfferVolumeDistributionStatistics();
             Statistics versions = new VersionsStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
@@ -180,6 +214,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
                 offerCount.log(protectedStoragePayload);
                 offerVolume.log(protectedStoragePayload);
+                offerVolumeDistribution.log(protectedStoragePayload);
                 versions.log(protectedStoragePayload);
             });
 
@@ -195,6 +230,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
             bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offerCount);
             offerVolumeBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offerVolume);
+            offerVolumeDistributionBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), offerVolumeDistribution);
             versionBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), versions);
             return true;
         }
