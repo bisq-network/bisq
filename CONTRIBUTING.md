@@ -1,11 +1,13 @@
 # Contributing to Bisq
 
-Anyone is welcome to contribute to Bisq. This document provides an overview of how we work. If you're looking for somewhere to start contributing, see the [good first issue](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A"good+first+issue") list.
+Anyone is welcome to contribute to Bisq. This document provides an overview of how we work. If you're looking for somewhere to start contributing, check out [critical bugs](https://bisq.wiki/Critical_Bugs) or see [good first issue](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A"good+first+issue") list.
 
 
 ## Communication Channels
 
-Most communication about Bisq happens in the [Bisq Slack workspace](https://bisq.network/slack-invite).
+Most communication about Bisq happens on [Keybase](https://keybase.io).
+
+Install Keybase and enter "bisq" from the teams tab. This is an "open" team, which means the admins will auto-accept any request to join, and you can get in fast.
 
 Discussion about code changes happens in GitHub issues and pull requests.
 
@@ -43,7 +45,12 @@ Please note that Pull Requests marked `NACK` and/or GitHub's `Change requested` 
 
 ## Compensation
 
-Bisq is not a company, but operates as a _decentralized autonomous organization_ (DAO). For any work merged into Bisq's `master` branch, you can [submit a compensation request](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://docs.bisq.network/dao/phase-zero.html).
+Bisq is not a company, but operates as a _decentralized autonomous organization_ (DAO).
+
+Since our [Q1 2020 update](https://bisq.network/blog/q1-2020-update/) contributions are NOT eligible for compensation unless they are allocated as part of the development budget. Fixes for [critical bugs](https://bisq.wiki/Critical_Bugs) are eligible for compensation when delivered.
+In any case please contact the team lead for development (@ripcurlx) upfront if you want to get compensated for your contributions.
+
+For any work that was approved and merged into Bisq's `master` branch, you can [submit a compensation request](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://docs.bisq.network/dao/phase-zero.html).
 
 
 ## Style and Coding Conventions
