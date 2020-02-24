@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 EnvironmentFile=/etc/default/bisq-pricenode.env
-ExecStart=/usr/bin/java -jar /bisq/bisq/lib/pricenode-0.7.2-SNAPSHOT.jar 2 2
+ExecStart=/bisq/bisq/bisq-pricenode 2 2
 ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
 
