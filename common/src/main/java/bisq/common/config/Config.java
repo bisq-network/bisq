@@ -802,7 +802,7 @@ public class Config {
         try {
             Files.createDirectories(path);
         } catch (IOException ex) {
-            throw new ConfigException(ex, "Application data directory '%s' could not be created", path);
+            throw new UncheckedIOException(format("Application data directory '%s' could not be created", path), ex);
         }
         return appDataDir;
     }
@@ -819,7 +819,7 @@ public class Config {
             try {
                 Files.createDirectory(path);
             } catch (IOException ex) {
-                throw new ConfigException(ex, "Directory '%s' could not be created", path);
+                throw new UncheckedIOException(format("Directory '%s' could not be created", path), ex);
             }
         }
         return dir;
