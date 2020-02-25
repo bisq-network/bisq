@@ -7,8 +7,4 @@ public class ConfigException extends BisqException {
     public ConfigException(String format, Object... args) {
         super(format, args);
     }
-
-    public ConfigException(Throwable cause, String format, Object... args) {
-        super(cause, format, args);
-    }
 }

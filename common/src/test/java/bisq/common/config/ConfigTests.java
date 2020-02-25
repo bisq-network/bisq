@@ -1,12 +1,14 @@
 package bisq.common.config;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -228,13 +230,29 @@ public class ConfigTests {
     }
 
     @Test
-    public void whenAppDataDirCannotBeCreated_thenConfigExceptionIsThrown() throws IOException {
+    public void whenAppDataDirCannotBeCreated_thenUncheckedIoExceptionIsThrown() throws IOException {
         // set a userDataDir that is actually a file so appDataDir cannot be created
         File aFile = Files.createTempFile("A", "File").toFile();
-        exceptionRule.expect(ConfigException.class);
+        exceptionRule.expect(UncheckedIOException.class);
         exceptionRule.expectMessage(containsString("Application data directory"));
         exceptionRule.expectMessage(containsString("could not be created"));
         configWithOpts(opt(USER_DATA_DIR, aFile));
+    }
+
+    @Test
+    public void whenAppDataDirIsSymbolicLink_thenAppDataDirCreationIsNoOp() throws IOException {
+        Path parentDir = Files.createTempDirectory("parent");
+        Path targetDir = parentDir.resolve("target");
+        Path symlink = parentDir.resolve("symlink");
+        Files.createDirectory(targetDir);
+        try {
+            Files.createSymbolicLink(symlink, targetDir);
+        } catch (Throwable ex) {
+            // An error occurred trying to create a symbolic link, likely because the
+            // operating system (e.g. Windows) does not support it, so we abort the test.
+            return;
+        }
+        configWithOpts(opt(APP_DATA_DIR, symlink));
     }
 
 

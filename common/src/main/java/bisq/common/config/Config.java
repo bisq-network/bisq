@@ -797,14 +797,15 @@ public class Config {
      * nothing if the directory already exists.
      * @return the given directory, now guaranteed to exist
      */
-    private static File mkAppDataDir(File appDataDir) {
-        Path path = appDataDir.toPath();
-        try {
-            Files.createDirectories(path);
-        } catch (IOException ex) {
-            throw new ConfigException(ex, "Application data directory '%s' could not be created", path);
+    private static File mkAppDataDir(File dir) {
+        if (!dir.exists()) {
+            try {
+                Files.createDirectories(dir.toPath());
+            } catch (IOException ex) {
+                throw new UncheckedIOException(format("Application data directory '%s' could not be created", dir), ex);
+            }
         }
-        return appDataDir;
+        return dir;
     }
 
     /**
@@ -815,11 +816,10 @@ public class Config {
     private static File mkdir(File parent, String child) {
         File dir = new File(parent, child);
         if (!dir.exists()) {
-            Path path = dir.toPath();
             try {
-                Files.createDirectory(path);
+                Files.createDirectory(dir.toPath());
             } catch (IOException ex) {
-                throw new ConfigException(ex, "Directory '%s' could not be created", path);
+                throw new UncheckedIOException(format("Directory '%s' could not be created", dir), ex);
             }
         }
         return dir;
