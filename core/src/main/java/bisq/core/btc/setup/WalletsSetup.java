@@ -278,7 +278,7 @@ public class WalletsSetup {
                     return;
                 }
             }
-        } else if (localBitcoinNode.safeIsUsable()) {
+        } else if (localBitcoinNode.isUsable()) {
             walletConfig.setMinBroadcastConnections(1);
             walletConfig.setPeerNodesForLocalHost();
         } else {

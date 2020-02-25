@@ -740,16 +740,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // unless the useTorForBtc parameter is explicitly provided.
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
 
-        // TODO bug. Non-critical, apparently.
-        // Sometimes this method, which queries LocalBitcoinNode for whether or not there's a
-        // usable local Bitcoin node, is called before LocalBitcoinNode has performed its
-        // checks. This was noticed when LocalBitcoinNode was refactored to return
-        // Optional<Boolean> istead of boolean, an empty Optional signifying that the relevant
-        // check has not yet been performed.
-        var usableLocalNodePresent = localBitcoinNode.safeIsUsable();
-
         if ((!Config.baseCurrencyNetwork().isMainnet()
-                || usableLocalNodePresent)
+                || localBitcoinNode.isUsable())
                 && !config.useTorForBtcOptionSetExplicitly)
             return false;
         else

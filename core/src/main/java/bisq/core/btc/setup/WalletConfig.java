@@ -244,7 +244,7 @@ public class WalletConfig extends AbstractIdleService {
         // It is also disabled if the local node was not found or was found to be misconfigured.
         if (Config.baseCurrencyNetwork().isDaoRegTest() ||
                 Config.baseCurrencyNetwork().isDaoTestNet() ||
-                !localBitcoinNode.safeIsUsable())
+                !localBitcoinNode.isUsable())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;

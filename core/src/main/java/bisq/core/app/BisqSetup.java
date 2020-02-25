@@ -494,13 +494,9 @@ public class BisqSetup {
             return;
         }
 
-        // Results of the check don't have to be passed to nextStep,
-        // because they're cached in LocalBitcoinNode and dependent routines query it themselves.
-        localBitcoinNode.checkUsable();
-
-        // Here we only want to provide the user with a choice (in a popup) in case a local node is
-        // detected, but badly configured.
-        var detectedButMisconfigured = localBitcoinNode.isDetectedButMisconfigured().get();
+        // Here we only want to provide the user with a choice (in a popup) in case a
+        // local node is detected, but badly configured.
+        var detectedButMisconfigured = localBitcoinNode.isDetectedButMisconfigured();
         if (detectedButMisconfigured) {
             displayLocalNodeMisconfigurationHandler.accept(nextStep);
             return;
@@ -879,7 +875,7 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.safeIsUsable());
+        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.isUsable());
     }
 
     private void maybeShowAccountSigningStateInfo() {

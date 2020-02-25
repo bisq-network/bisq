@@ -451,7 +451,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (walletsSetup.numPeersProperty().get() == 0) {
-                        if (localBitcoinNode.safeIsUsable())
+                        if (localBitcoinNode.isUsable())
                             getWalletServiceErrorMsg().set(
                                     Res.get("mainView.networkWarning.localhostBitcoinLost", Res.getBaseCurrencyName().toLowerCase()));
                         else

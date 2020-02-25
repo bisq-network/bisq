@@ -36,13 +36,10 @@ import ch.qos.logback.classic.Level;
 
 /**
  * Detects whether a Bitcoin node is running on localhost and whether it is well
- * configured (meaning it's not pruning and has bloom filters enabled). The class is
- * split into methods that perform relevant checks and cache the result (methods that
- * start with "check"), and methods that query that cache (methods that start with "is").
- * The querying methods return an Optional<Boolean>, whose emptiness shows if the
- * relevant check is pending, and whose contents show the result of the check. Method/s
- * starting with "safeIs" are provided to be used where the calling code was not
- * refactored to handle Optionals (see {@code LocalBitcoinNode#handleUnsafeQuery}).
+ * configured (meaning it's not pruning and has bloom filters enabled). The public
+ * methods automatically trigger detection and (if detected) configuration checks,
+ * and cache the results, and consequent queries to `LocalBitcoinNode` will always
+ * return the cached results.
  * @see bisq.common.config.Config#ignoreLocalBtcNode
  */
 @Singleton
@@ -54,8 +51,9 @@ public class LocalBitcoinNode {
     private static final int CONNECTION_TIMEOUT = 5000;
 
     private final int port;
-    private Optional<Boolean> detected = Optional.empty();
-    private Optional<Boolean> wellConfigured = Optional.empty();
+
+    private Boolean detected;
+    private Boolean wellConfigured;
 
     @Inject
     public LocalBitcoinNode(@Named(LOCAL_BITCOIN_NODE_PORT) int port) {
@@ -132,38 +130,41 @@ public class LocalBitcoinNode {
         return (localServices & NODE_BLOOM) == NODE_BLOOM;
     }
 
-    /**
-     * Initiates detection and configuration checks. The results are cached so that the
-     * public methods isUsable, isDetected, isWellConfigured don't trigger a recheck.
+    /* Performs checks that the query methods might be interested in.
      */
-    public boolean checkUsable() {
+    private void performChecks() {
+        checkUsable();
+    }
+
+    /* Initiates detection and configuration checks. The results are cached so that the
+     * public methods isUsable, isDetected, etc. don't trigger a recheck.
+     */
+    private void checkUsable() {
         var optionalVersionMessage = attemptHandshakeForVersionMessage();
         handleHandshakeAttempt(optionalVersionMessage);
-        // We know that the Optional/s will be populated by the end of the checks.
-        return isUsable().get();
     }
 
     private void handleHandshakeAttempt(Optional<VersionMessage> optionalVersionMessage) {
         if (!optionalVersionMessage.isPresent()) {
-            detected = Optional.of(false);
-            wellConfigured = Optional.of(false);
+            detected = false;
+            wellConfigured = false;
             log.info("No local Bitcoin node detected on port {},"
                     + " or the connection was prematurely closed"
                     + " (before a version messages could be coerced)",
                     port);
         } else {
-            detected = Optional.of(true);
+            detected = true;
             log.info("Local Bitcoin node detected on port {}", port);
 
             var versionMessage = optionalVersionMessage.get();
             var configurationCheckResult = checkWellConfigured(versionMessage);
 
             if (configurationCheckResult) {
-                wellConfigured = Optional.of(true);
+                wellConfigured = true;
                 log.info("Local Bitcoin node found to be well configured"
                         + " (not pruning and allows bloom filters)");
             } else {
-                wellConfigured = Optional.of(false);
+                wellConfigured = false;
                 log.info("Local Bitcoin node badly configured"
                         + " (it is pruning and/or bloom filters are disabled)");
             }
@@ -293,12 +294,11 @@ public class LocalBitcoinNode {
     }
 
     /**
-     * Returns an optional that, in case it is not empty, shows whether or not the
-     * local node was fit for usage at the time the checks were performed called,
-     * meaning it's been detected and its configuration satisfied our checks; or, in
-     * the case that it is empty, it signifies that the checks have not yet completed.
+     * Returns whether or not a local Bitcion node was detected and was well configured
+     * at the time the checks were performed. All checks are triggered in case they have
+     * not been performed.
      */
-    public Optional<Boolean> isUsable() {
+    public boolean isUsable() {
         // If a node is found to be well configured, it implies that it was also detected,
         // so this is query is enough to show if the relevant checks were performed and if
         // their results are positive.
@@ -306,69 +306,37 @@ public class LocalBitcoinNode {
     }
 
     /**
-     * Returns an Optional<Boolean> that, when not empty, tells you whether the local node
-     * was detected, but misconfigured.
+     * Returns whether the local node was detected, but misconfigured. Combination of
+     * methods isDetected and isWellConfigured.
      */
-    public Optional<Boolean> isDetectedButMisconfigured() {
-        return isDetected().flatMap(goodDetect ->
-                isWellConfigured().map(goodConfig ->
-                        goodDetect && !goodConfig
-                ));
+    public boolean isDetectedButMisconfigured() {
+        return isDetected() && !isWellConfigured();
     }
 
     /**
-     * Returns an optional, which is empty in case detection has not yet completed, or
-     * which contains a Boolean, in case detection has been performed, which signifies
-     * whether or not a Bitcoin node was running on localhost at the time the checks were
-     * performed. No further monitoring is performed, so if the node goes up or down in
-     * the meantime, this method will continue to return its original value. See
-     * {@code MainViewModel#setupBtcNumPeersWatcher} to understand how disconnection and
-     * reconnection of the local Bitcoin node is actually handled.
+     * Returns whether a local Bitcoin node was detected. All checks are triggered in case
+     * they have not been performed. No further monitoring is performed, so if the node
+     * goes up or down in the meantime, this method will continue to return its original
+     * value. See {@code MainViewModel#setupBtcNumPeersWatcher} to understand how
+     * disconnection and reconnection of the local Bitcoin node is actually handled.
      */
-    public Optional<Boolean> isDetected() {
+    public boolean isDetected() {
+        if (detected == null) {
+            performChecks();
+        }
         return detected;
     }
 
     /**
-     * Returns an optional whose emptiness signifies whether or not configuration checks
-     * have been performed, and its Boolean contents whether the local node's
-     * configuration satisfied our checks at the time they were performed. We check if the
-     * local node is not pruning and has bloom filters enabled.
+     * Returns whether the local node's configuration satisfied our checks at the time
+     * they were performed. All checks are triggered in case they have not been performed.
+     * We check if the local node is not pruning and has bloom filters enabled.
      */
-    public Optional<Boolean> isWellConfigured() {
+    public boolean isWellConfigured() {
+        if (wellConfigured == null) {
+            performChecks();
+        }
         return wellConfigured;
     }
 
-    /**
-     * A "safe" variant, which, in case LocalBitcoinNode checks were
-     * not performed, reverts to legacy behaviour and logs an error message. See
-     * {@code LocalBitcoinNode#handleUnsafeQuery}.
-     */
-    public boolean safeIsUsable() {
-        return handleUnsafeQuery(isUsable());
-    }
-
-    private boolean handleUnsafeQuery(Optional<Boolean> opt) {
-        return opt.orElseGet(() -> {
-            /* Returning false when checks haven't been performed yet is what the behaviour
-             * was before we switched to using Optionals. More specifically, the only query
-             * method at the time, isDetected(), would return false in such a case. We are
-             * relatively confident that the previous behaviour doesn't cause fatal bugs,
-             * so, in case LocalBitcoinNode is queried too early, we revert to it, instead
-             * of letting Optional.empty().get() throw an exception. The advantage over
-             * plain booleans then is that we can log the below error message (with
-             * stacktrace).
-             */
-            var whenChecksNotFinished = false;
-
-            var throwable = new Throwable("LocalBitcoinNode was queried before it was ready");
-
-            log.error("Unexpectedly queried LocalBitcoinNode before its checks were performed."
-                    + " This should never happen."
-                    + " Please report this on Bisq's issue tracker, including the following stacktrace:",
-                    throwable);
-
-            return whenChecksNotFinished;
-        });
-    }
 }
