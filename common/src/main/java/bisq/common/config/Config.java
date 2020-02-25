@@ -798,10 +798,12 @@ public class Config {
      * @return the given directory, now guaranteed to exist
      */
     private static File mkAppDataDir(File dir) {
-        try {
-            Files.createDirectories(dir.toPath());
-        } catch (IOException ex) {
-            throw new UncheckedIOException(format("Application data directory '%s' could not be created", dir), ex);
+        if (!dir.exists()) {
+            try {
+                Files.createDirectories(dir.toPath());
+            } catch (IOException ex) {
+                throw new UncheckedIOException(format("Application data directory '%s' could not be created", dir), ex);
+            }
         }
         return dir;
     }
