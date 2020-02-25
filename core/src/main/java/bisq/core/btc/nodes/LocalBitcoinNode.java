@@ -1,5 +1,8 @@
 package bisq.core.btc.nodes;
 
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
+
 import org.bitcoinj.core.AbstractBlockChain;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.Peer;
@@ -50,14 +53,42 @@ public class LocalBitcoinNode {
     private static final Logger log = LoggerFactory.getLogger(LocalBitcoinNode.class);
     private static final int CONNECTION_TIMEOUT = 5000;
 
+    private final Config config;
+
     private final int port;
 
     private Boolean detected;
     private Boolean wellConfigured;
 
     @Inject
-    public LocalBitcoinNode(@Named(LOCAL_BITCOIN_NODE_PORT) int port) {
+    public LocalBitcoinNode(Config config, @Named(LOCAL_BITCOIN_NODE_PORT) int port) {
+        this.config = config;
         this.port = port;
+    }
+
+    /**
+     * Returns whether Bisq will use a local Bitcoin node. Meaning a usable node was found
+     * and conditions under which we would ignore it are not met. If we're ignoring the
+     * local node, a call to this method will not trigger an unnecessary detection
+     * attempt.
+     */
+    public boolean willUse() {
+        return !willIgnore() && isUsable();
+    }
+
+    /**
+     * Returns whether Bisq will ignore a local Bitcoin node even if it is usable.
+     */
+    public boolean willIgnore() {
+        BaseCurrencyNetwork baseCurrencyNetwork = config.baseCurrencyNetwork;
+
+        // For dao testnet (server side regtest) we disable the use of local bitcoin node to
+        // avoid confusion if local btc node is not synced with our dao testnet master node.
+        // Note: above comment was previously in WalletConfig::createPeerGroup.
+
+        return config.ignoreLocalBtcNode
+            || baseCurrencyNetwork.isDaoRegTest()
+            || baseCurrencyNetwork.isDaoTestNet();
     }
 
     /**
