@@ -182,6 +182,7 @@ public class CurrencyUtil {
     public static List<TradeCurrency> getAllMoneyGramCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("AED"),
+                new FiatCurrency("ARS"),
                 new FiatCurrency("AUD"),
                 new FiatCurrency("BND"),
                 new FiatCurrency("CAD"),
