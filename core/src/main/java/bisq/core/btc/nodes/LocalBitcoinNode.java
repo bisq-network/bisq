@@ -60,74 +60,50 @@ public class LocalBitcoinNode {
         this.port = port;
     }
 
-    /* Creates an NioClient that is expected to only be used to coerce a VersionMessage
-     * out of a local Bitcoin node and be closed right after.
+    /**
+     * Returns whether or not a local Bitcion node was detected and was well configured
+     * at the time the checks were performed. All checks are triggered in case they have
+     * not been performed.
      */
-    private static NioClient createClient(Peer peer, int port, int connectionTimeout) throws IOException {
-        InetSocketAddress serverAddress =
-                new InetSocketAddress(InetAddress.getLocalHost(), port);
-
-        // This initiates the handshake procedure, which, if successful, will complete
-        // the peerVersionMessageFuture, or be cancelled, in case of failure.
-        NioClient client = new NioClient(serverAddress, peer, connectionTimeout);
-
-        return client;
+    public boolean isUsable() {
+        // If a node is found to be well configured, it implies that it was also detected,
+        // so this is query is enough to show if the relevant checks were performed and if
+        // their results are positive.
+        return isWellConfigured();
     }
 
-    /* Creates a Peer that is expected to only be used to coerce a VersionMessage out of a
-     * local Bitcoin node and be closed right after.
+    /**
+     * Returns whether the local node was detected, but misconfigured. Combination of
+     * methods isDetected and isWellConfigured.
      */
-    private static Peer createLocalPeer(int port) throws UnknownHostException {
-        // TODO: what's the effect of NetworkParameters on handshake?
-        // i.e. is it fine to just always use MainNetParams?
-        var networkParameters = new MainNetParams();
-
-        // We must construct a BitcoinJ Context before using BitcoinJ. We don't keep a
-        // reference, because it's automatically kept in a thread local storage.
-        new Context(networkParameters);
-
-        var ourVersionMessage = new VersionMessage(networkParameters, 0);
-
-        var localPeerAddress = new PeerAddress(InetAddress.getLocalHost(), port);
-
-        AbstractBlockChain blockchain = null;
-
-        var peer = new Peer(networkParameters, ourVersionMessage, localPeerAddress, blockchain);
-        return peer;
+    public boolean isDetectedButMisconfigured() {
+        return isDetected() && !isWellConfigured();
     }
 
-    private static boolean checkWellConfigured(VersionMessage versionMessage) {
-        var notPruning = versionMessage.hasBlockChain();
-        var supportsAndAllowsBloomFilters =
-                isBloomFilteringSupportedAndEnabled(versionMessage);
-        return notPruning && supportsAndAllowsBloomFilters;
+    /**
+     * Returns whether a local Bitcoin node was detected. All checks are triggered in case
+     * they have not been performed. No further monitoring is performed, so if the node
+     * goes up or down in the meantime, this method will continue to return its original
+     * value. See {@code MainViewModel#setupBtcNumPeersWatcher} to understand how
+     * disconnection and reconnection of the local Bitcoin node is actually handled.
+     */
+    public boolean isDetected() {
+        if (detected == null) {
+            performChecks();
+        }
+        return detected;
     }
 
-    /* Method backported from upstream bitcoinj: at the time of writing, our version is
-     * not BIP111-aware.
-     * Source routines and data can be found in Bitcoinj under:
-     * core/src/main/java/org/bitcoinj/core/VersionMessage.java
-     * and
-     * core/src/main/java/org/bitcoinj/core/NetworkParameters.java
+    /**
+     * Returns whether the local node's configuration satisfied our checks at the time
+     * they were performed. All checks are triggered in case they have not been performed.
+     * We check if the local node is not pruning and has bloom filters enabled.
      */
-    private static boolean isBloomFilteringSupportedAndEnabled(VersionMessage versionMessage) {
-        // A service bit that denotes whether the peer supports BIP37 bloom filters or
-        // not. The service bit is defined in BIP111.
-        int NODE_BLOOM = 1 << 2;
-
-        int BLOOM_FILTERS_BIP37_PROTOCOL_VERSION = 70000;
-        var whenBloomFiltersWereIntroduced = BLOOM_FILTERS_BIP37_PROTOCOL_VERSION;
-
-        int BLOOM_FILTERS_BIP111_PROTOCOL_VERSION = 70011;
-        var whenBloomFiltersWereDisabledByDefault = BLOOM_FILTERS_BIP111_PROTOCOL_VERSION;
-
-        int clientVersion = versionMessage.clientVersion;
-        long localServices = versionMessage.localServices;
-
-        if (clientVersion >= whenBloomFiltersWereIntroduced
-                && clientVersion < whenBloomFiltersWereDisabledByDefault)
-            return true;
-        return (localServices & NODE_BLOOM) == NODE_BLOOM;
+    public boolean isWellConfigured() {
+        if (wellConfigured == null) {
+            performChecks();
+        }
+        return wellConfigured;
     }
 
     /* Performs checks that the query methods might be interested in.
@@ -169,6 +145,40 @@ public class LocalBitcoinNode {
                         + " (it is pruning and/or bloom filters are disabled)");
             }
         }
+    }
+
+    private static boolean checkWellConfigured(VersionMessage versionMessage) {
+        var notPruning = versionMessage.hasBlockChain();
+        var supportsAndAllowsBloomFilters =
+                isBloomFilteringSupportedAndEnabled(versionMessage);
+        return notPruning && supportsAndAllowsBloomFilters;
+    }
+
+    /* Method backported from upstream bitcoinj: at the time of writing, our version is
+     * not BIP111-aware.
+     * Source routines and data can be found in Bitcoinj under:
+     * core/src/main/java/org/bitcoinj/core/VersionMessage.java
+     * and
+     * core/src/main/java/org/bitcoinj/core/NetworkParameters.java
+     */
+    private static boolean isBloomFilteringSupportedAndEnabled(VersionMessage versionMessage) {
+        // A service bit that denotes whether the peer supports BIP37 bloom filters or
+        // not. The service bit is defined in BIP111.
+        int NODE_BLOOM = 1 << 2;
+
+        int BLOOM_FILTERS_BIP37_PROTOCOL_VERSION = 70000;
+        var whenBloomFiltersWereIntroduced = BLOOM_FILTERS_BIP37_PROTOCOL_VERSION;
+
+        int BLOOM_FILTERS_BIP111_PROTOCOL_VERSION = 70011;
+        var whenBloomFiltersWereDisabledByDefault = BLOOM_FILTERS_BIP111_PROTOCOL_VERSION;
+
+        int clientVersion = versionMessage.clientVersion;
+        long localServices = versionMessage.localServices;
+
+        if (clientVersion >= whenBloomFiltersWereIntroduced
+                && clientVersion < whenBloomFiltersWereDisabledByDefault)
+            return true;
+        return (localServices & NODE_BLOOM) == NODE_BLOOM;
     }
 
     /* Performs a blocking Bitcoin protocol handshake, which includes exchanging version
@@ -226,6 +236,42 @@ public class LocalBitcoinNode {
         restoreLoggerLevel(NioClientManager.class, originalNioClientManagerLoggerLevel);
 
         return optionalPeerVersionMessage;
+    }
+
+    /* Creates a Peer that is expected to only be used to coerce a VersionMessage out of a
+     * local Bitcoin node and be closed right after.
+     */
+    private static Peer createLocalPeer(int port) throws UnknownHostException {
+        // TODO: what's the effect of NetworkParameters on handshake?
+        // i.e. is it fine to just always use MainNetParams?
+        var networkParameters = new MainNetParams();
+
+        // We must construct a BitcoinJ Context before using BitcoinJ. We don't keep a
+        // reference, because it's automatically kept in a thread local storage.
+        new Context(networkParameters);
+
+        var ourVersionMessage = new VersionMessage(networkParameters, 0);
+
+        var localPeerAddress = new PeerAddress(InetAddress.getLocalHost(), port);
+
+        AbstractBlockChain blockchain = null;
+
+        var peer = new Peer(networkParameters, ourVersionMessage, localPeerAddress, blockchain);
+        return peer;
+    }
+
+    /* Creates an NioClient that is expected to only be used to coerce a VersionMessage
+     * out of a local Bitcoin node and be closed right after.
+     */
+    private static NioClient createClient(Peer peer, int port, int connectionTimeout) throws IOException {
+        InetSocketAddress serverAddress =
+                new InetSocketAddress(InetAddress.getLocalHost(), port);
+
+        // This initiates the handshake procedure, which, if successful, will complete
+        // the peerVersionMessageFuture, or be cancelled, in case of failure.
+        NioClient client = new NioClient(serverAddress, peer, connectionTimeout);
+
+        return client;
     }
 
     private static Level silence(Class klass) {
@@ -291,52 +337,6 @@ public class LocalBitcoinNode {
         peer.addDisconnectedEventListener(cancelIfConnectionFails);
 
         return peerVersionMessageFuture;
-    }
-
-    /**
-     * Returns whether or not a local Bitcion node was detected and was well configured
-     * at the time the checks were performed. All checks are triggered in case they have
-     * not been performed.
-     */
-    public boolean isUsable() {
-        // If a node is found to be well configured, it implies that it was also detected,
-        // so this is query is enough to show if the relevant checks were performed and if
-        // their results are positive.
-        return isWellConfigured();
-    }
-
-    /**
-     * Returns whether the local node was detected, but misconfigured. Combination of
-     * methods isDetected and isWellConfigured.
-     */
-    public boolean isDetectedButMisconfigured() {
-        return isDetected() && !isWellConfigured();
-    }
-
-    /**
-     * Returns whether a local Bitcoin node was detected. All checks are triggered in case
-     * they have not been performed. No further monitoring is performed, so if the node
-     * goes up or down in the meantime, this method will continue to return its original
-     * value. See {@code MainViewModel#setupBtcNumPeersWatcher} to understand how
-     * disconnection and reconnection of the local Bitcoin node is actually handled.
-     */
-    public boolean isDetected() {
-        if (detected == null) {
-            performChecks();
-        }
-        return detected;
-    }
-
-    /**
-     * Returns whether the local node's configuration satisfied our checks at the time
-     * they were performed. All checks are triggered in case they have not been performed.
-     * We check if the local node is not pruning and has bloom filters enabled.
-     */
-    public boolean isWellConfigured() {
-        if (wellConfigured == null) {
-            performChecks();
-        }
-        return wellConfigured;
     }
 
 }
