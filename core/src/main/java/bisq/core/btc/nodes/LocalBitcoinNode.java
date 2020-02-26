@@ -3,7 +3,6 @@ package bisq.core.btc.nodes;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 
-import org.bitcoinj.core.AbstractBlockChain;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
@@ -11,7 +10,6 @@ import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.core.listeners.PeerDisconnectedEventListener;
 import org.bitcoinj.net.NioClient;
 import org.bitcoinj.net.NioClientManager;
-import org.bitcoinj.params.MainNetParams;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -56,7 +54,6 @@ public class LocalBitcoinNode {
     private static final int CONNECTION_TIMEOUT = 5000;
 
     private final Config config;
-
     private final int port;
 
     private Boolean detected;
@@ -87,10 +84,9 @@ public class LocalBitcoinNode {
         // For dao testnet (server side regtest) we disable the use of local bitcoin node to
         // avoid confusion if local btc node is not synced with our dao testnet master node.
         // Note: above comment was previously in WalletConfig::createPeerGroup.
-
-        return config.ignoreLocalBtcNode
-                || baseCurrencyNetwork.isDaoRegTest()
-                || baseCurrencyNetwork.isDaoTestNet();
+        return config.ignoreLocalBtcNode ||
+                baseCurrencyNetwork.isDaoRegTest() ||
+                baseCurrencyNetwork.isDaoTestNet();
     }
 
     /**
@@ -139,13 +135,15 @@ public class LocalBitcoinNode {
         return wellConfigured;
     }
 
-    /* Performs checks that the query methods might be interested in.
+    /**
+     * Performs checks that the query methods might be interested in.
      */
     private void performChecks() {
         checkUsable();
     }
 
-    /* Initiates detection and configuration checks. The results are cached so that the
+    /**
+     * Initiates detection and configuration checks. The results are cached so that the
      * public methods isUsable, isDetected, etc. don't trigger a recheck.
      */
     private void checkUsable() {
@@ -157,10 +155,8 @@ public class LocalBitcoinNode {
         if (!optionalVersionMessage.isPresent()) {
             detected = false;
             wellConfigured = false;
-            log.info("No local Bitcoin node detected on port {},"
-                            + " or the connection was prematurely closed"
-                            + " (before a version messages could be coerced)",
-                    port);
+            log.info("No local Bitcoin node detected on port {}, or the connection was prematurely closed" +
+                    " (before a version messages could be coerced)", port);
         } else {
             detected = true;
             log.info("Local Bitcoin node detected on port {}", port);
@@ -170,12 +166,10 @@ public class LocalBitcoinNode {
 
             if (configurationCheckResult) {
                 wellConfigured = true;
-                log.info("Local Bitcoin node found to be well configured"
-                        + " (not pruning and allows bloom filters)");
+                log.info("Local Bitcoin node found to be well configured (not pruning and allows bloom filters)");
             } else {
                 wellConfigured = false;
-                log.info("Local Bitcoin node badly configured"
-                        + " (it is pruning and/or bloom filters are disabled)");
+                log.info("Local Bitcoin node badly configured (it is pruning and/or bloom filters are disabled)");
             }
         }
     }
@@ -187,7 +181,8 @@ public class LocalBitcoinNode {
         return notPruning && supportsAndAllowsBloomFilters;
     }
 
-    /* Method backported from upstream bitcoinj: at the time of writing, our version is
+    /**
+     * Method backported from upstream bitcoinj: at the time of writing, our version is
      * not BIP111-aware.
      * Source routines and data can be found in Bitcoinj under:
      * core/src/main/java/org/bitcoinj/core/VersionMessage.java
@@ -211,10 +206,12 @@ public class LocalBitcoinNode {
         if (clientVersion >= whenBloomFiltersWereIntroduced
                 && clientVersion < whenBloomFiltersWereDisabledByDefault)
             return true;
+
         return (localServices & NODE_BLOOM) == NODE_BLOOM;
     }
 
-    /* Performs a blocking Bitcoin protocol handshake, which includes exchanging version
+    /**
+     * Performs a blocking Bitcoin protocol handshake, which includes exchanging version
      * messages and acks. Its purpose is to check if a local Bitcoin node is running,
      * and, if it is, check its advertised configuration. The returned Optional is empty,
      * if a local peer wasn't found, or if handshake failed for some reason. This method
@@ -231,19 +228,16 @@ public class LocalBitcoinNode {
             return Optional.empty();
         }
 
-        /* We temporarily silence BitcoinJ NioClient's and NioClientManager's loggers,
-         * because when a local Bitcoin node is not found they pollute console output
-         * with "connection refused" error messages.
-         */
+        // We temporarily silence BitcoinJ NioClient's and NioClientManager's loggers,
+        // because when a local Bitcoin node is not found they pollute console output
+        // with "connection refused" error messages.
         var originalNioClientLoggerLevel = silence(NioClient.class);
         var originalNioClientManagerLoggerLevel = silence(NioClientManager.class);
 
         NioClient client;
-
         try {
-            log.info("Initiating attempt to connect to and handshake with a local "
-                            + "Bitcoin node (which may or may not be running) on port {}.",
-                    port);
+            log.info("Initiating attempt to connect to and handshake with a local " +
+                    "Bitcoin node (which may or may not be running) on port {}.", port);
             client = createClient(peer, port, CONNECTION_TIMEOUT);
         } catch (IOException ex) {
             log.error("Local bitcoin node handshake attempt was unexpectedly interrupted", ex);
@@ -251,7 +245,6 @@ public class LocalBitcoinNode {
         }
 
         ListenableFuture<VersionMessage> peerVersionMessageFuture = getVersionMessage(peer);
-
         Optional<VersionMessage> optionalPeerVersionMessage;
 
         // block for VersionMessage or cancellation (in case of connection failure)
@@ -271,7 +264,8 @@ public class LocalBitcoinNode {
         return optionalPeerVersionMessage;
     }
 
-    /* Creates a Peer that is expected to only be used to coerce a VersionMessage out of a
+    /**
+     * Creates a Peer that is expected to only be used to coerce a VersionMessage out of a
      * local Bitcoin node and be closed right after.
      */
     private Peer createLocalPeer(int port) throws UnknownHostException {
@@ -288,16 +282,15 @@ public class LocalBitcoinNode {
         return new Peer(networkParameters, ourVersionMessage, localPeerAddress, null);
     }
 
-    /* Creates an NioClient that is expected to only be used to coerce a VersionMessage
+    /**
+     * Creates an NioClient that is expected to only be used to coerce a VersionMessage
      * out of a local Bitcoin node and be closed right after.
      */
     private static NioClient createClient(Peer peer, int port, int connectionTimeout) throws IOException {
-        InetSocketAddress serverAddress =
-                new InetSocketAddress(InetAddress.getLocalHost(), port);
+        InetSocketAddress serverAddress = new InetSocketAddress(InetAddress.getLocalHost(), port);
 
         // This initiates the handshake procedure, which, if successful, will complete
         // the peerVersionMessageFuture, or be cancelled, in case of failure.
-
         return new NioClient(serverAddress, peer, connectionTimeout);
     }
 
@@ -324,19 +317,17 @@ public class LocalBitcoinNode {
             public void onSuccess(Peer peer) {
                 peerVersionMessageFuture.set(peer.getPeerVersionMessage());
             }
+
             public void onFailure(@NotNull Throwable thr) {
                 // No action
             }
         };
-        Futures.addCallback(
-                versionHandshakeDone,
-                fetchPeerVersionMessage
-        );
+        Futures.addCallback(versionHandshakeDone, fetchPeerVersionMessage);
 
         PeerDisconnectedEventListener cancelIfConnectionFails =
                 (Peer disconnectedPeer, int peerCount) -> {
                     var peerVersionMessageAlreadyReceived =
-                        peerVersionMessageFuture.isDone();
+                            peerVersionMessageFuture.isDone();
                     if (peerVersionMessageAlreadyReceived) {
                         // This method is called whether or not the handshake was
                         // successful. In case it was successful, we don't want to do
@@ -348,8 +339,8 @@ public class LocalBitcoinNode {
                     // In such a case, we want to retrieve the VersionMessage.
                     var peerVersionMessage = disconnectedPeer.getPeerVersionMessage();
                     if (peerVersionMessage != null) {
-                        log.info("Handshake attempt was interrupted;"
-                                + " however, the local node's version message was coerced.");
+                        log.info("Handshake attempt was interrupted; " +
+                                "however, the local node's version message was coerced.");
                         peerVersionMessageFuture.set(peerVersionMessage);
                     } else {
                         log.info("Handshake attempt did not result in a version message exchange.");
@@ -362,5 +353,4 @@ public class LocalBitcoinNode {
 
         return peerVersionMessageFuture;
     }
-
 }

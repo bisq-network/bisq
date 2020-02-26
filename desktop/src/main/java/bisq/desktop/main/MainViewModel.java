@@ -307,14 +307,14 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         });
         bisqSetup.setDisplayLocalNodeMisconfigurationHandler(
                 (Runnable continueWithoutLocalNode) ->
-                new Popup()
-                .hideCloseButton()
-                .warning(Res.get("popup.warning.localNodeMisconfigured.explanation"))
-                .useShutDownButton()
-                .secondaryActionButtonText(Res.get("popup.warning.localNodeMisconfigured.continueWithoutLocalNode"))
-                .onSecondaryAction(continueWithoutLocalNode)
-                .show()
-                );
+                        new Popup()
+                                .hideCloseButton()
+                                .warning(Res.get("popup.warning.localNodeMisconfigured.explanation"))
+                                .useShutDownButton()
+                                .secondaryActionButtonText(Res.get("popup.warning.localNodeMisconfigured.continueWithoutLocalNode"))
+                                .onSecondaryAction(continueWithoutLocalNode)
+                                .show()
+        );
         bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup().warning(msg)
                 .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
                 .onAction(() -> GUIUtil.reSyncSPVChain(preferences))
@@ -453,10 +453,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                     if (walletsSetup.numPeersProperty().get() == 0) {
                         if (localBitcoinNode.willUse())
                             getWalletServiceErrorMsg().set(
-                                    Res.get("mainView.networkWarning.localhostBitcoinLost", Res.getBaseCurrencyName().toLowerCase()));
+                                    Res.get("mainView.networkWarning.localhostBitcoinLost",
+                                            Res.getBaseCurrencyName().toLowerCase()));
                         else
                             getWalletServiceErrorMsg().set(
-                                    Res.get("mainView.networkWarning.allConnectionsLost", Res.getBaseCurrencyName().toLowerCase()));
+                                    Res.get("mainView.networkWarning.allConnectionsLost",
+                                            Res.getBaseCurrencyName().toLowerCase()));
                     } else {
                         getWalletServiceErrorMsg().set(null);
                     }

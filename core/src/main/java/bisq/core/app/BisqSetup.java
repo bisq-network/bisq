@@ -490,8 +490,7 @@ public class BisqSetup {
 
         // Here we only want to provide the user with a choice (in a popup) in case a
         // local node is detected, but badly configured.
-        var detectedButMisconfigured = localBitcoinNode.isDetectedButMisconfigured();
-        if (detectedButMisconfigured) {
+        if (localBitcoinNode.isDetectedButMisconfigured()) {
             if (displayLocalNodeMisconfigurationHandler != null) {
                 displayLocalNodeMisconfigurationHandler.accept(nextStep);
                 return;
