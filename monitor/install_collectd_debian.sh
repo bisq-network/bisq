@@ -29,8 +29,13 @@ sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq 
 
 echo "[*] Preparing Bisq init script for monitoring"
 # remove stuff it it is there already
-sudo -H -i -u "${ROOT_USER}" sed -i -e 's/-Dcom.sun.management.jmxremote //g' -e 's/-Dcom.sun.management.jmxremote.local.only=true//g' -e 's/ -Dcom.sun.management.jmxremote.host=127.0.0.1//g' -e 's/ -Dcom.sun.management.jmxremote.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.rmi.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.ssl=false//g' -e 's/ -Dcom.sun.management.jmxremote.authenticate=false//g' "${SYSTEMD_ENV_HOME}/bisq.env"
-sudo -H -i -u "${ROOT_USER}" sed -i -e '/JAVA_OPTS/ s/"$/ -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true -Dcom.sun.management.jmxremote.port=6969 -Dcom.sun.management.jmxremote.rmi.port=6969 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"/' "${SYSTEMD_ENV_HOME}/bisq.env"
+for file in "${SYSTEMD_ENV_HOME}/bisq.env" "${SYSTEMD_ENV_HOME}/bisq-pricenode.env"
+do
+    if [ -f "$file" ];then
+        sudo -H -i -u "${ROOT_USER}" sed -i -e 's/-Dcom.sun.management.jmxremote //g' -e 's/-Dcom.sun.management.jmxremote.local.only=true//g' -e 's/ -Dcom.sun.management.jmxremote.host=127.0.0.1//g' -e 's/ -Dcom.sun.management.jmxremote.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.rmi.port=6969//g' -e 's/ -Dcom.sun.management.jmxremote.ssl=false//g' -e 's/ -Dcom.sun.management.jmxremote.authenticate=false//g' "${file}"
+        sudo -H -i -u "${ROOT_USER}" sed -i -e '/JAVA_OPTS/ s/"$/ -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true -Dcom.sun.management.jmxremote.port=6969 -Dcom.sun.management.jmxremote.rmi.port=6969 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"/' "${file}"
+    fi
+done
 
 echo "[*] Seeding entropy from /dev/urandom"
 sudo -H -i -u "${ROOT_USER}" /bin/sh -c "head -1500 /dev/urandom > ${ROOT_HOME}/.rnd"
@@ -50,7 +55,11 @@ sudo -H -i -u "${ROOT_USER}" systemctl enable nginx.service
 sudo -H -i -u "${ROOT_USER}" systemctl enable collectd.service
 
 echo "[*] Restarting services"
-sudo -H -i -u "${ROOT_USER}" systemctl restart bisq.service
+set +e
+service bisq status >/dev/null 2>&1
+[ $? != 4 ] && sudo -H -i -u "${ROOT_USER}" systemctl restart bisq.service
+service bisq-pricenode status >/dev/null 2>&1
+[ $? != 4 ] && sudo -H -i -u "${ROOT_USER}" systemctl restart bisq-pricenode.service
 sudo -H -i -u "${ROOT_USER}" systemctl restart nginx.service
 sudo -H -i -u "${ROOT_USER}" systemctl restart collectd.service
 
