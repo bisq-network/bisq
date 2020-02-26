@@ -69,21 +69,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
-    public interface VoteRevealTxPublishedListener {
-        void onVoteRevealTxPublished(String txId);
-    }
-
     private final DaoStateService daoStateService;
     private final BlindVoteListService blindVoteListService;
     private final PeriodService periodService;
     private final MyVoteListService myVoteListService;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final WalletsManager walletsManager;
-
+    private final WalletsManager walletsManager;    
     @Getter
     private final ObservableList<VoteRevealException> voteRevealExceptions = FXCollections.observableArrayList();
     private final List<VoteRevealTxPublishedListener> voteRevealTxPublishedListeners = new ArrayList<>();
+    private final List<VoteRevealTxFailedListener> voteRevealTxFailedListeners = new ArrayList<>();    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -106,7 +102,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         this.walletsManager = walletsManager;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoSetupService
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -125,11 +120,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     public void start() {
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     private byte[] getHashOfBlindVoteList() {
         List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
@@ -144,25 +134,24 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateListener
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addVoteRevealTxFailedListener(VoteRevealTxFailedListener voteRevealTxFailedListener) {
+        voteRevealTxFailedListeners.add(voteRevealTxFailedListener);
+    }
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         maybeRevealVotes(block.getHeight());
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     // Creation of vote reveal tx is done without user activity!
     // We create automatically the vote reveal tx when we are in the reveal phase of the current cycle when
     // the blind vote was created in case we have not done it already.
-    // The voter needs to be at least once online in the reveal phase when he has a blind vote created,
+    // The voter need to be at least once online in the reveal phase when he has a blind vote created,
     // otherwise his vote becomes invalid.
-    // In case the user misses the vote reveal phase an (invalid) vote reveal tx will be created the next time the user is
+    // In case the user miss the vote reveal phase an (invalid) vote reveal tx will be created the next time the user is
     // online. That tx only serves the purpose to unlock the stake from the blind vote but it will be ignored for voting.
     // A blind vote which did not get revealed might still be part of the majority hash calculation as we cannot know
     // which blind votes might be revealed until the phase is over at the moment when we publish the vote reveal tx.
@@ -198,7 +187,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                             // BSQ because the blind vote tx is already in the snapshot and does not get parsed
                             // again. It would require a reset of the snapshot and parse all blocks again.
                             // As this is an exceptional case we prefer to have a simple solution instead and just
-                            // publish the vote reveal tx but are aware that it is invalid.
+                            // publish the vote reveal tx but are aware that is is invalid.
                             log.warn("We missed the vote reveal phase but publish now the tx to unlock our locked " +
                                             "BSQ from the blind vote tx. BlindVoteTxId={}, blockHeight={}",
                                     blindVoteTxId, chainHeight);
@@ -211,6 +200,11 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                     }
                 });
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void revealVote(MyVote myVote, boolean isInVoteRevealPhase) {
         try {
@@ -238,7 +232,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             publishTx(voteRevealTx);
 
             // We don't want to wait for a successful broadcast to avoid issues if the broadcast succeeds delayed or at
-            // next startup but the tx was actually broadcast.
+            // next startup but the tx was actually broadcasted.
             myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
         } catch (IOException | WalletException | TransactionVerificationException
                 | InsufficientMoneyException e) {
@@ -247,13 +241,21 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         } catch (VoteRevealException e) {
             voteRevealExceptions.add(e);
         }
+
+        //Display vote reveal exceptions
+        voteRevealExceptions.forEach(e -> voteRevealTxFailedListeners.forEach(l -> l.onVoteRevealTxFailed(e)));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void publishTx(Transaction voteRevealTx) {
         walletsManager.publishAndCommitBsqTx(voteRevealTx, TxType.VOTE_REVEAL, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("voteRevealTx successfully broadcast.");
+                log.info("voteRevealTx successfully broadcasted.");
                 voteRevealTxPublishedListeners.forEach(l -> l.onVoteRevealTxPublished(transaction.getHashAsString()));
             }
 
@@ -271,5 +273,13 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         Transaction preparedTx = bsqWalletService.getPreparedVoteRevealTx(stakeTxOutput);
         Transaction txWithBtcFee = btcWalletService.completePreparedVoteRevealTx(preparedTx, opReturnData);
         return bsqWalletService.signTx(txWithBtcFee);
+    }
+
+    public interface VoteRevealTxPublishedListener {
+        void onVoteRevealTxPublished(String txId);
+    }
+
+    public interface VoteRevealTxFailedListener {
+        void onVoteRevealTxFailed(VoteRevealException exception);
     }
 }

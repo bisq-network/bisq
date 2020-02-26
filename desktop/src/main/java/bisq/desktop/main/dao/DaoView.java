@@ -78,6 +78,16 @@ public class DaoView extends ActivatableView<TabPane, Void> {
                     .feedback(Res.get("dao.voteReveal.txPublished", txId))
                     .show();
         });
+
+        voteRevealService.addVoteRevealTxFailedListener((exception) -> {
+            String key = "showVoteRevealFailedWarnPopupOnStartup" + exception.getBlindVoteTxId();
+            if (preferences.showAgain(key)) {
+                new Popup().headLine(Res.get("dao.voteReveal.txFailed.headLine"))
+                        .dontShowAgainId(key)
+                        .error(Res.get("dao.voteReveal.txFailed", exception.getBlindVoteTxId(), exception.getLocalizedMessage()))
+                        .show();
+            }
+        });
     }
 
     @Override
