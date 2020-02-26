@@ -87,8 +87,8 @@ public class LocalBitcoinNode {
         // Note: above comment was previously in WalletConfig::createPeerGroup.
 
         return config.ignoreLocalBtcNode
-            || baseCurrencyNetwork.isDaoRegTest()
-            || baseCurrencyNetwork.isDaoTestNet();
+                || baseCurrencyNetwork.isDaoRegTest()
+                || baseCurrencyNetwork.isDaoTestNet();
     }
 
     /**
@@ -156,8 +156,8 @@ public class LocalBitcoinNode {
             detected = false;
             wellConfigured = false;
             log.info("No local Bitcoin node detected on port {},"
-                    + " or the connection was prematurely closed"
-                    + " (before a version messages could be coerced)",
+                            + " or the connection was prematurely closed"
+                            + " (before a version messages could be coerced)",
                     port);
         } else {
             detected = true;
@@ -225,7 +225,7 @@ public class LocalBitcoinNode {
         try {
             peer = createLocalPeer(port);
         } catch (UnknownHostException ex) {
-            log.error("Local bitcoin node handshake attempt unexpectedly threw: {}", ex);
+            log.error("Local bitcoin node handshake attempt was unexpectedly interrupted", ex);
             return Optional.empty();
         }
 
@@ -240,11 +240,11 @@ public class LocalBitcoinNode {
 
         try {
             log.info("Initiating attempt to connect to and handshake with a local "
-                    + "Bitcoin node (which may or may not be running) on port {}.",
+                            + "Bitcoin node (which may or may not be running) on port {}.",
                     port);
             client = createClient(peer, port, CONNECTION_TIMEOUT);
         } catch (IOException ex) {
-            log.error("Local bitcoin node handshake attempt unexpectedly threw: {}", ex);
+            log.error("Local bitcoin node handshake attempt was unexpectedly interrupted", ex);
             return Optional.empty();
         }
 
@@ -305,18 +305,18 @@ public class LocalBitcoinNode {
         return client;
     }
 
-    private static Level silence(Class klass) {
+    private static Level silence(Class<?> klass) {
         var logger = getLogger(klass);
         var originalLevel = logger.getLevel();
         logger.setLevel(Level.OFF);
         return originalLevel;
     }
 
-    private static void restoreLoggerLevel(Class klass, Level originalLevel) {
+    private static void restoreLoggerLevel(Class<?> klass, Level originalLevel) {
         getLogger(klass).setLevel(originalLevel);
     }
 
-    private static ch.qos.logback.classic.Logger getLogger(Class klass) {
+    private static ch.qos.logback.classic.Logger getLogger(Class<?> klass) {
         return (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(klass);
     }
 
@@ -324,11 +324,11 @@ public class LocalBitcoinNode {
         SettableFuture<VersionMessage> peerVersionMessageFuture = SettableFuture.create();
 
         var versionHandshakeDone = peer.getVersionHandshakeFuture();
-        FutureCallback<Peer> fetchPeerVersionMessage = new FutureCallback<Peer>() {
+        FutureCallback<Peer> fetchPeerVersionMessage = new FutureCallback<>() {
             public void onSuccess(Peer peer) {
                 peerVersionMessageFuture.set(peer.getPeerVersionMessage());
             }
-            public void onFailure(Throwable thr) {
+            public void onFailure(@NotNull Throwable thr) {
                 // No action
             }
         };
