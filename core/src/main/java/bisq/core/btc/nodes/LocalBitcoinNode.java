@@ -274,10 +274,8 @@ public class LocalBitcoinNode {
     /* Creates a Peer that is expected to only be used to coerce a VersionMessage out of a
      * local Bitcoin node and be closed right after.
      */
-    private static Peer createLocalPeer(int port) throws UnknownHostException {
-        // TODO: what's the effect of NetworkParameters on handshake?
-        // i.e. is it fine to just always use MainNetParams?
-        var networkParameters = new MainNetParams();
+    private Peer createLocalPeer(int port) throws UnknownHostException {
+        var networkParameters = config.baseCurrencyNetwork.getParameters();
 
         // We must construct a BitcoinJ Context before using BitcoinJ. We don't keep a
         // reference, because it's automatically kept in a thread local storage.
