@@ -874,7 +874,7 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.isUsable());
+        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.willUse());
     }
 
     private void maybeShowAccountSigningStateInfo() {
