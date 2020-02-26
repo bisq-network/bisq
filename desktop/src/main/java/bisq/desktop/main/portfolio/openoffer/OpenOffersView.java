@@ -406,8 +406,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                     if (checkBox == null) {
                                         checkBox = new AutoTooltipCheckBox();
                                         checkBox.setGraphic(iconView);
-                                        updateState(item.getOpenOffer());
-                                        setGraphic(checkBox);
                                     }
                                     checkBox.setOnAction(event -> {
                                         if (item.getOpenOffer().isDeactivated()) {
@@ -418,6 +416,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         updateState(item.getOpenOffer());
                                         tableView.refresh();
                                     });
+                                    updateState(item.getOpenOffer());
+                                    setGraphic(checkBox);
                                 } else {
                                     setGraphic(null);
                                     if (checkBox != null) {
