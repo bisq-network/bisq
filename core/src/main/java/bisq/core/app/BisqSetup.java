@@ -492,8 +492,12 @@ public class BisqSetup {
         // local node is detected, but badly configured.
         var detectedButMisconfigured = localBitcoinNode.isDetectedButMisconfigured();
         if (detectedButMisconfigured) {
-            displayLocalNodeMisconfigurationHandler.accept(nextStep);
-            return;
+            if (displayLocalNodeMisconfigurationHandler != null) {
+                displayLocalNodeMisconfigurationHandler.accept(nextStep);
+                return;
+            } else {
+                log.error("displayLocalNodeMisconfigurationHandler undefined", new RuntimeException());
+            }
         }
 
         nextStep.run();
@@ -566,7 +570,8 @@ public class BisqSetup {
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
-        if (!preferences.getUseTorForBitcoinJ()) {
+        // TODO encapsulate below conditional inside getUseTorForBitcoinJ
+        if (!preferences.getUseTorForBitcoinJ() || localBitcoinNode.willUse()) {
             initWallet();
         }
 

@@ -37,6 +37,8 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Detects whether a Bitcoin node is running on localhost and whether it is well
  * configured (meaning it's not pruning and has bloom filters enabled). The public
@@ -285,10 +287,7 @@ public class LocalBitcoinNode {
 
         var localPeerAddress = new PeerAddress(InetAddress.getLocalHost(), port);
 
-        AbstractBlockChain blockchain = null;
-
-        var peer = new Peer(networkParameters, ourVersionMessage, localPeerAddress, blockchain);
-        return peer;
+        return new Peer(networkParameters, ourVersionMessage, localPeerAddress, null);
     }
 
     /* Creates an NioClient that is expected to only be used to coerce a VersionMessage
@@ -300,9 +299,8 @@ public class LocalBitcoinNode {
 
         // This initiates the handshake procedure, which, if successful, will complete
         // the peerVersionMessageFuture, or be cancelled, in case of failure.
-        NioClient client = new NioClient(serverAddress, peer, connectionTimeout);
 
-        return client;
+        return new NioClient(serverAddress, peer, connectionTimeout);
     }
 
     private static Level silence(Class<?> klass) {
@@ -338,29 +336,26 @@ public class LocalBitcoinNode {
         );
 
         PeerDisconnectedEventListener cancelIfConnectionFails =
-                new PeerDisconnectedEventListener() {
-                    public void onPeerDisconnected(Peer peer, int peerCount) {
-                        var peerVersionMessageAlreadyReceived =
-                                peerVersionMessageFuture.isDone();
-                        if (peerVersionMessageAlreadyReceived) {
-                            // This method is called whether or not the handshake was
-                            // successful. In case it was successful, we don't want to do
-                            // anything here.
-                            return;
-                        }
-                        // In some cases Peer will self-disconnect after receiving
-                        // node's VersionMessage, but before completing the handshake.
-                        // In such a case, we want to retrieve the VersionMessage.
-                        var peerVersionMessage = peer.getPeerVersionMessage();
-                        if (peerVersionMessage != null) {
-                            log.info("Handshake attempt was interrupted;"
-                                    + " however, the local node's version message was coerced.");
-                            peerVersionMessageFuture.set(peerVersionMessage);
-                        } else {
-                            log.info("Handshake attempt did not result in a version message exchange.");
-                            var mayInterruptWhileRunning = true;
-                            peerVersionMessageFuture.cancel(mayInterruptWhileRunning);
-                        }
+                (Peer disconnectedPeer, int peerCount) -> {
+                    var peerVersionMessageAlreadyReceived =
+                        peerVersionMessageFuture.isDone();
+                    if (peerVersionMessageAlreadyReceived) {
+                        // This method is called whether or not the handshake was
+                        // successful. In case it was successful, we don't want to do
+                        // anything here.
+                        return;
+                    }
+                    // In some cases Peer will self-disconnect after receiving
+                    // node's VersionMessage, but before completing the handshake.
+                    // In such a case, we want to retrieve the VersionMessage.
+                    var peerVersionMessage = disconnectedPeer.getPeerVersionMessage();
+                    if (peerVersionMessage != null) {
+                        log.info("Handshake attempt was interrupted;"
+                                + " however, the local node's version message was coerced.");
+                        peerVersionMessageFuture.set(peerVersionMessage);
+                    } else {
+                        log.info("Handshake attempt did not result in a version message exchange.");
+                        peerVersionMessageFuture.cancel(true);
                     }
                 };
 
