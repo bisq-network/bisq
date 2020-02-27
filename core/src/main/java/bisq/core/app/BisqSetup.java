@@ -76,7 +76,6 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
@@ -193,7 +192,7 @@ public class BisqSetup {
 
     @Setter
     @Nullable
-    private Consumer<Runnable> displayTacHandler;
+    private Consumer<Runnable> displayTacHandler, displayLocalNodeMisconfigurationHandler;
     @Setter
     @Nullable
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
@@ -348,7 +347,7 @@ public class BisqSetup {
     }
 
     private void step2() {
-        detectLocalBitcoinNode(this::step3);
+        maybeCheckLocalBitcoinNode(this::step3);
     }
 
     private void step3() {
@@ -482,14 +481,24 @@ public class BisqSetup {
         }
     }
 
-    private void detectLocalBitcoinNode(Runnable nextStep) {
-        BaseCurrencyNetwork baseCurrencyNetwork = config.baseCurrencyNetwork;
-        if (config.ignoreLocalBtcNode || baseCurrencyNetwork.isDaoRegTest() || baseCurrencyNetwork.isDaoTestNet()) {
+    private void maybeCheckLocalBitcoinNode(Runnable nextStep) {
+        if (localBitcoinNode.shouldBeIgnored()) {
             nextStep.run();
             return;
         }
 
-        localBitcoinNode.detectAndRun(nextStep);
+        // Here we only want to provide the user with a choice (in a popup) in case a
+        // local node is detected, but badly configured.
+        if (localBitcoinNode.isDetectedButMisconfigured()) {
+            if (displayLocalNodeMisconfigurationHandler != null) {
+                displayLocalNodeMisconfigurationHandler.accept(nextStep);
+                return;
+            } else {
+                log.error("displayLocalNodeMisconfigurationHandler undefined", new RuntimeException());
+            }
+        }
+
+        nextStep.run();
     }
 
     private void readMapsFromResources(Runnable nextStep) {
@@ -559,7 +568,8 @@ public class BisqSetup {
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
-        if (!preferences.getUseTorForBitcoinJ() || localBitcoinNode.isDetected()) {
+        // TODO encapsulate below conditional inside getUseTorForBitcoinJ
+        if (!preferences.getUseTorForBitcoinJ() || localBitcoinNode.shouldBeUsed()) {
             initWallet();
         }
 
@@ -862,7 +872,7 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.isDetected());
+        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.shouldBeUsed());
     }
 
     private void maybeShowAccountSigningStateInfo() {

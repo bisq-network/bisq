@@ -165,7 +165,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         bitcoinPeerSubVersionColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.subVersionColumn")));
         bitcoinPeerHeightColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.heightColumn")));
         localhostBtcNodeInfoLabel.setText(Res.get("settings.net.localhostBtcNodeInfo"));
-        if (!localBitcoinNode.isDetected()) {
+        if (localBitcoinNode.shouldBeIgnored()) {
             localhostBtcNodeInfoLabel.setVisible(false);
         }
         useProvidedNodesRadio.setText(Res.get("settings.net.useProvidedNodesRadio"));
@@ -380,14 +380,14 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     }
 
     private void onBitcoinPeersToggleSelected(boolean calledFromUser) {
-        boolean bitcoinLocalhostNodeRunning = localBitcoinNode.isDetected();
-        useTorForBtcJCheckBox.setDisable(bitcoinLocalhostNodeRunning);
-        bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
-        btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
-        btcNodesInputTextField.setDisable(bitcoinLocalhostNodeRunning);
-        useProvidedNodesRadio.setDisable(bitcoinLocalhostNodeRunning || !btcNodes.useProvidedBtcNodes());
-        useCustomNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
-        usePublicNodesRadio.setDisable(bitcoinLocalhostNodeRunning || isPreventPublicBtcNetwork());
+        boolean localBitcoinNodeShouldBeUsed = localBitcoinNode.shouldBeUsed();
+        useTorForBtcJCheckBox.setDisable(localBitcoinNodeShouldBeUsed);
+        bitcoinNodesLabel.setDisable(localBitcoinNodeShouldBeUsed);
+        btcNodesLabel.setDisable(localBitcoinNodeShouldBeUsed);
+        btcNodesInputTextField.setDisable(localBitcoinNodeShouldBeUsed);
+        useProvidedNodesRadio.setDisable(localBitcoinNodeShouldBeUsed || !btcNodes.useProvidedBtcNodes());
+        useCustomNodesRadio.setDisable(localBitcoinNodeShouldBeUsed);
+        usePublicNodesRadio.setDisable(localBitcoinNodeShouldBeUsed || isPreventPublicBtcNetwork());
 
         BtcNodes.BitcoinNodesOption currentBitcoinNodesOption = BtcNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
 
@@ -454,7 +454,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
     private void applyPreventPublicBtcNetwork() {
         final boolean preventPublicBtcNetwork = isPreventPublicBtcNetwork();
-        usePublicNodesRadio.setDisable(localBitcoinNode.isDetected() || preventPublicBtcNetwork);
+        usePublicNodesRadio.setDisable(localBitcoinNode.shouldBeUsed() || preventPublicBtcNetwork);
         if (preventPublicBtcNetwork && selectedBitcoinNodesOption == BtcNodes.BitcoinNodesOption.PUBLIC) {
             selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());

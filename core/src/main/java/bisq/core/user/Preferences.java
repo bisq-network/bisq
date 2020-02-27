@@ -736,11 +736,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean getUseTorForBitcoinJ() {
-        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet,
-        // unless the useTorForBtc parameter is explicitly provided.
-        // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
+        // We override the useTorForBitcoinJ and set it to false if we will use a
+        // localhost Bitcoin node or if we are not on mainnet, unless the useTorForBtc
+        // parameter is explicitly provided. On testnet there are very few Bitcoin tor
+        // nodes and we don't provide tor nodes.
+
         if ((!Config.baseCurrencyNetwork().isMainnet()
-                || localBitcoinNode.isDetected())
+                || localBitcoinNode.shouldBeUsed())
                 && !config.useTorForBtcOptionSetExplicitly)
             return false;
         else

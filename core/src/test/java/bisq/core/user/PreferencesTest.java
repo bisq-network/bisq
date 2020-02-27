@@ -60,7 +60,7 @@ public class PreferencesTest {
 
         storage = mock(Storage.class);
         Config config = new Config();
-        LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(config.baseCurrencyNetworkParameters.getPort());
+        LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(config);
         preferences = new Preferences(
                 storage, config, localBitcoinNode, null, null, Config.DEFAULT_FULL_DAO_NODE,
                 null, null, Config.UNSPECIFIED_PORT);

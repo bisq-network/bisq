@@ -239,11 +239,7 @@ public class WalletConfig extends AbstractIdleService {
             peerGroup.setConnectTimeoutMillis(TOR_VERSION_EXCHANGE_TIMEOUT);
         }
 
-        // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
-        // if local btc node is not synced with our dao testnet master node.
-        if (Config.baseCurrencyNetwork().isDaoRegTest() ||
-                Config.baseCurrencyNetwork().isDaoTestNet() ||
-                !localBitcoinNode.isDetected())
+        if (!localBitcoinNode.shouldBeUsed())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;
