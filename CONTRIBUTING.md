@@ -9,14 +9,18 @@ Java God, Bitcoin Native, Marketing Genius, Cypherpunk, Testing Machine, or simp
 **What is there to work on?** You have to be able to find and work a problem on your own. In general, we do not assign stuff to people, there is no specification to be implemented, there is no given way forward. You yourself have to find, choose and pick something to work on. If you get stuck, we are keen to help, but please do not wait for us to take your hand. Also, you can spend as much (or little) time as you want and when you want to - Bisq still is an open source project.
 
 **Will you get paid?** Well, yes and no. With Bisq, there is no classic funding or investors, so there is no payout of fiat money.
-- Yes, because there is the DAO. The DAO allows for compensation requests to be filed and voted on. If such a voting goes in your favor, you receive BSQ, a colored bitcoin token. Sell your BSQ and you get your fiat eventually.
-- No, because the market is still very small. We can sustain a few full-timers (paying rent, tax, small stuff) but do not expect to get rich fast and easy just now.
+- Yes, you can ask for compensation. If granted, you receive BSQ, a colored bitcoin token. Sell your BSQ and you get your fiat eventually.
+- No, because the BSQ market is still bootstrapping. The more correct way to see payment is "compensation". By earning BSQ, you invest in the Bisq project (as you might in a more traditional startup). But make no mistake, the DAO has only been operating for a few months now. Over time, the BSQ market should be able to stay ahead of compensation requests.
 
-The more correct way to see payment is "compensation". By earning BSQ, you invest in the Bisq project (just like other startups do it). But make no mistake, the DAO has only been operating for a few months now. Eventually, Bisq will create serious revenue.
+**Skills?**
+If you want to develop code, we expect you to know your ways around Git and Java. Then comes testing, JavaFX, Gradle, Github, ... If you want to do something else you are good at: marketing, user support, management process optimizations, you are most welcome as well!
+If you are good at something Bisq does not even realize it is in need for, well, come on in!
 
-**Skills?** If you want to develop code, we expect you to know your ways around Git and Java. Then comes testing, JavaFX, Gradle, Github, ... As for non-functional skills, we love to see people knowing their ways around P2P networks, cryptography, security, privacy, ...
+**Carreer?** There is no boss in Bisq - there is only stakeholders. Stakeholders have invested their time, gained some experience with the project and thus, are granted influence on the project accordingly. As soon as you receive your first couple of BSQ, you are a stakeholder too.
 
-**Carreer?** Start small, go bigger. If we like your work, we might just ask you to take on a more official role. Maybe someday you are the guy improving this document (again).
+Start with something small, get yourself familiar with how things are done. Like it? Take on bigger tasks, be it development work, [roles](https://github.com/bisq-network/roles/issues) or other things you believe Bisq is in need for.
+
+All in all, there is no boss, there is no annual raise of salary, there is nobody to take your hand, there is just stakeholders and their passion for the Bisq project.
 
 
 
@@ -27,7 +31,7 @@ Still here? Nice. You are hired. On to the grind.
 
 Join Gibhub if you haven't already, fork the Bisq repository, configure your local git ([username](https://help.github.com/articles/setting-your-username-in-git/), [commit signing](https://help.github.com/articles/signing-commits-with-gpg/)), clone your Bisq-fork to disk and do a compile run `./gradlew build`.
 
-Now you are ready to roll. Pick something off the [Good First Issue List](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22), pick any other [issue](https://github.com/bisq-network/bisq/issues), do some testing, spot a bug, report it and fix it, maybe there is something in the UI that needs cosmetic work. The possibilities are endless. However, make sure the task you pick is of some importance, otherwise it might cause some inconvenience later on.
+Now you are ready to roll. Pick something off the [Good First Issue List](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3Ais%3Apriority), a [priority task](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) or pick any other [issue](https://github.com/bisq-network/bisq/issues), do some testing, spot a bug, report it and fix it, maybe there is something in the UI that needs cosmetic work. The possibilities are endless. However, make sure the task you pick is of some importance, otherwise it might cause some inconvenience later on.
 
 Now that you have picked yourself something to work on, be vocal about it! Claim good first issues, or any issues, by simply leaving a comment saying that this is being worked on, join [Keybase](https://keybase.io/team/bisq). Once there, register your github with keybase, introduce yourself in the channel *#introductions*, get help in *#dev-onboarding* if your setup fights you, use *#dev* to see if the task you picked is a good way forward (you do not have to do that for good first issues though) and join other channels if you want to. Furthermore, check our [event calendar](https://bisq.network/calendar) and tune in on [dev-calls](hhttps://github.com/bisq-network/events/issues?q=Dev-Call), growth-calls and daily standup calls.
 
@@ -41,7 +45,7 @@ Please honor the list of rules below for your pull request to get merged. Due to
 ### Honor Git best practice
  - Create a topic branch off master
  - Commit little, commit often
- - Maintain a clean commit history (no merges commits!, use rebase and force-push if necessary)
+ - Maintain a clean commit history (no merge commits!, use rebase and force-push if necessary)
  - Use meaningful commit subjects AND description
    - how did stuff work before you touched it, what has been bad back then
    - how does the stuff work now and why is that better
