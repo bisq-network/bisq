@@ -239,7 +239,7 @@ public class WalletConfig extends AbstractIdleService {
             peerGroup.setConnectTimeoutMillis(TOR_VERSION_EXCHANGE_TIMEOUT);
         }
 
-        if (!localBitcoinNode.willUse())
+        if (!localBitcoinNode.shouldBeUsed())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;

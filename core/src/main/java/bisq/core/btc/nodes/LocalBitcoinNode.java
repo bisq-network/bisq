@@ -41,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
  * Detects whether a Bitcoin node is running on localhost and whether it is well
  * configured (meaning it's not pruning and has bloom filters enabled). The public
  * methods automatically trigger detection and (if detected) configuration checks,
- * and cache the results, and consequent queries to `LocalBitcoinNode` will always
+ * and cache the results, and subsequent queries to {@link LocalBitcoinNode} will always
  * return the cached results.
  * @see bisq.common.config.Config#ignoreLocalBtcNode
  */
@@ -66,35 +66,35 @@ public class LocalBitcoinNode {
     }
 
     /**
-     * Returns whether Bisq will use a local Bitcoin node. Meaning a usable node was found
-     * and conditions under which we would ignore it are not met. If we're ignoring the
-     * local node, a call to this method will not trigger an unnecessary detection
-     * attempt.
+     * Returns whether Bisq should use a local Bitcoin node, meaning that a usable node
+     * was detected and conditions under which it should be ignored have not been met. If
+     * the local node should be ignored, a call to this method will not trigger an
+     * unnecessary detection attempt.
      */
-    public boolean willUse() {
-        return !willIgnore() && isUsable();
+    public boolean shouldBeUsed() {
+        return !shouldBeIgnored() && isUsable();
     }
 
     /**
      * Returns whether Bisq will ignore a local Bitcoin node even if it is usable.
      */
-    public boolean willIgnore() {
+    public boolean shouldBeIgnored() {
         BaseCurrencyNetwork baseCurrencyNetwork = config.baseCurrencyNetwork;
 
-        // For dao testnet (server side regtest) we disable the use of local bitcoin node to
-        // avoid confusion if local btc node is not synced with our dao testnet master node.
-        // Note: above comment was previously in WalletConfig::createPeerGroup.
+        // For dao testnet (server side regtest) we disable the use of local bitcoin node
+        // to avoid confusion if local btc node is not synced with our dao testnet master
+        // node. Note: above comment was previously in WalletConfig::createPeerGroup.
         return config.ignoreLocalBtcNode ||
                 baseCurrencyNetwork.isDaoRegTest() ||
                 baseCurrencyNetwork.isDaoTestNet();
     }
 
     /**
-     * Returns whether or not a local Bitcion node was detected and was well configured
+     * Returns whether or not a local Bitcoin node was detected and was well-configured
      * at the time the checks were performed. All checks are triggered in case they have
      * not been performed.
      */
-    public boolean isUsable() {
+    private boolean isUsable() {
         // If a node is found to be well configured, it implies that it was also detected,
         // so this is query is enough to show if the relevant checks were performed and if
         // their results are positive.
@@ -102,8 +102,7 @@ public class LocalBitcoinNode {
     }
 
     /**
-     * Returns whether the local node was detected, but misconfigured. Combination of
-     * methods isDetected and isWellConfigured.
+     * Returns whether a local node was detected but misconfigured.
      */
     public boolean isDetectedButMisconfigured() {
         return isDetected() && !isWellConfigured();
@@ -116,7 +115,7 @@ public class LocalBitcoinNode {
      * value. See {@code MainViewModel#setupBtcNumPeersWatcher} to understand how
      * disconnection and reconnection of the local Bitcoin node is actually handled.
      */
-    public boolean isDetected() {
+    private boolean isDetected() {
         if (detected == null) {
             performChecks();
         }
@@ -128,7 +127,7 @@ public class LocalBitcoinNode {
      * they were performed. All checks are triggered in case they have not been performed.
      * We check if the local node is not pruning and has bloom filters enabled.
      */
-    public boolean isWellConfigured() {
+    private boolean isWellConfigured() {
         if (wellConfigured == null) {
             performChecks();
         }
@@ -144,7 +143,7 @@ public class LocalBitcoinNode {
 
     /**
      * Initiates detection and configuration checks. The results are cached so that the
-     * public methods isUsable, isDetected, etc. don't trigger a recheck.
+     * {@link #isUsable()}, {@link #isDetected()} et al don't trigger a recheck.
      */
     private void checkUsable() {
         var optionalVersionMessage = attemptHandshakeForVersionMessage();
@@ -183,12 +182,11 @@ public class LocalBitcoinNode {
 
     /**
      * Method backported from upstream bitcoinj: at the time of writing, our version is
-     * not BIP111-aware.
-     * Source routines and data can be found in Bitcoinj under:
+     * not BIP111-aware. Source routines and data can be found in bitcoinj under:
      * core/src/main/java/org/bitcoinj/core/VersionMessage.java
-     * and
-     * core/src/main/java/org/bitcoinj/core/NetworkParameters.java
+     * and core/src/main/java/org/bitcoinj/core/NetworkParameters.java
      */
+    @SuppressWarnings("UnnecessaryLocalVariable")
     private static boolean isBloomFilteringSupportedAndEnabled(VersionMessage versionMessage) {
         // A service bit that denotes whether the peer supports BIP37 bloom filters or
         // not. The service bit is defined in BIP111.

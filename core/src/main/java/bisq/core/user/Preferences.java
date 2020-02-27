@@ -742,7 +742,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // nodes and we don't provide tor nodes.
 
         if ((!Config.baseCurrencyNetwork().isMainnet()
-                || localBitcoinNode.willUse())
+                || localBitcoinNode.shouldBeUsed())
                 && !config.useTorForBtcOptionSetExplicitly)
             return false;
         else

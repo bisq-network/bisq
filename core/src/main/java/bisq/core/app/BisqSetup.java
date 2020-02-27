@@ -76,7 +76,6 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
@@ -483,7 +482,7 @@ public class BisqSetup {
     }
 
     private void maybeCheckLocalBitcoinNode(Runnable nextStep) {
-        if (localBitcoinNode.willIgnore()) {
+        if (localBitcoinNode.shouldBeIgnored()) {
             nextStep.run();
             return;
         }
@@ -570,7 +569,7 @@ public class BisqSetup {
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
         // TODO encapsulate below conditional inside getUseTorForBitcoinJ
-        if (!preferences.getUseTorForBitcoinJ() || localBitcoinNode.willUse()) {
+        if (!preferences.getUseTorForBitcoinJ() || localBitcoinNode.shouldBeUsed()) {
             initWallet();
         }
 
@@ -873,7 +872,7 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.willUse());
+        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.shouldBeUsed());
     }
 
     private void maybeShowAccountSigningStateInfo() {
