@@ -50,7 +50,6 @@ import com.google.inject.Singleton;
 import java.io.File;
 
 import static bisq.common.config.Config.*;
-import static bisq.core.btc.nodes.LocalBitcoinNode.LOCAL_BITCOIN_NODE_PORT;
 import static com.google.inject.name.Names.named;
 
 public class ModuleForAppWithP2p extends AppModule {
