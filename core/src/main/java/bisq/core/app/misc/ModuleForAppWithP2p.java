@@ -82,9 +82,6 @@ public class ModuleForAppWithP2p extends AppModule {
         bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.useDevMode);
         bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.referralId);
 
-        bindConstant().annotatedWith(named(LOCAL_BITCOIN_NODE_PORT))
-                .to(config.baseCurrencyNetworkParameters.getPort());
-
         // ordering is used for shut down sequence
         install(new TradeModule(config));
         install(new EncryptionServiceModule(config));

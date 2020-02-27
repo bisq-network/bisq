@@ -12,7 +12,6 @@ import org.bitcoinj.net.NioClient;
 import org.bitcoinj.net.NioClientManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -48,8 +47,6 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 public class LocalBitcoinNode {
 
-    public static final String LOCAL_BITCOIN_NODE_PORT = "localBitcoinNodePort";
-
     private static final Logger log = LoggerFactory.getLogger(LocalBitcoinNode.class);
     private static final int CONNECTION_TIMEOUT = 5000;
 
@@ -60,9 +57,9 @@ public class LocalBitcoinNode {
     private Boolean wellConfigured;
 
     @Inject
-    public LocalBitcoinNode(Config config, @Named(LOCAL_BITCOIN_NODE_PORT) int port) {
+    public LocalBitcoinNode(Config config) {
         this.config = config;
-        this.port = port;
+        this.port = config.baseCurrencyNetworkParameters.getPort();
     }
 
     /**
