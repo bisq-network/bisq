@@ -21,7 +21,7 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
 import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
@@ -333,20 +333,15 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
                 result.log(protectedStoragePayload);
             });
 
-            Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
-                    .getPersistableNetworkPayloadSet();
-            if (persistableNetworkPayloadSet != null) {
-                persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
+            dataResponse.getPersistableNetworkPayloadSet().forEach(persistableNetworkPayload -> {
+                // memorize message hashes
+                //Byte[] bytes = new Byte[persistableNetworkPayload.getHash().length];
+                //Arrays.setAll(bytes, n -> persistableNetworkPayload.getHash()[n]);
 
-                    // memorize message hashes
-                    //Byte[] bytes = new Byte[persistableNetworkPayload.getHash().length];
-                    //Arrays.setAll(bytes, n -> persistableNetworkPayload.getHash()[n]);
+                //hashes.add(bytes);
 
-                    //hashes.add(bytes);
-
-                    hashes.add(persistableNetworkPayload.getHash());
-                });
-            }
+                hashes.add(persistableNetworkPayload.getHash());
+            });
 
             bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), result);
             return true;

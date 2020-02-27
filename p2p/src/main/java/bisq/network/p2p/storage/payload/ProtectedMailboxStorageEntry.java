@@ -101,13 +101,12 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
             return false;
         }
 
-        boolean result = mailboxStoragePayload.getSenderPubKeyForAddOperation() != null &&
-                mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+        boolean result = mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         if (!result) {
             String res1 = this.toString();
             String res2 = "null";
-            if (mailboxStoragePayload != null && mailboxStoragePayload.getOwnerPubKey() != null)
+            if (mailboxStoragePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(mailboxStoragePayload.getSenderPubKeyForAddOperation().getEncoded(),true);
 
             log.warn("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. " +
@@ -141,7 +140,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         if (!result) {
             String res1 = this.toString();
             String res2 = "null";
-            if (mailboxStoragePayload != null && mailboxStoragePayload.getOwnerPubKey() != null)
+            if (mailboxStoragePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(mailboxStoragePayload.getOwnerPubKey().getEncoded(), true);
 
             log.warn("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. " +

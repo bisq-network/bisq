@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.desktop.app.BisqAppMain;
 import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.main.overlays.Overlay;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 
@@ -101,7 +101,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
     @Override
     protected void addHeadLine() {
-        Label versionNumber = addLabel(gridPane, ++rowIndex, BisqEnvironment.DEFAULT_APP_NAME + " v1.0");
+        Label versionNumber = addLabel(gridPane, ++rowIndex, BisqAppMain.DEFAULT_APP_NAME + " v1.0");
         versionNumber.getStyleClass().add("dao-launch-version");
         GridPane.setColumnSpan(versionNumber, 2);
         Label headlineLabel = addLabel(gridPane, ++rowIndex, headLine);

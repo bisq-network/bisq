@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.support.dispute.agent.arbitration;
 
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
@@ -27,7 +28,6 @@ import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
@@ -60,7 +60,7 @@ public class ArbitratorView extends DisputeAgentView {
                           ContractWindow contractWindow,
                           TradeDetailsWindow tradeDetailsWindow,
                           AccountAgeWitnessService accountAgeWitnessService,
-                          @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
+                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
                           SignPaymentAccountsWindow signPaymentAccountsWindow) {
         super(arbitrationManager,
                 keyRing,

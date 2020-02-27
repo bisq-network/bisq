@@ -16,6 +16,8 @@ regtest=1
 # The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
 # The default rpcPort for testnet is: 18332
 # For mainnet: 8332
+[regtest]
+peerbloomfilters=1
 rpcport=18443
 
 server=1
@@ -32,6 +34,8 @@ regtest=1
 # The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
 # The default rpcPort for testnet is: 18332
 # For mainnet: 8332
+[regtest]
+peerbloomfilters=1
 rpcport=18443
 
 server=1
@@ -48,6 +52,8 @@ regtest=1
 # The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
 # The default rpcPort for testnet is: 18332
 # For mainnet: 8332
+[regtest]
+peerbloomfilters=1
 rpcport=18443
 
 server=1

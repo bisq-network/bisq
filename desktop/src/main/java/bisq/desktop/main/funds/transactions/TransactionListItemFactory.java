@@ -24,8 +24,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
-import bisq.common.crypto.PubKeyRing;
-
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -40,7 +38,6 @@ public class TransactionListItemFactory {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final DaoFacade daoFacade;
-    private final PubKeyRing pubKeyRing;
     private final CoinFormatter formatter;
     private final Preferences preferences;
 
@@ -48,13 +45,11 @@ public class TransactionListItemFactory {
     TransactionListItemFactory(BtcWalletService btcWalletService,
                                BsqWalletService bsqWalletService,
                                DaoFacade daoFacade,
-                               PubKeyRing pubKeyRing,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                Preferences preferences) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
-        this.pubKeyRing = pubKeyRing;
         this.formatter = formatter;
         this.preferences = preferences;
     }
@@ -65,7 +60,6 @@ public class TransactionListItemFactory {
                 bsqWalletService,
                 tradable,
                 daoFacade,
-                pubKeyRing,
                 formatter,
                 preferences.getIgnoreDustThreshold());
     }

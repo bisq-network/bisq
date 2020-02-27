@@ -99,4 +99,10 @@
     -fx-selection-bar: #e1f5e3;
     -fx-selection-bar-non-focused: -fx-selection-bar;
     -fx-default-button: derive(-fx-accent, 95%);
+    -bs-progress-bar-track: #e0e0e0;
+    -bs-white: white;
+
+    /* dao chart colors */
+    -bs-chart-dao-line1: -bs-color-green-3;
+    -bs-chart-dao-line2: -bs-color-blue-5;
 }

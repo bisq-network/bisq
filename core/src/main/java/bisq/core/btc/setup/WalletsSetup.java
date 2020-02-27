@@ -17,8 +17,8 @@
 
 package bisq.core.btc.setup;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BtcOptionKeys;
+import bisq.core.btc.exceptions.InvalidHostException;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
@@ -34,6 +34,7 @@ import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.FileUtil;
@@ -91,6 +92,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -104,8 +106,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // merge WalletsSetup with WalletConfig to one class.
 @Slf4j
 public class WalletsSetup {
-    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 9 nodes
-    public static final int DEFAULT_CONNECTIONS = 9;
+
+    @Getter
+    public final BooleanProperty walletsSetupFailed = new SimpleBooleanProperty();
 
     private static final long STARTUP_TIMEOUT = 180;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
@@ -115,10 +118,11 @@ public class WalletsSetup {
     private final AddressEntryList addressEntryList;
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
-    private final BisqEnvironment bisqEnvironment;
+    private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
     private final BtcNodes btcNodes;
     private final String btcWalletFileName;
-    private final int numConnectionForBtc;
+    private final int numConnectionsForBtc;
     private final String userAgent;
     private final NetworkParameters params;
     private final File walletDir;
@@ -142,28 +146,29 @@ public class WalletsSetup {
                         AddressEntryList addressEntryList,
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
-                        BisqEnvironment bisqEnvironment,
+                        Config config,
+                        LocalBitcoinNode localBitcoinNode,
                         BtcNodes btcNodes,
-                        @Named(BtcOptionKeys.USER_AGENT) String userAgent,
-                        @Named(BtcOptionKeys.WALLET_DIR) File appDir,
-                        @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
-                        @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
-                        @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
+                        @Named(Config.USER_AGENT) String userAgent,
+                        @Named(Config.WALLET_DIR) File walletDir,
+                        @Named(Config.USE_ALL_PROVIDED_NODES) boolean useAllProvidedNodes,
+                        @Named(Config.NUM_CONNECTIONS_FOR_BTC) int numConnectionsForBtc,
+                        @Named(Config.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.addressEntryList = addressEntryList;
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
-        this.bisqEnvironment = bisqEnvironment;
+        this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.btcNodes = btcNodes;
-        this.numConnectionForBtc = numConnectionForBtc != null ? Integer.parseInt(numConnectionForBtc) : DEFAULT_CONNECTIONS;
-        this.useAllProvidedNodes = "true".equals(useAllProvidedNodes);
+        this.numConnectionsForBtc = numConnectionsForBtc;
+        this.useAllProvidedNodes = useAllProvidedNodes;
         this.userAgent = userAgent;
-
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
+        this.walletDir = walletDir;
 
-        btcWalletFileName = "bisq_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
-        params = BisqEnvironment.getParameters();
-        walletDir = new File(appDir, "wallet");
+        btcWalletFileName = "bisq_" + config.baseCurrencyNetwork.getCurrencyCode() + ".wallet";
+        params = Config.baseCurrencyNetworkParameters();
         PeerGroup.setIgnoreHttpSeeds(true);
     }
 
@@ -194,9 +199,10 @@ public class WalletsSetup {
         walletConfig = new WalletConfig(params,
                 socks5Proxy,
                 walletDir,
-                bisqEnvironment,
+                config,
+                localBitcoinNode,
                 userAgent,
-                numConnectionForBtc,
+                numConnectionsForBtc,
                 btcWalletFileName,
                 BSQ_WALLET_FILE_NAME,
                 SPV_CHAIN_FILE_NAME) {
@@ -263,13 +269,27 @@ public class WalletsSetup {
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
                 configPeerNodesForRegTestServer();
             } else {
-                configPeerNodes(socks5Proxy);
+                try {
+                    configPeerNodes(socks5Proxy);
+                } catch (IllegalArgumentException e) {
+                    timeoutTimer.stop();
+                    walletsSetupFailed.set(true);
+                    exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
+                    return;
+                }
             }
-        } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
+        } else if (localBitcoinNode.isDetected()) {
             walletConfig.setMinBroadcastConnections(1);
             walletConfig.setPeerNodesForLocalHost();
         } else {
-            configPeerNodes(socks5Proxy);
+            try {
+                configPeerNodes(socks5Proxy);
+            } catch (IllegalArgumentException e) {
+                timeoutTimer.stop();
+                walletsSetupFailed.set(true);
+                exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
+                return;
+            }
         }
 
         walletConfig.setDownloadListener(downloadListener)
@@ -473,10 +493,6 @@ public class WalletsSetup {
 
     public boolean isDownloadComplete() {
         return downloadPercentageProperty().get() == 1d;
-    }
-
-    public boolean isBitcoinLocalhostNodeRunning() {
-        return bisqEnvironment.isBitcoinLocalhostNodeRunning();
     }
 
     public Set<Address> getAddressesByContext(@SuppressWarnings("SameParameterValue") AddressEntry.Context context) {

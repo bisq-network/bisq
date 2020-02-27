@@ -17,7 +17,6 @@
 
 package bisq.core.alert;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
@@ -26,6 +25,7 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import org.bitcoinj.core.ECKey;
@@ -72,8 +72,8 @@ public class AlertManager {
     public AlertManager(P2PService p2PService,
                         KeyRing keyRing,
                         User user,
-                        @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
-                        @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                        @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
+                        @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
@@ -127,7 +127,7 @@ public class AlertManager {
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
             user.setDevelopersAlert(alert);
-            boolean result = p2PService.addProtectedStorageEntry(alert, true);
+            boolean result = p2PService.addProtectedStorageEntry(alert);
             if (result) {
                 log.trace("Add alertMessage to network was successful. AlertMessage={}", alert);
             }
@@ -139,7 +139,7 @@ public class AlertManager {
     public boolean removeAlertMessageIfKeyIsValid(String privKeyString) {
         Alert alert = user.getDevelopersAlert();
         if (isKeyValid(privKeyString) && alert != null) {
-            if (p2PService.removeData(alert, true))
+            if (p2PService.removeData(alert))
                 log.trace("Remove alertMessage from network was successful. AlertMessage={}", alert);
 
             user.setDevelopersAlert(null);

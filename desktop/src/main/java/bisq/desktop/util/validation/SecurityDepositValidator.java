@@ -46,10 +46,11 @@ public class SecurityDepositValidator extends NumberValidator {
         }
 
         if (result.isValid) {
-            result = validateIfNotZero(input)
-                    .and(validateIfNotNegative(input))
-                    .and(validateIfNotTooLowPercentageValue(input))
-                    .and(validateIfNotTooHighPercentageValue(input));
+            result = result.andValidation(input,
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotTooLowPercentageValue,
+                    this::validateIfNotTooHighPercentageValue);
         }
         return result;
     }
@@ -58,7 +59,7 @@ public class SecurityDepositValidator extends NumberValidator {
     private ValidationResult validateIfNotTooLowPercentageValue(String input) {
         try {
             double percentage = ParsingUtils.parsePercentStringToDouble(input);
-            double minPercentage = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+            double minPercentage = Restrictions.getMinBuyerSecurityDepositAsPercent();
             if (percentage < minPercentage)
                 return new ValidationResult(false,
                         Res.get("validation.inputTooSmall", FormattingUtils.formatToPercentWithSymbol(minPercentage)));
@@ -72,7 +73,7 @@ public class SecurityDepositValidator extends NumberValidator {
     private ValidationResult validateIfNotTooHighPercentageValue(String input) {
         try {
             double percentage = ParsingUtils.parsePercentStringToDouble(input);
-            double maxPercentage = Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount);
+            double maxPercentage = Restrictions.getMaxBuyerSecurityDepositAsPercent();
             if (percentage > maxPercentage)
                 return new ValidationResult(false,
                         Res.get("validation.inputTooLarge", FormattingUtils.formatToPercentWithSymbol(maxPercentage)));

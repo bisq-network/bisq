@@ -17,24 +17,22 @@
 
 package bisq.common.app;
 
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-
-import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AppModule extends AbstractModule {
-    protected final Environment environment;
+
+    protected final Config config;
 
     private final List<AppModule> modules = new ArrayList<>();
 
-    protected AppModule(Environment environment) {
-        Preconditions.checkNotNull(environment, "Environment must not be null");
-        this.environment = environment;
+    protected AppModule(Config config) {
+        this.config = config;
     }
 
     protected void install(AppModule module) {

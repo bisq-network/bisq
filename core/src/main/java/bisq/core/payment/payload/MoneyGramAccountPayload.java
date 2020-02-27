@@ -21,9 +21,9 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import com.google.protobuf.Message;
+import bisq.common.util.CollectionUtils;
 
-import org.springframework.util.CollectionUtils;
+import com.google.protobuf.Message;
 
 import java.nio.charset.Charset;
 

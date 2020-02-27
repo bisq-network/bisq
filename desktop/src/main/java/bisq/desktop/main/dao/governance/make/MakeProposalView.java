@@ -271,7 +271,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateTimeUntilNextProposalPhase(int height) {
-        nextProposalTextField.setText(DaoUtil.getNextPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade, btcFormatter));
+        nextProposalTextField.setText(DaoUtil.getNextPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade));
     }
 
     private void publishMyProposal(ProposalType type) {
@@ -298,9 +298,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                     new Popup().warning(Res.get("dao.proposal.create.missingBsqFundsForBond",
                             bsqFormatter.formatCoinWithCode(missing)))
                             .actionButtonText(Res.get("dao.proposal.create.publish"))
-                            .onAction(() -> {
-                                showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
-                            })
+                            .onAction(() -> showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee))
                             .show();
                 } else {
                     showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);

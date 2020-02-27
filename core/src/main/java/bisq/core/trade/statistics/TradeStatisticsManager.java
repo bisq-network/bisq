@@ -17,7 +17,6 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -26,11 +25,12 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.config.Config;
 import bisq.common.storage.JsonFileManager;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
+
 import javax.inject.Named;
 
 import javafx.collections.FXCollections;
@@ -40,6 +40,8 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,8 +62,8 @@ public class TradeStatisticsManager {
                                   PriceFeedService priceFeedService,
                                   TradeStatistics2StorageService tradeStatistics2StorageService,
                                   AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                  @Named(Storage.STORAGE_DIR) File storageDir,
-                                  @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+                                  @Named(Config.STORAGE_DIR) File storageDir,
+                                  @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.tradeStatistics2StorageService = tradeStatistics2StorageService;
@@ -80,6 +82,9 @@ public class TradeStatisticsManager {
         Set<TradeStatistics2> collect = tradeStatistics2StorageService.getMap().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
+                .map(WrapperTradeStatistics2::new)
+                .distinct()
+                .map(WrapperTradeStatistics2::unwrap)
                 .filter(TradeStatistics2::isValid)
                 .collect(Collectors.toSet());
         observableTradeStatisticsSet.addAll(collect);
@@ -94,9 +99,22 @@ public class TradeStatisticsManager {
     }
 
     private void addToSet(TradeStatistics2 tradeStatistics) {
+
         if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
-            if (observableTradeStatisticsSet.stream().anyMatch(e -> e.getOfferId().equals(tradeStatistics.getOfferId()))) {
-                return;
+            Optional<TradeStatistics2> duplicate = observableTradeStatisticsSet.stream().filter(
+                    e -> e.getOfferId().equals(tradeStatistics.getOfferId())).findAny();
+
+            if (duplicate.isPresent()) {
+                // TODO: Can be removed as soon as everyone uses v1.2.6+
+                // Removes an existing object with a trade id if the new one matches the existing except
+                // for the deposit tx id
+                if (tradeStatistics.getDepositTxId() == null &&
+                        tradeStatistics.isValid() &&
+                        duplicate.get().compareTo(tradeStatistics) == 0) {
+                    observableTradeStatisticsSet.remove(duplicate.get());
+                } else {
+                    return;
+                }
             }
 
             if (!tradeStatistics.isValid()) {
@@ -134,6 +152,31 @@ public class TradeStatisticsManager {
             TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
             list.toArray(array);
             jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
+        }
+    }
+
+    static class WrapperTradeStatistics2 {
+        private TradeStatistics2 tradeStatistics;
+
+        public WrapperTradeStatistics2(TradeStatistics2 tradeStatistics) {
+            this.tradeStatistics = tradeStatistics;
+        }
+
+        public TradeStatistics2 unwrap() {
+            return this.tradeStatistics;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            var wrapper = (WrapperTradeStatistics2) obj;
+            return Objects.equals(tradeStatistics.getOfferId(), wrapper.tradeStatistics.getOfferId());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tradeStatistics.getOfferId());
         }
     }
 }

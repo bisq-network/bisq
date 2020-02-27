@@ -301,8 +301,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         rows = 3;
         if (countryCode != null)
             rows++;
-        if (offer.getOfferFeePaymentTxId() != null)
-            rows++;
         if (!isF2F)
             rows++;
 
@@ -325,9 +323,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (countryCode != null && !isF2F)
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
                     CountryUtil.getNameAndCode(countryCode));
-
-        if (offer.getOfferFeePaymentTxId() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
         if (placeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("offerDetailsWindow.commitment"), Layout.GROUP_DISTANCE);
@@ -385,7 +380,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         Button cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
-        cancelButton.setId("cancel-button");
         cancelButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(Runnable::run);
             hide();

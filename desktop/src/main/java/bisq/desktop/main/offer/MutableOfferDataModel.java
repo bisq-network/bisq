@@ -713,4 +713,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
                 GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
     }
+
+    public boolean isMinBuyerSecurityDeposit() {
+        return !getBuyerSecurityDepositAsCoin().isGreaterThan(Restrictions.getMinBuyerSecurityDepositAsCoin());
+    }
 }

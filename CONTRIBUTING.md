@@ -1,5 +1,4 @@
 # Contributing to Bisq
-
 Read on to find out if taking part in the development of Bisq is for you and how to do it!
 
 ## Are you "the guy"?
@@ -31,7 +30,8 @@ Still here? Nice. You are hired. On to the grind.
 
 Join Gibhub if you haven't already, fork the Bisq repository, configure your local git ([username](https://help.github.com/articles/setting-your-username-in-git/), [commit signing](https://help.github.com/articles/signing-commits-with-gpg/)), clone your Bisq-fork to disk and do a compile run `./gradlew build`.
 
-Now you are ready to roll. Pick something off the [Good First Issue List](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3Ais%3Apriority), a [priority task](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) or pick any other [issue](https://github.com/bisq-network/bisq/issues), do some testing, spot a bug, report it and fix it, maybe there is something in the UI that needs cosmetic work. The possibilities are endless. However, make sure the task you pick is of some importance, otherwise it might cause some inconvenience later on.
+Now you are ready to roll. Pick something off the [Good First Issue List](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3Ais%3Apriority), a [critical bugs](https://bisq.wiki/Critical_Bugs), a [priority task](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) or pick any other [issue](https://github.com/bisq-network/bisq/issues), do some testing, spot a bug, report it and fix it, maybe there is something in the UI that needs cosmetic work. The possibilities are endless. However, make sure the task you pick is of some importance, otherwise it might cause some inconvenience later on.
+
 
 Now that you have picked yourself something to work on, be vocal about it! Claim good first issues, or any issues, by simply leaving a comment saying that this is being worked on, join [Keybase](https://keybase.io/team/bisq). Once there, register your github with keybase, introduce yourself in the channel *#introductions*, get help in *#dev-onboarding* if your setup fights you, use *#dev* to see if the task you picked is a good way forward (you do not have to do that for good first issues though) and join other channels if you want to. Furthermore, check our [event calendar](https://bisq.network/calendar) and tune in on [dev-calls](hhttps://github.com/bisq-network/events/issues?q=Dev-Call), growth-calls and daily standup calls.
 
@@ -95,7 +95,10 @@ In case you receive a NACK and/or `change requested`
 
 Your pull request got merged? great, congrats and thanks for making Bisq more better.
 
-For any work merged into Bisq's `master` branch, you can [submit a compensation request](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://docs.bisq.network/dao/phase-zero.html).
+Since our [Q1 2020 update](https://bisq.network/blog/q1-2020-update/) contributions are NOT eligible for compensation unless they are allocated as part of the development budget. Fixes for [critical bugs](https://bisq.wiki/Critical_Bugs) are eligible for compensation when delivered.
+In any case please contact the team lead for development (@ripcurlx) upfront if you want to get compensated for your contributions.
+
+For any work that was approved, merged into Bisq's `master` branch and allocated as part of the development budget, you can [submit a compensation request](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://docs.bisq.network/dao/phase-zero.html).
 
 
 ## Further reading/other resources worth checking

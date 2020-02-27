@@ -25,6 +25,10 @@ import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
+import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
+import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
+import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
+import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddOncePayload;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
@@ -32,8 +36,10 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
+import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
@@ -48,6 +54,7 @@ import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
@@ -88,6 +95,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -106,7 +116,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL_SEC = 60;
+    public static final int CHECK_TTL_INTERVAL_SEC = 60;
+
+    private boolean initialRequestApplied = false;
 
     private final Broadcaster broadcaster;
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
@@ -177,6 +189,179 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         map.putAll(protectedDataStoreService.getMap());
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // RequestData API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Returns a PreliminaryGetDataRequest that can be sent to a peer node to request missing Payload data.
+     */
+    public PreliminaryGetDataRequest buildPreliminaryGetDataRequest(int nonce) {
+        return new PreliminaryGetDataRequest(nonce, this.getKnownPayloadHashes());
+    }
+
+    /**
+     * Returns a GetUpdatedDataRequest that can be sent to a peer node to request missing Payload data.
+     */
+    public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
+        return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
+    }
+
+    /**
+     * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
+     */
+    private Set<byte[]> getKnownPayloadHashes() {
+        // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
+        // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
+        // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
+        // miss that event if we do not load the full set or use some delta handling.
+        Set<byte[]> excludedKeys =this.appendOnlyDataStoreService.getMap().keySet().stream()
+                .map(e -> e.bytes)
+                .collect(Collectors.toSet());
+
+        Set<byte[]> excludedKeysFromPersistedEntryMap = this.map.keySet()
+                .stream()
+                .map(e -> e.bytes)
+                .collect(Collectors.toSet());
+
+        excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
+
+        return excludedKeys;
+    }
+
+    /**
+     * Generic function that can be used to filter a Map<ByteArray, ProtectedStorageEntry || PersistableNetworkPayload>
+     * by a given set of keys and peer capabilities.
+     */
+    static private <T extends NetworkPayload> Set<T> filterKnownHashes(
+            Map<ByteArray, T> toFilter,
+            Function<T, ? extends NetworkPayload> objToPayload,
+            Set<ByteArray> knownHashes,
+            Capabilities peerCapabilities,
+            int maxEntries,
+            AtomicBoolean outTruncated) {
+
+        AtomicInteger limit = new AtomicInteger(maxEntries);
+
+        Set<T> filteredResults = toFilter.entrySet().stream()
+                .filter(e -> !knownHashes.contains(e.getKey()))
+                .filter(e -> limit.decrementAndGet() >= 0)
+                .map(Map.Entry::getValue)
+                .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
+                                                                      objToPayload.apply(networkPayload)))
+                .collect(Collectors.toSet());
+
+        if (limit.get() < 0)
+            outTruncated.set(true);
+
+        return filteredResults;
+    }
+
+    /**
+     * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
+     */
+    public GetDataResponse buildGetDataResponse(
+            GetDataRequest getDataRequest,
+            int maxEntriesPerType,
+            AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
+            AtomicBoolean outProtectedStorageEntryOutputTruncated,
+            Capabilities peerCapabilities) {
+
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
+                P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+
+        Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
+                filterKnownHashes(
+                        this.appendOnlyDataStoreService.getMap(),
+                        Function.identity(),
+                        excludedKeysAsByteArray,
+                        peerCapabilities,
+                        maxEntriesPerType,
+                        outPersistableNetworkPayloadOutputTruncated);
+
+        Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
+                filterKnownHashes(
+                        this.map,
+                        ProtectedStorageEntry::getProtectedStoragePayload,
+                        excludedKeysAsByteArray,
+                        peerCapabilities,
+                        maxEntriesPerType,
+                        outProtectedStorageEntryOutputTruncated);
+
+        return new GetDataResponse(
+                filteredProtectedStorageEntries,
+                filteredPersistableNetworkPayloads,
+                getDataRequest.getNonce(),
+                getDataRequest instanceof GetUpdatedDataRequest);
+    }
+
+    /**
+     * Returns true if a Payload should be transmit to a peer given the peer's supported capabilities.
+     */
+    private static boolean shouldTransmitPayloadToPeer(Capabilities peerCapabilities, NetworkPayload payload) {
+
+        // Sanity check to ensure this isn't used outside P2PDataStorage
+        if (!(payload instanceof ProtectedStoragePayload || payload instanceof PersistableNetworkPayload))
+            return false;
+
+        // If the payload doesn't have a required capability, we should transmit it
+        if (!(payload instanceof CapabilityRequiringPayload))
+            return true;
+
+        // Otherwise, only transmit the Payload if the peer supports all capabilities required by the payload
+        boolean shouldTransmit = peerCapabilities.containsAll(((CapabilityRequiringPayload) payload).getRequiredCapabilities());
+
+        if (!shouldTransmit) {
+            log.debug("We do not send the message to the peer because they do not support the required capability for that message type.\n" +
+                    "storagePayload is: " + Utilities.toTruncatedString(payload));
+        }
+
+        return shouldTransmit;
+    }
+
+    /**
+     * Processes a GetDataResponse message and updates internal state. Does not broadcast updates to the P2P network
+     * or domain listeners.
+     */
+    public void processGetDataResponse(GetDataResponse getDataResponse, NodeAddress sender) {
+        final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
+
+        long ts2 = System.currentTimeMillis();
+        dataSet.forEach(e -> {
+            // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
+            addProtectedStorageEntry(e, sender, null, false);
+
+        });
+        log.info("Processing {} protectedStorageEntries took {} ms.", dataSet.size(), this.clock.millis() - ts2);
+
+        ts2 = this.clock.millis();
+        persistableNetworkPayloadSet.forEach(e -> {
+            if (e instanceof ProcessOncePersistableNetworkPayload) {
+                // We use an optimized method as many checks are not required in that case to avoid
+                // performance issues.
+                // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
+                // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
+                // trade stats stats and all account age witness data.
+
+                // We only apply it once from first response
+                if (!initialRequestApplied) {
+                    addPersistableNetworkPayloadFromInitialRequest(e);
+
+                }
+            } else {
+                // We don't broadcast here as we are only connected to the seed node and would be pointless
+                addPersistableNetworkPayload(e, sender,false, false, false);
+            }
+        });
+        log.info("Processing {} persistableNetworkPayloads took {} ms.",
+                persistableNetworkPayloadSet.size(), this.clock.millis() - ts2);
+
+        // We only process PersistableNetworkPayloads implementing ProcessOncePersistableNetworkPayload once. It can cause performance
+        // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
+        // startup.
+        initialRequestApplied = true;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -229,16 +414,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (networkEnvelope instanceof BroadcastMessage) {
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (networkEnvelope instanceof AddDataMessage) {
-                    addProtectedStorageEntry(((AddDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, false);
+                    addProtectedStorageEntry(((AddDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, true);
                 } else if (networkEnvelope instanceof RemoveDataMessage) {
-                    remove(((RemoveDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, false);
+                    remove(((RemoveDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress);
                 } else if (networkEnvelope instanceof RemoveMailboxDataMessage) {
-                    remove(((RemoveMailboxDataMessage) networkEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress, false);
+                    remove(((RemoveMailboxDataMessage) networkEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress);
                 } else if (networkEnvelope instanceof RefreshOfferMessage) {
-                    refreshTTL((RefreshOfferMessage) networkEnvelope, peersNodeAddress, false);
+                    refreshTTL((RefreshOfferMessage) networkEnvelope, peersNodeAddress);
                 } else if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
                     addPersistableNetworkPayload(((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload(),
-                            peersNodeAddress, false, true, false, true);
+                            peersNodeAddress, true, false, true);
                 }
             });
         }
@@ -255,46 +440,31 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        if (connection.hasPeersNodeAddress() && !closeConnectionReason.isIntended) {
-            map.values()
-                    .forEach(protectedStorageEntry -> {
-                        NetworkPayload networkPayload = protectedStorageEntry.getProtectedStoragePayload();
-                        if (networkPayload instanceof ExpirablePayload && networkPayload instanceof RequiresOwnerIsOnlinePayload) {
-                            NodeAddress ownerNodeAddress = ((RequiresOwnerIsOnlinePayload) networkPayload).getOwnerNodeAddress();
-                            if (connection.getPeersNodeAddressOptional().isPresent() &&
-                                    ownerNodeAddress.equals(connection.getPeersNodeAddressOptional().get())) {
-                                // We have a RequiresLiveOwnerData data object with the node address of the
-                                // disconnected peer. We remove that data from our map.
+        if (closeConnectionReason.isIntended)
+            return;
 
-                                // Check if we have the data (e.g. OfferPayload)
-                                ByteArray hashOfPayload = get32ByteHashAsByteArray(networkPayload);
-                                boolean containsKey = map.containsKey(hashOfPayload);
-                                if (containsKey) {
-                                    log.debug("We remove the data as the data owner got disconnected with " +
-                                            "closeConnectionReason=" + closeConnectionReason);
+        if (!connection.getPeersNodeAddressOptional().isPresent())
+            return;
 
-                                    // We only set the data back by half of the TTL and remove the data only if is has
-                                    // expired after that back dating.
-                                    // We might get connection drops which are not caused by the node going offline, so
-                                    // we give more tolerance with that approach, giving the node the change to
-                                    // refresh the TTL with a refresh message.
-                                    // We observed those issues during stress tests, but it might have been caused by the
-                                    // test set up (many nodes/connections over 1 router)
-                                    // TODO investigate what causes the disconnections.
-                                    // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
-                                    protectedStorageEntry.backDate();
-                                    if (protectedStorageEntry.isExpired(this.clock)) {
-                                        log.info("We found an expired data entry which we have already back dated. " +
-                                                "We remove the protectedStoragePayload:\n\t" + Utilities.toTruncatedString(protectedStorageEntry.getProtectedStoragePayload(), 100));
-                                        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
-                                    }
-                                } else {
-                                    log.debug("Remove data ignored as we don't have an entry for that data.");
-                                }
-                            }
-                        }
-                    });
-        }
+        NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
+
+        // Backdate all the eligible payloads based on the node that disconnected
+        map.values().stream()
+                .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof RequiresOwnerIsOnlinePayload)
+                .filter(protectedStorageEntry -> ((RequiresOwnerIsOnlinePayload) protectedStorageEntry.getProtectedStoragePayload()).getOwnerNodeAddress().equals(peersNodeAddress))
+                .forEach(protectedStorageEntry ->  {
+                    // We only set the data back by half of the TTL and remove the data only if is has
+                    // expired after that back dating.
+                    // We might get connection drops which are not caused by the node going offline, so
+                    // we give more tolerance with that approach, giving the node the chance to
+                    // refresh the TTL with a refresh message.
+                    // We observed those issues during stress tests, but it might have been caused by the
+                    // test set up (many nodes/connections over 1 router)
+                    // TODO investigate what causes the disconnections.
+                    // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
+                    log.debug("Backdating {} due to closeConnectionReason={}", protectedStorageEntry, closeConnectionReason);
+                    protectedStorageEntry.backDate();
+                });
     }
 
     @Override
@@ -304,15 +474,31 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Client API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Adds a PersistableNetworkPayload to the local P2P data storage. If it does not already exist locally, it will
+     * be broadcast to the P2P network.
+     * @param payload PersistableNetworkPayload to add to the network
+     * @param sender local NodeAddress, if available
+     * @param allowReBroadcast <code>true</code> if the PersistableNetworkPayload should be rebroadcast even if it
+     *                         already exists locally
+     * @return <code>true</code> if the PersistableNetworkPayload passes all validation and exists in the P2PDataStore
+     *         on completion
+     */
     public boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
                                                 @Nullable NodeAddress sender,
-                                                boolean isDataOwner,
-                                                boolean allowBroadcast,
-                                                boolean reBroadcast,
-                                                boolean checkDate) {
+                                                boolean allowReBroadcast) {
+        return addPersistableNetworkPayload(
+                payload, sender, true, allowReBroadcast, false);
+    }
+
+    private boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
+                                                 @Nullable NodeAddress sender,
+                                                 boolean allowBroadcast,
+                                                 boolean reBroadcast,
+                                                 boolean checkDate) {
         log.trace("addPersistableNetworkPayload payload={}", payload);
 
         // Payload hash size does not match expectation for that type of message.
@@ -346,7 +532,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Broadcast the payload if requested by caller
         if (allowBroadcast)
-            broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
+            broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null);
 
         return true;
     }
@@ -356,27 +542,33 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Overwriting an entry would be also no issue. We also skip notifying listeners as we get called before the domain
     // is ready so no listeners are set anyway. We might get called twice from a redundant call later, so listeners
     // might be added then but as we have the data already added calling them would be irrelevant as well.
-    public boolean addPersistableNetworkPayloadFromInitialRequest(PersistableNetworkPayload payload) {
+    private void addPersistableNetworkPayloadFromInitialRequest(PersistableNetworkPayload payload) {
         byte[] hash = payload.getHash();
         if (payload.verifyHashSize()) {
             ByteArray hashAsByteArray = new ByteArray(hash);
             appendOnlyDataStoreService.put(hashAsByteArray, payload);
-            return true;
         } else {
             log.warn("We got a hash exceeding our permitted size");
-            return false;
         }
     }
 
+    /**
+     * Adds a ProtectedStorageEntry to the local P2P data storage. If it does not already exist locally, it will be
+     * broadcast to the P2P network.
+     *
+     * @param protectedStorageEntry ProtectedStorageEntry to add to the network
+     * @param sender local NodeAddress, if available
+     * @param listener optional listener that can be used to receive events on broadcast
+     * @return <code>true</code> if the ProtectedStorageEntry was added to the local P2P data storage and broadcast
+     */
     public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
-                                            @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
-        return addProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner, true);
+                                            @Nullable BroadcastHandler.Listener listener) {
+        return addProtectedStorageEntry(protectedStorageEntry, sender, listener, true);
     }
 
-    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
+    private boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
                                             @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener,
-                                            boolean isDataOwner,
                                             boolean allowBroadcast) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
@@ -422,7 +614,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast)
-            broadcastProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner);
+            broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, listener);
 
         // Persist ProtectedStorageEntrys carrying PersistablePayload payloads
         if (protectedStoragePayload instanceof PersistablePayload)
@@ -431,16 +623,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return true;
     }
 
-    private void broadcastProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
-                                                @Nullable NodeAddress sender,
-                                                @Nullable BroadcastHandler.Listener broadcastListener,
-                                                boolean isDataOwner) {
-        broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener, isDataOwner);
-    }
-
+    /**
+     * Updates a local RefreshOffer with TTL changes and broadcasts those changes to the network
+     *
+     * @param refreshTTLMessage refreshTTLMessage containing the update
+     * @param sender local NodeAddress, if available
+     * @return <code>true</code> if the RefreshOffer was successfully updated and changes broadcast
+     */
     public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
-                              @Nullable NodeAddress sender,
-                              boolean isDataOwner) {
+                              @Nullable NodeAddress sender) {
 
         ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
         ProtectedStorageEntry storedData = map.get(hashOfPayload);
@@ -476,14 +667,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
 
         // Always broadcast refreshes
-        broadcast(refreshTTLMessage, sender, null, isDataOwner);
+        broadcaster.broadcast(refreshTTLMessage, sender, null);
 
         return true;
     }
 
+    /**
+     * Removes a ProtectedStorageEntry from the local P2P data storage. If it is successful, it will broadcast that
+     * change to the P2P network.
+     *
+     * @param protectedStorageEntry ProtectedStorageEntry to add to the network
+     * @param sender local NodeAddress, if available
+     * @return <code>true</code> if the ProtectedStorageEntry was removed from the local P2P data storage and broadcast
+     */
     public boolean remove(ProtectedStorageEntry protectedStorageEntry,
-                          @Nullable NodeAddress sender,
-                          boolean isDataOwner) {
+                          @Nullable NodeAddress sender) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
@@ -504,7 +702,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
-        maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
+        // Update that we have seen this AddOncePayload so the next time it is seen it fails verification
+        if (protectedStoragePayload instanceof AddOncePayload)
+            removedAddOncePayloads.add(hashOfPayload);
 
         if (storedEntry != null) {
             // Valid remove entry, do the remove and signal listeners
@@ -517,9 +717,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after remove");
 
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-            broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null, isDataOwner);
+            broadcaster.broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null);
         } else {
-            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
+            broadcaster.broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null);
         }
 
         return true;
@@ -554,13 +754,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // We do not broadcast as this is a local operation only to avoid our maps get polluted with invalid objects
         // and as we do not check for ownership a node would not accept such a procedure if it would come from untrusted
         // source (network).
-    }
-
-    private void maybeAddToRemoveAddOncePayloads(ProtectedStoragePayload protectedStoragePayload,
-                                                 ByteArray hashOfData) {
-        if (protectedStoragePayload instanceof AddOncePayload) {
-            removedAddOncePayloads.add(hashOfData);
-        }
     }
 
     public ProtectedStorageEntry getProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
@@ -687,11 +880,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         } else {
             return true;
         }
-    }
-
-    private void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
-                           @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
-        broadcaster.broadcast(message, sender, listener, isDataOwner);
     }
 
     public static ByteArray get32ByteHashAsByteArray(NetworkPayload data) {

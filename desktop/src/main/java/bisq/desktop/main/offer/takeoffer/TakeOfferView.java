@@ -153,7 +153,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private Notification walletFundedNotification;
     private OfferView.CloseHandler closeHandler;
-    private Subscription cancelButton2StyleSubscription, balanceSubscription,
+    private Subscription balanceSubscription,
             showTransactionPublishedScreenSubscription, showWarningInvalidBtcDecimalPlacesSubscription,
             isWaitingForFundsSubscription, offerWarningSubscription, errorMessageSubscription,
             isOfferAvailableSubscription;
@@ -760,8 +760,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });*/
 
         balanceSubscription = EasyBind.subscribe(model.dataModel.getBalance(), balanceTextField::setBalance);
-        cancelButton2StyleSubscription = EasyBind.subscribe(takeOfferButton.visibleProperty(),
-                isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
     }
 
     private void removeSubscriptions() {
@@ -773,7 +771,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         showTransactionPublishedScreenSubscription.unsubscribe();
         // noSufficientFeeSubscription.unsubscribe();
         balanceSubscription.unsubscribe();
-        cancelButton2StyleSubscription.unsubscribe();
     }
 
     private void addListeners() {
@@ -1106,7 +1103,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 Res.get("takeOffer.amountPriceBox.priceDescription"));
         priceDescriptionLabel = priceInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel);
+        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel, "small-icon-label");
 
         VBox priceBox = priceInputBoxTuple.second;
 
@@ -1145,7 +1142,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 Res.get("shared.distanceInPercent"));
         priceAsPercentageDescription = priceAsPercentageInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, priceAsPercentageDescription);
+        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, priceAsPercentageDescription, "small-icon-label");
 
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 

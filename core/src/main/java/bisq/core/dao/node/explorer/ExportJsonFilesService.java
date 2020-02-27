@@ -17,7 +17,6 @@
 
 package bisq.core.dao.node.explorer;
 
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.DaoState;
@@ -27,9 +26,9 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import bisq.common.config.Config;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.JsonFileManager;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
@@ -70,8 +69,8 @@ public class ExportJsonFilesService implements DaoSetupService {
 
     @Inject
     public ExportJsonFilesService(DaoStateService daoStateService,
-                                  @Named(Storage.STORAGE_DIR) File storageDir,
-                                  @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+                                  @Named(Config.STORAGE_DIR) File storageDir,
+                                  @Named(Config.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.daoStateService = daoStateService;
         this.storageDir = storageDir;
         this.dumpBlockchainData = dumpBlockchainData;
@@ -140,7 +139,7 @@ public class ExportJsonFilesService implements DaoSetupService {
             // Access to daoStateService is single threaded, we must not access daoStateService from the thread.
             List<JsonTxOutput> allJsonTxOutputs = new ArrayList<>();
 
-            List<JsonTx> jsonTxs = daoStateService.getTxStream()
+            List<JsonTx> jsonTxs = daoStateService.getUnorderedTxStream()
                     .map(tx -> {
                         JsonTx jsonTx = getJsonTx(tx);
                         allJsonTxOutputs.addAll(jsonTx.getOutputs());

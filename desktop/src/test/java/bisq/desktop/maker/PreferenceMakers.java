@@ -17,9 +17,10 @@
 
 package bisq.desktop.maker;
 
-import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.user.Preferences;
 
+import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
 import com.natpryce.makeiteasy.Instantiator;
@@ -32,18 +33,18 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 public class PreferenceMakers {
 
     public static final Property<bisq.core.user.Preferences, Storage> storage = new Property<>();
-    public static final Property<Preferences, BisqEnvironment> bisqEnvironment = new Property<>();
-    public static final Property<Preferences, String> btcNodesFromOptions = new Property<>();
+    public static final Property<Preferences, Config> config = new Property<>();
+    public static final Property<Preferences, LocalBitcoinNode> localBitcoinNode = new Property<>();
     public static final Property<Preferences, String> useTorFlagFromOptions = new Property<>();
     public static final Property<Preferences, String> referralID = new Property<>();
 
     public static final Instantiator<Preferences> Preferences = lookup -> new Preferences(
             lookup.valueOf(storage, new SameValueDonor<Storage>(null)),
-            lookup.valueOf(bisqEnvironment, new SameValueDonor<BisqEnvironment>(null)),
-            lookup.valueOf(btcNodesFromOptions, new SameValueDonor<String>(null)),
+            lookup.valueOf(config, new SameValueDonor<Config>(null)),
+            lookup.valueOf(localBitcoinNode, new SameValueDonor<LocalBitcoinNode>(null)),
             lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<String>(null)),
             lookup.valueOf(referralID, new SameValueDonor<String>(null)),
-            null, null, null, null, null);
+            Config.DEFAULT_FULL_DAO_NODE, null, null, Config.UNSPECIFIED_PORT);
 
     public static final Preferences empty = make(a(Preferences));
 

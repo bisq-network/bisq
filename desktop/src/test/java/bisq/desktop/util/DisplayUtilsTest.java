@@ -1,12 +1,13 @@
 package bisq.desktop.util;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.coin.CoinFormatter;
+
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DisplayUtilsTest {
-    private final CoinFormatter formatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
+    private final CoinFormatter formatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
     @Before
     public void setUp() {
@@ -48,9 +49,9 @@ public class DisplayUtilsTest {
 
     @Test
     public void testFormatVolume() {
-        assertEquals("1.00", DisplayUtils.formatVolume(make(btcUsdOffer), true, 4));
-        assertEquals("100.00", DisplayUtils.formatVolume(make(usdVolume)));
-        assertEquals("1774.62", DisplayUtils.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
+        assertEquals("1", DisplayUtils.formatVolume(make(btcUsdOffer), true, 4));
+        assertEquals("100", DisplayUtils.formatVolume(make(usdVolume)));
+        assertEquals("1775", DisplayUtils.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
     }
 
     @Test

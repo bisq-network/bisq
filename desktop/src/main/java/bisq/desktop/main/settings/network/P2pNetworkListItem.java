@@ -21,7 +21,6 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.OutboundConnection;
@@ -47,7 +46,6 @@ public class P2pNetworkListItem {
     private final Connection connection;
     private final Subscription sentBytesSubscription, receivedBytesSubscription, onionAddressSubscription, roundTripTimeSubscription;
     private final ClockWatcher clockWatcher;
-    private final CoinFormatter formatter;
 
     private final StringProperty lastActivity = new SimpleStringProperty();
     private final StringProperty sentBytes = new SimpleStringProperty();
@@ -58,10 +56,9 @@ public class P2pNetworkListItem {
     private final StringProperty onionAddress = new SimpleStringProperty();
     private final ClockWatcher.Listener listener;
 
-    public P2pNetworkListItem(Connection connection, ClockWatcher clockWatcher, CoinFormatter formatter) {
+    P2pNetworkListItem(Connection connection, ClockWatcher clockWatcher) {
         this.connection = connection;
         this.clockWatcher = clockWatcher;
-        this.formatter = formatter;
         this.statistic = connection.getStatistic();
 
         sentBytesSubscription = EasyBind.subscribe(statistic.sentBytesProperty(),

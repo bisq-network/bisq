@@ -111,7 +111,7 @@ public class BroadcastHandler implements PeerManager.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, ResultHandler resultHandler,
-                          @Nullable Listener listener, boolean isDataOwner) {
+                          @Nullable Listener listener) {
         this.message = message;
         this.resultHandler = resultHandler;
         this.listener = listener;
@@ -127,6 +127,8 @@ public class BroadcastHandler implements PeerManager.Listener {
             Collections.shuffle(connectedPeersList);
             numPeers = connectedPeersList.size();
             int delay = 50;
+
+            boolean isDataOwner = (sender != null) && sender.equals(networkNode.getNodeAddress());
             if (!isDataOwner) {
                 // for not data owner (relay nodes) we send to max. 7 nodes and use a longer delay
                 numPeers = Math.min(7, connectedPeersList.size());

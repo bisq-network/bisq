@@ -17,13 +17,9 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PaymentAccountUtil;
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
-
-import javax.annotation.Nullable;
 
 public class Restrictions {
     private static Coin MIN_TRADE_AMOUNT;
@@ -31,10 +27,13 @@ public class Restrictions {
     // For the seller we use a fixed one as there is no way the seller can cancel the trade
     // To make it editable would just increase complexity.
     private static Coin SELLER_SECURITY_DEPOSIT;
+    // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
+    // mediated payout. For Refund agent cases we do not have that restriction.
+    private static Coin MIN_REFUND_AT_MEDIATED_DISPUTE;
 
     public static Coin getMinNonDustOutput() {
         if (minNonDustOutput == null)
-            minNonDustOutput = BisqEnvironment.getBaseCurrencyNetwork().getParameters().getMinNonDustOutput();
+            minNonDustOutput = Config.baseCurrencyNetwork().getParameters().getMinNonDustOutput();
         return minNonDustOutput;
     }
 
@@ -50,47 +49,45 @@ public class Restrictions {
 
     public static Coin getMinTradeAmount() {
         if (MIN_TRADE_AMOUNT == null)
-            MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 0,4 USD @ 4000 USD/BTC
+            MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 0,7 USD @ 7000 USD/BTC
         return MIN_TRADE_AMOUNT;
     }
 
-    public static double getDefaultBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
-        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
-            return 0.02; // 2% of trade amount.
-        else
-            return 0.1; // 10% of trade amount.
+    public static double getDefaultBuyerSecurityDepositAsPercent() {
+        return 0.15; // 15% of trade amount.
     }
 
-    public static double getMinBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
-        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
-            return 0.005; // 0.5% of trade amount.
-        else
-            return 0.05; // 5% of trade amount.
+    public static double getMinBuyerSecurityDepositAsPercent() {
+        return 0.15; // 15% of trade amount.
     }
 
-    public static double getMaxBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
-        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
-            return 0.2; // 20% of trade amount. For a 1 BTC trade it is about 800 USD @ 4000 USD/BTC
-        else
-            return 0.5; // 50% of trade amount. For a 1 BTC trade it is about 2000 USD @ 4000 USD/BTC
+    public static double getMaxBuyerSecurityDepositAsPercent() {
+        return 0.5; // 50% of trade amount. For a 1 BTC trade it is about 3500 USD @ 7000 USD/BTC
     }
 
     // We use MIN_BUYER_SECURITY_DEPOSIT as well as lower bound in case of small trade amounts.
     // So 0.0005 BTC is the min. buyer security deposit even with amount of 0.0001 BTC and 0.05% percentage value.
     public static Coin getMinBuyerSecurityDepositAsCoin() {
         if (MIN_BUYER_SECURITY_DEPOSIT == null)
-            MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC about 4 USD @ 4000 USD/BTC
+            MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.006"); // 0.006 BTC about 42 USD @ 7000 USD/BTC
         return MIN_BUYER_SECURITY_DEPOSIT;
     }
 
 
     public static double getSellerSecurityDepositAsPercent() {
-        return 0.05; // 5% of trade amount.
+        return 0.15; // 15% of trade amount.
     }
 
     public static Coin getMinSellerSecurityDepositAsCoin() {
         if (SELLER_SECURITY_DEPOSIT == null)
-            SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.005"); // 0.005 BTC about 20 USD @ 4000 USD/BTC
+            SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.006"); // 0.006 BTC about 42 USD @ 7000 USD/BTC
         return SELLER_SECURITY_DEPOSIT;
+    }
+
+    // This value must not be lower than MIN_BUYER_SECURITY_DEPOSIT or SELLER_SECURITY_DEPOSIT
+    public static Coin getMinRefundAtMediatedDispute() {
+        if (MIN_REFUND_AT_MEDIATED_DISPUTE == null)
+            MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.003"); // 0.003 BTC about 21 USD @ 7000 USD/BTC
+        return MIN_REFUND_AT_MEDIATED_DISPUTE;
     }
 }

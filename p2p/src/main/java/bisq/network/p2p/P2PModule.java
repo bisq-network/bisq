@@ -17,10 +17,8 @@
 
 package bisq.network.p2p;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.network.Connection;
-import bisq.network.p2p.network.ConnectionConfig;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.Broadcaster;
@@ -35,23 +33,25 @@ import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
+import com.google.inject.TypeLiteral;
 
 import java.time.Clock;
 
 import java.io.File;
 
-import static com.google.inject.name.Names.named;
+import java.util.List;
 
+import static bisq.common.config.Config.*;
+import static com.google.inject.name.Names.named;
+import static com.google.inject.util.Providers.of;
 
 public class P2PModule extends AppModule {
 
-    public P2PModule(Environment environment) {
-        super(environment);
+    public P2PModule(Config config) {
+        super(config);
     }
 
     @Override
@@ -69,42 +69,29 @@ public class P2PModule extends AppModule {
         bind(KeepAliveManager.class).in(Singleton.class);
         bind(Broadcaster.class).in(Singleton.class);
         bind(BanList.class).in(Singleton.class);
-        bind(ConnectionConfig.class).in(Singleton.class);
         bind(NetworkNode.class).toProvider(NetworkNodeProvider.class).in(Singleton.class);
         bind(Socks5ProxyProvider.class).in(Singleton.class);
 
         requestStaticInjection(Connection.class);
 
-        Boolean useLocalhostForP2P = environment.getProperty(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P, boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)).toInstance(useLocalhostForP2P);
+        bindConstant().annotatedWith(named(USE_LOCALHOST_FOR_P2P)).to(config.useLocalhostForP2P);
 
-        File torDir = new File(environment.getRequiredProperty(NetworkOptionKeys.TOR_DIR));
-        bind(File.class).annotatedWith(named(NetworkOptionKeys.TOR_DIR)).toInstance(torDir);
+        bind(File.class).annotatedWith(named(TOR_DIR)).toInstance(config.torDir);
 
-        // use a fixed port as arbitrator use that for his ID
-        Integer port = environment.getProperty(NetworkOptionKeys.PORT_KEY, int.class, 9999);
-        bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.PORT_KEY)).toInstance(port);
+        bind(int.class).annotatedWith(named(NODE_PORT)).toInstance(config.nodePort);
 
-        Integer maxConnections = environment.getProperty(NetworkOptionKeys.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
-        bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.MAX_CONNECTIONS)).toInstance(maxConnections);
+        bindConstant().annotatedWith(named(MAX_CONNECTIONS)).to(config.maxConnections);
 
-        Integer networkId = environment.getProperty(NetworkOptionKeys.NETWORK_ID, int.class, 1);
-        bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.NETWORK_ID)).toInstance(networkId);
-        bindConstant().annotatedWith(named(NetworkOptionKeys.SEED_NODES_KEY)).to(environment.getRequiredProperty(NetworkOptionKeys.SEED_NODES_KEY));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.BAN_LIST)).to(environment.getRequiredProperty(NetworkOptionKeys.BAN_LIST));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.TORRC_FILE)).to(environment.getRequiredProperty(NetworkOptionKeys.TORRC_FILE));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.TORRC_OPTIONS)).to(environment.getRequiredProperty(NetworkOptionKeys.TORRC_OPTIONS));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)).to(environment.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.TOR_STREAM_ISOLATION)).to(environment.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.MSG_THROTTLE_PER_SEC)).to(environment.getRequiredProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC)).to(environment.getRequiredProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER)).to(environment.getRequiredProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP)).to(environment.getRequiredProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP));
+        bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(BAN_LIST)).toInstance(config.banList);
+        bindConstant().annotatedWith(named(SOCKS_5_PROXY_BTC_ADDRESS)).to(config.socks5ProxyBtcAddress);
+        bindConstant().annotatedWith(named(SOCKS_5_PROXY_HTTP_ADDRESS)).to(config.socks5ProxyHttpAddress);
+        bind(File.class).annotatedWith(named(TORRC_FILE)).toProvider(of(config.torrcFile)); // allow null value
+        bindConstant().annotatedWith(named(TORRC_OPTIONS)).to(config.torrcOptions);
+        bindConstant().annotatedWith(named(TOR_CONTROL_PORT)).to(config.torControlPort);
+        bindConstant().annotatedWith(named(TOR_CONTROL_PASSWORD)).to(config.torControlPassword);
+        bind(File.class).annotatedWith(named(TOR_CONTROL_COOKIE_FILE)).toProvider(of(config.torControlCookieFile));
+        bindConstant().annotatedWith(named(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)).to(config.useTorControlSafeCookieAuth);
+        bindConstant().annotatedWith(named(TOR_STREAM_ISOLATION)).to(config.torStreamIsolation);
         bindConstant().annotatedWith(named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE")).to(1000);
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.AddressConfidenceListener;
@@ -27,6 +26,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -677,13 +677,13 @@ public abstract class WalletService {
     @Nullable
     public static Address getAddressFromOutput(TransactionOutput output) {
         return isOutputScriptConvertibleToAddress(output) ?
-                output.getScriptPubKey().getToAddress(BisqEnvironment.getParameters()) : null;
+                output.getScriptPubKey().getToAddress(Config.baseCurrencyNetworkParameters()) : null;
     }
 
     @Nullable
     public static String getAddressStringFromOutput(TransactionOutput output) {
         return isOutputScriptConvertibleToAddress(output) ?
-                output.getScriptPubKey().getToAddress(BisqEnvironment.getParameters()).toString() : null;
+                output.getScriptPubKey().getToAddress(Config.baseCurrencyNetworkParameters()).toString() : null;
     }
 
 

@@ -624,8 +624,8 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getUnspentTxOutputs();
     }
 
-    public Set<Tx> getTxs() {
-        return daoStateService.getTxs();
+    public int getNumTxs() {
+        return daoStateService.getNumTxs();
     }
 
     public Optional<TxOutput> getLockupTxOutput(String txId) {

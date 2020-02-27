@@ -17,13 +17,14 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
+
+import bisq.common.config.Config;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -411,8 +412,8 @@ class TxOutputParser {
     }
 
     private int getActivateHardFork1Height() {
-        return BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET :
-                BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET :
+        return Config.baseCurrencyNetwork().isMainnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET :
+                Config.baseCurrencyNetwork().isTestnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET :
                         ACTIVATE_HARD_FORK_1_HEIGHT_REGTEST;
     }
 

@@ -22,7 +22,6 @@ import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
 import bisq.core.dao.node.parser.exceptions.BlockHeightNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
-import bisq.core.dao.state.model.blockchain.Tx;
 
 import bisq.common.app.DevEnv;
 
@@ -31,7 +30,6 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 
 import java.util.LinkedList;
-import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +53,6 @@ public class BlockParser {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public BlockParser(TxParser txParser,
                        DaoStateService daoStateService) {
@@ -106,14 +103,13 @@ public class BlockParser {
         // one get resolved.
         // Lately there is a patter with 24 iterations observed
         long startTs = System.currentTimeMillis();
-        List<Tx> txList = block.getTxs();
 
         rawBlock.getRawTxs().forEach(rawTx ->
                 txParser.findTx(rawTx,
                         genesisTxId,
                         genesisBlockHeight,
                         genesisTotalSupply)
-                        .ifPresent(txList::add));
+                        .ifPresent(tx -> daoStateService.onNewTxForLastBlock(block, tx)));
 
         log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
                 blockHeight, System.currentTimeMillis() - startTs);

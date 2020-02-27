@@ -128,6 +128,10 @@
     -fx-background-color: -bs-rd-error-red;
 }
 
+.jfx-progress-bar > .track {
+    -fx-background-color: -bs-progress-bar-track;
+}
+
 .jfx-spinner {
     -jfx-radius: 10;
 }
@@ -834,6 +838,7 @@ textfield */
     -fx-border-width: 0px;
     -fx-underline: true;
     -fx-text-fill: -bs-rd-font-dark;
+    -fx-fill: -bs-rd-font-dark;
 }
 
 .hyperlink.no-underline {
@@ -842,6 +847,7 @@ textfield */
 
 .hyperlink:hover {
     -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
 }
 
 .hyperlink:hover,
@@ -1615,6 +1621,17 @@ textfield */
     -fx-stroke: -bs-buy;
 }
 
+/* The .chart-line-symbol rules change the color of the legend symbol */
+#charts-dao .default-color0.chart-series-line { -fx-stroke: -bs-chart-dao-line1; }
+#charts-dao .default-color0.chart-line-symbol { -fx-background-color: -bs-chart-dao-line1, -bs-background-color; }
+
+#charts-dao .default-color1.chart-series-line { -fx-stroke: -bs-chart-dao-line2; }
+#charts-dao .default-color1.chart-line-symbol { -fx-background-color: -bs-chart-dao-line2, -bs-background-color; }
+
+#charts-dao .chart-series-line {
+    -fx-stroke-width: 1px;
+}
+
 #charts .default-color0.chart-series-area-fill {
     -fx-fill: -bs-sell-transparent;
 }
@@ -1639,12 +1656,12 @@ textfield */
 #buy-button-big {
     -fx-font-size: 1em;
     -fx-background-color: -bs-buy;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
 }
 
 #buy-button {
     -fx-background-color: -bs-buy;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
 }
 
 #buy-button-big:hover, #buy-button:hover,
@@ -1654,13 +1671,13 @@ textfield */
 
 #sell-button-big {
     -fx-background-color: -bs-sell;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
     -fx-font-size: 1em;
 }
 
 #sell-button {
     -fx-background-color: -bs-sell;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
 }
 
 #sell-button-big:hover, #sell-button:hover,
@@ -2049,4 +2066,8 @@ textfield */
     -fx-text-fill: -bs-text-color;
 }
 
+.popover > .border {
+    -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
+    -fx-fill: -bs-background-color !important;
+}
 

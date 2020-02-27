@@ -119,18 +119,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         };
 
         keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) && arbitratorRegistrationTab == null) {
-                if (mediatorRegistrationTab != null) {
-                    root.getTabs().remove(mediatorRegistrationTab);
-                }
-                if (refundAgentRegistrationTab != null) {
-                    root.getTabs().remove(refundAgentRegistrationTab);
-                }
-                arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration").toUpperCase());
-                arbitratorRegistrationTab.setClosable(true);
-                root.getTabs().add(arbitratorRegistrationTab);
-                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.D, event) && mediatorRegistrationTab == null) {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.D, event) && mediatorRegistrationTab == null) {
                 if (arbitratorRegistrationTab != null) {
                     root.getTabs().remove(arbitratorRegistrationTab);
                 }

@@ -17,24 +17,22 @@
 
 package bisq.core.payment.validation;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.asset.AddressValidationResult;
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 
 import com.google.inject.Inject;
 
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
 
 @Slf4j
 public final class AltCoinAddressValidator extends InputValidator {
@@ -58,7 +56,7 @@ public final class AltCoinAddressValidator extends InputValidator {
             return validationResult;
 
         Optional<Asset> optionalAsset = CurrencyUtil.findAsset(assetRegistry, currencyCode,
-                BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated());
+                Config.baseCurrencyNetwork(), DevEnv.isDaoTradingActivated());
         if (optionalAsset.isPresent()) {
             Asset asset = optionalAsset.get();
             AddressValidationResult result = asset.validateAddress(input);

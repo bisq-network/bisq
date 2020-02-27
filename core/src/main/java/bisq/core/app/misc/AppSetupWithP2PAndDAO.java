@@ -20,7 +20,6 @@ package bisq.core.app.misc;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.TorSetup;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
@@ -34,10 +33,10 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,7 +60,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyReputationListService myReputationListService,
                                  MyProofOfBurnListService myProofOfBurnListService,
                                  TorSetup torSetup,
-                                 @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
+                                 Config config) {
         super(encryptionService,
                 keyRing,
                 p2PService,
@@ -69,12 +68,13 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                 accountAgeWitnessService,
                 signedWitnessService,
                 filterManager,
-                torSetup);
+                torSetup,
+                config);
 
         this.daoSetup = daoSetup;
 
         // TODO Should be refactored/removed. In the meantime keep in sync with CorePersistedDataHost
-        if (daoActivated) {
+        if (config.daoActivated) {
             persistedDataHosts.add(myVoteListService);
             persistedDataHosts.add(ballotListService);
             persistedDataHosts.add(myBlindVoteListService);

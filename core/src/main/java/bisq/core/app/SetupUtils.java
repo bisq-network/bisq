@@ -17,7 +17,7 @@
 
 package bisq.core.app;
 
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
 
 import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;
@@ -25,6 +25,7 @@ import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
@@ -75,11 +76,11 @@ public class SetupUtils {
         checkCryptoThread.start();
     }
 
-    public static BooleanProperty readFromResources(P2PDataStorage p2PDataStorage) {
+    public static BooleanProperty readFromResources(P2PDataStorage p2PDataStorage, Config config) {
         BooleanProperty result = new SimpleBooleanProperty();
         new Thread(() -> {
             // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
-            final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+            final BaseCurrencyNetwork baseCurrencyNetwork = config.baseCurrencyNetwork;
             final String postFix = "_" + baseCurrencyNetwork.name();
             long ts = new Date().getTime();
             p2PDataStorage.readFromResources(postFix);

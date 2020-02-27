@@ -30,8 +30,8 @@ public class BankUtil {
 
     // BankName
     @SuppressWarnings("SameReturnValue")
-    public static boolean isBankNameRequired(String countryCode) {
-        // Currently we always return true but let's keep that method to be more flexible in case we what to not show
+    public static boolean isBankNameRequired(@SuppressWarnings("unused") String countryCode) {
+        // Currently we always return true but let's keep that method to be more flexible in case we want to not show
         // it at some new payment method.
         return true;
          /*
@@ -157,9 +157,9 @@ public class BankUtil {
             case "HK":
                 return Res.get("payment.accountNr");
             case "NO":
-                return "Kontonummer"; // do not translate as it is used in Norwegian only
+                return "Kontonummer"; // do not translate as it is used in Norwegian and Swedish only
             case "SE":
-                return "Bankgiro number"; // do not translate as it is used in Swedish only
+                return "Kontonummer"; // do not translate as it is used in Norwegian and Swedish only
             case "MX":
                 return "CLABE"; // do not translate as it is used in Spanish only
             case "CL":

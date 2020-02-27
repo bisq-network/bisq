@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.blindvote;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.exceptions.WalletException;
@@ -48,6 +47,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
@@ -368,9 +368,9 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             // Republishing only will have effect if the payload creation date is < 5 hours as other nodes would not
             // accept payloads which are too old or are in future.
             // Only payloads received from seed nodes would ignore that date check.
-            int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
+            int minPeers = Config.baseCurrencyNetwork().isMainnet() ? 4 : 1;
             if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
-                    BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
+                    Config.baseCurrencyNetwork().isRegtest()) {
                 myBlindVoteList.stream()
                         .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),
                                 DaoPhase.Phase.BLIND_VOTE,

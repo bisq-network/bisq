@@ -28,9 +28,19 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
  */
 public class PersistableNetworkPayloadStub implements PersistableNetworkPayload {
     private final boolean hashSizeValid;
+    private final byte[] hash;
 
     public PersistableNetworkPayloadStub(boolean hashSizeValid) {
+        this(hashSizeValid, new byte[] { 1 });
+    }
+
+    public PersistableNetworkPayloadStub(byte[] hash) {
+        this(true, hash);
+    }
+
+    private PersistableNetworkPayloadStub(boolean hashSizeValid, byte[] hash) {
         this.hashSizeValid = hashSizeValid;
+        this.hash = hash;
     }
 
     @Override
@@ -40,7 +50,7 @@ public class PersistableNetworkPayloadStub implements PersistableNetworkPayload 
 
     @Override
     public byte[] getHash() {
-        return new byte[] { 1 };
+        return hash;
     }
 
     @Override

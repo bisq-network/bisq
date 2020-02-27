@@ -21,12 +21,11 @@ import bisq.core.dao.governance.ConsensusCritical;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
-
-import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
 import java.util.Optional;

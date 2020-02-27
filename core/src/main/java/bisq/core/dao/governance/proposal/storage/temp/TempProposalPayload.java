@@ -20,16 +20,15 @@ package bisq.core.dao.governance.proposal.storage.temp;
 import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
-
-import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
@@ -55,7 +54,7 @@ import javax.annotation.concurrent.Immutable;
 @Getter
 @EqualsAndHashCode
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-public class TempProposalPayload implements LazyProcessedPayload, ProtectedStoragePayload,
+public class TempProposalPayload implements ProcessOncePersistableNetworkPayload, ProtectedStoragePayload,
         ExpirablePayload, PersistablePayload {
 
     protected final Proposal proposal;

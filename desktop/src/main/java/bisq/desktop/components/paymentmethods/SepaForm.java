@@ -126,19 +126,11 @@ public class SepaForm extends GeneralSepaForm {
         if (CountryUtil.getAllSepaCountries().contains(country)) {
             countryComboBox.getSelectionModel().select(country);
             sepaAccount.setCountry(country);
-            TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
-            setupCurrency(country, currency);
         }
 
         updateFromInputs();
     }
 
-    @Override
-    void setupCurrency(Country country, TradeCurrency currency) {
-        final boolean isSepaCountry = CountryUtil.getAllSepaEuroCountries().contains(country);
-
-        updateCurrencyFormElements(currency, isSepaCountry, sepaAccount);
-    }
 
     private void addEuroCountriesGrid() {
         addCountriesGrid(Res.get("payment.accept.euro"), euroCountryCheckBoxes,

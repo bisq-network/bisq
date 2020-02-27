@@ -19,6 +19,7 @@ build
 .project
 .settings
 *.java.hsp
+*.java.hsw
 *.~ava
 /bundles
 /bisq-*
@@ -32,3 +33,4 @@ deploy
 /monitor/TorHiddenServiceStartupTimeTests/*
 /monitor/monitor-tor/*
 .java-version
+.localnet

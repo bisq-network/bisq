@@ -24,6 +24,11 @@ import bisq.core.offer.OpenOffer;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
+import java.nio.file.Files;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,9 +40,10 @@ import static protobuf.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 public class TradableListTest {
 
     @Test
-    public void protoTesting() {
+    public void protoTesting() throws IOException {
         OfferPayload offerPayload = mock(OfferPayload.class, RETURNS_DEEP_STUBS);
-        Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null, mock(CorruptedDatabaseFilesHandler.class));
+        File storageDir = Files.createTempDirectory("storage").toFile();
+        Storage<TradableList<OpenOffer>> storage = new Storage<>(storageDir, null, mock(CorruptedDatabaseFilesHandler.class));
         TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
         protobuf.PersistableEnvelope message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
         assertTrue(message.getMessageCase().equals(TRADABLE_LIST));

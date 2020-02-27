@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
@@ -45,6 +44,8 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.coin.BsqFormatter;
+
+import bisq.common.config.Config;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -80,7 +81,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class OfferBookViewModelTest {
-    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
     private static final Logger log = LoggerFactory.getLogger(OfferBookViewModelTest.class);
 
     @Before
@@ -297,9 +298,9 @@ public class OfferBookViewModelTest {
                 null, null, null, null, coinFormatter, new BsqFormatter());
         model.activate();
 
-        assertEquals(8, model.maxPlacesForVolume.intValue());
+        assertEquals(5, model.maxPlacesForVolume.intValue());
         offerBookListItems.addAll(make(btcBuyItem.but(with(amount, 2000000000L))));
-        assertEquals(10, model.maxPlacesForVolume.intValue());
+        assertEquals(7, model.maxPlacesForVolume.intValue());
     }
 
     @Test
@@ -315,12 +316,12 @@ public class OfferBookViewModelTest {
                 null, null, null, null, coinFormatter, new BsqFormatter());
         model.activate();
 
-        assertEquals(15, model.maxPlacesForVolume.intValue());
+        assertEquals(9, model.maxPlacesForVolume.intValue());
         offerBookListItems.addAll(make(btcItemWithRange.but(with(amount, 2000000000L))));
-        assertEquals(17, model.maxPlacesForVolume.intValue());
+        assertEquals(11, model.maxPlacesForVolume.intValue());
         offerBookListItems.addAll(make(btcItemWithRange.but(with(minAmount, 30000000000L),
                 with(amount, 30000000000L))));
-        assertEquals(25, model.maxPlacesForVolume.intValue());
+        assertEquals(19, model.maxPlacesForVolume.intValue());
     }
 
     @Test

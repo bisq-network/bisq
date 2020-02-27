@@ -23,6 +23,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import java.text.DateFormat;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import java.util.Date;
 import java.util.Optional;
@@ -31,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DisplayUtils {
-    private final static int scale = 3;
-    private static final MonetaryFormat fiatVolumeFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
+    private static final int SCALE = 3;
+    private static final MonetaryFormat FIAT_VOLUME_FORMAT = new MonetaryFormat().shift(0).minDecimals(0).repeatOptionalDecimals(0, 0);
 
     public static String formatDateTime(Date date) {
         return FormattingUtils.formatDateTime(date, true);
@@ -70,8 +71,8 @@ public class DisplayUtils {
         durationMillis = Math.max(0, durationMillis);
         String day = Res.get("time.day").toLowerCase();
         String days = Res.get("time.days");
-        String format = "d\' " + days + "\'";
-        return StringUtils.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), "1 " + days, "1 " + day);
+        String format = " d\' " + days + "\'";
+        return StringUtils.strip(StringUtils.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), " 1 " + days, " 1 " + day));
     }
 
     public static String booleanToYesNo(boolean value) {
@@ -96,7 +97,7 @@ public class DisplayUtils {
     }
 
     public static String formatVolume(Volume volume) {
-        return formatVolume(volume, fiatVolumeFormat, false);
+        return formatVolume(volume, FIAT_VOLUME_FORMAT, false);
     }
 
     private static String formatVolume(Volume volume, MonetaryFormat fiatVolumeFormat, boolean appendCurrencyCode) {
@@ -112,7 +113,11 @@ public class DisplayUtils {
     }
 
     public static String formatVolumeWithCode(Volume volume) {
-        return formatVolume(volume, fiatVolumeFormat, true);
+        return formatVolume(volume, FIAT_VOLUME_FORMAT, true);
+    }
+
+    static String formatAverageVolumeWithCode(Volume volume) {
+        return formatVolume(volume, FIAT_VOLUME_FORMAT.minDecimals(2), true);
     }
 
     public static String formatVolumeLabel(String currencyCode) {
@@ -205,16 +210,10 @@ public class DisplayUtils {
     // Amount
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static String formatAmount(Offer offer, CoinFormatter formatter) {
-        return formatAmount(offer, false, formatter);
-    }
-
-    private static String formatAmount(Offer offer, boolean decimalAligned, CoinFormatter coinFormatter) {
-        String formattedAmount = offer.isRange() ? coinFormatter.formatCoin(offer.getMinAmount()) + FormattingUtils.RANGE_SEPARATOR + coinFormatter.formatCoin(offer.getAmount()) : coinFormatter.formatCoin(offer.getAmount());
-        if (decimalAligned) {
-            formattedAmount = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedAmount, 15);
-        }
-        return formattedAmount;
+    public static String formatAmount(Offer offer, CoinFormatter coinFormatter) {
+        return offer.isRange()
+                ? coinFormatter.formatCoin(offer.getMinAmount()) + FormattingUtils.RANGE_SEPARATOR + coinFormatter.formatCoin(offer.getAmount())
+                : coinFormatter.formatCoin(offer.getAmount());
     }
 
     public static String formatAmount(Offer offer,
@@ -222,7 +221,9 @@ public class DisplayUtils {
                                       boolean decimalAligned,
                                       int maxPlaces,
                                       CoinFormatter coinFormatter) {
-        String formattedAmount = offer.isRange() ? coinFormatter.formatCoin(offer.getMinAmount(), decimalPlaces) + FormattingUtils.RANGE_SEPARATOR + coinFormatter.formatCoin(offer.getAmount(), decimalPlaces) : coinFormatter.formatCoin(offer.getAmount(), decimalPlaces);
+        String formattedAmount = offer.isRange()
+                ? coinFormatter.formatCoin(offer.getMinAmount(), decimalPlaces) + FormattingUtils.RANGE_SEPARATOR + coinFormatter.formatCoin(offer.getAmount(), decimalPlaces)
+                : coinFormatter.formatCoin(offer.getAmount(), decimalPlaces);
 
         if (decimalAligned) {
             formattedAmount = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedAmount, maxPlaces);
@@ -249,7 +250,7 @@ public class DisplayUtils {
         String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         String feeInFiatAsString;
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
-            feeInFiatAsString = formatVolumeWithCode(optionalFeeInFiat.get());
+            feeInFiatAsString = formatAverageVolumeWithCode(optionalFeeInFiat.get());
         } else {
             feeInFiatAsString = Res.get("shared.na");
         }
@@ -258,17 +259,21 @@ public class DisplayUtils {
 
     /**
      * Converts to a coin with max. 4 decimal places. Last place gets rounded.
-     * 0.01234 -> 0.0123
-     * 0.01235 -> 0.0124
+     * <p>0.01234 -> 0.0123
+     * <p>0.01235 -> 0.0124
      *
-     * @param input
-     * @param coinFormatter
-     * @return
+     * @param input         the decimal coin value to parse and round
+     * @param coinFormatter the coin formatter instance
+     * @return the converted coin
      */
     public static Coin parseToCoinWith4Decimals(String input, CoinFormatter coinFormatter) {
         try {
-            return Coin.valueOf(new BigDecimal(ParsingUtils.parseToCoin(ParsingUtils.cleanDoubleInput(input), coinFormatter).value).setScale(-scale - 1,
-                    BigDecimal.ROUND_HALF_UP).setScale(scale + 1, BigDecimal.ROUND_HALF_UP).toBigInteger().longValue());
+            return Coin.valueOf(
+                    new BigDecimal(ParsingUtils.parseToCoin(ParsingUtils.cleanDoubleInput(input), coinFormatter).value)
+                            .setScale(-SCALE - 1, RoundingMode.HALF_UP)
+                            .setScale(SCALE + 1, RoundingMode.HALF_UP)
+                            .toBigInteger().longValue()
+            );
         } catch (Throwable t) {
             if (input != null && input.length() > 0)
                 log.warn("Exception at parseToCoinWith4Decimals: " + t.toString());
@@ -283,9 +288,9 @@ public class DisplayUtils {
     /**
      * Transform a coin with the properties defined in the format (used to reduce decimal places)
      *
-     * @param coin The coin which should be transformed
-     * @param coinFormatter
-     * @return The transformed coin
+     * @param coin          the coin which should be transformed
+     * @param coinFormatter the coin formatter instance
+     * @return the transformed coin
      */
     public static Coin reduceTo4Decimals(Coin coin, CoinFormatter coinFormatter) {
         return ParsingUtils.parseToCoin(coinFormatter.formatCoin(coin), coinFormatter);

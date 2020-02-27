@@ -21,11 +21,10 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.storage.messages.AddOncePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
-
-import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
@@ -36,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -63,7 +64,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
     private Map<String, String> extraDataMap;
 
     public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
-                                 PublicKey senderPubKeyForAddOperation,
+                                 @NotNull PublicKey senderPubKeyForAddOperation,
                                  PublicKey ownerPubKey) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;

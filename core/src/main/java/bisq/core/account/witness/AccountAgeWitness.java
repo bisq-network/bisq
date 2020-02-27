@@ -19,8 +19,8 @@ package bisq.core.account.witness;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
@@ -28,8 +28,8 @@ import bisq.common.util.Utilities;
 import com.google.protobuf.ByteString;
 
 import java.time.Clock;
+import java.time.Instant;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Value;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
 @Value
-public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload {
+public class AccountAgeWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload {
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes
@@ -65,7 +65,7 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
         return protobuf.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
     }
 
-    public protobuf.AccountAgeWitness toProtoAccountAgeWitness() {
+    protobuf.AccountAgeWitness toProtoAccountAgeWitness() {
         return toProtoMessage().getAccountAgeWitness();
     }
 
@@ -89,7 +89,7 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     public boolean isDateInTolerance(Clock clock) {
         // We don't allow older or newer than 1 day.
         // Preventing forward dating is also important to protect against a sophisticated attack
-        return Math.abs(new Date().getTime() - date) <= TOLERANCE;
+        return Math.abs(clock.millis() - date) <= TOLERANCE;
     }
 
     @Override
@@ -107,7 +107,7 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage.ByteArray getHashAsByteArray() {
+    P2PDataStorage.ByteArray getHashAsByteArray() {
         return new P2PDataStorage.ByteArray(hash);
     }
 
@@ -115,7 +115,7 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     public String toString() {
         return "AccountAgeWitness{" +
                 "\n     hash=" + Utilities.bytesAsHexString(hash) +
-                ",\n     date=" + new Date(date) +
+                ",\n     date=" + Instant.ofEpochMilli(date) +
                 "\n}";
     }
 }

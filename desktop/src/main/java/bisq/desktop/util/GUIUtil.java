@@ -27,10 +27,10 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Country;
@@ -49,15 +49,16 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
@@ -662,9 +663,15 @@ public class GUIUtil {
         }
     }
 
-    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount) {
-        return " (" + getPercentage(fee, tradeAmount) +
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, Coin minFee) {
+        String result = " (" + getPercentage(fee, tradeAmount) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
+
+        if (!fee.isGreaterThan(minFee)) {
+            result = " " + Res.get("guiUtil.requiredMinimum");
+        }
+
+        return result;
     }
 
     public static String getPercentage(Coin part, Coin total) {
@@ -685,7 +692,7 @@ public class GUIUtil {
 
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
-        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+        final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
         new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
@@ -695,7 +702,7 @@ public class GUIUtil {
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(Config.baseCurrencyNetworkParameters(),
                         address), amount, label, null) :
                 "";
     }
@@ -942,7 +949,7 @@ public class GUIUtil {
         showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
-    public static void setFitToRowsForTableView(TableView tableView,
+    public static void setFitToRowsForTableView(TableView<?> tableView,
                                                 int rowHeight,
                                                 int headerHeight,
                                                 int minNumRows,
@@ -1093,12 +1100,44 @@ public class GUIUtil {
         Volume bsqAmountAsVolume = Volume.parse(bsqAmountAsString, "BSQ");
         Coin requiredBtc = bsqPrice.getAmountByVolume(bsqAmountAsVolume);
         Volume volumeByAmount = usdPrice.getVolumeByAmount(requiredBtc);
-        return DisplayUtils.formatVolumeWithCode(volumeByAmount);
+        return DisplayUtils.formatAverageVolumeWithCode(volumeByAmount);
     }
 
     public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {
         return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
                 state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
                 MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+    }
+
+    public static RegexValidator addressRegexValidator() {
+        RegexValidator regexValidator = new RegexValidator();
+        String portRegexPattern = "(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])";
+        String onionV2RegexPattern = String.format("[a-zA-Z2-7]{16}\\.onion(?:\\:%1$s)?", portRegexPattern);
+        String ipv4RegexPattern = String.format("(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}" +
+                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+                "(?:\\:%1$s)?", portRegexPattern);
+        String ipv6RegexPattern = "(" +
+                "([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|" +          // 1:2:3:4:5:6:7:8
+                "([0-9a-fA-F]{1,4}:){1,7}:|" +                         // 1::                              1:2:3:4:5:6:7::
+                "([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +         // 1::8             1:2:3:4:5:6::8  1:2:3:4:5:6::8
+                "([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|" +  // 1::7:8           1:2:3:4:5::7:8  1:2:3:4:5::8
+                "([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|" +  // 1::6:7:8         1:2:3:4::6:7:8  1:2:3:4::8
+                "([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|" +  // 1::5:6:7:8       1:2:3::5:6:7:8  1:2:3::8
+                "([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|" +  // 1::4:5:6:7:8     1:2::4:5:6:7:8  1:2::8
+                "[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|" +       // 1::3:4:5:6:7:8   1::3:4:5:6:7:8  1::8
+                ":((:[0-9a-fA-F]{1,4}){1,7}|:)|" +                     // ::2:3:4:5:6:7:8  ::2:3:4:5:6:7:8 ::8       ::
+                "fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|" +     // fe80::7:8%eth0   fe80::7:8%1
+                "::(ffff(:0{1,4}){0,1}:){0,1}" +                       // (link-local IPv6 addresses with zone index)
+                "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}" +
+                "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|" +          // ::255.255.255.255   ::ffff:255.255.255.255  ::ffff:0:255.255.255.255
+                "([0-9a-fA-F]{1,4}:){1,4}:" +                          // (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
+                "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}" +
+                "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])" +           // 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33
+                ")";                                                   // (IPv4-Embedded IPv6 Address)
+        ipv6RegexPattern = String.format("(?:%1$s)|(?:\\[%1$s\\]\\:%2$s)", ipv6RegexPattern, portRegexPattern);
+        String fqdnRegexPattern = String.format("(((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\\.)+(?!onion)[a-zA-Z]{2,63}(?:\\:%1$s)?)", portRegexPattern);
+        regexValidator.setPattern(String.format("^(?:(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)),)*(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s))*$",
+                onionV2RegexPattern, ipv4RegexPattern, ipv6RegexPattern, fqdnRegexPattern));
+        return regexValidator;
     }
 }

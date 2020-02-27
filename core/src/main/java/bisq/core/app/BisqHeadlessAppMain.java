@@ -17,8 +17,6 @@
 
 package bisq.core.app;
 
-import bisq.core.CoreModule;
-
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
@@ -38,22 +36,22 @@ public class BisqHeadlessAppMain extends BisqExecutable {
     protected HeadlessApp headlessApp;
 
     public BisqHeadlessAppMain() {
-        super("Bisq Daemon", "bisqd", Version.VERSION);
+        super("Bisq Daemon", "bisqd", "Bisq", Version.VERSION);
     }
 
     public static void main(String[] args) throws Exception {
-        if (BisqExecutable.setupInitialOptionParser(args)) {
-            // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
-            // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-            Thread.currentThread().setContextClassLoader(BisqHeadlessAppMain.class.getClassLoader());
+        // For some reason the JavaFX launch process results in us losing the thread
+        // context class loader: reset it. In order to work around a bug in JavaFX 8u25
+        // and below, you must include the following code as the first line of your
+        // realMain method:
+        Thread.currentThread().setContextClassLoader(BisqHeadlessAppMain.class.getClassLoader());
 
-            new BisqHeadlessAppMain().execute(args);
-        }
+        new BisqHeadlessAppMain().execute(args);
     }
 
     @Override
-    protected void doExecute(OptionSet options) {
-        super.doExecute(options);
+    protected void doExecute() {
+        super.doExecute();
 
         keepRunning();
     }
@@ -97,7 +95,7 @@ public class BisqHeadlessAppMain extends BisqExecutable {
 
     @Override
     protected AppModule getModule() {
-        return new CoreModule(bisqEnvironment);
+        return new CoreModule(config);
     }
 
     @Override

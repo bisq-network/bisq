@@ -19,6 +19,7 @@ package bisq.core.dao.state.model;
 
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
+import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.Cycle;
@@ -28,21 +29,24 @@ import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.ParamChange;
 
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.JsonExclude;
 
 import com.google.protobuf.Message;
 
 import javax.inject.Inject;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
 
 /**
  * Root class for mutable state of the DAO.
@@ -98,6 +102,10 @@ public class DaoState implements PersistablePayload {
     @Getter
     private final List<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsList;
 
+    // Transient data used only as an index - must be kept in sync with the block list
+    @JsonExclude
+    private transient final Map<String, Tx> txCache; // key is txId
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -145,6 +153,10 @@ public class DaoState implements PersistablePayload {
         this.paramChangeList = paramChangeList;
         this.evaluatedProposalList = evaluatedProposalList;
         this.decryptedBallotsWithMeritsList = decryptedBallotsWithMeritsList;
+
+        txCache = blocks.stream()
+                .flatMap(block -> block.getTxs().stream())
+                .collect(Collectors.toMap(Tx::getId, Function.identity(), (x, y) -> x, HashMap::new));
     }
 
     @Override
@@ -224,6 +236,21 @@ public class DaoState implements PersistablePayload {
         return getBsqStateBuilderExcludingBlocks().addBlocks(getBlocks().getLast().toProtoMessage()).build().toByteArray();
     }
 
+    public void addToTxCache(Tx tx) {
+        // We shouldn't get duplicate txIds, but use putIfAbsent instead of put for consistency with the map merge
+        // function used in the constructor to initialise txCache (and to exactly match the pre-caching behaviour).
+        txCache.putIfAbsent(tx.getId(), tx);
+    }
+
+    public void setTxCache(Map<String, Tx> txCache) {
+        this.txCache.clear();
+        this.txCache.putAll(txCache);
+    }
+
+    public Map<String, Tx> getTxCache() {
+        return Collections.unmodifiableMap(txCache);
+    }
+
     @Override
     public String toString() {
         return "DaoState{" +
@@ -237,6 +264,7 @@ public class DaoState implements PersistablePayload {
                 ",\n     paramChangeList=" + paramChangeList +
                 ",\n     evaluatedProposalList=" + evaluatedProposalList +
                 ",\n     decryptedBallotsWithMeritsList=" + decryptedBallotsWithMeritsList +
+                ",\n     txCache=" + txCache +
                 "\n}";
     }
 }

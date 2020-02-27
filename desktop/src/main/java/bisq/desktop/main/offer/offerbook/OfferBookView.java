@@ -37,6 +37,7 @@ import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -45,7 +46,6 @@ import bisq.desktop.util.Layout;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -61,12 +61,13 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
@@ -150,7 +151,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                   OfferDetailsWindow offerDetailsWindow,
                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
-                  @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
+                  @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
                   AccountAgeWitnessService accountAgeWitnessService) {
         super(model);
 
@@ -579,10 +580,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
                         offer.getCurrencyCode(), offer.getMirroredDirection());
                 new Popup()
-                        .warning(Res.get("offerbook.warning.tradeLimitNotMatching",
-                                DisplayUtils.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),
+                        .warning(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
                                 formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
-                                formatter.formatCoinWithCode(offer.getMinAmount())))
+                                Res.get("offerbook.warning.newVersionAnnouncement")))
                         .show();
             } else {
                 log.warn("We don't found a payment account but got called the isInsufficientTradeLimit case. That must not happen.");
@@ -1001,14 +1001,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (myOffer) {
                                         iconView.setId("image-remove");
                                         title = Res.get("shared.remove");
-                                        button.setId("cancel-button");
-                                        button.setStyle("-fx-text-fill: #444;"); // does not take the font colors sometimes from the style
+                                        button.setId(null);
+                                        button.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
                                         boolean isSellOffer = offer.getDirection() == OfferPayload.Direction.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
-                                        button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
+                                        button.setStyle("-fx-text-fill: white");
                                         if (isSellOffer) {
                                             title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                                                     Res.get("offerbook.takeOfferToBuy", offer.getOfferPayload().getBaseCurrencyCode()) :

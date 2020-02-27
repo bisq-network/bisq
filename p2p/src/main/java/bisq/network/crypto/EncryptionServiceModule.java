@@ -18,15 +18,14 @@
 package bisq.network.crypto;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 
 public class EncryptionServiceModule extends AppModule {
 
-    public EncryptionServiceModule(Environment environment) {
-        super(environment);
+    public EncryptionServiceModule(Config config) {
+        super(config);
     }
 
     @Override

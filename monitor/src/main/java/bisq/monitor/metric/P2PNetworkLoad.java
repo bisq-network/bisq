@@ -23,9 +23,6 @@ import bisq.monitor.Monitor;
 import bisq.monitor.Reporter;
 import bisq.monitor.ThreadGate;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
-import bisq.core.btc.BtcOptionKeys;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -42,12 +39,11 @@ import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
-
-import org.springframework.core.env.PropertySource;
 
 import java.time.Clock;
 
@@ -130,21 +126,13 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             // boot up P2P node
             File storageDir = torHiddenServiceDir;
             try {
-                BisqEnvironment environment = new BisqEnvironment(new PropertySource<String>("name") {
-
-                    @Override
-                    public String getProperty(String name) {
-                        if(BtcOptionKeys.BASE_CURRENCY_NETWORK.equals(name))
-                                return BaseCurrencyNetwork.BTC_MAINNET.name();
-                        return "";
-                    }
-                });
+                Config config = new Config();
                 CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = new CorruptedDatabaseFilesHandler();
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
                         networkProtoResolver, storageDir, corruptedDatabaseFilesHandler);
-                DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(environment, null);
+                DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(config);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new ClockWatcher(),
                         maxConnections, new Storage<PeerList>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler));
 

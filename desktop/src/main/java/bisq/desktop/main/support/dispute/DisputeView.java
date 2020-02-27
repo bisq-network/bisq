@@ -18,7 +18,6 @@
 package bisq.desktop.main.support.dispute;
 
 import bisq.desktop.common.view.ActivatableView;
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
@@ -41,10 +40,12 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -96,6 +97,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
 
@@ -224,67 +226,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
-                Map<String, List<Dispute>> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().forEach(dispute -> {
-                    String tradeId = dispute.getTradeId();
-                    List<Dispute> list;
-                    if (!map.containsKey(tradeId))
-                        map.put(tradeId, new ArrayList<>());
-
-                    list = map.get(tradeId);
-                    list.add(dispute);
-                });
-                List<List<Dispute>> disputeGroups = new ArrayList<>();
-                map.forEach((key, value) -> disputeGroups.add(value));
-                disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
-                StringBuilder stringBuilder = new StringBuilder();
-
-                // We don't translate that as it is not intended for the public
-                stringBuilder.append("Summary of all disputes (No. of disputes: ").append(disputeGroups.size()).append(")\n\n");
-                disputeGroups.forEach(disputeGroup -> {
-                    Dispute dispute0 = disputeGroup.get(0);
-                    stringBuilder.append("##########################################################################################/\n")
-                            .append("## Trade ID: ")
-                            .append(dispute0.getTradeId())
-                            .append("\n")
-                            .append("## Date: ")
-                            .append(DisplayUtils.formatDateTime(dispute0.getOpeningDate()))
-                            .append("\n")
-                            .append("## Is support ticket: ")
-                            .append(dispute0.isSupportTicket())
-                            .append("\n");
-                    if (dispute0.disputeResultProperty().get() != null && dispute0.disputeResultProperty().get().getReason() != null) {
-                        stringBuilder.append("## Reason: ")
-                                .append(dispute0.disputeResultProperty().get().getReason())
-                                .append("\n");
-                    }
-                    stringBuilder.append("##########################################################################################/\n")
-                            .append("\n");
-                    disputeGroup.forEach(dispute -> {
-                        stringBuilder
-                                .append("*******************************************************************************************\n")
-                                .append("** Trader's ID: ")
-                                .append(dispute.getTraderId())
-                                .append("\n*******************************************************************************************\n")
-                                .append("\n");
-                        dispute.getChatMessages().forEach(m -> {
-                            String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
-                            stringBuilder.append(role)
-                                    .append(m.getMessage())
-                                    .append("\n");
-                        });
-                        stringBuilder.append("\n");
-                    });
-                    stringBuilder.append("\n");
-                });
-                String message = stringBuilder.toString();
-                // We don't translate that as it is not intended for the public
-                new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
-                        .information(message)
-                        .width(1000)
-                        .actionButtonText("Copy")
-                        .onAction(() -> Utilities.copyToClipboard(message))
-                        .show();
+                showFullReport();
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.K, event)) {
+                showCompactReport();
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.U, event)) {
                 // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
                 if (selectedDispute != null) {
@@ -315,6 +259,157 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         chatView = new ChatView(disputeManager, formatter);
         chatView.initialize();
+    }
+
+    private void showCompactReport() {
+        Map<String, List<Dispute>> map = new HashMap<>();
+        Map<String, List<Dispute>> disputesByReason = new HashMap<>();
+        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
+            String tradeId = dispute.getTradeId();
+            List<Dispute> list;
+            if (!map.containsKey(tradeId))
+                map.put(tradeId, new ArrayList<>());
+
+            list = map.get(tradeId);
+            list.add(dispute);
+        });
+
+        List<List<Dispute>> disputeGroups = new ArrayList<>();
+        map.forEach((key, value) -> disputeGroups.add(value));
+        disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
+        StringBuilder stringBuilder = new StringBuilder();
+        AtomicInteger disputeIndex = new AtomicInteger();
+        disputeGroups.forEach(disputeGroup -> {
+            if (disputeGroup.size() > 0) {
+                Dispute dispute0 = disputeGroup.get(0);
+                Date openingDate = dispute0.getOpeningDate();
+                stringBuilder.append("\n")
+                        .append("Dispute nr. ")
+                        .append(disputeIndex.incrementAndGet())
+                        .append("\n")
+                        .append("Opening date: ")
+                        .append(DisplayUtils.formatDateTime(openingDate))
+                        .append("\n");
+                DisputeResult disputeResult0 = dispute0.getDisputeResultProperty().get();
+                String summaryNotes0 = "";
+                if (disputeResult0 != null) {
+                    Date closeDate = disputeResult0.getCloseDate();
+                    long duration = closeDate.getTime() - openingDate.getTime();
+                    stringBuilder.append("Close date: ")
+                            .append(DisplayUtils.formatDateTime(closeDate))
+                            .append("\n")
+                            .append("Duration: ")
+                            .append(FormattingUtils.formatDurationAsWords(duration))
+                            .append("\n");
+
+                    summaryNotes0 = disputeResult0.getSummaryNotesProperty().get();
+                    stringBuilder.append("Summary notes: ").append(summaryNotes0).append("\n");
+                }
+
+                // We might have a different summary notes at second trader. Only if it
+                // is different we show it.
+                if (disputeGroup.size() > 1) {
+                    Dispute dispute1 = disputeGroup.get(1);
+                    DisputeResult disputeResult1 = dispute1.getDisputeResultProperty().get();
+                    if (disputeResult1 != null) {
+                        String summaryNotes1 = disputeResult1.getSummaryNotesProperty().get();
+                        if (!summaryNotes1.equals(summaryNotes0)) {
+                            stringBuilder.append("Summary notes (trader 2): ").append(summaryNotes1).append("\n");
+                        }
+                    }
+                }
+
+                if (dispute0.disputeResultProperty().get() != null) {
+                    DisputeResult.Reason reason = dispute0.disputeResultProperty().get().getReason();
+                    if (dispute0.disputeResultProperty().get().getReason() != null) {
+                        disputesByReason.putIfAbsent(reason.name(), new ArrayList<>());
+                        disputesByReason.get(reason.name()).add(dispute0);
+                        stringBuilder.append("Reason: ")
+                                .append(reason.name())
+                                .append("\n");
+                    }
+                }
+            }
+        });
+        stringBuilder.append("\n").append("Summary of reasons for disputes: ").append("\n");
+        disputesByReason.forEach((k, v) -> {
+            stringBuilder.append(k).append(": ").append(v.size()).append("\n");
+        });
+
+        String message = stringBuilder.toString();
+        new Popup().headLine("Compact summary of all disputes (" + disputeGroups.size() + ")")
+                .maxMessageLength(500)
+                .information(message)
+                .width(1200)
+                .actionButtonText("Copy to clipboard")
+                .onAction(() -> Utilities.copyToClipboard(message))
+                .show();
+
+    }
+
+    private void showFullReport() {
+        Map<String, List<Dispute>> map = new HashMap<>();
+        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
+            String tradeId = dispute.getTradeId();
+            List<Dispute> list;
+            if (!map.containsKey(tradeId))
+                map.put(tradeId, new ArrayList<>());
+
+            list = map.get(tradeId);
+            list.add(dispute);
+        });
+        List<List<Dispute>> disputeGroups = new ArrayList<>();
+        map.forEach((key, value) -> disputeGroups.add(value));
+        disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
+        StringBuilder stringBuilder = new StringBuilder();
+
+        // We don't translate that as it is not intended for the public
+        stringBuilder.append("Summary of all disputes (No. of disputes: ").append(disputeGroups.size()).append(")\n\n");
+        disputeGroups.forEach(disputeGroup -> {
+            Dispute dispute0 = disputeGroup.get(0);
+            stringBuilder.append("##########################################################################################/\n")
+                    .append("## Trade ID: ")
+                    .append(dispute0.getTradeId())
+                    .append("\n")
+                    .append("## Date: ")
+                    .append(DisplayUtils.formatDateTime(dispute0.getOpeningDate()))
+                    .append("\n")
+                    .append("## Is support ticket: ")
+                    .append(dispute0.isSupportTicket())
+                    .append("\n");
+            if (dispute0.disputeResultProperty().get() != null && dispute0.disputeResultProperty().get().getReason() != null) {
+                stringBuilder.append("## Reason: ")
+                        .append(dispute0.disputeResultProperty().get().getReason())
+                        .append("\n");
+            }
+            stringBuilder.append("##########################################################################################/\n")
+                    .append("\n");
+            disputeGroup.forEach(dispute -> {
+                stringBuilder
+                        .append("*******************************************************************************************\n")
+                        .append("** Trader's ID: ")
+                        .append(dispute.getTraderId())
+                        .append("\n*******************************************************************************************\n")
+                        .append("\n");
+                dispute.getChatMessages().forEach(m -> {
+                    String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
+                    stringBuilder.append(role)
+                            .append(m.getMessage())
+                            .append("\n");
+                });
+                stringBuilder.append("\n");
+            });
+            stringBuilder.append("\n");
+        });
+        String message = stringBuilder.toString();
+        // We don't translate that as it is not intended for the public
+        new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
+                .maxMessageLength(1000)
+                .information(message)
+                .width(1200)
+                .actionButtonText("Copy")
+                .onAction(() -> Utilities.copyToClipboard(message))
+                .show();
     }
 
     @Override
@@ -797,6 +892,10 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
+                                    if (closedProperty != null) {
+                                        closedProperty.removeListener(listener);
+                                    }
+
                                     listener = (observable, oldValue, newValue) -> {
                                         setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
                                         if (getTableRow() != null)

@@ -17,10 +17,11 @@
 
 package bisq.desktop.util;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.coin.CoinFormatter;
+
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.CoinMaker;
 
@@ -40,7 +41,7 @@ import static org.mockito.Mockito.mock;
 
 public class ImmutableCoinFormatterTest {
 
-    private final CoinFormatter formatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
+    private final CoinFormatter formatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
     @Before
     public void setUp() {

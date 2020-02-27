@@ -17,7 +17,6 @@
 
 package bisq.core.dao;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -87,18 +86,16 @@ import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 
 import static com.google.inject.name.Names.named;
 
 public class DaoModule extends AppModule {
 
-    public DaoModule(Environment environment) {
-        super(environment);
+    public DaoModule(Config config) {
+        super(config);
     }
 
     @Override
@@ -198,14 +195,9 @@ public class DaoModule extends AppModule {
         bind(RepublishGovernanceDataHandler.class).in(Singleton.class);
 
         // Genesis
-        String genesisTxId = environment.getProperty(DaoOptionKeys.GENESIS_TX_ID, String.class, "");
-        bind(String.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_TX_ID)).toInstance(genesisTxId);
-
-        Integer genesisBlockHeight = environment.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, Integer.class, -1);
-        bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
-
-        Long genesisTotalSupply = environment.getProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY, Long.class, -1L);
-        bind(Long.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_TOTAL_SUPPLY)).toInstance(genesisTotalSupply);
+        bindConstant().annotatedWith(named(Config.GENESIS_TX_ID)).to(config.genesisTxId);
+        bindConstant().annotatedWith(named(Config.GENESIS_BLOCK_HEIGHT)).to(config.genesisBlockHeight);
+        bindConstant().annotatedWith(named(Config.GENESIS_TOTAL_SUPPLY)).to(config.genesisTotalSupply);
 
         // Bonds
         bind(LockupTxService.class).in(Singleton.class);
@@ -223,20 +215,15 @@ public class DaoModule extends AppModule {
         bind(MyProofOfBurnListService.class).in(Singleton.class);
 
         // Options
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_USER));
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PASSWORD)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_PASSWORD));
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_HOST)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_HOST));
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PORT)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_PORT));
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
-                .to(environment.getRequiredProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST))
-                .to(environment.getRequiredProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST));
-        bindConstant().annotatedWith(named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA))
-                .to(environment.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
-        bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
-                .to(environment.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
-
-        bind(Boolean.class).annotatedWith(Names.named(DaoOptionKeys.DAO_ACTIVATED)).toInstance(BisqEnvironment.isDaoActivated(environment));
+        bindConstant().annotatedWith(named(Config.RPC_USER)).to(config.rpcUser);
+        bindConstant().annotatedWith(named(Config.RPC_PASSWORD)).to(config.rpcPassword);
+        bindConstant().annotatedWith(named(Config.RPC_HOST)).to(config.rpcHost);
+        bindConstant().annotatedWith(named(Config.RPC_PORT)).to(config.rpcPort);
+        bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_PORT)).to(config.rpcBlockNotificationPort);
+        bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_HOST)).to(config.rpcBlockNotificationHost);
+        bindConstant().annotatedWith(named(Config.DUMP_BLOCKCHAIN_DATA)).to(config.dumpBlockchainData);
+        bindConstant().annotatedWith(named(Config.FULL_DAO_NODE)).to(config.fullDaoNode);
+        bindConstant().annotatedWith(named(Config.DAO_ACTIVATED)).to(config.daoActivated);
     }
 }
 

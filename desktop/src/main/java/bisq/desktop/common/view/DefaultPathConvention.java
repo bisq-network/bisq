@@ -17,11 +17,14 @@
 
 package bisq.desktop.common.view;
 
-import org.springframework.util.ClassUtils;
-
 public class DefaultPathConvention implements FxmlView.PathConvention {
+
+    /**
+     * Convert a '.'-based fully-qualified name of {@code viewClass} to a '/'-based
+     * resource path suffixed with ".fxml".
+     */
     @Override
     public String apply(Class<? extends View> viewClass) {
-        return ClassUtils.convertClassNameToResourcePath(viewClass.getName()).concat(".fxml");
+        return viewClass.getName().replace('.', '/').concat(".fxml");
     }
 }

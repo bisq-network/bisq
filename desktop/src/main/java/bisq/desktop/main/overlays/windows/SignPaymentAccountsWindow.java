@@ -23,7 +23,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
@@ -32,6 +31,7 @@ import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.util.FormattingUtils;
 
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -95,7 +95,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     public SignPaymentAccountsWindow(AccountAgeWitnessService accountAgeWitnessService,
                                      ArbitratorManager arbitratorManager,
                                      ArbitrationManager arbitrationManager,
-                                     @Named(AppOptionKeys.APP_NAME_KEY) String appName) {
+                                     @Named(Config.APP_NAME) String appName) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.arbitrationManager = arbitrationManager;

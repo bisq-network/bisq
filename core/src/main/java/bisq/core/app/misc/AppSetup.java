@@ -17,12 +17,12 @@
 
 package bisq.core.app.misc;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.SetupUtils;
 
 import bisq.network.crypto.EncryptionService;
 
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
@@ -33,15 +33,18 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AppSetup {
     protected final EncryptionService encryptionService;
     protected final KeyRing keyRing;
+    protected final Config config;
 
     @Inject
     public AppSetup(EncryptionService encryptionService,
-                    KeyRing keyRing) {
+                    KeyRing keyRing,
+                    Config config) {
         // we need to reference it so the seed node stores tradeStatistics
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
+        this.config = config;
 
-        Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(this.config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
     }
 

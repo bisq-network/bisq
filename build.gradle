@@ -8,7 +8,6 @@ buildscript {
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
         classpath files('gradle/witness/gradle-witness.jar')
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41"
     }
 }
 
@@ -22,7 +21,6 @@ configure(rootProject) {
 }
 
 configure(subprojects) {
-    apply plugin: 'kotlin'
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
 
@@ -40,6 +38,7 @@ configure(subprojects) {
         fontawesomefxVersion = '8.0.0'
         fontawesomefxCommonsVersion = '9.1.2'
         fontawesomefxMaterialdesignfontVersion = '2.0.26-9.1.2'
+        grpcVersion = '1.25.0'
         guavaVersion = '20.0'
         guiceVersion = '4.2.2'
         hamcrestVersion = '1.3'
@@ -61,14 +60,14 @@ configure(subprojects) {
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
         netlayerVersion = '0.6.5.2'
-        protobufVersion = '3.9.1'
+        protobufVersion = '3.10.0'
+        protocVersion = protobufVersion
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
         sarxosVersion = '0.3.12'
         slf4jVersion = '1.7.22'
         sparkVersion = '2.5.2'
         springBootVersion = '1.5.10.RELEASE'
-        springVersion = '4.3.6.RELEASE'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
@@ -88,7 +87,9 @@ configure(subprojects) {
 }
 
 
-configure([project(':desktop'),
+configure([project(':cli'),
+           project(':daemon'),
+           project(':desktop'),
            project(':monitor'),
            project(':relay'),
            project(':seednode'),
@@ -168,7 +169,7 @@ configure(project(':common')) {
 
     protobuf {
         protoc {
-            artifact = "com.google.protobuf:protoc:$protobufVersion"
+            artifact = "com.google.protobuf:protoc:$protocVersion"
         }
     }
 
@@ -177,8 +178,8 @@ configure(project(':common')) {
         compile "org.openjfx:javafx-base:$javafxVersion:$os"
         compile "org.openjfx:javafx-graphics:$javafxVersion:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
-        compile 'com.google.code.gson:gson:2.7'
-        compile "org.springframework:spring-core:$springVersion"
+        compile 'com.google.code.gson:gson:2.8.5'
+        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
         compile "ch.qos.logback:logback-classic:$logbackVersion"
@@ -199,6 +200,7 @@ configure(project(':common')) {
         compile "org.apache.commons:commons-lang3:$langVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile "org.hamcrest:hamcrest-all:$hamcrestVersion"
     }
 }
 
@@ -212,10 +214,7 @@ configure(project(':p2p')) {
         compile("com.github.JesusMcCloud.netlayer:tor.external:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile("org.apache.httpcomponents:httpclient:$httpclientVersion") {
-            exclude(module: 'commons-logging')
-        }
-        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        compile "org.apache.httpcomponents:httpclient:$httpclientVersion"
         compile "org.fxmisc.easybind:easybind:$easybindVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -227,10 +226,11 @@ configure(project(':p2p')) {
 
 
 configure(project(':core')) {
+    apply plugin: 'com.google.protobuf'
+
     dependencies {
         compile project(':assets')
         compile project(':p2p')
-        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
@@ -252,30 +252,78 @@ configure(project(':core')) {
         compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
             exclude(module: 'jackson-annotations')
         }
-
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation("io.grpc:grpc-protobuf:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        compileOnly "javax.annotation:javax.annotation-api:1.2"
+        runtimeOnly ("io.grpc:grpc-netty-shaded:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
+        testCompile "org.hamcrest:hamcrest-all:$hamcrestVersion"
         testCompile "org.mockito:mockito-core:$mockitoVersion"
-        testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
-        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: "$hamcrestVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
+
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:${protocVersion}"
+        }
+        plugins {
+            grpc {
+                artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+            }
+        }
+        generateProtoTasks {
+            all()*.plugins { grpc {} }
+        }
+    }
+
+    sourceSets.main.java.srcDirs += [
+        'build/generated/source/proto/main/grpc',
+        'build/generated/source/proto/main/java'
+    ]
 
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
     }
 }
 
+configure(project(':cli')) {
+    mainClassName = 'bisq.cli.app.BisqCliMain'
+
+    dependencies {
+        compile project(':core')
+        implementation("io.grpc:grpc-core:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
 
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.2.3-SNAPSHOT'
+    version = '1.2.7-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
@@ -303,7 +351,6 @@ configure(project(':desktop')) {
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
         testCompile "org.mockito:mockito-core:$mockitoVersion"
-        testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -390,7 +437,7 @@ configure(project(':seednode')) {
         compile project(':core')
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
     }
 }
 
@@ -401,6 +448,17 @@ configure(project(':statsnode')) {
     dependencies {
         compile project(':core')
         compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+configure(project(':daemon')) {
+    mainClassName = 'bisq.daemon.app.BisqDaemonMain'
+
+    dependencies {
+        compile project(':core')
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        compileOnly "javax.annotation:javax.annotation-api:1.2"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }

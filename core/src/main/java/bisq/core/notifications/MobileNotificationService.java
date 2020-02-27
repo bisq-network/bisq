@@ -19,11 +19,11 @@ package bisq.core.notifications;
 
 import bisq.core.user.Preferences;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.http.HttpClient;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import com.google.gson.Gson;
@@ -93,7 +93,7 @@ public class MobileNotificationService {
                                      MobileNotificationValidator mobileNotificationValidator,
                                      MobileModel mobileModel,
                                      HttpClient httpClient,
-                                     @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) Boolean useLocalHost) {
+                                     @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalHost) {
         this.preferences = preferences;
         this.mobileMessageEncryption = mobileMessageEncryption;
         this.mobileNotificationValidator = mobileNotificationValidator;

@@ -20,8 +20,8 @@ package bisq.core.account.sign;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
@@ -35,8 +35,8 @@ import com.google.protobuf.ByteString;
 import org.bitcoinj.core.Coin;
 
 import java.time.Clock;
+import java.time.Instant;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Value;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 // Supports signatures made from EC key (arbitrators) and signature created with DSA key.
 @Slf4j
 @Value
-public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope,
+public class SignedWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope,
         DateTolerantPayload, CapabilityRequiringPayload {
 
     public enum VerificationMethod {
@@ -142,7 +142,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     public boolean isDateInTolerance(Clock clock) {
         // We don't allow older or newer than 1 day.
         // Preventing forward dating is also important to protect against a sophisticated attack
-        return Math.abs(new Date().getTime() - date) <= TOLERANCE;
+        return Math.abs(clock.millis() - date) <= TOLERANCE;
     }
 
     @Override
@@ -176,12 +176,12 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     @Override
     public String toString() {
         return "SignedWitness{" +
-                ",\n     verificationMethod=" + verificationMethod +
+                "\n     verificationMethod=" + verificationMethod +
                 ",\n     witnessHash=" + Utilities.bytesAsHexString(accountAgeWitnessHash) +
                 ",\n     signature=" + Utilities.bytesAsHexString(signature) +
                 ",\n     signerPubKey=" + Utilities.bytesAsHexString(signerPubKey) +
                 ",\n     witnessOwnerPubKey=" + Utilities.bytesAsHexString(witnessOwnerPubKey) +
-                ",\n     date=" + date +
+                ",\n     date=" + Instant.ofEpochMilli(date) +
                 ",\n     tradeAmount=" + Coin.valueOf(tradeAmount).toFriendlyString() +
                 ",\n     hash=" + Utilities.bytesAsHexString(hash) +
                 "\n}";

@@ -27,7 +27,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
@@ -35,6 +34,7 @@ import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import com.google.common.reflect.TypeToken;
@@ -80,8 +80,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 
 import javafx.util.Duration;
-
-import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
@@ -845,8 +843,8 @@ public abstract class Overlay<T extends Overlay<T>> {
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> {
             try {
-                File dataDir = new File(BisqEnvironment.getStaticAppDataDir());
-                File logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
+                File dataDir = Config.appDataDir();
+                File logFile = new File(dataDir, "bisq.log");
                 Utilities.openFile(logFile);
             } catch (IOException e) {
                 e.printStackTrace();

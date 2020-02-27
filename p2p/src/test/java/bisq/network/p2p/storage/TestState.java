@@ -171,69 +171,66 @@ public class TestState {
 
     void verifyPersistableAdd(SavedTestState beforeState,
                               PersistableNetworkPayload persistableNetworkPayload,
-                              boolean expectedStateChange,
-                              boolean expectedBroadcastAndListenersSignaled,
-                              boolean expectedIsDataOwner) {
+                              boolean expectedHashMapAndDataStoreUpdated,
+                              boolean expectedListenersSignaled,
+                              boolean expectedBroadcast) {
         P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash());
 
-        if (expectedStateChange) {
-            // Payload is accessible from get()
+        if (expectedHashMapAndDataStoreUpdated)
             Assert.assertEquals(persistableNetworkPayload, this.mockedStorage.getAppendOnlyDataStoreMap().get(hash));
-        } else {
-            // On failure, just ensure the state remained the same as before the add
-            if (beforeState.persistableNetworkPayloadBeforeOp != null)
-                Assert.assertEquals(beforeState.persistableNetworkPayloadBeforeOp, this.mockedStorage.getAppendOnlyDataStoreMap().get(hash));
-            else
-                Assert.assertNull(this.mockedStorage.getAppendOnlyDataStoreMap().get(hash));
-        }
+        else
+            Assert.assertEquals(beforeState.persistableNetworkPayloadBeforeOp, this.mockedStorage.getAppendOnlyDataStoreMap().get(hash));
 
-        if (expectedStateChange && expectedBroadcastAndListenersSignaled) {
-            // Broadcast Called
-            verify(this.mockBroadcaster).broadcast(any(AddPersistableNetworkPayloadMessage.class), any(NodeAddress.class),
-                    eq(null), eq(expectedIsDataOwner));
-
-            // Verify the listeners were updated once
+        if (expectedListenersSignaled)
             verify(this.appendOnlyDataStoreListener).onAdded(persistableNetworkPayload);
-
-        } else {
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
-
-            // Verify the listeners were never updated
+        else
             verify(this.appendOnlyDataStoreListener, never()).onAdded(persistableNetworkPayload);
-        }
+
+        if (expectedBroadcast)
+            verify(this.mockBroadcaster).broadcast(any(AddPersistableNetworkPayloadMessage.class),
+                    nullable(NodeAddress.class), isNull());
+        else
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
     }
 
     void verifyProtectedStorageAdd(SavedTestState beforeState,
                                    ProtectedStorageEntry protectedStorageEntry,
-                                   boolean expectedStateChange,
-                                   boolean expectedIsDataOwner) {
+                                   boolean expectedHashMapAndDataStoreUpdated,
+                                   boolean expectedListenersSignaled,
+                                   boolean expectedBroadcast,
+                                   boolean expectedSequenceNrMapWrite) {
         P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
 
-        if (expectedStateChange) {
+        if (expectedHashMapAndDataStoreUpdated) {
             Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getMap().get(hashMapHash));
 
             if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload)
                 Assert.assertEquals(protectedStorageEntry, this.protectedDataStoreService.getMap().get(hashMapHash));
+        } else {
+            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
+            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.protectedDataStoreService.getMap().get(hashMapHash));
+        }
 
+        if (expectedListenersSignaled) {
             verify(this.hashMapChangedListener).onAdded(Collections.singletonList(protectedStorageEntry));
+        } else {
+            verify(this.hashMapChangedListener, never()).onAdded(Collections.singletonList(protectedStorageEntry));
+        }
 
+        if (expectedBroadcast) {
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
-            verify(this.mockBroadcaster).broadcast(captor.capture(), any(NodeAddress.class),
-                    eq(null), eq(expectedIsDataOwner));
+            verify(this.mockBroadcaster).broadcast(captor.capture(), nullable(NodeAddress.class), isNull());
 
             BroadcastMessage broadcastMessage = captor.getValue();
             Assert.assertTrue(broadcastMessage instanceof AddDataMessage);
             Assert.assertEquals(protectedStorageEntry, ((AddDataMessage) broadcastMessage).getProtectedStorageEntry());
+        } else {
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
+        }
 
+        if (expectedSequenceNrMapWrite) {
             this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
         } else {
-            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
-            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.protectedDataStoreService.getMap().get(hashMapHash));
-
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
-
-            // Internal state didn't change... nothing should be notified
-            verify(this.hashMapChangedListener, never()).onAdded(Collections.singletonList(protectedStorageEntry));
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
         }
     }
@@ -243,12 +240,11 @@ public class TestState {
                                       boolean expectedHashMapAndDataStoreUpdated,
                                       boolean expectedListenersSignaled,
                                       boolean expectedBroadcast,
-                                      boolean expectedSeqNrWrite,
-                                      boolean expectedIsDataOwner) {
+                                      boolean expectedSeqNrWrite) {
 
         verifyProtectedStorageRemove(beforeState, Collections.singletonList(protectedStorageEntry),
                 expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast,
-                expectedSeqNrWrite, expectedIsDataOwner);
+                expectedSeqNrWrite);
     }
 
     void verifyProtectedStorageRemove(SavedTestState beforeState,
@@ -256,8 +252,7 @@ public class TestState {
                                       boolean expectedHashMapAndDataStoreUpdated,
                                       boolean expectedListenersSignaled,
                                       boolean expectedBroadcast,
-                                      boolean expectedSeqNrWrite,
-                                      boolean expectedIsDataOwner) {
+                                      boolean expectedSeqNrWrite) {
 
         // The default matcher expects orders to stay the same. So, create a custom matcher function since
         // we don't care about the order.
@@ -280,7 +275,7 @@ public class TestState {
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
 
         if (!expectedBroadcast)
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
 
 
         protectedStorageEntries.forEach(protectedStorageEntry -> {
@@ -292,9 +287,9 @@ public class TestState {
 
             if (expectedBroadcast) {
                 if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-                    verify(this.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+                    verify(this.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), nullable(NodeAddress.class), isNull());
                 else
-                    verify(this.mockBroadcaster).broadcast(any(RemoveDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+                    verify(this.mockBroadcaster).broadcast(any(RemoveDataMessage.class), nullable(NodeAddress.class), isNull());
             }
 
 
@@ -312,8 +307,7 @@ public class TestState {
 
     void verifyRefreshTTL(SavedTestState beforeState,
                           RefreshOfferMessage refreshOfferMessage,
-                          boolean expectedStateChange,
-                          boolean expectedIsDataOwner) {
+                          boolean expectedStateChange) {
         P2PDataStorage.ByteArray payloadHash = new P2PDataStorage.ByteArray(refreshOfferMessage.getHashOfPayload());
 
         ProtectedStorageEntry entryAfterRefresh = this.mockedStorage.getMap().get(payloadHash);
@@ -325,8 +319,7 @@ public class TestState {
             Assert.assertTrue(entryAfterRefresh.getCreationTimeStamp() > beforeState.creationTimestampBeforeUpdate);
 
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
-            verify(this.mockBroadcaster).broadcast(captor.capture(), any(NodeAddress.class),
-                    eq(null), eq(expectedIsDataOwner));
+            verify(this.mockBroadcaster).broadcast(captor.capture(), nullable(NodeAddress.class), isNull());
 
             BroadcastMessage broadcastMessage = captor.getValue();
             Assert.assertTrue(broadcastMessage instanceof RefreshOfferMessage);
@@ -343,7 +336,7 @@ public class TestState {
                 Assert.assertEquals(beforeState.creationTimestampBeforeUpdate, entryAfterRefresh.getCreationTimeStamp());
             }
 
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
         }
     }

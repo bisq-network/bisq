@@ -72,7 +72,6 @@ import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.CashDepositAccount;
@@ -90,6 +89,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -256,7 +256,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> {
-                        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+                        final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
                         if (paymentAccount instanceof ClearXchangeAccount) {
                             new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                                     .width(900)

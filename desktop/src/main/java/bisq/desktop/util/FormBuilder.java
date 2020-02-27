@@ -504,9 +504,9 @@ public class FormBuilder {
 
     public static TextArea addTextArea(GridPane gridPane, int rowIndex, String prompt, double top) {
 
-        TextArea textArea = new BisqTextArea();
+        JFXTextArea textArea = new BisqTextArea();
         textArea.setPromptText(prompt);
-        ((JFXTextArea) textArea).setLabelFloat(true);
+        textArea.setLabelFloat(true);
         textArea.setWrapText(true);
 
         GridPane.setRowIndex(textArea, rowIndex);
@@ -901,7 +901,7 @@ public class FormBuilder {
     }
 
     public static CheckBox addCheckBox(GridPane gridPane, int rowIndex, String checkBoxTitle, double top) {
-        return addCheckBox(gridPane, rowIndex, 0, checkBoxTitle, 0);
+        return addCheckBox(gridPane, rowIndex, 0, checkBoxTitle, top);
     }
 
     public static CheckBox addCheckBox(GridPane gridPane,
@@ -1221,7 +1221,7 @@ public class FormBuilder {
         final Label topLabel2 = getTopLabel(titleCombobox);
         AutocompleteComboBox<T> comboBox = new AutocompleteComboBox<>();
         comboBox.setPromptText(titleCombobox);
-        ((JFXComboBox<T>) comboBox).setLabelFloat(true);
+        comboBox.setLabelFloat(true);
         topLabelVBox2.getChildren().addAll(topLabel2, comboBox);
 
         hBox.getChildren().addAll(topLabelVBox1, topLabelVBox2);
@@ -1278,9 +1278,9 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        ComboBox<T> comboBox = new JFXComboBox<>();
+        JFXComboBox<T> comboBox = new JFXComboBox<>();
         comboBox.setPromptText(titleCombobox);
-        ((JFXComboBox<T>) comboBox).setLabelFloat(true);
+        comboBox.setLabelFloat(true);
 
         TextField textField = new BisqTextField();
 
@@ -2045,16 +2045,27 @@ public class FormBuilder {
     // Icons
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label) {
+    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label, String style) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             final Text textIcon = MaterialDesignIconFactory.get().createIcon(icon, iconSize);
             textIcon.setOpacity(0.7);
+            if (style != null) {
+                textIcon.getStyleClass().add(style);
+            }
             label.setContentDisplay(ContentDisplay.LEFT);
             label.setGraphic(textIcon);
             return textIcon;
         } else {
             throw new IllegalArgumentException("Not supported icon type");
         }
+    }
+
+    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label) {
+        return getIconForLabel(icon, iconSize, label, null);
+    }
+
+    public static Text getSmallIconForLabel(GlyphIcons icon, Label label, String style) {
+        return getIconForLabel(icon, "0.769em", label, style);
     }
 
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {

@@ -50,6 +50,7 @@ public class InputTextField extends JFXTextField {
     private double inputLineExtension = 0;
 
     private InputValidator validator;
+    private String errorMessage = null;
 
 
     public InputValidator getValidator() {
@@ -58,6 +59,10 @@ public class InputTextField extends JFXTextField {
 
     public void setValidator(InputValidator validator) {
         this.validator = validator;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,23 +76,31 @@ public class InputTextField extends JFXTextField {
 
         validationResult.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                if (newValue.isValid) {
-                    resetValidation();
-                } else {
-                    resetValidation();
-                    validate();
-
-                    jfxValidationWrapper.applyErrorMessage(newValue);
+                resetValidation();
+                if (!newValue.isValid) {
+                    if (this.errorMessage != null) {
+                        jfxValidationWrapper.applyErrorMessage(this.errorMessage);
+                    } else {
+                        jfxValidationWrapper.applyErrorMessage(newValue);
+                    }
                 }
                 validate();
             }
         });
 
-        focusedProperty().addListener((o, oldValue, newValue) -> {
-            if (oldValue && !newValue && validator != null) {
+        textProperty().addListener((o, oldValue, newValue) -> {
+            if (validator != null) {
                 this.validationResult.set(validator.validate(getText()));
-            } else if (!oldValue && newValue && validator != null) {
-                this.validationResult.set(new InputValidator.ValidationResult(true));
+            }
+        });
+
+        focusedProperty().addListener((o, oldValue, newValue) -> {
+            if (validator != null) {
+                if (!oldValue && newValue) {
+                    this.validationResult.set(new InputValidator.ValidationResult(true));
+                } else {
+                    this.validationResult.set(validator.validate(getText()));
+                }
             }
         });
     }

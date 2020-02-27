@@ -18,9 +18,9 @@
 package bisq.core.payment.payload;
 
 
-import com.google.protobuf.Message;
+import bisq.common.util.CollectionUtils;
 
-import org.springframework.util.CollectionUtils;
+import com.google.protobuf.Message;
 
 import java.util.HashMap;
 import java.util.Map;

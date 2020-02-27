@@ -115,6 +115,11 @@ public class InfoInputTextField extends AnchorPane {
         setActionHandlers(node);
     }
 
+    public void hideInfoContent() {
+        currentIcon = null;
+        hideIcons();
+    }
+
     public void setIconsRightAligned() {
         AnchorPane.clearConstraints(infoIcon);
         AnchorPane.clearConstraints(warningIcon);

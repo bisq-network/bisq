@@ -17,8 +17,9 @@
 
 package bisq.core.dao.state.model.governance;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
+
+import bisq.common.config.Config;
 
 import lombok.Getter;
 
@@ -92,9 +93,9 @@ public enum BondedRoleType {
      */
     BondedRoleType(long requiredBondUnit, int unlockTimeInDays, String link, boolean allowMultipleHolders) {
         this.requiredBondUnit = requiredBondUnit;
-        this.unlockTimeInBlocks = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+        this.unlockTimeInBlocks = Config.baseCurrencyNetwork().isMainnet() ?
                 unlockTimeInDays * 144 :    // mainnet (144 blocks per day)
-                BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                Config.baseCurrencyNetwork().isRegtest() ?
                         5 :                 // regtest (arbitrarily low value for dev testing)
                         144;                // testnet (relatively short time for testing purposes)
         this.link = link;

@@ -35,6 +35,8 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 public class OfferForJson {
     private static final Logger log = LoggerFactory.getLogger(OfferForJson.class);
 
@@ -48,7 +50,6 @@ public class OfferForJson {
     public final double marketPriceMargin;
     public final String paymentMethod;
     public final String id;
-    public final String offerFeeTxID;
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
@@ -78,13 +79,12 @@ public class OfferForJson {
                         String currencyCode,
                         Coin minAmount,
                         Coin amount,
-                        Price price,
+                        @Nullable Price price,
                         Date date,
                         String id,
                         boolean useMarketBasedPrice,
                         double marketPriceMargin,
-                        PaymentMethod paymentMethod,
-                        String offerFeeTxID) {
+                        PaymentMethod paymentMethod) {
 
         this.direction = direction;
         this.currencyCode = currencyCode;
@@ -96,7 +96,6 @@ public class OfferForJson {
         this.useMarketBasedPrice = useMarketBasedPrice;
         this.marketPriceMargin = marketPriceMargin;
         this.paymentMethod = paymentMethod.getId();
-        this.offerFeeTxID = offerFeeTxID;
 
         setDisplayStrings();
     }

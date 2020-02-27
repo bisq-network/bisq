@@ -17,8 +17,6 @@
 
 package bisq.seednode;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.app.BisqExecutable;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
@@ -28,32 +26,27 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.setup.CommonSetup;
 
-import joptsimple.OptionSet;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.2.3";
+    private static final String VERSION = "1.2.7";
     private SeedNode seedNode;
 
     public SeedNodeMain() {
-        super("Bisq Seednode", "bisq-seednode", VERSION);
+        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
     }
 
     public static void main(String[] args) throws Exception {
         log.info("SeedNode.VERSION: " + VERSION);
-        BisqEnvironment.setDefaultAppName("bisq_seednode");
-
-        if (BisqExecutable.setupInitialOptionParser(args))
-            new SeedNodeMain().execute(args);
+        new SeedNodeMain().execute(args);
     }
 
     @Override
-    protected void doExecute(OptionSet options) {
-        super.doExecute(options);
+    protected void doExecute() {
+        super.doExecute();
 
-        checkMemory(bisqEnvironment, this);
+        checkMemory(config, this);
         startShutDownInterval(this);
         CommonSetup.setup(this);
 
@@ -89,7 +82,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected AppModule getModule() {
-        return new ModuleForAppWithP2p(bisqEnvironment);
+        return new ModuleForAppWithP2p(config);
     }
 
     @Override

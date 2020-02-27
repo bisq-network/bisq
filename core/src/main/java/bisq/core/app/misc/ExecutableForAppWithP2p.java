@@ -17,8 +17,6 @@
 
 package bisq.core.app.misc;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -29,6 +27,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
@@ -47,16 +46,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
-    private static final long MAX_MEMORY_MB_DEFAULT = 1200;
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
     private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
     private volatile boolean stopped;
     private final long startTime = System.currentTimeMillis();
-    private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
-    public ExecutableForAppWithP2p(String fullName, String scriptName, String version) {
-        super(fullName, scriptName, version);
+    public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
+        super(fullName, scriptName, appName, version);
     }
 
     @Override
@@ -138,16 +135,8 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         }, CHECK_SHUTDOWN_SEC);
     }
 
-    protected void checkMemory(BisqEnvironment environment, GracefulShutDownHandler gracefulShutDownHandler) {
-        String maxMemoryOption = environment.getProperty(AppOptionKeys.MAX_MEMORY);
-        if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
-            try {
-                maxMemory = Integer.parseInt(maxMemoryOption);
-            } catch (Throwable t) {
-                log.error(t.getMessage());
-            }
-        }
-
+    protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
+        int maxMemory = config.maxMemory;
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
             if (!stopped) {
@@ -189,12 +178,12 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         });
     }
 
-    protected void restart(BisqEnvironment bisqEnvironment, GracefulShutDownHandler gracefulShutDownHandler) {
+    protected void restart(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         stopped = true;
         gracefulShutDownHandler.gracefulShutDown(() -> {
             //noinspection finally
             try {
-                final String[] tokens = bisqEnvironment.getAppDataDir().split("_");
+                final String[] tokens = config.appDataDir.getPath().split("_");
                 String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
                 RestartUtil.restartApplication(logPath);
             } catch (IOException e) {

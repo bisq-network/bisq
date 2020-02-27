@@ -17,7 +17,6 @@
 
 package bisq.network.p2p;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.LocalhostNetworkNode;
 import bisq.network.p2p.network.NetworkNode;
@@ -25,6 +24,7 @@ import bisq.network.p2p.network.NewTor;
 import bisq.network.p2p.network.RunningTor;
 import bisq.network.p2p.network.TorNetworkNode;
 
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import javax.inject.Provider;
@@ -34,6 +34,8 @@ import javax.inject.Inject;
 
 import java.io.File;
 
+import javax.annotation.Nullable;
+
 public class NetworkNodeProvider implements Provider<NetworkNode> {
 
     private final NetworkNode networkNode;
@@ -41,21 +43,21 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
     @Inject
     public NetworkNodeProvider(NetworkProtoResolver networkProtoResolver,
                                BridgeAddressProvider bridgeAddressProvider,
-                               @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
-                               @Named(NetworkOptionKeys.PORT_KEY) int port,
-                               @Named(NetworkOptionKeys.TOR_DIR) File torDir,
-                               @Named(NetworkOptionKeys.TORRC_FILE) String torrcFile,
-                               @Named(NetworkOptionKeys.TORRC_OPTIONS) String torrcOptions,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) String controlPort,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) String password,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) String cookieFile,
-                               @Named(NetworkOptionKeys.TOR_STREAM_ISOLATION) boolean streamIsolation,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) boolean useSafeCookieAuthentication ) {
+                               @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
+                               @Named(Config.NODE_PORT) int port,
+                               @Named(Config.TOR_DIR) File torDir,
+                               @Nullable @Named(Config.TORRC_FILE) File torrcFile,
+                               @Named(Config.TORRC_OPTIONS) String torrcOptions,
+                               @Named(Config.TOR_CONTROL_PORT) int controlPort,
+                               @Named(Config.TOR_CONTROL_PASSWORD) String password,
+                               @Nullable @Named(Config.TOR_CONTROL_COOKIE_FILE) File cookieFile,
+                               @Named(Config.TOR_STREAM_ISOLATION) boolean streamIsolation,
+                               @Named(Config.TOR_CONTROL_USE_SAFE_COOKIE_AUTH) boolean useSafeCookieAuthentication ) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(port, networkProtoResolver) :
                 new TorNetworkNode(port, networkProtoResolver, streamIsolation,
-                        !controlPort.isEmpty() ?
-                                new RunningTor(torDir, Integer.parseInt(controlPort), password, cookieFile, useSafeCookieAuthentication) :
+                        controlPort != Config.UNSPECIFIED_PORT ?
+                                new RunningTor(torDir, controlPort, password, cookieFile, useSafeCookieAuthentication) :
                                 new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses()));
     }
 

@@ -31,7 +31,7 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.RegexValidator;
 
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.role.BondedRole;

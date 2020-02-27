@@ -24,11 +24,12 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 
 import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
@@ -37,8 +38,6 @@ import com.google.protobuf.ByteString;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-
-import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
@@ -60,7 +59,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKeyBytes"})
 @Value
-public final class TradeStatistics implements LazyProcessedPayload, ProtectedStoragePayload, ExpirablePayload, PersistablePayload {
+public final class TradeStatistics implements ProcessOncePersistableNetworkPayload, ProtectedStoragePayload, ExpirablePayload, PersistablePayload {
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
     private final String counterCurrency;

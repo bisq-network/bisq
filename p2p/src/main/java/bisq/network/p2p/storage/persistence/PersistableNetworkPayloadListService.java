@@ -20,6 +20,7 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
+import bisq.common.config.Config;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 
@@ -53,7 +54,7 @@ public final class PersistableNetworkPayloadListService extends MapStoreService<
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PersistableNetworkPayloadListService(@Named(Storage.STORAGE_DIR) File storageDir,
+    public PersistableNetworkPayloadListService(@Named(Config.STORAGE_DIR) File storageDir,
                                                 Storage<PersistableNetworkPayloadList> persistableNetworkPayloadMapStorage) {
         super(storageDir, persistableNetworkPayloadMapStorage);
     }

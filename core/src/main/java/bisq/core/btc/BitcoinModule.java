@@ -17,8 +17,6 @@
 
 package bisq.core.btc;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.setup.RegTestHost;
@@ -35,34 +33,37 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
+import com.google.inject.TypeLiteral;
 
 import java.io.File;
 
 import java.util.Arrays;
+import java.util.List;
 
+import static bisq.common.config.Config.PROVIDERS;
+import static bisq.common.config.Config.WALLET_DIR;
 import static com.google.inject.name.Names.named;
 
 public class BitcoinModule extends AppModule {
-    public BitcoinModule(Environment environment) {
-        super(environment);
+
+    public BitcoinModule(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
         // If we have selected BTC_DAO_REGTEST or BTC_DAO_TESTNET we use our master regtest node,
         // otherwise the specified host or default (localhost)
-        String regTestHost = environment.getProperty(BtcOptionKeys.REG_TEST_HOST, String.class, "");
+        String regTestHost = config.bitcoinRegtestHost;
         if (regTestHost.isEmpty()) {
-            regTestHost = BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ?
+            regTestHost = config.baseCurrencyNetwork.isDaoTestNet() ?
                     "104.248.31.39" :
-                    BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ?
+                    config.baseCurrencyNetwork.isDaoRegTest() ?
                             "134.209.242.206" :
-                            RegTestHost.DEFAULT_HOST;
+                            Config.DEFAULT_REGTEST_HOST;
         }
 
         RegTestHost.HOST = regTestHost;
@@ -74,22 +75,15 @@ public class BitcoinModule extends AppModule {
             bind(RegTestHost.class).toInstance(RegTestHost.REMOTE_HOST);
         }
 
-        bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(environment.getRequiredProperty(UserAgent.NAME_KEY));
-        bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(environment.getRequiredProperty(UserAgent.VERSION_KEY));
-        bind(UserAgent.class).in(Singleton.class);
+        bind(File.class).annotatedWith(named(WALLET_DIR)).toInstance(config.walletDir);
 
-        File walletDir = new File(environment.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
-        bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
-
-        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.BTC_NODES));
-        bindConstant().annotatedWith(named(BtcOptionKeys.USER_AGENT)).to(environment.getRequiredProperty(BtcOptionKeys.USER_AGENT));
-        bindConstant().annotatedWith(named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC));
-        bindConstant().annotatedWith(named(BtcOptionKeys.USE_ALL_PROVIDED_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES));
-        bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
-        bindConstant().annotatedWith(named(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE)).to(environment.getRequiredProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE));
-        String socks5DiscoverMode = environment.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
-        bind(String.class).annotatedWith(Names.named(BtcOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
-        bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(environment.getRequiredProperty(AppOptionKeys.PROVIDERS));
+        bindConstant().annotatedWith(named(Config.BTC_NODES)).to(config.btcNodes);
+        bindConstant().annotatedWith(named(Config.USER_AGENT)).to(config.userAgent);
+        bindConstant().annotatedWith(named(Config.NUM_CONNECTIONS_FOR_BTC)).to(config.numConnectionsForBtc);
+        bindConstant().annotatedWith(named(Config.USE_ALL_PROVIDED_NODES)).to(config.useAllProvidedNodes);
+        bindConstant().annotatedWith(named(Config.IGNORE_LOCAL_BTC_NODE)).to(config.ignoreLocalBtcNode);
+        bindConstant().annotatedWith(named(Config.SOCKS5_DISCOVER_MODE)).to(config.socks5DiscoverMode);
+        bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(PROVIDERS)).toInstance(config.providers);
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(WalletsSetup.class).in(Singleton.class);

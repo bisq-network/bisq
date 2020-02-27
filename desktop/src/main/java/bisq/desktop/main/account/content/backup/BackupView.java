@@ -22,11 +22,10 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
+import bisq.common.config.Config;
 import bisq.common.storage.FileUtil;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -73,10 +72,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BackupView(Preferences preferences, BisqEnvironment environment) {
+    private BackupView(Preferences preferences, Config config) {
         super();
         this.preferences = preferences;
-        dataDir = new File(environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
+        dataDir = new File(config.appDataDir.getPath());
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
 

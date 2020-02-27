@@ -56,9 +56,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
-                          @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
+                          @Nullable BroadcastHandler.Listener listener) {
         BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager);
-        broadcastHandler.broadcast(message, sender, this, listener, isDataOwner);
+        broadcastHandler.broadcast(message, sender, this, listener);
         broadcastHandlers.add(broadcastHandler);
     }
 

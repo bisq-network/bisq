@@ -43,12 +43,10 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
-import bisq.core.exceptions.BisqException;
+import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -57,7 +55,6 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXComboBox;
@@ -146,7 +143,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final CoinFormatter formatter;
 
     private final ToggleGroup navButtons = new ToggleGroup();
     private ChangeListener<String> walletServiceErrorMsgListener;
@@ -166,12 +162,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                     CachingViewLoader viewLoader,
                     Navigation navigation,
                     Transitions transitions,
-                    @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                     DaoStateMonitoringService daoStateMonitoringService) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.formatter = formatter;
         MainView.transitions = transitions;
         this.daoStateMonitoringService = daoStateMonitoringService;
     }
@@ -405,9 +399,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
                 navigation.navigateToPreviousVisitedView();
 
-                transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> {
-                    disposeSplashScreen();
-                });
+                transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());
             }
         });
 
