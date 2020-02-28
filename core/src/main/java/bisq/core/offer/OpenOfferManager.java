@@ -735,15 +735,24 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
                 // We rewrite our offer with the additional capabilities entry
 
-                Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
+                // - Capabilities changed?
+                // We rewrite our offer with the additional capabilities entry
                 Map<String, String> updatedExtraDataMap = new HashMap<>();
+                if (!OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
+                        !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
+                    Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
 
-                if (originalExtraDataMap != null) {
-                    updatedExtraDataMap.putAll(originalExtraDataMap);
+                    if (originalExtraDataMap != null) {
+                        updatedExtraDataMap.putAll(originalExtraDataMap);
+                    }
+
+                    // We overwrite any entry with our current capabilities
+                    updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+                    log.info("Converted offer to support new Capability.MEDIATION and Capability.REFUND_AGENT capability. id={}", originalOffer.getId());
+                } else {
+                    updatedExtraDataMap = originalOfferPayload.getExtraDataMap();
                 }
-
-                // We overwrite any entry with our current capabilities
-                updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
 
                 // - Protocol version changed?
                 int protocolVersion = originalOfferPayload.getProtocolVersion();
