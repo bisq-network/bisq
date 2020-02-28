@@ -732,8 +732,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
             if (originalOfferPayload.getProtocolVersion() < Version.TRADE_PROTOCOL_VERSION ||
                     !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
-                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
-                // We rewrite our offer with the additional capabilities entry
+                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT) ||
+                    !originalOfferPayload.getOwnerNodeAddress().equals(p2PService.getAddress())) {
 
                 // - Capabilities changed?
                 // We rewrite our offer with the additional capabilities entry
@@ -762,9 +762,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     log.info("Updated the protocol version of offer id={}", originalOffer.getId());
                 }
 
+                // - node address changed? (due to a faulty tor dir)
+                NodeAddress ownerNodeAddress = originalOfferPayload.getOwnerNodeAddress();
+                if (!ownerNodeAddress.equals(p2PService.getAddress())) {
+                    ownerNodeAddress = p2PService.getAddress();
+                    log.info("Updated the owner nodeaddress of offer id={}", originalOffer.getId());
+                }
+
                 OfferPayload updatedPayload = new OfferPayload(originalOfferPayload.getId(),
                         originalOfferPayload.getDate(),
-                        originalOfferPayload.getOwnerNodeAddress(),
+                        ownerNodeAddress,
                         originalOfferPayload.getPubKeyRing(),
                         originalOfferPayload.getDirection(),
                         originalOfferPayload.getPrice(),
