@@ -28,7 +28,6 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
-
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
@@ -52,11 +51,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.skin.TextFieldSkin;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -89,25 +92,28 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @Slf4j
 public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
+    
+    private static final Image EYE = new Image(WalletPasswordWindow.class.getResource(Res.get("shared.path.eye")).toExternalForm(), 25, 25, true, true);
+    private static final Image EYE_SLASH = new Image(WalletPasswordWindow.class.getResource(Res.get("shared.path.eye_slash")).toExternalForm(), 25, 25, true, true);
     private final WalletsManager walletsManager;
     private File storageDir;
-
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
     private PasswordTextField passwordTextField;
     private InputTextField visiblePasswordTextField;
-    private AutoTooltipCheckBox showPasswordCheckBox;
     private Button forgotPasswordButton;
     private Button restoreButton;
     private TextArea seedWordsTextArea;
     private DatePicker datePicker;
     private final SimpleBooleanProperty seedWordsValid = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty showPassword = new SimpleBooleanProperty(false);
     private final BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
     private ChangeListener<String> changeListener;
     private ChangeListener<String> wordsTextAreaChangeListener;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
     private boolean hideForgotPasswordButton = false;
-
+    private ImageView passwordImageView;
+    private Image eyeIcon = showPassword.get() ? EYE_SLASH : EYE;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface
@@ -164,7 +170,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         if (passwordTextField != null) {
             passwordTextField.textProperty().removeListener(changeListener);
             visiblePasswordTextField.textProperty().removeListener(changeListener);
-            showPasswordCheckBox.setOnMouseClicked(null);
         }
 
         if (seedWordsValidChangeListener != null) {
@@ -197,10 +202,19 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addInputFields() {
+    	log.info("EYE ICON =>" + eyeIcon.getUrl() + " -> " + eyeIcon);
         VBox vbox = new VBox();
     	vbox.setSpacing(15);
     	vbox.setPadding(new Insets(30, 30, 30, 30));
     	vbox.setAlignment(Pos.CENTER_LEFT);
+    	passwordImageView = new ImageView();
+    	passwordImageView.setImage(eyeIcon);
+    	passwordImageView.setOnMouseClicked(e -> {
+    		showPassword.set(showPassword.get() ? false : true);
+    		eyeIcon = showPassword.get() ? EYE_SLASH : EYE;
+    		passwordImageView.setImage(eyeIcon);
+    	});
+    	StackPane passwordStackPane = new StackPane();
         passwordTextField = new PasswordTextField();
         passwordTextField.setLabelFloat(true);
         passwordTextField.setPromptText(Res.get("password.enterPassword"));
@@ -209,21 +223,25 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         visiblePasswordTextField.setLabelFloat(true);
         visiblePasswordTextField.setPromptText(Res.get("password.enterPassword"));
         visiblePasswordTextField.setMinWidth(560);
-        showPasswordCheckBox = new AutoTooltipCheckBox(Res.get("password.showPassword"));
+    	StackPane.setAlignment(passwordTextField, Pos.CENTER_RIGHT);
+    	StackPane.setAlignment(passwordImageView, Pos.CENTER_RIGHT);
+    	StackPane.setAlignment(visiblePasswordTextField, Pos.CENTER_RIGHT);
+    	passwordStackPane.getChildren().addAll(passwordTextField, visiblePasswordTextField, passwordImageView);
         
-        vbox.getChildren().addAll(passwordTextField, visiblePasswordTextField, showPasswordCheckBox);
+        vbox.getChildren().addAll(passwordStackPane);
         GridPane.setHalignment(vbox, HPos.LEFT);
         GridPane.setRowIndex(vbox, ++rowIndex);
         GridPane.setMargin(vbox, new Insets(15, 10, 10, 15));
         gridPane.getChildren().add(vbox);
         
-        passwordTextField.managedProperty().bind(showPasswordCheckBox.selectedProperty().not());
-        passwordTextField.visibleProperty().bind(showPasswordCheckBox.selectedProperty().not());
-        visiblePasswordTextField.managedProperty().bind(showPasswordCheckBox.selectedProperty());
-        visiblePasswordTextField.visibleProperty().bind(showPasswordCheckBox.selectedProperty());
+        passwordTextField.managedProperty().bind(showPassword.not());
+        passwordTextField.visibleProperty().bind(showPassword.not());
+        visiblePasswordTextField.managedProperty().bind(showPassword);
+        visiblePasswordTextField.visibleProperty().bind(showPassword);
         visiblePasswordTextField.textProperty().bindBidirectional(passwordTextField.textProperty());
 
-        changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(!passwordTextField.validate());
+        changeListener = (observable, oldValue, newValue) -> 
+        	unlockButton.setDisable(!passwordTextField.getText().isEmpty() && passwordTextField.getText().length() >= 10);
         passwordTextField.textProperty().addListener(changeListener);
         visiblePasswordTextField.textProperty().addListener(changeListener);
     }
