@@ -745,8 +745,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 // We overwrite any entry with our current capabilities
                 updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
 
-                // We update the trade protocol version
-                int protocolVersion = Version.TRADE_PROTOCOL_VERSION;
+                // - Protocol version changed?
+                int protocolVersion = originalOfferPayload.getProtocolVersion();
+                if (protocolVersion < Version.TRADE_PROTOCOL_VERSION) {
+                    // We update the trade protocol version
+                    protocolVersion = Version.TRADE_PROTOCOL_VERSION;
+                    log.info("Updated the protocol version of offer id={}", originalOffer.getId());
+                }
 
                 OfferPayload updatedPayload = new OfferPayload(originalOfferPayload.getId(),
                         originalOfferPayload.getDate(),
@@ -807,7 +812,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 updatedOpenOffer.setStorage(openOfferTradableListStorage);
                 openOffers.add(updatedOpenOffer);
 
-                log.info("Converted offer to support new Capability.MEDIATION and Capability.REFUND_AGENT capability. id={}", originalOffer.getId());
+                log.info("Updating offer completed. id={}", originalOffer.getId());
             }
         });
     }
