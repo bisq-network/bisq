@@ -132,7 +132,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PreferencesPayload() {
+    PreferencesPayload() {
     }
 
 
@@ -207,7 +207,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
         return protobuf.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
+    public static PreferencesPayload fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
         final protobuf.Country userCountry = proto.getUserCountry();
         PaymentAccount paymentAccount = null;
         if (proto.hasSelectedPaymentAccountForCreateOffer() && proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod())
@@ -275,6 +275,5 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
                 proto.getTacAcceptedV120());
-
     }
 }

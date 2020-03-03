@@ -68,7 +68,7 @@ public class TradeStatistics2Store implements PersistableEnvelope {
         return protobuf.TradeStatistics2Store.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.TradeStatistics2Store proto) {
+    public static TradeStatistics2Store fromProto(protobuf.TradeStatistics2Store proto) {
         List<TradeStatistics2> list = proto.getItemsList().stream()
                 .map(TradeStatistics2::fromProto).collect(Collectors.toList());
         return new TradeStatistics2Store(list);

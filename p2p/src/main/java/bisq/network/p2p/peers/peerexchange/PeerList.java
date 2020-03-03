@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.peers.peerexchange;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
@@ -43,7 +42,7 @@ public class PeerList extends PersistableList<Peer> {
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PeerList proto) {
+    public static PeerList fromProto(protobuf.PeerList proto) {
         return new PeerList(new ArrayList<>(proto.getPeerList().stream()
                 .map(Peer::fromProto)
                 .collect(Collectors.toList())));

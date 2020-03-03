@@ -72,7 +72,7 @@ public class TempProposalStore implements PersistableEnvelope {
         return protobuf.TempProposalStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.TempProposalStore proto, NetworkProtoResolver networkProtoResolver) {
+    public static TempProposalStore fromProto(protobuf.TempProposalStore proto, NetworkProtoResolver networkProtoResolver) {
         List<ProtectedStorageEntry> list = proto.getItemsList().stream()
                 .map(entry -> ProtectedStorageEntry.fromProto(entry, networkProtoResolver))
                 .collect(Collectors.toList());

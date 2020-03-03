@@ -46,7 +46,7 @@ public class PersistableNetworkPayloadList implements PersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
 
-    public PersistableNetworkPayloadList() {
+    PersistableNetworkPayloadList() {
     }
 
 
@@ -54,7 +54,7 @@ public class PersistableNetworkPayloadList implements PersistableEnvelope {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PersistableNetworkPayloadList(Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map) {
+    private PersistableNetworkPayloadList(Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map) {
         this.map.putAll(map);
     }
 
@@ -69,8 +69,8 @@ public class PersistableNetworkPayloadList implements PersistableEnvelope {
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PersistableNetworkPayloadList proto,
-                                                PersistenceProtoResolver resolver) {
+    public static PersistableNetworkPayloadList fromProto(protobuf.PersistableNetworkPayloadList proto,
+                                                          PersistenceProtoResolver resolver) {
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         proto.getItemsList()
                 .forEach(e -> {

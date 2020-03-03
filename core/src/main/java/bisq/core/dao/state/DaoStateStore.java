@@ -67,7 +67,7 @@ public class DaoStateStore implements PersistableEnvelope {
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.DaoStateStore proto) {
+    public static DaoStateStore fromProto(protobuf.DaoStateStore proto) {
         LinkedList<DaoStateHash> daoStateHashList = proto.getDaoStateHashList().isEmpty() ?
                 new LinkedList<>() :
                 new LinkedList<>(proto.getDaoStateHashList().stream()

@@ -45,7 +45,7 @@ public class NavigationPath implements PersistableEnvelope {
         return protobuf.PersistableEnvelope.newBuilder().setNavigationPath(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.NavigationPath proto) {
+    public static NavigationPath fromProto(protobuf.NavigationPath proto) {
         return new NavigationPath(new ArrayList<>(proto.getPathList()));
     }
 }

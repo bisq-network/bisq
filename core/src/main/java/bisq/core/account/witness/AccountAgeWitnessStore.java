@@ -69,7 +69,7 @@ public class AccountAgeWitnessStore implements PersistableEnvelope {
         return protobuf.AccountAgeWitnessStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.AccountAgeWitnessStore proto) {
+    public static AccountAgeWitnessStore fromProto(protobuf.AccountAgeWitnessStore proto) {
         List<AccountAgeWitness> list = proto.getItemsList().stream()
                 .map(AccountAgeWitness::fromProto).collect(Collectors.toList());
         return new AccountAgeWitnessStore(list);

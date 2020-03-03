@@ -69,7 +69,7 @@ public class BlindVoteStore implements PersistableEnvelope {
         return protobuf.BlindVoteStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.BlindVoteStore proto) {
+    public static BlindVoteStore fromProto(protobuf.BlindVoteStore proto) {
         List<BlindVotePayload> list = proto.getItemsList().stream()
                 .map(BlindVotePayload::fromProto).collect(Collectors.toList());
         return new BlindVoteStore(list);

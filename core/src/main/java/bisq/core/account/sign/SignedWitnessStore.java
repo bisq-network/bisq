@@ -70,7 +70,7 @@ public class SignedWitnessStore implements PersistableEnvelope {
         return protobuf.SignedWitnessStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.SignedWitnessStore proto) {
+    public static SignedWitnessStore fromProto(protobuf.SignedWitnessStore proto) {
         List<SignedWitness> list = proto.getItemsList().stream()
                 .map(SignedWitness::fromProto).collect(Collectors.toList());
         return new SignedWitnessStore(list);
