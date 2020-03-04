@@ -20,7 +20,7 @@ package bisq.core.trade.statistics;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class TradeStatistics2Store implements PersistableEnvelope {
+public class TradeStatistics2Store implements ThreadedPersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
 

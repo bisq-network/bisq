@@ -17,24 +17,28 @@
 
 package bisq.common.proto.persistable;
 
-import bisq.common.Envelope;
-import bisq.common.UserThread;
-
 import com.google.protobuf.Message;
 
-import com.google.common.util.concurrent.Futures;
-
-import java.util.concurrent.FutureTask;
-
 /**
- * Interface for the outside envelope object persisted to disk.
+ * Interface for the outer envelope object persisted to disk, where its serialization
+ * during persistence takes place on a separate thread (for performance).
+ * <p>
+ * To make the serialization thread-safe, all modifications of the object must be
+ * synchronized with it. This may be achieved by wrapping such modifications with the
+ * provided {@link ThreadedPersistableEnvelope#modifySynchronized(Runnable)} method.
  */
-public interface PersistableEnvelope extends Envelope {
+public interface ThreadedPersistableEnvelope extends PersistableEnvelope {
 
+    @Override
     default Message toProtoMessageSynchronized() {
-        FutureTask<Message> toProtoOnUserThread = new FutureTask<>(this::toProtoMessage);
-        UserThread.execute(toProtoOnUserThread);
-        //noinspection UnstableApiUsage
-        return Futures.getUnchecked(toProtoOnUserThread);
+        synchronized (this) {
+            return toProtoMessage();
+        }
+    }
+
+    default void modifySynchronized(Runnable modifyTask) {
+        synchronized (this) {
+            modifyTask.run();
+        }
     }
 }
