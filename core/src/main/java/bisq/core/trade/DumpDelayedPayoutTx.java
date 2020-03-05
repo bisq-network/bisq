@@ -17,24 +17,42 @@
 
 package bisq.core.trade;
 
+import bisq.common.config.Config;
 import bisq.common.storage.JsonFileManager;
 import bisq.common.util.Utilities;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import java.io.File;
+
 import java.util.stream.Collectors;
 
-class DumpDelayedPayoutTx {
+public class DumpDelayedPayoutTx {
+    private final boolean dumpDelayedPayoutTxs;
+    private final JsonFileManager jsonFileManager;
+
+    @Inject
+    DumpDelayedPayoutTx(@Named(Config.STORAGE_DIR) File storageDir,
+                        @Named(Config.DUMP_DELAYED_PAYOUT_TXS) boolean dumpDelayedPayoutTxs) {
+        this.dumpDelayedPayoutTxs = dumpDelayedPayoutTxs;
+        jsonFileManager = new JsonFileManager(storageDir);
+    }
 
     static class DelayedPayoutHash {
         String tradeId;
         String delayedPayoutTx;
+
         DelayedPayoutHash(String tradeId, String delayedPayoutTx) {
             this.tradeId = tradeId;
             this.delayedPayoutTx = delayedPayoutTx;
         }
     }
 
-    static void dumpDelayedPayoutTxs(TradableList<Trade> tradableList, JsonFileManager jsonFileManager,
-                                     String fileName) {
+    public void maybeDumpDelayedPayoutTxs(TradableList<Trade> tradableList, String fileName) {
+        if (!dumpDelayedPayoutTxs)
+            return;
+
         var delayedPayoutHashes = tradableList.stream()
                 .map(trade -> new DelayedPayoutHash(trade.getId(),
                         Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes())))
