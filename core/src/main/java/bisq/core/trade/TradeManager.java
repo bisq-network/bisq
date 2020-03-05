@@ -66,7 +66,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.JsonFileManager;
 import bisq.common.storage.Storage;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -247,7 +246,10 @@ public class TradeManager implements PersistedDataHost {
             if (offer != null)
                 offer.setPriceFeedService(priceFeedService);
         });
-        maybeDumpDelayedPayoutTxs();
+
+        if (dumpDelayedPayoutTxs){
+            DumpDelayedPayoutTx.dumpDelayedPayoutTxs(tradableList, jsonFileManager, "delayed_payout_txs");
+        }
     }
 
 
@@ -792,26 +794,5 @@ public class TradeManager implements PersistedDataHost {
 
     public void persistTrades() {
         tradableList.persist();
-    }
-
-    @SuppressWarnings("InnerClassMayBeStatic")
-    class DelayedPayoutHash {
-        String tradeId;
-        String delayedPayoutTx;
-        DelayedPayoutHash(String tradeId, String delayedPayoutTx) {
-            this.tradeId = tradeId;
-            this.delayedPayoutTx = delayedPayoutTx;
-        }
-    }
-
-    private void maybeDumpDelayedPayoutTxs() {
-        if (!dumpDelayedPayoutTxs)
-            return;
-
-        var delayedPayoutHashes = tradableList.stream()
-                .map(trade -> new DelayedPayoutHash(trade.getId(),
-                        Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes())))
-                .collect(Collectors.toList());
-        jsonFileManager.writeToDisc(Utilities.objectToJson(delayedPayoutHashes), "delayed_payout_txs");
     }
 }
