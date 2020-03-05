@@ -373,7 +373,7 @@ public class Config {
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<String> providersOpt =
-                parser.accepts(PROVIDERS, "List custom providers")
+                parser.accepts(PROVIDERS, "List custom pricenodes")
                         .withRequiredArg()
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
