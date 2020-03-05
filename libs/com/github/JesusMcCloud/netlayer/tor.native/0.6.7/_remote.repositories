@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 05 17:10:53 CET 2020
+tor.native-0.6.7.pom>=
+tor.native-0.6.7.jar>=

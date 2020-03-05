@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.JesusMcCloud.netlayer</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.6.7</version>
+    <packaging>pom</packaging>
+
+    <name>Netlayer</name>
+
+    <properties>
+        <!-- General -->
+        <java.version>1.8</java.version>
+        <kotlin.version>1.3.41</kotlin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Maven plugins -->
+        <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+        <tor-binary.version>0.4.2.6</tor-binary.version>
+    </properties>
+
+    <modules>
+        <module>tor</module>
+        <module>tor.native</module>
+        <module>tor.external</module>
+    </modules>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+    <dependencies>
+         <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ravn</groupId>
+            <artifactId>jsocks</artifactId>
+            <version>567e1cd</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.microutils</groupId>
+            <artifactId>kotlin-logging</artifactId>
+            <version>1.5.4</version>
+        </dependency>
+    </dependencies>
+</project>

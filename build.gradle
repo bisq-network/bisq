@@ -59,7 +59,7 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = '0.6.5.2'
+        netlayerVersion = '0.6.7'
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
@@ -73,6 +73,9 @@ configure(subprojects) {
     }
 
     repositories {
+        maven {
+            url uri("${rootProject.projectDir}/libs")
+        }
         mavenCentral()
         maven { url 'https://jitpack.io' }
     }
