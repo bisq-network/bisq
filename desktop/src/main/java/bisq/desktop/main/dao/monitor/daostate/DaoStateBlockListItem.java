@@ -22,6 +22,8 @@ import bisq.desktop.main.dao.monitor.StateBlockListItem;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 
+import java.util.function.IntSupplier;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @EqualsAndHashCode(callSuper = true)
 class DaoStateBlockListItem extends StateBlockListItem<DaoStateHash, DaoStateBlock> {
-    DaoStateBlockListItem(DaoStateBlock stateBlock, int cycleIndex) {
-        super(stateBlock, cycleIndex);
+    DaoStateBlockListItem(DaoStateBlock stateBlock, IntSupplier cycleIndexSupplier) {
+        super(stateBlock, cycleIndexSupplier);
     }
 }
-

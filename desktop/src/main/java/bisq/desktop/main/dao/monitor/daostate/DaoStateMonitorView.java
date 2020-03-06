@@ -45,6 +45,7 @@ import javafx.collections.ListChangeListener;
 import java.io.File;
 
 import java.util.Map;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -126,8 +127,10 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
     @Override
     protected DaoStateBlockListItem getStateBlockListItem(DaoStateBlock daoStateBlock) {
-        int cycleIndex = periodService.getCycle(daoStateBlock.getHeight()).map(cycleService::getCycleIndex).orElse(0);
-        return new DaoStateBlockListItem(daoStateBlock, cycleIndex);
+        IntSupplier cycleIndexSupplier = () -> periodService.getCycle(daoStateBlock.getHeight())
+                .map(cycleService::getCycleIndex)
+                .orElse(0);
+        return new DaoStateBlockListItem(daoStateBlock, cycleIndexSupplier);
     }
 
     @Override
