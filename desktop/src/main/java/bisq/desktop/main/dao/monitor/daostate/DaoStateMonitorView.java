@@ -19,7 +19,6 @@ package bisq.desktop.main.dao.monitor.daostate;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.monitor.StateMonitorView;
-import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
@@ -53,7 +52,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
         implements DaoStateMonitoringService.Listener {
     private final DaoStateMonitoringService daoStateMonitoringService;
     private ListChangeListener<UtxoMismatch> utxoMismatchListChangeListener;
-    private Overlay warningPopup;
+    private Popup warningPopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -208,17 +207,16 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     private void updateUtxoMismatches() {
         if (!daoStateMonitoringService.getUtxoMismatches().isEmpty()) {
             StringBuilder sb = new StringBuilder();
-            daoStateMonitoringService.getUtxoMismatches().forEach(e -> {
-                sb.append("\n").append(Res.get("dao.monitor.daoState.utxoConflicts.blockHeight", e.getHeight())).append("\n")
-                        .append(Res.get("dao.monitor.daoState.utxoConflicts.sumUtxo", e.getSumUtxo() / 100)).append("\n")
-                        .append(Res.get("dao.monitor.daoState.utxoConflicts.sumBsq", e.getSumBsq() / 100));
-            });
+            daoStateMonitoringService.getUtxoMismatches().forEach(e -> sb.append("\n")
+                    .append(Res.get("dao.monitor.daoState.utxoConflicts.blockHeight", e.getHeight())).append("\n")
+                    .append(Res.get("dao.monitor.daoState.utxoConflicts.sumUtxo", e.getSumUtxo() / 100)).append("\n")
+                    .append(Res.get("dao.monitor.daoState.utxoConflicts.sumBsq", e.getSumBsq() / 100))
+            );
 
             if (warningPopup == null) {
                 warningPopup = new Popup().headLine(Res.get("dao.monitor.daoState.utxoConflicts"))
-                        .warning(Utilities.toTruncatedString(sb.toString(), 500, false)).onClose(() -> {
-                            warningPopup = null;
-                        });
+                        .warning(Utilities.toTruncatedString(sb.toString(), 500, false))
+                        .onClose(() -> warningPopup = null);
                 warningPopup.show();
             }
         }
