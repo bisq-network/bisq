@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
-@Order(4)
+@Order(3)
 class Poloniex extends ExchangeRateProvider {
 
     private final RestTemplate restTemplate = new RestTemplate();
