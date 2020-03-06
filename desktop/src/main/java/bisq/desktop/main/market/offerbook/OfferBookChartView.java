@@ -42,6 +42,7 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
@@ -91,6 +92,7 @@ import javafx.util.StringConverter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelAutocompleteComboBox;
@@ -280,6 +282,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
 
         root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
+        layout();
 
         updateChartData();
     }
@@ -321,13 +324,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             navigation.navigateTo(MainView.class, BuyOfferView.class);
         };
 
-        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
-            double newTableViewHeight = offerTableViewHeight.apply(newValue.doubleValue());
-            if (buyOfferTableView.getHeight() != newTableViewHeight) {
-                buyOfferTableView.setMinHeight(newTableViewHeight);
-                sellOfferTableView.setMinHeight(newTableViewHeight);
-            }
-        };
+        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> layout();
     }
 
     @Override
@@ -665,4 +662,16 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         Collections.reverse(columns);
         sellOfferTableView.getColumns().addAll(columns);
     }
+
+    private void layout() {
+        UserThread.runAfter(() -> {
+            if (root.getScene() != null) {
+                double newTableViewHeight = offerTableViewHeight.apply(root.getScene().getHeight());
+                if (buyOfferTableView.getHeight() != newTableViewHeight) {
+                    buyOfferTableView.setMinHeight(newTableViewHeight);
+                    sellOfferTableView.setMinHeight(newTableViewHeight);
+               }
+            }
+       }, 100, TimeUnit.MILLISECONDS);
+   }
 }
