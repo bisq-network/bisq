@@ -28,6 +28,9 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Set;
 
+/**
+ * Stub implementation of CoinMarketCap price provider to prevent NullPointerExceptions within legacy clients
+ */
 @Component
 @Order(3)
 class CoinMarketCap extends ExchangeRateProvider {
@@ -36,6 +39,12 @@ class CoinMarketCap extends ExchangeRateProvider {
         super("CMC", "coinmarketcap", Duration.ofMinutes(5)); // large data structure, so don't request it too often
     }
 
+    /**
+     * Returns an empty Set for the CoinMarketCap price provider.
+     * Price data of CMC provider is not used in the client anymore, except for the last update timestamp.
+     *
+     * @return Empty Set
+     */
     @Override
     public Set<ExchangeRate> doGet() {
 
