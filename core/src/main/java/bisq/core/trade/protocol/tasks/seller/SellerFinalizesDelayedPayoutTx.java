@@ -23,6 +23,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Transaction;
 
@@ -65,6 +66,7 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
                     sellerSignature);
 
             trade.applyDelayedPayoutTx(signedDelayedPayoutTx);
+            log.info("DelayedPayoutTxBytes = {}", Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()));
 
             complete();
         } catch (Throwable t) {
