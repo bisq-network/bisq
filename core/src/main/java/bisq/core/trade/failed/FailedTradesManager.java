@@ -20,6 +20,7 @@ package bisq.core.trade.failed;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.DumpDelayedPayoutTx;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
 
@@ -44,17 +45,19 @@ public class FailedTradesManager implements PersistedDataHost {
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
     private final Storage<TradableList<Trade>> tradableListStorage;
+    private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing,
                                PriceFeedService priceFeedService,
                                BtcWalletService btcWalletService,
-                               Storage<TradableList<Trade>> storage) {
+                               Storage<TradableList<Trade>> storage,
+                               DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
         tradableListStorage = storage;
-
+        this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
     }
 
     @Override
@@ -67,6 +70,8 @@ public class FailedTradesManager implements PersistedDataHost {
 
             trade.setTransientFields(tradableListStorage, btcWalletService);
         });
+
+        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(failedTrades, "delayed_payout_txs_failed");
     }
 
     public void add(Trade trade) {
