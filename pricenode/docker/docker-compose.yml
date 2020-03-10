@@ -4,9 +4,13 @@ version: '3'
 
 services:
     pricenode:
+        container_name: pricenode
         restart: unless-stopped
         build:
             context: .
+            args:
+                - BISQ_URL=https://github.com/bisq-network/bisq.git
+                - BISQ_BRANCH=master
         image: bisq:pricenode
         ports:
             - 80:80
