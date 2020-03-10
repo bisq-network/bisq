@@ -76,6 +76,8 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.time.temporal.ChronoUnit;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
@@ -424,6 +426,7 @@ public abstract class Trade implements Tradable, Model {
     private long lastRefreshRequestDate;
     @Getter
     private long refreshInterval;
+    private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -454,7 +457,7 @@ public abstract class Trade implements Tradable, Model {
         takeOfferDate = new Date().getTime();
         processModel = new ProcessModel();
         lastRefreshRequestDate = takeOfferDate;
-        refreshInterval = offer.getPaymentMethod().getMaxTradePeriod() / 5;
+        refreshInterval = Math.min(offer.getPaymentMethod().getMaxTradePeriod() / 5, MAX_REFRESH_INTERVAL);
     }
 
 
