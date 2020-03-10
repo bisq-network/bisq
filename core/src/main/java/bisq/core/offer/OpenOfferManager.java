@@ -732,25 +732,46 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
             if (originalOfferPayload.getProtocolVersion() < Version.TRADE_PROTOCOL_VERSION ||
                     !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
-                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
+                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT) ||
+                    !originalOfferPayload.getOwnerNodeAddress().equals(p2PService.getAddress())) {
+
+                // - Capabilities changed?
                 // We rewrite our offer with the additional capabilities entry
-
-                Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
                 Map<String, String> updatedExtraDataMap = new HashMap<>();
+                if (!OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
+                        !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
+                    Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
 
-                if (originalExtraDataMap != null) {
-                    updatedExtraDataMap.putAll(originalExtraDataMap);
+                    if (originalExtraDataMap != null) {
+                        updatedExtraDataMap.putAll(originalExtraDataMap);
+                    }
+
+                    // We overwrite any entry with our current capabilities
+                    updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+                    log.info("Converted offer to support new Capability.MEDIATION and Capability.REFUND_AGENT capability. id={}", originalOffer.getId());
+                } else {
+                    updatedExtraDataMap = originalOfferPayload.getExtraDataMap();
                 }
 
-                // We overwrite any entry with our current capabilities
-                updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+                // - Protocol version changed?
+                int protocolVersion = originalOfferPayload.getProtocolVersion();
+                if (protocolVersion < Version.TRADE_PROTOCOL_VERSION) {
+                    // We update the trade protocol version
+                    protocolVersion = Version.TRADE_PROTOCOL_VERSION;
+                    log.info("Updated the protocol version of offer id={}", originalOffer.getId());
+                }
 
-                // We update the trade protocol version
-                int protocolVersion = Version.TRADE_PROTOCOL_VERSION;
+                // - node address changed? (due to a faulty tor dir)
+                NodeAddress ownerNodeAddress = originalOfferPayload.getOwnerNodeAddress();
+                if (!ownerNodeAddress.equals(p2PService.getAddress())) {
+                    ownerNodeAddress = p2PService.getAddress();
+                    log.info("Updated the owner nodeaddress of offer id={}", originalOffer.getId());
+                }
 
                 OfferPayload updatedPayload = new OfferPayload(originalOfferPayload.getId(),
                         originalOfferPayload.getDate(),
-                        originalOfferPayload.getOwnerNodeAddress(),
+                        ownerNodeAddress,
                         originalOfferPayload.getPubKeyRing(),
                         originalOfferPayload.getDirection(),
                         originalOfferPayload.getPrice(),
@@ -807,7 +828,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 updatedOpenOffer.setStorage(openOfferTradableListStorage);
                 openOffers.add(updatedOpenOffer);
 
-                log.info("Converted offer to support new Capability.MEDIATION and Capability.REFUND_AGENT capability. id={}", originalOffer.getId());
+                log.info("Updating offer completed. id={}", originalOffer.getId());
             }
         });
     }

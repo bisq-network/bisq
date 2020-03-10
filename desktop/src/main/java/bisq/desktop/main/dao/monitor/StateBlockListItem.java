@@ -23,6 +23,11 @@ import bisq.core.locale.Res;
 
 import bisq.common.util.Utilities;
 
+import com.google.common.base.Suppliers;
+
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,17 +36,27 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode
 public abstract class StateBlockListItem<StH extends StateHash, StB extends StateBlock<StH>> {
-    protected final StateBlock<StH> stateBlock;
-    protected final String height;
-    protected final String hash;
-    protected final String prevHash;
-    protected final String numNetworkMessages;
-    protected final String numMisMatches;
-    protected final boolean isInSync;
+    private final StateBlock<StH> stateBlock;
+    private final Supplier<String> height;
+    private final String hash;
+    private final String prevHash;
+    private final String numNetworkMessages;
+    private final String numMisMatches;
+    private final boolean isInSync;
+
+    public String getHeight() {
+        return height.get();
+    }
 
     protected StateBlockListItem(StB stateBlock, int cycleIndex) {
+        this(stateBlock, () -> cycleIndex);
+    }
+
+    protected StateBlockListItem(StB stateBlock, IntSupplier cycleIndexSupplier) {
         this.stateBlock = stateBlock;
-        height = Res.get("dao.monitor.table.cycleBlockHeight", cycleIndex + 1, String.valueOf(stateBlock.getHeight()));
+        height = Suppliers.memoize(() ->
+                Res.get("dao.monitor.table.cycleBlockHeight", cycleIndexSupplier.getAsInt() + 1,
+                        String.valueOf(stateBlock.getHeight())))::get;
         hash = Utilities.bytesAsHexString(stateBlock.getHash());
         prevHash = stateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(stateBlock.getPrevHash()) : "-";
         numNetworkMessages = String.valueOf(stateBlock.getPeersMap().size());

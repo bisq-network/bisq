@@ -20,7 +20,6 @@ package bisq.desktop.main.portfolio.pendingtrades.steps;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
-import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeStepInfo;
@@ -93,7 +92,7 @@ public abstract class TradeStepView extends AnchorPane {
     private ClockWatcher.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
     protected Label infoLabel;
-    private Overlay acceptMediationResultPopup;
+    private Popup acceptMediationResultPopup;
     private BootstrapListener bootstrapListener;
 
 
