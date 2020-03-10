@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -40,14 +40,16 @@ class CoinMarketCap extends ExchangeRateProvider {
     }
 
     /**
-     * Returns an empty Set for the CoinMarketCap price provider.
+     * Returns a Set with a non existing symbol for the CoinMarketCap price provider.
      * Price data of CMC provider is not used in the client anymore, except for the last update timestamp.
+     * To prevent a unnecessary warning log in that case we have to pass at least one element.
      *
      * @return Empty Set
      */
     @Override
     public Set<ExchangeRate> doGet() {
-
-        return Collections.emptySet();
+        HashSet<ExchangeRate> exchangeRates = new HashSet<>();
+        exchangeRates.add(new ExchangeRate("NON_EXISTING_SYMBOL", 0, 0L, "CMC"));
+        return exchangeRates;
     }
 }
