@@ -10,7 +10,8 @@ Copy to this directory:
 Edit docker-compose.yml:
 --
 
-* fill in your public and private api keys (needs a btcaverage developer subscription)
+* fill in your public and private api keys (needs a bitcoinaverage.com developer subscription at the moment)
+* optionally: update BISQ_URL and BISQ_BRANCH
 
 Needed software to start a pricenode
 ==
@@ -30,14 +31,3 @@ How to monitor
 See if it's running: `docker ps`
 
 Check the logs: `docker-compose logs`
-
-
-Notes when using CoreOs
-==
-
-Using CoreOs as host OS is entirely optional!
-
-* the cloudconfig.yml file is a configuration file for starting a coreos machine
-from scratch.
-* when installing a Coreos server, docker-compose needs to be additionally installed next to the
-already provided docker installation

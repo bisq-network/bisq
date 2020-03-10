@@ -10,7 +10,6 @@ RUN git config --global user.email "you@example.com"
 RUN git config --global user.name "Your Name"
 RUN git fetch origin $BISQ_BRANCH && git checkout $BISQ_BRANCH
 RUN git rev-parse --verify HEAD > git_head.txt
-#RUN gradle build
 RUN ./gradlew :pricenode:installDist  -x test < /dev/null
 RUN chmod +x ./pricenode/build/app/bin/bisq-pricenode
 
