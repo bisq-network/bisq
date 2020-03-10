@@ -30,7 +30,7 @@ import com.google.protobuf.Message;
 public interface ThreadedPersistableEnvelope extends PersistableEnvelope {
 
     @Override
-    default Message toProtoMessageSynchronized() {
+    default Message toPersistableMessage() {
         synchronized (this) {
             return toProtoMessage();
         }

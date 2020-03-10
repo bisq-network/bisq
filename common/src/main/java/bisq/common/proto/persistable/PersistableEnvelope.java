@@ -31,7 +31,7 @@ import java.util.concurrent.FutureTask;
  */
 public interface PersistableEnvelope extends Envelope {
 
-    default Message toProtoMessageSynchronized() {
+    default Message toPersistableMessage() {
         FutureTask<Message> toProtoOnUserThread = new FutureTask<>(this::toProtoMessage);
         UserThread.execute(toProtoOnUserThread);
         //noinspection UnstableApiUsage
