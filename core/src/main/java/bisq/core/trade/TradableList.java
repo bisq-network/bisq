@@ -23,7 +23,7 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
 import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
@@ -41,7 +41,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class TradableList<T extends Tradable> implements PersistableEnvelope {
+public final class TradableList<T extends Tradable> implements UserThreadMappedPersistableEnvelope {
     transient final private Storage<TradableList<T>> storage;
     @Getter
     private final ObservableList<T> list = FXCollections.observableArrayList();
@@ -78,10 +78,10 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                 .build();
     }
 
-    public static TradableList fromProto(protobuf.TradableList proto,
-                                         CoreProtoResolver coreProtoResolver,
-                                         Storage<TradableList<Tradable>> storage,
-                                         BtcWalletService btcWalletService) {
+    public static TradableList<Tradable> fromProto(protobuf.TradableList proto,
+                                                   CoreProtoResolver coreProtoResolver,
+                                                   Storage<TradableList<Tradable>> storage,
+                                                   BtcWalletService btcWalletService) {
         List<Tradable> list = proto.getTradableList().stream()
                 .map(tradable -> {
                     switch (tradable.getMessageCase()) {

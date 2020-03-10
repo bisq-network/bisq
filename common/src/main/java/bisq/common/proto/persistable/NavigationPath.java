@@ -21,7 +21,6 @@ import bisq.common.util.CollectionUtils;
 
 import com.google.protobuf.Message;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -36,7 +35,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class NavigationPath implements PersistableEnvelope {
-    private List<String> path = new ArrayList<>();
+    private List<String> path = List.of();
 
     @Override
     public Message toProtoMessage() {
@@ -46,6 +45,6 @@ public class NavigationPath implements PersistableEnvelope {
     }
 
     public static NavigationPath fromProto(protobuf.NavigationPath proto) {
-        return new NavigationPath(new ArrayList<>(proto.getPathList()));
+        return new NavigationPath(List.copyOf(proto.getPathList()));
     }
 }

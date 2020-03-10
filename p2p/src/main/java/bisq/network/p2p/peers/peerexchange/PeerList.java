@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.peers.peerexchange;
 
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.PersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -26,19 +26,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-@EqualsAndHashCode(callSuper = true)
-public class PeerList extends PersistableList<Peer> {
+@EqualsAndHashCode
+public class PeerList implements PersistableEnvelope {
+    @Getter
+    private final List<Peer> list;
 
     public PeerList(List<Peer> list) {
-        super(list);
+        this.list = list;
+    }
+
+    public int size() {
+        return list.size();
     }
 
     @Override
     public Message toProtoMessage() {
         return protobuf.PersistableEnvelope.newBuilder()
                 .setPeerList(protobuf.PeerList.newBuilder()
-                        .addAllPeer(getList().stream().map(Peer::toProtoMessage).collect(Collectors.toList())))
+                        .addAllPeer(list.stream().map(Peer::toProtoMessage).collect(Collectors.toList())))
                 .build();
     }
 

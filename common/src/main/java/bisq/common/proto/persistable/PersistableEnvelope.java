@@ -18,13 +18,8 @@
 package bisq.common.proto.persistable;
 
 import bisq.common.Envelope;
-import bisq.common.UserThread;
 
 import com.google.protobuf.Message;
-
-import com.google.common.util.concurrent.Futures;
-
-import java.util.concurrent.FutureTask;
 
 /**
  * Interface for the outside envelope object persisted to disk.
@@ -32,9 +27,6 @@ import java.util.concurrent.FutureTask;
 public interface PersistableEnvelope extends Envelope {
 
     default Message toPersistableMessage() {
-        FutureTask<Message> toProtoOnUserThread = new FutureTask<>(this::toProtoMessage);
-        UserThread.execute(toProtoOnUserThread);
-        //noinspection UnstableApiUsage
-        return Futures.getUnchecked(toProtoOnUserThread);
+        return toProtoMessage();
     }
 }

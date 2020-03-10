@@ -31,7 +31,7 @@ import lombok.Setter;
 import lombok.experimental.Delegate;
 
 @EqualsAndHashCode
-public class PersistableList<T extends PersistablePayload> implements PersistableEnvelope, Iterable<T> {
+public class PersistableList<T extends PersistablePayload> implements UserThreadMappedPersistableEnvelope, Iterable<T> {
     @Delegate(excludes = ExcludesDelegateMethods.class)
     @Getter
     @Setter
