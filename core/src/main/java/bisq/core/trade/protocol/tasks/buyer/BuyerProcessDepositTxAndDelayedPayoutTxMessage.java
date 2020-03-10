@@ -26,6 +26,7 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Transaction;
 
@@ -61,6 +62,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             byte[] delayedPayoutTxBytes = message.getDelayedPayoutTx();
             trade.applyDelayedPayoutTxBytes(delayedPayoutTxBytes);
             BtcWalletService.printTx("delayedPayoutTx received from peer", trade.getDelayedPayoutTx());
+            log.info("DelayedPayoutTxBytes = {}", Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()));
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
