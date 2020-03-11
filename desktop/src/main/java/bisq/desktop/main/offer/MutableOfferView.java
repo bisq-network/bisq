@@ -284,6 +284,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onTabSelected(boolean isSelected) {
+        if (isSelected == model.getDataModel().isTabSelected)
+            return;
+
         if (isSelected && !model.getDataModel().isTabSelected)
             doActivate();
         else
