@@ -21,6 +21,8 @@ import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
 
+import com.google.common.base.Strings;
+
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -95,14 +97,23 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public String getHolderName() {
+        return excludeFromJsonDataMap.getOrDefault(HOLDER_NAME, "");
+    }
+
+    public void setHolderName(String holderName) {
+        excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));
+    }
+
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - UK Sort code: " + sortCode + ", " + Res.getWithCol("payment.accountNr") + " " + accountNr;
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "UK Sort code: " + sortCode + "\n" +
+        return (getHolderName().isEmpty() ? "" : Res.getWithCol("payment.account.owner") + " " + getHolderName() + "\n") +
+                "UK Sort code: " + sortCode + "\n" +
                 Res.getWithCol("payment.accountNr") + " " + accountNr;
     }
 
