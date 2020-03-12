@@ -133,6 +133,12 @@ configure([project(':cli'),
             unixScriptFile.text = unixScriptFile.text.replace(
                 'cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`" >/dev/null')
 
+            if (applicationName == 'desktop') {
+                def script = file("${rootProject.projectDir}/bisq-$applicationName")
+                script.text = script.text.replace(
+                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=4g"')
+            }
+
             if (osdetector.os != 'windows')
                 delete fileTree(dir: rootProject.projectDir, include: 'bisq-*.bat')
             else
