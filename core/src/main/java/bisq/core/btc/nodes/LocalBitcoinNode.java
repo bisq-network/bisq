@@ -229,11 +229,10 @@ public class LocalBitcoinNode {
         var originalNioClientLoggerLevel = silence(NioClient.class);
         var originalNioClientManagerLoggerLevel = silence(NioClientManager.class);
 
-        NioClient client;
         try {
             log.info("Initiating attempt to connect to and handshake with a local " +
                     "Bitcoin node (which may or may not be running) on port {}.", port);
-            client = createClient(peer, port, CONNECTION_TIMEOUT);
+            createClient(peer, port, CONNECTION_TIMEOUT);
         } catch (IOException ex) {
             log.error("Local bitcoin node handshake attempt was unexpectedly interrupted", ex);
             return Optional.empty();
@@ -251,7 +250,6 @@ public class LocalBitcoinNode {
         }
 
         peer.close();
-        client.closeConnection();
 
         restoreLoggerLevel(NioClient.class, originalNioClientLoggerLevel);
         restoreLoggerLevel(NioClientManager.class, originalNioClientManagerLoggerLevel);
