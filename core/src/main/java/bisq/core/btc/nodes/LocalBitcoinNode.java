@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +51,7 @@ public class LocalBitcoinNode {
 
     private static final Logger log = LoggerFactory.getLogger(LocalBitcoinNode.class);
     private static final int CONNECTION_TIMEOUT = 5000;
+    private static final int HANDSHAKE_TIMEOUT = CONNECTION_TIMEOUT;
 
     private final Config config;
     private final int port;
@@ -244,10 +247,15 @@ public class LocalBitcoinNode {
 
         // block for VersionMessage or cancellation (in case of connection failure)
         try {
-            var peerVersionMessage = peerVersionMessageFuture.get();
+            var peerVersionMessage = peerVersionMessageFuture.get(HANDSHAKE_TIMEOUT, TimeUnit.MILLISECONDS);
             optionalPeerVersionMessage = Optional.of(peerVersionMessage);
-        } catch (ExecutionException | InterruptedException | CancellationException ex) {
+        } catch (ExecutionException | InterruptedException | CancellationException | TimeoutException ex) {
             optionalPeerVersionMessage = Optional.empty();
+            if (ex instanceof TimeoutException) {
+                log.error("Exploratory handshake attempt with a local Bitcoin node (that may not be there)" +
+                        " unexpectedly timed out. This should never happen; please report this. HANDSHAKE_TIMEOUT" +
+                        " is {} ms. Continuing as if a local BTC node was not found.", HANDSHAKE_TIMEOUT);
+            }
         }
 
         peer.close();
