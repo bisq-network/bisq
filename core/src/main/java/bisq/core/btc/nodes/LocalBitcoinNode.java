@@ -248,13 +248,13 @@ public class LocalBitcoinNode {
         try {
             var peerVersionMessage = peerVersionMessageFuture.get(HANDSHAKE_TIMEOUT, TimeUnit.MILLISECONDS);
             optionalPeerVersionMessage = Optional.of(peerVersionMessage);
-        } catch (ExecutionException | InterruptedException | CancellationException | TimeoutException ex) {
+        } catch (ExecutionException | InterruptedException | CancellationException ex) {
             optionalPeerVersionMessage = Optional.empty();
-            if (ex instanceof TimeoutException) {
-                log.error("Exploratory handshake attempt with a local Bitcoin node (that may not be there)" +
-                        " unexpectedly timed out. This should never happen; please report this. HANDSHAKE_TIMEOUT" +
-                        " is {} ms. Continuing as if a local BTC node was not found.", HANDSHAKE_TIMEOUT);
-            }
+        } catch (TimeoutException ex) {
+            optionalPeerVersionMessage = Optional.empty();
+            log.error("Exploratory handshake attempt with a local Bitcoin node (that may not be there)" +
+                    " unexpectedly timed out. This should never happen; please report this. HANDSHAKE_TIMEOUT" +
+                    " is {} ms. Continuing as if a local BTC node was not found.", HANDSHAKE_TIMEOUT);
         }
 
         peer.close();
