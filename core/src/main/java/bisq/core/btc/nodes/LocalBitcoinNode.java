@@ -8,11 +8,13 @@ import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.core.listeners.PeerDisconnectedEventListener;
-import org.bitcoinj.net.NioClient;
-import org.bitcoinj.net.NioClientManager;
+
+import org.bitcoinj.net.BlockingClient;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import javax.net.SocketFactory;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -168,7 +170,7 @@ public class LocalBitcoinNode {
                 log.info("Local Bitcoin node found to be well configured (not pruning and allows bloom filters)");
             } else {
                 wellConfigured = false;
-                log.info("Local Bitcoin node badly configured (it is pruning and/or bloom filters are disabled)");
+                log.warn("Local Bitcoin node badly configured (it is pruning and/or bloom filters are disabled)");
             }
         }
     }
@@ -226,16 +228,17 @@ public class LocalBitcoinNode {
             return Optional.empty();
         }
 
-        // We temporarily silence BitcoinJ NioClient's and NioClientManager's loggers,
-        // because when a local Bitcoin node is not found they pollute console output
-        // with "connection refused" error messages.
-        var originalNioClientLoggerLevel = silence(NioClient.class);
-        var originalNioClientManagerLoggerLevel = silence(NioClientManager.class);
+        // We temporarily silence loggers of following BitcoinJ classes, because in some
+        // cases they pollute console output with misguiding messages.
+        var originalBlockingClientLoggerLevel = silence(BlockingClient.class);
+        var originalPeerLoggerLevel = silence(Peer.class);
 
         try {
             log.info("Initiating attempt to connect to and handshake with a local " +
                     "Bitcoin node (which may or may not be running) on port {}.", port);
-            createClient(peer, port, CONNECTION_TIMEOUT);
+            // We don't keep a reference, because a handshake is initiated automatically
+            // and because the client is closed automatically when closing the Peer.
+            createBlockingClient(peer, port, CONNECTION_TIMEOUT);
         } catch (IOException ex) {
             log.error("Local bitcoin node handshake attempt was unexpectedly interrupted", ex);
             return Optional.empty();
@@ -253,14 +256,14 @@ public class LocalBitcoinNode {
         } catch (TimeoutException ex) {
             optionalPeerVersionMessage = Optional.empty();
             log.error("Exploratory handshake attempt with a local Bitcoin node (that may not be there)" +
-                    " unexpectedly timed out. This should never happen; please report this. HANDSHAKE_TIMEOUT" +
-                    " is {} ms. Continuing as if a local BTC node was not found.", HANDSHAKE_TIMEOUT);
+                    " unexpectedly timed out. This should never happen; please report this." +
+                    " Continuing as if a local BTC node was not found.");
         }
 
         peer.close();
 
-        restoreLoggerLevel(NioClient.class, originalNioClientLoggerLevel);
-        restoreLoggerLevel(NioClientManager.class, originalNioClientManagerLoggerLevel);
+        restoreLoggerLevel(BlockingClient.class, originalBlockingClientLoggerLevel);
+        restoreLoggerLevel(Peer.class, originalPeerLoggerLevel);
 
         return optionalPeerVersionMessage;
     }
@@ -280,19 +283,24 @@ public class LocalBitcoinNode {
 
         var localPeerAddress = new PeerAddress(InetAddress.getLocalHost(), port);
 
-        return new Peer(networkParameters, ourVersionMessage, localPeerAddress, null);
+        var peer = new Peer(networkParameters, ourVersionMessage, localPeerAddress, null);
+
+        // We're not interested in the peer's blockchain.
+        peer.setDownloadData(false);
+
+        return peer;
     }
 
     /**
-     * Creates an NioClient that is expected to only be used to coerce a VersionMessage
+     * Creates a BlockingClient that is expected to only be used to coerce a VersionMessage
      * out of a local Bitcoin node and be closed right after.
      */
-    private static NioClient createClient(Peer peer, int port, int connectionTimeout) throws IOException {
+    private static BlockingClient createBlockingClient(Peer peer, int port, int connectionTimeout) throws IOException {
         InetSocketAddress serverAddress = new InetSocketAddress(InetAddress.getLocalHost(), port);
 
         // This initiates the handshake procedure, which, if successful, will complete
         // the peerVersionMessageFuture, or be cancelled, in case of failure.
-        return new NioClient(serverAddress, peer, connectionTimeout);
+        return new BlockingClient(serverAddress, peer, connectionTimeout, SocketFactory.getDefault(), null);
     }
 
     private static Level silence(Class<?> klass) {
