@@ -49,13 +49,14 @@ public class DumpDelayedPayoutTx {
         }
     }
 
-    public void maybeDumpDelayedPayoutTxs(TradableList<Trade> tradableList, String fileName) {
+    public <T extends Tradable> void maybeDumpDelayedPayoutTxs(TradableList<T> tradableList, String fileName) {
         if (!dumpDelayedPayoutTxs)
             return;
 
         var delayedPayoutHashes = tradableList.stream()
+                .filter(tradable -> tradable instanceof Trade)
                 .map(trade -> new DelayedPayoutHash(trade.getId(),
-                        Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes())))
+                        Utilities.bytesAsHexString(((Trade) trade).getDelayedPayoutTxBytes())))
                 .collect(Collectors.toList());
         jsonFileManager.writeToDisc(Utilities.objectToJson(delayedPayoutHashes), fileName);
     }
