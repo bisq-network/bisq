@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 HOSTNAME="${COLLECTD_HOSTNAME:-localhost}"
 INTERVAL=750
