@@ -192,7 +192,7 @@ public class BisqSetup {
 
     @Setter
     @Nullable
-    private Consumer<Runnable> displayTacHandler, displayLocalNodeMisconfigurationHandler;
+    private Consumer<Runnable> displayTacHandler;
     @Setter
     @Nullable
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
@@ -347,7 +347,7 @@ public class BisqSetup {
     }
 
     private void step2() {
-        maybeCheckLocalBitcoinNode(this::step3);
+        step3();
     }
 
     private void step3() {
@@ -479,26 +479,6 @@ public class BisqSetup {
         } else {
             step2();
         }
-    }
-
-    private void maybeCheckLocalBitcoinNode(Runnable nextStep) {
-        if (localBitcoinNode.shouldBeIgnored()) {
-            nextStep.run();
-            return;
-        }
-
-        // Here we only want to provide the user with a choice (in a popup) in case a
-        // local node is detected, but badly configured.
-        if (localBitcoinNode.isDetectedButMisconfigured()) {
-            if (displayLocalNodeMisconfigurationHandler != null) {
-                displayLocalNodeMisconfigurationHandler.accept(nextStep);
-                return;
-            } else {
-                log.error("displayLocalNodeMisconfigurationHandler undefined", new RuntimeException());
-            }
-        }
-
-        nextStep.run();
     }
 
     private void readMapsFromResources(Runnable nextStep) {
