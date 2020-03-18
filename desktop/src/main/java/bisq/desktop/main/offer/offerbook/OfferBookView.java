@@ -241,8 +241,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
-        volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinAmount()));
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod()));
         avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
 
@@ -292,6 +292,21 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
         model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> priceColumn.setSortType(newValue));
         priceColumn.setSortType(model.priceSortTypeProperty.get());
+
+        amountColumn.sortTypeProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == TableColumn.SortType.DESCENDING) {
+                amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
+            } else {
+                amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
+            }
+        });
+        volumeColumn.sortTypeProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == TableColumn.SortType.DESCENDING) {
+                volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+            } else {
+                volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+            }
+        });
 
         paymentMethodComboBox.setConverter(new PaymentMethodStringConverter(paymentMethodComboBox));
         paymentMethodComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
