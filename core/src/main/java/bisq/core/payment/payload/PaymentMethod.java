@@ -74,6 +74,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String FASTER_PAYMENTS_ID = "FASTER_PAYMENTS";
     public static final String NATIONAL_BANK_ID = "NATIONAL_BANK";
     public static final String JAPAN_BANK_ID = "JAPAN_BANK";
+    public static final String AUSTRALIA_PAYID_ID = "AUSTRALIA_PAYID";
     public static final String SAME_BANK_ID = "SAME_BANK";
     public static final String SPECIFIC_BANKS_ID = "SPECIFIC_BANKS";
     public static final String SWISH_ID = "SWISH";
@@ -112,6 +113,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod FASTER_PAYMENTS;
     public static PaymentMethod NATIONAL_BANK;
     public static PaymentMethod JAPAN_BANK;
+    public static PaymentMethod AUSTRALIA_PAYID;
     public static PaymentMethod SAME_BANK;
     public static PaymentMethod SPECIFIC_BANKS;
     public static PaymentMethod SWISH;
@@ -184,6 +186,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
             // Japan
             JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            // Australia
+            AUSTRALIA_PAYID = new PaymentMethod(AUSTRALIA_PAYID_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
 
             // China
             ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
