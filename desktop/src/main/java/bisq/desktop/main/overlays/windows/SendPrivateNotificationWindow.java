@@ -42,6 +42,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,8 +146,10 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
+        hBox.setAlignment(Pos.CENTER_RIGHT);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setColumnSpan(hBox, 2);
+        GridPane.setColumnIndex(hBox, 0);
         hBox.getChildren().addAll(sendButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
