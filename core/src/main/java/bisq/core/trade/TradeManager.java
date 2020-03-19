@@ -439,6 +439,14 @@ public class TradeManager implements PersistedDataHost {
     public void checkOfferAvailability(Offer offer,
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
+
+        if (btcWalletService.isUnconfirmedTransactionsLimitHit()) {
+            String errorMessage = "There are too many unconfirmed transactions at the moment. Please try again later.";
+            errorMessageHandler.handleErrorMessage(errorMessage);
+            log.warn(errorMessage);
+            return;
+        }
+
         offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler, errorMessageHandler);
     }
 

@@ -76,8 +76,8 @@ public class PlaceOfferProtocol {
                 }
         );
         taskRunner.addTasks(
-                CheckNumberOfUnconfirmedTransactions.class,
                 ValidateOffer.class,
+                CheckNumberOfUnconfirmedTransactions.class,
                 CreateMakerFeeTx.class,
                 AddToOfferBook.class
         );

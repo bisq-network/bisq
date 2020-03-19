@@ -12,7 +12,7 @@ public class CheckNumberOfUnconfirmedTransactions extends Task<PlaceOfferModel> 
 
     @Override
     protected void run() {
-        if (10 < model.getWalletService().getTransactions(true).stream().filter(transaction -> transaction.isPending()).count())
+        if (model.getWalletService().isUnconfirmedTransactionsLimitHit())
             failed("There are too many unconfirmed transactions at the moment. Please try again later.");
         complete();
     }

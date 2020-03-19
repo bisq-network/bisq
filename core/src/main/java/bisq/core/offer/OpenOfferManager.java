@@ -637,6 +637,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
             }
 
+            if (btcWalletService.isUnconfirmedTransactionsLimitHit()) {
+                errorMessage = "There are too many unconfirmed transactions at the moment. Please try again later.";
+                log.warn(errorMessage);
+                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+            }
+
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,
                     availabilityResult,
                     arbitratorNodeAddress,
