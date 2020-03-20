@@ -84,10 +84,10 @@ public class DnsLookupTor {
 
             byte[] hostBytes = host.getBytes(Charsets.UTF_8);
             buf = new byte[7 + hostBytes.length];
-            buf[0] = b('\u0005');
-            buf[1] = b('\u00f0');
-            buf[2] = b('\u0000');
-            buf[3] = b('\u0003');
+            buf[0] = b('\u0005');               // version SOCKS5
+            buf[1] = b('\u00f0');               // CMD_RESOLVE
+            buf[2] = b('\u0000');               // (reserved)
+            buf[3] = b('\u0003');               // SOCKS5_ATYPE_HOSTNAME
             buf[4] = (byte) hostBytes.length;
             System.arraycopy(hostBytes, 0, buf, 5, hostBytes.length);
             buf[5 + hostBytes.length] = 0;
@@ -113,13 +113,16 @@ public class DnsLookupTor {
                 throw new DnsLookupException(torStatusErrors.get(buf[1]) + "(host=" + host + ")");
             }
 
-            if (buf[3] != b('\u0001'))
+            final char SOCKS5_ATYPE_IPV4 = '\u0001';
+            final char SOCKS5_ATYPE_IPV6 = '\u0004';
+            final byte atype = buf[3];
+            if (atype != b(SOCKS5_ATYPE_IPV4) && atype != b(SOCKS5_ATYPE_IPV6))
                 throw new DnsLookupException(torStatusErrors.get(b('\u0001')) + "(host=" + host + ")");
 
-            buf = new byte[4];
+            final int octets = (atype == SOCKS5_ATYPE_IPV4 ? 4 : 16);
+            buf = new byte[octets];
             bytesRead = proxySocket.getInputStream().read(buf);
-
-            if (bytesRead != 4)
+            if (bytesRead != octets)
                 throw new DnsLookupException("Invalid Tor Address Response");
 
             return InetAddress.getByAddress(buf);

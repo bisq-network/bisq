@@ -113,13 +113,32 @@ public class BtcNodes {
          * @return BtcNode instance
          */
         public static BtcNode fromFullAddress(String fullAddress) {
-            String[] parts = fullAddress.split(":");
+            String[] parts = fullAddress.split("]");
             checkArgument(parts.length > 0);
-            final String host = parts[0];
+            String host = "";
             int port = DEFAULT_PORT;
-            if (parts.length == 2)
-                port = Integer.valueOf(parts[1]);
+            if (parts[0].contains("[") && parts[0].contains(":")) {
+                // IPv6 address and optional port number
+                // address part delimited by square brackets e.g. [2a01:123:456:789::2]:8333
+                host = parts[0].replace("[", "").replace("]", "");
+                if (parts.length == 2)
+                    port = Integer.parseInt(parts[1].replace(":", ""));
+            }
+            else if (parts[0].contains(":") && !parts[0].contains(".")) {
+                // IPv6 address only; not delimited by square brackets
+                host = parts[0];
+            }
+            else if (parts[0].contains(".")) {
+                // address and an optional port number
+                // e.g. 127.0.0.1:8333 or abcdef123xyz.onion:9999
+                parts = fullAddress.split(":");
+                checkArgument(parts.length > 0);
+                host = parts[0];
+                if (parts.length == 2)
+                    port = Integer.parseInt(parts[1]);
+            }
 
+            checkArgument(host.length()>0, "BtcNode address format not recognised");
             return host.contains(".onion") ? new BtcNode(null, host, null, port, null) : new BtcNode(null, null, host, port, null);
         }
 
