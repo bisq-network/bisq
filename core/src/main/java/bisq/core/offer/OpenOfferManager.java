@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.locale.Res;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
@@ -638,7 +639,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             }
 
             if (btcWalletService.isUnconfirmedTransactionsLimitHit()) {
-                errorMessage = "There are too many unconfirmed transactions at the moment. Please try again later.";
+                errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
                 log.warn(errorMessage);
                 availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
             }
