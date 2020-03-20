@@ -440,7 +440,7 @@ public class TradeManager implements PersistedDataHost {
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
 
-        if (btcWalletService.isUnconfirmedTransactionsLimitHit()) {
+        if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
             String errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
             errorMessageHandler.handleErrorMessage(errorMessage);
             log.warn(errorMessage);

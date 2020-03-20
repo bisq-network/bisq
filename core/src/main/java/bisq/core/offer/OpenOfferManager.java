@@ -638,7 +638,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
             }
 
-            if (btcWalletService.isUnconfirmedTransactionsLimitHit()) {
+            if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
                 errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
                 log.warn(errorMessage);
                 availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
