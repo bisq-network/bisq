@@ -72,6 +72,7 @@ public class PlaceOfferProtocol {
                                 },
                                 log::error);
                     }
+                    model.getOffer().setErrorMessage(errorMessage);
                     errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
