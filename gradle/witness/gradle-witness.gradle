@@ -84,7 +84,7 @@ dependencyVerification {
         'org.jetbrains.kotlin:kotlin-stdlib-jdk8:f7dbbaee3e0841758187a213c052388a4e619e11c87ab16f4bc229cfe7ce5fed',
         'org.jetbrains.kotlin:kotlin-stdlib:6ea3d0921b26919b286f05cbdb906266666a36f9a7c096197114f7495708ffbc',
         'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
-        'org.slf4j:slf4j-api:3a4cd4969015f3beb4b5b4d81dbafc01765fb60b8a439955ca64d8476fef553e',
+        'org.slf4j:slf4j-api:18c4a0095d5c1da6b817592e767bb23d29dd2f560ad74df75ff3961dbde25b79',
         'org.tukaani:xz:a594643d73cc01928cf6ca5ce100e094ea9d73af760a5d4fb6b75fa673ecec96',
     ]
 }
