@@ -14,8 +14,8 @@
 dependencyVerification {
     verify = [
         'aopalliance:aopalliance:0addec670fedcd3f113c5c8091d783280d23f75e3acb841b61a9cdb079376a08',
-        'ch.qos.logback:logback-classic:e66efc674e94837344bc5b748ff510c37a44eeff86cbfdbf9e714ef2eb374013',
-        'ch.qos.logback:logback-core:4cd46fa17d77057b39160058df2f21ebbc2aded51d0edcc25d2c1cecc042a005',
+        'ch.qos.logback:logback-classic:86a0268c3c96888d4e49d8a754b5b2173286aee100559e803efcbb0df676c66e',
+        'ch.qos.logback:logback-core:58738067842476feeae5768e832cd36a0e40ce41576ba5739c3632d376bd8c86',
         'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
         'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
         'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
@@ -48,8 +48,8 @@ dependencyVerification {
         'com.nativelibs4java:bridj:101bcd9b6637e6bc16e56deb3daefba62b1f5e8e9e37e1b3e56e3b5860d659cf',
         'com.squareup.okhttp:okhttp:b4c943138fcef2bcc9d2006b2250c4aabbedeafc5947ed7c0af7fd103ceb2707',
         'com.squareup.okio:okio:114bdc1f47338a68bcbc95abf2f5cdc72beeec91812f2fcd7b521c1937876266',
-        'commons-codec:commons-codec:ad19d2601c3abf0b946b5c3a4113e226a8c1e3305e395b90013b78dd94a723ce',
-        'commons-io:commons-io:cc6a41dc3eaacc9e440a6bd0d2890b20d36b4ee408fe2d67122f328bb6e01581',
+        'commons-codec:commons-codec:61f7a3079e92b9fdd605238d0295af5fd11ac411a0a0af48deace1f6c5ffa072',
+        'commons-io:commons-io:f877d304660ac2a142f3865badfc971dec7ed73c747c7f8d5d2f5139ca736513',
         'commons-logging:commons-logging:daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636',
         'de.jensd:fontawesomefx-commons:5539bb3335ecb822dbf928546f57766eeb9f1516cc1417a064b5709629612149',
         'de.jensd:fontawesomefx-materialdesignfont:dbad8dfdd1c85e298d5bbae25b2399aec9e85064db57b2427d10f3815aa98752',
@@ -72,9 +72,9 @@ dependencyVerification {
         'network.bisq.btcd-cli4j:btcd-cli4j-core:203156fc63dc1202774de9818e4f21149549f79b25d356b08bb0c784be40c0e8',
         'network.bisq.btcd-cli4j:btcd-cli4j-daemon:0a2783a851add6e3d8ae899ade48c041b250bfac64b6a4c5f6380ebcdbbe6848',
         'org.apache.commons:commons-compress:5f2df1e467825e4cac5996d44890c4201c000b43c0b23cffc0782d28a0beb9b0',
-        'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
-        'org.apache.httpcomponents:httpclient:db3d1b6c2d6a5e5ad47577ad61854e2f0e0936199b8e05eb541ed52349263135',
-        'org.apache.httpcomponents:httpcore:d7f853dee87680b07293d30855b39b9eb56c1297bd16ff1cd6f19ddb8fa745fb',
+        'org.apache.commons:commons-lang3:9375aad1000cdd5bd3068e832de9802094fac1f145655251e141d5d0072fab9a',
+        'org.apache.httpcomponents:httpclient:bc5f065aba5dd815ee559dd24d9bcb797fb102ff9cfa036f5091ebc529bd3b93',
+        'org.apache.httpcomponents:httpcore:e06e89d40943245fcfa39ec537cdbfce3762aecde8f9c597780d2b00c2b43424',
         'org.bitcoinj:orchid:f836325cfa0466a011cb755c9b0fee6368487a2352eb45f4306ad9e4c18de080',
         'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
         'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
@@ -84,7 +84,7 @@ dependencyVerification {
         'org.jetbrains.kotlin:kotlin-stdlib-jdk8:f7dbbaee3e0841758187a213c052388a4e619e11c87ab16f4bc229cfe7ce5fed',
         'org.jetbrains.kotlin:kotlin-stdlib:6ea3d0921b26919b286f05cbdb906266666a36f9a7c096197114f7495708ffbc',
         'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
-        'org.slf4j:slf4j-api:3a4cd4969015f3beb4b5b4d81dbafc01765fb60b8a439955ca64d8476fef553e',
+        'org.slf4j:slf4j-api:18c4a0095d5c1da6b817592e767bb23d29dd2f560ad74df75ff3961dbde25b79',
         'org.tukaani:xz:a594643d73cc01928cf6ca5ce100e094ea9d73af760a5d4fb6b75fa673ecec96',
     ]
 }
