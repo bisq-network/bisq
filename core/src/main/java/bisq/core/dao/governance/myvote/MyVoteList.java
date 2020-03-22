@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.myvote;
 
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import com.google.protobuf.Message;
 
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public class MyVoteList extends PersistableList<MyVote> {
+public class MyVoteList extends UserThreadMappedPersistableList<MyVote> {
 
     MyVoteList() {
         super();
@@ -65,4 +65,3 @@ public class MyVoteList extends PersistableList<MyVote> {
                 .collect(Collectors.toList());
     }
 }
-
