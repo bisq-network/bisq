@@ -17,16 +17,15 @@
 
 package bisq.common.proto.persistable;
 
-import bisq.common.Envelope;
+import java.util.List;
 
-import com.google.protobuf.Message;
+public class UserThreadMappedPersistableList<T extends PersistablePayload> extends PersistableList<T>
+        implements UserThreadMappedPersistableEnvelope {
 
-/**
- * Interface for the outside envelope object persisted to disk.
- */
-public interface PersistableEnvelope extends Envelope {
+    public UserThreadMappedPersistableList(List<T> list) {
+        super(list);
+    }
 
-    default Message toPersistableMessage() {
-        return toProtoMessage();
+    public UserThreadMappedPersistableList() {
     }
 }

@@ -20,8 +20,8 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -42,11 +42,11 @@ import lombok.extern.slf4j.Slf4j;
 // TODO at next hard fork we can rename the PB definition and class name.
 @Deprecated
 @Slf4j
-public class PersistableNetworkPayloadList implements PersistableEnvelope {
+public class PersistableNetworkPayloadList implements ThreadedPersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
 
-    public PersistableNetworkPayloadList() {
+    PersistableNetworkPayloadList() {
     }
 
 
@@ -54,7 +54,7 @@ public class PersistableNetworkPayloadList implements PersistableEnvelope {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PersistableNetworkPayloadList(Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map) {
+    private PersistableNetworkPayloadList(Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map) {
         this.map.putAll(map);
     }
 
@@ -69,8 +69,8 @@ public class PersistableNetworkPayloadList implements PersistableEnvelope {
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PersistableNetworkPayloadList proto,
-                                                PersistenceProtoResolver resolver) {
+    public static PersistableNetworkPayloadList fromProto(protobuf.PersistableNetworkPayloadList proto,
+                                                          PersistenceProtoResolver resolver) {
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         proto.getItemsList()
                 .forEach(e -> {

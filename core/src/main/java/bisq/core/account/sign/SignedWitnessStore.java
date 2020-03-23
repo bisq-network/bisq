@@ -21,7 +21,7 @@ package bisq.core.account.sign;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class SignedWitnessStore implements PersistableEnvelope {
+public class SignedWitnessStore implements ThreadedPersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
 
@@ -70,7 +70,7 @@ public class SignedWitnessStore implements PersistableEnvelope {
         return protobuf.SignedWitnessStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.SignedWitnessStore proto) {
+    public static SignedWitnessStore fromProto(protobuf.SignedWitnessStore proto) {
         List<SignedWitness> list = proto.getItemsList().stream()
                 .map(SignedWitness::fromProto).collect(Collectors.toList());
         return new SignedWitnessStore(list);

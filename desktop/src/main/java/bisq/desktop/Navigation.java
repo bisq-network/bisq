@@ -141,7 +141,7 @@ public final class Navigation implements PersistedDataHost {
 
     private void queueUpForSave() {
         if (currentPath.tip() != null) {
-            navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toList()));
+            navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toUnmodifiableList()));
         }
         storage.queueUpForSave(navigationPath, 1000);
     }
