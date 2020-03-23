@@ -57,10 +57,6 @@ import static java.lang.String.format;
 
 /**
  * gRPC client.
- *
- * FIXME We get warning 'DEBUG io.grpc.netty.shaded.io.netty.util.internal.PlatformDependent0 - direct buffer constructor: unavailable
- * java.lang.UnsupportedOperationException: Reflective setAccessible(true) disabled' which is
- * related to Java 10 changes. Requests are working but we should find out why we get that warning
  */
 @Slf4j
 public class BisqCliMain {
@@ -80,10 +76,8 @@ public class BisqCliMain {
     }
 
     private BisqCliMain(String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host, port)
-                // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
-                // needing certificates.
-                .usePlaintext(true).build());
+        // Channels are secure by default (via SSL/TLS);  for the example disable TLS to avoid needing certificates.
+        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
 
         // Simple input scanner
         // TODO use some more sophisticated input processing with validation....
