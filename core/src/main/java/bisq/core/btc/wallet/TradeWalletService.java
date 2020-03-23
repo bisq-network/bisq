@@ -177,6 +177,9 @@ public class TradeWalletService {
 
             checkNotNull(wallet, "Wallet must not be null");
             wallet.completeTx(sendRequest);
+            if (removeDust(tradingFeeTx)) {
+                wallet.signTransaction(sendRequest);
+            }
             WalletService.printTx("tradingFeeTx", tradingFeeTx);
 
             if (doBroadcast && callback != null) {
@@ -1215,5 +1218,26 @@ public class TradeWalletService {
         checkArgument(!tx.getInputs().isEmpty(), "The tx must have inputs. tx={}", tx);
         tx.getInputs().forEach(input -> input.setSequenceNumber(TransactionInput.NO_SEQUENCE - 1));
         tx.setLockTime(lockTime);
+    }
+
+    private boolean removeDust(Transaction tx) {
+        List<TransactionOutput> txos = tx.getOutputs();
+        List<TransactionOutput> toKeep = new ArrayList<TransactionOutput>();
+        for (TransactionOutput zz: txos) {
+            if (zz.getValue().value >= 546) {
+                toKeep.add(zz);
+            }
+            else {
+                log.info("removing dust TXO = {}", zz.getValue().toFriendlyString());
+            }
+        }
+        if (toKeep.size() != txos.size()) {
+            tx.clearOutputs();
+            for (TransactionOutput zz : toKeep) {
+                tx.addOutput(zz);
+            }
+            return true;    // dust was removed
+        }
+        return false;       // no action necessary
     }
 }
