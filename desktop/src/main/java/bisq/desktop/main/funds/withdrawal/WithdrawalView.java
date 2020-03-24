@@ -56,6 +56,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.wallet.Wallet;
 
 import javax.inject.Inject;
@@ -330,8 +331,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
-                Coin fee = feeEstimationTransaction.getFee();
-                sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin;
+                Coin dust = getDust(feeEstimationTransaction);
+                Coin fee = feeEstimationTransaction.getFee().add(dust);
+                sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin.add(dust);
                 Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
                 if (areInputsValid()) {
                     int txSize = feeEstimationTransaction.bitcoinSerialize().length;
@@ -628,6 +630,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         };
                     }
                 });
+    }
+
+    private Coin getDust(Transaction tx) {
+        Coin dust = Coin.ZERO;
+        for (TransactionOutput txo: tx.getOutputs()) {
+            if (txo.getValue().value < 546) {
+                dust = dust.add(txo.getValue());
+                log.info("dust TXO = {}", txo.getValue().toFriendlyString());
+            }
+        }
+        return dust;
     }
 }
 
