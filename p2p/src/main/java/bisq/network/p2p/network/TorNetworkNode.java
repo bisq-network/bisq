@@ -148,8 +148,10 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
-        BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
+        // this one is executed synchronously
         BooleanProperty networkNodeShutDown = networkNodeShutDown();
+        // this one is committed as a thread to the executor
+        BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
         BooleanProperty shutDownTimerTriggered = shutDownTimerTriggered();
 
         // Need to store allShutDown to not get garbage collected
