@@ -128,6 +128,7 @@
     -bs-chart-tick: rgba(255, 255, 255, 0.7);
     -bs-chart-lines: rgba(0, 0, 0, 0.3);
     -bs-white: white;
+    -bs-prompt-text: -bs-color-gray-3;
 
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-green-5;
