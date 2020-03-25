@@ -170,7 +170,9 @@ public class GUIUtil {
         GUIUtil.preferences = preferences;
     }
 
-    public static String getUserLanguage() { return preferences.getUserLanguage(); }
+    public static String getUserLanguage() {
+        return preferences.getUserLanguage();
+    }
 
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
@@ -696,6 +698,20 @@ public class GUIUtil {
         new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
+                .dontShowAgainId(key)
+                .show();
+    }
+
+    public static void showFasterPaymentsWarning(Navigation navigation) {
+        String key = "recreateFasterPaymentsAccount";
+        String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
+        new Popup().information(Res.get("payment.fasterPayments.newRequirements.info", currencyName))
+                .width(900)
+                .actionButtonTextWithGoTo("navigation.account")
+                .onAction(() -> {
+                    navigation.setReturnPath(navigation.getCurrentPath());
+                    navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                })
                 .dontShowAgainId(key)
                 .show();
     }
