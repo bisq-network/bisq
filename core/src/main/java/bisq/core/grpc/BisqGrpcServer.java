@@ -34,6 +34,30 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 
+
+import bisq.grpc.GetBalanceGrpc;
+import bisq.grpc.GetBalanceReply;
+import bisq.grpc.GetBalanceRequest;
+import bisq.grpc.GetOffersGrpc;
+import bisq.grpc.GetOffersReply;
+import bisq.grpc.GetOffersRequest;
+import bisq.grpc.GetPaymentAccountsGrpc;
+import bisq.grpc.GetPaymentAccountsReply;
+import bisq.grpc.GetPaymentAccountsRequest;
+import bisq.grpc.GetTradeStatisticsGrpc;
+import bisq.grpc.GetTradeStatisticsReply;
+import bisq.grpc.GetTradeStatisticsRequest;
+import bisq.grpc.GetVersionGrpc;
+import bisq.grpc.GetVersionReply;
+import bisq.grpc.GetVersionRequest;
+import bisq.grpc.PlaceOfferGrpc;
+import bisq.grpc.PlaceOfferReply;
+import bisq.grpc.PlaceOfferRequest;
+import bisq.grpc.StopServerGrpc;
+import bisq.grpc.StopServerReply;
+import bisq.grpc.StopServerRequest;
+
+
 /**
  * gRPC server. Gets a instance of BisqFacade passed to access data from the running Bisq instance.
  */

@@ -47,6 +47,7 @@ configure(subprojects) {
         ioVersion = '2.6'
         jacksonVersion = '2.8.10'
         javafxVersion = '11.0.2'
+        javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
         jfoenixVersion = '9.0.6'
@@ -154,6 +155,47 @@ configure([project(':cli'),
     }
 }
 
+configure(project(':protodefinition')) {
+    apply plugin: 'com.google.protobuf'
+
+    dependencies {
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation("io.grpc:grpc-protobuf:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+
+    sourceSets.main.java.srcDirs += [
+        'build/generated/source/proto/main/grpc',
+        'build/generated/source/proto/main/java'
+    ]
+
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:${protocVersion}"
+        }
+        plugins {
+            grpc {
+                artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+            }
+        }
+        generateProtoTasks {
+            all()*.plugins { grpc {} }
+        }
+    }
+}
 
 configure(project(':assets')) {
     dependencies {
@@ -171,17 +213,8 @@ configure(project(':assets')) {
 
 
 configure(project(':common')) {
-    apply plugin: 'com.google.protobuf'
-
-    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
-
-    protobuf {
-        protoc {
-            artifact = "com.google.protobuf:protoc:$protocVersion"
-        }
-    }
-
     dependencies {
+        compile project(':protodefinition')
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
         compile "org.openjfx:javafx-base:$javafxVersion:$os"
         compile "org.openjfx:javafx-graphics:$javafxVersion:$os"
@@ -201,6 +234,10 @@ configure(project(':common')) {
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
+        }
+        runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
         }
         compile "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
@@ -236,14 +273,13 @@ configure(project(':p2p')) {
 
 
 configure(project(':core')) {
-    apply plugin: 'com.google.protobuf'
-
     dependencies {
+        compile project(':protodefinition')
         compile project(':assets')
         compile project(':p2p')
-		implementation "commons-codec:commons-codec:$codecVersion"
-		implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
-		implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
+        implementation "commons-codec:commons-codec:$codecVersion"
+        implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
+        implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
         compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
@@ -276,8 +312,8 @@ configure(project(':core')) {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
-        compileOnly "javax.annotation:javax.annotation-api:1.2"
-        runtimeOnly ("io.grpc:grpc-netty-shaded:$grpcVersion") {
+        compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
@@ -291,25 +327,6 @@ configure(project(':core')) {
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 
-    protobuf {
-        protoc {
-            artifact = "com.google.protobuf:protoc:${protocVersion}"
-        }
-        plugins {
-            grpc {
-                artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
-            }
-        }
-        generateProtoTasks {
-            all()*.plugins { grpc {} }
-        }
-    }
-
-    sourceSets.main.java.srcDirs += [
-        'build/generated/source/proto/main/grpc',
-        'build/generated/source/proto/main/java'
-    ]
-
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
     }
@@ -319,7 +336,9 @@ configure(project(':cli')) {
     mainClassName = 'bisq.cli.app.BisqCliMain'
 
     dependencies {
-        compile project(':core')
+        compile project(':protodefinition')
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation("io.grpc:grpc-core:$grpcVersion") {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
@@ -328,6 +347,13 @@ configure(project(':cli')) {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
+        runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
@@ -355,6 +381,7 @@ configure(project(':desktop')) {
         compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
         compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
         compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
+        compile "com.google.guava:guava:$guavaVersion"
         compile "com.googlecode.jcsv:jcsv:$jcsvVersion"
         compile "com.github.sarxos:webcam-capture:$sarxosVersion"
         compile "org.openjfx:javafx-controls:$javafxVersion:$os"
@@ -418,8 +445,8 @@ configure(project(':pricenode')) {
     dependencies {
         compile project(":core")
         implementation "commons-codec:commons-codec:$codecVersion"
-		implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
-		implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
+        implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
+        implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
         compile("org.knowm.xchange:xchange-bitcoinaverage:$knowmXchangeVersion")
@@ -441,12 +468,12 @@ configure(project(':relay')) {
     dependencies {
         compile project(':common')
         compile "com.sparkjava:spark-core:$sparkVersion"
-        compile "com.turo:pushy:$pushyVersion"       
+        compile "com.turo:pushy:$pushyVersion"
         implementation("com.google.firebase:firebase-admin:$firebaseVersion") {
             exclude(module: 'commons-logging')
             exclude(module: 'httpclient')
-            exclude(module: 'httpcore')            
-        }        
+            exclude(module: 'httpcore')
+        }
         compile "commons-codec:commons-codec:$codecVersion"
     }
 }
@@ -481,8 +508,21 @@ configure(project(':daemon')) {
 
     dependencies {
         compile project(':core')
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation("io.grpc:grpc-protobuf:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
-        compileOnly "javax.annotation:javax.annotation-api:1.2"
+        compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
