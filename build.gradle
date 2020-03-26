@@ -51,7 +51,7 @@ configure(subprojects) {
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
         jfoenixVersion = '9.0.6'
-        joptVersion = '5.0.3'
+        joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
         jupiterVersion = '5.3.2'
@@ -337,6 +337,7 @@ configure(project(':cli')) {
 
     dependencies {
         compile project(':proto')
+        implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation("io.grpc:grpc-core:$grpcVersion") {
