@@ -225,7 +225,7 @@ public abstract class NetworkNode implements MessageListener {
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.info("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
+                    log.debug("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
                     UserThread.execute(() -> resultFuture.setException(throwable));
                 }
             });

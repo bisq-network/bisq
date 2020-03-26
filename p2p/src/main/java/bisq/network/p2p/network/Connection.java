@@ -627,6 +627,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private void handleException(Throwable e) {
         CloseConnectionReason closeConnectionReason;
 
+        // silent fail if we are shutdown
+        if (stopped)
+            return;
+
         if (e instanceof SocketException) {
             if (socket.isClosed())
                 closeConnectionReason = CloseConnectionReason.SOCKET_CLOSED;
