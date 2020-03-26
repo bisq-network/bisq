@@ -33,7 +33,7 @@
           <emptyLine />
           <package name="bisq.asset" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="bisq.grpc" withSubpackages="true" static="false" />
+          <package name="bisq.proto.grpc" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="protobuf" withSubpackages="true" static="false" />
           <emptyLine />

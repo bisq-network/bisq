@@ -1,11 +1,11 @@
 package bisq.cli.app;
 
-import bisq.grpc.GetBalanceGrpc;
-import bisq.grpc.GetBalanceRequest;
-import bisq.grpc.GetVersionGrpc;
-import bisq.grpc.GetVersionRequest;
-import bisq.grpc.StopServerGrpc;
-import bisq.grpc.StopServerRequest;
+import bisq.proto.grpc.GetBalanceGrpc;
+import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetVersionGrpc;
+import bisq.proto.grpc.GetVersionRequest;
+import bisq.proto.grpc.StopServerGrpc;
+import bisq.proto.grpc.StopServerRequest;
 
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;

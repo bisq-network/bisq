@@ -155,7 +155,7 @@ configure([project(':cli'),
     }
 }
 
-configure(project(':protodefinition')) {
+configure(project(':proto')) {
     apply plugin: 'com.google.protobuf'
 
     dependencies {
@@ -214,7 +214,7 @@ configure(project(':assets')) {
 
 configure(project(':common')) {
     dependencies {
-        compile project(':protodefinition')
+        compile project(':proto')
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
         compile "org.openjfx:javafx-base:$javafxVersion:$os"
         compile "org.openjfx:javafx-graphics:$javafxVersion:$os"
@@ -274,7 +274,7 @@ configure(project(':p2p')) {
 
 configure(project(':core')) {
     dependencies {
-        compile project(':protodefinition')
+        compile project(':proto')
         compile project(':assets')
         compile project(':p2p')
         implementation "commons-codec:commons-codec:$codecVersion"
@@ -336,7 +336,7 @@ configure(project(':cli')) {
     mainClassName = 'bisq.cli.app.BisqCliMain'
 
     dependencies {
-        compile project(':protodefinition')
+        compile project(':proto')
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation("io.grpc:grpc-core:$grpcVersion") {
