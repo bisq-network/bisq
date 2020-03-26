@@ -233,10 +233,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 UserThread.runAfter(() -> {
                     log.warn("Timeout triggered resultHandler");
                     resultHandler.handleResult();
+                    System.exit(0);
                 }, 20);
             } else {
                 log.warn("injector == null triggered resultHandler");
-                UserThread.runAfter(resultHandler::handleResult, 1);
+                UserThread.runAfter(() -> {
+                    resultHandler.handleResult();
+                    System.exit(0);
+                }, 1);
             }
         } catch (Throwable t) {
             log.error("App shutdown failed with exception");
