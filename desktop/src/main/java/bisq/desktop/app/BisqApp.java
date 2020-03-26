@@ -151,11 +151,11 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();
-            UserThread.runAfter(() -> {
+            new Thread(() -> {
                 gracefulShutDownHandler.gracefulShutDown(() -> {
                     log.debug("App shutdown complete");
                 });
-            }, 200, TimeUnit.MILLISECONDS);
+            }).start();
             shutDownRequested = true;
         }
     }
