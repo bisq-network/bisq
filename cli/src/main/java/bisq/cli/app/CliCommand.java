@@ -1,5 +1,12 @@
 package bisq.cli.app;
 
+import bisq.grpc.GetBalanceGrpc;
+import bisq.grpc.GetBalanceRequest;
+import bisq.grpc.GetVersionGrpc;
+import bisq.grpc.GetVersionRequest;
+import bisq.grpc.StopServerGrpc;
+import bisq.grpc.StopServerRequest;
+
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
@@ -12,15 +19,6 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 
 import static java.lang.System.currentTimeMillis;
-
-
-
-import bisq.grpc.GetBalanceGrpc;
-import bisq.grpc.GetBalanceRequest;
-import bisq.grpc.GetVersionGrpc;
-import bisq.grpc.GetVersionRequest;
-import bisq.grpc.StopServerGrpc;
-import bisq.grpc.StopServerRequest;
 
 @Slf4j
 final class CliCommand {
