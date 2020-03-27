@@ -51,7 +51,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         // do not translate as it is used in English only
         addCompactTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE,
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getSortCode());
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
+        addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.accountNr"),
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
