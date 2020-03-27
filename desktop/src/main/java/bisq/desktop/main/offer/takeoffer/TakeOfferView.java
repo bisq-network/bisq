@@ -51,6 +51,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -159,7 +160,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             isOfferAvailableSubscription;
 
     private int gridRow = 0;
-    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed;
+    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
     private InfoInputTextField volumeInfoTextField;
@@ -283,14 +284,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceDescriptionLabel.setText(CurrencyUtil.getPriceWithCurrencyCode(currencyCode));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
-        if (model.getPossiblePaymentAccounts().size() > 1) {
+        PaymentAccount lastPaymentAccount = model.getLastSelectedPaymentAccount();
 
+        if (model.getPossiblePaymentAccounts().size() > 1) {
             new Popup().headLine(Res.get("popup.info.multiplePaymentAccounts.headline"))
                     .information(Res.get("popup.info.multiplePaymentAccounts.msg"))
                     .dontShowAgainId("MultiplePaymentAccountsAvailableWarning")
                     .show();
 
-            PaymentAccount lastPaymentAccount = model.getLastSelectedPaymentAccount();
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(lastPaymentAccount);
             model.onPaymentAccountSelected(lastPaymentAccount);
@@ -299,7 +300,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
-        maybeShowClearXchangeWarning();
+        maybeShowClearXchangeWarning(lastPaymentAccount);
+        maybeShowFasterPaymentsWarning(lastPaymentAccount);
 
         if (!DevEnv.isDaoActivated() && !model.isRange()) {
             nextButton.setVisible(false);
@@ -647,7 +649,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferButton.disableProperty().unbind();
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void addSubscriptions() {
         errorPopupDisplayed = new SimpleBooleanProperty();
         offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {
@@ -712,29 +713,27 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
-            //noinspection ConstantConditions
             if (newValue && DevEnv.isDevMode()) {
                 close();
-            } else //noinspection ConstantConditions,ConstantConditions
-                if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
-                    String key = "takeOfferSuccessInfo";
-                    if (DontShowAgainLookup.showAgain(key)) {
-                        UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
-                                .feedback(Res.get("takeOffer.success.info"))
-                                .actionButtonTextWithGoTo("navigation.portfolio.pending")
-                                .dontShowAgainId(key)
-                                .onAction(() -> {
-                                    UserThread.runAfter(
-                                            () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                            , 100, TimeUnit.MILLISECONDS);
-                                    close();
-                                })
-                                .onClose(this::close)
-                                .show(), 1);
-                    } else {
-                        close();
-                    }
+            } else if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
+                String key = "takeOfferSuccessInfo";
+                if (DontShowAgainLookup.showAgain(key)) {
+                    UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
+                            .feedback(Res.get("takeOffer.success.info"))
+                            .actionButtonTextWithGoTo("navigation.portfolio.pending")
+                            .dontShowAgainId(key)
+                            .onAction(() -> {
+                                UserThread.runAfter(
+                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                        , 100, TimeUnit.MILLISECONDS);
+                                close();
+                            })
+                            .onClose(this::close)
+                            .show(), 1);
+                } else {
+                    close();
                 }
+            }
         });
 
  /*       noSufficientFeeBinding = EasyBind.combine(model.dataModel.getIsWalletFunded(), model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
@@ -837,8 +836,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountsComboBox.setVisible(false);
         paymentAccountsComboBox.setManaged(false);
         paymentAccountsComboBox.setOnAction(e -> {
-            maybeShowClearXchangeWarning();
-            model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
+            PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
+            if (paymentAccount != null) {
+                maybeShowClearXchangeWarning(paymentAccount);
+                maybeShowFasterPaymentsWarning(paymentAccount);
+            }
+            model.onPaymentAccountSelected(paymentAccount);
         });
 
         paymentMethodLabel = paymentAccountTuple.second;
@@ -898,9 +901,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         nextButton = tuple.first;
         nextButton.setMaxWidth(200);
         nextButton.setDefaultButton(true);
-        nextButton.setOnAction(e -> {
-            showNextStepAfterAmountIsSet();
-        });
+        nextButton.setOnAction(e -> showNextStepAfterAmountIsSet());
 
         cancelButton1 = tuple.second;
         cancelButton1.setMaxWidth(200);
@@ -1236,12 +1237,20 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .show();
     }
 
-    private void maybeShowClearXchangeWarning() {
-        if (model.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
+    private void maybeShowClearXchangeWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(GUIUtil::showClearXchangeWarning,
-                    500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(GUIUtil::showClearXchangeWarning, 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void maybeShowFasterPaymentsWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.FASTER_PAYMENTS_ID) &&
+                ((FasterPaymentsAccount) paymentAccount).getHolderName().isEmpty() &&
+                !fasterPaymentsWarningDisplayed) {
+            fasterPaymentsWarningDisplayed = true;
+            UserThread.runAfter(() -> GUIUtil.showFasterPaymentsWarning(navigation), 500, TimeUnit.MILLISECONDS);
         }
     }
 

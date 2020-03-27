@@ -19,13 +19,11 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,8 +33,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -60,7 +56,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
                                              String postalAddress,
                                              String holderName,
                                              long maxTradePeriod,
-                                             @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                             Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -84,7 +80,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
                 proto.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
                 proto.getUSPostalMoneyOrderAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -108,7 +104,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     @Override
     public byte[] getAgeWitnessInputData() {
         // We use here the holderName because the address alone seems to be too weak
-        return super.getAgeWitnessInputData(ArrayUtils.addAll(holderName.getBytes(Charset.forName("UTF-8")),
-                postalAddress.getBytes(Charset.forName("UTF-8"))));
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(holderName.getBytes(StandardCharsets.UTF_8),
+                postalAddress.getBytes(StandardCharsets.UTF_8)));
     }
 }
