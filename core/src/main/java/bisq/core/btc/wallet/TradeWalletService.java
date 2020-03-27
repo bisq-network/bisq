@@ -1220,21 +1220,29 @@ public class TradeWalletService {
         tx.setLockTime(lockTime);
     }
 
-    private boolean removeDust(Transaction tx) {
-        List<TransactionOutput> txos = tx.getOutputs();
-        List<TransactionOutput> toKeep = new ArrayList<TransactionOutput>();
-        for (TransactionOutput zz: txos) {
-            if (zz.getValue().value >= 546) {
-                toKeep.add(zz);
+    // BISQ issue #4039: prevent dust outputs from being created.
+    // check all the outputs in a proposed transaction, if any are below the dust threshold
+    // remove them, noting the details in the log. returns 'true' to indicate if any dust was
+    // removed.
+    private boolean removeDust(Transaction transaction) {
+        List<TransactionOutput> originalTransactionOutputs = transaction.getOutputs();
+        List<TransactionOutput> keepTransactionOutputs = new ArrayList<>();
+        for (TransactionOutput transactionOutput: originalTransactionOutputs) {
+            if (transactionOutput.getValue().value >= preferences.getIgnoreDustThreshold()) {
+                keepTransactionOutputs.add(transactionOutput);
             }
             else {
-                log.info("removing dust TXO = {}", zz.getValue().toFriendlyString());
+                log.info("your transaction would have contained a dust output of {}", transactionOutput.toString());
             }
         }
-        if (toKeep.size() != txos.size()) {
-            tx.clearOutputs();
-            for (TransactionOutput zz : toKeep) {
-                tx.addOutput(zz);
+        // if dust was detected, keepTransactionOutputs will have fewer elements than originalTransactionOutputs
+        // set the transaction outputs to what we saved in keepTransactionOutputs, thus discarding dust.
+        if (keepTransactionOutputs.size() != originalTransactionOutputs.size()) {
+            log.info("dust output was detected and removed, the new output is as follows:");
+            transaction.clearOutputs();
+            for (TransactionOutput transactionOutput : keepTransactionOutputs) {
+                transaction.addOutput(transactionOutput);
+                log.info("{}", transactionOutput.toString());
             }
             return true;    // dust was removed
         }
