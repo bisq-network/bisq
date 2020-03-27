@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.BisqSetupListener {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args)  {
         new BisqDaemonMain().execute(args);
     }
 
