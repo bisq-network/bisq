@@ -669,7 +669,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Coin getDust(Transaction transaction) {
         Coin dust = Coin.ZERO;
         for (TransactionOutput transactionOutput: transaction.getOutputs()) {
-            if (transactionOutput.getValue().value < preferences.getIgnoreDustThreshold()) {
+            if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
                 dust = dust.add(transactionOutput.getValue());
                 log.info("dust TXO = {}", transactionOutput.toString());
             }
