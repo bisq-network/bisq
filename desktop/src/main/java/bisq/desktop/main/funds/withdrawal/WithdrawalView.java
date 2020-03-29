@@ -98,6 +98,8 @@ import javafx.util.Callback;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
+import java.text.MessageFormat;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -331,10 +333,28 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
+
                 Coin dust = getDust(feeEstimationTransaction);
                 Coin fee = feeEstimationTransaction.getFee().add(dust);
-                sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin.add(dust);
-                Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
+                Coin receiverAmount = Coin.ZERO;
+                // amountAsCoin is what the user typed into the withdrawal field.
+                // this can be interpreted as either the senders amount or receivers amount depending
+                // on a radio button "fee excluded / fee included".
+                // therefore we calculate the actual sendersAmount and receiverAmount as follows:
+                if (feeExcluded) {
+                    receiverAmount = amountAsCoin;
+                    sendersAmount = receiverAmount.add(fee);
+                } else {
+                    sendersAmount = amountAsCoin.add(dust); // sendersAmount bumped up to UTXO size when dust is in play
+                    receiverAmount = sendersAmount.subtract(fee);
+                }
+                if (dust.isPositive()) {
+                    log.info("Dust output ({} satoshi) was detected, the dust amount has been added to the fee (was {}, now {})",
+                            dust.value,
+                            feeEstimationTransaction.getFee(),
+                            fee.value);
+                }
+
                 if (areInputsValid()) {
                     int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
@@ -342,15 +362,25 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     if (receiverAmount.isPositive()) {
                         double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                         double kb = txSize / 1000d;
+
+                        String messageText = Res.get("shared.sendFundsDetailsWithFee",
+                            formatter.formatCoinWithCode(sendersAmount),
+                            withdrawFromTextField.getText(),
+                            withdrawToTextField.getText(),
+                            formatter.formatCoinWithCode(fee),
+                            feePerByte,
+                            kb,
+                            formatter.formatCoinWithCode(receiverAmount));
+                        if (dust.isPositive()) {
+                            messageText = MessageFormat.format(
+                                "Bisq detected that this transaction would create a change output which is below the minimum dust threshold (and not allowed by Bitcoin consensus rules).  Instead, this dust ({0} satoshi) will be added to the transaction fee.\n\n\n",
+                                dust.value)
+                                + messageText;
+                        }
+                        // jmacxx TODO: get review on the above message text, & clarification on proper way to add i18n resource strings
+
                         new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
-                                .confirmation(Res.get("shared.sendFundsDetailsWithFee",
-                                        formatter.formatCoinWithCode(sendersAmount),
-                                        withdrawFromTextField.getText(),
-                                        withdrawToTextField.getText(),
-                                        formatter.formatCoinWithCode(fee),
-                                        feePerByte,
-                                        kb,
-                                        formatter.formatCoinWithCode(receiverAmount)))
+                                .confirmation(messageText)
                                 .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> doWithdraw(sendersAmount, fee, new FutureCallback<>() {
                                     @Override
@@ -632,12 +662,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 });
     }
 
-    private Coin getDust(Transaction tx) {
+    // BISQ issue #4039: prevent dust outputs from being created.
+    // check the outputs of a proposed transaction, if any are below the dust threshold
+    // add up the dust, noting the details in the log.
+    // returns the 'dust amount' to indicate if any dust was detected.
+    private Coin getDust(Transaction transaction) {
         Coin dust = Coin.ZERO;
-        for (TransactionOutput txo: tx.getOutputs()) {
-            if (txo.getValue().value < 546) {
-                dust = dust.add(txo.getValue());
-                log.info("dust TXO = {}", txo.getValue().toFriendlyString());
+        for (TransactionOutput transactionOutput: transaction.getOutputs()) {
+            if (transactionOutput.getValue().value < preferences.getIgnoreDustThreshold()) {
+                dust = dust.add(transactionOutput.getValue());
+                log.info("dust TXO = {}", transactionOutput.toString());
             }
         }
         return dust;
