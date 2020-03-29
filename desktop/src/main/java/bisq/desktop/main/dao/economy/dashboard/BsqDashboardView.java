@@ -34,8 +34,8 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple3;
@@ -74,9 +74,7 @@ import java.time.format.FormatStyle;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -377,20 +375,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private long getAverage(List<TradeStatistics2> list) {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
-        List<Long> tradePrices = new ArrayList<>(list.size());
 
         for (TradeStatistics2 item : list) {
-            item.getTradeVolume();
             accumulatedVolume += item.getTradeVolume().getValue();
             accumulatedAmount += item.getTradeAmount().getValue();
-            tradePrices.add(item.getTradePrice().getValue());
         }
-        Collections.sort(tradePrices);
-        list.sort(Comparator.comparingLong(o -> o.getTradeDate().getTime()));
 
         long averagePrice;
-        Long[] prices = new Long[tradePrices.size()];
-        tradePrices.toArray(prices);
         double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
         averagePrice = accumulatedVolume > 0 ? MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume) : 0;
 
