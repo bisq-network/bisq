@@ -31,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.cli.app.CommandParser.GETBALANCE;
 import static bisq.cli.app.CommandParser.GETVERSION;
+import static bisq.cli.app.CommandParser.HELP;
 import static bisq.cli.app.CommandParser.STOPSERVER;
 import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 
@@ -43,27 +43,23 @@ import static java.lang.System.out;
 @Slf4j
 public class BisqCliMain {
 
+    private static final int EXIT_SUCCESS = 0;
+    private static final int EXIT_FAILURE = 1;
+
     private final ManagedChannel channel;
     private final CliCommand cmd;
-    private final OptionParser cmdParser;
+    private final OptionParser parser;
 
     public static void main(String[] args) {
-        new BisqCliMain("localhost", 8888, args);
+        new BisqCliMain("localhost", 9998, args);
     }
 
-    private BisqCliMain(String host, int port, String[] params) {
+    private BisqCliMain(String host, int port, String[] args) {
         // Channels are secure by default (via SSL/TLS);  for the example disable TLS to avoid needing certificates.
         this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
-
-        long startTs = currentTimeMillis();
-
-        String command = parseCommand(params);
+        String command = parseCommand(args);
         String result = runCommand(command);
-
-        // First response is rather slow (300 ms) but following responses are fast (3-5 ms).
-        // log.info("{}\t{}", result, cmd.responseTime.apply(startTs));
-        out.println(result + "\t" + cmd.responseTime.apply(startTs));
-
+        out.println(result);
         try {
             shutdown(); // Orderly channel shutdown
         } catch (InterruptedException ignored) {
@@ -76,12 +72,15 @@ public class BisqCliMain {
     private BisqCliMain(ManagedChannel channel) {
         this.channel = channel;
         this.cmd = new CliCommand(channel);
-        this.cmdParser = new CommandParser().configure();
+        this.parser = new CommandParser().configure();
     }
 
     private String runCommand(String command) {
         final String result;
         switch (command) {
+            case HELP:
+                CommandParser.printHelp();
+                exit(EXIT_SUCCESS);
             case GETBALANCE:
                 long satoshis = cmd.getBalance();
                 result = satoshis == -1 ? "Server initializing..." : cmd.prettyBalance.apply(satoshis);
@@ -100,18 +99,18 @@ public class BisqCliMain {
     }
 
     private String parseCommand(String[] params) {
-        OptionSpec<String> nonOptions = cmdParser.nonOptions().ofType(String.class);
-        OptionSet options = cmdParser.parse(params);
+        OptionSpec<String> nonOptions = parser.nonOptions().ofType(String.class);
+        OptionSet options = parser.parse(params);
         List<String> detectedOptions = nonOptions.values(options);
         if (detectedOptions.isEmpty()) {
-            CommandParser.printUsage();
-            exit(0);
+            CommandParser.printHelp();
+            exit(EXIT_FAILURE);
         }
         return detectedOptions.get(0);
     }
 
     private void shutdown() throws InterruptedException {
         channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
 }
