@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HOSTNAME="${COLLECTD_HOSTNAME:-localhost}"
-INTERVAL=5
+INTERVAL=750
 
 last=$(date +"%F %T" -d "$INTERVAL seconds ago")
 while true;

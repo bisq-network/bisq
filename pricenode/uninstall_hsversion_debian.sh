@@ -8,8 +8,6 @@ echo "[*] Network Size Monitoring removal script"
 ROOT_USER=root
 
 SCRAPER_HOME=/journalreader
-SCRAPER_USER=journalreader
-SCRAPER_GROUP=systemd-journal
 
 #####
 echo "[*] Checking environment..."
