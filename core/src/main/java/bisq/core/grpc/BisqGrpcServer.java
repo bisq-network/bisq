@@ -200,7 +200,7 @@ public class BisqGrpcServer {
 
     private void start() throws IOException {
         // TODO add to options
-        int port = 8888;
+        int port = 9998;
 
         // Config services
         server = ServerBuilder.forPort(port)

@@ -18,8 +18,6 @@ import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static java.lang.System.currentTimeMillis;
-
 @Slf4j
 final class CliCommand {
 
@@ -31,8 +29,6 @@ final class CliCommand {
     private final BigDecimal satoshiDivisor = new BigDecimal(100000000);
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     final Function<Long, String> prettyBalance = (sats) -> btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
-
-    final Function<Long, String> responseTime = (t0) -> "(response time:  " + (currentTimeMillis() - t0) + " ms)";
 
     CliCommand(ManagedChannel channel) {
         getBalanceStub = GetBalanceGrpc.newBlockingStub(channel);

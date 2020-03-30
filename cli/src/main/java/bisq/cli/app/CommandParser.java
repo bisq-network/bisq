@@ -2,7 +2,7 @@ package bisq.cli.app;
 
 import joptsimple.OptionParser;
 
-import static java.lang.System.err;
+import static java.lang.System.out;
 
 final class CommandParser {
 
@@ -20,8 +20,8 @@ final class CommandParser {
         return parser;
     }
 
-    static void printUsage() {
-        err.println("Usage:  bisq-cli getbalance | getversion");
+    static void printHelp() {
+        out.println("Usage:  bisq-cli getbalance | getversion");
     }
 
 }
