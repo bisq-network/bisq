@@ -20,18 +20,22 @@ package bisq.cli.app;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.cli.app.CommandParser.GETBALANCE;
+import static bisq.cli.app.CommandParser.GETVERSION;
+import static bisq.cli.app.CommandParser.HELP;
+import static bisq.cli.app.CommandParser.STOPSERVER;
 import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
 import static java.lang.System.exit;
-import static java.lang.System.in;
+import static java.lang.System.out;
 
 /**
  * gRPC client.
@@ -39,62 +43,26 @@ import static java.lang.System.in;
 @Slf4j
 public class BisqCliMain {
 
+    private static final int EXIT_SUCCESS = 0;
+    private static final int EXIT_FAILURE = 1;
+
     private final ManagedChannel channel;
     private final CliCommand cmd;
+    private final OptionParser parser;
 
     public static void main(String[] args) {
-        new BisqCliMain("localhost", 8888);
+        new BisqCliMain("localhost", 9998, args);
     }
 
-    private BisqCliMain(String host, int port) {
+    private BisqCliMain(String host, int port, String[] args) {
         // Channels are secure by default (via SSL/TLS);  for the example disable TLS to avoid needing certificates.
         this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
-
-        // Simple input scanner
-        // TODO use some more sophisticated input processing with validation....
-        try (Scanner scanner = new Scanner(in)) {
-            while (true) {
-                long startTs = currentTimeMillis();
-
-                String[] tokens = scanner.nextLine().split(" ");
-                if (tokens.length == 0) {
-                    return;
-                }
-                String command = tokens[0];
-                if (tokens.length > 1) {
-                    List<String> params = new ArrayList<>(Arrays.asList(tokens));
-                    params.remove(0);
-                }
-                String result;
-
-                switch (command) {
-                    case "getBalance":
-                        long satoshis = cmd.getBalance();
-                        // TODO mimic bitcoin-cli?  Depends on an error code: Loading block index... Verifying blocks...
-                        result = satoshis == -1 ? "Server initializing..." : cmd.prettyBalance.apply(satoshis);
-                        break;
-                    case "getVersion":
-                        result = cmd.getVersion();
-                        break;
-                    case "stop":
-                        result = "Shut down client";
-                        try {
-                            shutdown();
-                        } catch (InterruptedException e) {
-                            log.error(e.toString(), e);
-                        }
-                        break;
-                    case "stopServer":
-                        cmd.stopServer();
-                        result = "Server stopped";
-                        break;
-                    default:
-                        result = format("Unknown command '%s'", command);
-                }
-
-                // First response is rather slow (300 ms) but following responses are fast (3-5 ms).
-                log.info("{}\t{}", result, cmd.responseTime.apply(startTs));
-            }
+        String command = parseCommand(args);
+        String result = runCommand(command);
+        out.println(result);
+        try {
+            shutdown(); // Orderly channel shutdown
+        } catch (InterruptedException ignored) {
         }
     }
 
@@ -104,10 +72,45 @@ public class BisqCliMain {
     private BisqCliMain(ManagedChannel channel) {
         this.channel = channel;
         this.cmd = new CliCommand(channel);
+        this.parser = new CommandParser().configure();
+    }
+
+    private String runCommand(String command) {
+        final String result;
+        switch (command) {
+            case HELP:
+                CommandParser.printHelp();
+                exit(EXIT_SUCCESS);
+            case GETBALANCE:
+                long satoshis = cmd.getBalance();
+                result = satoshis == -1 ? "Server initializing..." : cmd.prettyBalance.apply(satoshis);
+                break;
+            case GETVERSION:
+                result = cmd.getVersion();
+                break;
+            case STOPSERVER:
+                cmd.stopServer();
+                result = "Server stopped";
+                break;
+            default:
+                result = format("Unknown command '%s'", command);
+        }
+        return result;
+    }
+
+    private String parseCommand(String[] params) {
+        OptionSpec<String> nonOptions = parser.nonOptions().ofType(String.class);
+        OptionSet options = parser.parse(params);
+        List<String> detectedOptions = nonOptions.values(options);
+        if (detectedOptions.isEmpty()) {
+            CommandParser.printHelp();
+            exit(EXIT_FAILURE);
+        }
+        return detectedOptions.get(0);
     }
 
     private void shutdown() throws InterruptedException {
         channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
 }
