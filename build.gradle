@@ -73,9 +73,6 @@ configure(subprojects) {
     }
 
     repositories {
-        maven {
-            url uri("${rootProject.projectDir}/libs")
-        }
         mavenCentral()
         maven { url 'https://jitpack.io' }
     }
