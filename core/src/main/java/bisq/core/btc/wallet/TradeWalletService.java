@@ -260,6 +260,7 @@ public class TradeWalletService {
         checkNotNull(wallet, "Wallet must not be null");
         wallet.completeTx(sendRequest);
         Transaction resultTx = sendRequest.tx;
+        removeDust(resultTx);
 
         // Sign all BTC inputs
         for (int i = preparedBsqTxInputsSize; i < resultTx.getInputs().size(); i++) {
@@ -1228,11 +1229,11 @@ public class TradeWalletService {
         List<TransactionOutput> originalTransactionOutputs = transaction.getOutputs();
         List<TransactionOutput> keepTransactionOutputs = new ArrayList<>();
         for (TransactionOutput transactionOutput: originalTransactionOutputs) {
-            if (transactionOutput.getValue().value >= preferences.getIgnoreDustThreshold()) {
-                keepTransactionOutputs.add(transactionOutput);
+            if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
+                log.info("your transaction would have contained a dust output of {}", transactionOutput.toString());
             }
             else {
-                log.info("your transaction would have contained a dust output of {}", transactionOutput.toString());
+                keepTransactionOutputs.add(transactionOutput);
             }
         }
         // if dust was detected, keepTransactionOutputs will have fewer elements than originalTransactionOutputs
