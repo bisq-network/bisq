@@ -176,7 +176,7 @@ public class TradeStepInfo {
                 // orange button
                 titledGroupBg.setText(Res.get("portfolio.pending.support.headline.halfPeriodOver"));
                 label.setText(firstHalfOverWarnTextSupplier.get());
-                button.setText(Res.get("portfolio.pending.openSupport").toUpperCase());
+                button.setText(Res.get("portfolio.pending.support.button.getHelp").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().remove("action-button");
                 button.setDisable(false);
