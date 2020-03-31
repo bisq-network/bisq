@@ -80,17 +80,24 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
                     injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
                         module.close(injector);
-                        log.debug("Graceful shutdown completed");
                         resultHandler.handleResult();
+                        log.info("Graceful shutdown completed");
+                        System.exit(0);
                     });
                     injector.getInstance(WalletsSetup.class).shutDown();
                     injector.getInstance(BtcWalletService.class).shutDown();
                     injector.getInstance(BsqWalletService.class).shutDown();
                 }));
                 // we wait max 5 sec.
-                UserThread.runAfter(resultHandler::handleResult, 5);
+                UserThread.runAfter(() -> {
+                    resultHandler.handleResult();
+                    System.exit(0);
+                }, 5);
             } else {
-                UserThread.runAfter(resultHandler::handleResult, 1);
+                UserThread.runAfter(() -> {
+                    resultHandler.handleResult();
+                    System.exit(0);
+                }, 1);
             }
         } catch (Throwable t) {
             log.debug("App shutdown failed with exception");
