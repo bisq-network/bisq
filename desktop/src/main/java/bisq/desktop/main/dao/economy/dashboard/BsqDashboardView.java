@@ -379,7 +379,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
                 .filter(e -> e.getTradeDate().after(pastXDays))
                 .collect(Collectors.toList());
         long average = isUSDField ? getUSDAverage(bsqTradePastXDays, usdTradePastXDays) :
-                getBTCAverage(bsqTradePastXDays, usdTradePastXDays);
+                getBTCAverage(bsqTradePastXDays);
         Price avgPrice = isUSDField ? Price.valueOf("USD", average) :
                 Price.valueOf("BSQ", average);
         String avg = FormattingUtils.formatPrice(avgPrice);
@@ -391,7 +391,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         return average;
     }
 
-    private long getBTCAverage(List<TradeStatistics2> bsqList, List<TradeStatistics2> usdList) {
+    private long getBTCAverage(List<TradeStatistics2> bsqList) {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
 
