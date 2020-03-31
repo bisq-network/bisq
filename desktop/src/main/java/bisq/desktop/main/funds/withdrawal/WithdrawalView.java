@@ -372,12 +372,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             kb,
                             formatter.formatCoinWithCode(receiverAmount));
                         if (dust.isPositive()) {
-                            messageText = MessageFormat.format(
-                                "Bisq detected that this transaction would create a change output which is below the minimum dust threshold (and not allowed by Bitcoin consensus rules).  Instead, this dust ({0} satoshi) will be added to the transaction fee.\n\n\n",
-                                dust.value)
+                            messageText = Res.get("shared.sendFundsDetailsDust",
+                                dust.value, dust.value > 1 ? "s" : "")
                                 + messageText;
                         }
-                        // jmacxx TODO: get review on the above message text, & clarification on proper way to add i18n resource strings
 
                         new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
                                 .confirmation(messageText)
