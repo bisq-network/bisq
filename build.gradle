@@ -39,6 +39,7 @@ configure(subprojects) {
         fontawesomefxCommonsVersion = '9.1.2'
         fontawesomefxMaterialdesignfontVersion = '2.0.26-9.1.2'
         grpcVersion = '1.25.0'
+        gsonVersion = '2.8.5'
         guavaVersion = '20.0'
         guiceVersion = '4.2.2'
         hamcrestVersion = '1.3'
@@ -219,7 +220,7 @@ configure(project(':common')) {
         compile "org.openjfx:javafx-base:$javafxVersion:$os"
         compile "org.openjfx:javafx-graphics:$javafxVersion:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
-        compile 'com.google.code.gson:gson:2.8.5'
+        compile "com.google.code.gson:gson:$gsonVersion"
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
@@ -278,6 +279,7 @@ configure(project(':core')) {
         compile project(':assets')
         compile project(':p2p')
         implementation "commons-codec:commons-codec:$codecVersion"
+        implementation "com.google.code.gson:gson:$gsonVersion"
         implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
@@ -445,6 +447,7 @@ configure(project(':pricenode')) {
 
     dependencies {
         compile project(":core")
+        implementation "com.google.code.gson:gson:$gsonVersion"
         implementation "commons-codec:commons-codec:$codecVersion"
         implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
@@ -468,12 +471,14 @@ configure(project(':relay')) {
 
     dependencies {
         compile project(':common')
+        implementation "io.grpc:grpc-auth:$grpcVersion"
         compile "com.sparkjava:spark-core:$sparkVersion"
         compile "com.turo:pushy:$pushyVersion"
         implementation("com.google.firebase:firebase-admin:$firebaseVersion") {
             exclude(module: 'commons-logging')
             exclude(module: 'httpclient')
             exclude(module: 'httpcore')
+            exclude(module: 'grpc-auth')
         }
         compile "commons-codec:commons-codec:$codecVersion"
     }
