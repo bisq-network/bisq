@@ -229,6 +229,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                         injector.getInstance(BsqWalletService.class).shutDown();
                     });
                 });
+                injector.getInstance(AvoidStandbyModeService.class).shutDown();
                 // we wait max 20 sec.
                 UserThread.runAfter(() -> {
                     log.warn("Timeout triggered resultHandler");
