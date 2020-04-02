@@ -122,6 +122,8 @@ public class ProvidersRepository {
                         !bannedNodes.contains(e.replace("http://", "")
                                 .replace("/", "")
                                 .replace(".onion", "")))
+                .map(e -> e.endsWith("/") ? e : e + "/")
+                .map(e -> e.startsWith("http") ? e : "http://" + e)
                 .collect(Collectors.toList());
     }
 }
