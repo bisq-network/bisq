@@ -488,6 +488,7 @@ configure(project(':seednode')) {
     dependencies {
         compile project(':core')
         compileOnly "org.projectlombok:lombok:$lombokVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile "org.mockito:mockito-core:$mockitoVersion"
     }
