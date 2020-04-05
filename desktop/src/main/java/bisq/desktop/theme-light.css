@@ -40,17 +40,21 @@
     -bs-bg-green: #99ba9c;
     -bs-rd-green: #25B135;
     -bs-rd-green-dark: #3EA34A;
-    -bs-rd-nav-selected: #25b135;
+    -bs-rd-nav-selected: #fff;
     -bs-rd-nav-deselected: rgba(255, 255, 255, 0.59);
     -bs-rd-nav-background: #2ea33c;
     -bs-rd-nav-primary-background: #25b135;
-    -bs-rd-nav-primary-border: #189e27;
+    -bs-rd-nav-primary-border: rgba(255, 255, 255, 0);
     -bs-rd-nav-border: #535353;
     -bs-rd-nav-border-color: rgba(255, 255, 255, 0.31);
-    -bs-rd-tab-border: #e2e0e0;
+
+    -bs-rd-nav-button-hover: rgba(0, 0, 0, 0.03);
+
+
+    -bs-rd-tab-border: rgba(255, 255, 255, 0.00);
     -bs-tab-content-area: #ffffff;
-    -bs-color-gray-background: #f2f2f2;
-    -bs-content-pane-bg-top: #f2f2f2;
+    -bs-color-gray-background: #e7e7e7;
+    -bs-content-pane-bg-top: #EAEAEA;
     -bs-content-pane-bg-bottom: #f6f6f6;
     -bs-scroll-pane-background: transparent;
     -bs-tab-content-area: transparent;
@@ -58,6 +62,10 @@
     -bs-footer-pane-background: #dddddd;
     -bs-footer-pane-text: #4b4b4b;
     -bs-footer-pane-line: #bbb;
+
+
+    -bs-tab-content-label-hover: rgba(0, 0, 0, 0.03);
+
     -bs-rd-font-balance: #4f4f4f;
     -bs-rd-font-dark-gray: #3c3c3c;
     -bs-rd-font-dark: #4b4b4b;
@@ -95,7 +103,7 @@
     -bs-green-soft: derive(-bs-rd-green, 60%);
     -bs-red-soft: derive(-bs-rd-error-red, 60%);
     -fx-focus-color: -fx-accent;
-    -fx-faint-focus-color: #0f87c3;
+    -fx-faint-focus-color: #3ea34a;
     -fx-selection-bar: #e1f5e3;
     -fx-selection-bar-non-focused: -fx-selection-bar;
     -fx-default-button: derive(-fx-accent, 95%);
