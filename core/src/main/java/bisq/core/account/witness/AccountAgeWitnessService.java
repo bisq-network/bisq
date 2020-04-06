@@ -662,12 +662,7 @@ public class AccountAgeWitnessService {
                 .collect(Collectors.toList());
     }
 
-    @VisibleForTesting
-    public boolean isNotFiltered(Dispute dispute) {
-        Contract c = dispute.getContract();
-        PubKeyRing r = c.getBuyerPubKeyRing();
-        byte[] b = dispute.getContract().getBuyerPubKeyRing().getSignaturePubKeyBytes();
-        String hex = Utils.HEX.encode(b);
+    private boolean isNotFiltered(Dispute dispute) {
         boolean isFiltered = filterManager.isNodeAddressBanned(dispute.getContract().getBuyerNodeAddress()) ||
                 filterManager.isNodeAddressBanned(dispute.getContract().getSellerNodeAddress()) ||
                 filterManager.isCurrencyBanned(dispute.getContract().getOfferPayload().getCurrencyCode()) ||
@@ -690,8 +685,7 @@ public class AccountAgeWitnessService {
                 dispute.getContract().getOfferPayload().getCurrencyCode());
     }
 
-    @VisibleForTesting
-    public boolean isBuyerWinner(Dispute dispute) {
+    private boolean isBuyerWinner(Dispute dispute) {
         if (!dispute.isClosed() || dispute.getDisputeResultProperty() == null)
             return false;
         return dispute.getDisputeResultProperty().get().getWinner() == DisputeResult.Winner.BUYER;

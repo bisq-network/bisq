@@ -353,7 +353,6 @@ public class SignedWitnessService {
     private boolean isValidSignerWitnessInternal(SignedWitness signedWitness,
                                                  long childSignedWitnessDateMillis,
                                                  Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
-        String ownerpubkeyhash = Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey());
         if (filterManager.isSignerPubKeyBanned(Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))) {
             return false;
         }

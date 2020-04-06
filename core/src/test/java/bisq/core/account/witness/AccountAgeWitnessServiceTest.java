@@ -95,7 +95,6 @@ public class AccountAgeWitnessServiceTest {
 
     @Before
     public void setup() {
-//        SignedWitnessService signedWitnessService = mock(SignedWitnessService.class);
         chargeBackRisk = mock(ChargeBackRisk.class);
         AppendOnlyDataStoreService dataStoreService = mock(AppendOnlyDataStoreService.class);
         KeyRing keyRing = mock(KeyRing.class);
@@ -112,6 +111,7 @@ public class AccountAgeWitnessServiceTest {
 
     @After
     public void tearDown() {
+        // Do teardown stuff
     }
 
     @Ignore
