@@ -115,7 +115,7 @@
     -bs-rd-separator: #1F1F1F;
     -bs-rd-separator-dark: #1F1F1F;
     -bs-rd-error-red: #d83431;
-    -bs-rd-message-bubble: #2cadaf;
+    -bs-rd-message-bubble: #0086c6;
     -bs-rd-tooltip-truncated: #afaeb0;
 
     -bs-toggle-selected: #25b135;
@@ -262,4 +262,20 @@
 
 .small-icon-label {
     -fx-fill: -bs-text-color;
+}
+
+
+
+
+
+
+
+
+
+#bubble_arrow_grey_left {
+    -fx-image: url("../../images/bubble_arrow_grey_left_dark.png");
+}
+
+#bubble_arrow_grey_right {
+    -fx-image: url("../../images/bubble_arrow_grey_right_dark.png");
 }
