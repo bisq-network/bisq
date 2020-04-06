@@ -258,9 +258,38 @@
 tree-table-view:focused {
     -fx-background-insets: 0;
 }
-.list-view:focused {
-    -fx-background-color: -bs-color-primary;
-    -fx-background-insets: 0;
+
+
+/* list view */
+.list-view .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+.list-view .list-cell:odd, .list-view .list-cell:even {
+    -fx-background-color: -bs-background-color;
+    -fx-border-width: 0;
+}
+
+.list-view .list-cell:selected,
+.table-view .table-cell:selected {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.number-column.table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+
+.list-view, .list-view:focused {
+    -fx-border-color: -bs-content-background-gray;
+    -fx-border-width: 1;
+}
+.list-view .list-cell, .list-view .list-cell:focused {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
 }
 
 /* Selected rows */
@@ -326,7 +355,7 @@ tree-table-view:focused {
 .jfx-combo-box > .input-focused-line, .jfx-text-field > .input-focused-line {
     -fx-translate-x: -0.333333em;
     -fx-background-color: transparent;
-    -jfx-disable-animation;
+    -jfx-disable-animation: true;
 }
 
 
@@ -618,6 +647,7 @@ tree-table-view:focused {
 .content-pane {
     /*-fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);*/
     -fx-background-color: -bs-content-background-gray;
+    -jfx-disable-animation: true;
 }
 
 #footer-pane {
@@ -910,24 +940,34 @@ textfield */
  * Table                                                                       *
  *                                                                             *
  ******************************************************************************/
- .table-view {
-   -fx-border-color: transparent;
- }
-
- .table-view .table-cell {
+.table-view .table-cell {
     -fx-alignment: center-left;
-    -fx-padding: 2 0 2 0;
+    -fx-padding: 5 0 4 0;
     /*-fx-padding: 3 0 2 0;*/
 }
 
 .table-view .table-cell.last-column {
     -fx-alignment: center-right;
-    -fx-padding: 2 10 2 0;
+    -fx-padding: 5 10 4 0;
 }
+
+
+.table-view, .table-cell:focused, .table-row-cell {
+    -fx-background: transparent;
+}
+.table-view .table-row-cell:even .table-cell {
+    -fx-background-color: derive(-bs-background-color, -3%);
+    -fx-border-color: derive(-bs-background-color, -3%);
+}
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: derive(-bs-background-color,-8%);
+    -fx-border-color: derive(-bs-background-color,-8%);
+}
+
 
 .table-view .table-cell.last-column.avatar-column {
     -fx-alignment: center;
-    -fx-padding: 2 0 2 0;
+    -fx-padding: 5 0 4 0;
 }
 
 .table-view .column-header.last-column {
@@ -947,7 +987,7 @@ textfield */
 }
 
 .table-view .table-cell.first-column {
-    -fx-padding: 2 0 2 10;
+    -fx-padding: 5 0 4 10;
 }
 
 .table-view .column-header.first-column {
@@ -1011,6 +1051,7 @@ textfield */
 .table-row-cell {
     -fx-border-width: 0 0 1 0;
     -fx-border-color: -bs-color-gray-0;
+    -fx-table-cell-border-color: -bs-background-color;
 }
 
 .table-row-cell:selected {
@@ -1178,13 +1219,18 @@ textfield */
     -fx-font-size: 0.769em;
     -fx-font-weight: normal;
     -fx-cursor: hand;
-    -jfx-disable-animation;
+    -jfx-disable-animation: true;
 }
 
 .jfx-tab-pane .headers-region .tab .tab-container .tab-label:hover {
     -fx-background-color: -bs-tab-content-label-hover;
     -jfx-disable-animation: true;
 }
+
+.jfx-tab-pane {
+    -jfx-disable-animation: true;
+}
+
 
 .jfx-tab-pane .depth-container {
     -fx-effect: none;
@@ -1211,12 +1257,12 @@ textfield */
 }
 
 #form-header-text {
-    -fx-font-weight: bold;
-    -fx-font-size: 1.077em;
+    /*-fx-font-weight: bold;*/
+    -fx-font-size: 2.077em;
 }
 
 #form-title {
-    -fx-font-weight: bold;
+    /*-fx-font-weight: bold;*/
 }
 
 /* scroll-pane */
@@ -1330,7 +1376,7 @@ textfield */
 }
 
 .combo-box-editor-bold {
-    -fx-font-weight: bold;
+    /*-fx-font-weight: bold;*/
     -fx-padding: 5 8 5 8 !important;
     -fx-text-fill: -bs-text-color;
     -fx-font-family: "IBM Plex Sans Medium";
@@ -1564,6 +1610,8 @@ textfield */
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background-color: -bs-background-color;
 }
+
+
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
     -fx-background-color: -bs-background-color;

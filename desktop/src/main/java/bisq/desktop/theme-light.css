@@ -50,6 +50,7 @@
 
     -bs-rd-nav-button-hover: rgba(0, 0, 0, 0.03);
 
+
     -bs-rd-tab-border: rgba(255, 255, 255, 0.00);
     -bs-tab-content-area: #ffffff;
     -bs-color-gray-background: #e7e7e7;
@@ -61,6 +62,7 @@
     -bs-footer-pane-background: #dddddd;
     -bs-footer-pane-text: #4b4b4b;
     -bs-footer-pane-line: #bbb;
+
 
     -bs-tab-content-label-hover: rgba(0, 0, 0, 0.03);
 
@@ -97,7 +99,7 @@
     -bs-cancel-focus: derive(-bs-cancel, -50%);
     -bs-cancel-hover: derive(-bs-cancel, -10%);
     -fx-accent: #25b135;
-    -fx-box-border: transparent;
+    -fx-box-border: rgba(255, 255, 255, 0);;
     -bs-green-soft: derive(-bs-rd-green, 60%);
     -bs-red-soft: derive(-bs-rd-error-red, 60%);
     -fx-focus-color: -fx-accent;
