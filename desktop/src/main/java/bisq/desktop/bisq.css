@@ -942,32 +942,19 @@ textfield */
  ******************************************************************************/
 .table-view .table-cell {
     -fx-alignment: center-left;
-    -fx-padding: 5 0 4 0;
+    -fx-padding: 6 0 4 0;
     /*-fx-padding: 3 0 2 0;*/
+    -fx-text-fill: -bs-text-color;
 }
 
 .table-view .table-cell.last-column {
     -fx-alignment: center-right;
-    -fx-padding: 5 10 4 0;
+    -fx-padding: 6 10 4 0;
 }
-
-
-.table-view, .table-cell:focused, .table-row-cell {
-    -fx-background: transparent;
-}
-.table-view .table-row-cell:even .table-cell {
-    -fx-background-color: derive(-bs-background-color, -3%);
-    -fx-border-color: derive(-bs-background-color, -3%);
-}
-.table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: derive(-bs-background-color,-8%);
-    -fx-border-color: derive(-bs-background-color,-8%);
-}
-
 
 .table-view .table-cell.last-column.avatar-column {
     -fx-alignment: center;
-    -fx-padding: 5 0 4 0;
+    -fx-padding: 6 0 4 0;
 }
 
 .table-view .column-header.last-column {
@@ -987,7 +974,7 @@ textfield */
 }
 
 .table-view .table-cell.first-column {
-    -fx-padding: 5 0 4 10;
+    -fx-padding: 6 0 4 10;
 }
 
 .table-view .column-header.first-column {
