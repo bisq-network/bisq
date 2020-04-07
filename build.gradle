@@ -62,6 +62,7 @@ configure(subprojects) {
         logbackVersion = '1.1.11'
         loggingVersion = '1.2'
         lombokVersion = '1.18.2'
+        macaroonsVersion = '0.4.1'
         mockitoVersion = '3.0.0'
         netlayerVersion = '0.6.7'
         protobufVersion = '3.10.0'
@@ -137,7 +138,7 @@ configure([project(':cli'),
             unixScriptFile.text = unixScriptFile.text.replace(
                 'cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`" >/dev/null')
 
-            if (applicationName == 'desktop') {
+            if (applicationName == 'desktop' || applicationName == 'daemon' || applicationName == 'cli') {
                 def script = file("${rootProject.projectDir}/bisq-$applicationName")
                 script.text = script.text.replace(
                     'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=4g"')
@@ -305,6 +306,7 @@ configure(project(':core')) {
         compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
             exclude(module: 'jackson-annotations')
         }
+        implementation "com.github.nitram509:jmacaroons:$macaroonsVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation("io.grpc:grpc-protobuf:$grpcVersion") {
             exclude(module: 'guava')
@@ -340,6 +342,8 @@ configure(project(':cli')) {
     dependencies {
         compile project(':proto')
         implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        implementation "commons-codec:commons-codec:$codecVersion"
+        implementation "com.github.nitram509:jmacaroons:$macaroonsVersion"
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation("io.grpc:grpc-core:$grpcVersion") {
@@ -350,7 +354,7 @@ configure(project(':cli')) {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
-        runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
+        implementation("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }

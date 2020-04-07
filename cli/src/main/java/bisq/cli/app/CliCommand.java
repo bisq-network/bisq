@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 final class CliCommand {
 
+    private final MacaroonCallCredential macaroonCallCredential;
     private final GetBalanceGrpc.GetBalanceBlockingStub getBalanceStub;
     private final GetVersionGrpc.GetVersionBlockingStub getVersionStub;
     private final StopServerGrpc.StopServerBlockingStub stopServerStub;
@@ -30,10 +31,11 @@ final class CliCommand {
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     final Function<Long, String> prettyBalance = (sats) -> btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
 
-    CliCommand(ManagedChannel channel) {
-        getBalanceStub = GetBalanceGrpc.newBlockingStub(channel);
-        getVersionStub = GetVersionGrpc.newBlockingStub(channel);
-        stopServerStub = StopServerGrpc.newBlockingStub(channel);
+    CliCommand(ManagedChannel channel, String macaroon) {
+        this.macaroonCallCredential = new MacaroonCallCredential(macaroon);
+        this.getBalanceStub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(macaroonCallCredential);
+        this.getVersionStub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(macaroonCallCredential);
+        this.stopServerStub = StopServerGrpc.newBlockingStub(channel).withCallCredentials(macaroonCallCredential);
     }
 
     String getVersion() {

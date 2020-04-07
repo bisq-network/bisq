@@ -11,6 +11,8 @@
     </root>
 
     <logger name="com.neemre.btcdcli4j" level="WARN"/>
-    <logger name="io.grpc.netty" level="WARN"/>
+    <logger name="io.grpc.netty.shaded.io.netty.util.internal.PlatformDependent0" level="WARN"/>
+    <logger name="io.grpc.netty.shaded.io.netty.util.internal.NativeLibraryLoader" level="WARN"/>
+    <logger name="io.grpc" level="DEBUG"/> <!-- show debug while implementing new auth mechanism -->
 
 </configuration>

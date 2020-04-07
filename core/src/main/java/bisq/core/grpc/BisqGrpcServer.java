@@ -48,6 +48,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.List;
@@ -204,6 +205,9 @@ public class BisqGrpcServer {
 
         // Config services
         server = ServerBuilder.forPort(port)
+                .useTransportSecurity(  // TODO find proper home for SSL cert + key
+                        new File("cert/aes256/server.crt"),
+                        new File("cert/aes256/pkcs8_key.pem"))
                 .addService(new GetVersionImpl())
                 .addService(new GetBalanceImpl())
                 .addService(new GetTradeStatisticsImpl())
@@ -211,15 +215,16 @@ public class BisqGrpcServer {
                 .addService(new GetPaymentAccountsImpl())
                 .addService(new PlaceOfferImpl())
                 .addService(new StopServerImpl())
+                .intercept(new AuthenticationInterceptor(coreApi.getConfig().appDataDir))
                 .build()
                 .start();
 
         log.info("Server started, listening on " + port);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Use stderr here since the logger may have been reset by its JVM shutdown hook.
-            log.error("*** shutting down gRPC server since JVM is shutting down");
+            log.error("Shutting down gRPC server");
             BisqGrpcServer.this.stop();
-            log.error("*** server shut down");
+            log.error("Stopped");
         }));
     }
 }

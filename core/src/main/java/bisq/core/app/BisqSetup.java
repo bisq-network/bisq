@@ -36,6 +36,7 @@ import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.filter.FilterManager;
+import bisq.core.grpc.MacaroonOven;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.notifications.alerts.DisputeMsgEvents;
@@ -104,6 +105,7 @@ import javafx.collections.SetChangeListener;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -121,6 +123,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+
+
+import com.github.nitram509.jmacaroons.Macaroon;
 
 @Slf4j
 @Singleton
@@ -342,6 +348,7 @@ public class BisqSetup {
     public void start() {
         UserThread.runPeriodically(() -> {
         }, 1);
+        maybeCreateMacaroon();
         maybeReSyncSPVChain();
         maybeShowTac(this::step2);
     }
@@ -447,6 +454,13 @@ public class BisqSetup {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void maybeCreateMacaroon() {
+        File macaroonFile = new File(config.appDataDir, "bisqd.macaroon");
+        if (!macaroonFile.exists()) {
+            new MacaroonOven("localhost:9998", "0123456789", "bisqd rpc", macaroonFile).bake();
+        }
+    }
 
     private void maybeReSyncSPVChain() {
         // We do the delete of the spv file at startup before BitcoinJ is initialized to avoid issues with locked files under Windows.
