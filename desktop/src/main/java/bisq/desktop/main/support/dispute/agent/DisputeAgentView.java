@@ -18,6 +18,7 @@
 package bisq.desktop.main.support.dispute.agent;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -26,6 +27,8 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
@@ -38,7 +41,13 @@ import bisq.common.crypto.KeyRing;
 
 import javafx.scene.control.Button;
 
+import javafx.collections.ListChangeListener;
+
+import java.util.Set;
+
 public abstract class DisputeAgentView extends DisputeView {
+
+    private final DaoFacade daoFacade;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                             KeyRing keyRing,
@@ -49,6 +58,7 @@ public abstract class DisputeAgentView extends DisputeView {
                             ContractWindow contractWindow,
                             TradeDetailsWindow tradeDetailsWindow,
                             AccountAgeWitnessService accountAgeWitnessService,
+                            DaoFacade daoFacade,
                             boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
@@ -60,6 +70,7 @@ public abstract class DisputeAgentView extends DisputeView {
                 tradeDetailsWindow,
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
+        this.daoFacade = daoFacade;
     }
 
     @Override
@@ -68,6 +79,20 @@ public abstract class DisputeAgentView extends DisputeView {
 
         filterBox.setVisible(true);
         filterBox.setManaged(true);
+
+        ListChangeListener<Dispute> disputesWithInvalidDonationAddressListener = c -> {
+            c.next();
+            if (c.wasAdded()) {
+                c.getAddedSubList().forEach(dispute -> {
+                    String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
+                    Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
+                    String tradeId = dispute.getTradeId();
+                    new Popup().warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                            addressAsString, allPastParamValues, tradeId)).show();
+                });
+            }
+        };
+        disputeManager.getDisputesWithInvalidDonationAddress().addListener(disputesWithInvalidDonationAddressListener);
     }
 
     @Override

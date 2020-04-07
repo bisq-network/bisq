@@ -102,6 +102,9 @@ public final class Dispute implements NetworkPayload {
     @Setter
     @Nullable
     private String delayedPayoutTxId;
+    @Setter
+    @Nullable
+    private String donationAddressOfDelayedPayoutTx;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +231,7 @@ public final class Dispute implements NetworkPayload {
         Optional.ofNullable(supportType).ifPresent(result -> builder.setSupportType(SupportType.toProtoMessage(supportType)));
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
+        Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
         return builder.build();
     }
 
@@ -269,6 +273,11 @@ public final class Dispute implements NetworkPayload {
         String delayedPayoutTxId = proto.getDelayedPayoutTxId();
         if (!delayedPayoutTxId.isEmpty()) {
             dispute.setDelayedPayoutTxId(delayedPayoutTxId);
+        }
+
+        String donationAddressOfDelayedPayoutTx = proto.getDonationAddressOfDelayedPayoutTx();
+        if (!donationAddressOfDelayedPayoutTx.isEmpty()) {
+            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx);
         }
 
         return dispute;
@@ -382,6 +391,7 @@ public final class Dispute implements NetworkPayload {
                 ",\n     supportType=" + supportType +
                 ",\n     mediatorsDisputeResult='" + mediatorsDisputeResult + '\'' +
                 ",\n     delayedPayoutTxId='" + delayedPayoutTxId + '\'' +
+                ",\n     donationAddressOfDelayedPayoutTx='" + donationAddressOfDelayedPayoutTx + '\'' +
                 "\n}";
     }
 }

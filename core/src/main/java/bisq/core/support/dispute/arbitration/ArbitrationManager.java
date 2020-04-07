@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -88,9 +89,10 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                               ClosedTradableManager closedTradableManager,
                               OpenOfferManager openOfferManager,
                               PubKeyRing pubKeyRing,
-                              ArbitrationDisputeListService arbitrationDisputeListService) {
+                              ArbitrationDisputeListService arbitrationDisputeListService,
+                              DaoFacade daoFacade) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, arbitrationDisputeListService);
+                openOfferManager, pubKeyRing, arbitrationDisputeListService, daoFacade);
     }
 
 

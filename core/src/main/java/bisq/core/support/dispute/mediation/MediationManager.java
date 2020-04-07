@@ -20,6 +20,7 @@ package bisq.core.support.dispute.mediation;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -80,9 +81,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                             ClosedTradableManager closedTradableManager,
                             OpenOfferManager openOfferManager,
                             PubKeyRing pubKeyRing,
-                            MediationDisputeListService mediationDisputeListService) {
+                            MediationDisputeListService mediationDisputeListService,
+                            DaoFacade daoFacade) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, mediationDisputeListService);
+                openOfferManager, pubKeyRing, mediationDisputeListService, daoFacade);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

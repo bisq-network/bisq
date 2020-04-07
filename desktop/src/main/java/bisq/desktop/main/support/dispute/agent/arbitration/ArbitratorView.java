@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.support.dispute.agent.arbitration;
 
-import bisq.common.config.Config;
-import bisq.common.util.Utilities;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -28,6 +26,7 @@ import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
@@ -37,13 +36,15 @@ import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
-
-import javax.inject.Named;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 @FxmlView
 public class ArbitratorView extends DisputeAgentView {
@@ -61,6 +62,7 @@ public class ArbitratorView extends DisputeAgentView {
                           TradeDetailsWindow tradeDetailsWindow,
                           AccountAgeWitnessService accountAgeWitnessService,
                           @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
+                          DaoFacade daoFacade,
                           SignPaymentAccountsWindow signPaymentAccountsWindow) {
         super(arbitrationManager,
                 keyRing,
@@ -71,6 +73,7 @@ public class ArbitratorView extends DisputeAgentView {
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                daoFacade,
                 useDevPrivilegeKeys);
         this.signPaymentAccountsWindow = signPaymentAccountsWindow;
     }

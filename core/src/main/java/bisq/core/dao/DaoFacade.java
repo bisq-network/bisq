@@ -94,6 +94,7 @@ import javafx.collections.transformation.FilteredList;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -517,7 +518,10 @@ public class DaoFacade implements DaoSetupService {
         lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
-    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount,
+                                                               int lockTime,
+                                                               LockupReason lockupReason,
+                                                               byte[] hash)
             throws InsufficientMoneyException, IOException, TransactionVerificationException, WalletException {
         return lockupTxService.getMiningFeeAndTxSize(lockupAmount, lockTime, lockupReason, hash);
     }
@@ -694,6 +698,14 @@ public class DaoFacade implements DaoSetupService {
 
     public String getParamValue(Param param) {
         return getParamValue(param, periodService.getChainHeight());
+    }
+
+    public Set<String> getAllPastParamValues(Param param) {
+        Set<String> set = new HashSet<>();
+        periodService.getCycles().forEach(cycle -> {
+            set.add(getParamValue(param, cycle.getHeightOfFirstBlock()));
+        });
+        return set;
     }
 
     public String getParamValue(Param param, int blockHeight) {

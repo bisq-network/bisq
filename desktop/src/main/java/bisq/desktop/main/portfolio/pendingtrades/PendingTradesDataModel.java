@@ -62,9 +62,12 @@ import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
 
 import com.google.inject.Inject;
 
@@ -534,6 +537,18 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         // In case we re-open a dispute we allow Trade.DisputeState.REFUND_REQUESTED
         useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.REFUND_REQUESTED;
 
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        checkNotNull(delayedPayoutTx, "delayedPayoutTx must not be null");
+        checkArgument(!delayedPayoutTx.getOutputs().isEmpty(), "delayedPayoutTx.getOutputs() must not be empty");
+        TransactionOutput output = delayedPayoutTx.getOutput(0);
+        NetworkParameters params = btcWalletService.getParams();
+        Address donationAddressOfDelayedPayoutTx = output.getAddressFromP2PKHScript(params);
+        if (donationAddressOfDelayedPayoutTx == null) {
+            // The donation address can be as well be a multisig address.
+            donationAddressOfDelayedPayoutTx = output.getAddressFromP2SH(params);
+            checkNotNull(donationAddressOfDelayedPayoutTx, "address must not be null");
+        }
+
         ResultHandler resultHandler;
         if (useMediation) {
             // If no dispute state set we start with mediation
@@ -561,6 +576,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     mediatorPubKeyRing,
                     isSupportTicket,
                     SupportType.MEDIATION);
+
+            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx.toString());
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             disputeManager.sendOpenNewDisputeMessage(dispute,
@@ -636,6 +653,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isSupportTicket,
                     SupportType.REFUND);
 
+            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx.toString());
+
             String tradeId = dispute.getTradeId();
             mediationManager.findDispute(tradeId)
                     .ifPresent(mediatorsDispute -> {
@@ -649,7 +668,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         }
                     });
 
-            dispute.setDelayedPayoutTxId(trade.getDelayedPayoutTx().getHashAsString());
+            dispute.setDelayedPayoutTxId(delayedPayoutTx.getHashAsString());
 
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 

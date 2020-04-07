@@ -20,6 +20,8 @@ package bisq.core.support.dispute;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportManager;
@@ -44,19 +46,28 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
+
 import javafx.beans.property.IntegerProperty;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -68,6 +79,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final OpenOfferManager openOfferManager;
     protected final PubKeyRing pubKeyRing;
     protected final DisputeListService<T> disputeListService;
+    private final DaoFacade daoFacade;
+    @Getter
+    protected final ObservableList<Dispute> disputesWithInvalidDonationAddress = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +96,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           PubKeyRing pubKeyRing,
-                          DisputeListService<T> disputeListService) {
+                          DisputeListService<T> disputeListService,
+                          DaoFacade daoFacade) {
         super(p2PService, walletsSetup);
 
         this.tradeWalletService = tradeWalletService;
@@ -92,6 +107,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.openOfferManager = openOfferManager;
         this.pubKeyRing = pubKeyRing;
         this.disputeListService = disputeListService;
+        this.daoFacade = daoFacade;
     }
 
 
@@ -241,6 +257,30 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
+    public boolean isValidDonationAddress(Dispute dispute) {
+        String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
+
+        // We don't check in case of old clients which do not have the field set.
+        if (addressAsString == null) {
+            return true;
+        }
+
+        // We use all past addresses from DAO param changes as the dispute case might have been opened later and the
+        // DAO param changed in the meantime.
+        Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
+
+        if (allPastParamValues.contains(addressAsString)) {
+            return true;
+        }
+
+        log.warn("Donation address is not a valid DAO donation address." +
+                "\nAddress used in the dispute: " + addressAsString +
+                "\nAll DAO param donation addresses:" + allPastParamValues);
+        return false;
+
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -261,6 +301,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         dispute.setStorage(disputeListService.getStorage());
         Contract contractFromOpener = dispute.getContract();
+
+        if (!isValidDonationAddress(dispute)) {
+            disputesWithInvalidDonationAddress.add(dispute);
+        }
+
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
         if (isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
@@ -315,6 +360,25 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
+
+        Optional<Trade> optionalTrade = tradeManager.getTradeById(dispute.getTradeId());
+        checkArgument(optionalTrade.isPresent());
+        Transaction delayedPayoutTx = optionalTrade.get().getDelayedPayoutTx();
+        checkNotNull(delayedPayoutTx, "delayedPayoutTx must not be null");
+        checkArgument(!delayedPayoutTx.getOutputs().isEmpty(), "delayedPayoutTx.getOutputs() must not be empty");
+        NetworkParameters params = btcWalletService.getParams();
+        TransactionOutput output = delayedPayoutTx.getOutput(0);
+        Address address = output.getAddressFromP2PKHScript(params);
+        if (address == null) {
+            address = output.getAddressFromP2SH(params);
+        }
+        checkNotNull(address, "address must not be null");
+        String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
+        if (donationAddressOfDelayedPayoutTx != null) {
+            checkArgument(address.toString().equals(donationAddressOfDelayedPayoutTx),
+                    "donationAddressOfDelayedPayoutTx from peers dispute must match own address");
+        }
+
         if (!isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
@@ -498,6 +562,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.getSupportType());
         dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
+        dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
