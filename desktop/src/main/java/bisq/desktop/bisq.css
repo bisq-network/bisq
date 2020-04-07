@@ -86,7 +86,8 @@
 }
 
 .zero-decimals {
-    -fx-text-fill: -bs-color-gray-3;
+    -fx-text-fill: -bs-decimals;
+    -fx-fill: -bs-decimals;
 }
 
 .confirmation-label {
@@ -214,7 +215,7 @@
     -jfx-focus-color: -bs-color-primary;
     -jfx-unfocus-color: -bs-color-gray-line;
     -fx-background-color: -bs-background-color;
-    -jfx-disable-animation: true;
+    /*-jfx-disable-animation: true;*/
 }
 
 
@@ -240,14 +241,15 @@
 }
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background: -fx-selection-bar;
-    -fx-background-color: -fx-selection-bar;
+    -fx-background: -bs-combobox-selected;
+    -fx-background-color: -bs-combobox-selected;
 }
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    -fx-background: -fx-accent;
-    -fx-background-color: -fx-selection-bar;
+    -fx-background:-bs-combobox-hover;
+    -fx-background-color: -bs-combobox-hover;
+    -fx-text-fill: -bs-text-color;
 }
 
 .list-view:focused,
@@ -317,8 +319,32 @@ tree-table-view:focused {
     -fx-background-color: -bs-background-color;
     -fx-background-radius: 4;
     -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
-    -jfx-disable-animation: true;
+    /*-jfx-disable-animation: true;*/
 }
+
+
+
+.jfx-combo-box:focused,
+.jfx-combo-box:focused > .arrow-button,
+.jfx-combo-box:focused > .text-input,
+.jfx-text-field:focused{
+  -fx-background-color: derive(-bs-background-color, 8%);
+}
+
+.jfx-combo-box:error,
+.jfx-text-field:error{
+  -fx-text-fill: -bs-rd-error-red;
+  -fx-background-color: -bs-rd-error-field;
+}
+
+
+.jfx-combo-box:error:focused,
+.jfx-text-field:error:focused{
+  -fx-text-fill: -bs-rd-error-red;
+  -fx-background-color: derive(-bs-rd-error-field, -5%);
+}
+
+
 
 
 
@@ -351,12 +377,18 @@ tree-table-view:focused {
 
 
 /* Hide bottom line in all combo boxes and text fields*/
-.jfx-combo-box > .input-line, .jfx-text-field > .input-line,
-.jfx-combo-box > .input-focused-line, .jfx-text-field > .input-focused-line {
+.jfx-combo-box > .input-line,
+.jfx-text-field > .input-line,
+.jfx-combo-box > .input-focused-line,
+.jfx-text-field > .input-focused-line,
+.jfx-password-field > .input-line,
+.jfx-password-field > .input-focused-line {
     -fx-translate-x: -0.333333em;
     -fx-background-color: transparent;
     -jfx-disable-animation: true;
 }
+
+
 
 
 
@@ -370,15 +402,6 @@ tree-table-view:focused {
     -fx-background-radius: 3;
     -jfx-focus-color: -bs-color-primary;
     -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
-}
-
-.jfx-password-field > .input-line {
-    -fx-translate-x: -0.333333em;
-    -fx-background-color: transparent;
-}
-
-.jfx-password-field > .input-focused-line {
-    -fx-translate-x: -0.333333em;
 }
 
 .jfx-text-field:error, .jfx-password-field:error, .jfx-text-area:error {
@@ -395,6 +418,11 @@ tree-table-view:focused {
 .jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {
     -fx-text-fill: -bs-rd-error-red;
     -fx-font-size: 1em;
+}
+
+
+.field-label {
+  /*-fx-text-fill: red;*/
 }
 
 .input-with-border {

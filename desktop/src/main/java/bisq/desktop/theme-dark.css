@@ -1,4 +1,5 @@
 .root {
+
     /* javafx main color palette */
     -fx-base: #29292a;
     -fx-background: #29292a;
@@ -27,12 +28,12 @@
 
     /* fifty shades of gray */
     -bs-color-gray-13: #bbb;
-    -bs-color-gray-11: #f2f2f2;
+    -bs-color-gray-11: #dadada;
     -bs-color-gray-10: #cfcecf;
     -bs-color-gray-6: #afaeb0;
     -bs-color-gray-5: #424242;
     -bs-color-gray-4: #929293;
-    -bs-color-gray-3: #7b7b7c;
+    -bs-color-gray-3: #656565;
     -bs-color-gray-2: #504f52;
     -bs-color-gray-1: #29292a;
     -bs-color-gray-0: #2B2B2B;
@@ -65,30 +66,27 @@
     -bs-rd-green: #25B135;
     -bs-rd-green-dark: #3EA34A;
 
+
     /* other element styling */
-    /*
-    -bs-rd-nav-selected: #000;
-    -bs-rd-nav-deselected: #15611d;
-    -bs-rd-nav-background: #2ea33c;
-    -bs-rd-nav-primary-background: #25b135;
-    -bs-rd-nav-primary-border: #44a750;
-    -bs-rd-nav-border: #29292a;
-    -bs-rd-nav-border-color: rgba(46, 46, 49, 0.31);
-    -bs-rd-tab-border: #111;
-    */
+    -bs-rd-nav-border: #535353;
     -bs-rd-nav-primary-border: rgba(0, 0, 0, 0);
     -bs-rd-nav-border-color: rgba(255, 255, 255, 0.1);
     -bs-rd-nav-background: #18181B;
     -bs-rd-nav-primary-background: rgba(255, 255, 255, 0.015);
     -bs-rd-nav-background: #18181B;
 
+    -bs-rd-nav-selected: #fff;
+    -bs-rd-nav-deselected: rgba(255, 255, 255, 0.45);
     -bs-rd-nav-button-hover: rgba(255, 255, 255, 0.03);
 
     -bs-tab-content-area: #111;
     -bs-content-pane-bg-top: #212124;
-
+    -bs-rd-tab-border: rgba(255, 255, 255, 0.00);
     -bs-tab-content-label-hover: rgba(0, 0, 0, 0.03);
 
+
+    -bs-combobox-hover: rgba(255, 255, 255, 0.1);
+    -bs-combobox-selected: rgba(21, 188, 29, 0.1);
 
     -bs-content-pane-bg-bottom: #29292a;
     -bs-scroll-pane-background: transparent;
@@ -115,6 +113,7 @@
     -bs-rd-separator: #1F1F1F;
     -bs-rd-separator-dark: #1F1F1F;
     -bs-rd-error-red: #d83431;
+    -bs-rd-error-field: #521C1C;
     -bs-rd-message-bubble: #0086c6;
     -bs-rd-tooltip-truncated: #afaeb0;
 
@@ -142,6 +141,9 @@
     -bs-chart-lines: rgba(0, 0, 0, 0.3);
     -bs-white: white;
     -bs-prompt-text: -bs-color-gray-3;
+
+    /*-bs-decimals: #313133;*/
+    -bs-decimals: #db6300;
 
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-green-5;
@@ -193,7 +195,7 @@
 .jfx-combo-box, .jfx-combo-box > .list-cell {
     -fx-background-color: -bs-background-color;
     -fx-prompt-text-fill: -bs-color-gray-3;
-    -fx-text-fill: -bs-text-color;
+    -fx-text-fill: -bs-color-gray-11;
 }
 .jfx-text-area:readonly, .jfx-text-field:readonly,
 .hyperlink-with-icon {
@@ -204,7 +206,7 @@
 }
 .jfx-combo-box > .text,
 .jfx-text-field-top-label, .jfx-text-area-top-label {
-    -fx-text-fill: -bs-text-color;
+    -fx-text-fill: -bs-color-gray-11;
 }
 
 .input-with-border {
@@ -261,7 +263,7 @@
 }
 
 .small-icon-label {
-    -fx-fill: -bs-text-color;
+    -fx-fill: -bs-color-gray-11;
 }
 
 

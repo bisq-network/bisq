@@ -64,6 +64,9 @@
     -bs-footer-pane-line: #bbb;
 
 
+    -bs-combobox-hover: rgba(0, 0, 0, 0.1);
+    -bs-combobox-selected: rgba(21, 188, 29, 0.1);
+
     -bs-tab-content-label-hover: rgba(0, 0, 0, 0.03);
 
     -bs-rd-font-balance: #4f4f4f;
@@ -79,6 +82,7 @@
     -bs-rd-separator: #dbdbdb;
     -bs-rd-separator-dark: #dbdbdb;
     -bs-rd-error-red: #dd0000;
+    -bs-rd-error-field: #FFE2E2;
     -bs-rd-message-bubble: #0086c6;
     -bs-toggle-selected: #7b7b7b;
     -bs-rd-tooltip-truncated: #0a0a0a;
@@ -110,6 +114,8 @@
     -bs-progress-bar-track: #e0e0e0;
     -bs-white: white;
     -bs-prompt-text: -fx-control-inner-background;
+
+    -bs-decimals: #cccccc;
 
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-green-3;
