@@ -17,10 +17,12 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.DonationAddressValidation;
 
 public class BuyerStep1View extends TradeStepView {
 
@@ -31,6 +33,24 @@ public class BuyerStep1View extends TradeStepView {
     public BuyerStep1View(PendingTradesViewModel model) {
         super(model);
     }
+
+    @Override
+    public void activate() {
+        super.activate();
+
+        try {
+            DonationAddressValidation.validate(trade.getDelayedPayoutTx(),
+                    model.dataModel.daoFacade,
+                    model.dataModel.btcWalletService);
+        } catch (DonationAddressValidation.DonationAddressException e) {
+            new Popup().warning(Res.get("portfolio.pending.invalidDonationAddress",
+                    e.getAddressAsString(),
+                    e.getRecentDonationAddressString(),
+                    e.getDefaultDonationAddressString()))
+                    .show();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info

@@ -17,20 +17,13 @@
 
 package bisq.core.trade.protocol.tasks.buyer;
 
-import bisq.core.dao.governance.param.Param;
+import bisq.core.trade.DonationAddressValidation;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
-
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerVerifiesDonationAddress extends TradeTask {
@@ -44,35 +37,15 @@ public class BuyerVerifiesDonationAddress extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx(), "preparedDelayedPayoutTx must not be null");
-
-            // Get most recent donation address.
-            // We do not support past DAO param addresses to avoid that those receive funds (no bond set up anymore).
-            // Users who have not synced the DAO cannot trade.
-            String recentDonationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
-
-            // In case the seller has deactivated the DAO the default address will be used.
-            String defaultDonationAddressString = Param.RECIPIENT_BTC_ADDRESS.getDefaultValue();
-
-            TransactionOutput output = preparedDelayedPayoutTx.getOutput(0);
-            NetworkParameters params = processModel.getBtcWalletService().getParams();
-            Address address = output.getAddressFromP2PKHScript(params);
-            if (address == null) {
-                // The donation address can be as well be a multisig address.
-                address = output.getAddressFromP2SH(params);
-                checkNotNull(address, "address must not be null");
-            }
-
-            String addressAsString = address.toString();
-            if (recentDonationAddressString.equals(addressAsString) ||
-                    defaultDonationAddressString.equals(addressAsString)) {
-                complete();
-            } else {
-                failed("Sellers donation address not recognized." +
-                        "\nAddress used by BTC seller: " + addressAsString +
-                        "\nRecent donation address:" + recentDonationAddressString +
-                        "\nDefault donation address: " + defaultDonationAddressString);
-            }
+            DonationAddressValidation.validate(processModel.getPreparedDelayedPayoutTx(),
+                    processModel.getDaoFacade(),
+                    processModel.getBtcWalletService());
+            complete();
+        } catch (DonationAddressValidation.DonationAddressException e) {
+            failed("Sellers donation address is invalid." +
+                    "\nAddress used by BTC seller: " + e.getAddressAsString() +
+                    "\nRecent donation address:" + e.getRecentDonationAddressString() +
+                    "\nDefault donation address: " + e.getDefaultDonationAddressString());
         } catch (Throwable t) {
             failed(t);
         }

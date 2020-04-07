@@ -297,6 +297,15 @@ public class TradeManager implements PersistedDataHost {
                                 trade.getId());
                         tradesWithoutDepositTx.add(trade);
                     }
+
+            try {
+                DonationAddressValidation.validate(trade.getDelayedPayoutTx(),
+                        daoFacade,
+                        btcWalletService);
+            } catch (DonationAddressValidation.DonationAddressException e) {
+                // We move it to failed trades so it cannot be continued.
+                addTradeToFailedTradesList.add(trade);
+            }
                 }
         );
 
