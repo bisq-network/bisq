@@ -299,12 +299,17 @@ public class TradeManager implements PersistedDataHost {
                     }
 
             try {
-                DonationAddressValidation.validate(trade.getDelayedPayoutTx(),
+                DelayedPayoutTxValidation.validatePayoutTx(trade,
+                        trade.getDelayedPayoutTx(),
                         daoFacade,
                         btcWalletService);
-            } catch (DonationAddressValidation.DonationAddressException |
-                    DonationAddressValidation.MissingDelayedPayoutTxException e) {
+            } catch (DelayedPayoutTxValidation.DonationAddressException |
+                    DelayedPayoutTxValidation.InvalidTxException |
+                    DelayedPayoutTxValidation.InvalidLockTimeException |
+                    DelayedPayoutTxValidation.MissingDelayedPayoutTxException e) {
                 // We move it to failed trades so it cannot be continued.
+                log.warn("We move the trade with ID '{}' to failed trades because of exception {}",
+                        trade.getId(), e.getMessage());
                 addTradeToFailedTradesList.add(trade);
             }
                 }
