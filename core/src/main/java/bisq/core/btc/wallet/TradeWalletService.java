@@ -671,7 +671,7 @@ public class TradeWalletService {
         Transaction delayedPayoutTx = new Transaction(params);
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
-        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
+        Coin outputAmount = p2SHMultiSigOutput.getValue().subtract(minerFee);
         delayedPayoutTx.addOutput(outputAmount, Address.fromBase58(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
