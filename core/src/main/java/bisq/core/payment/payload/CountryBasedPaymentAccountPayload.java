@@ -17,10 +17,9 @@
 
 package bisq.core.payment.payload;
 
-
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.Map;
 
@@ -29,8 +28,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -48,7 +45,7 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
                                                 String id,
                                                 String countryCode,
                                                 long maxTradePeriod,
-                                                @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                                Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -71,6 +68,6 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
 
     @Override
     protected byte[] getAgeWitnessInputData(byte[] data) {
-        return super.getAgeWitnessInputData(ArrayUtils.addAll(countryCode.getBytes(Charset.forName("UTF-8")), data));
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(countryCode.getBytes(StandardCharsets.UTF_8), data));
     }
 }

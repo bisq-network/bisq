@@ -148,8 +148,10 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
-        BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
+        // this one is executed synchronously
         BooleanProperty networkNodeShutDown = networkNodeShutDown();
+        // this one is committed as a thread to the executor
+        BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
         BooleanProperty shutDownTimerTriggered = shutDownTimerTriggered();
 
         // Need to store allShutDown to not get garbage collected
@@ -185,6 +187,14 @@ public class TorNetworkNode extends NetworkNode {
                 long ts = System.currentTimeMillis();
                 log.debug("Shutdown torNetworkNode");
                 try {
+                    /**
+                     * make sure we get tor.
+                     * - there have been situations where <code>tor</code> isn't set yet, which would leave tor running
+                     * - downside is that if tor is not already started, we start it here just to shut it down. However,
+                     *   that can only be the case if Bisq gets shutdown even before it reaches step 2/4 at startup.
+                     * The risk seems worth it compared to the risk of not shutting down tor.
+                     */
+                    tor = Tor.getDefault();
                     if (tor != null)
                         tor.shutdown();
                     log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");

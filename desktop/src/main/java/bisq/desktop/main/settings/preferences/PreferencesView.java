@@ -173,7 +173,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 !rpcUser.isEmpty() &&
                 !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != Config.UNSPECIFIED_PORT;
-        this.displayStandbyModeFeature = Utilities.isOSX() || Utilities.isWindows();
+        this.displayStandbyModeFeature = Utilities.isLinux() || Utilities.isOSX() || Utilities.isWindows();
     }
 
     @Override

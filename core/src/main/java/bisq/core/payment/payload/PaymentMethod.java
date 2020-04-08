@@ -302,8 +302,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             riskFactor = 4;
         else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_HIGH_RISK.value)
             riskFactor = 8;
-        else
-            throw new RuntimeException("maxTradeLimit is not matching one of our default values. maxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString());
+        else {
+            riskFactor = 8;
+            log.error("maxTradeLimit is not matching one of our default values. maxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString());
+        }
 
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();
         checkNotNull(tradeLimits, "tradeLimits must not be null");

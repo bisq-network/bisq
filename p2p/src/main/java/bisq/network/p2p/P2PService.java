@@ -129,6 +129,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final KeepAliveManager keepAliveManager;
     private final Socks5ProxyProvider socks5ProxyProvider;
 
+    @Getter
+    private static NodeAddress myNodeAddress;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -195,11 +198,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onAllServicesInitialized() {
         if (networkNode.getNodeAddress() != null) {
             maybeProcessAllMailboxEntries();
+            myNodeAddress = networkNode.getNodeAddress();
         } else {
             // If our HS is still not published
             networkNode.nodeAddressProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue != null)
+                if (newValue != null) {
                     maybeProcessAllMailboxEntries();
+                    myNodeAddress = networkNode.getNodeAddress();
+                }
             });
         }
     }

@@ -81,7 +81,11 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             });
 
             // filter
-            cache.removeAll(config.bannedSeedNodes.stream().map(NodeAddress::new).collect(Collectors.toSet()));
+            cache.removeAll(
+                    config.bannedSeedNodes.stream()
+                            .filter(n -> !n.isEmpty())
+                            .map(NodeAddress::new)
+                            .collect(Collectors.toSet()));
 
             log.info("Seed nodes: {}", cache);
         } catch (Throwable t) {

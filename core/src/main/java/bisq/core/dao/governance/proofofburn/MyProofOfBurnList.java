@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.proofofburn;
 
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import lombok.EqualsAndHashCode;
  * PersistableEnvelope wrapper for list of MyProofOfBurn objects.
  */
 @EqualsAndHashCode(callSuper = true)
-public class MyProofOfBurnList extends PersistableList<MyProofOfBurn> {
+public class MyProofOfBurnList extends UserThreadMappedPersistableList<MyProofOfBurn> {
 
     private MyProofOfBurnList(List<MyProofOfBurn> list) {
         super(list);
@@ -69,4 +69,3 @@ public class MyProofOfBurnList extends PersistableList<MyProofOfBurn> {
                 .collect(Collectors.toList());
     }
 }
-

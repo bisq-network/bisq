@@ -23,6 +23,8 @@ import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 
+import protobuf.NetworkEnvelope;
+
 import com.google.protobuf.ByteString;
 
 import java.util.Set;
@@ -33,10 +35,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-
-
-import protobuf.NetworkEnvelope;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)

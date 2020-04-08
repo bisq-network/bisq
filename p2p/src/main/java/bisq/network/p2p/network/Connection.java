@@ -284,7 +284,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                         if (!stopped) {
                                             synchronized (lock) {
                                                 BundleOfEnvelopes current = queueOfBundles.poll();
-                                                if (current != null) {
+                                                if (current != null && !stopped) {
                                                     if (current.getEnvelopes().size() == 1) {
                                                         protoOutputStream.writeEnvelope(current.getEnvelopes().get(0));
                                                     } else {
@@ -626,6 +626,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     private void handleException(Throwable e) {
         CloseConnectionReason closeConnectionReason;
+
+        // silent fail if we are shutdown
+        if (stopped)
+            return;
 
         if (e instanceof SocketException) {
             if (socket.isClosed())

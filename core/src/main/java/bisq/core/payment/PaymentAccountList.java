@@ -19,8 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.proto.CoreProtoResolver;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import com.google.protobuf.Message;
 
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public class PaymentAccountList extends PersistableList<PaymentAccount> {
+public class PaymentAccountList extends UserThreadMappedPersistableList<PaymentAccount> {
 
     public PaymentAccountList(List<PaymentAccount> list) {
         super(list);
@@ -45,7 +44,7 @@ public class PaymentAccountList extends PersistableList<PaymentAccount> {
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
+    public static PaymentAccountList fromProto(protobuf.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
         return new PaymentAccountList(new ArrayList<>(proto.getPaymentAccountList().stream()
                 .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
                 .collect(Collectors.toList())));

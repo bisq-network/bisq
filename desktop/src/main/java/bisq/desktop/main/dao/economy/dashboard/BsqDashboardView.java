@@ -21,7 +21,6 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.GUIUtil;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
@@ -34,13 +33,15 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
@@ -76,7 +77,6 @@ import java.time.temporal.TemporalAdjusters;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -108,8 +108,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private AreaChart<Number, Number> bsqPriceChart;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
-    private TextField avgPrice90TextField, marketCapTextField, availableAmountTextField;
-    private TextFieldWithIcon avgPrice30TextField;
+    private TextField avgPrice90TextField, avgUSDPrice90TextField, marketCapTextField, availableAmountTextField;
+    private TextFieldWithIcon avgPrice30TextField, avgUSDPrice30TextField;
     private Label marketPriceLabel;
 
     private Coin availableAmount;
@@ -143,7 +143,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         priceChangeListener = (observable, oldValue, newValue) -> {
             updatePrice();
-            updateAveragePriceFields();
+            updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
+            updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
         };
     }
 
@@ -162,6 +163,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
                 Res.get("dao.factsAndFigures.dashboard.avgPrice30"), -15).second;
         AnchorPane.setRightAnchor(avgPrice30TextField.getIconLabel(), 10d);
 
+        avgUSDPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
+                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice90")).second;
+
+        avgUSDPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice30"), -15).second;
+        AnchorPane.setRightAnchor(avgUSDPrice30TextField.getIconLabel(), 10d);
+
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
 
@@ -178,7 +186,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateWithBsqBlockChainData();
         updatePrice();
         updateChartData();
-        updateAveragePriceFields();
+        updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
+        updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
     }
 
 
@@ -336,22 +345,22 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         }
     }
 
-    private void updateAveragePriceFields() {
-        long average90 = updateAveragePriceField(avgPrice90TextField, 90);
-        long average30 = updateAveragePriceField(avgPrice30TextField.getTextField(), 30);
+    private void updateAveragePriceFields(TextField field90, TextFieldWithIcon field30, boolean isUSDField) {
+        long average90 = updateAveragePriceField(field90, 90, isUSDField);
+        long average30 = updateAveragePriceField(field30.getTextField(), 30, isUSDField);
         boolean trendUp = average30 > average90;
         boolean trendDown = average30 < average90;
 
-        Label iconLabel = avgPrice30TextField.getIconLabel();
+        Label iconLabel = field30.getIconLabel();
         ObservableList<String> styleClass = iconLabel.getStyleClass();
         if (trendUp) {
-            avgPrice30TextField.setVisible(true);
-            avgPrice30TextField.setIcon(AwesomeIcon.CIRCLE_ARROW_UP);
+            field30.setVisible(true);
+            field30.setIcon(AwesomeIcon.CIRCLE_ARROW_UP);
             styleClass.remove("price-trend-down");
             styleClass.add("price-trend-up");
         } else if (trendDown) {
-            avgPrice30TextField.setVisible(true);
-            avgPrice30TextField.setIcon(AwesomeIcon.CIRCLE_ARROW_DOWN);
+            field30.setVisible(true);
+            field30.setIcon(AwesomeIcon.CIRCLE_ARROW_DOWN);
             styleClass.remove("price-trend-up");
             styleClass.add("price-trend-down");
         } else {
@@ -359,40 +368,75 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         }
     }
 
-    private long updateAveragePriceField(TextField textField, int days) {
-        Date past90 = getPastDate(days);
-        List<TradeStatistics2> bsqTradePast90Days = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+    private long updateAveragePriceField(TextField textField, int days, boolean isUSDField) {
+        Date pastXDays = getPastDate(days);
+        List<TradeStatistics2> bsqTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrencyCode().equals("BSQ"))
-                .filter(e -> e.getTradeDate().after(past90))
+                .filter(e -> e.getTradeDate().after(pastXDays))
                 .collect(Collectors.toList());
-        long average = getAverage(bsqTradePast90Days);
-        Coin oneBsq = Coin.valueOf(100);
-        Price avgPrice = Price.valueOf("BSQ", average);
+        List<TradeStatistics2> usdTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> e.getCurrencyCode().equals("USD"))
+                .filter(e -> e.getTradeDate().after(pastXDays))
+                .collect(Collectors.toList());
+        long average = isUSDField ? getUSDAverage(bsqTradePastXDays, usdTradePastXDays) :
+                getBTCAverage(bsqTradePastXDays);
+        Price avgPrice = isUSDField ? Price.valueOf("USD", average) :
+                Price.valueOf("BSQ", average);
         String avg = FormattingUtils.formatPrice(avgPrice);
-        String bsqInUsdAvg = average > 0 ? GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, bsqFormatter) : Res.get("shared.na");
-        textField.setText(avg + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdAvg + ")");
+        if (isUSDField) {
+            textField.setText(avg + " USD/BSQ");
+        } else {
+            textField.setText(avg + " BSQ/BTC");
+        }
         return average;
     }
 
-    private long getAverage(List<TradeStatistics2> list) {
+    private long getBTCAverage(List<TradeStatistics2> bsqList) {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
-        List<Long> tradePrices = new ArrayList<>(list.size());
 
-        for (TradeStatistics2 item : list) {
-            item.getTradeVolume();
+        for (TradeStatistics2 item : bsqList) {
             accumulatedVolume += item.getTradeVolume().getValue();
-            accumulatedAmount += item.getTradeAmount().getValue();
-            tradePrices.add(item.getTradePrice().getValue());
+            accumulatedAmount += item.getTradeAmount().getValue(); // Amount of BTC traded
         }
-        Collections.sort(tradePrices);
-        list.sort(Comparator.comparingLong(o -> o.getTradeDate().getTime()));
-
         long averagePrice;
-        Long[] prices = new Long[tradePrices.size()];
-        tradePrices.toArray(prices);
         double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
         averagePrice = accumulatedVolume > 0 ? MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume) : 0;
+
+        return averagePrice;
+    }
+
+    private long getUSDAverage(List<TradeStatistics2> bsqList, List<TradeStatistics2> usdList) {
+        // Use next USD/BTC print as price to calculate BSQ/USD rate
+        // Store each trade as amount of USD and amount of BSQ traded
+        List<Tuple2<Double, Double>> usdBsqList = new ArrayList<>(bsqList.size());
+        usdList.sort(Comparator.comparing(o -> o.getTradeDate().getTime()));
+        var usdBTCPrice = 10000d; // Default to 10000 USD per BTC if there is no USD feed at all
+
+        for (TradeStatistics2 item : bsqList) {
+            // Find usdprice for trade item
+            usdBTCPrice = usdList.stream()
+                    .filter(usd -> usd.getTradeDate().getTime() > item.getTradeDate().getTime())
+                    .map(usd -> MathUtils.scaleDownByPowerOf10((double) usd.getTradePrice().getValue(),
+                            Fiat.SMALLEST_UNIT_EXPONENT))
+                    .findFirst()
+                    .orElse(usdBTCPrice);
+            var bsqAmount = MathUtils.scaleDownByPowerOf10((double) item.getTradeVolume().getValue(),
+                    Altcoin.SMALLEST_UNIT_EXPONENT);
+            var btcAmount = MathUtils.scaleDownByPowerOf10((double) item.getTradeAmount().getValue(),
+                    Altcoin.SMALLEST_UNIT_EXPONENT);
+            usdBsqList.add(new Tuple2<>(usdBTCPrice * btcAmount, bsqAmount));
+        }
+        long averagePrice;
+        var usdTraded = usdBsqList.stream()
+                .mapToDouble(item -> item.first)
+                .sum();
+        var bsqTraded = usdBsqList.stream()
+                .mapToDouble(item -> item.second)
+                .sum();
+        var averageAsDouble = bsqTraded > 0 ? usdTraded / bsqTraded : 0d;
+        var averageScaledUp = MathUtils.scaleUpByPowerOf10(averageAsDouble, Fiat.SMALLEST_UNIT_EXPONENT);
+        averagePrice = bsqTraded > 0 ? MathUtils.roundDoubleToLong(averageScaledUp) : 0;
 
         return averagePrice;
     }
