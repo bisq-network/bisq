@@ -724,40 +724,6 @@ public class TradeWalletService {
         return delayedPayoutTx;
     }
 
-    public boolean verifiesDepositTxAndDelayedPayoutTx(Transaction depositTx,
-                                                       Transaction delayedPayoutTx,
-                                                       long lockTime) {
-
-        TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
-        if (delayedPayoutTx.getInputs().size() != 1) {
-            log.error("Number of inputs must be 1");
-            return false;
-        }
-
-        TransactionOutput connectedOutput = delayedPayoutTx.getInput(0).getConnectedOutput();
-        if (connectedOutput == null) {
-            log.error("connectedOutput must not be null");
-            return false;
-        }
-
-        if (!connectedOutput.equals(p2SHMultiSigOutput)) {
-            log.error("connectedOutput must be p2SHMultiSigOutput");
-            return false;
-        }
-
-        if (delayedPayoutTx.getLockTime() != lockTime) {
-            log.error("LockTime must match trades lockTime");
-            return false;
-        }
-
-        if (delayedPayoutTx.getInputs().stream().noneMatch(e -> e.getSequenceNumber() == TransactionInput.NO_SEQUENCE - 1)) {
-            log.error("Sequence number must be 0xFFFFFFFE");
-            return false;
-        }
-
-        return true;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Standard payout tx
