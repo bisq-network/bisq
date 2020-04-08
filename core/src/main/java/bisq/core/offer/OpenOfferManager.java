@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.filter.FilterManager;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
@@ -110,6 +111,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final DaoFacade daoFacade;
+    private final FilterManager filterManager;
     private final Storage<TradableList<OpenOffer>> openOfferTradableListStorage;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private boolean stopped;
@@ -138,6 +140,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             MediatorManager mediatorManager,
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
+                            FilterManager filterManager,
                             Storage<TradableList<OpenOffer>> storage) {
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
@@ -155,6 +158,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
+        this.filterManager = filterManager;
 
         openOfferTradableListStorage = storage;
 
@@ -359,7 +363,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 arbitratorManager,
                 tradeStatisticsManager,
                 daoFacade,
-                user);
+                user,
+                filterManager);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {

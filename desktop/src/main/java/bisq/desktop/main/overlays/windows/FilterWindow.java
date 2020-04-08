@@ -111,6 +111,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
         InputTextField mediatorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.mediators"));
         InputTextField refundAgentsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.refundAgents"));
+        InputTextField btcFeeReceiverAddressesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcFeeReceiverAddresses"));
         InputTextField seedNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode"));
         InputTextField priceRelayNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
         InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
@@ -129,6 +130,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(arbitratorsInputTextField, filter.getArbitrators());
             setupFieldFromList(mediatorsInputTextField, filter.getMediators());
             setupFieldFromList(refundAgentsInputTextField, filter.getRefundAgents());
+            setupFieldFromList(btcFeeReceiverAddressesInputTextField, filter.getBtcFeeReceiverAddresses());
             setupFieldFromList(seedNodesInputTextField, filter.getSeedNodes());
             setupFieldFromList(priceRelayNodesInputTextField, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesInputTextField, filter.getBtcNodes());
@@ -155,7 +157,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             disableDaoBelowVersionInputTextField.getText(),
                             disableTradeBelowVersionInputTextField.getText(),
                             readAsList(mediatorsInputTextField),
-                            readAsList(refundAgentsInputTextField)
+                            readAsList(refundAgentsInputTextField),
+                            readAsList(btcFeeReceiverAddressesInputTextField)
                     ),
                     keyInputTextField.getText())
             )
