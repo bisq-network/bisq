@@ -69,6 +69,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.trade.DonationAddressValidation;
 import bisq.core.trade.Trade;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -113,6 +114,21 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     public void activate() {
         super.activate();
+
+        try {
+            DonationAddressValidation.validate(trade.getDelayedPayoutTx(),
+                    model.dataModel.daoFacade,
+                    model.dataModel.btcWalletService);
+        } catch (DonationAddressValidation.DonationAddressException e) {
+            new Popup().warning(Res.get("portfolio.pending.invalidDonationAddress",
+                    e.getAddressAsString(),
+                    e.getRecentDonationAddressString(),
+                    e.getDefaultDonationAddressString()))
+                    .show();
+        } catch (DonationAddressValidation.MissingDelayedPayoutTxException ignore) {
+            // We don't react on that error as a failed trade might get listed initially but getting removed from the
+            // trade manager after initPendingTrades which happens after activate might be called.
+        }
 
         if (timeoutTimer != null)
             timeoutTimer.stop();

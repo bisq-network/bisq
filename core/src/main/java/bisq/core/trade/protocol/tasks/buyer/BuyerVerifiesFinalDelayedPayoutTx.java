@@ -29,9 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerVerifiesDelayedPayoutTx extends TradeTask {
+public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public BuyerVerifiesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerVerifiesFinalDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,7 +42,9 @@ public class BuyerVerifiesDelayedPayoutTx extends TradeTask {
 
             Transaction depositTx = checkNotNull(trade.getDepositTx());
             Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
-            if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx, delayedPayoutTx)) {
+            if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx,
+                    delayedPayoutTx,
+                    trade.getLockTime())) {
                 complete();
             } else {
                 failed("DelayedPayoutTx is not spending depositTx correctly");
