@@ -21,7 +21,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class TempProposalStore implements PersistableEnvelope {
+public class TempProposalStore implements ThreadedPersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
 
@@ -72,7 +72,7 @@ public class TempProposalStore implements PersistableEnvelope {
         return protobuf.TempProposalStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.TempProposalStore proto, NetworkProtoResolver networkProtoResolver) {
+    public static TempProposalStore fromProto(protobuf.TempProposalStore proto, NetworkProtoResolver networkProtoResolver) {
         List<ProtectedStorageEntry> list = proto.getItemsList().stream()
                 .map(entry -> ProtectedStorageEntry.fromProto(entry, networkProtoResolver))
                 .collect(Collectors.toList());

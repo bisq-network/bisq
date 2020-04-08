@@ -49,6 +49,10 @@ import java.io.File;
 
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import sun.misc.Signal;
+
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
@@ -63,6 +67,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected Injector injector;
     protected AppModule module;
     protected Config config;
+    private boolean isShutdown = false;
 
     public BisqExecutable(String fullName, String scriptName, String appName, String version) {
         this.fullName = fullName;
@@ -99,6 +104,16 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         configUserThread();
         CoreSetup.setup(config);
         addCapabilities();
+
+        Signal.handle(new Signal("INT"), signal -> {
+            gracefulShutDown(() -> {
+            });
+        });
+
+        Signal.handle(new Signal("TERM"), signal -> {
+            gracefulShutDown(() -> {
+            });
+        });
 
         // If application is JavaFX application we need to wait until it is initialized
         launchApplication();
@@ -189,6 +204,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     // This might need to be overwritten in case the application is not using all modules
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
+        if (isShutdown) // prevent double cleanup
+            return;
+
+        isShutdown = true;
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
@@ -210,14 +229,19 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                         injector.getInstance(BsqWalletService.class).shutDown();
                     });
                 });
+                injector.getInstance(AvoidStandbyModeService.class).shutDown();
                 // we wait max 20 sec.
                 UserThread.runAfter(() -> {
                     log.warn("Timeout triggered resultHandler");
                     resultHandler.handleResult();
+                    System.exit(0);
                 }, 20);
             } else {
                 log.warn("injector == null triggered resultHandler");
-                UserThread.runAfter(resultHandler::handleResult, 1);
+                UserThread.runAfter(() -> {
+                    resultHandler.handleResult();
+                    System.exit(0);
+                }, 1);
             }
         } catch (Throwable t) {
             log.error("App shutdown failed with exception");

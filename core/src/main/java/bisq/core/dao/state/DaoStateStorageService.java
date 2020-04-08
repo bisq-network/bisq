@@ -86,8 +86,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     private void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, long delayInMilli) {
-        store.setDaoState(daoState);
-        store.setDaoStateHashChain(daoStateHashChain);
+        store.modifySynchronized(() -> {
+            store.setDaoState(daoState);
+            store.setDaoStateHashChain(daoStateHashChain);
+        });
         storage.queueUpForSave(store, delayInMilli);
     }
 

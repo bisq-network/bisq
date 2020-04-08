@@ -33,7 +33,6 @@ import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.app.AvoidStandbyModeService;
-import bisq.core.app.OSXStandbyModeDisabler;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -133,7 +132,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
 
-            injector.getInstance(OSXStandbyModeDisabler.class).doIt();
             injector.getInstance(AvoidStandbyModeService.class).init();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
@@ -151,11 +149,11 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();
-            UserThread.runAfter(() -> {
+            new Thread(() -> {
                 gracefulShutDownHandler.gracefulShutDown(() -> {
                     log.debug("App shutdown complete");
                 });
-            }, 200, TimeUnit.MILLISECONDS);
+            }).start();
             shutDownRequested = true;
         }
     }

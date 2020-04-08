@@ -1,3 +1,4 @@
+include 'proto'
 include 'assets'
 include 'common'
 include 'p2p'

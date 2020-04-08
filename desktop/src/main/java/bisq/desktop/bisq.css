@@ -701,11 +701,11 @@ tree-table-view:focused {
 }
 
 .text-field {
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
 }
 
 .text-area {
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
 }
 
 #label-url {
@@ -1485,7 +1485,7 @@ textfield */
     -fx-text-fill: -fx-text-inner-color;
     -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
     -fx-highlight-text-fill: -fx-text-inner-color;
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
     -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
     linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
     -fx-background-insets: 0, 1;
@@ -1497,7 +1497,7 @@ textfield */
     -fx-text-fill: -fx-text-inner-color;
     -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
     -fx-highlight-text-fill: -fx-text-inner-color;
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
     -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
     linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -bs-color-gray-1);
     -fx-background-insets: 0, 1;
