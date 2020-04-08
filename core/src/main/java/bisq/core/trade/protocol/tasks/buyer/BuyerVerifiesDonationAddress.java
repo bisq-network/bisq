@@ -46,6 +46,8 @@ public class BuyerVerifiesDonationAddress extends TradeTask {
                     "\nAddress used by BTC seller: " + e.getAddressAsString() +
                     "\nRecent donation address:" + e.getRecentDonationAddressString() +
                     "\nDefault donation address: " + e.getDefaultDonationAddressString());
+        } catch (DonationAddressValidation.MissingDelayedPayoutTxException e) {
+            failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);
         }

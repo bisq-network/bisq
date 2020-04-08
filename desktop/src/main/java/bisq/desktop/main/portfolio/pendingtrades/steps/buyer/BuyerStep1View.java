@@ -48,6 +48,9 @@ public class BuyerStep1View extends TradeStepView {
                     e.getRecentDonationAddressString(),
                     e.getDefaultDonationAddressString()))
                     .show();
+        } catch (DonationAddressValidation.MissingDelayedPayoutTxException e) {
+            // We don't react on that error as a failed trade might get listed initially but getting removed from the
+            // trade manager after initPendingTrades which happens after activate might be called.
         }
     }
 

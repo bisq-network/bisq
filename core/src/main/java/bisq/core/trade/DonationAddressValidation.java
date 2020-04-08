@@ -26,7 +26,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
-import lombok.Value;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -34,15 +34,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class DonationAddressValidation {
 
-    @Value
+    @Getter
     public static class DonationAddressException extends Exception {
         private final String addressAsString;
         private final String recentDonationAddressString;
         private final String defaultDonationAddressString;
 
-        public DonationAddressException(String addressAsString,
-                                        String recentDonationAddressString,
-                                        String defaultDonationAddressString) {
+        DonationAddressException(String addressAsString,
+                                 String recentDonationAddressString,
+                                 String defaultDonationAddressString) {
 
             this.addressAsString = addressAsString;
             this.recentDonationAddressString = recentDonationAddressString;
@@ -50,10 +50,18 @@ public class DonationAddressValidation {
         }
     }
 
+    public static class MissingDelayedPayoutTxException extends Exception {
+        public MissingDelayedPayoutTxException(String msg) {
+            super(msg);
+        }
+    }
+
     public static void validate(Transaction delayedPayoutTx,
                                 DaoFacade daoFacade,
-                                BtcWalletService btcWalletService) throws DonationAddressException {
-        checkNotNull(delayedPayoutTx, "delayedPayoutTx must not be null");
+                                BtcWalletService btcWalletService) throws DonationAddressException, MissingDelayedPayoutTxException {
+        if (delayedPayoutTx == null) {
+            throw new MissingDelayedPayoutTxException("DelayedPayoutTx must not be null");
+        }
 
         // Get most recent donation address.
         // We do not support past DAO param addresses to avoid that those receive funds (no bond set up anymore).
