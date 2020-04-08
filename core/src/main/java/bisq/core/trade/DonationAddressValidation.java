@@ -29,6 +29,7 @@ import org.bitcoinj.core.TransactionOutput;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -70,6 +71,9 @@ public class DonationAddressValidation {
 
         // In case the seller has deactivated the DAO the default address will be used.
         String defaultDonationAddressString = Param.RECIPIENT_BTC_ADDRESS.getDefaultValue();
+
+        checkArgument(delayedPayoutTx.getOutputs().size() == 1,
+                "preparedDelayedPayoutTx must have 1 output");
 
         TransactionOutput output = delayedPayoutTx.getOutput(0);
         NetworkParameters params = btcWalletService.getParams();

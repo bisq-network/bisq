@@ -724,11 +724,29 @@ public class TradeWalletService {
         return delayedPayoutTx;
     }
 
-    public boolean verifiesDepositTxAndDelayedPayoutTx(@SuppressWarnings("unused") Transaction depositTx,
-                                                       Transaction delayedPayoutTx) {
-        // todo add more checks
-        if (delayedPayoutTx.getLockTime() == 0) {
-            log.error("Time lock is not set");
+    public boolean verifiesDepositTxAndDelayedPayoutTx(Transaction depositTx,
+                                                       Transaction delayedPayoutTx,
+                                                       long lockTime) {
+
+        TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
+        if (delayedPayoutTx.getInputs().size() != 1) {
+            log.error("Number of inputs must be 1");
+            return false;
+        }
+
+        TransactionOutput connectedOutput = delayedPayoutTx.getInput(0).getConnectedOutput();
+        if (connectedOutput == null) {
+            log.error("connectedOutput must not be null");
+            return false;
+        }
+
+        if (!connectedOutput.equals(p2SHMultiSigOutput)) {
+            log.error("connectedOutput must be p2SHMultiSigOutput");
+            return false;
+        }
+
+        if (delayedPayoutTx.getLockTime() != lockTime) {
+            log.error("LockTime must match trades lockTime");
             return false;
         }
 
@@ -1228,11 +1246,10 @@ public class TradeWalletService {
     private boolean removeDust(Transaction transaction) {
         List<TransactionOutput> originalTransactionOutputs = transaction.getOutputs();
         List<TransactionOutput> keepTransactionOutputs = new ArrayList<>();
-        for (TransactionOutput transactionOutput: originalTransactionOutputs) {
+        for (TransactionOutput transactionOutput : originalTransactionOutputs) {
             if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
                 log.info("your transaction would have contained a dust output of {}", transactionOutput.toString());
-            }
-            else {
+            } else {
                 keepTransactionOutputs.add(transactionOutput);
             }
         }

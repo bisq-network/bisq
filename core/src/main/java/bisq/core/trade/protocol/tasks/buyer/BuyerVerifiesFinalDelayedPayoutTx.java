@@ -42,7 +42,9 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
 
             Transaction depositTx = checkNotNull(trade.getDepositTx());
             Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
-            if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx, delayedPayoutTx)) {
+            if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx,
+                    delayedPayoutTx,
+                    trade.getLockTime())) {
                 complete();
             } else {
                 failed("DelayedPayoutTx is not spending depositTx correctly");
