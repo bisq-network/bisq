@@ -93,12 +93,14 @@ public class DelayedPayoutTxValidation {
         if (delayedPayoutTx.getInputs().size() != 1) {
             errorMsg = "Number of delayedPayoutTx inputs must be 1";
             log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
             throw new InvalidTxException(errorMsg);
         }
 
         if (delayedPayoutTx.getOutputs().size() != 1) {
             errorMsg = "Number of delayedPayoutTx outputs must be 1";
             log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
             throw new InvalidTxException(errorMsg);
         }
 
@@ -109,13 +111,15 @@ public class DelayedPayoutTxValidation {
         if (delayedPayoutTx.getLockTime() != trade.getLockTime()) {
             errorMsg = "delayedPayoutTx.getLockTime() must match trade.getLockTime()";
             log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
             throw new InvalidLockTimeException(errorMsg);
         }
 
         // Validate seq num
-        if (delayedPayoutTx.getInput(0).getSequenceNumber() == TransactionInput.NO_SEQUENCE - 1) {
+        if (delayedPayoutTx.getInput(0).getSequenceNumber() != TransactionInput.NO_SEQUENCE - 1) {
             errorMsg = "Sequence number must be 0xFFFFFFFE";
             log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
             throw new InvalidLockTimeException(errorMsg);
         }
 
@@ -129,6 +133,7 @@ public class DelayedPayoutTxValidation {
         if (!output.getValue().equals(msOutputAmount)) {
             errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
             log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
             throw new InvalidTxException(errorMsg);
         }
 
@@ -150,6 +155,7 @@ public class DelayedPayoutTxValidation {
             if (address == null) {
                 errorMsg = "Donation address cannot be resolved (not of type P2PKHScript or P2SH). Output: " + output;
                 log.error(errorMsg);
+                log.error(delayedPayoutTx.toString());
                 throw new DonationAddressException(errorMsg);
             }
         }
@@ -162,6 +168,7 @@ public class DelayedPayoutTxValidation {
                     "\nRecent donation address:" + recentDonationAddressString +
                     "\nDefault donation address: " + defaultDonationAddressString;
             log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
             throw new DonationAddressException(errorMsg);
         }
     }
