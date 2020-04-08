@@ -31,6 +31,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -99,6 +100,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final WalletsSetup walletsSetup;
     @Getter
     private final AccountAgeWitnessService accountAgeWitnessService;
+    public final DaoFacade daoFacade;
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
@@ -134,6 +136,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   P2PService p2PService,
                                   WalletsSetup walletsSetup,
                                   AccountAgeWitnessService accountAgeWitnessService,
+                                  DaoFacade daoFacade,
                                   Navigation navigation,
                                   WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter) {
@@ -147,6 +150,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.daoFacade = daoFacade;
         this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
