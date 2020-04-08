@@ -37,8 +37,8 @@ import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSignPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
-import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesDonationAddress;
+import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesFinalDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
@@ -171,7 +171,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
         taskRunner.addTasks(
                 BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
-                BuyerVerifiesDelayedPayoutTx.class,
+                BuyerVerifiesFinalDelayedPayoutTx.class,
                 PublishTradeStatistics.class
         );
         taskRunner.run();
