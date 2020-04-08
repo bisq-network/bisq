@@ -29,9 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerVerifiesDelayedPayoutTx extends TradeTask {
+public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public BuyerVerifiesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerVerifiesFinalDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
