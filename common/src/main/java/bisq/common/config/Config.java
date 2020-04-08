@@ -714,7 +714,7 @@ public class Config {
             this.genesisTxId = options.valueOf(genesisTxIdOpt);
             this.genesisBlockHeight = options.valueOf(genesisBlockHeightOpt);
             this.genesisTotalSupply = options.valueOf(genesisTotalSupplyOpt);
-            this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
+            this.daoActivated = options.valueOf(daoActivatedOpt);
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
