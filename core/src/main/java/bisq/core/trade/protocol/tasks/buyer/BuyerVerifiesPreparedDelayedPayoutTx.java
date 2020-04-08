@@ -26,9 +26,9 @@ import bisq.common.taskrunner.TaskRunner;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerVerifiesDonationAddress extends TradeTask {
+public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public BuyerVerifiesDonationAddress(TaskRunner taskHandler, Trade trade) {
+    public BuyerVerifiesPreparedDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
