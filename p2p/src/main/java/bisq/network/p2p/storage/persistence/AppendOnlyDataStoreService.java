@@ -25,6 +25,7 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import javax.inject.Inject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,6 +54,16 @@ public class AppendOnlyDataStoreService {
 
     public void readFromResources(String postFix) {
         services.forEach(service -> service.readFromResources(postFix));
+    }
+
+    /**
+     * TODO to be implemented
+     *
+     * @param filter
+     * @return
+     */
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String filter) {
+        return new HashMap<>();
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
