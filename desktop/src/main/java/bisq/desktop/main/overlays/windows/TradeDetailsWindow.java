@@ -39,6 +39,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
 
@@ -231,6 +232,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (trade.getTradingPeerNodeAddress() != null)
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
                     trade.getTradingPeerNodeAddress().getFullAddress());
+
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
+                Res.get("tradeDetailsWindow.tradingPeersPubKeyHash"),
+                trade.getContract() != null ? Utils.HEX.encode(trade.getContract().getPeersPubKeyRing(
+                        tradeManager.getKeyRing().getPubKeyRing()).getSignaturePubKeyBytes()) :
+                        Res.get("shared.na"));
 
         if (contract != null) {
             if (buyerPaymentAccountPayload != null) {

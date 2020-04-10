@@ -18,6 +18,7 @@
 package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.filter.FilterManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.User;
 
@@ -34,6 +35,7 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
 
@@ -46,6 +48,7 @@ import java.security.SignatureException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -60,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
-    public static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
+    private static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
     static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = Coin.parseCoin("0.0025");
 
     private final KeyRing keyRing;
@@ -69,6 +72,7 @@ public class SignedWitnessService {
     private final User user;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
+    private final FilterManager filterManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -80,11 +84,13 @@ public class SignedWitnessService {
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                User user) {
+                                User user,
+                                FilterManager filterManager) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
         this.user = user;
+        this.filterManager = filterManager;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -131,8 +137,13 @@ public class SignedWitnessService {
 
     /**
      * List of dates as long when accountAgeWitness was signed
+     *
+     * Witnesses that were added but are no longer considered signed won't be shown
      */
     public List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness) {
+        if (!isSignedAccountAgeWitness(accountAgeWitness)) {
+            return new ArrayList<>();
+        }
         return getSignedWitnessSet(accountAgeWitness).stream()
                 .filter(this::verifySignature)
                 .map(SignedWitness::getDate)
@@ -157,6 +168,26 @@ public class SignedWitnessService {
                 .map(SignedWitness::isSignedByArbitrator)
                 .findAny()
                 .orElse(false);
+    }
+
+    public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .map(SignedWitness::getWitnessOwnerPubKey)
+                .anyMatch(ownerPubKey -> filterManager.isSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
+    }
+
+    public String ownerPubKey(AccountAgeWitness accountAgeWitness) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .map(signedWitness -> Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))
+                .findFirst()
+                .orElse("");
+    }
+
+    @VisibleForTesting
+    public Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey) {
+        return signedWitnessMap.values().stream()
+                .filter(e -> Arrays.equals(e.getWitnessOwnerPubKey(), ownerPubKey))
+                .collect(Collectors.toSet());
     }
 
     // Arbitrators sign with EC key
@@ -322,6 +353,9 @@ public class SignedWitnessService {
     private boolean isValidSignerWitnessInternal(SignedWitness signedWitness,
                                                  long childSignedWitnessDateMillis,
                                                  Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
+        if (filterManager.isSignerPubKeyBanned(Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))) {
+            return false;
+        }
         if (!verifySignature(signedWitness)) {
             return false;
         }
@@ -373,6 +407,7 @@ public class SignedWitnessService {
         if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
             log.info("broadcast signed witness {}", signedWitness.toString());
             p2PService.addPersistableNetworkPayload(signedWitness, false);
+            addToMap(signedWitness);
         }
     }
 
