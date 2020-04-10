@@ -108,9 +108,16 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
         keyEventEventHandler = keyEvent -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
-                new Popup().warning(Res.get("portfolio.failed.unfail"))
-                        .onAction(this::onUnfail)
-                        .show();
+                var checkUnfailString = checkUnfail();
+                if (!checkUnfailString.isEmpty()) {
+                    new Popup().warning(Res.get("portfolio.failed.cantUnfail", checkUnfailString))
+                            .onAction(this::onUnfail)
+                            .show();
+                } else {
+                    new Popup().warning(Res.get("portfolio.failed.unfail"))
+                            .onAction(this::onUnfail)
+                            .show();
+                }
             }
         };
 
@@ -119,6 +126,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private void onUnfail() {
         Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
         model.dataModel.unfailTrade(trade);
+    }
+
+    private String checkUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        return model.dataModel.checkUnfail(trade);
 
     }
 

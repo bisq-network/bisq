@@ -64,6 +64,8 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -89,6 +91,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -604,11 +607,34 @@ public class TradeManager implements PersistedDataHost {
     }
 
     // If trade still has funds locked up it might come back from failed trades
-    private void unfailTrade(Trade trade) {
+    // Aborts unfailing if the address entries needed are not available
+    private boolean unfailTrade(Trade trade) {
+        if (!recoverAddresses(trade)) {
+            log.warn("Failed to recover address during unfail trade");
+            return false;
+        }
+
         if (!tradableList.contains(trade)) {
             tradableList.add(trade);
         }
+        return true;
     }
+
+    // The trade is added to pending trades if the associated address entries are AVAILABLE and
+    // the relevant entries are changed, otherwise it's not added and no address entries are changed
+    private boolean recoverAddresses(Trade trade) {
+        // Find addresses associated with this trade.
+        var entries = TradeUtils.getAvailableAddresses(trade, btcWalletService, keyRing);
+        if (entries == null)
+            return false;
+
+        btcWalletService.recoverAddressEntry(trade.getId(), entries.first,
+                AddressEntry.Context.MULTI_SIG);
+        btcWalletService.recoverAddressEntry(trade.getId(), entries.second,
+                AddressEntry.Context.TRADE_PAYOUT);
+        return true;
+    }
+
 
     // If trade is in preparation (if taker role: before taker fee is paid; both roles: before deposit published)
     // we just remove the trade from our list. We don't store those trades.
