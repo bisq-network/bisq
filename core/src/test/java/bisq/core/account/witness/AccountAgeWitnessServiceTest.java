@@ -20,7 +20,6 @@ package bisq.core.account.witness;
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterManager;
-import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.ChargeBackRisk;
@@ -32,7 +31,6 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 
 import bisq.network.p2p.P2PService;
@@ -48,12 +46,8 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 
-import java.security.Key;
 import java.security.KeyPair;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.cert.CertificateException;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,8 +56,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 import org.junit.After;
 import org.junit.Before;
@@ -74,12 +66,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-
-
-import org.mockito.Mockito;
-import org.mockito.Spy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 // Restricted default Java security policy on Travis does not allow long keys, so test fails.
@@ -238,7 +226,7 @@ public class AccountAgeWitnessServiceTest {
         when(arbitratorKey.getPubKey()).thenReturn("1".getBytes());
 
         // Arbitrator signs both trader accounts
-        items.forEach(item-> service.arbitratorSignAccountAgeWitness(
+        items.forEach(item -> service.arbitratorSignAccountAgeWitness(
                 item.getTradeAmount(),
                 item.getAccountAgeWitness(),
                 arbitratorKey,

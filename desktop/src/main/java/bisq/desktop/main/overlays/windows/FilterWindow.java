@@ -39,9 +39,11 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -58,6 +60,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 public class FilterWindow extends Overlay<FilterWindow> {
     private final FilterManager filterManager;
     private final boolean useDevPrivilegeKeys;
+    private ScrollPane scrollPane;
 
     @Inject
     public FilterWindow(FilterManager filterManager,
@@ -67,12 +70,26 @@ public class FilterWindow extends Overlay<FilterWindow> {
         type = Type.Attention;
     }
 
+    @Override
+    protected Region getRootContainer() {
+        return scrollPane;
+    }
+
     public void show() {
         if (headLine == null)
             headLine = Res.get("filterWindow.headline");
 
         width = 968;
+
         createGridPane();
+
+        scrollPane = new ScrollPane();
+        scrollPane.setContent(gridPane);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setMaxHeight(1000);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
         addHeadLine();
         addContent();
         applyStyles();

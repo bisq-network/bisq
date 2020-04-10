@@ -227,8 +227,10 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         onBitcoinPeersToggleSelected(false);
 
         bitcoinPeersToggleGroupListener = (observable, oldValue, newValue) -> {
-            selectedBitcoinNodesOption = (BtcNodes.BitcoinNodesOption) newValue.getUserData();
-            onBitcoinPeersToggleSelected(true);
+            if (newValue != null) {
+                selectedBitcoinNodesOption = (BtcNodes.BitcoinNodesOption) newValue.getUserData();
+                onBitcoinPeersToggleSelected(true);
+            }
         };
 
         btcNodesInputTextField.setPromptText(Res.get("settings.net.ips"));
