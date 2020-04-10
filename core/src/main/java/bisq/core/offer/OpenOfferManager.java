@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.locale.Res;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
@@ -635,6 +636,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             } else {
                 log.warn("handleOfferAvailabilityRequest: openOffer not found. That should never happen.");
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
+            }
+
+            if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
+                errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
+                log.warn(errorMessage);
+                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
             }
 
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,

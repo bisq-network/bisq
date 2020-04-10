@@ -609,6 +609,15 @@ public abstract class WalletService {
         return wallet.getLastBlockSeenHeight();
     }
 
+    /**
+     * Check if there are more than 20 unconfirmed transactions in the chain right now.
+     *
+     * @return true when queue is full
+     */
+    public boolean isUnconfirmedTransactionsLimitHit() {
+        return 20 < getTransactions(true).stream().filter(transaction -> transaction.isPending()).count();
+    }
+
     public Set<Transaction> getTransactions(boolean includeDead) {
         return wallet.getTransactions(includeDead);
     }
