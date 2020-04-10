@@ -108,10 +108,13 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
         keyEventEventHandler = keyEvent -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
+                var checkTxs = checkTxs();
                 var checkUnfailString = checkUnfail();
-                if (!checkUnfailString.isEmpty()) {
+                if (!checkTxs.isEmpty()) {
+                    new Popup().warning(checkTxs)
+                            .show();
+                } else if (!checkUnfailString.isEmpty()) {
                     new Popup().warning(Res.get("portfolio.failed.cantUnfail", checkUnfailString))
-                            .onAction(this::onUnfail)
                             .show();
                 } else {
                     new Popup().warning(Res.get("portfolio.failed.unfail"))
@@ -131,7 +134,17 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private String checkUnfail() {
         Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
         return model.dataModel.checkUnfail(trade);
+    }
 
+    private String checkTxs() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        if (trade.getDepositTx() == null) {
+            return Res.get("portfolio.failed.depositTxNull");
+        }
+        if (trade.getDelayedPayoutTx() == null) {
+            return Res.get("portfolio.failed.delayedPayoutTxNull");
+        }
+        return "";
     }
 
     @Override
