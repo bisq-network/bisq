@@ -23,6 +23,7 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeStepInfo;
+import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
@@ -94,6 +95,7 @@ public abstract class TradeStepView extends AnchorPane {
     protected Label infoLabel;
     private Popup acceptMediationResultPopup;
     private BootstrapListener bootstrapListener;
+    private TradeSubView.ChatCallback chatCallback;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -173,11 +175,11 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (!isMediationClosedState()) {
             tradeStepInfo.setOnAction(e -> {
-                new Popup().attention(Res.get("portfolio.pending.support.popup.info"))
-                        .actionButtonText(Res.get("portfolio.pending.support.popup.button"))
-                        .onAction(this::openSupportTicket)
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
+                if (this.isTradePeriodOver()) {
+                    openSupportTicket();
+                } else {
+                    openChat();
+                }
             });
         }
 
@@ -226,6 +228,13 @@ public abstract class TradeStepView extends AnchorPane {
     private void openSupportTicket() {
         applyOnDisputeOpened();
         model.dataModel.onOpenDispute();
+    }
+
+    private void openChat() {
+        // call up the chain to open chat
+        if (this.chatCallback != null) {
+            this.chatCallback.onOpenChat(this.trade);
+        }
     }
 
     public void deactivate() {
@@ -500,6 +509,10 @@ public abstract class TradeStepView extends AnchorPane {
         return trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED;
     }
 
+    private boolean isTradePeriodOver() {
+        return Trade.TradePeriodState.TRADE_PERIOD_OVER == trade.tradePeriodStateProperty().get();
+    }
+
     private boolean hasSelfAccepted() {
         return trade.getProcessModel().getMediatedPayoutTxSignature() != null;
     }
@@ -653,5 +666,9 @@ public abstract class TradeStepView extends AnchorPane {
         infoGridPane.getChildren().add(warningBox);
 
         return infoGridPane;
+    }
+
+    public void setChatCallback(TradeSubView.ChatCallback chatCallback) {
+        this.chatCallback = chatCallback;
     }
 }

@@ -260,6 +260,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         root.getChildren().add(selectedSubView);
                     else if (root.getChildren().size() == 2)
                         root.getChildren().set(1, selectedSubView);
+
+                    // create and register a callback so we can be notified when the subview
+                    // wants to open the chat window
+                    ChatCallback chatCallback = this::openChat;
+                    selectedSubView.setChatCallback(chatCallback);
                 }
 
                 updateTableSelection();
@@ -764,5 +769,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 });
         return chatColumn;
     }
-}
 
+    public interface ChatCallback {
+        void onOpenChat(Trade trade);
+    }
+
+}
