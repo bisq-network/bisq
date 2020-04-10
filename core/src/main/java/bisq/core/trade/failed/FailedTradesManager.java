@@ -17,12 +17,14 @@
 
 package bisq.core.trade.failed;
 
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.DumpDelayedPayoutTx;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeUtils;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -33,7 +35,7 @@ import com.google.inject.Inject;
 import javafx.collections.ObservableList;
 
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -50,7 +52,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Setter
-    private Consumer<Trade> unfailTradeCallback;
+    private Function<Trade, Boolean> unfailTradeCallback;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing,
@@ -103,8 +105,29 @@ public class FailedTradesManager implements PersistedDataHost {
     }
 
     public void unfailTrade(Trade trade) {
-        if (unfailTradeCallback == null) return;
-        unfailTradeCallback.accept(trade);
-        failedTrades.remove(trade);
+        if (unfailTradeCallback == null)
+            return;
+
+        if (unfailTradeCallback.apply(trade)) {
+            failedTrades.remove(trade);
+        }
+    }
+
+    public String checkUnfail(Trade trade) {
+        var addresses = TradeUtils.getTradeAddresses(trade, btcWalletService, keyRing);
+        if (addresses == null) {
+            return "Addresses not found";
+        }
+        StringBuilder blockingTrades = new StringBuilder();
+        for (var entry : btcWalletService.getAddressEntryListAsImmutableList()) {
+            if (entry.getContext() == AddressEntry.Context.AVAILABLE)
+                continue;
+            if (entry.getAddressString() != null &&
+                    (entry.getAddressString().equals(addresses.first) ||
+                            entry.getAddressString().equals(addresses.second))) {
+                blockingTrades.append(entry.getOfferId()).append(", ");
+            }
+        }
+        return blockingTrades.toString();
     }
 }
