@@ -38,20 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 public class AppendOnlyDataStoreService {
     private List<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
 
-    // We do not add PersistableNetworkPayloadListService to the services list as it it deprecated and used only to
-    // transfer old persisted data to the new data structure.
-    @SuppressWarnings("deprecation")
-    private PersistableNetworkPayloadListService persistableNetworkPayloadListService;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("deprecation")
     @Inject
-    public AppendOnlyDataStoreService(PersistableNetworkPayloadListService persistableNetworkPayloadListService) {
-        this.persistableNetworkPayloadListService = persistableNetworkPayloadListService;
+    public AppendOnlyDataStoreService() {
     }
 
     public void addService(MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload> service) {
@@ -60,19 +53,6 @@ public class AppendOnlyDataStoreService {
 
     public void readFromResources(String postFix) {
         services.forEach(service -> service.readFromResources(postFix));
-
-        // transferDeprecatedDataStructure();
-    }
-
-    // Only needed for one time converting the old data store to the new ones. Can be removed after next release when we
-    // are sure that no issues occurred.
-    private void transferDeprecatedDataStructure() {
-        // We read the file if it exists in the db folder
-        persistableNetworkPayloadListService.readStore();
-        // Transfer the content to the new services
-        persistableNetworkPayloadListService.getMap().forEach(this::put);
-        // We are done with the transfer, now let's remove the file
-        persistableNetworkPayloadListService.removeFile();
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {

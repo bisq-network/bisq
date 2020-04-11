@@ -34,7 +34,6 @@ public class AppendOnlyDataStoreServiceFake extends AppendOnlyDataStoreService {
     private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
 
     public AppendOnlyDataStoreServiceFake() {
-        super(null);
         map = new HashMap<>();
     }
 
