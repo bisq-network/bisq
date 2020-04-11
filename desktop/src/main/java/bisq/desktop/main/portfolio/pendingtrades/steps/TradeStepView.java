@@ -522,11 +522,16 @@ public abstract class TradeStepView extends AnchorPane {
             return;
         }
 
-        if (trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null) {
-            log.error("trade.getDepositTx() or trade.getDelayedPayoutTx() was null at openMediationResultPopup. " +
+        if (trade.getDepositTx() == null) {
+            log.error("trade.getDepositTx() was null at openMediationResultPopup. " +
                     "We add the trade to failed trades. TradeId={}", trade.getId());
             model.dataModel.addTradeToFailedTrades();
             new Popup().warning(Res.get("portfolio.pending.mediationResult.error.depositTxNull")).show();
+            return;
+        } else if (trade.getDelayedPayoutTx() == null) {
+            log.error("trade.getDelayedPayoutTx() was null at openMediationResultPopup. " +
+                    "We add the trade to failed trades. TradeId={}", trade.getId());
+            new Popup().warning(Res.get("portfolio.pending.mediationResult.error.delayedPayoutTxNull")).show();
             return;
         }
 

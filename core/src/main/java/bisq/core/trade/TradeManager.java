@@ -283,10 +283,7 @@ public class TradeManager implements PersistedDataHost {
         tradableList.forEach(trade -> {
                     if (trade.isDepositPublished() ||
                             (trade.isTakerFeePublished() && !trade.hasFailed())) {
-                        initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
-                                trade.getProcessModel().getFundsNeededForTradeAsLong());
-                        trade.updateDepositTxFromWallet();
-                        tradesForStatistics.add(trade);
+                        initPendingTrade(trade);
                     } else if (trade.isTakerFeePublished() && !trade.isFundsLockedIn()) {
                         addTradeToFailedTradesList.add(trade);
                         trade.appendErrorMessage("Invalid state: trade.isTakerFeePublished() && !trade.isFundsLockedIn()");
@@ -338,6 +335,13 @@ public class TradeManager implements PersistedDataHost {
         cleanUpAddressEntries();
 
         pendingTradesInitialized.set(true);
+    }
+
+    private void initPendingTrade(Trade trade) {
+        initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
+                trade.getProcessModel().getFundsNeededForTradeAsLong());
+        trade.updateDepositTxFromWallet();
+        tradesForStatistics.add(trade);
     }
 
     private void onTradesChanged() {
@@ -613,6 +617,8 @@ public class TradeManager implements PersistedDataHost {
             log.warn("Failed to recover address during unfail trade");
             return false;
         }
+
+        initPendingTrade(trade);
 
         if (!tradableList.contains(trade)) {
             tradableList.add(trade);
