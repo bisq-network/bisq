@@ -123,7 +123,6 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                 }
             }
         };
-
     }
 
     private void onUnfail() {
@@ -141,7 +140,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         if (trade.getDepositTx() == null) {
             return Res.get("portfolio.failed.depositTxNull");
         }
-        if (trade.getDelayedPayoutTx() == null) {
+        if (trade.getDelayedPayoutTxBytes() == null) {
             return Res.get("portfolio.failed.delayedPayoutTxNull");
         }
         return "";
