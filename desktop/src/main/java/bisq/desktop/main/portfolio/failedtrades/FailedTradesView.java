@@ -27,9 +27,11 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.fxml.FXML;
 
@@ -64,11 +66,15 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private SortedList<FailedTradesListItem> sortedList;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
+    private final boolean allowFaultyDelayedTxs;
 
     @Inject
-    public FailedTradesView(FailedTradesViewModel model, TradeDetailsWindow tradeDetailsWindow) {
+    public FailedTradesView(FailedTradesViewModel model,
+                            TradeDetailsWindow tradeDetailsWindow,
+                            @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
     }
 
     @Override
@@ -111,9 +117,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                 var checkTxs = checkTxs();
                 var checkUnfailString = checkUnfail();
                 if (!checkTxs.isEmpty()) {
+                    log.warn("Cannot unfail, error {}", checkTxs);
                     new Popup().warning(checkTxs)
                             .show();
                 } else if (!checkUnfailString.isEmpty()) {
+                    log.warn("Cannot unfail, error {}", checkUnfailString);
                     new Popup().warning(Res.get("portfolio.failed.cantUnfail", checkUnfailString))
                             .show();
                 } else {
@@ -137,11 +145,16 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     private String checkTxs() {
         Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        log.info("Initiated unfail of trade {}", trade.getId());
         if (trade.getDepositTx() == null) {
+            log.info("Check unfail found no depositTx for trade {}", trade.getId());
             return Res.get("portfolio.failed.depositTxNull");
         }
         if (trade.getDelayedPayoutTxBytes() == null) {
-            return Res.get("portfolio.failed.delayedPayoutTxNull");
+            log.info("Check unfail found no delayedPayoutTxBytes for trade {}", trade.getId());
+            if (!allowFaultyDelayedTxs) {
+                return Res.get("portfolio.failed.delayedPayoutTxNull");
+            }
         }
         return "";
     }

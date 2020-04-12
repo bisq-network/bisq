@@ -57,6 +57,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.ClockWatcher;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
@@ -74,6 +75,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -145,6 +147,8 @@ public class TradeManager implements PersistedDataHost {
     @Getter
     private final ObservableList<Trade> tradesWithoutDepositTx = FXCollections.observableArrayList();
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
+    @Getter
+    private final boolean allowFaultyDelayedTxs;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +176,8 @@ public class TradeManager implements PersistedDataHost {
                         DaoFacade daoFacade,
                         ClockWatcher clockWatcher,
                         Storage<TradableList<Trade>> storage,
-                        DumpDelayedPayoutTx dumpDelayedPayoutTx) {
+                        DumpDelayedPayoutTx dumpDelayedPayoutTx,
+                        @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         this.user = user;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
@@ -193,6 +198,7 @@ public class TradeManager implements PersistedDataHost {
         this.daoFacade = daoFacade;
         this.clockWatcher = clockWatcher;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
+        this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
 
         tradableListStorage = storage;
 
@@ -307,13 +313,14 @@ public class TradeManager implements PersistedDataHost {
                     } catch (DelayedPayoutTxValidation.DonationAddressException |
                             DelayedPayoutTxValidation.InvalidTxException |
                             DelayedPayoutTxValidation.InvalidLockTimeException |
-                            DelayedPayoutTxValidation.MissingDelayedPayoutTxException e) {
-                        // We move it to failed trades so it cannot be continued.
-                        log.warn("We move the trade with ID '{}' to failed trades because of exception {}",
-                                trade.getId(), e.getMessage());
-                        addTradeToFailedTradesList.add(trade);
-                    } catch (DelayedPayoutTxValidation.AmountMismatchException e) {
+                            DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
+                            DelayedPayoutTxValidation.AmountMismatchException e) {
                         log.warn("Delayed payout tx exception, trade {}, exception {}", trade.getId(), e.getMessage());
+                        if (!allowFaultyDelayedTxs) {
+                            // We move it to failed trades so it cannot be continued.
+                            log.warn("We move the trade with ID '{}' to failed trades", trade.getId());
+                            addTradeToFailedTradesList.add(trade);
+                        }
                     }
                 }
         );
