@@ -613,7 +613,7 @@ public class Config {
                         "payout transactions")
                         .withRequiredArg()
                         .ofType(boolean.class)
-                        .defaultsTo(true);
+                        .defaultsTo(false);
 
         try {
             CompositeOptionSet options = new CompositeOptionSet();
