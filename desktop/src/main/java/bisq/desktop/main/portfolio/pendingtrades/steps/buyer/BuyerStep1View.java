@@ -45,16 +45,14 @@ public class BuyerStep1View extends TradeStepView {
                     model.dataModel.btcWalletService);
         } catch (DelayedPayoutTxValidation.DonationAddressException |
                 DelayedPayoutTxValidation.InvalidTxException |
-//                DelayedPayoutTxValidation.AmountMismatchException | // todo activate june 2020
+                DelayedPayoutTxValidation.AmountMismatchException |
                 DelayedPayoutTxValidation.InvalidLockTimeException e) {
-            new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
-        } catch (DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                DelayedPayoutTxValidation.AmountMismatchException ignore) {
+            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+            }
+        } catch (DelayedPayoutTxValidation.MissingDelayedPayoutTxException ignore) {
             // We don't react on those errors as a failed trade might get listed initially but getting removed from the
             // trade manager after initPendingTrades which happens after activate might be called.
-
-            // Allow amount mismatch until june 2020 to get trades through as it's due to a bug that has now been fixed.
-            // No new trades with mismatch can be created after v1.3.1
         }
     }
 

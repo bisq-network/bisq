@@ -115,6 +115,7 @@ public class Config {
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
     public static final String DAO_ACTIVATED = "daoActivated";
     public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
+    public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -197,6 +198,7 @@ public class Config {
     public final int genesisBlockHeight;
     public final long genesisTotalSupply;
     public final boolean dumpDelayedPayoutTxs;
+    public final boolean allowFaultyDelayedTxs;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -606,6 +608,13 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Boolean> allowFaultyDelayedTxsOpt =
+                parser.accepts(ALLOW_FAULTY_DELAYED_TXS, "Allow completion of trades with faulty delayed " +
+                        "payout transactions")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(true);
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -717,6 +726,7 @@ public class Config {
             this.genesisTotalSupply = options.valueOf(genesisTotalSupplyOpt);
             this.daoActivated = options.valueOf(daoActivatedOpt);
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
+            this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),
