@@ -312,6 +312,8 @@ public class TradeManager implements PersistedDataHost {
                         log.warn("We move the trade with ID '{}' to failed trades because of exception {}",
                                 trade.getId(), e.getMessage());
                         addTradeToFailedTradesList.add(trade);
+                    } catch (DelayedPayoutTxValidation.AmountMismatchException e) {
+                        log.warn("Delayed payout tx exception, trade {}, exception {}", trade.getId(), e.getMessage());
                     }
                 }
         );

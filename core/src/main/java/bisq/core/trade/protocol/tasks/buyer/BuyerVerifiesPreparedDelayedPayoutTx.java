@@ -46,7 +46,8 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         } catch (DelayedPayoutTxValidation.DonationAddressException |
                 DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
                 DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.InvalidLockTimeException e) {
+                DelayedPayoutTxValidation.InvalidLockTimeException |
+                DelayedPayoutTxValidation.AmountMismatchException e) {
             failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);

@@ -58,6 +58,12 @@ public class DelayedPayoutTxValidation {
         }
     }
 
+    public static class AmountMismatchException extends Exception {
+        AmountMismatchException(String msg) {
+            super(msg);
+        }
+    }
+
     public static class InvalidLockTimeException extends Exception {
         InvalidLockTimeException(String msg) {
             super(msg);
@@ -69,7 +75,7 @@ public class DelayedPayoutTxValidation {
                                         DaoFacade daoFacade,
                                         BtcWalletService btcWalletService)
             throws DonationAddressException, MissingDelayedPayoutTxException,
-            InvalidTxException, InvalidLockTimeException {
+            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
         String errorMsg;
         if (delayedPayoutTx == null) {
             errorMsg = "DelayedPayoutTx must not be null";
@@ -122,7 +128,7 @@ public class DelayedPayoutTxValidation {
             errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
-            throw new InvalidTxException(errorMsg);
+            throw new AmountMismatchException(errorMsg);
         }
 
 
