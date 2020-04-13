@@ -122,8 +122,11 @@ public class BuyerStep2View extends TradeStepView {
                     model.dataModel.btcWalletService);
         } catch (DelayedPayoutTxValidation.DonationAddressException |
                 DelayedPayoutTxValidation.InvalidTxException |
+                DelayedPayoutTxValidation.AmountMismatchException |
                 DelayedPayoutTxValidation.InvalidLockTimeException e) {
-            new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+            }
         } catch (DelayedPayoutTxValidation.MissingDelayedPayoutTxException ignore) {
             // We don't react on those errors as a failed trade might get listed initially but getting removed from the
             // trade manager after initPendingTrades which happens after activate might be called.

@@ -591,6 +591,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
 
             if (trade.getDelayedPayoutTx() == null) {
+                log.error("Delayed payout tx is missing");
                 return;
             }
 
