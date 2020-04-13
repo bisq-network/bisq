@@ -24,6 +24,8 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 
+import protobuf.NetworkEnvelope;
+
 import com.google.protobuf.ByteString;
 
 import java.util.Set;
@@ -34,8 +36,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
-
-import protobuf.NetworkEnvelope;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)

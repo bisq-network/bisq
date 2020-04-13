@@ -20,7 +20,7 @@ package bisq.core.dao.state.model.governance;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @EqualsAndHashCode(callSuper = true)
-public class BallotList extends PersistableList<Ballot> implements ConsensusCritical, ImmutableDaoStateModel {
+public class BallotList extends UserThreadMappedPersistableList<Ballot> implements ConsensusCritical, ImmutableDaoStateModel {
 
     public BallotList(List<Ballot> list) {
         super(list);
@@ -75,4 +75,3 @@ public class BallotList extends PersistableList<Ballot> implements ConsensusCrit
                 .collect(Collectors.toList());
     }
 }
-

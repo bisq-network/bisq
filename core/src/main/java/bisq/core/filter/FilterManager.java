@@ -17,6 +17,7 @@
 
 package bisq.core.filter;
 
+import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -332,6 +333,7 @@ public class FilterManager {
 
         Optional.ofNullable(filter.getBannedCurrencies()).ifPresent(builder::addAllBannedCurrencies);
         Optional.ofNullable(filter.getBannedPaymentMethods()).ifPresent(builder::addAllBannedPaymentMethods);
+        Optional.ofNullable(filter.getBannedSignerPubKeys()).ifPresent(builder::addAllBannedSignerPubKeys);
 
         return Utils.HEX.encode(builder.build().toByteArray());
     }
@@ -417,4 +419,12 @@ public class FilterManager {
                             }
                         });
     }
+
+    public boolean isSignerPubKeyBanned(String signerPubKeyAsHex) {
+        return getFilter() != null &&
+                getFilter().getBannedSignerPubKeys() != null &&
+                getFilter().getBannedSignerPubKeys().stream()
+                        .anyMatch(e -> e.equals(signerPubKeyAsHex));
+    }
+
 }

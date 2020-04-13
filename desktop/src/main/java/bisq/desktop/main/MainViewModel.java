@@ -305,16 +305,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             else
                 torNetworkSettingsWindow.hide();
         });
-        bisqSetup.setDisplayLocalNodeMisconfigurationHandler(
-                (Runnable continueWithoutLocalNode) ->
-                        new Popup()
-                                .hideCloseButton()
-                                .warning(Res.get("popup.warning.localNodeMisconfigured.explanation"))
-                                .useShutDownButton()
-                                .secondaryActionButtonText(Res.get("popup.warning.localNodeMisconfigured.continueWithoutLocalNode"))
-                                .onSecondaryAction(continueWithoutLocalNode)
-                                .show()
-        );
         bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup().warning(msg)
                 .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
                 .onAction(() -> GUIUtil.reSyncSPVChain(preferences))

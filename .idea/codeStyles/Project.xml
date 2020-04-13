@@ -33,6 +33,10 @@
           <emptyLine />
           <package name="bisq.asset" withSubpackages="true" static="false" />
           <emptyLine />
+          <package name="bisq.proto.grpc" withSubpackages="true" static="false" />
+          <emptyLine />
+          <package name="protobuf" withSubpackages="true" static="false" />
+          <emptyLine />
           <package name="io.grpc" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="com.google.protobuf" withSubpackages="true" static="false" />

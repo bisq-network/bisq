@@ -25,7 +25,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -49,7 +49,7 @@ import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAs
 @Slf4j
 @Data
 @AllArgsConstructor
-public final class PreferencesPayload implements PersistableEnvelope {
+public final class PreferencesPayload implements UserThreadMappedPersistableEnvelope {
     private String userLanguage;
     private Country userCountry;
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
@@ -132,7 +132,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PreferencesPayload() {
+    PreferencesPayload() {
     }
 
 
@@ -207,7 +207,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
         return protobuf.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
+    public static PreferencesPayload fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
         final protobuf.Country userCountry = proto.getUserCountry();
         PaymentAccount paymentAccount = null;
         if (proto.hasSelectedPaymentAccountForCreateOffer() && proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod())
@@ -275,6 +275,5 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
                 proto.getTacAcceptedV120());
-
     }
 }

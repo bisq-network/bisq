@@ -51,6 +51,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -170,7 +171,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
-    private boolean clearXchangeWarningDisplayed, isActivated;
+    private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, isActivated;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
             buyerSecurityDepositInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
@@ -492,8 +493,16 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(GUIUtil::showClearXchangeWarning,
-                    500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(GUIUtil::showClearXchangeWarning, 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void maybeShowFasterPaymentsWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.FASTER_PAYMENTS_ID) &&
+                ((FasterPaymentsAccount) paymentAccount).getHolderName().isEmpty() &&
+                !fasterPaymentsWarningDisplayed) {
+            fasterPaymentsWarningDisplayed = true;
+            UserThread.runAfter(() -> GUIUtil.showFasterPaymentsWarning(navigation), 500, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -505,6 +514,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
+            maybeShowFasterPaymentsWarning(paymentAccount);
 
             currencySelection.setVisible(paymentAccount.hasMultipleCurrencies());
             currencySelection.setManaged(paymentAccount.hasMultipleCurrencies());

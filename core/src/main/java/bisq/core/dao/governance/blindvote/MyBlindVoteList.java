@@ -19,8 +19,7 @@ package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.governance.ConsensusCritical;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import com.google.protobuf.Message;
 
@@ -34,7 +33,7 @@ import lombok.EqualsAndHashCode;
  * List of my own blind votes. Blind votes received from other voters are stored in the BlindVoteStore.
  */
 @EqualsAndHashCode(callSuper = true)
-public class MyBlindVoteList extends PersistableList<BlindVote> implements ConsensusCritical {
+public class MyBlindVoteList extends UserThreadMappedPersistableList<BlindVote> implements ConsensusCritical {
 
     MyBlindVoteList() {
         super();
@@ -59,7 +58,7 @@ public class MyBlindVoteList extends PersistableList<BlindVote> implements Conse
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.MyBlindVoteList proto) {
+    public static MyBlindVoteList fromProto(protobuf.MyBlindVoteList proto) {
         return new MyBlindVoteList(new ArrayList<>(proto.getBlindVoteList().stream()
                 .map(BlindVote::fromProto)
                 .collect(Collectors.toList())));

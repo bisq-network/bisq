@@ -392,7 +392,8 @@ public class Config {
                         .describedAs("host:port[,...]");
 
         ArgumentAcceptingOptionSpec<Boolean> useLocalhostForP2POpt =
-                parser.accepts(USE_LOCALHOST_FOR_P2P, "Use localhost P2P network for development")
+                parser.accepts(USE_LOCALHOST_FOR_P2P, "Use localhost P2P network for development. Only available for non-BTC_MAINNET configuration.")
+                        .availableIf(BASE_CURRENCY_NETWORK)
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -687,7 +688,7 @@ public class Config {
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
             this.banList = options.valuesOf(banListOpt);
-            this.useLocalhostForP2P = options.valueOf(useLocalhostForP2POpt);
+            this.useLocalhostForP2P = this.baseCurrencyNetwork.isMainnet() ? false : options.valueOf(useLocalhostForP2POpt);
             this.maxConnections = options.valueOf(maxConnectionsOpt);
             this.socks5ProxyBtcAddress = options.valueOf(socks5ProxyBtcAddressOpt);
             this.socks5ProxyHttpAddress = options.valueOf(socks5ProxyHttpAddressOpt);
@@ -714,7 +715,7 @@ public class Config {
             this.genesisTxId = options.valueOf(genesisTxIdOpt);
             this.genesisBlockHeight = options.valueOf(genesisBlockHeightOpt);
             this.genesisTotalSupply = options.valueOf(genesisTotalSupplyOpt);
-            this.daoActivated = options.valueOf(daoActivatedOpt) || !baseCurrencyNetwork.isMainnet();
+            this.daoActivated = options.valueOf(daoActivatedOpt);
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",

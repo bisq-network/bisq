@@ -297,6 +297,21 @@ public class TradeManager implements PersistedDataHost {
                                 trade.getId());
                         tradesWithoutDepositTx.add(trade);
                     }
+
+            try {
+                DelayedPayoutTxValidation.validatePayoutTx(trade,
+                        trade.getDelayedPayoutTx(),
+                        daoFacade,
+                        btcWalletService);
+            } catch (DelayedPayoutTxValidation.DonationAddressException |
+                    DelayedPayoutTxValidation.InvalidTxException |
+                    DelayedPayoutTxValidation.InvalidLockTimeException |
+                    DelayedPayoutTxValidation.MissingDelayedPayoutTxException e) {
+                // We move it to failed trades so it cannot be continued.
+                log.warn("We move the trade with ID '{}' to failed trades because of exception {}",
+                        trade.getId(), e.getMessage());
+                addTradeToFailedTradesList.add(trade);
+            }
                 }
         );
 
@@ -429,6 +444,14 @@ public class TradeManager implements PersistedDataHost {
     public void checkOfferAvailability(Offer offer,
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
+
+        if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
+            String errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
+            errorMessageHandler.handleErrorMessage(errorMessage);
+            log.warn(errorMessage);
+            return;
+        }
+
         offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler, errorMessageHandler);
     }
 

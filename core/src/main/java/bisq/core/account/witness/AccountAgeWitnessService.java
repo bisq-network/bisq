@@ -33,6 +33,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
@@ -54,8 +55,11 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
@@ -96,15 +100,25 @@ public class AccountAgeWitnessService {
         ARBITRATOR(Res.get("offerbook.timeSinceSigning.info.arbitrator")),
         PEER_INITIAL(Res.get("offerbook.timeSinceSigning.info.peer")),
         PEER_LIMIT_LIFTED(Res.get("offerbook.timeSinceSigning.info.peerLimitLifted")),
-        PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer"));
+        PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer")),
+        BANNED(Res.get("offerbook.timeSinceSigning.info.banned"));
 
         private String presentation;
+        private String hash = "";
 
         SignState(String presentation) {
             this.presentation = presentation;
         }
 
+        public SignState addHash(String hash) {
+            this.hash = hash;
+            return this;
+        }
+
         public String getPresentation() {
+            if (!hash.isEmpty()) { // Only showing in DEBUG mode
+                return presentation + " " + hash;
+            }
             return presentation;
         }
 
@@ -187,7 +201,8 @@ public class AccountAgeWitnessService {
                     });
     }
 
-    private void addToMap(AccountAgeWitness accountAgeWitness) {
+    @VisibleForTesting
+    public void addToMap(AccountAgeWitness accountAgeWitness) {
         accountAgeWitnessMap.putIfAbsent(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
     }
 
@@ -202,11 +217,18 @@ public class AccountAgeWitnessService {
             p2PService.addPersistableNetworkPayload(accountAgeWitness, false);
     }
 
+    public byte[] getPeerAccountAgeWitnessHash(Trade trade) {
+        return findTradePeerWitness(trade)
+                .map(accountAgeWitness -> accountAgeWitness.getHash())
+                .orElse(null);
+    }
+
     private byte[] getAccountInputDataWithSalt(PaymentAccountPayload paymentAccountPayload) {
         return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
     }
 
-    private AccountAgeWitness getNewWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+    @VisibleForTesting
+    public AccountAgeWitness getNewWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
@@ -623,7 +645,8 @@ public class AccountAgeWitnessService {
     }
 
     // Arbitrator signing
-    public List<TraderDataItem> getTraderPaymentAccounts(long safeDate, PaymentMethod paymentMethod,
+    public List<TraderDataItem> getTraderPaymentAccounts(long safeDate,
+                                                         PaymentMethod paymentMethod,
                                                          List<Dispute> disputes) {
         return disputes.stream()
                 .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
@@ -648,11 +671,16 @@ public class AccountAgeWitnessService {
                 filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getBuyerPaymentAccountPayload(),
                         new PaymentAccountFilter[1]) ||
                 filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getSellerPaymentAccountPayload(),
-                        new PaymentAccountFilter[1]);
+                        new PaymentAccountFilter[1]) ||
+                filterManager.isSignerPubKeyBanned(
+                        Utils.HEX.encode(dispute.getContract().getBuyerPubKeyRing().getSignaturePubKeyBytes())) ||
+                filterManager.isSignerPubKeyBanned(
+                        Utils.HEX.encode(dispute.getContract().getSellerPubKeyRing().getSignaturePubKeyBytes()));
         return !isFiltered;
     }
 
-    private boolean hasChargebackRisk(Dispute dispute) {
+    @VisibleForTesting
+    public boolean hasChargebackRisk(Dispute dispute) {
         return chargeBackRisk.hasChargebackRisk(dispute.getContract().getPaymentMethodId(),
                 dispute.getContract().getOfferPayload().getCurrencyCode());
     }
@@ -677,14 +705,14 @@ public class AccountAgeWitnessService {
                         buyerPaymentAccountPaload,
                         witness,
                         tradeAmount,
-                        sellerPubKeyRing.getSignaturePubKey()))
+                        buyerPubKeyRing.getSignaturePubKey()))
                 .orElse(null);
         TraderDataItem sellerData = findWitness(sellerPaymentAccountPaload, sellerPubKeyRing)
                 .map(witness -> new TraderDataItem(
                         sellerPaymentAccountPaload,
                         witness,
                         tradeAmount,
-                        buyerPubKeyRing.getSignaturePubKey()))
+                        sellerPubKeyRing.getSignaturePubKey()))
                 .orElse(null);
         return Stream.of(buyerData, sellerData);
     }
@@ -722,19 +750,25 @@ public class AccountAgeWitnessService {
     }
 
     public SignState getSignState(AccountAgeWitness accountAgeWitness) {
+        // Add hash to sign state info when running in debug mode
+        String hash = log.isDebugEnabled() ? Utilities.bytesAsHexString(accountAgeWitness.getHash()) + "\n" +
+                signedWitnessService.ownerPubKey(accountAgeWitness) : "";
+        if (signedWitnessService.isFilteredWitness(accountAgeWitness)) {
+            return SignState.BANNED.addHash(hash);
+        }
         if (signedWitnessService.isSignedByArbitrator(accountAgeWitness)) {
-            return SignState.ARBITRATOR;
+            return SignState.ARBITRATOR.addHash(hash);
         } else {
             final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
             switch (getAccountAgeCategory(accountSignAge)) {
                 case TWO_MONTHS_OR_MORE:
                 case ONE_TO_TWO_MONTHS:
-                    return SignState.PEER_SIGNER;
+                    return SignState.PEER_SIGNER.addHash(hash);
                 case LESS_ONE_MONTH:
-                    return SignState.PEER_INITIAL;
+                    return SignState.PEER_INITIAL.addHash(hash);
                 case UNVERIFIED:
                 default:
-                    return SignState.UNSIGNED;
+                    return SignState.UNSIGNED.addHash(hash);
             }
         }
     }

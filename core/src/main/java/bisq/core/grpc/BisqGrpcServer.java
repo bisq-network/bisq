@@ -22,6 +22,28 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 
+import bisq.proto.grpc.GetBalanceGrpc;
+import bisq.proto.grpc.GetBalanceReply;
+import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetOffersGrpc;
+import bisq.proto.grpc.GetOffersReply;
+import bisq.proto.grpc.GetOffersRequest;
+import bisq.proto.grpc.GetPaymentAccountsGrpc;
+import bisq.proto.grpc.GetPaymentAccountsReply;
+import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetTradeStatisticsGrpc;
+import bisq.proto.grpc.GetTradeStatisticsReply;
+import bisq.proto.grpc.GetTradeStatisticsRequest;
+import bisq.proto.grpc.GetVersionGrpc;
+import bisq.proto.grpc.GetVersionReply;
+import bisq.proto.grpc.GetVersionRequest;
+import bisq.proto.grpc.PlaceOfferGrpc;
+import bisq.proto.grpc.PlaceOfferReply;
+import bisq.proto.grpc.PlaceOfferRequest;
+import bisq.proto.grpc.StopServerGrpc;
+import bisq.proto.grpc.StopServerReply;
+import bisq.proto.grpc.StopServerRequest;
+
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -178,7 +200,7 @@ public class BisqGrpcServer {
 
     private void start() throws IOException {
         // TODO add to options
-        int port = 8888;
+        int port = 9998;
 
         // Config services
         server = ServerBuilder.forPort(port)

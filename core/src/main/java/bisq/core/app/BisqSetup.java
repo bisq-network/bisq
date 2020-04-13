@@ -192,7 +192,7 @@ public class BisqSetup {
 
     @Setter
     @Nullable
-    private Consumer<Runnable> displayTacHandler, displayLocalNodeMisconfigurationHandler;
+    private Consumer<Runnable> displayTacHandler;
     @Setter
     @Nullable
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
@@ -343,25 +343,21 @@ public class BisqSetup {
         UserThread.runPeriodically(() -> {
         }, 1);
         maybeReSyncSPVChain();
-        maybeShowTac();
+        maybeShowTac(this::step2);
     }
 
     private void step2() {
-        maybeCheckLocalBitcoinNode(this::step3);
-    }
-
-    private void step3() {
         torSetup.cleanupTorFiles();
-        readMapsFromResources(this::step4);
+        readMapsFromResources(this::step3);
         checkCryptoSetup();
         checkForCorrectOSArchitecture();
     }
 
-    private void step4() {
-        startP2pNetworkAndWallet(this::step5);
+    private void step3() {
+        startP2pNetworkAndWallet(this::step4);
     }
 
-    private void step5() {
+    private void step4() {
         initDomainServices();
 
         bisqSetupListeners.forEach(BisqSetupListener::onSetupComplete);
@@ -469,36 +465,16 @@ public class BisqSetup {
         }
     }
 
-    private void maybeShowTac() {
+    private void maybeShowTac(Runnable nextStep) {
         if (!preferences.isTacAcceptedV120() && !DevEnv.isDevMode()) {
             if (displayTacHandler != null)
                 displayTacHandler.accept(() -> {
                     preferences.setTacAcceptedV120(true);
-                    step2();
+                    nextStep.run();
                 });
         } else {
-            step2();
-        }
-    }
-
-    private void maybeCheckLocalBitcoinNode(Runnable nextStep) {
-        if (localBitcoinNode.shouldBeIgnored()) {
             nextStep.run();
-            return;
         }
-
-        // Here we only want to provide the user with a choice (in a popup) in case a
-        // local node is detected, but badly configured.
-        if (localBitcoinNode.isDetectedButMisconfigured()) {
-            if (displayLocalNodeMisconfigurationHandler != null) {
-                displayLocalNodeMisconfigurationHandler.accept(nextStep);
-                return;
-            } else {
-                log.error("displayLocalNodeMisconfigurationHandler undefined", new RuntimeException());
-            }
-        }
-
-        nextStep.run();
     }
 
     private void readMapsFromResources(Runnable nextStep) {

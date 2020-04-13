@@ -17,8 +17,8 @@
 
 package bisq.core.btc.model;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
 import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @ToString
 @Slf4j
-public final class AddressEntryList implements PersistableEnvelope, PersistedDataHost {
+public final class AddressEntryList implements UserThreadMappedPersistableEnvelope, PersistedDataHost {
     transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter

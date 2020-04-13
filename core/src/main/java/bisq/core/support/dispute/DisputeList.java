@@ -19,6 +19,7 @@ package bisq.core.support.dispute;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
 import bisq.common.storage.Storage;
 
 import javafx.collections.FXCollections;
@@ -39,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public abstract class DisputeList<T extends PersistableEnvelope> implements PersistableEnvelope, PersistedDataHost {
+public abstract class DisputeList<T extends PersistableEnvelope> implements UserThreadMappedPersistableEnvelope, PersistedDataHost {
     transient protected final Storage<T> storage;
 
     @Getter

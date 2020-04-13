@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.buyer;
 
+import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -26,12 +27,10 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
-public class BuyerVerifiesDelayedPayoutTx extends TradeTask {
+public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public BuyerVerifiesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerVerifiesFinalDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -40,13 +39,19 @@ public class BuyerVerifiesDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction depositTx = checkNotNull(trade.getDepositTx());
-            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
-            if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx, delayedPayoutTx)) {
-                complete();
-            } else {
-                failed("DelayedPayoutTx is not spending depositTx correctly");
-            }
+            Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+            // Check again tx
+            DelayedPayoutTxValidation.validatePayoutTx(trade,
+                    delayedPayoutTx,
+                    processModel.getDaoFacade(),
+                    processModel.getBtcWalletService());
+
+            complete();
+        } catch (DelayedPayoutTxValidation.DonationAddressException |
+                DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
+                DelayedPayoutTxValidation.InvalidTxException |
+                DelayedPayoutTxValidation.InvalidLockTimeException e) {
+            failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);
         }

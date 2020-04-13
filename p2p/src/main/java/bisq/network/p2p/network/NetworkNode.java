@@ -36,6 +36,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import java.time.Duration;
+import java.time.LocalTime;
+
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -222,7 +225,7 @@ public abstract class NetworkNode implements MessageListener {
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.info("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
+                    log.debug("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
                     UserThread.execute(() -> resultFuture.setException(throwable));
                 }
             });
@@ -330,7 +333,24 @@ public abstract class NetworkNode implements MessageListener {
                 server = null;
             }
 
-            getAllConnections().stream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
+            getAllConnections().parallelStream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
+
+            // wait for connections to actually close, c.shutDown may create threads to actually close connections...
+            LocalTime timeout = LocalTime.now().plus(Duration.ofSeconds(15));
+            while (!getAllConnections().isEmpty()) {
+                // check timeout
+                if (timeout.isBefore(LocalTime.now())) {
+                    log.error("Could not close all connections within timeout (" + getAllConnections().size() + " connections remaining). Moving on.");
+                    break;
+                }
+                try {
+                    // reduce system load
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+
             log.debug("NetworkNode shutdown complete");
         }
         if (shutDownCompleteHandler != null) shutDownCompleteHandler.run();

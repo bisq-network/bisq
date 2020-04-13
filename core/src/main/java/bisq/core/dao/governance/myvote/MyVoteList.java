@@ -17,8 +17,7 @@
 
 package bisq.core.dao.governance.myvote;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import com.google.protobuf.Message;
 
@@ -29,9 +28,9 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public class MyVoteList extends PersistableList<MyVote> {
+public class MyVoteList extends UserThreadMappedPersistableList<MyVote> {
 
-    public MyVoteList() {
+    MyVoteList() {
         super();
     }
 
@@ -53,7 +52,7 @@ public class MyVoteList extends PersistableList<MyVote> {
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.MyVoteList proto) {
+    public static MyVoteList fromProto(protobuf.MyVoteList proto) {
         return new MyVoteList(new ArrayList<>(proto.getMyVoteList().stream()
                 .map(MyVote::fromProto)
                 .collect(Collectors.toList())));
@@ -66,4 +65,3 @@ public class MyVoteList extends PersistableList<MyVote> {
                 .collect(Collectors.toList());
     }
 }
-

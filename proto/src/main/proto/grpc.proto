@@ -18,10 +18,9 @@
 syntax = "proto3";
 package io.bisq.protobuffer;
 
-// FIXME: IntelliJ does not recognize the import but the compiler does
 import "pb.proto";
 
-option java_package = "bisq.core.grpc";
+option java_package = "bisq.proto.grpc";
 option java_multiple_files = true;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +67,6 @@ service GetTradeStatistics {
 message GetTradeStatisticsRequest {
 }
 
-// FIXME: IntelliJ does not recognize the imported TradeStatistics2 but the compiler does
 message GetTradeStatisticsReply {
     repeated TradeStatistics2 TradeStatistics = 1;
 }
@@ -85,7 +83,6 @@ service GetOffers {
 message GetOffersRequest {
 }
 
-// FIXME: IntelliJ does not recognize the imported Offer but the compiler does
 message GetOffersReply {
     repeated Offer offers = 1;
 }
@@ -102,7 +99,6 @@ service GetPaymentAccounts {
 message GetPaymentAccountsRequest {
 }
 
-// FIXME: IntelliJ does not recognize the imported PaymentAccount but the compiler does
 message GetPaymentAccountsReply {
     repeated PaymentAccount paymentAccounts = 1;
 }

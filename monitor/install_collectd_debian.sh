@@ -40,7 +40,7 @@ done
 echo "[*] Seeding entropy from /dev/urandom"
 sudo -H -i -u "${ROOT_USER}" /bin/sh -c "head -1500 /dev/urandom > ${ROOT_HOME}/.rnd"
 echo "[*] Installing Nginx config"
-sudo -H -i -u "${ROOT_USER}" openssl req -x509 -nodes -newkey rsa:2048 -keyout /etc/nginx/cert.key -out /etc/nginx/cert.crt -subj="/O=Bisq/OU=Bisq Infrastructure/CN=$onionaddress"
+sudo -H -i -u "${ROOT_USER}" openssl req -x509 -nodes -newkey rsa:2048 -days 3000 -keyout /etc/nginx/cert.key -out /etc/nginx/cert.crt -subj="/O=Bisq/OU=Bisq Infrastructure/CN=$onionaddress"
 curl -s "${BISQ_REPO_URL}/${BISQ_REPO_TAG}/monitor/nginx.conf" > /tmp/nginx.conf
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 /tmp/nginx.conf /etc/nginx/nginx.conf
 
