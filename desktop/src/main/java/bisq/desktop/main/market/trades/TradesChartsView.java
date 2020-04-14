@@ -556,7 +556,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 setMaxWidth(240);
             }
         };
-        dateColumn.getStyleClass().addAll("number-column", "first-column");
+        dateColumn.getStyleClass().addAll("first-column");
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         dateColumn.setCellFactory(
                 new Callback<>() {
@@ -585,7 +585,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 setMaxWidth(130);
             }
         };
-        marketColumn.getStyleClass().add("number-column");
         marketColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         marketColumn.setCellFactory(
                 new Callback<>() {
@@ -688,7 +687,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // paymentMethod
         TableColumn<TradeStatistics2, TradeStatistics2> paymentMethodColumn = new AutoTooltipTableColumn<>(Res.get("shared.paymentMethod"));
-        paymentMethodColumn.getStyleClass().add("number-column");
         paymentMethodColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         paymentMethodColumn.setCellFactory(
                 new Callback<>() {
@@ -712,7 +710,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // direction
         TableColumn<TradeStatistics2, TradeStatistics2> directionColumn = new AutoTooltipTableColumn<>(Res.get("shared.offerType"));
-        directionColumn.getStyleClass().addAll("number-column", "last-column");
+        directionColumn.getStyleClass().addAll("last-column");
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         directionColumn.setCellFactory(
                 new Callback<>() {

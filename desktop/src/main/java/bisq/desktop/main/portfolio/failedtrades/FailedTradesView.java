@@ -204,6 +204,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
 
     private void setAmountColumnCellFactory() {
+        amountColumn.getStyleClass().addAll("number-column");
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
                 new Callback<>() {
@@ -222,6 +223,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setPriceColumnCellFactory() {
+        priceColumn.getStyleClass().addAll("number-column");
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
                 new Callback<>() {
@@ -240,6 +242,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setVolumeColumnCellFactory() {
+        volumeColumn.getStyleClass().addAll("number-column");
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<>() {

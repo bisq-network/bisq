@@ -869,26 +869,12 @@ textfield */
  ******************************************************************************/
 .table-view .table-cell {
     -fx-alignment: center-left;
-    -fx-padding: 2 0 2 0;
-    /*-fx-padding: 3 0 2 0;*/
-}
-
-.table-view .table-cell.last-column {
-    -fx-alignment: center-right;
-    -fx-padding: 2 10 2 0;
+    -fx-padding: 2 5 2 5;
 }
 
 .table-view .table-cell.last-column.avatar-column {
     -fx-alignment: center;
     -fx-padding: 2 0 2 0;
-}
-
-.table-view .column-header.last-column {
-    -fx-padding: 0 10 0 0;
-}
-
-.table-view .column-header.last-column .label {
-    -fx-alignment: center-right;
 }
 
 .table-view .column-header.last-column.avatar-column {
@@ -903,13 +889,17 @@ textfield */
     -fx-padding: 2 0 2 10;
 }
 
-.table-view .column-header.first-column {
-    -fx-padding: 0 0 0 10;
-}
-
 .number-column.table-cell {
     -fx-font-size: 1em;
-    -fx-padding: 0 0 0 0;
+    -fx-alignment: center-right;
+}
+
+.number-column.table-cell.last-column {
+    -fx-padding: 2 10 2 0;
+}
+
+.table-view .column-header.number-column .label {
+    -fx-alignment: center-right;
 }
 
 .table-view .filler {
@@ -921,10 +911,10 @@ textfield */
 }
 
 .table-view .column-header .label {
-    -fx-alignment: center-left;
     -fx-font-weight: normal;
     -fx-font-size: 0.923em;
-    -fx-padding: 0;
+    -fx-alignment: center-left;
+    -fx-padding: 2 3 2 3;
 }
 
 .table-view .column-header {

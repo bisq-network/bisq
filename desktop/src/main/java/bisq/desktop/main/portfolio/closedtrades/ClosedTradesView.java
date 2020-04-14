@@ -426,6 +426,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     }
 
     private void setAmountColumnCellFactory() {
+        amountColumn.getStyleClass().addAll("number-column");
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
                 new Callback<>() {
@@ -444,6 +445,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     }
 
     private void setPriceColumnCellFactory() {
+        priceColumn.getStyleClass().addAll("number-column");
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
                 new Callback<>() {
@@ -462,6 +464,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     }
 
     private void setVolumeColumnCellFactory() {
+        volumeColumn.getStyleClass().addAll("number-column");
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<>() {
