@@ -338,7 +338,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             long a = o1 != null ? o1.getValue() : 0;
             long b = o2 != null ? o2.getValue() : 0;
             if (a != b) {
-                if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
+                if (o1 != null && CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
                     return a > b ? 1 : -1;
                 else
                     return a < b ? 1 : -1;
