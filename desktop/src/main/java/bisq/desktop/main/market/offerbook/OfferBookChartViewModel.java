@@ -280,18 +280,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.BUY))
-                .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b) {
-                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
-                            return a > b ? 1 : -1;
-                        else
-                            return a < b ? 1 : -1;
-                    } else {
-                        return 0;
-                    }
-                })
+                .sorted(getComparator(false))
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
@@ -320,18 +309,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.SELL))
-                .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b) {
-                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
-                            return a < b ? 1 : -1;
-                        else
-                            return a > b ? 1 : -1;
-                    } else {
-                        return 0;
-                    }
-                })
+                .sorted(getComparator(true))
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
@@ -353,6 +331,26 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         }
 
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
+    }
+
+    private Comparator<Offer> getComparator(boolean reversePrimarySortOrder) {
+        Comparator<Offer> primary = Comparator.comparing(Offer::getPrice, (o1, o2) -> {
+            long a = o1 != null ? o1.getValue() : 0;
+            long b = o2 != null ? o2.getValue() : 0;
+            if (a != b) {
+                if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
+                    return a > b ? 1 : -1;
+                else
+                    return a < b ? 1 : -1;
+            } else {
+                return 0;
+            }
+        });
+
+        if (reversePrimarySortOrder)
+            primary = primary.reversed();
+
+        return primary.thenComparing(Offer::getAmount);
     }
 
     private void buildChartAndTableEntries(List<Offer> sortedList,
