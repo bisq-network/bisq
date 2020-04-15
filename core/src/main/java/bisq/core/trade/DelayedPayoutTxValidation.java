@@ -165,7 +165,8 @@ public class DelayedPayoutTxValidation {
         // We use the default addresses for non mainnet networks. For dev testing it need to be changed here.
         // We use a list to gain more flexibility at updates of DAO param, but still might fail if buyer has not updated
         // software. Needs a better solution....
-        List<String> hardCodedAddresses = Config.baseCurrencyNetwork().isMainnet() ? List.of("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV") :  // mainnet
+        List<String> hardCodedAddresses = Config.baseCurrencyNetwork().isMainnet() ?
+                List.of("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp", "3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV") :  // mainnet
                 Config.baseCurrencyNetwork().isDaoBetaNet() ? List.of("1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7") :  // daoBetaNet
                         Config.baseCurrencyNetwork().isTestnet() ? List.of("2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV") : // testnet
                                 List.of("2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w"); // regtest or DAO testnet (regtest)
