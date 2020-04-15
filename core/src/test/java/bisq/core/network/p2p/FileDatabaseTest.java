@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.app.Version;
 import bisq.common.storage.Storage;
 
 import java.nio.file.Files;
@@ -327,8 +328,12 @@ public class FileDatabaseTest {
         Files.copy(source.toPath(), target.toPath());
     }
 
+    /**
+     * note that this function assumes a Bisq version format of x.y.z. It will not work with formats other than that eg. x.yy.z
+     * @param offset
+     * @return relative version string to the Version.VERSION constant
+     */
     public String getVersion(int offset) {
-        int start = 5;
-        return String.valueOf(start + offset);
+        return new StringBuilder().append(Integer.valueOf(Version.VERSION.replace(".", "")) + offset).insert(2, ".").insert(1, ".").toString();
     }
 }
