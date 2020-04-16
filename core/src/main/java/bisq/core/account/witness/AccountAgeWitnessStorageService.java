@@ -107,9 +107,18 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
         // check Version.VERSION and see if we have latest r/o data store file in working directory
         if (!new File(absolutePathOfStorageDir + File.separator + getFileName() + "_" + Version.VERSION).exists())
             makeFileFromResourceFile(postFix); // if we have the latest file, we are good, else do stuff // TODO are we?
+        else {
+            // load stores/storage
+            File dbDir = new File(absolutePathOfStorageDir);
+            List<File> resourceFiles = Arrays.asList(dbDir.list((dir, name) -> name.startsWith(getFileName()))).stream().map(s -> new File(s)).collect(Collectors.toList());
 
-        // load stores/storage
-
+            history = new HashMap<>();
+            store = readStore(getFileName());
+            resourceFiles.forEach(file -> {
+                AccountAgeWitnessStore tmp = readStore(file.getName().replace(postFix, ""));
+                history.put(file.getName().replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
+            });
+        }
     }
 
     @Override
