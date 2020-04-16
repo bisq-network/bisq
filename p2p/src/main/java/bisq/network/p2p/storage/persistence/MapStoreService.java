@@ -67,12 +67,12 @@ public abstract class MapStoreService<T extends PersistableEnvelope, R extends P
 
     public abstract boolean canHandle(R payload);
 
-    void put(P2PDataStorage.ByteArray hash, R payload) {
+    protected void put(P2PDataStorage.ByteArray hash, R payload) {
         getMap().put(hash, payload);
         persist();
     }
 
-    R putIfAbsent(P2PDataStorage.ByteArray hash, R payload) {
+    protected R putIfAbsent(P2PDataStorage.ByteArray hash, R payload) {
         R previous = getMap().putIfAbsent(hash, payload);
         persist();
         return previous;

@@ -269,7 +269,7 @@ public class FileDatabaseTest {
 
         // check result
         // - did the live database grow?
-        Collection<PersistableNetworkPayload> result = DUT.getMap("since" + getVersion(0)).values();
+        Collection<PersistableNetworkPayload> result = DUT.getMap("since " + getVersion(0)).values();
         Assert.assertEquals(2, result.size());
         Assert.assertTrue(result.contains(object2));
         Assert.assertTrue(result.contains(object3));

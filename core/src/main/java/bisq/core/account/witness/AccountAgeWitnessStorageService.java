@@ -68,6 +68,20 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
     }
 
     @Override
+    protected void put(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
+        store.getMap().put(hash, payload);
+        persist();
+    }
+
+    @Override
+    protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash,
+                                                    PersistableNetworkPayload payload) {
+        PersistableNetworkPayload previous = store.getMap().putIfAbsent(hash, payload);
+        persist();
+        return previous;
+    }
+
+    @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>();
         result.putAll(store.getMap());
