@@ -240,7 +240,7 @@ public class FileDatabaseTest {
         Assert.assertTrue(result.contains(object3));
         // - check "since version" filter
         result = DUT.getMap("since " + getVersion(-1)).values();
-        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(2, result.size());
         Assert.assertTrue(result.contains(object2));
         Assert.assertTrue(result.contains(object3));
     }

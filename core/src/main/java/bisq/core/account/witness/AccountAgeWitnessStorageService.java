@@ -84,8 +84,10 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
         // TODO do a proper language, possibly classes
         if (filter.startsWith("since ")) {
             filter = filter.replace("since ", "");
-            if (!filter.equals(Version.VERSION))
-                result.putAll(history.get(filter).getMap());
+            if (!filter.equals(Version.VERSION)) {
+                String finalFilter = filter;
+                history.entrySet().stream().filter(entry -> Integer.valueOf(entry.getKey().replace(".", "")) > Integer.valueOf(finalFilter.replace(".", ""))).forEach(entry -> result.putAll(entry.getValue().getMap()));
+            }
         }
 
         return result;
@@ -110,7 +112,7 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
         else {
             // load stores/storage
             File dbDir = new File(absolutePathOfStorageDir);
-            List<File> resourceFiles = Arrays.asList(dbDir.list((dir, name) -> name.startsWith(getFileName()))).stream().map(s -> new File(s)).collect(Collectors.toList());
+            List<File> resourceFiles = Arrays.asList(dbDir.list((dir, name) -> name.startsWith(getFileName() + "_"))).stream().map(s -> new File(s)).collect(Collectors.toList());
 
             history = new HashMap<>();
             store = readStore(getFileName());
