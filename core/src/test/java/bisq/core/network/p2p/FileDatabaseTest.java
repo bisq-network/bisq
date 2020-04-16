@@ -178,8 +178,8 @@ public class FileDatabaseTest {
         Assert.assertEquals(2, storageDir.list((dir, name) -> name.startsWith("AccountAgeWitnessStore") && !name.endsWith("_TEST")).length);
         // - do the 3 data stores share objects
         Assert.assertEquals(0, DUT.getMap("since " + getVersion(0)).size());
-        Assert.assertEquals(1, DUT.getMap().size() - DUT.getMap("since " + getVersion(0)).size());
-        Assert.assertEquals(1, DUT.getMap().size() - DUT.getMap("since " + getVersion(-1)).size());
+        Assert.assertEquals(1, DUT.getMap("since " + getVersion(-1)).size());
+        Assert.assertEquals(2, DUT.getMap("since " + getVersion(-2)).size());
     }
 
     /**
