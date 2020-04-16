@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -57,6 +58,29 @@ public class FileDatabaseTest {
     static final AccountAgeWitness object3 = new AccountAgeWitness(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3}, 3);
 
     /**
+     * TEST CASE: check if test fixture databases are in place and correct
+     *
+     * This does not test any business logic, just makes sure the test setup is correct.
+     */
+    @Test
+    public void checkTestFixtures() throws IOException, InterruptedException {
+        checkTestFixturesHelper(object1);
+        checkTestFixturesHelper(object1, object2);
+        checkTestFixturesHelper(object2);
+        checkTestFixturesHelper(object2, object3);
+        checkTestFixturesHelper(object3);
+    }
+
+    private void checkTestFixturesHelper(AccountAgeWitness... objects) throws IOException, InterruptedException {
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), objects);
+        AppendOnlyDataStoreService DUT = loadDatabase();
+        Assert.assertEquals(objects.length, DUT.getMap().size());
+        Arrays.stream(objects).forEach(object -> {
+            Assert.assertTrue(DUT.getMap().containsValue(object));
+        });
+    }
+
+    /**
      * TEST CASE: test migration scenario from old database file model to new one
      *
      * USE CASE:
@@ -74,9 +98,9 @@ public class FileDatabaseTest {
     public void migrationScenario() throws IOException, InterruptedException {
         // setup scenario
         // - create one data store in working directory
-        createDatabase(createFile("AccountAgeWitnessStore"), object1, object2);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object1, object2);
         // - create one data store in resources with new naming scheme
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object1);
+        createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object1);
 
         // simulate bisq startup
         final AppendOnlyDataStoreService DUT = loadDatabase();
@@ -108,11 +132,11 @@ public class FileDatabaseTest {
     public void updateScenario() throws IOException, InterruptedException {
         // setup scenario
         // - create two data stores in resources
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
+        createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
+        createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
         // - create two data stores in work dir
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(-1)), object1);
-        createDatabase(createFile("AccountAgeWitnessStore"), object2, object3);
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object2, object3);
 
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -141,8 +165,8 @@ public class FileDatabaseTest {
     public void freshInstallScenario() throws IOException, InterruptedException {
         // setup scenario
         // - create two data stores in resources
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
+        createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
+        createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
 
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -173,9 +197,9 @@ public class FileDatabaseTest {
     public void getMap() throws IOException, InterruptedException {
         // setup scenario
         // - create 2 data stores containing historical data and a live database
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(-1)), object1);
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(0)), object2);
-        createDatabase(createFile("AccountAgeWitnessStore"), object3);
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object2);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object3);
 
         // simulate Bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -202,9 +226,9 @@ public class FileDatabaseTest {
     public void getMapSinceFilter() throws IOException, InterruptedException {
         // setup scenario
         // - create 2 data stores containing historical data and a live database
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(-1)), object1);
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(0)), object2);
-        createDatabase(createFile("AccountAgeWitnessStore"), object3);
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object2);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object3);
 
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -235,8 +259,8 @@ public class FileDatabaseTest {
     public void put() throws IOException, InterruptedException {
         // setup scenario
         // - create one database containing historical data and a live database
-        createDatabase(createFile("AccountAgeWitnessStore_" + getVersion(0)), object1);
-        createDatabase(createFile("AccountAgeWitnessStore"), object2);
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object1);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object2);
 
         // simulate Bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -262,27 +286,6 @@ public class FileDatabaseTest {
 
     @After
     public void cleanup() {
-        for (File file : files) {
-            file.delete();
-        }
-        try {
-            Files.walk(new File(storageDir + "/setup").toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
-
-            File backupDir = new File(storageDir + "/backup");
-            if (backupDir.exists())
-                Files.walk(backupDir.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public File createFile(String name) {
-        File tmp = new File(storageDir + "/" + name);
-        files.add(tmp);
-        return tmp;
-    }
-
-    public void flush() {
         try {
             boolean done = false;
             while (!done) {
@@ -293,38 +296,61 @@ public class FileDatabaseTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        for (File file : files) {
+            file.delete();
+        }
+
+        try {
+            File backupDir = new File(storageDir + "/backup");
+            if (backupDir.exists())
+                Files.walk(backupDir.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Arrays.stream(storageDir.list((dir, name) -> name.startsWith("AccountAgeWitnessStore"))).forEach(s -> {
+            new File(storageDir + File.separator + s).delete();
+        });
     }
 
-    private AppendOnlyDataStoreService doDatabase(File storageDir, String suffix) {
+    public File createFile(boolean isResourceFile, String name) {
+        File tmp;
+        if (isResourceFile)
+            tmp = new File(ClassLoader.getSystemClassLoader().getResource("").getFile() + File.separator + name);
+        else
+            tmp = new File(storageDir + File.separator + name);
+
+        files.add(tmp);
+        return tmp;
+    }
+
+    private AppendOnlyDataStoreService loadDatabase() {
         Storage<AccountAgeWitnessStore> storage = new Storage<>(storageDir, new CorePersistenceProtoResolver(null, null, null, null), null);
         AccountAgeWitnessStorageService storageService = new AccountAgeWitnessStorageService(storageDir, storage);
         final AppendOnlyDataStoreService protectedDataStoreService = new AppendOnlyDataStoreService();
         protectedDataStoreService.addService(storageService);
-        protectedDataStoreService.readFromResources(suffix);
+        protectedDataStoreService.readFromResources("_TEST");
         return protectedDataStoreService;
     }
 
-    private AppendOnlyDataStoreService loadDatabase() {
-        return doDatabase(storageDir, "_TEST");
-    }
-
     private void createDatabase(File target,
-                                AccountAgeWitness... objects) throws IOException, InterruptedException {
-        File tmpDirectory = new File("src/test/resources/setup");
+                                AccountAgeWitness... objects) throws IOException {
 
-        if (!tmpDirectory.exists())
-            tmpDirectory.mkdir();
+        if (null == objects) {
+            return;
+        }
 
-        final AppendOnlyDataStoreService protectedDataStoreService = doDatabase(tmpDirectory, "_NOTHING");
+        String filename = "";
+        filename += Arrays.asList(objects).contains(object1) ? "o1" : "";
+        filename += Arrays.asList(objects).contains(object2) ? "o2" : "";
+        filename += Arrays.asList(objects).contains(object3) ? "o3" : "";
 
-        if (null != objects)
-            for (AccountAgeWitness object : objects)
-                protectedDataStoreService.put(new P2PDataStorage.ByteArray(object.getHash()), object);
+        File source = new File(storageDir + File.separator + filename);
 
-        final File source = createFile("setup/AccountAgeWitnessStore");
-        flush();
-        while (!source.exists())
-            Thread.sleep(100);
+        if (target.exists())
+            target.delete();
+
         Files.copy(source.toPath(), target.toPath());
     }
 
