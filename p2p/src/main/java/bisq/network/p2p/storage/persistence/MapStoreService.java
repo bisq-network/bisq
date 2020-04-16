@@ -54,6 +54,17 @@ public abstract class MapStoreService<T extends PersistableEnvelope, R extends P
 
     public abstract Map<P2PDataStorage.ByteArray, R> getMap();
 
+    /**
+     * reroute the filtered query to a non-filtered by default.
+     * <p>
+     *     only stores that are shipped with a release use it anyways and they have to override
+     *     the method to take advantage of the feature.
+     * </p>
+     */
+    public Map<P2PDataStorage.ByteArray, R> getMap(String filter) {
+        return getMap();
+    }
+
     public abstract boolean canHandle(R payload);
 
     void put(P2PDataStorage.ByteArray hash, R payload) {

@@ -21,23 +21,31 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
+import bisq.common.app.Version;
 import bisq.common.config.Config;
+import bisq.common.storage.FileUtil;
+import bisq.common.storage.ResourceNotFoundException;
 import bisq.common.storage.Storage;
 
 import javax.inject.Named;
 import javax.inject.Inject;
 
+import java.nio.file.Paths;
+
 import java.io.File;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeWitnessStore, PersistableNetworkPayload> {
     private static final String FILE_NAME = "AccountAgeWitnessStore";
+    private HashMap<String, AccountAgeWitnessStore> history;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +69,26 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
 
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return store.getMap();
+        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>();
+        result.putAll(store.getMap());
+        history.forEach((s, accountAgeWitnessStore) -> result.putAll(accountAgeWitnessStore.getMap()));
+
+        return result;
+    }
+
+    @Override
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String filter) {
+        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>();
+        result.putAll(store.getMap());
+
+        // TODO do a proper language, possibly classes
+        if (filter.startsWith("since ")) {
+            filter = filter.replace("since ", "");
+            if (!filter.equals(Version.VERSION))
+                result.putAll(history.get(filter).getMap());
+        }
+
+        return result;
     }
 
     @Override
@@ -74,16 +101,78 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
+    @Override
+    protected void readFromResources(String postFix) {
+        // check Version.VERSION and see if we have latest r/o data store file in working directory
+        if (!new File(absolutePathOfStorageDir + File.separator + getFileName() + "_" + Version.VERSION).exists())
+            makeFileFromResourceFile(postFix); // if we have the latest file, we are good, else do stuff // TODO are we?
+
+        // load stores/storage
+
+    }
+
     @Override
     protected AccountAgeWitnessStore createStore() {
         return new AccountAgeWitnessStore();
     }
 
+    private AccountAgeWitnessStore readStore(String name) {
+        AccountAgeWitnessStore store = storage.initAndGetPersistedWithFileName(name, 100);
+        if (store != null) {
+            log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
+                    storage.getClass().getSimpleName(),
+                    store.toProtoMessage().toByteArray().length / 1_000_000D);
+        } else {
+            store = createStore();
+        }
+
+        return store;
+    }
+
     @Override
-    protected void readStore() {
-        super.readStore();
-        checkArgument(store instanceof AccountAgeWitnessStore,
-                "Store is not instance of AccountAgeWitnessStore. That can happen if the ProtoBuffer " +
-                        "file got changed. We cleared the data store and recreated it again.");
+    protected void makeFileFromResourceFile(String postFix) {
+        File dbDir = new File(absolutePathOfStorageDir);
+        if (!dbDir.exists() && !dbDir.mkdir())
+            log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
+
+        // check resources for files
+        File resourceDir = new File(ClassLoader.getSystemClassLoader().getResource("").getFile());
+        List<File> resourceFiles = Arrays.asList(resourceDir.list((dir, name) -> name.startsWith(getFileName()))).stream().map(s -> new File(s)).collect(Collectors.toList());
+
+        // if not, copy and split
+        resourceFiles.forEach(file -> {
+            final File destinationFile = new File(Paths.get(absolutePathOfStorageDir, file.getName().replace(postFix, "")).toString());
+            final String resourceFileName = file.getName();
+            if (!destinationFile.exists()) {
+                try {
+                    log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
+                    FileUtil.resourceToFile(resourceFileName, destinationFile);
+                } catch (ResourceNotFoundException e) {
+                    log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
+                } catch (Throwable e) {
+                    log.error("Could not copy resourceFile " + resourceFileName + " to " +
+                            destinationFile.getAbsolutePath() + ".\n" + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else {
+                log.debug(file.getName() + " file exists already.");
+            }
+        });
+
+        // split
+        // - get all
+        history = new HashMap<>();
+        store = readStore(getFileName());
+        resourceFiles.forEach(file -> {
+            AccountAgeWitnessStore tmp = readStore(file.getName().replace(postFix, ""));
+            history.put(file.getName().replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
+            // - subtract all that is in resource files
+            store.getMap().keySet().removeAll(tmp.getMap().keySet());
+        });
+
+        // - create new file with leftovers
+        storage.queueUpForSave();
+
     }
 }
