@@ -20,6 +20,7 @@ package bisq.core.trade.statistics;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
+import bisq.network.p2p.storage.persistence.SplitStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.storage.Storage;
@@ -35,7 +36,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload> {
+public class TradeStatistics2StorageService extends SplitStoreService<TradeStatistics2Store> {
     private static final String FILE_NAME = "TradeStatistics2Store";
 
 
@@ -60,11 +61,6 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     }
 
     @Override
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return store.getMap();
-    }
-
-    @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
         return payload instanceof TradeStatistics2;
     }
@@ -77,10 +73,5 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     protected TradeStatistics2Store createStore() {
         return new TradeStatistics2Store();
-    }
-
-    @Override
-    protected void readStore() {
-        super.readStore();
     }
 }
