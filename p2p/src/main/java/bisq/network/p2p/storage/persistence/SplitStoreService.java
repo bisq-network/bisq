@@ -4,12 +4,21 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Version;
+import bisq.common.storage.FileUtil;
+import bisq.common.storage.ResourceNotFoundException;
 import bisq.common.storage.Storage;
+
+import java.nio.file.Paths;
 
 import java.io.File;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Has business logic to operate data stores which are spread across multiple files.<br><br><p>
@@ -40,6 +49,7 @@ import java.util.Map;
  *     <li><a href="https://github.com/bisq-network/projects/issues/25">project description</a></li>
  * </ul></p>
  */
+@Slf4j
 public abstract class SplitStoreService<T extends SplitStore> extends MapStoreService<T, PersistableNetworkPayload> {
     protected HashMap<String, SplitStore> history;
 
@@ -86,5 +96,83 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
         }
 
         return result;
+    }
+
+    @Override
+    protected void readFromResources(String postFix) {
+        // check Version.VERSION and see if we have latest r/o data store file in working directory
+        if (!new File(absolutePathOfStorageDir + File.separator + getFileName() + "_" + Version.VERSION).exists())
+            makeFileFromResourceFile(postFix); // if we have the latest file, we are good, else do stuff // TODO are we?
+        else {
+            // load stores/storage
+            File dbDir = new File(absolutePathOfStorageDir);
+            List<File> resourceFiles = Arrays.asList(dbDir.list((dir, name) -> name.startsWith(getFileName() + "_"))).stream().map(s -> new File(s)).collect(Collectors.toList());
+
+            history = new HashMap<>();
+            store = readStore(getFileName());
+            resourceFiles.forEach(file -> {
+                SplitStore tmp = readStore(file.getName().replace(postFix, ""));
+                history.put(file.getName().replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
+            });
+        }
+    }
+
+    private T readStore(String name) {
+        T store = storage.initAndGetPersistedWithFileName(name, 100);
+        if (store != null) {
+            log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
+                    storage.getClass().getSimpleName(),
+                    store.toProtoMessage().toByteArray().length / 1_000_000D);
+        } else {
+            store = createStore();
+        }
+
+        return store;
+    }
+
+    @Override
+    protected void makeFileFromResourceFile(String postFix) {
+        File dbDir = new File(absolutePathOfStorageDir);
+        if (!dbDir.exists() && !dbDir.mkdir())
+            log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
+
+        // check resources for files
+        File resourceDir = new File(ClassLoader.getSystemClassLoader().getResource("").getFile());
+        List<File> resourceFiles = Arrays.asList(resourceDir.list((dir, name) -> name.startsWith(getFileName()))).stream().map(s -> new File(s)).collect(Collectors.toList());
+
+        // if not, copy and split
+        resourceFiles.forEach(file -> {
+            final File destinationFile = new File(Paths.get(absolutePathOfStorageDir, file.getName().replace(postFix, "")).toString());
+            final String resourceFileName = file.getName();
+            if (!destinationFile.exists()) {
+                try {
+                    log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
+                    FileUtil.resourceToFile(resourceFileName, destinationFile);
+                } catch (ResourceNotFoundException e) {
+                    log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
+                } catch (Throwable e) {
+                    log.error("Could not copy resourceFile " + resourceFileName + " to " +
+                            destinationFile.getAbsolutePath() + ".\n" + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else {
+                log.debug(file.getName() + " file exists already.");
+            }
+        });
+
+        // split
+        // - get all
+        history = new HashMap<>();
+        store = readStore(getFileName());
+        resourceFiles.forEach(file -> {
+            SplitStore tmp = readStore(file.getName().replace(postFix, ""));
+            history.put(file.getName().replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
+            // - subtract all that is in resource files
+            store.getMap().keySet().removeAll(tmp.getMap().keySet());
+        });
+
+        // - create new file with leftovers
+        storage.queueUpForSave();
+
     }
 }
