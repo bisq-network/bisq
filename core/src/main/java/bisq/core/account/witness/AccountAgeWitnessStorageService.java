@@ -17,9 +17,9 @@
 
 package bisq.core.account.witness;
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.MapStoreService;
+import bisq.network.p2p.storage.persistence.SplitStore;
+import bisq.network.p2p.storage.persistence.SplitStoreService;
 
 import bisq.common.app.Version;
 import bisq.common.config.Config;
@@ -37,15 +37,13 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeWitnessStore, PersistableNetworkPayload> {
+public class AccountAgeWitnessStorageService extends SplitStoreService<AccountAgeWitnessStore> {
     private static final String FILE_NAME = "AccountAgeWitnessStore";
-    private HashMap<String, AccountAgeWitnessStore> history;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,46 +63,6 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
     @Override
     public String getFileName() {
         return FILE_NAME;
-    }
-
-    @Override
-    protected void put(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
-        store.getMap().put(hash, payload);
-        persist();
-    }
-
-    @Override
-    protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash,
-                                                    PersistableNetworkPayload payload) {
-        PersistableNetworkPayload previous = store.getMap().putIfAbsent(hash, payload);
-        persist();
-        return previous;
-    }
-
-    @Override
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>();
-        result.putAll(store.getMap());
-        history.forEach((s, accountAgeWitnessStore) -> result.putAll(accountAgeWitnessStore.getMap()));
-
-        return result;
-    }
-
-    @Override
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String filter) {
-        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>();
-        result.putAll(store.getMap());
-
-        // TODO do a proper language, possibly classes
-        if (filter.startsWith("since ")) {
-            filter = filter.replace("since ", "");
-            if (!filter.equals(Version.VERSION)) {
-                String finalFilter = filter;
-                history.entrySet().stream().filter(entry -> Integer.valueOf(entry.getKey().replace(".", "")) > Integer.valueOf(finalFilter.replace(".", ""))).forEach(entry -> result.putAll(entry.getValue().getMap()));
-            }
-        }
-
-        return result;
     }
 
     @Override
@@ -131,7 +89,7 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
             history = new HashMap<>();
             store = readStore(getFileName());
             resourceFiles.forEach(file -> {
-                AccountAgeWitnessStore tmp = readStore(file.getName().replace(postFix, ""));
+                SplitStore tmp = readStore(file.getName().replace(postFix, ""));
                 history.put(file.getName().replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
             });
         }
@@ -190,7 +148,7 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
         history = new HashMap<>();
         store = readStore(getFileName());
         resourceFiles.forEach(file -> {
-            AccountAgeWitnessStore tmp = readStore(file.getName().replace(postFix, ""));
+            SplitStore tmp = readStore(file.getName().replace(postFix, ""));
             history.put(file.getName().replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
             // - subtract all that is in resource files
             store.getMap().keySet().removeAll(tmp.getMap().keySet());
