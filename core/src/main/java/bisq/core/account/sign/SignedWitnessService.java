@@ -176,7 +176,14 @@ public class SignedWitnessService {
                 .anyMatch(ownerPubKey -> filterManager.isSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
     }
 
-    public String ownerPubKey(AccountAgeWitness accountAgeWitness) {
+    private byte[] ownerPubKey(AccountAgeWitness accountAgeWitness) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .map(SignedWitness::getWitnessOwnerPubKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public String ownerPubKeyAsString(AccountAgeWitness accountAgeWitness) {
         return getSignedWitnessSet(accountAgeWitness).stream()
                 .map(signedWitness -> Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))
                 .findFirst()
@@ -195,9 +202,31 @@ public class SignedWitnessService {
                                       AccountAgeWitness accountAgeWitness,
                                       ECKey key,
                                       PublicKey peersPubKey) {
+        signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey.getEncoded(), new Date().getTime());
+    }
+
+    public String signAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+                                        ECKey key,
+                                        long time) {
+        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, key,
+                ownerPubKey(accountAgeWitness), time);
+    }
+
+    // Arbitrators sign with EC key
+    private String signAccountAgeWitness(Coin tradeAmount,
+                                         AccountAgeWitness accountAgeWitness,
+                                         ECKey key,
+                                         byte[] peersPubKey,
+                                         long time) {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
-            log.warn("Arbitrator trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
-            return;
+            var err = "Arbitrator trying to sign already signed accountagewitness " + accountAgeWitness.toString();
+            log.warn(err);
+            return err;
+        }
+        if (peersPubKey == null) {
+            var err = "Trying to sign accountAgeWitness " + accountAgeWitness.toString() + "\nwith owner pubkey=null";
+            log.warn(err);
+            return err;
         }
 
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
@@ -206,11 +235,12 @@ public class SignedWitnessService {
                 accountAgeWitness.getHash(),
                 signatureBase64.getBytes(Charsets.UTF_8),
                 key.getPubKey(),
-                peersPubKey.getEncoded(),
-                new Date().getTime(),
+                peersPubKey,
+                time,
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
         log.info("Arbitrator signed witness {}", signedWitness.toString());
+        return "";
     }
 
     // Any peer can sign with DSA key

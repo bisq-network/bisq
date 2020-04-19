@@ -33,7 +33,6 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
-import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
@@ -76,6 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -131,6 +131,7 @@ public class AccountAgeWitnessService {
     private final ChargeBackRisk chargeBackRisk;
     private final FilterManager filterManager;
 
+    @Getter
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
 
@@ -219,7 +220,7 @@ public class AccountAgeWitnessService {
 
     public byte[] getPeerAccountAgeWitnessHash(Trade trade) {
         return findTradePeerWitness(trade)
-                .map(accountAgeWitness -> accountAgeWitness.getHash())
+                .map(AccountAgeWitness::getHash)
                 .orElse(null);
     }
 
@@ -628,6 +629,12 @@ public class AccountAgeWitnessService {
         signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
     }
 
+    public String arbitratorSignAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+                                                ECKey key,
+                                                long time) {
+        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, time);
+    }
+
     public void traderSignPeersAccountAgeWitness(Trade trade) {
         AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
         Coin tradeAmount = trade.getTradeAmount();
@@ -752,7 +759,7 @@ public class AccountAgeWitnessService {
     public SignState getSignState(AccountAgeWitness accountAgeWitness) {
         // Add hash to sign state info when running in debug mode
         String hash = log.isDebugEnabled() ? Utilities.bytesAsHexString(accountAgeWitness.getHash()) + "\n" +
-                signedWitnessService.ownerPubKey(accountAgeWitness) : "";
+                signedWitnessService.ownerPubKeyAsString(accountAgeWitness) : "";
         if (signedWitnessService.isFilteredWitness(accountAgeWitness)) {
             return SignState.BANNED.addHash(hash);
         }
@@ -776,6 +783,7 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Debug logs
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     private String getWitnessDebugLog(PaymentAccountPayload paymentAccountPayload,
                                       PubKeyRing pubKeyRing) {
         Optional<AccountAgeWitness> accountAgeWitness = findWitness(paymentAccountPayload, pubKeyRing);
