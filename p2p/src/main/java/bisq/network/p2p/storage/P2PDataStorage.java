@@ -54,6 +54,7 @@ import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
@@ -81,6 +82,7 @@ import java.security.PublicKey;
 import java.time.Clock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -89,6 +91,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -205,6 +208,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
     }
 
+    private byte[] getSpecialKey() {
+        byte[] result = new byte[20];
+        Arrays.fill(result, (byte) 0);
+        System.arraycopy(Version.VERSION.getBytes(), 0, result, 0, Version.VERSION.length());
+        return result;
+    }
+
+    private String containsSpecialKey(Set<P2PDataStorage.ByteArray> collection) {
+        Optional<String> result = collection.stream().map(byteArray -> new String(byteArray.bytes).trim()).filter(s -> s.matches("^[0-9]+\\.[0-9]+\\.[0-9]+")).findFirst();
+        if (result.isPresent())
+            return result.get();
+        else
+            return "";
+    }
+
     /**
      * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
      */
@@ -213,7 +231,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys = this.appendOnlyDataStoreService.getMap().keySet().stream()
+        Set<byte[]> excludedKeys = this.appendOnlyDataStoreService.getMap("since " + Version.VERSION).keySet().stream()
                 .map(e -> e.bytes)
                 .collect(Collectors.toSet());
 
@@ -223,6 +241,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .collect(Collectors.toSet());
 
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
+        excludedKeys.add(getSpecialKey());
 
         return excludedKeys;
     }
@@ -268,9 +287,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
+        String specialKey = containsSpecialKey(excludedKeysAsByteArray);
+
+        Map<ByteArray, PersistableNetworkPayload> tmp;
+        if ("".equals(specialKey))
+            tmp = this.appendOnlyDataStoreService.getMap();
+        else {
+            tmp = this.appendOnlyDataStoreService.getMap("since " + specialKey);
+        }
+
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
-                        this.appendOnlyDataStoreService.getMap(),
+                        tmp,
                         Function.identity(),
                         excludedKeysAsByteArray,
                         peerCapabilities,
