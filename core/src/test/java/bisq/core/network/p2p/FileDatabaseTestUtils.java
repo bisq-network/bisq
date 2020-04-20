@@ -25,7 +25,7 @@ import java.util.Set;
 import org.junit.After;
 
 /**
- * utility class for the {@link FileDatabaseTest}
+ * utility class for the {@link FileDatabaseTest} and {@link RequestDataTest}
  */
 public class FileDatabaseTestUtils {
     // Test fixtures
