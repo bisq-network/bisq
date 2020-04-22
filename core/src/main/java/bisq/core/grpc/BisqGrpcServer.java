@@ -201,6 +201,8 @@ public class BisqGrpcServer {
     private void start() throws IOException {
         // TODO add to options
         int port = 9998;
+        String rpcUser = coreApi.getConfig().rpcUser;
+        String rpcPassword = coreApi.getConfig().rpcPassword;
 
         // Config services
         server = ServerBuilder.forPort(port)
@@ -211,15 +213,16 @@ public class BisqGrpcServer {
                 .addService(new GetPaymentAccountsImpl())
                 .addService(new PlaceOfferImpl())
                 .addService(new StopServerImpl())
+                .intercept(new AuthenticationInterceptor(rpcUser, rpcPassword))
                 .build()
                 .start();
 
         log.info("Server started, listening on " + port);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Use stderr here since the logger may have been reset by its JVM shutdown hook.
-            log.error("*** shutting down gRPC server since JVM is shutting down");
+            log.error("Shutting down gRPC server");
             BisqGrpcServer.this.stop();
-            log.error("*** server shut down");
+            log.error("Server shut down");
         }));
     }
 }

@@ -19,8 +19,9 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-final class CliCommand {
+final class RpcCommand {
 
+    private final BisqCallCredentials callCredentials;
     private final GetBalanceGrpc.GetBalanceBlockingStub getBalanceStub;
     private final GetVersionGrpc.GetVersionBlockingStub getVersionStub;
     private final StopServerGrpc.StopServerBlockingStub stopServerStub;
@@ -30,10 +31,11 @@ final class CliCommand {
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     final Function<Long, String> prettyBalance = (sats) -> btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
 
-    CliCommand(ManagedChannel channel) {
-        getBalanceStub = GetBalanceGrpc.newBlockingStub(channel);
-        getVersionStub = GetVersionGrpc.newBlockingStub(channel);
-        stopServerStub = StopServerGrpc.newBlockingStub(channel);
+    RpcCommand(ManagedChannel channel, CommandParser parser) {
+        this.callCredentials = new BisqCallCredentials(parser.getCreds());
+        this.getBalanceStub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+        this.getVersionStub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+        this.stopServerStub = StopServerGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
     }
 
     String getVersion() {

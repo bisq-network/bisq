@@ -20,19 +20,14 @@ package bisq.cli.app;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.cli.app.CommandParser.GETBALANCE;
-import static bisq.cli.app.CommandParser.GETVERSION;
-import static bisq.cli.app.CommandParser.HELP;
-import static bisq.cli.app.CommandParser.STOPSERVER;
+import static bisq.cli.app.CliConfig.GETBALANCE;
+import static bisq.cli.app.CliConfig.GETVERSION;
+import static bisq.cli.app.CliConfig.HELP;
+import static bisq.cli.app.CliConfig.STOPSERVER;
 import static java.lang.String.format;
 import static java.lang.System.exit;
 import static java.lang.System.out;
@@ -47,18 +42,17 @@ public class BisqCliMain {
     private static final int EXIT_FAILURE = 1;
 
     private final ManagedChannel channel;
-    private final CliCommand cmd;
-    private final OptionParser parser;
+    private final RpcCommand rpcCommand;
+    private final CliConfig config;
+    private final CommandParser parser;
 
     public static void main(String[] args) {
         new BisqCliMain("localhost", 9998, args);
     }
 
     private BisqCliMain(String host, int port, String[] args) {
-        // Channels are secure by default (via SSL/TLS);  for the example disable TLS to avoid needing certificates.
-        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
-        String command = parseCommand(args);
-        String result = runCommand(command);
+        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build(), args);
+        String result = runCommand();
         out.println(result);
         try {
             shutdown(); // Orderly channel shutdown
@@ -69,44 +63,41 @@ public class BisqCliMain {
     /**
      * Construct client for accessing server using the existing channel.
      */
-    private BisqCliMain(ManagedChannel channel) {
+    private BisqCliMain(ManagedChannel channel, String[] args) {
         this.channel = channel;
-        this.cmd = new CliCommand(channel);
-        this.parser = new CommandParser().configure();
+        this.config = new CliConfig(args);
+        this.parser = new CommandParser(config);
+        this.rpcCommand = new RpcCommand(channel, parser);
     }
 
-    private String runCommand(String command) {
-        final String result;
-        switch (command) {
-            case HELP:
-                CommandParser.printHelp();
-                exit(EXIT_SUCCESS);
-            case GETBALANCE:
-                long satoshis = cmd.getBalance();
-                result = satoshis == -1 ? "Server initializing..." : cmd.prettyBalance.apply(satoshis);
-                break;
-            case GETVERSION:
-                result = cmd.getVersion();
-                break;
-            case STOPSERVER:
-                cmd.stopServer();
-                result = "Server stopped";
-                break;
-            default:
-                result = format("Unknown command '%s'", command);
-        }
-        return result;
-    }
-
-    private String parseCommand(String[] params) {
-        OptionSpec<String> nonOptions = parser.nonOptions().ofType(String.class);
-        OptionSet options = parser.parse(params);
-        List<String> detectedOptions = nonOptions.values(options);
-        if (detectedOptions.isEmpty()) {
-            CommandParser.printHelp();
+    private String runCommand() {
+        if (parser.getCmdToken().isPresent()) {
+            final String cmdToken = parser.getCmdToken().get();
+            final String result;
+            switch (cmdToken) {
+                case HELP:
+                    CliConfig.printHelp();
+                    exit(EXIT_SUCCESS);
+                case GETBALANCE:
+                    long satoshis = rpcCommand.getBalance();
+                    result = satoshis == -1 ? "Server initializing..." : rpcCommand.prettyBalance.apply(satoshis);
+                    break;
+                case GETVERSION:
+                    result = rpcCommand.getVersion();
+                    break;
+                case STOPSERVER:
+                    rpcCommand.stopServer();
+                    result = "Server stopped";
+                    break;
+                default:
+                    result = format("Unknown command '%s'", cmdToken);
+            }
+            return result;
+        } else {
+            CliConfig.printHelp();
             exit(EXIT_FAILURE);
+            return null;
         }
-        return detectedOptions.get(0);
     }
 
     private void shutdown() throws InterruptedException {

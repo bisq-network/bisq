@@ -140,7 +140,7 @@ public class Config {
     public final boolean helpRequested;
     public final File configFile;
 
-    // Options supported both at the cli and in the config file
+    // Options supported on cmd line and in the config file
     public final String appName;
     public final File userDataDir;
     public final File appDataDir;
@@ -206,7 +206,7 @@ public class Config {
     public final File storageDir;
     public final File keyStorageDir;
 
-    // The parser that will be used to parse both cli and config file options
+    // The parser that will be used to parse both cmd line and config file options
     private final OptionParser parser = new OptionParser();
 
     /**
