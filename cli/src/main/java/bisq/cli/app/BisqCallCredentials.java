@@ -24,32 +24,27 @@ public class BisqCallCredentials extends CallCredentials {
     }
 
     @Override
-    public void applyRequestMetadata(
-            RequestInfo requestInfo,
-            Executor appExecutor,
-            MetadataApplier metadataApplier) {
-
+    public void applyRequestMetadata(RequestInfo requestInfo, Executor appExecutor, MetadataApplier metadataApplier) {
         appExecutor.execute(() -> {
             try {
                 Metadata headers = new Metadata();
                 Key<String> creds = Key.of("bisqd-creds", ASCII_STRING_MARSHALLER);
                 headers.put(creds, encodeCredentials());
                 metadataApplier.apply(headers);
-            } catch (Throwable e) {
-                metadataApplier.fail(UNAUTHENTICATED.withCause(e));
+            } catch (Throwable ex) {
+                metadataApplier.fail(UNAUTHENTICATED.withCause(ex));
             }
         });
     }
 
-    @Override
-    public void thisUsesUnstableApi() {
+    private String encodeCredentials() {
+        if (!credentials.containsKey(RPC_USER) || !credentials.containsKey(RPC_PASSWORD))
+            throw new ConfigException("Cannot call rpc service without username:password credentials");
+
+        return credentials.get(RPC_USER) + ":" + credentials.get(RPC_PASSWORD);
     }
 
-    private String encodeCredentials() {
-        if (!credentials.containsKey(RPC_USER) || !credentials.containsKey(RPC_PASSWORD)) {
-            throw new ConfigException("Cannot call rpc service without username:password credentials");
-        } else {
-            return credentials.get(RPC_USER) + ":" + credentials.get(RPC_PASSWORD);
-        }
+    @Override
+    public void thisUsesUnstableApi() {
     }
 }
