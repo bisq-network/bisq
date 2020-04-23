@@ -28,7 +28,7 @@ public class BisqCallCredentials extends CallCredentials {
         appExecutor.execute(() -> {
             try {
                 Metadata headers = new Metadata();
-                Key<String> creds = Key.of("bisqd-creds", ASCII_STRING_MARSHALLER);
+                Key<String> creds = Key.of("bisq-api-token", ASCII_STRING_MARSHALLER);
                 headers.put(creds, encodeCredentials());
                 metadataApplier.apply(headers);
             } catch (Throwable ex) {

@@ -217,7 +217,7 @@ public class BisqGrpcServer {
                 .addService(new GetPaymentAccountsImpl())
                 .addService(new PlaceOfferImpl())
                 .addService(new StopServerImpl())
-                .intercept(new AuthenticationInterceptor(rpcUser, rpcPassword))
+                .intercept(new TokenAuthInterceptor(rpcUser, rpcPassword))
                 .build()
                 .start();
 

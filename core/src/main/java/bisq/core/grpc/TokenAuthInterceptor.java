@@ -16,12 +16,12 @@ import static io.grpc.Status.UNAUTHENTICATED;
  * Simple authentication interceptor to validate a cleartext token in username:password format.
  */
 @Slf4j
-public class AuthenticationInterceptor implements ServerInterceptor {
+public class TokenAuthInterceptor implements ServerInterceptor {
 
     private final String rpcUser;
     private final String rpcPassword;
 
-    public AuthenticationInterceptor(String rpcUser, String rpcPassword) {
+    public TokenAuthInterceptor(String rpcUser, String rpcPassword) {
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
     }
@@ -29,7 +29,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata,
                                                                  ServerCallHandler<ReqT, RespT> serverCallHandler) {
-        authenticate(metadata.get(Key.of("bisqd-creds", ASCII_STRING_MARSHALLER)));
+        authenticate(metadata.get(Key.of("bisq-api-token", ASCII_STRING_MARSHALLER)));
         return serverCallHandler.startCall(serverCall, metadata);
     }
 
