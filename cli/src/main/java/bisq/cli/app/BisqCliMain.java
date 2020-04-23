@@ -46,7 +46,7 @@ import static java.lang.System.exit;
 import static java.lang.System.out;
 
 /**
- * A command-line client for the Bisq gRPC API
+ * A command-line client for the Bisq gRPC API.
  */
 @Slf4j
 public class BisqCliMain {
@@ -79,7 +79,7 @@ public class BisqCliMain {
         OptionSet options = parser.parse(args);
 
         if (options.has(helpOpt)) {
-            out.println("Bisq RPC Client v0.1.0");
+            out.println("Bisq RPC Client");
             out.println();
             out.println("Usage: bisq-cli [options] <command>");
             out.println();
@@ -98,14 +98,14 @@ public class BisqCliMain {
 
         String authToken = options.valueOf(authOpt);
         if (authToken == null) {
-            err.println("error: Authentication token must not be null");
+            err.println("error: rpc authentication token must not be null");
             exit(EXIT_FAILURE);
         }
 
         @SuppressWarnings("unchecked")
         List<String> nonOptionArgs = (List<String>) options.nonOptionArguments();
         if (nonOptionArgs.isEmpty()) {
-            err.println("error: No RPC command specified");
+            err.println("error: no rpc command specified");
             exit(EXIT_FAILURE);
         }
 
@@ -128,7 +128,12 @@ public class BisqCliMain {
                     GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
             GetBalanceRequest request = GetBalanceRequest.newBuilder().build();
             long satoshis = getBalanceStub.getBalance(request).getBalance();
-            out.println(satoshis == -1 ? "Server initializing..." : formatSatoshis(satoshis));
+            if (satoshis == -1) {
+                err.println("Server initializing...");
+                shutdown(channel);
+                exit(EXIT_FAILURE);
+            }
+            out.println(formatBalance(satoshis));
             shutdown(channel);
             exit(EXIT_SUCCESS);
         }
@@ -138,7 +143,7 @@ public class BisqCliMain {
     }
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    private static String formatSatoshis(long satoshis) {
+    private static String formatBalance(long satoshis) {
         DecimalFormat btcFormat = new DecimalFormat("###,##0.00000000");
         BigDecimal satoshiDivisor = new BigDecimal(100000000);
         return btcFormat.format(BigDecimal.valueOf(satoshis).divide(satoshiDivisor));
