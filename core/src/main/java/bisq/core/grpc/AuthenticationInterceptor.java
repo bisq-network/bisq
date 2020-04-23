@@ -29,25 +29,18 @@ public class AuthenticationInterceptor implements ServerInterceptor {
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata,
                                                                  ServerCallHandler<ReqT, RespT> serverCallHandler) {
-        authenticate(metadata);
+        authenticate(metadata.get(Key.of("bisqd-creds", ASCII_STRING_MARSHALLER)));
         return serverCallHandler.startCall(serverCall, metadata);
     }
 
-    private void authenticate(Metadata metadata) {
-        String authToken = metadata.get(Key.of("bisqd-creds", ASCII_STRING_MARSHALLER));
-        if (authToken == null) {
+    private void authenticate(String authToken) {
+        if (authToken == null)
             throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Authentication token is missing"));
-        } else {
-            try {
-                if (isValidToken(authToken)) {
-                    log.info("Authenticated user {} with token {}", rpcUser, authToken);
-                } else {
-                    throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Invalid username or password"));
-                }
-            } catch (Exception e) {
-                throw new StatusRuntimeException(UNAUTHENTICATED.withDescription(e.getMessage()).withCause(e));
-            }
-        }
+
+        if (!isValidToken(authToken))
+            throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Invalid username or password"));
+
+        log.info("Authenticated user {} with token {}", rpcUser, authToken);
     }
 
     private boolean isValidToken(String token) {
