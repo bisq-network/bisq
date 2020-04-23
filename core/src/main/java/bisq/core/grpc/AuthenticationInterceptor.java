@@ -6,8 +6,6 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.StatusRuntimeException;
 
-import java.util.function.Predicate;
-
 import lombok.extern.slf4j.Slf4j;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
@@ -20,7 +18,8 @@ import static io.grpc.Status.UNAUTHENTICATED;
 @Slf4j
 public class AuthenticationInterceptor implements ServerInterceptor {
 
-    private String rpcUser, rpcPassword;
+    private final String rpcUser;
+    private final String rpcPassword;
 
     public AuthenticationInterceptor(String rpcUser, String rpcPassword) {
         this.rpcUser = rpcUser;
@@ -42,7 +41,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
             throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Authentication token is missing"));
         } else {
             try {
-                if (isValidToken.test(authToken)) {
+                if (isValidToken(authToken)) {
                     log.info("Authenticated user {} with token {}", rpcUser, authToken);
                 } else {
                     throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Invalid username or password"));
@@ -53,10 +52,8 @@ public class AuthenticationInterceptor implements ServerInterceptor {
         }
     }
 
-    private final Predicate<String> isValidUser = (u) -> u.equals(rpcUser);
-    private final Predicate<String> isValidPassword = (p) -> p.equals(rpcPassword);
-    private final Predicate<String> isValidToken = (t) -> {
-        String[] pair = t.split(":");
-        return isValidUser.test(pair[0]) && isValidPassword.test(pair[1]);
-    };
+    private boolean isValidToken(String token) {
+        String[] pair = token.split(":");
+        return pair[0].equals(rpcUser) && pair[1].equals(rpcPassword);
+    }
 }
