@@ -116,6 +116,7 @@ public class Config {
     public static final String DAO_ACTIVATED = "daoActivated";
     public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
+    public static final String API_TOKEN = "apiToken";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -199,6 +200,7 @@ public class Config {
     public final long genesisTotalSupply;
     public final boolean dumpDelayedPayoutTxs;
     public final boolean allowFaultyDelayedTxs;
+    public final String apiToken;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -615,6 +617,11 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<String> apiTokenOpt =
+                parser.accepts(API_TOKEN, "Bisq gRPC API authentication token")
+                        .withRequiredArg()
+                        .defaultsTo("");
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -727,6 +734,7 @@ public class Config {
             this.daoActivated = options.valueOf(daoActivatedOpt);
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
+            this.apiToken = options.valueOf(apiTokenOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),

@@ -205,8 +205,6 @@ public class BisqGrpcServer {
     private void start() throws IOException {
         // TODO add to options
         int port = 9998;
-        String rpcUser = config.rpcUser;
-        String rpcPassword = config.rpcPassword;
 
         // Config services
         server = ServerBuilder.forPort(port)
@@ -217,7 +215,7 @@ public class BisqGrpcServer {
                 .addService(new GetPaymentAccountsImpl())
                 .addService(new PlaceOfferImpl())
                 .addService(new StopServerImpl())
-                .intercept(new TokenAuthInterceptor(rpcUser, rpcPassword))
+                .intercept(new TokenAuthInterceptor(config.apiToken))
                 .build()
                 .start();
 

@@ -4,11 +4,8 @@ import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 
-import java.util.Map;
 import java.util.concurrent.Executor;
 
-import static bisq.cli.app.CliConfig.RPC_PASSWORD;
-import static bisq.cli.app.CliConfig.RPC_USER;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Status.UNAUTHENTICATED;
 
@@ -17,10 +14,10 @@ import static io.grpc.Status.UNAUTHENTICATED;
  */
 public class BisqCallCredentials extends CallCredentials {
 
-    private final Map<String, String> credentials;
+    private final String apiToken;
 
-    public BisqCallCredentials(Map<String, String> credentials) {
-        this.credentials = credentials;
+    public BisqCallCredentials(String apiToken) {
+        this.apiToken = apiToken;
     }
 
     @Override
@@ -28,20 +25,13 @@ public class BisqCallCredentials extends CallCredentials {
         appExecutor.execute(() -> {
             try {
                 Metadata headers = new Metadata();
-                Key<String> creds = Key.of("bisq-api-token", ASCII_STRING_MARSHALLER);
-                headers.put(creds, encodeCredentials());
+                Key<String> apiTokenKey = Key.of("bisq-api-token", ASCII_STRING_MARSHALLER);
+                headers.put(apiTokenKey, apiToken);
                 metadataApplier.apply(headers);
             } catch (Throwable ex) {
                 metadataApplier.fail(UNAUTHENTICATED.withCause(ex));
             }
         });
-    }
-
-    private String encodeCredentials() {
-        if (!credentials.containsKey(RPC_USER) || !credentials.containsKey(RPC_PASSWORD))
-            throw new ConfigException("Cannot call rpc service without username:password credentials");
-
-        return credentials.get(RPC_USER) + ":" + credentials.get(RPC_PASSWORD);
     }
 
     @Override

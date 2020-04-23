@@ -18,12 +18,10 @@ import static io.grpc.Status.UNAUTHENTICATED;
 @Slf4j
 public class TokenAuthInterceptor implements ServerInterceptor {
 
-    private final String rpcUser;
-    private final String rpcPassword;
+    private final String apiToken;
 
-    public TokenAuthInterceptor(String rpcUser, String rpcPassword) {
-        this.rpcUser = rpcUser;
-        this.rpcPassword = rpcPassword;
+    public TokenAuthInterceptor(String apiToken) {
+        this.apiToken = apiToken;
     }
 
     @Override
@@ -35,16 +33,9 @@ public class TokenAuthInterceptor implements ServerInterceptor {
 
     private void authenticate(String authToken) {
         if (authToken == null)
-            throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Authentication token is missing"));
+            throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("API token is missing"));
 
-        if (!isValidToken(authToken))
-            throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Invalid username or password"));
-
-        log.info("Authenticated user {} with token {}", rpcUser, authToken);
-    }
-
-    private boolean isValidToken(String token) {
-        String[] pair = token.split(":");
-        return pair[0].equals(rpcUser) && pair[1].equals(rpcPassword);
+        if (!authToken.equals(apiToken))
+            throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Invalid API token"));
     }
 }

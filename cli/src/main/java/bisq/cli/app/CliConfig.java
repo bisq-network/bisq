@@ -16,12 +16,10 @@ final class CliConfig {
     static final String STOPSERVER = "stopserver";
 
     // Argument accepting name constants
-    static final String RPC_USER = "rpcuser";
-    static final String RPC_PASSWORD = "rpcpassword";
+    static final String API_TOKEN = "apiToken";
 
     // Argument accepting cmd options
-    final String rpcUser;
-    final String rpcPassword;
+    final String apiToken;
 
     // The parser that will be used to parse both cmd line and config file options
     private final OptionParser optionParser = new OptionParser();
@@ -30,22 +28,17 @@ final class CliConfig {
     CliConfig(String[] params) {
         this.params = params;
 
-        ArgumentAcceptingOptionSpec<String> rpcUserOpt =
-                optionParser.accepts(RPC_USER, "Bisq daemon username")
-                        .withRequiredArg()
-                        .defaultsTo("");
-        ArgumentAcceptingOptionSpec<String> rpcPasswordOpt =
-                optionParser.accepts(RPC_PASSWORD, "Bisq daemon password")
-                        .withRequiredArg()
-                        .defaultsTo("");
+        ArgumentAcceptingOptionSpec<String> apiTokenOpt =
+                optionParser.accepts(API_TOKEN, "Bisq API token")
+                        .withRequiredArg();
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
             // Parse command line options
             OptionSet cliOpts = optionParser.parse(params);
             options.addOptionSet(cliOpts);
 
-            this.rpcUser = options.valueOf(rpcUserOpt);
-            this.rpcPassword = options.valueOf(rpcPasswordOpt);
+            this.apiToken = options.valueOf(apiTokenOpt);
 
             optionParser.allowsUnrecognizedOptions();
             optionParser.nonOptions(GETBALANCE).ofType(String.class).describedAs("Get btc balance");
@@ -69,6 +62,6 @@ final class CliConfig {
     }
 
     static void printHelp() {
-        out.println("Usage:  bisq-cli --rpcpassword=user --rpcpassword=password  getbalance | getversion");
+        out.println("Usage:  bisq-cli --apiToken=token getbalance | getversion");
     }
 }

@@ -32,7 +32,7 @@ final class RpcCommand {
     final Function<Long, String> prettyBalance = (sats) -> btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
 
     RpcCommand(ManagedChannel channel, CommandParser parser) {
-        this.callCredentials = new BisqCallCredentials(parser.getCreds());
+        this.callCredentials = new BisqCallCredentials(parser.getApiToken());
         this.getBalanceStub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
         this.getVersionStub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
         this.stopServerStub = StopServerGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
