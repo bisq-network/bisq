@@ -22,6 +22,8 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 
+import bisq.common.config.Config;
+
 import bisq.proto.grpc.GetBalanceGrpc;
 import bisq.proto.grpc.GetBalanceReply;
 import bisq.proto.grpc.GetBalanceRequest;
@@ -65,6 +67,7 @@ public class BisqGrpcServer {
     private Server server;
 
     private static BisqGrpcServer instance;
+    private static Config config;
     private static CoreApi coreApi;
 
 
@@ -170,9 +173,10 @@ public class BisqGrpcServer {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqGrpcServer(CoreApi coreApi) {
+    public BisqGrpcServer(Config config, CoreApi coreApi) {
         instance = this;
 
+        BisqGrpcServer.config = config;
         BisqGrpcServer.coreApi = coreApi;
 
         try {
@@ -201,8 +205,8 @@ public class BisqGrpcServer {
     private void start() throws IOException {
         // TODO add to options
         int port = 9998;
-        String rpcUser = coreApi.getConfig().rpcUser;
-        String rpcPassword = coreApi.getConfig().rpcPassword;
+        String rpcUser = config.rpcUser;
+        String rpcPassword = config.rpcPassword;
 
         // Config services
         server = ServerBuilder.forPort(port)

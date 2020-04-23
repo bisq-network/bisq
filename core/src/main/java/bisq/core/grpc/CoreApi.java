@@ -32,7 +32,6 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.common.app.Version;
-import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
@@ -50,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CoreApi {
-    private final Config config;
     private final Balances balances;
     private final BalancePresentation balancePresentation;
     private final OfferBookService offerBookService;
@@ -60,15 +58,13 @@ public class CoreApi {
     private final User user;
 
     @Inject
-    public CoreApi(Config config,
-                   Balances balances,
+    public CoreApi(Balances balances,
                    BalancePresentation balancePresentation,
                    OfferBookService offerBookService,
                    TradeStatisticsManager tradeStatisticsManager,
                    CreateOfferService createOfferService,
                    OpenOfferManager openOfferManager,
                    User user) {
-        this.config = config;
         this.balances = balances;
         this.balancePresentation = balancePresentation;
         this.offerBookService = offerBookService;
@@ -76,10 +72,6 @@ public class CoreApi {
         this.createOfferService = createOfferService;
         this.openOfferManager = openOfferManager;
         this.user = user;
-    }
-
-    public Config getConfig() {
-        return config;
     }
 
     public String getVersion() {
