@@ -36,7 +36,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
     }
 
     private void authenticate(Metadata metadata) {
-        final String authToken = metadata.get(Key.of("bisqd-creds", ASCII_STRING_MARSHALLER));
+        String authToken = metadata.get(Key.of("bisqd-creds", ASCII_STRING_MARSHALLER));
         if (authToken == null) {
             throw new StatusRuntimeException(UNAUTHENTICATED.withDescription("Authentication token is missing"));
         } else {
