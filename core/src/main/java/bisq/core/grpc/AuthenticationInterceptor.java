@@ -27,10 +27,8 @@ public class AuthenticationInterceptor implements ServerInterceptor {
     }
 
     @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-            ServerCall<ReqT, RespT> serverCall,
-            Metadata metadata,
-            ServerCallHandler<ReqT, RespT> serverCallHandler) {
+    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata,
+                                                                 ServerCallHandler<ReqT, RespT> serverCallHandler) {
         authenticate(metadata);
         return serverCallHandler.startCall(serverCall, metadata);
     }
