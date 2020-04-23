@@ -17,23 +17,36 @@
 
 package bisq.cli.app;
 
+import bisq.proto.grpc.GetBalanceGrpc;
+import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetVersionGrpc;
+import bisq.proto.grpc.GetVersionRequest;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import joptsimple.AbstractOptionSpec;
+import joptsimple.ArgumentAcceptingOptionSpec;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
+import java.text.DecimalFormat;
+
+import java.io.IOException;
+
+import java.math.BigDecimal;
+
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.cli.app.CliConfig.GETBALANCE;
-import static bisq.cli.app.CliConfig.GETVERSION;
-import static bisq.cli.app.CliConfig.HELP;
-import static bisq.cli.app.CliConfig.STOPSERVER;
-import static java.lang.String.format;
+import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 
 /**
- * gRPC client.
+ * A command-line client for the Bisq gRPC API
  */
 @Slf4j
 public class BisqCliMain {
@@ -41,67 +54,101 @@ public class BisqCliMain {
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
 
-    private final ManagedChannel channel;
-    private final RpcCommand rpcCommand;
-    private final CliConfig config;
-    private final CommandParser parser;
+    public static void main(String[] args) throws IOException {
+        OptionParser parser = new OptionParser();
 
-    public static void main(String[] args) {
-        new BisqCliMain("localhost", 9998, args);
-    }
+        AbstractOptionSpec<Void> helpOpt =
+                parser.accepts("help", "Print this help text")
+                        .forHelp();
 
-    private BisqCliMain(String host, int port, String[] args) {
-        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build(), args);
-        String result = runCommand();
-        out.println(result);
-        try {
-            shutdown(); // Orderly channel shutdown
-        } catch (InterruptedException ignored) {
+        ArgumentAcceptingOptionSpec<String> hostOpt =
+                parser.accepts("host", "Bisq node hostname or IP")
+                        .withRequiredArg()
+                        .defaultsTo("localhost");
+
+        ArgumentAcceptingOptionSpec<Integer> portOpt =
+                parser.accepts("port", "Bisq node RPC port")
+                        .withRequiredArg()
+                        .ofType(Integer.class)
+                        .defaultsTo(9998);
+
+        ArgumentAcceptingOptionSpec<String> authOpt =
+                parser.accepts("auth", "Bisq node RPC authentication token")
+                        .withRequiredArg();
+
+        OptionSet options = parser.parse(args);
+
+        if (options.has(helpOpt)) {
+            out.println("Bisq RPC Client v0.1.0");
+            out.println();
+            out.println("Usage: bisq-cli [options] <command>");
+            out.println();
+            parser.printHelpOn(out);
+            out.println();
+            out.println("Command           Descripiton");
+            out.println("-------           -----------");
+            out.println("getversion        Get Bisq node version");
+            out.println("getbalance        Get Bisq node wallet balance");
+            out.println();
+            exit(EXIT_SUCCESS);
         }
-    }
 
-    /**
-     * Construct client for accessing server using the existing channel.
-     */
-    private BisqCliMain(ManagedChannel channel, String[] args) {
-        this.channel = channel;
-        this.config = new CliConfig(args);
-        this.parser = new CommandParser(config);
-        this.rpcCommand = new RpcCommand(channel, parser);
-    }
+        String host = options.valueOf(hostOpt);
+        int port = options.valueOf(portOpt);
 
-    private String runCommand() {
-        if (parser.getCmdToken().isPresent()) {
-            final String cmdToken = parser.getCmdToken().get();
-            final String result;
-            switch (cmdToken) {
-                case HELP:
-                    CliConfig.printHelp();
-                    exit(EXIT_SUCCESS);
-                case GETBALANCE:
-                    long satoshis = rpcCommand.getBalance();
-                    result = satoshis == -1 ? "Server initializing..." : rpcCommand.prettyBalance.apply(satoshis);
-                    break;
-                case GETVERSION:
-                    result = rpcCommand.getVersion();
-                    break;
-                case STOPSERVER:
-                    rpcCommand.stopServer();
-                    result = "Server stopped";
-                    break;
-                default:
-                    result = format("Unknown command '%s'", cmdToken);
-            }
-            return result;
-        } else {
-            CliConfig.printHelp();
+        String authToken = options.valueOf(authOpt);
+        if (authToken == null) {
+            err.println("error: Authentication token must not be null");
             exit(EXIT_FAILURE);
-            return null;
         }
+
+        @SuppressWarnings("unchecked")
+        List<String> nonOptionArgs = (List<String>) options.nonOptionArguments();
+        if (nonOptionArgs.isEmpty()) {
+            err.println("error: No RPC command specified");
+            exit(EXIT_FAILURE);
+        }
+
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+        BisqCallCredentials credentials = new BisqCallCredentials(authToken);
+
+        String command = nonOptionArgs.get(0);
+
+        if ("getversion".equals(command)) {
+            GetVersionRequest request = GetVersionRequest.newBuilder().build();
+            GetVersionGrpc.GetVersionBlockingStub getVersionStub =
+                    GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+            out.println(getVersionStub.getVersion(request).getVersion());
+            shutdown(channel);
+            exit(EXIT_SUCCESS);
+        }
+
+        if ("getbalance".equals(command)) {
+            GetBalanceGrpc.GetBalanceBlockingStub getBalanceStub =
+                    GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+            GetBalanceRequest request = GetBalanceRequest.newBuilder().build();
+            long satoshis = getBalanceStub.getBalance(request).getBalance();
+            out.println(satoshis == -1 ? "Server initializing..." : formatSatoshis(satoshis));
+            shutdown(channel);
+            exit(EXIT_SUCCESS);
+        }
+
+        err.printf("error: unknown rpc command '%s'\n", command);
+        exit(EXIT_FAILURE);
     }
 
-    private void shutdown() throws InterruptedException {
-        channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
-        exit(EXIT_SUCCESS);
+    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+    private static String formatSatoshis(long satoshis) {
+        DecimalFormat btcFormat = new DecimalFormat("###,##0.00000000");
+        BigDecimal satoshiDivisor = new BigDecimal(100000000);
+        return btcFormat.format(BigDecimal.valueOf(satoshis).divide(satoshiDivisor));
+    }
+
+    private static void shutdown(ManagedChannel channel) {
+        try {
+            channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
     }
 }
