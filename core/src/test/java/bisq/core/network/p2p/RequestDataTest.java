@@ -175,6 +175,39 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         Assert.assertTrue("Bisq Version does not match formatting! x.y.z vs. " + Version.VERSION, Version.VERSION.matches("^[0-9]\\.[0-9]\\.[0-9]$"));
     }
 
+    /**
+     * TEST CASE: test what happens if an incoming "special key" is a future bisq version
+     *
+     * USE CASE:
+     * A Bisq client Alice of version x asks a Bisq client Bob of version x-1 for data.
+     * The "special" key incoming to Bob describes its future. A real-world example is an
+     * outdated seednode getting asked by an up-to-date client.
+     *
+     * RESULT
+     * send anything new since the seednode's newest data bucket - ie. all live data. This
+     * will result in duplicates arriving at the client but
+     * <ul><li>we took care of that already</li>
+     * <li>is a sane way of reacting to a newer client</li></ul>
+     */
+    @Test
+    public void futureSpecialKey() throws IOException {
+        // setup scenario
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object2, object3);
+
+        // craft a PreliminaryGetDataRequest as a query to get a GetDataResponse
+        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
+        PreliminaryGetDataRequest query = new PreliminaryGetDataRequest(0, new HashSet<>(Arrays.asList(getSpecialKey(getVersion(0)).getHash())));
+        Set<PersistableNetworkPayload> result = DUT.buildGetDataResponse(query, 100000, null, null, null).getPersistableNetworkPayloadSet();
+
+        // check result
+        // - check total number of elements
+        Assert.assertEquals(2, result.size());
+        // - check keys
+        Assert.assertFalse(result.contains(object1));
+        Assert.assertTrue(result.contains(object2));
+        Assert.assertTrue(result.contains(object3));
+    }
 
     /////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////// Utils /////////////////////////////////////
