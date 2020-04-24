@@ -58,19 +58,21 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
     private static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
-    static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = Coin.parseCoin("0.0025");
+    public static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = Coin.parseCoin("0.0025");
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
     private final User user;
 
+    @Getter
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
     private final FilterManager filterManager;
 
@@ -205,11 +207,13 @@ public class SignedWitnessService {
         signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey.getEncoded(), new Date().getTime());
     }
 
+    // Arbitrators sign with EC key
     public String signAccountAgeWitness(AccountAgeWitness accountAgeWitness,
                                         ECKey key,
+                                        byte[] peersPubKey,
                                         long time) {
-        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, key,
-                ownerPubKey(accountAgeWitness), time);
+        var witnessPubKey = peersPubKey == null ? ownerPubKey(accountAgeWitness) : peersPubKey;
+        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, key, witnessPubKey, time);
     }
 
     // Arbitrators sign with EC key
@@ -327,6 +331,13 @@ public class SignedWitnessService {
         return signedWitnessMap.values().stream()
                 .filter(e -> !e.isSignedByArbitrator())
                 .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<SignedWitness> getOrphanSignedWitnessSet() {
+        return signedWitnessMap.values().stream()
+                .filter(witness -> getSignedWitnessSetByOwnerPubKey(witness.getSignerPubKey(), new Stack<>()).isEmpty())
+                .filter(witness -> witness.getVerificationMethod() != SignedWitness.VerificationMethod.ARBITRATOR)
                 .collect(Collectors.toSet());
     }
 

@@ -56,15 +56,19 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -451,5 +455,12 @@ public class Utilities {
             result = result << 8 | aByte & 0xff;
         }
         return result;
+    }
+
+    // Helper to filter unique elements by key
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor)
+    {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 }

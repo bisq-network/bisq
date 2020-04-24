@@ -17,6 +17,7 @@
 
 package bisq.core.account.witness;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
@@ -66,12 +67,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -630,9 +637,16 @@ public class AccountAgeWitnessService {
     }
 
     public String arbitratorSignAccountAgeWitness(AccountAgeWitness accountAgeWitness,
-                                                ECKey key,
-                                                long time) {
-        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, time);
+                                                  ECKey key,
+                                                  long time) {
+        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, null, time);
+    }
+
+    public String arbitratorSignAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+                                                  ECKey key,
+                                                  byte[] tradersPubKey,
+                                                  long time) {
+        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, tradersPubKey,time);
     }
 
     public void traderSignPeersAccountAgeWitness(Trade trade) {
@@ -778,6 +792,35 @@ public class AccountAgeWitnessService {
                     return SignState.UNSIGNED.addHash(hash);
             }
         }
+    }
+
+    public Set<AccountAgeWitness> getOrphanSignedWitnesses() {
+        var orphans = signedWitnessService.getOrphanSignedWitnessSet().stream()
+                .map(signedWitness -> getWitnessByHash(signedWitness.getAccountAgeWitnessHash()).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        var orphanSigners = signedWitnessService.getOrphanSignedWitnessSet().stream()
+                .filter(Utilities.distinctByKey(w -> Utilities.bytesAsHexString(w.getSignerPubKey())))
+                .collect(Collectors.toSet());
+        var orphanAEW = signedWitnessService.getOrphanSignedWitnessSet();
+        log.debug("Orphaned signed account age witnesses:");
+        orphanSigners.forEach(w -> {
+            log.debug("{}: {}", w.getVerificationMethod().toString(),
+                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getSignerPubKey())));
+            logChild(w, "  ", new HashSet<>());
+        });
+        return orphans;
+    }
+
+    private void logChild(SignedWitness sigWit, String initString, Set<SignedWitness> excluded) {
+        var allSig = signedWitnessService.getSignedWitnessMap();
+        log.debug("{}{}", initString, Utilities.bytesAsHexString(sigWit.getAccountAgeWitnessHash()));
+        allSig.values().forEach(w -> {
+            if (Arrays.equals(w.getSignerPubKey(), sigWit.getWitnessOwnerPubKey()) && !excluded.contains(w)) {
+                excluded.add(sigWit);
+                logChild(w, initString + "  ", excluded);
+            }
+        });
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

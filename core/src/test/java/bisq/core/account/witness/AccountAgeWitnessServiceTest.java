@@ -37,6 +37,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
@@ -53,9 +54,11 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -81,12 +84,25 @@ public class AccountAgeWitnessServiceTest {
     private AccountAgeWitnessService service;
     private ChargeBackRisk chargeBackRisk;
     private FilterManager filterManager;
+    private File dir1;
+    private File dir2;
+    private File dir3;
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
+        KeyRing keyRing = mock(KeyRing.class);
+        setupService(keyRing);
+        keypair = Sig.generateKeyPair();
+        publicKey = keypair.getPublic();
+        // Setup temp storage dir
+        dir1 = makeDir("temp_tests1");
+        dir2 = makeDir("temp_tests1");
+        dir3 = makeDir("temp_tests1");
+    }
+
+    private void setupService(KeyRing keyRing) {
         chargeBackRisk = mock(ChargeBackRisk.class);
         AppendOnlyDataStoreService dataStoreService = mock(AppendOnlyDataStoreService.class);
-        KeyRing keyRing = mock(KeyRing.class);
         P2PService p2pService = mock(P2PService.class);
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
@@ -94,8 +110,13 @@ public class AccountAgeWitnessServiceTest {
         filterManager = mock(FilterManager.class);
         signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterManager);
         service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, filterManager);
-        keypair = Sig.generateKeyPair();
-        publicKey = keypair.getPublic();
+    }
+
+    private File makeDir(String name) throws IOException {
+        var dir = File.createTempFile(name, "");
+        dir.delete();
+        dir.mkdir();
+        return dir;
     }
 
     @After
@@ -105,21 +126,21 @@ public class AccountAgeWitnessServiceTest {
 
     @Ignore
     @Test
-    public void testIsTradeDateAfterReleaseDate() throws CryptoException {
-        Date ageWitnessReleaseDate = new GregorianCalendar(2017, 9, 23).getTime();
-        Date tradeDate = new GregorianCalendar(2017, 10, 1).getTime();
+    public void testIsTradeDateAfterReleaseDate() {
+        Date ageWitnessReleaseDate = new GregorianCalendar(2017, Calendar.OCTOBER, 23).getTime();
+        Date tradeDate = new GregorianCalendar(2017, Calendar.NOVEMBER, 1).getTime();
         assertTrue(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
         }));
-        tradeDate = new GregorianCalendar(2017, 9, 23).getTime();
+        tradeDate = new GregorianCalendar(2017, Calendar.OCTOBER, 23).getTime();
         assertTrue(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
         }));
-        tradeDate = new GregorianCalendar(2017, 9, 22, 0, 0, 1).getTime();
+        tradeDate = new GregorianCalendar(2017, Calendar.OCTOBER, 22, 0, 0, 1).getTime();
         assertTrue(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
         }));
-        tradeDate = new GregorianCalendar(2017, 9, 22).getTime();
+        tradeDate = new GregorianCalendar(2017, Calendar.OCTOBER, 22).getTime();
         assertFalse(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
         }));
-        tradeDate = new GregorianCalendar(2017, 9, 21).getTime();
+        tradeDate = new GregorianCalendar(2017, Calendar.OCTOBER, 21).getTime();
         assertFalse(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
         }));
     }
@@ -140,15 +161,7 @@ public class AccountAgeWitnessServiceTest {
     }
 
     @Test
-    public void testArbitratorSignWitness() throws IOException {
-        // Setup temp storage dir
-        File dir1 = File.createTempFile("temp_tests1", "");
-        dir1.delete();
-        dir1.mkdir();
-        File dir2 = File.createTempFile("temp_tests1", "");
-        dir2.delete();
-        dir2.mkdir();
-
+    public void testArbitratorSignWitness() {
         KeyRing buyerKeyRing = new KeyRing(new KeyStorage(dir1));
         KeyRing sellerKeyRing = new KeyRing(new KeyStorage(dir2));
 
@@ -238,13 +251,110 @@ public class AccountAgeWitnessServiceTest {
                 buyerPubKeyRing.getSignaturePubKeyBytes()).stream()
                 .findFirst()
                 .orElse(null);
+        assert foundBuyerSignedWitness != null;
         assertEquals(Utilities.bytesAsHexString(foundBuyerSignedWitness.getAccountAgeWitnessHash()),
                 Utilities.bytesAsHexString(buyerAccountAgeWitness.getHash()));
         SignedWitness foundSellerSignedWitness = signedWitnessService.getSignedWitnessSetByOwnerPubKey(
                 sellerPubKeyRing.getSignaturePubKeyBytes()).stream()
                 .findFirst()
                 .orElse(null);
+        assert foundSellerSignedWitness != null;
         assertEquals(Utilities.bytesAsHexString(foundSellerSignedWitness.getAccountAgeWitnessHash()),
                 Utilities.bytesAsHexString(sellerAccountAgeWitness.getHash()));
     }
+
+    // Create a tree of signed witnesses Arb -(SWA)-> aew1 -(SW1)-> aew2 -(SW2)-> aew3
+    // Delete SWA signature, none of the account age witnesses are considered signed
+    // Sign a dummy AccountAgeWitness using the signerPubkey from SW1; aew2 and aew3 are not considered signed. The
+    // lost SignedWitness isn't possible to recover so aew1 is still not signed, but it's pubkey is a signer.
+    @Test
+    public void testArbitratorSignDummyWitness() throws CryptoException {
+        ECKey arbitratorKey = new ECKey();
+        // Init 2 user accounts
+        var user1KeyRing = new KeyRing(new KeyStorage(dir1));
+        var user2KeyRing = new KeyRing(new KeyStorage(dir2));
+        var user3KeyRing = new KeyRing(new KeyStorage(dir3));
+        var pubKeyRing1 = user1KeyRing.getPubKeyRing();
+        var pubKeyRing2 = user2KeyRing.getPubKeyRing();
+        var pubKeyRing3 = user3KeyRing.getPubKeyRing();
+        var account1 = new SepaAccountPayload(PaymentMethod.SEPA_ID, "1", CountryUtil.getAllSepaCountries());
+        var account2 = new SepaAccountPayload(PaymentMethod.SEPA_ID, "2", CountryUtil.getAllSepaCountries());
+        var account3 = new SepaAccountPayload(PaymentMethod.SEPA_ID, "3", CountryUtil.getAllSepaCountries());
+        var aew1 = service.getNewWitness(account1, pubKeyRing1);
+        var aew2 = service.getNewWitness(account2, pubKeyRing2);
+        var aew3 = service.getNewWitness(account3, pubKeyRing3);
+        // Backdate witness1 70 days
+        aew1 = new AccountAgeWitness(aew1.getHash(), new Date().getTime() - TimeUnit.DAYS.toMillis(70));
+        aew2 = new AccountAgeWitness(aew2.getHash(), new Date().getTime() - TimeUnit.DAYS.toMillis(35));
+        aew3 = new AccountAgeWitness(aew3.getHash(), new Date().getTime() - TimeUnit.DAYS.toMillis(1));
+        service.addToMap(aew1);
+        service.addToMap(aew2);
+        service.addToMap(aew3);
+
+        // Test as user1. It's still possible to sign as arbitrator since the ECKey is passed as an argument.
+        setupService(user1KeyRing);
+
+        // Arbitrator signs user1
+        service.arbitratorSignAccountAgeWitness(aew1, arbitratorKey, pubKeyRing1.getSignaturePubKeyBytes(),
+                aew1.getDate());
+        // user1 signs user2
+        signAccountAgeWitness(aew2, pubKeyRing2.getSignaturePubKey(), aew2.getDate(), user1KeyRing);
+        // user2 signs user3
+        signAccountAgeWitness(aew3, pubKeyRing3.getSignaturePubKey(), aew3.getDate(), user2KeyRing);
+        signedWitnessService.signAccountAgeWitness(SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING, aew2,
+                pubKeyRing2.getSignaturePubKey());
+        assertTrue(service.accountIsSigner(aew1));
+        assertTrue(service.accountIsSigner(aew2));
+        assertFalse(service.accountIsSigner(aew3));
+        assertTrue(signedWitnessService.isSignedAccountAgeWitness(aew3));
+
+        // Remove SignedWitness signed by arbitrator
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        var signedWitnessArb = signedWitnessService.getSignedWitnessMap().values().stream()
+                .filter(sw -> sw.getVerificationMethod() == SignedWitness.VerificationMethod.ARBITRATOR)
+                .findAny()
+                .get();
+        signedWitnessService.getSignedWitnessMap().remove(signedWitnessArb.getHashAsByteArray());
+        assertEquals(signedWitnessService.getSignedWitnessMap().size(), 2);
+
+        // Check that no account age witness is a signer
+        assertFalse(service.accountIsSigner(aew1));
+        assertFalse(service.accountIsSigner(aew2));
+        assertFalse(service.accountIsSigner(aew3));
+        assertFalse(signedWitnessService.isSignedAccountAgeWitness(aew2));
+
+        // Sign dummy AccountAgeWitness using signer key from SW_1
+        assertEquals(signedWitnessService.getOrphanSignedWitnessSet().size(), 1);
+
+        // TODO: move this to accountagewitnessservice
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        var orphanedSignedWitness = signedWitnessService.getOrphanSignedWitnessSet().stream().findAny().get();
+        var dummyAccountAgeWitnessHash = Hash.getRipemd160hash(orphanedSignedWitness.getSignerPubKey());
+        var dummyAEW = new AccountAgeWitness(dummyAccountAgeWitnessHash,
+                orphanedSignedWitness.getDate() -
+                        (TimeUnit.DAYS.toMillis(SignedWitnessService.SIGNER_AGE_DAYS + 1)));
+        service.arbitratorSignAccountAgeWitness(
+                dummyAEW, arbitratorKey, orphanedSignedWitness.getSignerPubKey(), dummyAEW.getDate());
+
+        assertFalse(service.accountIsSigner(aew1));
+        assertTrue(service.accountIsSigner(aew2));
+        assertFalse(service.accountIsSigner(aew3));
+        assertTrue(signedWitnessService.isSignedAccountAgeWitness(aew2));
+    }
+
+    private void signAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+                                       PublicKey witnessOwnerPubKey,
+                                       long time,
+                                       KeyRing signerKeyRing) throws CryptoException {
+        byte[] signature = Sig.sign(signerKeyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
+        SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.TRADE,
+                accountAgeWitness.getHash(),
+                signature,
+                signerKeyRing.getSignatureKeyPair().getPublic().getEncoded(),
+                witnessOwnerPubKey.getEncoded(),
+                time,
+                SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING.value);
+        signedWitnessService.getSignedWitnessMap().putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
+    }
+
 }
