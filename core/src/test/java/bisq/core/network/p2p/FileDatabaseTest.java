@@ -54,7 +54,7 @@ import org.junit.Test;
 public class FileDatabaseTest extends FileDatabaseTestUtils {
 
     /**
-     * TEST CASE: check if test fixture databases are in place and correct
+     * TEST CASE: check if test fixture databases are in place and correct<br><br>
      *
      * This does not test any business logic, just makes sure the test setup is correct.
      */
@@ -77,15 +77,15 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test migration scenario from old database file model to new one
+     * TEST CASE: test migration scenario from old database file model to new one<br><br>
      *
      * USE CASE:
      * We migrate from just having one working-dir database file to having multiple. In
      * detail, the user starts with having one database file in her working directory and
      * one in her resources. After the update, there is still one database in her resources
-     * but it is labelled differently.
+     * but it is labelled differently.<br><br>
      *
-     * RESULT
+     * RESULT:
      * There are 2 data stores in her working directory, one holding the live database,
      * the other one being the exact and readonly copy of the database in resources. Plus,
      * the 2 data stores do not share any set of objects.
@@ -112,14 +112,14 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test Bisq software update scenario
+     * TEST CASE: test Bisq software update scenario<br><br>
      *
      * USE CASE:
      * Given a newly released Bisq version x, a new differential database is added to
      * the resources. The new database has to be copied to the working directory and the
-     * live database has to be stripped of the entries found in the new database.
+     * live database has to be stripped of the entries found in the new database.<br><br>
      *
-     * RESULT
+     * RESULT:
      * There are n + 1 data stores in the users working directory, one holding the live
      * database, the other 2 being the exact and readonly copy of the data stores in
      * resources. Plus, the data stores in the working dir do not share any set of objects.
@@ -148,13 +148,13 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test clean install of Bisq software app
+     * TEST CASE: test clean install of Bisq software app<br><br>
      *
      * USE CASE:
      * A user has a fresh install of Bisq. Ie. there are two database files in resources
-     * and none in the working directory.
+     * and none in the working directory.<br><br>
      *
-     * RESULT
+     * RESULT:
      * After startup, there should be 3 data stores in the working directory.
      */
     @Test
@@ -179,14 +179,14 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test if getMap still return all elements
+     * TEST CASE: test if getMap still return all elements<br><br>
      *
      * USE CASE:
      * The app needs all data for <insert your reason here>. Currently, this is the most
      * encountered use case. Future plans, however, aim to reduce the need for this use
-     * case.
+     * case.<br><br>
      *
-     * RESULT
+     * RESULT:
      * getMap returns all elements stored in the various database files.
      */
     @Test
@@ -209,13 +209,13 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test if getMap filtering works
+     * TEST CASE: test if getMap filtering works<br><br>
      *
      * USE CASE:
      * After introducing the database snapshot functionality, the app only requests objects
-     * which it got since the last database snapshot.
+     * which it got since the last database snapshot.<br><br>
      *
-     * RESULT
+     * RESULT:
      * getMap(since x) returns all elements added after snapshot x
      */
     @Test
@@ -242,13 +242,13 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test if adding new data only adds to live database
+     * TEST CASE: test if adding new data only adds to live database<br><br>
      *
      * USE CASE:
      * Whenever new objects come in, they are going to be persisted to disk so that
-     * the local database is kept in sync with the distributed database.
+     * the local database is kept in sync with the distributed database.<br><br>
      *
-     * RESULT
+     * RESULT:
      * map.put should only add data to the live database. Other data stores are read-only!
      */
     @Test
@@ -275,13 +275,13 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
 
     /**
      * TEST CASE: test if only new data is added given a set of data we partially already
-     * know.
+     * know.<br><br>
      *
      * USE CASE:
      * Given a Bisq client version x asks a seed node version x-1 for data, it might receive
-     * data it already has. We do not want to add duplicates to our local database.
+     * data it already has. We do not want to add duplicates to our local database.<br><br>
      *
-     * RESULT
+     * RESULT:
      * Check for duplicates
      */
     @Test

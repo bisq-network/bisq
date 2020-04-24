@@ -42,19 +42,20 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for migrating to and operating a multi-file file-based data store system
+ * Tests for the "reduced" initial query size feature. See <a href="https://github.com/bisq-network/projects/issues/25">
+ *     project description</a> on github.
  */
 public class RequestDataTest extends FileDatabaseTestUtils {
 
     /**
-     * TEST CASE: test the optimized query creation
+     * TEST CASE: test the optimized query creation<br><br>
      *
      * USE CASE:
      * In order to save on data to be transmitted, we summarize data history by reporting
      * our bisq version as a "special key". The queried peers then know which data we
-     * already have.
+     * already have.<br><br>
      *
-     * RESULT
+     * RESULT:
      * Test whether our client creates the correct query.
      */
     @Test
@@ -64,7 +65,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object2);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object3);
 
-        // simulate bisq startup
+        // create a PreliminaryGetDataRequest as a Device Under Test
         P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
         Set<P2PDataStorage.ByteArray> result = DUT.buildPreliminaryGetDataRequest(0).getExcludedKeys().stream().map(bytes -> new P2PDataStorage.ByteArray(bytes)).collect(Collectors.toSet());
 
@@ -80,14 +81,14 @@ public class RequestDataTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test the optimized query evaluation
+     * TEST CASE: test the optimized query evaluation<br><br>
      *
      * USE CASE:
      * In order to save on data to be transmitted, we summarize data history by reporting
      * our bisq version as a "special key". The queried peers then know which data we
-     * already have.
+     * already have.<br><br>
      *
-     * RESULT
+     * RESULT:
      * Given the new query, see if another peer would respond correctly
      */
     @Test
@@ -97,7 +98,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object2);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object3);
 
-        // simulate bisq startup
+        // craft a PreliminaryGetDataRequest as a query to get a GetDataResponse
         P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
         PreliminaryGetDataRequest query = new PreliminaryGetDataRequest(0, new HashSet<>(Arrays.asList(getSpecialKey(getVersion(0)).getHash())));
         Set<PersistableNetworkPayload> result = DUT.buildGetDataResponse(query, 100000, null, null, null).getPersistableNetworkPayloadSet();
@@ -124,17 +125,17 @@ public class RequestDataTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: what happens if a faulty key arrives
+     * TEST CASE: what happens if a faulty key arrives<br><br>
      *
      * USE CASE:
      * An Attacker tries to hijack the protocol by sending a incorrect "special key". The
      * system should be resilient against that and thus, recover and fall back to a known
-     * state.
+     * state.<br><br>
      *
-     * RESULT
+     * RESULT:
      * Although it would be nice to have some sort of detection, it is hard to do right.
      * So we just stick to what happened until now, namely, we ignore the special key
-     * and let other size limits do the work.
+     * and let other size limits do the work.<br><br>
      *
      * However, we add an additional test to ensure Bisq version follows a strict pattern.
      */
@@ -147,6 +148,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         // craft a PreliminaryGetDataRequest as a query to get a GetDataResponse
         P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
 
+        // check results
         List<String> faultyKeys = Arrays.asList("1.3.13", "1.13.3", "13.3.3", "a.3.3", "13.a.3", "ä.3.3", Version.VERSION.replace(".", "_"), Version.VERSION.replace(".", ","));
         faultyKeys.forEach(s -> faultySpecialKeyHelper(DUT, s));
     }
@@ -161,13 +163,13 @@ public class RequestDataTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: make sure Bisq follows a strict pattern in release versioning.
+     * TEST CASE: make sure Bisq follows a strict pattern in release versioning.<br><br>
      *
      * USE CASE:
      * Bringing in the timely element we need to make sure Bisq's release versioning stays
-     * true to the pattern it follows now.
+     * true to the pattern it follows now.<br><br>
      *
-     * RESULT
+     * RESULT:
      * If the pattern does not match, we fire!
      */
     @Test
@@ -176,14 +178,14 @@ public class RequestDataTest extends FileDatabaseTestUtils {
     }
 
     /**
-     * TEST CASE: test what happens if an incoming "special key" is a future bisq version
+     * TEST CASE: test what happens if an incoming "special key" is a future bisq version<br><br>
      *
      * USE CASE:
      * A Bisq client Alice of version x asks a Bisq client Bob of version x-1 for data.
      * The "special" key incoming to Bob describes its future. A real-world example is an
-     * outdated seednode getting asked by an up-to-date client.
+     * outdated seednode getting asked by an up-to-date client.<br><br>
      *
-     * RESULT
+     * RESULT:
      * send anything new since the seednode's newest data bucket - ie. all live data. This
      * will result in duplicates arriving at the client but
      * <ul><li>we took care of that already</li>
