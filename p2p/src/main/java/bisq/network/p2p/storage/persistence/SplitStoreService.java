@@ -59,6 +59,10 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
 
     @Override
     protected void put(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
+        // make sure we do not add data that we already have (in a bin of historical data)
+        if (getMap().containsKey(hash))
+            return;
+
         store.getMap().put(hash, payload);
         persist();
     }
@@ -66,6 +70,10 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
     @Override
     protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash,
                                                     PersistableNetworkPayload payload) {
+        // make sure we do not add data that we already have (in a bin of historical data)
+        if (getMap().containsKey(hash))
+            return null;
+
         PersistableNetworkPayload previous = store.getMap().putIfAbsent(hash, payload);
         persist();
         return previous;

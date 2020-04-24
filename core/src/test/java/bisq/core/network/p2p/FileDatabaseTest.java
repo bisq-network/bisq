@@ -272,4 +272,38 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
         // - did the historical data data store grow?
         Assert.assertEquals(1, DUT.getMap().size() - result.size());
     }
+
+    /**
+     * TEST CASE: test if only new data is added given a set of data we partially already
+     * know.
+     *
+     * USE CASE:
+     * Given a Bisq client version x asks a seed node version x-1 for data, it might receive
+     * data it already has. We do not want to add duplicates to our local database.
+     *
+     * RESULT
+     * Check for duplicates
+     */
+    @Test
+    public void putDuplicates() throws IOException {
+        // setup scenario
+        // - create one database containing historical data and a live database
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object1);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object2);
+
+        // simulate Bisq startup
+        AppendOnlyDataStoreService DUT = loadDatabase();
+        // add data
+        // - duplicate data
+        DUT.put(new P2PDataStorage.ByteArray(object1.getHash()), object1);
+        // - legit data
+        DUT.put(new P2PDataStorage.ByteArray(object3.getHash()), object3);
+
+        // check result
+        // - did the live database grow?
+        Collection<PersistableNetworkPayload> result = DUT.getMap("since " + getVersion(0)).values();
+        Assert.assertEquals(2, result.size());
+        Assert.assertTrue(result.contains(object2));
+        Assert.assertTrue(result.contains(object3));
+    }
 }
