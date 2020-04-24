@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
+import bisq.common.app.Version;
 import bisq.common.storage.Storage;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -119,6 +121,58 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         Assert.assertFalse(result.contains(object1));
         Assert.assertTrue(result.contains(object2));
         Assert.assertFalse(result.contains(object3));
+    }
+
+    /**
+     * TEST CASE: what happens if a faulty key arrives
+     *
+     * USE CASE:
+     * An Attacker tries to hijack the protocol by sending a incorrect "special key". The
+     * system should be resilient against that and thus, recover and fall back to a known
+     * state.
+     *
+     * RESULT
+     * Although it would be nice to have some sort of detection, it is hard to do right.
+     * So we just stick to what happened until now, namely, we ignore the special key
+     * and let other size limits do the work.
+     *
+     * However, we add an additional test to ensure Bisq version follows a strict pattern.
+     */
+    @Test
+    public void faultySpecialKey() throws IOException {
+        // setup scenario
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object1);
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object2);
+
+        // craft a PreliminaryGetDataRequest as a query to get a GetDataResponse
+        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
+
+        List<String> faultyKeys = Arrays.asList("1.3.13", "1.13.3", "13.3.3", "a.3.3", "13.a.3", "ä.3.3", Version.VERSION.replace(".", "_"), Version.VERSION.replace(".", ","));
+        faultyKeys.forEach(s -> faultySpecialKeyHelper(DUT, s));
+    }
+
+    private void faultySpecialKeyHelper(P2PDataStorage DUT, String key) {
+        PreliminaryGetDataRequest query = new PreliminaryGetDataRequest(0, new HashSet<>(Arrays.asList(getSpecialKey(key).getHash())));
+
+        Set<PersistableNetworkPayload> result = DUT.buildGetDataResponse(query, 100000, null, null, null).getPersistableNetworkPayloadSet();
+        Assert.assertEquals(key + " got accepted", 2, result.size());
+        Assert.assertTrue(key + " got accepted", result.contains(object1));
+        Assert.assertTrue(key + " got accepted", result.contains(object2));
+    }
+
+    /**
+     * TEST CASE: make sure Bisq follows a strict pattern in release versioning.
+     *
+     * USE CASE:
+     * Bringing in the timely element we need to make sure Bisq's release versioning stays
+     * true to the pattern it follows now.
+     *
+     * RESULT
+     * If the pattern does not match, we fire!
+     */
+    @Test
+    public void testBisqVersionFormat() {
+        Assert.assertTrue("Bisq Version does not match formatting! x.y.z vs. " + Version.VERSION, Version.VERSION.matches("^[0-9]\\.[0-9]\\.[0-9]$"));
     }
 
 

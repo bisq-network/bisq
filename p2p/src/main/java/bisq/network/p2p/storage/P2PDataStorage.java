@@ -216,7 +216,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     private String containsSpecialKey(Set<P2PDataStorage.ByteArray> collection) {
-        Optional<String> result = collection.stream().map(byteArray -> new String(byteArray.bytes).trim()).filter(s -> s.matches("^[0-9]+\\.[0-9]+\\.[0-9]+")).findFirst();
+        Optional<String> result = collection.stream().map(byteArray -> new String(byteArray.bytes).trim()).filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$")).findFirst();
         if (result.isPresent())
             return result.get();
         else
