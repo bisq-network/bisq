@@ -10,23 +10,25 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Status.UNAUTHENTICATED;
 
 /**
- * Simple credentials implementation for sending cleartext username:password token via rpc call headers.
+ * Sets the {@value AUTH_HEADER_KEY} rpc call header to a given value.
  */
-public class BisqCallCredentials extends CallCredentials {
+public class AuthHeaderCallCredentials extends CallCredentials {
 
-    private final String apiToken;
+    public static final String AUTH_HEADER_KEY = "authorization";
 
-    public BisqCallCredentials(String apiToken) {
-        this.apiToken = apiToken;
+    private final String authHeaderValue;
+
+    public AuthHeaderCallCredentials(String authHeaderValue) {
+        this.authHeaderValue = authHeaderValue;
     }
 
     @Override
     public void applyRequestMetadata(RequestInfo requestInfo, Executor appExecutor, MetadataApplier metadataApplier) {
         appExecutor.execute(() -> {
             try {
-                Metadata headers = new Metadata();
-                Key<String> apiTokenKey = Key.of("bisq-api-token", ASCII_STRING_MARSHALLER);
-                headers.put(apiTokenKey, apiToken);
+                var headers = new Metadata();
+                var authorizationKey = Key.of(AUTH_HEADER_KEY, ASCII_STRING_MARSHALLER);
+                headers.put(authorizationKey, authHeaderValue);
                 metadataApplier.apply(headers);
             } catch (Throwable ex) {
                 metadataApplier.fail(UNAUTHENTICATED.withCause(ex));

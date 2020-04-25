@@ -61,12 +61,12 @@ public class BisqCliMain {
                 .withRequiredArg()
                 .defaultsTo("localhost");
 
-        var portOpt = parser.accepts("port", "Bisq node RPC port")
+        var portOpt = parser.accepts("port", "Bisq node rpc port")
                 .withRequiredArg()
                 .ofType(Integer.class)
                 .defaultsTo(9998);
 
-        var authOpt = parser.accepts("auth", "Bisq node RPC authentication token")
+        var passwordOpt = parser.accepts("password", "Bisq node rpc server password")
                 .withRequiredArg();
 
         var options = parser.parse(args);
@@ -89,9 +89,9 @@ public class BisqCliMain {
         var host = options.valueOf(hostOpt);
         var port = options.valueOf(portOpt);
 
-        var authToken = options.valueOf(authOpt);
-        if (authToken == null) {
-            err.println("error: rpc authentication token must not be null");
+        var password = options.valueOf(passwordOpt);
+        if (password == null) {
+            err.println("error: rpc password must not be null");
             exit(EXIT_FAILURE);
         }
 
@@ -103,7 +103,7 @@ public class BisqCliMain {
         }
 
         var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-        var credentials = new BisqCallCredentials(authToken);
+        var credentials = new AuthHeaderCallCredentials(password);
 
         var command = nonOptionArgs.get(0);
 
