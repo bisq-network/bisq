@@ -25,10 +25,7 @@ import bisq.proto.grpc.GetVersionRequest;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
-import joptsimple.AbstractOptionSpec;
-import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
-import joptsimple.OptionSet;
 
 import java.text.DecimalFormat;
 
@@ -55,28 +52,24 @@ public class BisqCliMain {
     private static final int EXIT_FAILURE = 1;
 
     public static void main(String[] args) throws IOException {
-        OptionParser parser = new OptionParser();
+        var parser = new OptionParser();
 
-        AbstractOptionSpec<Void> helpOpt =
-                parser.accepts("help", "Print this help text")
-                        .forHelp();
+        var helpOpt = parser.accepts("help", "Print this help text")
+                .forHelp();
 
-        ArgumentAcceptingOptionSpec<String> hostOpt =
-                parser.accepts("host", "Bisq node hostname or IP")
-                        .withRequiredArg()
-                        .defaultsTo("localhost");
+        var hostOpt = parser.accepts("host", "Bisq node hostname or IP")
+                .withRequiredArg()
+                .defaultsTo("localhost");
 
-        ArgumentAcceptingOptionSpec<Integer> portOpt =
-                parser.accepts("port", "Bisq node RPC port")
-                        .withRequiredArg()
-                        .ofType(Integer.class)
-                        .defaultsTo(9998);
+        var portOpt = parser.accepts("port", "Bisq node RPC port")
+                .withRequiredArg()
+                .ofType(Integer.class)
+                .defaultsTo(9998);
 
-        ArgumentAcceptingOptionSpec<String> authOpt =
-                parser.accepts("auth", "Bisq node RPC authentication token")
-                        .withRequiredArg();
+        var authOpt = parser.accepts("auth", "Bisq node RPC authentication token")
+                .withRequiredArg();
 
-        OptionSet options = parser.parse(args);
+        var options = parser.parse(args);
 
         if (options.has(helpOpt)) {
             out.println("Bisq RPC Client");
@@ -93,47 +86,46 @@ public class BisqCliMain {
             exit(EXIT_SUCCESS);
         }
 
-        String host = options.valueOf(hostOpt);
-        int port = options.valueOf(portOpt);
+        var host = options.valueOf(hostOpt);
+        var port = options.valueOf(portOpt);
 
-        String authToken = options.valueOf(authOpt);
+        var authToken = options.valueOf(authOpt);
         if (authToken == null) {
             err.println("error: rpc authentication token must not be null");
             exit(EXIT_FAILURE);
         }
 
         @SuppressWarnings("unchecked")
-        List<String> nonOptionArgs = (List<String>) options.nonOptionArguments();
+        var nonOptionArgs = (List<String>) options.nonOptionArguments();
         if (nonOptionArgs.isEmpty()) {
             err.println("error: no rpc command specified");
             exit(EXIT_FAILURE);
         }
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-        BisqCallCredentials credentials = new BisqCallCredentials(authToken);
+        var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+        var credentials = new BisqCallCredentials(authToken);
 
-        String command = nonOptionArgs.get(0);
+        var command = nonOptionArgs.get(0);
 
         if ("getversion".equals(command)) {
-            GetVersionRequest request = GetVersionRequest.newBuilder().build();
-            GetVersionGrpc.GetVersionBlockingStub getVersionStub =
-                    GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-            out.println(getVersionStub.getVersion(request).getVersion());
+            var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+            var request = GetVersionRequest.newBuilder().build();
+            var version = stub.getVersion(request).getVersion();
+            out.println(version);
             shutdown(channel);
             exit(EXIT_SUCCESS);
         }
 
         if ("getbalance".equals(command)) {
-            GetBalanceGrpc.GetBalanceBlockingStub getBalanceStub =
-                    GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-            GetBalanceRequest request = GetBalanceRequest.newBuilder().build();
-            long satoshis = getBalanceStub.getBalance(request).getBalance();
-            if (satoshis == -1) {
+            var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+            var request = GetBalanceRequest.newBuilder().build();
+            var balance = stub.getBalance(request).getBalance();
+            if (balance == -1) {
                 err.println("Server initializing...");
                 shutdown(channel);
                 exit(EXIT_FAILURE);
             }
-            out.println(formatBalance(satoshis));
+            out.println(formatBalance(balance));
             shutdown(channel);
             exit(EXIT_SUCCESS);
         }
@@ -144,8 +136,8 @@ public class BisqCliMain {
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     private static String formatBalance(long satoshis) {
-        DecimalFormat btcFormat = new DecimalFormat("###,##0.00000000");
-        BigDecimal satoshiDivisor = new BigDecimal(100000000);
+        var btcFormat = new DecimalFormat("###,##0.00000000");
+        var satoshiDivisor = new BigDecimal(100000000);
         return btcFormat.format(BigDecimal.valueOf(satoshis).divide(satoshiDivisor));
     }
 
