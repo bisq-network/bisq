@@ -43,7 +43,6 @@ import bisq.proto.grpc.PlaceOfferGrpc;
 import bisq.proto.grpc.PlaceOfferReply;
 import bisq.proto.grpc.PlaceOfferRequest;
 
-import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
@@ -57,12 +56,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqGrpcServer {
 
-    private Server server;
-
-    private static Config config;
-    private static CoreApi coreApi;
-
     static class GetVersionImpl extends GetVersionGrpc.GetVersionImplBase {
+        private final CoreApi coreApi;
+
+        public GetVersionImpl(CoreApi coreApi) {
+            this.coreApi = coreApi;
+        }
+
         @Override
         public void getVersion(GetVersionRequest req, StreamObserver<GetVersionReply> responseObserver) {
             GetVersionReply reply = GetVersionReply.newBuilder().setVersion(coreApi.getVersion()).build();
@@ -72,6 +72,12 @@ public class BisqGrpcServer {
     }
 
     static class GetBalanceImpl extends GetBalanceGrpc.GetBalanceImplBase {
+        private final CoreApi coreApi;
+
+        public GetBalanceImpl(CoreApi coreApi) {
+            this.coreApi = coreApi;
+        }
+
         @Override
         public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
             GetBalanceReply reply = GetBalanceReply.newBuilder().setBalance(coreApi.getAvailableBalance()).build();
@@ -81,6 +87,12 @@ public class BisqGrpcServer {
     }
 
     static class GetTradeStatisticsImpl extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
+        private final CoreApi coreApi;
+
+        public GetTradeStatisticsImpl(CoreApi coreApi) {
+            this.coreApi = coreApi;
+        }
+
         @Override
         public void getTradeStatistics(GetTradeStatisticsRequest req,
                                        StreamObserver<GetTradeStatisticsReply> responseObserver) {
@@ -94,6 +106,12 @@ public class BisqGrpcServer {
     }
 
     static class GetOffersImpl extends GetOffersGrpc.GetOffersImplBase {
+        private final CoreApi coreApi;
+
+        public GetOffersImpl(CoreApi coreApi) {
+            this.coreApi = coreApi;
+        }
+
         @Override
         public void getOffers(GetOffersRequest req, StreamObserver<GetOffersReply> responseObserver) {
 
@@ -108,6 +126,12 @@ public class BisqGrpcServer {
     }
 
     static class GetPaymentAccountsImpl extends GetPaymentAccountsGrpc.GetPaymentAccountsImplBase {
+        private final CoreApi coreApi;
+
+        public GetPaymentAccountsImpl(CoreApi coreApi) {
+            this.coreApi = coreApi;
+        }
+
         @Override
         public void getPaymentAccounts(GetPaymentAccountsRequest req,
                                        StreamObserver<GetPaymentAccountsReply> responseObserver) {
@@ -123,6 +147,12 @@ public class BisqGrpcServer {
     }
 
     static class PlaceOfferImpl extends PlaceOfferGrpc.PlaceOfferImplBase {
+        private final CoreApi coreApi;
+
+        public PlaceOfferImpl(CoreApi coreApi) {
+            this.coreApi = coreApi;
+        }
+
         @Override
         public void placeOffer(PlaceOfferRequest req, StreamObserver<PlaceOfferReply> responseObserver) {
             TransactionResultHandler resultHandler = transaction -> {
@@ -145,45 +175,31 @@ public class BisqGrpcServer {
     }
 
     public BisqGrpcServer(Config config, CoreApi coreApi) {
-        BisqGrpcServer.config = config;
-        BisqGrpcServer.coreApi = coreApi;
 
         try {
-            start();
+            // TODO add to options
+            int port = 9998;
+
+            var server = ServerBuilder.forPort(port)
+                    .addService(new GetVersionImpl(coreApi))
+                    .addService(new GetBalanceImpl(coreApi))
+                    .addService(new GetTradeStatisticsImpl(coreApi))
+                    .addService(new GetOffersImpl(coreApi))
+                    .addService(new GetPaymentAccountsImpl(coreApi))
+                    .addService(new PlaceOfferImpl(coreApi))
+                    .intercept(new PasswordAuthInterceptor(config.apiPassword))
+                    .build()
+                    .start();
+
+            log.info("Server started, listening on " + port);
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.error("Shutting down gRPC server");
+                server.shutdown();
+                log.error("Server shut down");
+            }));
 
         } catch (IOException e) {
             log.error(e.toString(), e);
         }
-    }
-
-    public void stop() {
-        if (server != null) {
-            server.shutdown();
-        }
-    }
-
-    private void start() throws IOException {
-        // TODO add to options
-        int port = 9998;
-
-        // Config services
-        server = ServerBuilder.forPort(port)
-                .addService(new GetVersionImpl())
-                .addService(new GetBalanceImpl())
-                .addService(new GetTradeStatisticsImpl())
-                .addService(new GetOffersImpl())
-                .addService(new GetPaymentAccountsImpl())
-                .addService(new PlaceOfferImpl())
-                .intercept(new PasswordAuthInterceptor(config.apiPassword))
-                .build()
-                .start();
-
-        log.info("Server started, listening on " + port);
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            // Use stderr here since the logger may have been reset by its JVM shutdown hook.
-            log.error("Shutting down gRPC server");
-            BisqGrpcServer.this.stop();
-            log.error("Server shut down");
-        }));
     }
 }
