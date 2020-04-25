@@ -11,18 +11,18 @@ import static io.grpc.Status.UNAUTHENTICATED;
 import static java.lang.String.format;
 
 /**
- * Sets the {@value AUTH_HEADER_KEY} rpc call header to a given value.
+ * Sets the {@value PASSWORD_KEY} rpc call header to a given value.
  */
-class AuthHeaderCallCredentials extends CallCredentials {
+class PasswordCallCredentials extends CallCredentials {
 
-    public static final String AUTH_HEADER_KEY = "authorization";
+    public static final String PASSWORD_KEY = "password";
 
-    private final String authHeaderValue;
+    private final String passwordValue;
 
-    public AuthHeaderCallCredentials(String authHeaderValue) {
-        if (authHeaderValue == null)
-            throw new IllegalArgumentException(format("'%s' header value must not be null", AUTH_HEADER_KEY));
-        this.authHeaderValue = authHeaderValue;
+    public PasswordCallCredentials(String passwordValue) {
+        if (passwordValue == null)
+            throw new IllegalArgumentException(format("'%s' header value must not be null", PASSWORD_KEY));
+        this.passwordValue = passwordValue;
     }
 
     @Override
@@ -30,8 +30,8 @@ class AuthHeaderCallCredentials extends CallCredentials {
         appExecutor.execute(() -> {
             try {
                 var headers = new Metadata();
-                var authorizationKey = Key.of(AUTH_HEADER_KEY, ASCII_STRING_MARSHALLER);
-                headers.put(authorizationKey, authHeaderValue);
+                var passwordKey = Key.of(PASSWORD_KEY, ASCII_STRING_MARSHALLER);
+                headers.put(passwordKey, passwordValue);
                 metadataApplier.apply(headers);
             } catch (Throwable ex) {
                 metadataApplier.fail(UNAUTHENTICATED.withCause(ex));

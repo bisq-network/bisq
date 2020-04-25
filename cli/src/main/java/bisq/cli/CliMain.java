@@ -111,7 +111,7 @@ public class CliMain {
             }
 
             var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-            var credentials = new AuthHeaderCallCredentials(password);
+            var credentials = new PasswordCallCredentials(password);
 
             switch (method) {
                 case getversion: {

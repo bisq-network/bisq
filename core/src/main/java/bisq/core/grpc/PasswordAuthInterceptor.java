@@ -15,33 +15,33 @@ import static java.lang.String.format;
 
 /**
  * Authorizes rpc server calls by comparing the value of the caller's
- * {@value AUTH_HEADER_KEY} header to an expected value set at server startup time.
+ * {@value PASSWORD_KEY} header to an expected value set at server startup time.
  *
  * @see bisq.common.config.Config#apiPassword
  */
 @Slf4j
-public class AuthorizationInterceptor implements ServerInterceptor {
+public class PasswordAuthInterceptor implements ServerInterceptor {
 
-    public static final String AUTH_HEADER_KEY = "authorization";
+    public static final String PASSWORD_KEY = "password";
 
-    private final String expectedAuthHeaderValue;
+    private final String expectedPasswordValue;
 
-    public AuthorizationInterceptor(String expectedAuthHeaderValue) {
-        this.expectedAuthHeaderValue = expectedAuthHeaderValue;
+    public PasswordAuthInterceptor(String expectedPasswordValue) {
+        this.expectedPasswordValue = expectedPasswordValue;
     }
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata headers,
                                                                  ServerCallHandler<ReqT, RespT> serverCallHandler) {
-        var actualAuthHeaderValue = headers.get(Key.of(AUTH_HEADER_KEY, ASCII_STRING_MARSHALLER));
+        var actualPasswordValue = headers.get(Key.of(PASSWORD_KEY, ASCII_STRING_MARSHALLER));
 
-        if (actualAuthHeaderValue == null)
+        if (actualPasswordValue == null)
             throw new StatusRuntimeException(UNAUTHENTICATED.withDescription(
-                    format("missing '%s' rpc header value", AUTH_HEADER_KEY)));
+                    format("missing '%s' rpc header value", PASSWORD_KEY)));
 
-        if (!actualAuthHeaderValue.equals(expectedAuthHeaderValue))
+        if (!actualPasswordValue.equals(expectedPasswordValue))
             throw new StatusRuntimeException(UNAUTHENTICATED.withDescription(
-                    format("incorrect '%s' rpc header value", AUTH_HEADER_KEY)));
+                    format("incorrect '%s' rpc header value", PASSWORD_KEY)));
 
         return serverCallHandler.startCall(serverCall, headers);
     }
