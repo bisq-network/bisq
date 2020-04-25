@@ -158,7 +158,7 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.println("Method               Descripiton");
+            stream.println("Method               Description");
             stream.println("-------              -----------");
             stream.println("getversion           Get server version");
             stream.println("getbalance           Get server wallet balance");
