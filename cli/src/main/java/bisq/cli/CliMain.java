@@ -25,6 +25,7 @@ import bisq.proto.grpc.GetVersionRequest;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import joptsimple.OptionException;
 import joptsimple.OptionParser;
 
 import java.text.DecimalFormat;
@@ -69,69 +70,74 @@ public class CliMain {
         var passwordOpt = parser.accepts("password", "Bisq node rpc server password")
                 .withRequiredArg();
 
-        var options = parser.parse(args);
+        try {
+            var options = parser.parse(args);
 
-        if (options.has(helpOpt)) {
-            out.println("Bisq RPC Client");
-            out.println();
-            out.println("Usage: bisq-cli [options] <command>");
-            out.println();
-            parser.printHelpOn(out);
-            out.println();
-            out.println("Command           Descripiton");
-            out.println("-------           -----------");
-            out.println("getversion        Get Bisq node version");
-            out.println("getbalance        Get Bisq node wallet balance");
-            out.println();
-            exit(EXIT_SUCCESS);
-        }
+            if (options.has(helpOpt)) {
+                out.println("Bisq RPC Client");
+                out.println();
+                out.println("Usage: bisq-cli [options] <command>");
+                out.println();
+                parser.printHelpOn(out);
+                out.println();
+                out.println("Command           Descripiton");
+                out.println("-------           -----------");
+                out.println("getversion        Get Bisq node version");
+                out.println("getbalance        Get Bisq node wallet balance");
+                out.println();
+                exit(EXIT_SUCCESS);
+            }
 
-        var host = options.valueOf(hostOpt);
-        var port = options.valueOf(portOpt);
+            var host = options.valueOf(hostOpt);
+            var port = options.valueOf(portOpt);
 
-        var password = options.valueOf(passwordOpt);
-        if (password == null) {
-            err.println("error: rpc password must not be null");
-            exit(EXIT_FAILURE);
-        }
-
-        @SuppressWarnings("unchecked")
-        var nonOptionArgs = (List<String>) options.nonOptionArguments();
-        if (nonOptionArgs.isEmpty()) {
-            err.println("error: no rpc command specified");
-            exit(EXIT_FAILURE);
-        }
-
-        var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-        var credentials = new AuthHeaderCallCredentials(password);
-
-        var command = nonOptionArgs.get(0);
-
-        if ("getversion".equals(command)) {
-            var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-            var request = GetVersionRequest.newBuilder().build();
-            var version = stub.getVersion(request).getVersion();
-            out.println(version);
-            shutdown(channel);
-            exit(EXIT_SUCCESS);
-        }
-
-        if ("getbalance".equals(command)) {
-            var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-            var request = GetBalanceRequest.newBuilder().build();
-            var balance = stub.getBalance(request).getBalance();
-            if (balance == -1) {
-                err.println("Server initializing...");
-                shutdown(channel);
+            var password = options.valueOf(passwordOpt);
+            if (password == null) {
+                err.println("error: rpc password must not be null");
                 exit(EXIT_FAILURE);
             }
-            out.println(formatBalance(balance));
-            shutdown(channel);
-            exit(EXIT_SUCCESS);
-        }
 
-        err.printf("error: unknown rpc command '%s'\n", command);
-        exit(EXIT_FAILURE);
+            @SuppressWarnings("unchecked")
+            var nonOptionArgs = (List<String>) options.nonOptionArguments();
+            if (nonOptionArgs.isEmpty()) {
+                err.println("error: no rpc command specified");
+                exit(EXIT_FAILURE);
+            }
+
+            var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+            var credentials = new AuthHeaderCallCredentials(password);
+
+            var command = nonOptionArgs.get(0);
+
+            if ("getversion".equals(command)) {
+                var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+                var request = GetVersionRequest.newBuilder().build();
+                var version = stub.getVersion(request).getVersion();
+                out.println(version);
+                shutdown(channel);
+                exit(EXIT_SUCCESS);
+            }
+
+            if ("getbalance".equals(command)) {
+                var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+                var request = GetBalanceRequest.newBuilder().build();
+                var balance = stub.getBalance(request).getBalance();
+                if (balance == -1) {
+                    err.println("Server initializing...");
+                    shutdown(channel);
+                    exit(EXIT_FAILURE);
+                }
+                out.println(formatBalance(balance));
+                shutdown(channel);
+                exit(EXIT_SUCCESS);
+            }
+
+            err.printf("error: unknown rpc command '%s'\n", command);
+            exit(EXIT_FAILURE);
+        } catch (OptionException ex) {
+            err.println("error: " + ex.getMessage());
+            exit(EXIT_FAILURE);
+        }
     }
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
