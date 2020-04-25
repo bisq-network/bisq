@@ -54,6 +54,11 @@ public class CliMain {
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
 
+    private enum Command {
+        getversion,
+        getbalance
+    }
+
     public static void main(String[] args) {
         var parser = new OptionParser();
 
@@ -88,50 +93,59 @@ public class CliMain {
                 exit(EXIT_FAILURE);
             }
 
+            var commandName = nonOptionArgs.get(0);
+            Command command = null;
+            try {
+                command = Command.valueOf(commandName);
+            } catch (IllegalArgumentException ex) {
+                err.printf("Error: '%s' is not a supported command\n", commandName);
+                exit(EXIT_FAILURE);
+            }
+
             var host = options.valueOf(hostOpt);
             var port = options.valueOf(portOpt);
-
             var password = options.valueOf(passwordOpt);
             if (password == null) {
-                err.println("Error: no password specified");
+                err.println("Error: rpc server password not specified");
                 exit(EXIT_FAILURE);
             }
 
             var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
             var credentials = new AuthHeaderCallCredentials(password);
 
-            var command = nonOptionArgs.get(0);
-
-            if ("getversion".equals(command)) {
-                var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-                var request = GetVersionRequest.newBuilder().build();
-                var version = stub.getVersion(request).getVersion();
-                out.println(version);
-                shutdown(channel);
-                exit(EXIT_SUCCESS);
-            }
-
-            if ("getbalance".equals(command)) {
-                var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-                var request = GetBalanceRequest.newBuilder().build();
-                var balance = stub.getBalance(request).getBalance();
-                if (balance == -1) {
-                    err.println("Error: server is still initializing");
+            switch (command) {
+                case getversion: {
+                    var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+                    var request = GetVersionRequest.newBuilder().build();
+                    var version = stub.getVersion(request).getVersion();
+                    out.println(version);
                     shutdown(channel);
+                    exit(EXIT_SUCCESS);
+                }
+                case getbalance: {
+                    var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+                    var request = GetBalanceRequest.newBuilder().build();
+                    var balance = stub.getBalance(request).getBalance();
+                    if (balance == -1) {
+                        err.println("Error: server is still initializing");
+                        shutdown(channel);
+                        exit(EXIT_FAILURE);
+                    }
+                    out.println(formatBalance(balance));
+                    shutdown(channel);
+                    exit(EXIT_SUCCESS);
+                }
+                default: {
+                    err.printf("Error: unhandled command '%s'\n", command);
                     exit(EXIT_FAILURE);
                 }
-                out.println(formatBalance(balance));
-                shutdown(channel);
-                exit(EXIT_SUCCESS);
             }
-
-            err.printf("Error: unknown command '%s'\n", command);
         } catch (OptionException ex) {
             err.println("Error: " + ex.getMessage());
+            exit(EXIT_FAILURE);
         } catch (StatusRuntimeException ex) {
             Throwable t = ex.getCause() == null ? ex : ex.getCause();
             err.println("Error: " + t.getMessage());
-        } finally {
             exit(EXIT_FAILURE);
         }
     }

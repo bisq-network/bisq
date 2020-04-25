@@ -8,6 +8,7 @@ import java.util.concurrent.Executor;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Status.UNAUTHENTICATED;
+import static java.lang.String.format;
 
 /**
  * Sets the {@value AUTH_HEADER_KEY} rpc call header to a given value.
@@ -19,6 +20,8 @@ class AuthHeaderCallCredentials extends CallCredentials {
     private final String authHeaderValue;
 
     public AuthHeaderCallCredentials(String authHeaderValue) {
+        if (authHeaderValue == null)
+            throw new IllegalArgumentException(format("'%s' header value must not be null", AUTH_HEADER_KEY));
         this.authHeaderValue = authHeaderValue;
     }
 
