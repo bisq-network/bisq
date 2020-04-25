@@ -65,16 +65,16 @@ public class CliMain {
         var helpOpt = parser.accepts("help", "Print this help text")
                 .forHelp();
 
-        var hostOpt = parser.accepts("host", "Bisq node hostname or IP")
+        var hostOpt = parser.accepts("host", "rpc server hostname or IP")
                 .withRequiredArg()
                 .defaultsTo("localhost");
 
-        var portOpt = parser.accepts("port", "Bisq node rpc port")
+        var portOpt = parser.accepts("port", "rpc server port")
                 .withRequiredArg()
                 .ofType(Integer.class)
                 .defaultsTo(9998);
 
-        var passwordOpt = parser.accepts("password", "Bisq node rpc server password")
+        var passwordOpt = parser.accepts("password", "rpc server password")
                 .withRequiredArg();
 
         try {
@@ -158,10 +158,10 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.println("Method            Descripiton");
-            stream.println("-------           -----------");
-            stream.println("getversion        Get Bisq node version");
-            stream.println("getbalance        Get Bisq node wallet balance");
+            stream.println("Method               Descripiton");
+            stream.println("-------              -----------");
+            stream.println("getversion           Get server version");
+            stream.println("getbalance           Get server wallet balance");
             stream.println();
         } catch (IOException ex) {
             ex.printStackTrace(stream);
