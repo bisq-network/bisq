@@ -56,18 +56,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqGrpcServer {
 
+    private final CoreApi coreApi;
+
     public BisqGrpcServer(Config config, CoreApi coreApi) {
+        this.coreApi = coreApi;
+
         try {
             // TODO add to options
             int port = 9998;
 
             var server = ServerBuilder.forPort(port)
-                    .addService(new GetVersionService(coreApi))
-                    .addService(new GetBalanceService(coreApi))
-                    .addService(new GetTradeStatisticsService(coreApi))
-                    .addService(new GetOffersService(coreApi))
-                    .addService(new GetPaymentAccountsService(coreApi))
-                    .addService(new PlaceOfferService(coreApi))
+                    .addService(new GetVersionService())
+                    .addService(new GetBalanceService())
+                    .addService(new GetTradeStatisticsService())
+                    .addService(new GetOffersService())
+                    .addService(new GetPaymentAccountsService())
+                    .addService(new PlaceOfferService())
                     .intercept(new PasswordAuthInterceptor(config.apiPassword))
                     .build()
                     .start();
@@ -84,13 +88,7 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetVersionService extends GetVersionGrpc.GetVersionImplBase {
-        private final CoreApi coreApi;
-
-        public GetVersionService(CoreApi coreApi) {
-            this.coreApi = coreApi;
-        }
-
+    class GetVersionService extends GetVersionGrpc.GetVersionImplBase {
         @Override
         public void getVersion(GetVersionRequest req, StreamObserver<GetVersionReply> responseObserver) {
             GetVersionReply reply = GetVersionReply.newBuilder().setVersion(coreApi.getVersion()).build();
@@ -99,13 +97,7 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetBalanceService extends GetBalanceGrpc.GetBalanceImplBase {
-        private final CoreApi coreApi;
-
-        public GetBalanceService(CoreApi coreApi) {
-            this.coreApi = coreApi;
-        }
-
+    class GetBalanceService extends GetBalanceGrpc.GetBalanceImplBase {
         @Override
         public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
             GetBalanceReply reply = GetBalanceReply.newBuilder().setBalance(coreApi.getAvailableBalance()).build();
@@ -114,13 +106,7 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
-        private final CoreApi coreApi;
-
-        public GetTradeStatisticsService(CoreApi coreApi) {
-            this.coreApi = coreApi;
-        }
-
+    class GetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
         @Override
         public void getTradeStatistics(GetTradeStatisticsRequest req,
                                        StreamObserver<GetTradeStatisticsReply> responseObserver) {
@@ -133,13 +119,7 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetOffersService extends GetOffersGrpc.GetOffersImplBase {
-        private final CoreApi coreApi;
-
-        public GetOffersService(CoreApi coreApi) {
-            this.coreApi = coreApi;
-        }
-
+    class GetOffersService extends GetOffersGrpc.GetOffersImplBase {
         @Override
         public void getOffers(GetOffersRequest req, StreamObserver<GetOffersReply> responseObserver) {
 
@@ -153,13 +133,7 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetPaymentAccountsService extends GetPaymentAccountsGrpc.GetPaymentAccountsImplBase {
-        private final CoreApi coreApi;
-
-        public GetPaymentAccountsService(CoreApi coreApi) {
-            this.coreApi = coreApi;
-        }
-
+    class GetPaymentAccountsService extends GetPaymentAccountsGrpc.GetPaymentAccountsImplBase {
         @Override
         public void getPaymentAccounts(GetPaymentAccountsRequest req,
                                        StreamObserver<GetPaymentAccountsReply> responseObserver) {
@@ -174,13 +148,7 @@ public class BisqGrpcServer {
         }
     }
 
-    static class PlaceOfferService extends PlaceOfferGrpc.PlaceOfferImplBase {
-        private final CoreApi coreApi;
-
-        public PlaceOfferService(CoreApi coreApi) {
-            this.coreApi = coreApi;
-        }
-
+    class PlaceOfferService extends PlaceOfferGrpc.PlaceOfferImplBase {
         @Override
         public void placeOffer(PlaceOfferRequest req, StreamObserver<PlaceOfferReply> responseObserver) {
             TransactionResultHandler resultHandler = transaction -> {
