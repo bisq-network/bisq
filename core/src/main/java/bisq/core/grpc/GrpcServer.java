@@ -56,14 +56,13 @@ import lombok.extern.slf4j.Slf4j;
 public class GrpcServer {
 
     private final CoreApi coreApi;
+    private final int port;
 
     public GrpcServer(Config config, CoreApi coreApi) {
         this.coreApi = coreApi;
+        this.port = config.apiPort;
 
         try {
-            // TODO add to options
-            int port = 9998;
-
             var server = ServerBuilder.forPort(port)
                     .addService(new GetVersionService())
                     .addService(new GetBalanceService())

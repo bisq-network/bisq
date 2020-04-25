@@ -117,6 +117,7 @@ public class Config {
     public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
     public static final String API_PASSWORD = "apiPassword";
+    public static final String API_PORT = "apiPort";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -201,6 +202,7 @@ public class Config {
     public final boolean dumpDelayedPayoutTxs;
     public final boolean allowFaultyDelayedTxs;
     public final String apiPassword;
+    public final int apiPort;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -622,6 +624,12 @@ public class Config {
                         .withRequiredArg()
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<Integer> apiPortOpt =
+                parser.accepts(API_PORT, "gRPC API port")
+                        .withRequiredArg()
+                        .ofType(Integer.class)
+                        .defaultsTo(9998);
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -735,6 +743,7 @@ public class Config {
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
+            this.apiPort = options.valueOf(apiPortOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),
