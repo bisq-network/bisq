@@ -12,7 +12,7 @@ import static io.grpc.Status.UNAUTHENTICATED;
 /**
  * Sets the {@value AUTH_HEADER_KEY} rpc call header to a given value.
  */
-public class AuthHeaderCallCredentials extends CallCredentials {
+class AuthHeaderCallCredentials extends CallCredentials {
 
     public static final String AUTH_HEADER_KEY = "authorization";
 
