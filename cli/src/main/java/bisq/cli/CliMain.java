@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.cli.app;
+package bisq.cli;
 
 import bisq.proto.grpc.GetBalanceGrpc;
 import bisq.proto.grpc.GetBalanceRequest;
@@ -46,7 +46,7 @@ import static java.lang.System.out;
  * A command-line client for the Bisq gRPC API.
  */
 @Slf4j
-public class BisqCliMain {
+public class CliMain {
 
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;

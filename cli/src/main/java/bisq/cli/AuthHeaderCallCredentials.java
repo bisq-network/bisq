@@ -1,4 +1,4 @@
-package bisq.cli.app;
+package bisq.cli;
 
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;

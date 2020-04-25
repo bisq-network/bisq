@@ -335,7 +335,7 @@ configure(project(':core')) {
 }
 
 configure(project(':cli')) {
-    mainClassName = 'bisq.cli.app.BisqCliMain'
+    mainClassName = 'bisq.cli.CliMain'
 
     dependencies {
         compile project(':proto')
