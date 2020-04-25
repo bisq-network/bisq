@@ -24,6 +24,7 @@ import bisq.proto.grpc.GetVersionRequest;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -125,9 +126,12 @@ public class CliMain {
             }
 
             err.printf("Error: unknown command '%s'\n", command);
-            exit(EXIT_FAILURE);
         } catch (OptionException ex) {
             err.println("Error: " + ex.getMessage());
+        } catch (StatusRuntimeException ex) {
+            Throwable t = ex.getCause() == null ? ex : ex.getCause();
+            err.println("Error: " + t.getMessage());
+        } finally {
             exit(EXIT_FAILURE);
         }
     }
