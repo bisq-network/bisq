@@ -53,11 +53,11 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqGrpcServer {
+public class GrpcServer {
 
     private final CoreApi coreApi;
 
-    public BisqGrpcServer(Config config, CoreApi coreApi) {
+    public GrpcServer(Config config, CoreApi coreApi) {
         this.coreApi = coreApi;
 
         try {
