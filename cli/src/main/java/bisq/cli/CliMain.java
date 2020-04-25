@@ -31,6 +31,7 @@ import joptsimple.OptionParser;
 import java.text.DecimalFormat;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
 import java.math.BigDecimal;
 
@@ -52,7 +53,7 @@ public class CliMain {
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         var parser = new OptionParser();
 
         var helpOpt = parser.accepts("help", "Print this help text")
@@ -74,18 +75,16 @@ public class CliMain {
             var options = parser.parse(args);
 
             if (options.has(helpOpt)) {
-                out.println("Bisq RPC Client");
-                out.println();
-                out.println("Usage: bisq-cli [options] <command>");
-                out.println();
-                parser.printHelpOn(out);
-                out.println();
-                out.println("Command           Descripiton");
-                out.println("-------           -----------");
-                out.println("getversion        Get Bisq node version");
-                out.println("getbalance        Get Bisq node wallet balance");
-                out.println();
+                printHelp(parser, out);
                 exit(EXIT_SUCCESS);
+            }
+
+            @SuppressWarnings("unchecked")
+            var nonOptionArgs = (List<String>) options.nonOptionArguments();
+            if (nonOptionArgs.isEmpty()) {
+                printHelp(parser, err);
+                err.println("Error: no command specified");
+                exit(EXIT_FAILURE);
             }
 
             var host = options.valueOf(hostOpt);
@@ -93,14 +92,7 @@ public class CliMain {
 
             var password = options.valueOf(passwordOpt);
             if (password == null) {
-                err.println("error: rpc password must not be null");
-                exit(EXIT_FAILURE);
-            }
-
-            @SuppressWarnings("unchecked")
-            var nonOptionArgs = (List<String>) options.nonOptionArguments();
-            if (nonOptionArgs.isEmpty()) {
-                err.println("error: no rpc command specified");
+                err.println("Error: no password specified");
                 exit(EXIT_FAILURE);
             }
 
@@ -123,7 +115,7 @@ public class CliMain {
                 var request = GetBalanceRequest.newBuilder().build();
                 var balance = stub.getBalance(request).getBalance();
                 if (balance == -1) {
-                    err.println("Server initializing...");
+                    err.println("Error: server is still initializing");
                     shutdown(channel);
                     exit(EXIT_FAILURE);
                 }
@@ -132,11 +124,29 @@ public class CliMain {
                 exit(EXIT_SUCCESS);
             }
 
-            err.printf("error: unknown rpc command '%s'\n", command);
+            err.printf("Error: unknown command '%s'\n", command);
             exit(EXIT_FAILURE);
         } catch (OptionException ex) {
-            err.println("error: " + ex.getMessage());
+            err.println("Error: " + ex.getMessage());
             exit(EXIT_FAILURE);
+        }
+    }
+
+    private static void printHelp(OptionParser parser, PrintStream stream) {
+        try {
+            stream.println("Bisq RPC Client");
+            stream.println();
+            stream.println("Usage: bisq-cli [options] <command>");
+            stream.println();
+            parser.printHelpOn(stream);
+            stream.println();
+            stream.println("Command           Descripiton");
+            stream.println("-------           -----------");
+            stream.println("getversion        Get Bisq node version");
+            stream.println("getbalance        Get Bisq node wallet balance");
+            stream.println();
+        } catch (IOException ex) {
+            ex.printStackTrace(stream);
         }
     }
 
