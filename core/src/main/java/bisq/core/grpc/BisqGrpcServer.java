@@ -62,12 +62,12 @@ public class BisqGrpcServer {
             int port = 9998;
 
             var server = ServerBuilder.forPort(port)
-                    .addService(new GetVersionImpl(coreApi))
-                    .addService(new GetBalanceImpl(coreApi))
-                    .addService(new GetTradeStatisticsImpl(coreApi))
-                    .addService(new GetOffersImpl(coreApi))
-                    .addService(new GetPaymentAccountsImpl(coreApi))
-                    .addService(new PlaceOfferImpl(coreApi))
+                    .addService(new GetVersionService(coreApi))
+                    .addService(new GetBalanceService(coreApi))
+                    .addService(new GetTradeStatisticsService(coreApi))
+                    .addService(new GetOffersService(coreApi))
+                    .addService(new GetPaymentAccountsService(coreApi))
+                    .addService(new PlaceOfferService(coreApi))
                     .intercept(new PasswordAuthInterceptor(config.apiPassword))
                     .build()
                     .start();
@@ -84,10 +84,10 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetVersionImpl extends GetVersionGrpc.GetVersionImplBase {
+    static class GetVersionService extends GetVersionGrpc.GetVersionImplBase {
         private final CoreApi coreApi;
 
-        public GetVersionImpl(CoreApi coreApi) {
+        public GetVersionService(CoreApi coreApi) {
             this.coreApi = coreApi;
         }
 
@@ -99,10 +99,10 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetBalanceImpl extends GetBalanceGrpc.GetBalanceImplBase {
+    static class GetBalanceService extends GetBalanceGrpc.GetBalanceImplBase {
         private final CoreApi coreApi;
 
-        public GetBalanceImpl(CoreApi coreApi) {
+        public GetBalanceService(CoreApi coreApi) {
             this.coreApi = coreApi;
         }
 
@@ -114,10 +114,10 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetTradeStatisticsImpl extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
+    static class GetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
         private final CoreApi coreApi;
 
-        public GetTradeStatisticsImpl(CoreApi coreApi) {
+        public GetTradeStatisticsService(CoreApi coreApi) {
             this.coreApi = coreApi;
         }
 
@@ -133,10 +133,10 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetOffersImpl extends GetOffersGrpc.GetOffersImplBase {
+    static class GetOffersService extends GetOffersGrpc.GetOffersImplBase {
         private final CoreApi coreApi;
 
-        public GetOffersImpl(CoreApi coreApi) {
+        public GetOffersService(CoreApi coreApi) {
             this.coreApi = coreApi;
         }
 
@@ -153,10 +153,10 @@ public class BisqGrpcServer {
         }
     }
 
-    static class GetPaymentAccountsImpl extends GetPaymentAccountsGrpc.GetPaymentAccountsImplBase {
+    static class GetPaymentAccountsService extends GetPaymentAccountsGrpc.GetPaymentAccountsImplBase {
         private final CoreApi coreApi;
 
-        public GetPaymentAccountsImpl(CoreApi coreApi) {
+        public GetPaymentAccountsService(CoreApi coreApi) {
             this.coreApi = coreApi;
         }
 
@@ -174,10 +174,10 @@ public class BisqGrpcServer {
         }
     }
 
-    static class PlaceOfferImpl extends PlaceOfferGrpc.PlaceOfferImplBase {
+    static class PlaceOfferService extends PlaceOfferGrpc.PlaceOfferImplBase {
         private final CoreApi coreApi;
 
-        public PlaceOfferImpl(CoreApi coreApi) {
+        public PlaceOfferService(CoreApi coreApi) {
             this.coreApi = coreApi;
         }
 
