@@ -56,6 +56,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqGrpcServer {
 
+    public BisqGrpcServer(Config config, CoreApi coreApi) {
+        try {
+            // TODO add to options
+            int port = 9998;
+
+            var server = ServerBuilder.forPort(port)
+                    .addService(new GetVersionImpl(coreApi))
+                    .addService(new GetBalanceImpl(coreApi))
+                    .addService(new GetTradeStatisticsImpl(coreApi))
+                    .addService(new GetOffersImpl(coreApi))
+                    .addService(new GetPaymentAccountsImpl(coreApi))
+                    .addService(new PlaceOfferImpl(coreApi))
+                    .intercept(new PasswordAuthInterceptor(config.apiPassword))
+                    .build()
+                    .start();
+
+            log.info("Server started, listening on " + port);
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.error("Shutting down gRPC server");
+                server.shutdown();
+                log.error("Server shut down");
+            }));
+
+        } catch (IOException e) {
+            log.error(e.toString(), e);
+        }
+    }
+
     static class GetVersionImpl extends GetVersionGrpc.GetVersionImplBase {
         private final CoreApi coreApi;
 
@@ -171,35 +199,6 @@ public class BisqGrpcServer {
                     req.getBuyerSecurityDeposit(),
                     req.getPaymentAccountId(),
                     resultHandler);
-        }
-    }
-
-    public BisqGrpcServer(Config config, CoreApi coreApi) {
-
-        try {
-            // TODO add to options
-            int port = 9998;
-
-            var server = ServerBuilder.forPort(port)
-                    .addService(new GetVersionImpl(coreApi))
-                    .addService(new GetBalanceImpl(coreApi))
-                    .addService(new GetTradeStatisticsImpl(coreApi))
-                    .addService(new GetOffersImpl(coreApi))
-                    .addService(new GetPaymentAccountsImpl(coreApi))
-                    .addService(new PlaceOfferImpl(coreApi))
-                    .intercept(new PasswordAuthInterceptor(config.apiPassword))
-                    .build()
-                    .start();
-
-            log.info("Server started, listening on " + port);
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.error("Shutting down gRPC server");
-                server.shutdown();
-                log.error("Server shut down");
-            }));
-
-        } catch (IOException e) {
-            log.error(e.toString(), e);
         }
     }
 }
