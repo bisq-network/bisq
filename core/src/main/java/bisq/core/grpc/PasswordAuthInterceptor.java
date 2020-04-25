@@ -6,8 +6,6 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.StatusRuntimeException;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Metadata.Key;
 import static io.grpc.Status.UNAUTHENTICATED;
@@ -19,8 +17,7 @@ import static java.lang.String.format;
  *
  * @see bisq.common.config.Config#apiPassword
  */
-@Slf4j
-public class PasswordAuthInterceptor implements ServerInterceptor {
+class PasswordAuthInterceptor implements ServerInterceptor {
 
     public static final String PASSWORD_KEY = "password";
 
