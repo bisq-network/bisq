@@ -75,11 +75,10 @@ public class GrpcServer {
                     .build()
                     .start();
 
-            log.info("Server started, listening on " + port);
+            log.info("listening on port {}", port);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.error("Shutting down gRPC server");
                 server.shutdown();
-                log.error("Server shut down");
+                log.info("shutdown complete");
             }));
 
         } catch (IOException e) {
