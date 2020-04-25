@@ -48,7 +48,6 @@ import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +90,7 @@ public class BisqGrpcServer {
     class GetVersionService extends GetVersionGrpc.GetVersionImplBase {
         @Override
         public void getVersion(GetVersionRequest req, StreamObserver<GetVersionReply> responseObserver) {
-            GetVersionReply reply = GetVersionReply.newBuilder().setVersion(coreApi.getVersion()).build();
+            var reply = GetVersionReply.newBuilder().setVersion(coreApi.getVersion()).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -100,7 +99,7 @@ public class BisqGrpcServer {
     class GetBalanceService extends GetBalanceGrpc.GetBalanceImplBase {
         @Override
         public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
-            GetBalanceReply reply = GetBalanceReply.newBuilder().setBalance(coreApi.getAvailableBalance()).build();
+            var reply = GetBalanceReply.newBuilder().setBalance(coreApi.getAvailableBalance()).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -110,10 +109,12 @@ public class BisqGrpcServer {
         @Override
         public void getTradeStatistics(GetTradeStatisticsRequest req,
                                        StreamObserver<GetTradeStatisticsReply> responseObserver) {
-            List<protobuf.TradeStatistics2> tradeStatistics = coreApi.getTradeStatistics().stream()
+
+            var tradeStatistics = coreApi.getTradeStatistics().stream()
                     .map(TradeStatistics2::toProtoTradeStatistics2)
                     .collect(Collectors.toList());
-            GetTradeStatisticsReply reply = GetTradeStatisticsReply.newBuilder().addAllTradeStatistics(tradeStatistics).build();
+
+            var reply = GetTradeStatisticsReply.newBuilder().addAllTradeStatistics(tradeStatistics).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -123,11 +124,11 @@ public class BisqGrpcServer {
         @Override
         public void getOffers(GetOffersRequest req, StreamObserver<GetOffersReply> responseObserver) {
 
-            List<protobuf.Offer> tradeStatistics = coreApi.getOffers().stream()
+            var tradeStatistics = coreApi.getOffers().stream()
                     .map(Offer::toProtoMessage)
                     .collect(Collectors.toList());
 
-            GetOffersReply reply = GetOffersReply.newBuilder().addAllOffers(tradeStatistics).build();
+            var reply = GetOffersReply.newBuilder().addAllOffers(tradeStatistics).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -138,11 +139,11 @@ public class BisqGrpcServer {
         public void getPaymentAccounts(GetPaymentAccountsRequest req,
                                        StreamObserver<GetPaymentAccountsReply> responseObserver) {
 
-            List<protobuf.PaymentAccount> tradeStatistics = coreApi.getPaymentAccounts().stream()
+            var tradeStatistics = coreApi.getPaymentAccounts().stream()
                     .map(PaymentAccount::toProtoMessage)
                     .collect(Collectors.toList());
 
-            GetPaymentAccountsReply reply = GetPaymentAccountsReply.newBuilder().addAllPaymentAccounts(tradeStatistics).build();
+            var reply = GetPaymentAccountsReply.newBuilder().addAllPaymentAccounts(tradeStatistics).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
