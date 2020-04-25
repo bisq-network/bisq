@@ -145,7 +145,7 @@ public class CliMain {
             exit(EXIT_FAILURE);
         } catch (StatusRuntimeException ex) {
             Throwable t = ex.getCause() == null ? ex : ex.getCause();
-            err.println("Error: " + t.getMessage());
+            err.println("Error: " + t.getMessage().replace("UNAUTHENTICATED: ", ""));
             exit(EXIT_FAILURE);
         }
     }
