@@ -54,7 +54,7 @@ public class CliMain {
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
 
-    private enum Command {
+    private enum Method {
         getversion,
         getbalance
     }
@@ -89,16 +89,16 @@ public class CliMain {
             var nonOptionArgs = (List<String>) options.nonOptionArguments();
             if (nonOptionArgs.isEmpty()) {
                 printHelp(parser, err);
-                err.println("Error: no command specified");
+                err.println("Error: no method specified");
                 exit(EXIT_FAILURE);
             }
 
-            var commandName = nonOptionArgs.get(0);
-            Command command = null;
+            var methodName = nonOptionArgs.get(0);
+            Method method = null;
             try {
-                command = Command.valueOf(commandName);
+                method = Method.valueOf(methodName);
             } catch (IllegalArgumentException ex) {
-                err.printf("Error: '%s' is not a supported command\n", commandName);
+                err.printf("Error: '%s' is not a supported method\n", methodName);
                 exit(EXIT_FAILURE);
             }
 
@@ -113,7 +113,7 @@ public class CliMain {
             var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
             var credentials = new AuthHeaderCallCredentials(password);
 
-            switch (command) {
+            switch (method) {
                 case getversion: {
                     var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = GetVersionRequest.newBuilder().build();
@@ -136,7 +136,7 @@ public class CliMain {
                     exit(EXIT_SUCCESS);
                 }
                 default: {
-                    err.printf("Error: unhandled command '%s'\n", command);
+                    err.printf("Error: unhandled method '%s'\n", method);
                     exit(EXIT_FAILURE);
                 }
             }
@@ -154,11 +154,11 @@ public class CliMain {
         try {
             stream.println("Bisq RPC Client");
             stream.println();
-            stream.println("Usage: bisq-cli [options] <command>");
+            stream.println("Usage: bisq-cli [options] <method>");
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.println("Command           Descripiton");
+            stream.println("Method            Descripiton");
             stream.println("-------           -----------");
             stream.println("getversion        Get Bisq node version");
             stream.println("getbalance        Get Bisq node wallet balance");
