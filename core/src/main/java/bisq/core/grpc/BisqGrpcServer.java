@@ -42,9 +42,6 @@ import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.PlaceOfferGrpc;
 import bisq.proto.grpc.PlaceOfferReply;
 import bisq.proto.grpc.PlaceOfferRequest;
-import bisq.proto.grpc.StopServerGrpc;
-import bisq.proto.grpc.StopServerReply;
-import bisq.proto.grpc.StopServerRequest;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -58,15 +55,11 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 
-/**
- * gRPC server. Gets a instance of BisqFacade passed to access data from the running Bisq instance.
- */
 @Slf4j
 public class BisqGrpcServer {
 
     private Server server;
 
-    private static BisqGrpcServer instance;
     private static Config config;
     private static CoreApi coreApi;
 
@@ -157,25 +150,11 @@ public class BisqGrpcServer {
         }
     }
 
-    static class StopServerImpl extends StopServerGrpc.StopServerImplBase {
-        @Override
-        public void stopServer(StopServerRequest req, StreamObserver<StopServerReply> responseObserver) {
-            StopServerReply reply = StopServerReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-
-            instance.stop();
-        }
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BisqGrpcServer(Config config, CoreApi coreApi) {
-        instance = this;
-
         BisqGrpcServer.config = config;
         BisqGrpcServer.coreApi = coreApi;
 
@@ -214,7 +193,6 @@ public class BisqGrpcServer {
                 .addService(new GetOffersImpl())
                 .addService(new GetPaymentAccountsImpl())
                 .addService(new PlaceOfferImpl())
-                .addService(new StopServerImpl())
                 .intercept(new PasswordAuthInterceptor(config.apiPassword))
                 .build()
                 .start();
