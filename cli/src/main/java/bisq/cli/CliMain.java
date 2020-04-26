@@ -28,6 +28,7 @@ import io.grpc.StatusRuntimeException;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 
 import java.text.DecimalFormat;
 
@@ -77,39 +78,45 @@ public class CliMain {
         var passwordOpt = parser.accepts("password", "rpc server password")
                 .withRequiredArg();
 
+        OptionSet options = null;
         try {
-            var options = parser.parse(args);
+            options = parser.parse(args);
+        } catch (OptionException ex) {
+            err.println("Error: " + ex.getMessage());
+            exit(EXIT_FAILURE);
+        }
 
-            if (options.has(helpOpt)) {
-                printHelp(parser, out);
-                exit(EXIT_SUCCESS);
-            }
+        if (options.has(helpOpt)) {
+            printHelp(parser, out);
+            exit(EXIT_SUCCESS);
+        }
 
-            @SuppressWarnings("unchecked")
-            var nonOptionArgs = (List<String>) options.nonOptionArguments();
-            if (nonOptionArgs.isEmpty()) {
-                printHelp(parser, err);
-                err.println("Error: no method specified");
-                exit(EXIT_FAILURE);
-            }
+        @SuppressWarnings("unchecked")
+        var nonOptionArgs = (List<String>) options.nonOptionArguments();
+        if (nonOptionArgs.isEmpty()) {
+            printHelp(parser, err);
+            err.println("Error: no method specified");
+            exit(EXIT_FAILURE);
+        }
 
-            var methodName = nonOptionArgs.get(0);
-            Method method = null;
-            try {
-                method = Method.valueOf(methodName);
-            } catch (IllegalArgumentException ex) {
-                err.printf("Error: '%s' is not a supported method\n", methodName);
-                exit(EXIT_FAILURE);
-            }
+        var methodName = nonOptionArgs.get(0);
+        Method method = null;
+        try {
+            method = Method.valueOf(methodName);
+        } catch (IllegalArgumentException ex) {
+            err.printf("Error: '%s' is not a supported method\n", methodName);
+            exit(EXIT_FAILURE);
+        }
 
-            var host = options.valueOf(hostOpt);
-            var port = options.valueOf(portOpt);
-            var password = options.valueOf(passwordOpt);
-            if (password == null) {
-                err.println("Error: rpc server password not specified");
-                exit(EXIT_FAILURE);
-            }
+        var host = options.valueOf(hostOpt);
+        var port = options.valueOf(portOpt);
+        var password = options.valueOf(passwordOpt);
+        if (password == null) {
+            err.println("Error: rpc server password not specified");
+            exit(EXIT_FAILURE);
+        }
 
+        try {
             var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
             var credentials = new PasswordCallCredentials(password);
 
@@ -140,9 +147,6 @@ public class CliMain {
                     exit(EXIT_FAILURE);
                 }
             }
-        } catch (OptionException ex) {
-            err.println("Error: " + ex.getMessage());
-            exit(EXIT_FAILURE);
         } catch (StatusRuntimeException ex) {
             Throwable t = ex.getCause() == null ? ex : ex.getCause();
             err.println("Error: " + t.getMessage().replace("UNAUTHENTICATED: ", ""));
