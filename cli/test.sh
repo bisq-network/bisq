@@ -52,8 +52,8 @@ echo "========================================================================"
 OUTPUT=$(expect -c '
     # exp_internal 1
     puts "TEST missing required password option error"
-    set expected "Error: Missing required option(s) \\\[password\\\]"
-    spawn ./bisq-cli anymethod
+    set expected "Error: missing required '\''password'\'' option"
+    spawn ./bisq-cli getversion
     expect {
         $expected { puts "PASS" }
         default {
@@ -133,8 +133,24 @@ OUTPUT=$(expect -c '
     }
 ')
 echo "$OUTPUT"
-
 echo "========================================================================"
 
-echo "TEST help (todo)"
-./bisq-cli --password=xyz --help
+OUTPUT=$(expect -c '
+    puts "TEST running with no options or arguments prints help text"
+    # exp_internal 1
+    set expected "Bisq RPC Client"
+    spawn ./bisq-cli
+    expect {
+        $expected { puts "PASS" }
+        default {
+            set results $expect_out(buffer)
+            puts "FAIL expected = $expected"
+            puts "       actual = $results"
+        }
+    }
+')
+echo "$OUTPUT"
+echo "========================================================================"
+
+echo "TEST --help option prints help text"
+./bisq-cli --help

@@ -75,8 +75,7 @@ public class CliMain {
                 .defaultsTo(9998);
 
         var passwordOpt = parser.accepts("password", "rpc server password")
-                .withRequiredArg()
-                .required();
+                .withRequiredArg();
 
         OptionSet options = null;
         try {
@@ -111,6 +110,10 @@ public class CliMain {
         var host = options.valueOf(hostOpt);
         var port = options.valueOf(portOpt);
         var password = options.valueOf(passwordOpt);
+        if (password == null) {
+            err.println("Error: missing required 'password' option");
+            exit(EXIT_FAILURE);
+        }
 
         var credentials = new PasswordCallCredentials(password);
 
