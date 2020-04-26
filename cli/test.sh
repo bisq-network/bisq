@@ -34,9 +34,9 @@ echo "$OUTPUT"
 echo "========================================================================"
 
 OUTPUT=$(expect -c '
-    puts "TEST bad option error"
-    set expected "Error: pwd is not a recognized option"
-    spawn ./bisq-cli --pwd=xyz getversion
+    puts "TEST unrecognized option error"
+    set expected "Error: bogus is not a recognized option"
+    spawn ./bisq-cli --bogus getversion
     expect {
         $expected { puts "PASS" }
         default {
@@ -68,9 +68,9 @@ echo "========================================================================"
 
 OUTPUT=$(expect -c '
     # exp_internal 1
-    puts "TEST getversion (bad pwd error)"
+    puts "TEST getversion (incorrect password error)"
     set expected "Error: incorrect '\''password'\'' rpc header value"
-    spawn ./bisq-cli --password=badpassword getversion
+    spawn ./bisq-cli --password=bogus getversion
     expect {
         $expected { puts "PASS\n" }
         default {
@@ -85,7 +85,7 @@ echo "========================================================================"
 
 OUTPUT=$(expect -c '
     # exp_internal 1
-    puts "TEST getversion (pwd in quotes) COMMIT"
+    puts "TEST getversion (password value in quotes) COMMIT"
     set expected "1.3.2"
     # Note: have to define quoted argument in a variable as "''value''"
     set pwd_in_quotes "''xyz''"
