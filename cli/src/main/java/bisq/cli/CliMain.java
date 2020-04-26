@@ -22,7 +22,6 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 
-import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
@@ -118,6 +117,15 @@ public class CliMain {
 
         try {
             var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace(err);
+                    exit(EXIT_FAILURE);
+                }
+            }));
+
             var credentials = new PasswordCallCredentials(password);
 
             switch (method) {
@@ -126,7 +134,6 @@ public class CliMain {
                     var request = GetVersionRequest.newBuilder().build();
                     var version = stub.getVersion(request).getVersion();
                     out.println(version);
-                    shutdown(channel);
                     exit(EXIT_SUCCESS);
                 }
                 case getbalance: {
@@ -135,11 +142,9 @@ public class CliMain {
                     var balance = stub.getBalance(request).getBalance();
                     if (balance == -1) {
                         err.println("Error: server is still initializing");
-                        shutdown(channel);
                         exit(EXIT_FAILURE);
                     }
                     out.println(formatBalance(balance));
-                    shutdown(channel);
                     exit(EXIT_SUCCESS);
                 }
                 default: {
@@ -177,13 +182,5 @@ public class CliMain {
         var btcFormat = new DecimalFormat("###,##0.00000000");
         var satoshiDivisor = new BigDecimal(100000000);
         return btcFormat.format(BigDecimal.valueOf(satoshis).divide(satoshiDivisor));
-    }
-
-    private static void shutdown(ManagedChannel channel) {
-        try {
-            channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
     }
 }
