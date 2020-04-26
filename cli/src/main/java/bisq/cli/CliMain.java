@@ -115,17 +115,17 @@ public class CliMain {
             exit(EXIT_FAILURE);
         }
 
-        try {
-            var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                try {
-                    channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace(err);
-                    exit(EXIT_FAILURE);
-                }
-            }));
+        var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace(err);
+                exit(EXIT_FAILURE);
+            }
+        }));
 
+        try {
             var credentials = new PasswordCallCredentials(password);
 
             switch (method) {
