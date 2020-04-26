@@ -150,6 +150,9 @@ public class CliMain {
                 }
             }
         } catch (StatusRuntimeException ex) {
+            // This exception is thrown if the client-provided password credentials do not
+            // match the value set on the server. The actual error message is in a nested
+            // exception and we clean it up a bit to make it more presentable.
             Throwable t = ex.getCause() == null ? ex : ex.getCause();
             err.println("Error: " + t.getMessage().replace("UNAUTHENTICATED: ", ""));
             exit(EXIT_FAILURE);
