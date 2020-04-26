@@ -167,10 +167,10 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.println("Method               Description");
-            stream.println("-------              -----------");
-            stream.println("getversion           Get server version");
-            stream.println("getbalance           Get server wallet balance");
+            stream.println("Method      Description");
+            stream.println("------      -----------");
+            stream.println("getversion  Get server version");
+            stream.println("getbalance  Get server wallet balance");
             stream.println();
         } catch (IOException ex) {
             ex.printStackTrace(stream);
