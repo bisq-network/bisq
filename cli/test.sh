@@ -9,9 +9,9 @@
 #
 # Prior to running this script, run:
 #
-#     ./bisq-daemon --apiPassword=xyz --appDataDir=$(mktemp -d)
+#     ./bisq-daemon --apiPassword=xyz
 #
-# The fresh data directory ensures a new, unencrypted wallet with 0 BTC balance
+# The data directory used must contain an unencrypted wallet with a 0 BTC balance
 
 # Ensure project root is the current working directory
 cd $(dirname $0)/..
