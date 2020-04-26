@@ -85,7 +85,7 @@ echo "========================================================================"
 
 OUTPUT=$(expect -c '
     # exp_internal 1
-    puts "TEST getversion (password value in quotes) COMMIT"
+    puts "TEST getversion (password value in quotes)"
     set expected "1.3.2"
     # Note: have to define quoted argument in a variable as "''value''"
     set pwd_in_quotes "''xyz''"
