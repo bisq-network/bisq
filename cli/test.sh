@@ -51,9 +51,9 @@ echo "========================================================================"
 
 OUTPUT=$(expect -c '
     # exp_internal 1
-    puts "TEST getversion (no pwd error)"
-    set expected "Error: rpc server password not specified"
-    spawn ./bisq-cli getversion
+    puts "TEST missing required password option error"
+    set expected "Error: Missing required option(s) \\\[password\\\]"
+    spawn ./bisq-cli anymethod
     expect {
         $expected { puts "PASS" }
         default {
@@ -106,23 +106,6 @@ OUTPUT=$(expect -c '
     puts "TEST getversion"
     set expected "1.3.2"
     spawn ./bisq-cli --password=xyz getversion
-    expect {
-        $expected { puts "PASS" }
-        default {
-            set results $expect_out(buffer)
-            puts "FAIL expected = $expected"
-            puts "       actual = $results"
-        }
-    }
-')
-echo "$OUTPUT"
-echo "========================================================================"
-
-OUTPUT=$(expect -c '
-    puts "TEST getbalance (no pwd error)"
-    # exp_internal 1
-    set expected "Error: rpc server password not specified"
-    spawn  ./bisq-cli getbalance
     expect {
         $expected { puts "PASS" }
         default {

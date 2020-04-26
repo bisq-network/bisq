@@ -75,7 +75,8 @@ public class CliMain {
                 .defaultsTo(9998);
 
         var passwordOpt = parser.accepts("password", "rpc server password")
-                .withRequiredArg();
+                .withRequiredArg()
+                .required();
 
         OptionSet options = null;
         try {
@@ -110,10 +111,8 @@ public class CliMain {
         var host = options.valueOf(hostOpt);
         var port = options.valueOf(portOpt);
         var password = options.valueOf(passwordOpt);
-        if (password == null) {
-            err.println("Error: rpc server password not specified");
-            exit(EXIT_FAILURE);
-        }
+
+        var credentials = new PasswordCallCredentials(password);
 
         var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -126,8 +125,6 @@ public class CliMain {
         }));
 
         try {
-            var credentials = new PasswordCallCredentials(password);
-
             switch (method) {
                 case getversion: {
                     var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);

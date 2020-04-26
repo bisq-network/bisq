@@ -21,7 +21,7 @@ class PasswordCallCredentials extends CallCredentials {
 
     public PasswordCallCredentials(String passwordValue) {
         if (passwordValue == null)
-            throw new IllegalArgumentException(format("'%s' header value must not be null", PASSWORD_KEY));
+            throw new IllegalArgumentException(format("'%s' value must not be null", PASSWORD_KEY));
         this.passwordValue = passwordValue;
     }
 
