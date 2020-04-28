@@ -23,13 +23,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import lombok.extern.slf4j.Slf4j;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-@Slf4j
 public class PermutationTest {
 
 
@@ -109,13 +107,12 @@ public class PermutationTest {
         int limit = 1048575;
         List<String> result;
         List<String> list;
-        String targetValue;
         List<String> expected;
         BiFunction<String, List<String>, Boolean> predicate = (target, variationList) -> variationList.toString().equals(target);
 
         list = Arrays.asList(a, b, c, d, e);
 
-        expected = Arrays.asList("-");
+        expected = Arrays.asList(a);
         result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);
         assertTrue(expected.toString().equals(result.toString()));
 
@@ -123,7 +120,22 @@ public class PermutationTest {
         expected = Arrays.asList(a, c, e);
         result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);
         assertTrue(expected.toString().equals(result.toString()));
+    }
 
+    @Test
+    public void testBreakAtLimit() {
+        BiFunction<String, List<String>, Boolean> predicate =
+                (target, variationList) -> variationList.toString().equals(target);
+        var list = Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o");
+        var expected = Arrays.asList("b", "g", "m");
+        
+        // Takes around 32508 tries starting from longer strings
+        var limit = 100000;
+        var result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);
+        assertTrue(expected.toString().equals(result.toString()));
+        limit = 1000;
+        result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);
+        assertTrue(result.isEmpty());
     }
 
 
