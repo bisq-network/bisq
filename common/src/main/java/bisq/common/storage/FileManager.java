@@ -165,7 +165,9 @@ public class FileManager<T extends PersistableEnvelope> {
                 log.warn("make dir failed");
 
         File corruptedFile = new File(Paths.get(dbDir.getAbsolutePath(), backupFolderName, fileName).toString());
-        FileUtil.renameFile(storageFile, corruptedFile);
+        if (storageFile.exists()) {
+            FileUtil.renameFile(storageFile, corruptedFile);
+        }
     }
 
     synchronized void removeAndBackupFile(String fileName) throws IOException {
