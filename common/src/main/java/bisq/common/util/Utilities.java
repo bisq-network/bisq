@@ -334,6 +334,10 @@ public class Utilities {
         return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
     }
 
+    public static boolean isCtrlShiftPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return new KeyCodeCombination(keyCode, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN).match(keyEvent);
+    }
+
     public static byte[] concatenateByteArrays(byte[] array1, byte[] array2) {
         return ArrayUtils.addAll(array1, array2);
     }

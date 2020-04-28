@@ -334,10 +334,11 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
-    public Set<SignedWitness> getOrphanSignedWitnessSet() {
+    public Set<SignedWitness> getRootSignedWitnessSet(boolean includeSignedByArbitrator) {
         return signedWitnessMap.values().stream()
                 .filter(witness -> getSignedWitnessSetByOwnerPubKey(witness.getSignerPubKey(), new Stack<>()).isEmpty())
-                .filter(witness -> witness.getVerificationMethod() != SignedWitness.VerificationMethod.ARBITRATOR)
+                .filter(witness -> includeSignedByArbitrator ||
+                        witness.getVerificationMethod() != SignedWitness.VerificationMethod.ARBITRATOR)
                 .collect(Collectors.toSet());
     }
 

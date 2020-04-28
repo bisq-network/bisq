@@ -324,11 +324,11 @@ public class AccountAgeWitnessServiceTest {
         assertFalse(signedWitnessService.isSignedAccountAgeWitness(aew2));
 
         // Sign dummy AccountAgeWitness using signer key from SW_1
-        assertEquals(signedWitnessService.getOrphanSignedWitnessSet().size(), 1);
+        assertEquals(signedWitnessService.getRootSignedWitnessSet().size(), 1);
 
         // TODO: move this to accountagewitnessservice
         @SuppressWarnings("OptionalGetWithoutIsPresent")
-        var orphanedSignedWitness = signedWitnessService.getOrphanSignedWitnessSet().stream().findAny().get();
+        var orphanedSignedWitness = signedWitnessService.getRootSignedWitnessSet().stream().findAny().get();
         var dummyAccountAgeWitnessHash = Hash.getRipemd160hash(orphanedSignedWitness.getSignerPubKey());
         var dummyAEW = new AccountAgeWitness(dummyAccountAgeWitnessHash,
                 orphanedSignedWitness.getDate() -
