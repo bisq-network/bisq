@@ -21,15 +21,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
+
+import lombok.extern.slf4j.Slf4j;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
+@Slf4j
 public class PermutationTest {
 
 
-    @Test
+    // @Test
     public void testGetPartialList() {
         String blindVote0 = "blindVote0";
         String blindVote1 = "blindVote1";
@@ -96,6 +100,34 @@ public class PermutationTest {
     }
 
     @Test
+    public void testFindMatchingPermutation() {
+        String a = "A";
+        String b = "B";
+        String c = "C";
+        String d = "D";
+        String e = "E";
+        int limit = 1048575;
+        List<String> result;
+        List<String> list;
+        String targetValue;
+        List<String> expected;
+        BiFunction<String, List<String>, Boolean> predicate = (target, variationList) -> variationList.toString().equals(target);
+
+        list = Arrays.asList(a, b, c, d, e);
+
+        expected = Arrays.asList(a);
+        result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);
+        assertTrue(expected.toString().equals(result.toString()));
+
+
+        expected = Arrays.asList(a, c, e);
+        result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);
+        assertTrue(expected.toString().equals(result.toString()));
+
+    }
+
+
+    //  @Test
     public void testFindAllPermutations() {
         String blindVote0 = "blindVote0";
         String blindVote1 = "blindVote1";
@@ -107,18 +139,23 @@ public class PermutationTest {
         // findAllPermutations took 580 ms for 20 items and 1048575 iterations
         // findAllPermutations took 10 ms for 15 items and 32767 iterations
         // findAllPermutations took 0 ms for 10 items and 1023 iterations
-        int limit = 1048575;
+        // int limit = 1048575;
+        int limit = 1048575000;
         List<String> list;
         List<List<String>> expected;
         List<List<String>> result;
         List<String> subList;
 
 
-       /* list = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            list.add("blindVote"+i);
+        log.error("prep");
+        list = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            list.add("blindVote" + i);
         }
-        PermutationUtil.findAllPermutations(list, limit);*/
+        log.error("start");
+
+        PermutationUtil.findAllPermutations(list, limit);
+        log.error("end");
 
 
         list = new ArrayList<>();

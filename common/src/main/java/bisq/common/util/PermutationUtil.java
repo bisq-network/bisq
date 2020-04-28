@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiFunction;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,8 +54,53 @@ public class PermutationUtil {
         return altered;
     }
 
+    public static <T, R> List<T> findMatchingPermutation(R targetValue,
+                                                         List<T> list,
+                                                         BiFunction<R, List<T>, Boolean> predicate,
+                                                         int maxIterations) {
+        if (predicate.apply(targetValue, list)) {
+            return list;
+        } else {
+            return findMatchingPermutation(targetValue,
+                    list,
+                    new ArrayList<>(),
+                    predicate,
+                    maxIterations);
+        }
+    }
+
+    private static <T, R> List<T> findMatchingPermutation(R targetValue,
+                                                          List<T> list,
+                                                          List<List<T>> lists,
+                                                          BiFunction<R, List<T>, Boolean> predicate,
+                                                          int maxIterations) {
+
+        if (maxIterations == 0) {
+            return new ArrayList<>();
+        }
+
+        maxIterations--;
+        for (int i = 0; i < list.size(); i++) {
+            List<T> newList = new ArrayList<>(list);
+            newList.remove(i);
+
+            // We want to avoid testing duplicates
+            if (!lists.contains(newList)) {
+                if (predicate.apply(targetValue, newList)) {
+                    return newList;
+                } else {
+                    lists.add(newList);
+                }
+            }
+        }
+
+        List<T> nextList = lists.remove(0);
+        return findMatchingPermutation(targetValue, nextList, lists, predicate, maxIterations);
+    }
+
     //TODO optimize algorithm so that it starts from all objects and goes down instead starting with from the bottom.
     // That should help that we are not hitting the iteration limit so easily.
+
     /**
      * Returns a list of all possible permutations of a give sorted list ignoring duplicates.
      * E.g. List [A,B,C] results in this list of permutations: [[A], [B], [A,B], [C], [A,C], [B,C], [A,B,C]]
