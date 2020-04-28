@@ -115,7 +115,7 @@ public class PermutationTest {
 
         list = Arrays.asList(a, b, c, d, e);
 
-        expected = Arrays.asList(a);
+        expected = Arrays.asList("-");
         result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);
         assertTrue(expected.toString().equals(result.toString()));
 
@@ -147,15 +147,12 @@ public class PermutationTest {
         List<String> subList;
 
 
-        log.error("prep");
         list = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
+       /* for (int i = 0; i < 4; i++) {
             list.add("blindVote" + i);
-        }
-        log.error("start");
+        }*/
 
         PermutationUtil.findAllPermutations(list, limit);
-        log.error("end");
 
 
         list = new ArrayList<>();
