@@ -19,6 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -36,9 +37,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.time.Duration;
-import java.time.LocalTime;
-
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -51,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -333,27 +332,29 @@ public abstract class NetworkNode implements MessageListener {
                 server = null;
             }
 
-            getAllConnections().parallelStream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
-
-            // wait for connections to actually close, c.shutDown may create threads to actually close connections...
-            LocalTime timeout = LocalTime.now().plus(Duration.ofSeconds(15));
-            while (!getAllConnections().isEmpty()) {
-                // check timeout
-                if (timeout.isBefore(LocalTime.now())) {
-                    log.error("Could not close all connections within timeout (" + getAllConnections().size() + " connections remaining). Moving on.");
-                    break;
+            Set<Connection> allConnections = getAllConnections();
+            int numConnections = allConnections.size();
+            log.info("Shutdown {} connections", numConnections);
+            AtomicInteger shutdownCompleted = new AtomicInteger();
+            Timer timeoutHandler = UserThread.runAfter(() -> {
+                if (shutDownCompleteHandler != null) {
+                    log.info("Shutdown completed due timeout");
+                    shutDownCompleteHandler.run();
                 }
-                try {
-                    // reduce system load
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    // ignore
-                }
-            }
-
-            log.debug("NetworkNode shutdown complete");
+            }, 3);
+            allConnections.forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN,
+                    () -> {
+                        shutdownCompleted.getAndIncrement();
+                        log.info("Shutdown o fnode {} completed", c.getPeersNodeAddressOptional());
+                        if (shutdownCompleted.get() == numConnections) {
+                            log.info("Shutdown completed with all connections closed");
+                            timeoutHandler.stop();
+                            if (shutDownCompleteHandler != null) {
+                                shutDownCompleteHandler.run();
+                            }
+                        }
+                    }));
         }
-        if (shutDownCompleteHandler != null) shutDownCompleteHandler.run();
     }
 
 
