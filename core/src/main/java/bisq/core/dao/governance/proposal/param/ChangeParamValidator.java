@@ -144,6 +144,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
             case REIMBURSEMENT_MIN_AMOUNT:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
                         Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                break;
             case COMPENSATION_REQUEST_MAX_AMOUNT:
             case REIMBURSEMENT_MAX_AMOUNT:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
