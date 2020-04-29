@@ -116,6 +116,7 @@ public class Config {
     public static final String DAO_ACTIVATED = "daoActivated";
     public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
+    public static final String API_PASSWORD = "apiPassword";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -140,7 +141,7 @@ public class Config {
     public final boolean helpRequested;
     public final File configFile;
 
-    // Options supported both at the cli and in the config file
+    // Options supported on cmd line and in the config file
     public final String appName;
     public final File userDataDir;
     public final File appDataDir;
@@ -199,6 +200,7 @@ public class Config {
     public final long genesisTotalSupply;
     public final boolean dumpDelayedPayoutTxs;
     public final boolean allowFaultyDelayedTxs;
+    public final String apiPassword;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -206,7 +208,7 @@ public class Config {
     public final File storageDir;
     public final File keyStorageDir;
 
-    // The parser that will be used to parse both cli and config file options
+    // The parser that will be used to parse both cmd line and config file options
     private final OptionParser parser = new OptionParser();
 
     /**
@@ -615,6 +617,11 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<String> apiPasswordOpt =
+                parser.accepts(API_PASSWORD, "gRPC API password")
+                        .withRequiredArg()
+                        .defaultsTo("");
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -727,6 +734,7 @@ public class Config {
             this.daoActivated = options.valueOf(daoActivatedOpt);
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
+            this.apiPassword = options.valueOf(apiPasswordOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),

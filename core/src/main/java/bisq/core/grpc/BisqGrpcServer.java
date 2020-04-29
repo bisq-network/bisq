@@ -22,6 +22,8 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 
+import bisq.common.config.Config;
+
 import bisq.proto.grpc.GetBalanceGrpc;
 import bisq.proto.grpc.GetBalanceReply;
 import bisq.proto.grpc.GetBalanceRequest;
@@ -65,6 +67,7 @@ public class BisqGrpcServer {
     private Server server;
 
     private static BisqGrpcServer instance;
+    private static Config config;
     private static CoreApi coreApi;
 
 
@@ -170,9 +173,10 @@ public class BisqGrpcServer {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqGrpcServer(CoreApi coreApi) {
+    public BisqGrpcServer(Config config, CoreApi coreApi) {
         instance = this;
 
+        BisqGrpcServer.config = config;
         BisqGrpcServer.coreApi = coreApi;
 
         try {
@@ -211,15 +215,16 @@ public class BisqGrpcServer {
                 .addService(new GetPaymentAccountsImpl())
                 .addService(new PlaceOfferImpl())
                 .addService(new StopServerImpl())
+                .intercept(new PasswordAuthInterceptor(config.apiPassword))
                 .build()
                 .start();
 
         log.info("Server started, listening on " + port);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Use stderr here since the logger may have been reset by its JVM shutdown hook.
-            log.error("*** shutting down gRPC server since JVM is shutting down");
+            log.error("Shutting down gRPC server");
             BisqGrpcServer.this.stop();
-            log.error("*** server shut down");
+            log.error("Server shut down");
         }));
     }
 }
