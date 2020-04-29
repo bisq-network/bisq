@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.settings.preferences;
 
+import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -88,6 +89,8 @@ import javafx.collections.ObservableList;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.io.File;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -123,12 +126,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
+    private final File storageDir;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
-    private Button resetDontShowAgainButton, resyncDaoButton;
+    private Button resetDontShowAgainButton, resyncDaoFromGenesisButton, resyncDaoFromResourcesButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
     private ObservableList<BlockChainExplorer> blockExplorers;
     private ObservableList<BlockChainExplorer> bsqBlockChainExplorers;
@@ -162,13 +166,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            Config config,
                            @Named(Config.RPC_USER) String rpcUser,
                            @Named(Config.RPC_PASSWORD) String rpcPassword,
-                           @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
+                           @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort,
+                           @Named(Config.STORAGE_DIR) File storageDir) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
+        this.storageDir = storageDir;
         daoOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
                 !rpcUser.isEmpty() &&
                 !rpcPassword.isEmpty() &&
@@ -600,10 +606,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        resyncDaoButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
-        resyncDaoButton.setMaxWidth(Double.MAX_VALUE);
-        GridPane.setHgrow(resyncDaoButton, Priority.ALWAYS);
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
+        resyncDaoFromResourcesButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
+        resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncDaoFromResourcesButton, Priority.ALWAYS);
+
+        resyncDaoFromGenesisButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromGenesis.label"));
+        resyncDaoFromGenesisButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncDaoFromGenesisButton, Priority.ALWAYS);
 
         isDaoFullNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isDaoFullNode"));
         rpcUserTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.dao.rpcUser"));
@@ -865,11 +875,26 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockNotifyPortTextField.setText(blockNotifyPort > 0 ? String.valueOf(blockNotifyPort) : "");
         updateDaoFields();
 
-        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() ->
-                new Popup().attention(Res.get("setting.preferences.dao.resync.popup"))
+        resyncDaoFromResourcesButton.setOnAction(e -> {
+            try {
+                daoFacade.resyncDaoStateFromResources(storageDir);
+                new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                         .useShutDownButton()
                         .hideCloseButton()
-                        .show()));
+                        .show();
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error(t.toString());
+                new Popup().error(t.toString()).show();
+            }
+        });
+
+        resyncDaoFromGenesisButton.setOnAction(e ->
+                new Popup().attention(Res.get("setting.preferences.dao.resyncFromGenesis.popup"))
+                        .actionButtonText(Res.get("setting.preferences.dao.resyncFromGenesis.resync"))
+                        .onAction(() -> daoFacade.resyncDaoStateFromGenesis(() -> BisqApp.getShutDownHandler().run()))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show());
 
         isDaoFullNodeToggleButton.setOnAction(e -> {
             String key = "daoFullModeInfoShown";
@@ -973,7 +998,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateDaoPreferences() {
-        resyncDaoButton.setOnAction(null);
+        resyncDaoFromResourcesButton.setOnAction(null);
+        resyncDaoFromGenesisButton.setOnAction(null);
         isDaoFullNodeToggleButton.setOnAction(null);
         rpcUserTextField.textProperty().removeListener(rpcUserListener);
         rpcPwTextField.textProperty().removeListener(rpcPwListener);
