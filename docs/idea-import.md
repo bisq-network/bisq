@@ -4,7 +4,7 @@ Most Bisq contributors use IDEA for development. The following instructions have
 
  1. Follow the instructions in [build.md](build.md) to clone and build Bisq at the command line.
  1. Open IDEA
- 1. Go to `Preferences->Plugins` (`File->Settings, Plugins for Windows`). Search for and install the _Lombok_ plugin. When prompted, do not restart IDEA.
+ 1. Go to `Preferences->Plugins` (`File->Settings, Plugins for Windows`). Search for and install the _Lombok_ plugin. (See [here](https://plugins.jetbrains.com/plugin/6317-lombok) if not found in Marketplace.) When prompted, do not restart IDEA.
  1. Go to `Preferences->Build, Execution, Deployment->Compiler->Annotation Processors` and check the `Enable annotation processing` option (to enable processing of Lombok annotations)
  1. Restart IDEA
  1. Go to `Import Project`, select the `settings.gradle` file and click `Open`
