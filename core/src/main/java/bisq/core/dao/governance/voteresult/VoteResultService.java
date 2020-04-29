@@ -363,7 +363,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
         // We convert the list to a map with proposalTxId as key and the vote as value. As the vote can be null we
         // wrap it into an optional.
-        Map<String, Optional<Vote>> voteByTxIdMap = voteWithProposalTxIdList.stream()
+        Map<String, Optional<Vote>> voteByTxIdMap = voteWithProposalTxIdList.getList().stream()
                 .collect(Collectors.toMap(VoteWithProposalTxId::getProposalTxId, e -> Optional.ofNullable(e.getVote())));
 
         // We make a map with proposalTxId as key and the ballot as value out of our stored ballot list.
@@ -415,11 +415,11 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // If we received a proposal after we had already voted we consider it as a proposal withhold attack and
         // treat the proposal as it was voted with a rejected vote.
         ballotByTxIdMap.entrySet().stream()
-                .filter(e -> !voteByTxIdMap.keySet().contains(e.getKey()))
+                .filter(e -> !voteByTxIdMap.containsKey(e.getKey()))
                 .map(Map.Entry::getValue)
                 .forEach(ballot -> {
                     log.warn("We have a proposal which was not part of our blind vote and reject it. " +
-                            "Proposal ={}" + ballot.getProposal());
+                            "Proposal={}", ballot.getProposal());
                     ballots.add(new Ballot(ballot.getProposal(), new Vote(false)));
                 });
 
@@ -778,7 +778,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Value
-    public class HashWithStake {
+    public static class HashWithStake {
         private final byte[] hash;
         private final long stake;
 

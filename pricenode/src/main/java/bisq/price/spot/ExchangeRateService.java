@@ -84,7 +84,8 @@ class ExchangeRateService {
             timestamp = getTimestamp(provider, exchangeRates);
         } catch (Throwable t) {
             log.error(t.toString());
-            t.printStackTrace();
+            if (log.isDebugEnabled())
+                t.printStackTrace();
         }
 
         if (provider instanceof BitcoinAverage.Local) {

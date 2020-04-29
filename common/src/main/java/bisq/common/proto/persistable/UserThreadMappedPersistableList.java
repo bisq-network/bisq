@@ -19,7 +19,7 @@ package bisq.common.proto.persistable;
 
 import java.util.List;
 
-public class UserThreadMappedPersistableList<T extends PersistablePayload> extends PersistableList<T>
+public abstract class UserThreadMappedPersistableList<T extends PersistablePayload> extends PersistableList<T>
         implements UserThreadMappedPersistableEnvelope {
 
     public UserThreadMappedPersistableList(List<T> list) {
