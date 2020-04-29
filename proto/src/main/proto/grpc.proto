@@ -53,6 +53,7 @@ message GetBalanceRequest {
 
 message GetBalanceReply {
     uint64 balance = 1;
+    string error_message = 2; // optional error message
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -126,4 +127,77 @@ message PlaceOfferRequest {
 
 message PlaceOfferReply {
     bool result = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// RemoveWalletPassword
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service RemoveWalletPassword {
+    rpc RemoveWalletPassword (RemoveWalletPasswordRequest) returns (RemoveWalletPasswordReply) {
+    }
+}
+
+message RemoveWalletPasswordRequest {
+    string password = 1;
+}
+
+message RemoveWalletPasswordReply {
+    bool success = 1;
+    string error_message = 2; // optional error message
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// SetWalletPassword
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service SetWalletPassword {
+    rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
+    }
+}
+
+message SetWalletPasswordRequest {
+    string password = 1;
+    string newPassword = 2;
+}
+
+message SetWalletPasswordReply {
+    bool success = 1;
+    string error_message = 2; // optional error message
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// LockWallet
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service LockWallet {
+    rpc LockWallet (LockWalletRequest) returns (LockWalletReply) {
+    }
+}
+
+message LockWalletRequest {
+}
+
+message LockWalletReply {
+    bool success = 1;
+    string error_message = 2; // optional error message
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// UnlockWallet
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service UnlockWallet {
+    rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
+    }
+}
+
+message UnlockWalletRequest {
+    string password = 1;
+    uint64 timeout = 2;
+}
+
+message UnlockWalletReply {
+    bool success = 1;
+    string error_message = 2; // optional error message
 }

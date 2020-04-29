@@ -39,9 +39,21 @@ import bisq.proto.grpc.GetTradeStatisticsRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionReply;
 import bisq.proto.grpc.GetVersionRequest;
+import bisq.proto.grpc.LockWalletGrpc;
+import bisq.proto.grpc.LockWalletReply;
+import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.PlaceOfferGrpc;
 import bisq.proto.grpc.PlaceOfferReply;
 import bisq.proto.grpc.PlaceOfferRequest;
+import bisq.proto.grpc.RemoveWalletPasswordGrpc;
+import bisq.proto.grpc.RemoveWalletPasswordReply;
+import bisq.proto.grpc.RemoveWalletPasswordRequest;
+import bisq.proto.grpc.SetWalletPasswordGrpc;
+import bisq.proto.grpc.SetWalletPasswordReply;
+import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.UnlockWalletGrpc;
+import bisq.proto.grpc.UnlockWalletReply;
+import bisq.proto.grpc.UnlockWalletRequest;
 
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -69,7 +81,11 @@ public class GrpcServer {
                     .addService(new GetTradeStatisticsService())
                     .addService(new GetOffersService())
                     .addService(new GetPaymentAccountsService())
+                    .addService(new LockWalletService())
                     .addService(new PlaceOfferService())
+                    .addService(new RemoveWalletPasswordService())
+                    .addService(new SetWalletPasswordService())
+                    .addService(new UnlockWalletService())
                     .intercept(new PasswordAuthInterceptor(config.apiPassword))
                     .build()
                     .start();
@@ -97,7 +113,8 @@ public class GrpcServer {
     class GetBalanceService extends GetBalanceGrpc.GetBalanceImplBase {
         @Override
         public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
-            var reply = GetBalanceReply.newBuilder().setBalance(coreApi.getAvailableBalance()).build();
+            var result = coreApi.getAvailableBalance();
+            var reply = GetBalanceReply.newBuilder().setBalance(result.first).setErrorMessage(result.second).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -166,6 +183,54 @@ public class GrpcServer {
                     req.getBuyerSecurityDeposit(),
                     req.getPaymentAccountId(),
                     resultHandler);
+        }
+    }
+
+    class RemoveWalletPasswordService extends RemoveWalletPasswordGrpc.RemoveWalletPasswordImplBase {
+        @Override
+        public void removeWalletPassword(RemoveWalletPasswordRequest req,
+                                         StreamObserver<RemoveWalletPasswordReply> responseObserver) {
+            var result = coreApi.removeWalletPassword(req.getPassword());
+            var reply = RemoveWalletPasswordReply.newBuilder()
+                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        }
+    }
+
+    class SetWalletPasswordService extends SetWalletPasswordGrpc.SetWalletPasswordImplBase {
+        @Override
+        public void setWalletPassword(SetWalletPasswordRequest req,
+                                      StreamObserver<SetWalletPasswordReply> responseObserver) {
+            var result = coreApi.setWalletPassword(req.getPassword(), req.getNewPassword());
+            var reply = SetWalletPasswordReply.newBuilder()
+                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        }
+    }
+
+    class LockWalletService extends LockWalletGrpc.LockWalletImplBase {
+        @Override
+        public void lockWallet(LockWalletRequest req,
+                               StreamObserver<LockWalletReply> responseObserver) {
+            var result = coreApi.lockWallet();
+            var reply = LockWalletReply.newBuilder()
+                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        }
+    }
+
+    class UnlockWalletService extends UnlockWalletGrpc.UnlockWalletImplBase {
+        @Override
+        public void unlockWallet(UnlockWalletRequest req,
+                                 StreamObserver<UnlockWalletReply> responseObserver) {
+            var result = coreApi.unlockWallet(req.getPassword(), req.getTimeout());
+            var reply = UnlockWalletReply.newBuilder()
+                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         }
     }
 }

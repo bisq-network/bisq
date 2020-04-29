@@ -18,6 +18,7 @@
 package bisq.core.grpc;
 
 import bisq.core.btc.Balances;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
@@ -25,23 +26,31 @@ import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.presentation.BalancePresentation;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.common.app.Version;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
+
+import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Provides high level interface to functionality of core Bisq features.
@@ -50,27 +59,30 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreApi {
     private final Balances balances;
-    private final BalancePresentation balancePresentation;
     private final OfferBookService offerBookService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final CreateOfferService createOfferService;
     private final OpenOfferManager openOfferManager;
+    private final WalletsManager walletsManager;
     private final User user;
+
+    @Nullable
+    private String tempWalletPassword;
 
     @Inject
     public CoreApi(Balances balances,
-                   BalancePresentation balancePresentation,
                    OfferBookService offerBookService,
                    TradeStatisticsManager tradeStatisticsManager,
                    CreateOfferService createOfferService,
                    OpenOfferManager openOfferManager,
+                   WalletsManager walletsManager,
                    User user) {
         this.balances = balances;
-        this.balancePresentation = balancePresentation;
         this.offerBookService = offerBookService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.createOfferService = createOfferService;
         this.openOfferManager = openOfferManager;
+        this.walletsManager = walletsManager;
         this.user = user;
     }
 
@@ -78,12 +90,19 @@ public class CoreApi {
         return Version.VERSION;
     }
 
-    public long getAvailableBalance() {
-        return balances.getAvailableBalance().get().getValue();
-    }
+    public Tuple2<Long, String> getAvailableBalance() {
+        if (!walletsManager.areWalletsAvailable())
+            return new Tuple2<>(-1L, "Error: wallet is not available");
 
-    public String getAvailableBalanceAsString() {
-        return balancePresentation.getAvailableBalance().get();
+        if (walletsManager.areWalletsEncrypted())
+            return new Tuple2<>(-1L, "Error: wallet is encrypted; unlock it with the 'unlock \"password\" timeout' command");
+
+        try {
+            long balance = balances.getAvailableBalance().get().getValue();
+            return new Tuple2<>(balance, "");
+        } catch (Throwable t) {
+            return new Tuple2<>(-1L, "Error: " + t.getLocalizedMessage());
+        }
     }
 
     public List<TradeStatistics2> getTradeStatistics() {
@@ -159,5 +178,93 @@ public class CoreApi {
                 useSavingsWallet,
                 resultHandler,
                 log::error);
+    }
+
+    // Provided for automated wallet encryption password testing, despite the
+    // security risks exposed by providing users the ability to decrypt their wallets.
+    public Tuple2<Boolean, String> removeWalletPassword(String password) {
+        if (!walletsManager.areWalletsAvailable())
+            return new Tuple2<>(false, "Error: wallet is not available");
+
+        if (!walletsManager.areWalletsEncrypted())
+            return new Tuple2<>(false, "Error: wallet is not encrypted with a password");
+
+        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+        if (keyCrypterScrypt == null)
+            return new Tuple2<>(false, "Error: wallet encrypter is not available");
+
+        KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+        if (!walletsManager.checkAESKey(aesKey))
+            return new Tuple2<>(false, "Error: incorrect password");
+
+        walletsManager.decryptWallets(aesKey);
+        return new Tuple2<>(true, "");
+    }
+
+    public Tuple2<Boolean, String> setWalletPassword(String password, String newPassword) {
+        try {
+            if (!walletsManager.areWalletsAvailable())
+                return new Tuple2<>(false, "Error: wallet is not available");
+
+            KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+            if (keyCrypterScrypt == null)
+                return new Tuple2<>(false, "Error: wallet encrypter is not available");
+
+            if (newPassword != null && !newPassword.isEmpty()) {
+                // todo validate new password
+                if (!walletsManager.areWalletsEncrypted())
+                    return new Tuple2<>(false, "Error: wallet is not encrypted with a password");
+
+                KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+                if (!walletsManager.checkAESKey(aesKey))
+                    return new Tuple2<>(false, "Error: incorrect old password");
+
+                walletsManager.decryptWallets(aesKey);
+                aesKey = keyCrypterScrypt.deriveKey(newPassword);
+                walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+                return new Tuple2<>(true, "");
+            }
+
+            if (walletsManager.areWalletsEncrypted())
+                return new Tuple2<>(false, "Error: wallet is already encrypted");
+            KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+            walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+            return new Tuple2<>(true, "");
+        } catch (Throwable t) {
+            return new Tuple2<>(false, "Error: " + t.getLocalizedMessage());
+        }
+    }
+
+    public Tuple2<Boolean, String> lockWallet() {
+        if (tempWalletPassword != null) {
+            Tuple2<Boolean, String> encrypted = setWalletPassword(tempWalletPassword, null);
+            tempWalletPassword = null;
+            if (!encrypted.first)
+                return encrypted;
+
+            return new Tuple2<>(true, "");
+        }
+        return new Tuple2<>(false, "Error: wallet is already locked");
+    }
+
+    public Tuple2<Boolean, String> unlockWallet(String password, long timeout) {
+        Tuple2<Boolean, String> decrypted = removeWalletPassword(password);
+        if (!decrypted.first)
+            return decrypted;
+
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                log.info("Locking wallet");
+                setWalletPassword(password, null);
+                tempWalletPassword = null;
+            }
+        };
+        Timer timer = new Timer("Lock Wallet Timer");
+        timer.schedule(timerTask, TimeUnit.SECONDS.toMillis(timeout));
+
+        // Cache a temp password for timeout (secs) to allow user locks wallet before timeout expires.
+        tempWalletPassword = password;
+        return new Tuple2<>(true, "");
     }
 }
