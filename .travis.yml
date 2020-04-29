@@ -3,8 +3,18 @@ jdk:
     - openjdk10
     - openjdk12
 
+cache:
+    directories:
+        - .git/lfs
+git:
+    lfs_skip_smudge: true
+
+install:
+    - git lfs pull
+
 before_install:
     grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+
 notifications:
     slack:
         on_success: change

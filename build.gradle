@@ -270,6 +270,17 @@ configure(project(':p2p')) {
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion")
     }
+
+    processResources.doFirst {
+        // Sanity check that Git LFS-managed data store files have actually been sync'd.
+        // If they have not, e.g. because Git LFS is not installed, they will be text files
+        // containing a sha256 hash of the remote object, indicating we should stop the
+        // build and inform the user how to fix the problem.
+        if (file('src/main/resources/ProposalStore_BTC_MAINNET').text.contains("oid sha256:"))
+            throw new GradleException("p2p data store files have not been synchronized. " +
+                "To fix this, ensure you have Git LFS installed and run `git lfs pull`. " +
+                "See docs/build.md for more information.")
+    }
 }
 
 
@@ -335,7 +346,7 @@ configure(project(':core')) {
 }
 
 configure(project(':cli')) {
-    mainClassName = 'bisq.cli.app.BisqCliMain'
+    mainClassName = 'bisq.cli.CliMain'
 
     dependencies {
         compile project(':proto')
