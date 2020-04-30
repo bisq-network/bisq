@@ -127,18 +127,3 @@ message PlaceOfferRequest {
 message PlaceOfferReply {
     bool result = 1;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// StopServer
-///////////////////////////////////////////////////////////////////////////////////////////
-
-service StopServer {
-    rpc StopServer (StopServerRequest) returns (StopServerReply) {
-    }
-}
-
-message StopServerRequest {
-}
-
-message StopServerReply {
-}

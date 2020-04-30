@@ -27,7 +27,6 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -45,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 // Supports signatures made from EC key (arbitrators) and signature created with DSA key.
 @Slf4j
 @Value
-public class SignedWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, PersistableEnvelope,
+public class SignedWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         DateTolerantPayload, CapabilityRequiringPayload {
 
     public enum VerificationMethod {

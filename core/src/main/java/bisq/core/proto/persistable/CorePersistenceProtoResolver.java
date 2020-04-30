@@ -31,7 +31,6 @@ import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.state.DaoStateStore;
 import bisq.core.dao.state.model.governance.BallotList;
-import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
@@ -144,8 +143,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyVoteList.fromProto(proto.getMyVoteList());
                 case MY_BLIND_VOTE_LIST:
                     return MyBlindVoteList.fromProto(proto.getMyBlindVoteList());
-                case MERIT_LIST:
-                    return MeritList.fromProto(proto.getMeritList());
                 case DAO_STATE_STORE:
                     return DaoStateStore.fromProto(proto.getDaoStateStore());
                 case MY_REPUTATION_LIST:
