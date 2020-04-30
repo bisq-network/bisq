@@ -579,7 +579,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // To avoid that expired data get stored and broadcast we check early for expire date.
         if (protectedStorageEntry.isExpired(clock)) {
-            log.warn("We received an expired protectedStorageEntry from peer {}",
+            //TODO: set to warn log level with next release v1.3.5
+            log.debug("We received an expired protectedStorageEntry from peer {}",
                     sender != null ? sender.getFullAddress() : "sender is null");
             log.debug("Expired protectedStorageEntry from peer {}. getCreationTimeStamp={}, protectedStorageEntry={}",
                     sender != null ? sender.getFullAddress() : "sender is null",
