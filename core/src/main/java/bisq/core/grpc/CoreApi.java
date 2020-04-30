@@ -46,11 +46,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Provides high level interface to functionality of core Bisq features.
@@ -67,7 +68,7 @@ public class CoreApi {
     private final User user;
 
     @Nullable
-    private String tempWalletPassword;
+    private String tempLockWalletPassword;
 
     @Inject
     public CoreApi(Balances balances,
@@ -180,7 +181,7 @@ public class CoreApi {
                 log::error);
     }
 
-    // Provided for automated wallet encryption password testing, despite the
+    // Provided for automated wallet protection method testing, despite the
     // security risks exposed by providing users the ability to decrypt their wallets.
     public Tuple2<Boolean, String> removeWalletPassword(String password) {
         if (!walletsManager.areWalletsAvailable())
@@ -236,9 +237,9 @@ public class CoreApi {
     }
 
     public Tuple2<Boolean, String> lockWallet() {
-        if (tempWalletPassword != null) {
-            Tuple2<Boolean, String> encrypted = setWalletPassword(tempWalletPassword, null);
-            tempWalletPassword = null;
+        if (tempLockWalletPassword != null) {
+            Tuple2<Boolean, String> encrypted = setWalletPassword(tempLockWalletPassword, null);
+            tempLockWalletPassword = null;
             if (!encrypted.first)
                 return encrypted;
 
@@ -257,14 +258,15 @@ public class CoreApi {
             public void run() {
                 log.info("Locking wallet");
                 setWalletPassword(password, null);
-                tempWalletPassword = null;
+                tempLockWalletPassword = null;
             }
         };
         Timer timer = new Timer("Lock Wallet Timer");
-        timer.schedule(timerTask, TimeUnit.SECONDS.toMillis(timeout));
+        timer.schedule(timerTask, SECONDS.toMillis(timeout));
 
-        // Cache a temp password for timeout (secs) to allow user locks wallet before timeout expires.
-        tempWalletPassword = password;
+        // Cache wallet password for timeout (secs), in case
+        // user wants to lock the wallet for timeout expires.
+        tempLockWalletPassword = password;
         return new Tuple2<>(true, "");
     }
 }
