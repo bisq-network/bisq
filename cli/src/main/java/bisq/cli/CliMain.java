@@ -172,6 +172,10 @@ public class CliMain {
                 }
                 case unlockwallet: {
                     if (nonOptionArgs.size() < 2) {
+                        err.println("Error: no \"password\" specified");
+                        exit(EXIT_FAILURE);
+                    }
+                    if (nonOptionArgs.size() < 3) {
                         err.println("Error: no unlock timeout specified");
                         exit(EXIT_FAILURE);
                     }
