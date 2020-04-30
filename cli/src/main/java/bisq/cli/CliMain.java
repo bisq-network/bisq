@@ -249,14 +249,18 @@ public class CliMain {
         try {
             stream.println("Bisq RPC Client");
             stream.println();
-            stream.println("Usage: bisq-cli [options] <method>");
+            stream.println("Usage: bisq-cli [options] <method> [params]");
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.println("Method      Description");
-            stream.println("------      -----------");
-            stream.println("getversion  Get server version");
-            stream.println("getbalance  Get server wallet balance");
+            stream.format("%-19s%-30s%s%n", "Method", "Params", "Description");
+            stream.format("%-19s%-30s%s%n", "------", "------", "------------");
+            stream.format("%-19s%-30s%s%n", "getversion", "", "Get server version");
+            stream.format("%-19s%-30s%s%n", "getbalance", "", "Get server wallet balance");
+            stream.format("%-19s%-30s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
+            stream.format("%-19s%-30s%s%n", "unlockwallet", "\"password\" timeout", "Store wallet password in memory for 'timeout' seconds");
+            stream.format("%-19s%-30s%s%n", "setwalletpassword", "\"password\" [,\"newpassword\"]",
+                    "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.println();
         } catch (IOException ex) {
             ex.printStackTrace(stream);
