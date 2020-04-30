@@ -33,7 +33,7 @@ import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.InteracETransferAccountPayload;
-import bisq.core.payment.payload.JapanBankAccountPayload;;
+import bisq.core.payment.payload.JapanBankAccountPayload;
 import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.NationalBankAccountPayload;
@@ -57,7 +57,7 @@ import bisq.core.trade.statistics.TradeStatistics2;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufferRuntimeException;
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.PersistablePayload;
 
 import java.time.Clock;
 
@@ -165,7 +165,7 @@ public class CoreProtoResolver implements ProtoResolver {
     }
 
     @Override
-    public PersistableEnvelope fromProto(protobuf.PersistableNetworkPayload proto) {
+    public PersistablePayload fromProto(protobuf.PersistableNetworkPayload proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case ACCOUNT_AGE_WITNESS:

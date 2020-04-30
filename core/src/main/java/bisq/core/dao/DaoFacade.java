@@ -91,6 +91,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -517,7 +518,10 @@ public class DaoFacade implements DaoSetupService {
         lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
-    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount,
+                                                               int lockTime,
+                                                               LockupReason lockupReason,
+                                                               byte[] hash)
             throws InsufficientMoneyException, IOException, TransactionVerificationException, WalletException {
         return lockupTxService.getMiningFeeAndTxSize(lockupAmount, lockTime, lockupReason, hash);
     }
@@ -700,8 +704,12 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getParamValue(param, blockHeight);
     }
 
-    public void resyncDao(Runnable resultHandler) {
-        daoStateStorageService.resetDaoState(resultHandler);
+    public void resyncDaoStateFromGenesis(Runnable resultHandler) {
+        daoStateStorageService.resyncDaoStateFromGenesis(resultHandler);
+    }
+
+    public void resyncDaoStateFromResources(File storageDir) throws IOException {
+        daoStateStorageService.resyncDaoStateFromResources(storageDir);
     }
 
     public boolean isMyRole(Role role) {

@@ -33,6 +33,7 @@ import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 
+import static bisq.common.config.Config.ALLOW_FAULTY_DELAYED_TXS;
 import static bisq.common.config.Config.DUMP_DELAYED_PAYOUT_TXS;
 import static bisq.common.config.Config.DUMP_STATISTICS;
 import static com.google.inject.name.Names.named;
@@ -58,5 +59,6 @@ public class TradeModule extends AppModule {
         bind(AssetTradeActivityCheck.class).in(Singleton.class);
         bindConstant().annotatedWith(named(DUMP_STATISTICS)).to(config.dumpStatistics);
         bindConstant().annotatedWith(named(DUMP_DELAYED_PAYOUT_TXS)).to(config.dumpDelayedPayoutTxs);
+        bindConstant().annotatedWith(named(ALLOW_FAULTY_DELAYED_TXS)).to(config.allowFaultyDelayedTxs);
     }
 }

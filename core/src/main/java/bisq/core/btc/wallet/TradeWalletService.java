@@ -675,7 +675,7 @@ public class TradeWalletService {
         Transaction delayedPayoutTx = new Transaction(params);
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
-        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
+        Coin outputAmount = p2SHMultiSigOutput.getValue().subtract(minerFee);
         delayedPayoutTx.addOutput(outputAmount, Address.fromBase58(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
@@ -722,22 +722,6 @@ public class TradeWalletService {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         input.verify(input.getConnectedOutput());
         return delayedPayoutTx;
-    }
-
-    public boolean verifiesDepositTxAndDelayedPayoutTx(@SuppressWarnings("unused") Transaction depositTx,
-                                                       Transaction delayedPayoutTx) {
-        // todo add more checks
-        if (delayedPayoutTx.getLockTime() == 0) {
-            log.error("Time lock is not set");
-            return false;
-        }
-
-        if (delayedPayoutTx.getInputs().stream().noneMatch(e -> e.getSequenceNumber() == TransactionInput.NO_SEQUENCE - 1)) {
-            log.error("Sequence number must be 0xFFFFFFFE");
-            return false;
-        }
-
-        return true;
     }
 
 
@@ -1228,11 +1212,10 @@ public class TradeWalletService {
     private boolean removeDust(Transaction transaction) {
         List<TransactionOutput> originalTransactionOutputs = transaction.getOutputs();
         List<TransactionOutput> keepTransactionOutputs = new ArrayList<>();
-        for (TransactionOutput transactionOutput: originalTransactionOutputs) {
+        for (TransactionOutput transactionOutput : originalTransactionOutputs) {
             if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
                 log.info("your transaction would have contained a dust output of {}", transactionOutput.toString());
-            }
-            else {
+            } else {
                 keepTransactionOutputs.add(transactionOutput);
             }
         }

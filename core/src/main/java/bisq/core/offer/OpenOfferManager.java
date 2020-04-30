@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.locale.Res;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
@@ -159,9 +160,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         openOfferTradableListStorage = storage;
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            UserThread.execute(OpenOfferManager.this::shutDown);
-        }, "OpenOfferManager.ShutDownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() ->
+                UserThread.execute(OpenOfferManager.this::shutDown), "OpenOfferManager.ShutDownHook"));
     }
 
     @Override
@@ -220,7 +220,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         int size = openOffers != null ? openOffers.size() : 0;
         log.info("Remove open offers at shutDown. Number of open offers: {}", size);
         if (offerBookService.isBootstrapped() && size > 0) {
-            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
+            UserThread.execute(() -> openOffers.forEach(
+                    openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload())
+            ));
             if (completeHandler != null)
                 UserThread.runAfter(completeHandler, size * 200 + 500, TimeUnit.MILLISECONDS);
         } else {
@@ -635,6 +637,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             } else {
                 log.warn("handleOfferAvailabilityRequest: openOffer not found. That should never happen.");
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
+            }
+
+            if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
+                errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
+                log.warn(errorMessage);
+                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
             }
 
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,

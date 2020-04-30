@@ -1,6 +1,14 @@
 # Building Bisq
 
 
+## Install Git LFS
+
+Bisq uses Git LFS to track certain large binary files. Follow the instructions at https://git-lfs.github.com to install it, then run the following to command to verify the installation:
+
+    $ git lfs version
+    git-lfs/2.10.0 (GitHub; darwin amd64; go 1.13.6)
+
+
 ## Clone
 
     git clone https://github.com/bisq-network/bisq
@@ -20,7 +28,7 @@ If on Windows run `gradlew.bat build` instead.
 
 Bisq executables are now available in the root project directory. Run Bisq Desktop as follows:
 
-Note: bisq runs fine on jdk10 and jdk11. jdk12 is currently not supported. 
+Note: bisq runs fine on jdk10 and jdk11. jdk12 is currently not supported.
 
     ./bisq-desktop
 

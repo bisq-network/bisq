@@ -17,53 +17,93 @@
 
 package bisq.core.account.witness;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.filter.FilterManager;
+import bisq.core.locale.CountryUtil;
+import bisq.core.offer.OfferPayload;
 import bisq.core.payment.ChargeBackRisk;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.SepaAccountPayload;
+import bisq.core.support.SupportType;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.arbitration.TraderDataItem;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.trade.Contract;
+
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.KeyStorage;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import java.security.KeyPair;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.cert.CertificateException;
 
+import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 
 // Restricted default Java security policy on Travis does not allow long keys, so test fails.
 // Using Utilities.removeCryptographyRestrictions(); did not work.
-@Ignore
+//@Ignore
 public class AccountAgeWitnessServiceTest {
     private PublicKey publicKey;
     private KeyPair keypair;
+    private SignedWitnessService signedWitnessService;
     private AccountAgeWitnessService service;
+    private ChargeBackRisk chargeBackRisk;
+    private FilterManager filterManager;
 
     @Before
-    public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        SignedWitnessService signedWitnessService = mock(SignedWitnessService.class);
-        ChargeBackRisk chargeBackRisk = mock(ChargeBackRisk.class);
-        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, null, null);
+    public void setup() {
+        chargeBackRisk = mock(ChargeBackRisk.class);
+        AppendOnlyDataStoreService dataStoreService = mock(AppendOnlyDataStoreService.class);
+        KeyRing keyRing = mock(KeyRing.class);
+        P2PService p2pService = mock(P2PService.class);
+        ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
+        when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
+        AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
+        filterManager = mock(FilterManager.class);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterManager);
+        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, filterManager);
         keypair = Sig.generateKeyPair();
         publicKey = keypair.getPublic();
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() {
+        // Do teardown stuff
     }
 
+    @Ignore
     @Test
     public void testIsTradeDateAfterReleaseDate() throws CryptoException {
         Date ageWitnessReleaseDate = new GregorianCalendar(2017, 9, 23).getTime();
@@ -84,6 +124,7 @@ public class AccountAgeWitnessServiceTest {
         }));
     }
 
+    @Ignore
     @Test
     public void testVerifySignatureOfNonce() throws CryptoException {
         byte[] nonce = new byte[]{0x01};
@@ -96,5 +137,114 @@ public class AccountAgeWitnessServiceTest {
         }));
         assertFalse(service.verifySignature(publicKey, new byte[]{0x02}, new byte[]{0x04}, errorMessage -> {
         }));
+    }
+
+    @Test
+    public void testArbitratorSignWitness() throws IOException {
+        // Setup temp storage dir
+        File dir1 = File.createTempFile("temp_tests1", "");
+        dir1.delete();
+        dir1.mkdir();
+        File dir2 = File.createTempFile("temp_tests1", "");
+        dir2.delete();
+        dir2.mkdir();
+
+        KeyRing buyerKeyRing = new KeyRing(new KeyStorage(dir1));
+        KeyRing sellerKeyRing = new KeyRing(new KeyStorage(dir2));
+
+        // Setup dispute for arbitrator to sign both sides
+        List<Dispute> disputes = new ArrayList<>();
+        PubKeyRing buyerPubKeyRing = buyerKeyRing.getPubKeyRing();
+        PubKeyRing sellerPubKeyRing = sellerKeyRing.getPubKeyRing();
+        PaymentAccountPayload buyerPaymentAccountPayload = new SepaAccountPayload(PaymentMethod.SEPA_ID, "1", CountryUtil.getAllSepaCountries());
+        PaymentAccountPayload sellerPaymentAccountPayload = new SepaAccountPayload(PaymentMethod.SEPA_ID, "2", CountryUtil.getAllSepaCountries());
+        AccountAgeWitness buyerAccountAgeWitness = service.getNewWitness(buyerPaymentAccountPayload, buyerPubKeyRing);
+        service.addToMap(buyerAccountAgeWitness);
+        AccountAgeWitness sellerAccountAgeWitness = service.getNewWitness(sellerPaymentAccountPayload, sellerPubKeyRing);
+        service.addToMap(sellerAccountAgeWitness);
+        long now = new Date().getTime() + 1000;
+        Contract contract = mock(Contract.class);
+        disputes.add(new Dispute(
+                "trade1",
+                0,
+                true,
+                true,
+                buyerPubKeyRing,
+                now - 1,
+                contract,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "contractAsJson",
+                null,
+                null,
+                null,
+                true,
+                SupportType.ARBITRATION));
+        disputes.get(0).getIsClosedProperty().set(true);
+        disputes.get(0).getDisputeResultProperty().set(new DisputeResult(
+                "trade1",
+                1,
+                DisputeResult.Winner.BUYER,
+                DisputeResult.Reason.OTHER.ordinal(),
+                true,
+                true,
+                true,
+                "summary",
+                null,
+                null,
+                100000,
+                0,
+                null,
+                now - 1,
+                false));
+
+        // Filtermanager says nothing is filtered
+        when(filterManager.isNodeAddressBanned(any())).thenReturn(false);
+        when(filterManager.isCurrencyBanned(any())).thenReturn(false);
+        when(filterManager.isPaymentMethodBanned(any())).thenReturn(false);
+        when(filterManager.isPeersPaymentAccountDataAreBanned(any(), any())).thenReturn(false);
+        when(filterManager.isSignerPubKeyBanned(any())).thenReturn(false);
+
+        when(chargeBackRisk.hasChargebackRisk(any(), any())).thenReturn(true);
+
+        when(contract.getPaymentMethodId()).thenReturn(PaymentMethod.SEPA_ID);
+        when(contract.getTradeAmount()).thenReturn(Coin.parseCoin("0.01"));
+        when(contract.getBuyerPubKeyRing()).thenReturn(buyerPubKeyRing);
+        when(contract.getSellerPubKeyRing()).thenReturn(sellerPubKeyRing);
+        when(contract.getBuyerPaymentAccountPayload()).thenReturn(buyerPaymentAccountPayload);
+        when(contract.getSellerPaymentAccountPayload()).thenReturn(sellerPaymentAccountPayload);
+        when(contract.getOfferPayload()).thenReturn(mock(OfferPayload.class));
+        List<TraderDataItem> items = service.getTraderPaymentAccounts(now, getPaymentMethodById(PaymentMethod.SEPA_ID), disputes);
+        assertEquals(2, items.size());
+
+        // Setup a mocked arbitrator key
+        ECKey arbitratorKey = mock(ECKey.class);
+        when(arbitratorKey.signMessage(any())).thenReturn("1");
+        when(arbitratorKey.signMessage(any())).thenReturn("2");
+        when(arbitratorKey.getPubKey()).thenReturn("1".getBytes());
+
+        // Arbitrator signs both trader accounts
+        items.forEach(item -> service.arbitratorSignAccountAgeWitness(
+                item.getTradeAmount(),
+                item.getAccountAgeWitness(),
+                arbitratorKey,
+                item.getPeersPubKey()));
+
+        // Check that both accountAgeWitnesses are signed
+        SignedWitness foundBuyerSignedWitness = signedWitnessService.getSignedWitnessSetByOwnerPubKey(
+                buyerPubKeyRing.getSignaturePubKeyBytes()).stream()
+                .findFirst()
+                .orElse(null);
+        assertEquals(Utilities.bytesAsHexString(foundBuyerSignedWitness.getAccountAgeWitnessHash()),
+                Utilities.bytesAsHexString(buyerAccountAgeWitness.getHash()));
+        SignedWitness foundSellerSignedWitness = signedWitnessService.getSignedWitnessSetByOwnerPubKey(
+                sellerPubKeyRing.getSignaturePubKeyBytes()).stream()
+                .findFirst()
+                .orElse(null);
+        assertEquals(Utilities.bytesAsHexString(foundSellerSignedWitness.getAccountAgeWitnessHash()),
+                Utilities.bytesAsHexString(sellerAccountAgeWitness.getHash()));
     }
 }

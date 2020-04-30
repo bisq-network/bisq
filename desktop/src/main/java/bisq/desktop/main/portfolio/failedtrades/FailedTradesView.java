@@ -21,21 +21,32 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.Trade;
+
+import bisq.common.config.Config;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.fxml.FXML;
 
+import javafx.scene.Scene;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.event.EventHandler;
 
 import javafx.collections.transformation.SortedList;
 
@@ -53,11 +64,17 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn;
     private final TradeDetailsWindow tradeDetailsWindow;
     private SortedList<FailedTradesListItem> sortedList;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
+    private final boolean allowFaultyDelayedTxs;
 
     @Inject
-    public FailedTradesView(FailedTradesViewModel model, TradeDetailsWindow tradeDetailsWindow) {
+    public FailedTradesView(FailedTradesViewModel model,
+                            TradeDetailsWindow tradeDetailsWindow,
+                            @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
     }
 
     @Override
@@ -95,10 +112,59 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
+        keyEventEventHandler = keyEvent -> {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
+                var checkTxs = checkTxs();
+                var checkUnfailString = checkUnfail();
+                if (!checkTxs.isEmpty()) {
+                    log.warn("Cannot unfail, error {}", checkTxs);
+                    new Popup().warning(checkTxs)
+                            .show();
+                } else if (!checkUnfailString.isEmpty()) {
+                    log.warn("Cannot unfail, error {}", checkUnfailString);
+                    new Popup().warning(Res.get("portfolio.failed.cantUnfail", checkUnfailString))
+                            .show();
+                } else {
+                    new Popup().warning(Res.get("portfolio.failed.unfail"))
+                            .onAction(this::onUnfail)
+                            .show();
+                }
+            }
+        };
+    }
+
+    private void onUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        model.dataModel.unfailTrade(trade);
+    }
+
+    private String checkUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        return model.dataModel.checkUnfail(trade);
+    }
+
+    private String checkTxs() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        log.info("Initiated unfail of trade {}", trade.getId());
+        if (trade.getDepositTx() == null) {
+            log.info("Check unfail found no depositTx for trade {}", trade.getId());
+            return Res.get("portfolio.failed.depositTxNull");
+        }
+        if (trade.getDelayedPayoutTxBytes() == null) {
+            log.info("Check unfail found no delayedPayoutTxBytes for trade {}", trade.getId());
+            if (!allowFaultyDelayedTxs) {
+                return Res.get("portfolio.failed.delayedPayoutTxNull");
+            }
+        }
+        return "";
     }
 
     @Override
     protected void activate() {
+        scene = root.getScene();
+        if (scene != null) {
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
         sortedList = new SortedList<>(model.getList());
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -106,6 +172,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     protected void deactivate() {
+        if (scene != null) {
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
         sortedList.comparatorProperty().unbind();
     }
 
