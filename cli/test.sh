@@ -1,19 +1,20 @@
 #!/usr/bin/env bats
 #
-# bats v0.4.0 project
+# Integration tests for bisq-cli running against a live bisq-daemon
 #
-#  https://github.com/sstephenson/bats/tree/v0.4.0
+# Prerequisites:
 #
-# Prior to running this script, run:
+#  - bats v0.4.0 must be installed (brew install bats on macOS)
+#    see https://github.com/sstephenson/bats/tree/v0.4.0
 #
-#     ./bisq-daemon --apiPassword=xyz
+#  - Run `./bisq-daemon --apiPassword=xyz --appDataDir=$TESTDIR` where $TESTDIR
+#    is empty or otherwise contains an unencrypted wallet with a 0 BTC balance
 #
-# To run this script:
+# Usage:
 #
-#     cd <project-root-dir>
-#     bats cli/test.sh
+#  This script must be run from the root of the project, e.g.:
 #
-# The data directory used must contain an unencrypted wallet with a 0 BTC balance
+#     ./cli/test.sh
 
 @test "test unsupported method error" {
   run ./bisq-cli --password=xyz bogus
