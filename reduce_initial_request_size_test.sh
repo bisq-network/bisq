@@ -30,6 +30,7 @@ run()
 #		echo "$target: ${cmd[$target]}"
 		screen -S localnet -X screen -t $target; \
 		screen -S localnet -p $target -X stuff "${cmd[$target]}\n"; \
+		sleep 3
 	done;
 	# give bitcoind rpc server time to start
 	sleep 5
@@ -47,12 +48,43 @@ staap()
 	screen -wipe
 }
 
+check()
+{
+	# gather data
+	for target in \
+		alice \
+		bob \
+		mediator; do \
+		echo "$target:" >> result.log; \
+		grep -o ": .* with [0-9\.]* kB" .localnet/$target/bisq.log >> result.log; \
+		rm .localnet/$target/bisq.log; \
+	done;
+}
+
 # clean everything for a fresh test run
 rm -rf .localnet
 rm -rf installdir
+staap
 
 # deploy configuration files and start bitcoind
 make localnet
+for target in \
+	seednode \
+	seednode2 \
+	alice \
+	bob \
+	mediator; do \
+	mkdir -p .localnet/$target/btc_regtest/db/; \
+	cp PreferencesPayload .localnet/$target/btc_regtest/db/; \
+done;
+
+
+# - borrow mainnet data stores to better illustrate stuff
+cd p2p/src/main/resources/
+cp TradeStatistics2Store_BTC_MAINNET TradeStatistics2Store_BTC_REGTEST
+cp AccountAgeWitnessStore_BTC_MAINNET AccountAgeWitnessStore_BTC_REGTEST
+cp SignedWitnessStore_BTC_MAINNET SignedWitnessStore_BTC_REGTEST
+cd -
 
 # start with 1.3.2 setup
 # - get sources for 1.3.2
@@ -73,12 +105,15 @@ install desktop mediator
 run
 
 # - setup mediator/refund agent
-read -n 1 -p "Configure mediator/refund agent! proceed?" mainmenuinput
-read -n 1 -p "Create 2 offers and do one trade! proceed?" mainmenuinput
+sleep 5
 
 # - shut down everything
 staap
 
+echo "##### Sanity check ###########################################" > result.log
+check
+
+exit 1
 # upgrade to PR
 git checkout -f reduce_initial_request_size
 ./gradlew :seednode:build
