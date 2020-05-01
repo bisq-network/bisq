@@ -180,6 +180,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
         });
 
         // - create new file with leftovers
+        storage.initAndGetPersisted(store, 0);
         storage.queueUpForSave();
 
     }
