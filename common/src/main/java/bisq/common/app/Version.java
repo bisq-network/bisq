@@ -17,6 +17,9 @@
 
 package bisq.common.app;
 
+import java.util.Arrays;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -28,6 +31,16 @@ public class Version {
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
     public static final String VERSION = "1.3.8";
+
+    /**
+     * Holds a list of historical versions.
+     *
+     * Has been introduced with version 1.3.2. Prior versions did not need the history.
+     *
+     * The history of versions is used in the differential data store solution which
+     * was introduced to get rid of storing all data every time.
+     */
+    public static final List<String> history = Arrays.asList();
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);

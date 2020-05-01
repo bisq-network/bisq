@@ -22,6 +22,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
 import org.junit.After;
 
 /**
@@ -114,5 +117,29 @@ public class FileDatabaseTestUtils {
      */
     public String getVersion(int offset) {
         return new StringBuilder().append(Integer.valueOf(Version.VERSION.replace(".", "")) + offset).insert(2, ".").insert(1, ".").toString();
+    }
+
+    /**
+     * Beware of this nasty hack!<br><br>
+     *
+     * TODO get rid of this as soon as we have at least one version in <code>Version.history</code><br><br>
+     *
+     * Because <code>Version.history</code> should be static and final, we cannot create
+     * proper tests. Hence, we use reflections to do it. This can be removed as soon as
+     * there is at least one version in <code>Version.history</code>!
+     *
+     * @param field
+     * @param newValue
+     * @throws Exception
+     */
+    static void setFinalStatic(Field field, Object newValue) throws Exception {
+        field.setAccessible(true);
+
+        // remove final modifier from field
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+        field.set(null, newValue);
     }
 }

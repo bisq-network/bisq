@@ -106,6 +106,7 @@ run
 
 # - setup mediator/refund agent
 sleep 5
+read -p "Wrap up first test case?"
 
 # - shut down everything
 staap
@@ -113,9 +114,15 @@ staap
 echo "##### Sanity check ###########################################" > result.log
 check
 
-exit 1
 # upgrade to PR
 git checkout -f reduce_initial_request_size
+
+# create release data stores
+cd p2p/src/main/resources/
+cp TradeStatistics2Store_BTC_REGTEST TradeStatistics2Store_1.3.2_BTC_REGTEST
+cp AccountAgeWitnessStore_BTC_REGTEST AccountAgeWitnessStore_1.3.2_BTC_REGTEST
+cp SignedWitnessStore_BTC_REGTEST SignedWitnessStore_1.3.2_BTC_REGTEST
+cd -
 ./gradlew :seednode:build
 
 # install seednode binaries
@@ -124,11 +131,16 @@ install seednode seednode
 # fire up all of it
 run
 
-read -n 1 -p "Create 2 offers and do one trade! done. proceed:" mainmenuinput
+sleep 5
+read -p "Wrap up second test case?"
 
 # shut down anything again
 staap
 
+echo "##### After upgrading one seednode ###########################" >> result.log
+check
+
+exit 1
 ## install client binaries
 install desktop alice
 

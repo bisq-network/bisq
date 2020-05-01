@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -145,13 +146,15 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
             log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
 
         // check resources for files
-        File resourceDir = new File(ClassLoader.getSystemClassLoader().getResource("").getFile());
-        List<File> resourceFiles = Arrays.asList(resourceDir.list((dir, name) -> name.startsWith(getFileName()))).stream().map(s -> new File(s)).collect(Collectors.toList());
+        List<String> versions = new ArrayList<>();
+        versions.add(Version.VERSION);
+        versions.addAll(Version.history);
+        List<String> resourceFiles = versions.stream().map(s -> getFileName() + "_" + s + postFix).collect(Collectors.toList());
 
         // if not, copy and split
         resourceFiles.forEach(file -> {
-            final File destinationFile = new File(Paths.get(absolutePathOfStorageDir, file.getName().replace(postFix, "")).toString());
-            final String resourceFileName = file.getName();
+            final File destinationFile = new File(Paths.get(absolutePathOfStorageDir, file.replace(postFix, "")).toString());
+            final String resourceFileName = file;
             if (!destinationFile.exists()) {
                 try {
                     log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
@@ -164,7 +167,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
                     e.printStackTrace();
                 }
             } else {
-                log.debug(file.getName() + " file exists already.");
+                log.debug(file + " file exists already.");
             }
         });
 
@@ -173,8 +176,8 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
         history = new HashMap<>();
         store = readStore(getFileName());
         resourceFiles.forEach(file -> {
-            SplitStore tmp = readStore(file.getName().replace(postFix, ""));
-            history.put(file.getName().replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
+            SplitStore tmp = readStore(file.replace(postFix, ""));
+            history.put(file.replace(postFix, "").replace(getFileName(), "").replace("_", ""), tmp);
             // - subtract all that is in resource files
             store.getMap().keySet().removeAll(tmp.getMap().keySet());
         });

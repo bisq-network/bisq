@@ -68,6 +68,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     private void checkTestFixturesHelper(AccountAgeWitness... objects) throws IOException, InterruptedException {
+        createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), objects);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), objects);
         AppendOnlyDataStoreService DUT = loadDatabase();
         Assert.assertEquals(objects.length, DUT.getMap().size());
@@ -125,7 +126,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * resources. Plus, the data stores in the working dir do not share any set of objects.
      */
     @Test
-    public void updateScenario() throws IOException, InterruptedException {
+    public void updateScenario() throws Exception {
         // setup scenario
         // - create two data stores in resources
         createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
@@ -133,6 +134,10 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
         // - create two data stores in work dir
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object2, object3);
+
+        // beware of the nasty hack!
+        // TODO replace as soon as we have at least one version string in history
+        setFinalStatic(Version.class.getField("history"), Arrays.asList("1.3.1"));
 
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -158,11 +163,15 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * After startup, there should be 3 data stores in the working directory.
      */
     @Test
-    public void freshInstallScenario() throws IOException, InterruptedException {
+    public void freshInstallScenario() throws Exception {
         // setup scenario
         // - create two data stores in resources
         createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
         createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
+
+        // beware of the nasty hack!
+        // TODO replace as soon as we have at least one version string in history
+        setFinalStatic(Version.class.getField("history"), Arrays.asList("1.3.1"));
 
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
