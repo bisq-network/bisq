@@ -152,21 +152,13 @@ public class CliMain {
                     var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = GetBalanceRequest.newBuilder().build();
                     var reply = stub.getBalance(request);
-                    if (reply.getBalance() == -1) {
-                        err.println(reply.getErrorMessage());
-                        exit(EXIT_FAILURE);
-                    }
                     out.println(formatBalance(reply.getBalance()));
                     exit(EXIT_SUCCESS);
                 }
                 case lockwallet: {
                     var stub = LockWalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = LockWalletRequest.newBuilder().build();
-                    var reply = stub.lockWallet(request);
-                    if (!reply.getSuccess()) {
-                        err.println(reply.getErrorMessage());
-                        exit(EXIT_FAILURE);
-                    }
+                    stub.lockWallet(request);
                     out.println("wallet locked");
                     exit(EXIT_SUCCESS);
                 }
@@ -190,11 +182,7 @@ public class CliMain {
                     var request = UnlockWalletRequest.newBuilder()
                             .setPassword(nonOptionArgs.get(1))
                             .setTimeout(timeout).build();
-                    var reply = stub.unlockWallet(request);
-                    if (!reply.getSuccess()) {
-                        err.println(reply.getErrorMessage());
-                        exit(EXIT_FAILURE);
-                    }
+                    stub.unlockWallet(request);
                     out.println("wallet unlocked");
                     exit(EXIT_SUCCESS);
                 }
@@ -205,11 +193,7 @@ public class CliMain {
                     }
                     var stub = RemoveWalletPasswordGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = RemoveWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
-                    var reply = stub.removeWalletPassword(request);
-                    if (!reply.getSuccess()) {
-                        err.println(reply.getErrorMessage());
-                        exit(EXIT_FAILURE);
-                    }
+                    stub.removeWalletPassword(request);
                     out.println("wallet decrypted");
                     exit(EXIT_SUCCESS);
                 }
@@ -222,11 +206,7 @@ public class CliMain {
                     var request = (nonOptionArgs.size() == 3)
                             ? SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).setNewPassword(nonOptionArgs.get(2)).build()
                             : SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
-                    var reply = stub.setWalletPassword(request);
-                    if (!reply.getSuccess()) {
-                        err.println(reply.getErrorMessage());
-                        exit(EXIT_FAILURE);
-                    }
+                    stub.setWalletPassword(request);
                     out.println("wallet encrypted" + (nonOptionArgs.size() == 2 ? "" : " with new password"));
                     exit(EXIT_SUCCESS);
                 }
@@ -236,11 +216,17 @@ public class CliMain {
                 }
             }
         } catch (StatusRuntimeException ex) {
-            // This exception is thrown if the client-provided password credentials do not
-            // match the value set on the server. The actual error message is in a nested
-            // exception and we clean it up a bit to make it more presentable.
+            // The actual server error message is in a nested exception and we clean it
+            // up a bit to make it more presentable.
             Throwable t = ex.getCause() == null ? ex : ex.getCause();
-            err.println("Error: " + t.getMessage().replace("UNAUTHENTICATED: ", ""));
+            String message = t.getMessage()
+                    .replace("FAILED_PRECONDITION: ", "")
+                    .replace("INTERNAL: ", "")
+                    .replace("INVALID_ARGUMENT: ", "")
+                    .replace("UNAUTHENTICATED: ", "")
+                    .replace("UNAVAILABLE: ", "")
+                    .replace("UNKNOWN: ", "");
+            err.println("Error: " + message);
             exit(EXIT_FAILURE);
         }
     }

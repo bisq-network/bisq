@@ -56,6 +56,7 @@ import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
 
 import io.grpc.ServerBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
@@ -114,7 +115,13 @@ public class GrpcServer {
         @Override
         public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
             var result = coreApi.getAvailableBalance();
-            var reply = GetBalanceReply.newBuilder().setBalance(result.first).setErrorMessage(result.second).build();
+            if (!result.second.equals(ApiStatus.OK)) {
+                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
+                        .withDescription(result.second.getDescription()));
+                responseObserver.onError(ex);
+                throw ex;
+            }
+            var reply = GetBalanceReply.newBuilder().setBalance(result.first).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -191,8 +198,13 @@ public class GrpcServer {
         public void removeWalletPassword(RemoveWalletPasswordRequest req,
                                          StreamObserver<RemoveWalletPasswordReply> responseObserver) {
             var result = coreApi.removeWalletPassword(req.getPassword());
-            var reply = RemoveWalletPasswordReply.newBuilder()
-                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            if (!result.second.equals(ApiStatus.OK)) {
+                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
+                        .withDescription(result.second.getDescription()));
+                responseObserver.onError(ex);
+                throw ex;
+            }
+            var reply = RemoveWalletPasswordReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -203,8 +215,13 @@ public class GrpcServer {
         public void setWalletPassword(SetWalletPasswordRequest req,
                                       StreamObserver<SetWalletPasswordReply> responseObserver) {
             var result = coreApi.setWalletPassword(req.getPassword(), req.getNewPassword());
-            var reply = SetWalletPasswordReply.newBuilder()
-                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            if (!result.second.equals(ApiStatus.OK)) {
+                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
+                        .withDescription(result.second.getDescription()));
+                responseObserver.onError(ex);
+                throw ex;
+            }
+            var reply = SetWalletPasswordReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -215,8 +232,13 @@ public class GrpcServer {
         public void lockWallet(LockWalletRequest req,
                                StreamObserver<LockWalletReply> responseObserver) {
             var result = coreApi.lockWallet();
-            var reply = LockWalletReply.newBuilder()
-                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            if (!result.second.equals(ApiStatus.OK)) {
+                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
+                        .withDescription(result.second.getDescription()));
+                responseObserver.onError(ex);
+                throw ex;
+            }
+            var reply = LockWalletReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
@@ -227,8 +249,13 @@ public class GrpcServer {
         public void unlockWallet(UnlockWalletRequest req,
                                  StreamObserver<UnlockWalletReply> responseObserver) {
             var result = coreApi.unlockWallet(req.getPassword(), req.getTimeout());
-            var reply = UnlockWalletReply.newBuilder()
-                    .setSuccess(result.first).setErrorMessage(result.second).build();
+            if (!result.second.equals(ApiStatus.OK)) {
+                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
+                        .withDescription(result.second.getDescription()));
+                responseObserver.onError(ex);
+                throw ex;
+            }
+            var reply = UnlockWalletReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }

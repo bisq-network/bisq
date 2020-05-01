@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.grpc.ApiStatus.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -91,18 +92,21 @@ public class CoreApi {
         return Version.VERSION;
     }
 
-    public Tuple2<Long, String> getAvailableBalance() {
+    public Tuple2<Long, ApiStatus> getAvailableBalance() {
         if (!walletsManager.areWalletsAvailable())
-            return new Tuple2<>(-1L, "Error: wallet is not available");
+            return new Tuple2<>(-1L, WALLET_NOT_AVAILABLE);
 
         if (walletsManager.areWalletsEncrypted())
-            return new Tuple2<>(-1L, "Error: wallet is encrypted; unlock it with the 'unlock \"password\" timeout' command");
+            return new Tuple2<>(-1L, WALLET_IS_ENCRYPTED_WITH_UNLOCK_INSTRUCTION);
 
         try {
             long balance = balances.getAvailableBalance().get().getValue();
-            return new Tuple2<>(balance, "");
+            return new Tuple2<>(balance, OK);
         } catch (Throwable t) {
-            return new Tuple2<>(-1L, "Error: " + t.getLocalizedMessage());
+            // TODO Derive new ApiStatus codes from server stack traces.
+            t.printStackTrace();
+            // TODO Fix bug causing NPE thrown by getAvailableBalance().
+            return new Tuple2<>(-1L, INTERNAL);
         }
     }
 
@@ -183,74 +187,78 @@ public class CoreApi {
 
     // Provided for automated wallet protection method testing, despite the
     // security risks exposed by providing users the ability to decrypt their wallets.
-    public Tuple2<Boolean, String> removeWalletPassword(String password) {
+    public Tuple2<Boolean, ApiStatus> removeWalletPassword(String password) {
         if (!walletsManager.areWalletsAvailable())
-            return new Tuple2<>(false, "Error: wallet is not available");
+            return new Tuple2<>(false, WALLET_NOT_AVAILABLE);
 
         if (!walletsManager.areWalletsEncrypted())
-            return new Tuple2<>(false, "Error: wallet is not encrypted with a password");
+            return new Tuple2<>(false, WALLET_NOT_ENCRYPTED);
 
         KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
         if (keyCrypterScrypt == null)
-            return new Tuple2<>(false, "Error: wallet encrypter is not available");
+            return new Tuple2<>(false, WALLET_ENCRYPTER_NOT_AVAILABLE);
 
         KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
         if (!walletsManager.checkAESKey(aesKey))
-            return new Tuple2<>(false, "Error: incorrect password");
+            return new Tuple2<>(false, INCORRECT_WALLET_PASSWORD);
 
         walletsManager.decryptWallets(aesKey);
-        return new Tuple2<>(true, "");
+        return new Tuple2<>(true, OK);
     }
 
-    public Tuple2<Boolean, String> setWalletPassword(String password, String newPassword) {
+    public Tuple2<Boolean, ApiStatus> setWalletPassword(String password, String newPassword) {
         try {
             if (!walletsManager.areWalletsAvailable())
-                return new Tuple2<>(false, "Error: wallet is not available");
+                return new Tuple2<>(false, WALLET_NOT_AVAILABLE);
 
             KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
             if (keyCrypterScrypt == null)
-                return new Tuple2<>(false, "Error: wallet encrypter is not available");
+                return new Tuple2<>(false, WALLET_ENCRYPTER_NOT_AVAILABLE);
 
             if (newPassword != null && !newPassword.isEmpty()) {
-                // todo validate new password
+                // TODO Validate new password before replacing old password.
                 if (!walletsManager.areWalletsEncrypted())
-                    return new Tuple2<>(false, "Error: wallet is not encrypted with a password");
+                    return new Tuple2<>(false, WALLET_NOT_ENCRYPTED);
 
                 KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
                 if (!walletsManager.checkAESKey(aesKey))
-                    return new Tuple2<>(false, "Error: incorrect old password");
+                    return new Tuple2<>(false, INCORRECT_OLD_WALLET_PASSWORD);
 
                 walletsManager.decryptWallets(aesKey);
                 aesKey = keyCrypterScrypt.deriveKey(newPassword);
                 walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-                return new Tuple2<>(true, "");
+                return new Tuple2<>(true, OK);
             }
 
             if (walletsManager.areWalletsEncrypted())
-                return new Tuple2<>(false, "Error: wallet is already encrypted");
+                return new Tuple2<>(false, WALLET_IS_ENCRYPTED);
+
+            // TODO Validate new password.
             KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
             walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-            return new Tuple2<>(true, "");
+            return new Tuple2<>(true, OK);
         } catch (Throwable t) {
-            return new Tuple2<>(false, "Error: " + t.getLocalizedMessage());
+            // TODO Derive new ApiStatus codes from server stack traces.
+            t.printStackTrace();
+            return new Tuple2<>(false, INTERNAL);
         }
     }
 
-    public Tuple2<Boolean, String> lockWallet() {
+    public Tuple2<Boolean, ApiStatus> lockWallet() {
         if (tempLockWalletPassword != null) {
-            Tuple2<Boolean, String> encrypted = setWalletPassword(tempLockWalletPassword, null);
+            Tuple2<Boolean, ApiStatus> encrypted = setWalletPassword(tempLockWalletPassword, null);
             tempLockWalletPassword = null;
-            if (!encrypted.first)
+            if (!encrypted.second.equals(OK))
                 return encrypted;
 
-            return new Tuple2<>(true, "");
+            return new Tuple2<>(true, OK);
         }
-        return new Tuple2<>(false, "Error: wallet is already locked");
+        return new Tuple2<>(false, WALLET_ALREADY_LOCKED);
     }
 
-    public Tuple2<Boolean, String> unlockWallet(String password, long timeout) {
-        Tuple2<Boolean, String> decrypted = removeWalletPassword(password);
-        if (!decrypted.first)
+    public Tuple2<Boolean, ApiStatus> unlockWallet(String password, long timeout) {
+        Tuple2<Boolean, ApiStatus> decrypted = removeWalletPassword(password);
+        if (!decrypted.second.equals(OK))
             return decrypted;
 
         TimerTask timerTask = new TimerTask() {
@@ -267,6 +275,6 @@ public class CoreApi {
         // Cache wallet password for timeout (secs), in case
         // user wants to lock the wallet for timeout expires.
         tempLockWalletPassword = password;
-        return new Tuple2<>(true, "");
+        return new Tuple2<>(true, OK);
     }
 }
