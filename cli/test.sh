@@ -10,8 +10,8 @@
 #
 # To run this script:
 #
-#	  cd <project-root-dir>
-#	  bats cli/test.sh
+#     cd <project-root-dir>
+#     bats cli/test.sh
 #
 # The data directory used must contain an unencrypted wallet with a 0 BTC balance
 
@@ -79,4 +79,3 @@
   [ "${lines[1]}" = "Usage: bisq-cli [options] <method>" ]
   # TODO add asserts after help text is modified for new endpoints
 }
-
