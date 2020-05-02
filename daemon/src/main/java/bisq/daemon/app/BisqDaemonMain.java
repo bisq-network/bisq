@@ -98,7 +98,7 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-        CoreApi coreApi = injector.getInstance(CoreApi.class);
-        new GrpcServer(config, coreApi);
+        GrpcServer grpcServer = injector.getInstance(GrpcServer.class);
+        grpcServer.start();
     }
 }

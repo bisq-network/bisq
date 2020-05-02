@@ -17,18 +17,14 @@
 
 package bisq.cli;
 
-import bisq.proto.grpc.GetBalanceGrpc;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
-import bisq.proto.grpc.LockWalletGrpc;
 import bisq.proto.grpc.LockWalletRequest;
-import bisq.proto.grpc.RemoveWalletPasswordGrpc;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
-import bisq.proto.grpc.SetWalletPasswordGrpc;
 import bisq.proto.grpc.SetWalletPasswordRequest;
-import bisq.proto.grpc.UnlockWalletGrpc;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.WalletGrpc;
 
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -139,26 +135,26 @@ public class CliMain {
             }
         }));
 
+        var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        var walletService = WalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+
         try {
             switch (method) {
                 case getversion: {
-                    var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = GetVersionRequest.newBuilder().build();
-                    var version = stub.getVersion(request).getVersion();
+                    var version = versionService.getVersion(request).getVersion();
                     out.println(version);
                     exit(EXIT_SUCCESS);
                 }
                 case getbalance: {
-                    var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = GetBalanceRequest.newBuilder().build();
-                    var reply = stub.getBalance(request);
+                    var reply = walletService.getBalance(request);
                     out.println(formatBalance(reply.getBalance()));
                     exit(EXIT_SUCCESS);
                 }
                 case lockwallet: {
-                    var stub = LockWalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = LockWalletRequest.newBuilder().build();
-                    stub.lockWallet(request);
+                    walletService.lockWallet(request);
                     out.println("wallet locked");
                     exit(EXIT_SUCCESS);
                 }
@@ -178,11 +174,10 @@ public class CliMain {
                         err.println(nonOptionArgs.get(2) + " is not a number");
                         exit(EXIT_FAILURE);
                     }
-                    var stub = UnlockWalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = UnlockWalletRequest.newBuilder()
                             .setPassword(nonOptionArgs.get(1))
                             .setTimeout(timeout).build();
-                    stub.unlockWallet(request);
+                    walletService.unlockWallet(request);
                     out.println("wallet unlocked");
                     exit(EXIT_SUCCESS);
                 }
@@ -191,9 +186,8 @@ public class CliMain {
                         err.println("Error: no \"password\" specified");
                         exit(EXIT_FAILURE);
                     }
-                    var stub = RemoveWalletPasswordGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = RemoveWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
-                    stub.removeWalletPassword(request);
+                    walletService.removeWalletPassword(request);
                     out.println("wallet decrypted");
                     exit(EXIT_SUCCESS);
                 }
@@ -202,11 +196,10 @@ public class CliMain {
                         err.println("Error: no \"password\" specified");
                         exit(EXIT_FAILURE);
                     }
-                    var stub = SetWalletPasswordGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = (nonOptionArgs.size() == 3)
                             ? SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).setNewPassword(nonOptionArgs.get(2)).build()
                             : SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
-                    stub.setWalletPassword(request);
+                    walletService.setWalletPassword(request);
                     out.println("wallet encrypted" + (nonOptionArgs.size() == 2 ? "" : " with new password"));
                     exit(EXIT_SUCCESS);
                 }

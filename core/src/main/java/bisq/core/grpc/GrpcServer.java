@@ -24,9 +24,6 @@ import bisq.core.trade.statistics.TradeStatistics2;
 
 import bisq.common.config.Config;
 
-import bisq.proto.grpc.GetBalanceGrpc;
-import bisq.proto.grpc.GetBalanceReply;
-import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetOffersGrpc;
 import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
@@ -39,27 +36,18 @@ import bisq.proto.grpc.GetTradeStatisticsRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionReply;
 import bisq.proto.grpc.GetVersionRequest;
-import bisq.proto.grpc.LockWalletGrpc;
-import bisq.proto.grpc.LockWalletReply;
-import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.PlaceOfferGrpc;
 import bisq.proto.grpc.PlaceOfferReply;
 import bisq.proto.grpc.PlaceOfferRequest;
-import bisq.proto.grpc.RemoveWalletPasswordGrpc;
-import bisq.proto.grpc.RemoveWalletPasswordReply;
-import bisq.proto.grpc.RemoveWalletPasswordRequest;
-import bisq.proto.grpc.SetWalletPasswordGrpc;
-import bisq.proto.grpc.SetWalletPasswordReply;
-import bisq.proto.grpc.SetWalletPasswordRequest;
-import bisq.proto.grpc.UnlockWalletGrpc;
-import bisq.proto.grpc.UnlockWalletReply;
-import bisq.proto.grpc.UnlockWalletRequest;
 
+import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
+import javax.inject.Inject;
+
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import java.util.stream.Collectors;
 
@@ -69,36 +57,32 @@ import lombok.extern.slf4j.Slf4j;
 public class GrpcServer {
 
     private final CoreApi coreApi;
-    private final int port;
+    private final Server server;
 
-    public GrpcServer(Config config, CoreApi coreApi) {
+    @Inject
+    public GrpcServer(Config config, CoreApi coreApi, GrpcWalletService walletService) {
         this.coreApi = coreApi;
-        this.port = config.apiPort;
+        this.server = ServerBuilder.forPort(config.apiPort)
+                .addService(new GetVersionService())
+                .addService(new GetTradeStatisticsService())
+                .addService(new GetOffersService())
+                .addService(new GetPaymentAccountsService())
+                .addService(new PlaceOfferService())
+                .addService(walletService)
+                .intercept(new PasswordAuthInterceptor(config.apiPassword))
+                .build();
+    }
 
+    public void start() {
         try {
-            var server = ServerBuilder.forPort(port)
-                    .addService(new GetVersionService())
-                    .addService(new GetBalanceService())
-                    .addService(new GetTradeStatisticsService())
-                    .addService(new GetOffersService())
-                    .addService(new GetPaymentAccountsService())
-                    .addService(new LockWalletService())
-                    .addService(new PlaceOfferService())
-                    .addService(new RemoveWalletPasswordService())
-                    .addService(new SetWalletPasswordService())
-                    .addService(new UnlockWalletService())
-                    .intercept(new PasswordAuthInterceptor(config.apiPassword))
-                    .build()
-                    .start();
-
-            log.info("listening on port {}", port);
+            server.start();
+            log.info("listening on port {}", server.getPort());
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 server.shutdown();
                 log.info("shutdown complete");
             }));
-
-        } catch (IOException e) {
-            log.error(e.toString(), e);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -111,21 +95,6 @@ public class GrpcServer {
         }
     }
 
-    class GetBalanceService extends GetBalanceGrpc.GetBalanceImplBase {
-        @Override
-        public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
-            var result = coreApi.getAvailableBalance();
-            if (!result.second.equals(ApiStatus.OK)) {
-                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                        .withDescription(result.second.getDescription()));
-                responseObserver.onError(ex);
-                throw ex;
-            }
-            var reply = GetBalanceReply.newBuilder().setBalance(result.first).build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        }
-    }
 
     class GetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
         @Override
@@ -190,74 +159,6 @@ public class GrpcServer {
                     req.getBuyerSecurityDeposit(),
                     req.getPaymentAccountId(),
                     resultHandler);
-        }
-    }
-
-    class RemoveWalletPasswordService extends RemoveWalletPasswordGrpc.RemoveWalletPasswordImplBase {
-        @Override
-        public void removeWalletPassword(RemoveWalletPasswordRequest req,
-                                         StreamObserver<RemoveWalletPasswordReply> responseObserver) {
-            var result = coreApi.removeWalletPassword(req.getPassword());
-            if (!result.second.equals(ApiStatus.OK)) {
-                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                        .withDescription(result.second.getDescription()));
-                responseObserver.onError(ex);
-                throw ex;
-            }
-            var reply = RemoveWalletPasswordReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        }
-    }
-
-    class SetWalletPasswordService extends SetWalletPasswordGrpc.SetWalletPasswordImplBase {
-        @Override
-        public void setWalletPassword(SetWalletPasswordRequest req,
-                                      StreamObserver<SetWalletPasswordReply> responseObserver) {
-            var result = coreApi.setWalletPassword(req.getPassword(), req.getNewPassword());
-            if (!result.second.equals(ApiStatus.OK)) {
-                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                        .withDescription(result.second.getDescription()));
-                responseObserver.onError(ex);
-                throw ex;
-            }
-            var reply = SetWalletPasswordReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        }
-    }
-
-    class LockWalletService extends LockWalletGrpc.LockWalletImplBase {
-        @Override
-        public void lockWallet(LockWalletRequest req,
-                               StreamObserver<LockWalletReply> responseObserver) {
-            var result = coreApi.lockWallet();
-            if (!result.second.equals(ApiStatus.OK)) {
-                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                        .withDescription(result.second.getDescription()));
-                responseObserver.onError(ex);
-                throw ex;
-            }
-            var reply = LockWalletReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        }
-    }
-
-    class UnlockWalletService extends UnlockWalletGrpc.UnlockWalletImplBase {
-        @Override
-        public void unlockWallet(UnlockWalletRequest req,
-                                 StreamObserver<UnlockWalletReply> responseObserver) {
-            var result = coreApi.unlockWallet(req.getPassword(), req.getTimeout());
-            if (!result.second.equals(ApiStatus.OK)) {
-                StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                        .withDescription(result.second.getDescription()));
-                responseObserver.onError(ex);
-                throw ex;
-            }
-            var reply = UnlockWalletReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
         }
     }
 }
