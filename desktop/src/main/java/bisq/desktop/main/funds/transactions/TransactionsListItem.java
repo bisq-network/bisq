@@ -67,6 +67,7 @@ class TransactionsListItem {
     private boolean received;
     private boolean detailsAvailable;
     private Coin amountAsCoin = Coin.ZERO;
+    private String memo = "";
     private int confirmations = 0;
     @Getter
     private final boolean isDustAttackTx;
@@ -88,9 +89,12 @@ class TransactionsListItem {
                          TransactionAwareTradable transactionAwareTradable,
                          DaoFacade daoFacade,
                          CoinFormatter formatter,
-                         long ignoreDustThreshold) {
+                         long ignoreDustThreshold,
+                         bisq.core.transaction.Transaction storedTransaction
+                         ) {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
+        this.memo = storedTransaction.getMemo();
 
         txId = transaction.getHashAsString();
 
@@ -340,5 +344,7 @@ class TransactionsListItem {
     public String getNumConfirmations() {
         return String.valueOf(confirmations);
     }
+
+    public String getMemo() { return memo; }
 }
 

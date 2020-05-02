@@ -20,15 +20,20 @@ package bisq.desktop.main.funds.transactions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.transaction.TransactionsPayload;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
+
+import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import java.util.HashMap;
 
 import javax.annotation.Nullable;
 
@@ -40,27 +45,38 @@ public class TransactionListItemFactory {
     private final DaoFacade daoFacade;
     private final CoinFormatter formatter;
     private final Preferences preferences;
+    private final Storage<TransactionsPayload> storage;
 
     @Inject
     TransactionListItemFactory(BtcWalletService btcWalletService,
                                BsqWalletService bsqWalletService,
                                DaoFacade daoFacade,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
-                               Preferences preferences) {
+                               Preferences preferences,
+                               Storage<TransactionsPayload> storage
+    ) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
         this.formatter = formatter;
         this.preferences = preferences;
+        this.storage = storage;
     }
 
     TransactionsListItem create(Transaction transaction, @Nullable TransactionAwareTradable tradable) {
+        TransactionsPayload persisted = storage.initAndGetPersistedWithFileName("TransactionPayload", 100);
+        if (persisted == null) {
+            persisted = new TransactionsPayload(new HashMap<>());
+        }
+
         return new TransactionsListItem(transaction,
                 btcWalletService,
                 bsqWalletService,
                 tradable,
                 daoFacade,
                 formatter,
-                preferences.getIgnoreDustThreshold());
+                preferences.getIgnoreDustThreshold(),
+                persisted.findTransactionById(transaction.getHashAsString())
+        );
     }
 }
