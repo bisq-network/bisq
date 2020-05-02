@@ -52,6 +52,7 @@ import javax.inject.Named;
 
 import com.jfoenix.controls.JFXTabPane;
 
+import javafx.scene.Cursor;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -64,10 +65,12 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -83,6 +86,8 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
+import javafx.event.EventHandler;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -90,6 +95,7 @@ import javafx.collections.ObservableList;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -102,7 +108,7 @@ import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
     private final boolean useDevPrivilegeKeys;
 
-    private NumberAxis xAxis;
+    private NumberAxis xAxis, yAxis;
     private XYChart.Series<Number, Number> seriesBuy, seriesSell;
     private final Navigation navigation;
     private final CoinFormatter formatter;
@@ -345,7 +351,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         xAxis.setTickMarkVisible(false);
         xAxis.setMinorTickVisible(false);
 
-        NumberAxis yAxis = new NumberAxis();
+        yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setSide(Side.RIGHT);
         yAxis.setAutoRanging(true);
@@ -421,7 +427,45 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         seriesBuy.getData().addAll(model.getBuyData());
         seriesSell.getData().addAll(model.getSellData());
+
+        // Before adding the points to the chart, set a custom node used for showing a label on hover
+        Arrays.asList(seriesBuy, seriesSell).forEach(series -> {
+            series.getData().forEach(dataPoint -> {
+                dataPoint.setNode(
+                        new HoveredLabelNode(model.getCurrencyCode(), dataPoint.getXValue(), dataPoint.getYValue())
+                );
+            });
+        });
+
+        // Add both series to the chart
         areaChart.getData().addAll(List.of(seriesBuy, seriesSell));
+    }
+
+    /**
+     * A node which displays a label on hover, but is otherwise empty
+     *
+     * Based on https://gist.github.com/jewelsea/1422628
+     */
+    protected class HoveredLabelNode extends StackPane {
+        HoveredLabelNode(String currency, Number price, Number cumulativeBtcAmountAtPricePoint) {
+
+            // For consistency and simplicity, use the same formatting rules as for the axis labels
+            Label label = new Label(yAxis.getTickLabelFormatter().toString(cumulativeBtcAmountAtPricePoint) + " @" + '\n' +
+                    xAxis.getTickLabelFormatter().toString(price) + " " + currency + "/BTC");
+            label.setMinSize(Label.USE_PREF_SIZE, Label.USE_PREF_SIZE);
+            label.getStyleClass().addAll("chart-line-symbol");
+
+            setOnMouseEntered(mouseEvent -> {
+                getChildren().setAll(label);
+                setCursor(Cursor.NONE);
+                toFront();
+            });
+
+            setOnMouseExited(mouseEvent -> {
+                getChildren().clear();
+                setCursor(Cursor.CROSSHAIR);
+            });
+        }
     }
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
