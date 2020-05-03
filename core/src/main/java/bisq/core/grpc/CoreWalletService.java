@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.core.grpc.ApiStatus.OK;
-import static bisq.core.grpc.ApiStatus.WALLET_ALREADY_LOCKED;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
@@ -81,13 +80,12 @@ class CoreWalletService {
         walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
     }
 
-    public Tuple2<Boolean, ApiStatus> lockWallet() {
-        if (tempLockWalletPassword != null) {
-            setWalletPassword(tempLockWalletPassword, null);
-            tempLockWalletPassword = null;
-            return new Tuple2<>(true, OK);
-        }
-        return new Tuple2<>(false, WALLET_ALREADY_LOCKED);
+    public void lockWallet() {
+        if (tempLockWalletPassword == null)
+            throw new IllegalStateException("wallet is already locked");
+
+        setWalletPassword(tempLockWalletPassword, null);
+        tempLockWalletPassword = null;
     }
 
     public Tuple2<Boolean, ApiStatus> unlockWallet(String password, long timeout) {

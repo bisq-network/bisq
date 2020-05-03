@@ -28,10 +28,7 @@ import io.grpc.Status;
  */
 enum ApiStatus {
 
-    OK(Status.OK, null),
-
-    WALLET_ALREADY_LOCKED(Status.FAILED_PRECONDITION, "wallet is already locked");
-
+    OK(Status.OK, null);
 
     private final Status grpcStatus;
     private final String description;
@@ -56,5 +53,5 @@ enum ApiStatus {
                 ", description='" + description + '\'' +
                 '}';
     }
-}
+    }
 
