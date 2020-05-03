@@ -28,16 +28,9 @@ import io.grpc.Status;
  */
 enum ApiStatus {
 
-    INCORRECT_WALLET_PASSWORD(Status.INVALID_ARGUMENT, "incorrect password"),
-
     OK(Status.OK, null),
 
-    WALLET_ALREADY_LOCKED(Status.FAILED_PRECONDITION, "wallet is already locked"),
-
-    WALLET_ENCRYPTER_NOT_AVAILABLE(Status.FAILED_PRECONDITION, "wallet encrypter is not available"),
-
-    WALLET_NOT_ENCRYPTED(Status.FAILED_PRECONDITION, "wallet is not encrypted with a password"),
-    WALLET_NOT_AVAILABLE(Status.UNAVAILABLE, "wallet is not available");
+    WALLET_ALREADY_LOCKED(Status.FAILED_PRECONDITION, "wallet is already locked");
 
 
     private final Status grpcStatus;

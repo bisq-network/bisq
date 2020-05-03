@@ -59,16 +59,16 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     @Override
     public void removeWalletPassword(RemoveWalletPasswordRequest req,
                                      StreamObserver<RemoveWalletPasswordReply> responseObserver) {
-        var result = walletService.removeWalletPassword(req.getPassword());
-        if (!result.second.equals(ApiStatus.OK)) {
-            StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                    .withDescription(result.second.getDescription()));
+        try {
+            walletService.removeWalletPassword(req.getPassword());
+            var reply = RemoveWalletPasswordReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
             throw ex;
         }
-        var reply = RemoveWalletPasswordReply.newBuilder().build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
     }
 
     @Override

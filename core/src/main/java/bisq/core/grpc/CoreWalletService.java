@@ -18,7 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.grpc.ApiStatus.*;
+import static bisq.core.grpc.ApiStatus.OK;
+import static bisq.core.grpc.ApiStatus.WALLET_ALREADY_LOCKED;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
@@ -95,9 +96,7 @@ class CoreWalletService {
     }
 
     public Tuple2<Boolean, ApiStatus> unlockWallet(String password, long timeout) {
-        Tuple2<Boolean, ApiStatus> decrypted = removeWalletPassword(password);
-        if (!decrypted.second.equals(OK))
-            return decrypted;
+        removeWalletPassword(password);
 
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -118,22 +117,21 @@ class CoreWalletService {
 
     // Provided for automated wallet protection method testing, despite the
     // security risks exposed by providing users the ability to decrypt their wallets.
-    public Tuple2<Boolean, ApiStatus> removeWalletPassword(String password) {
+    public void removeWalletPassword(String password) {
         if (!walletsManager.areWalletsAvailable())
-            return new Tuple2<>(false, WALLET_NOT_AVAILABLE);
+            throw new IllegalStateException("wallet is not yet available");
 
         if (!walletsManager.areWalletsEncrypted())
-            return new Tuple2<>(false, WALLET_NOT_ENCRYPTED);
+            throw new IllegalStateException("wallet is not encrypted with a password");
 
         KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
         if (keyCrypterScrypt == null)
-            return new Tuple2<>(false, WALLET_ENCRYPTER_NOT_AVAILABLE);
+            throw new IllegalStateException("wallet encrypter is not available");
 
         KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
         if (!walletsManager.checkAESKey(aesKey))
-            return new Tuple2<>(false, INCORRECT_WALLET_PASSWORD);
+            throw new IllegalStateException("incorrect password");
 
         walletsManager.decryptWallets(aesKey);
-        return new Tuple2<>(true, OK);
     }
 }
