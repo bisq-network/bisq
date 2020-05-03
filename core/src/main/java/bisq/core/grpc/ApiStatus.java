@@ -28,20 +28,13 @@ import io.grpc.Status;
  */
 enum ApiStatus {
 
-    INCORRECT_OLD_WALLET_PASSWORD(Status.INVALID_ARGUMENT, "incorrect old password"),
     INCORRECT_WALLET_PASSWORD(Status.INVALID_ARGUMENT, "incorrect password"),
 
-    INTERNAL(Status.INTERNAL, "internal server error"),
-
     OK(Status.OK, null),
-
-    UNKNOWN(Status.UNKNOWN, "unknown"),
 
     WALLET_ALREADY_LOCKED(Status.FAILED_PRECONDITION, "wallet is already locked"),
 
     WALLET_ENCRYPTER_NOT_AVAILABLE(Status.FAILED_PRECONDITION, "wallet encrypter is not available"),
-
-    WALLET_IS_ENCRYPTED(Status.FAILED_PRECONDITION, "wallet is encrypted with a password"),
 
     WALLET_NOT_ENCRYPTED(Status.FAILED_PRECONDITION, "wallet is not encrypted with a password"),
     WALLET_NOT_AVAILABLE(Status.UNAVAILABLE, "wallet is not available");

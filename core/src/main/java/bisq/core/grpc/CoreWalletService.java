@@ -50,51 +50,45 @@ class CoreWalletService {
         return balance.getValue();
     }
 
-    public Tuple2<Boolean, ApiStatus> setWalletPassword(String password, String newPassword) {
+    public void setWalletPassword(String password, String newPassword) {
         try {
             if (!walletsManager.areWalletsAvailable())
-                return new Tuple2<>(false, WALLET_NOT_AVAILABLE);
+                throw new IllegalStateException("wallet is not yet available");
 
             KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
             if (keyCrypterScrypt == null)
-                return new Tuple2<>(false, WALLET_ENCRYPTER_NOT_AVAILABLE);
+                throw new IllegalStateException("wallet encrypter is not available");
 
             if (newPassword != null && !newPassword.isEmpty()) {
                 // TODO Validate new password before replacing old password.
                 if (!walletsManager.areWalletsEncrypted())
-                    return new Tuple2<>(false, WALLET_NOT_ENCRYPTED);
+                    throw new IllegalStateException("wallet is not encrypted with a password");
 
                 KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
                 if (!walletsManager.checkAESKey(aesKey))
-                    return new Tuple2<>(false, INCORRECT_OLD_WALLET_PASSWORD);
+                    throw new IllegalStateException("incorrect old password");
 
                 walletsManager.decryptWallets(aesKey);
                 aesKey = keyCrypterScrypt.deriveKey(newPassword);
                 walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-                return new Tuple2<>(true, OK);
             }
 
             if (walletsManager.areWalletsEncrypted())
-                return new Tuple2<>(false, WALLET_IS_ENCRYPTED);
+                throw new IllegalStateException("wallet is encrypted with a password");
 
             // TODO Validate new password.
             KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
             walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-            return new Tuple2<>(true, OK);
         } catch (Throwable t) {
-            // TODO Derive new ApiStatus codes from server stack traces.
             t.printStackTrace();
-            return new Tuple2<>(false, INTERNAL);
+            throw new IllegalStateException(t);
         }
     }
 
     public Tuple2<Boolean, ApiStatus> lockWallet() {
         if (tempLockWalletPassword != null) {
-            Tuple2<Boolean, ApiStatus> encrypted = setWalletPassword(tempLockWalletPassword, null);
+            setWalletPassword(tempLockWalletPassword, null);
             tempLockWalletPassword = null;
-            if (!encrypted.second.equals(OK))
-                return encrypted;
-
             return new Tuple2<>(true, OK);
         }
         return new Tuple2<>(false, WALLET_ALREADY_LOCKED);

@@ -44,16 +44,16 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     @Override
     public void setWalletPassword(SetWalletPasswordRequest req,
                                   StreamObserver<SetWalletPasswordReply> responseObserver) {
-        var result = walletService.setWalletPassword(req.getPassword(), req.getNewPassword());
-        if (!result.second.equals(ApiStatus.OK)) {
-            StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                    .withDescription(result.second.getDescription()));
+        try {
+            walletService.setWalletPassword(req.getPassword(), req.getNewPassword());
+            var reply = SetWalletPasswordReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
             throw ex;
         }
-        var reply = SetWalletPasswordReply.newBuilder().build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
     }
 
     @Override
