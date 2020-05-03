@@ -3,8 +3,6 @@ package bisq.core.grpc;
 import bisq.core.btc.Balances;
 import bisq.core.btc.wallet.WalletsManager;
 
-import bisq.common.util.Tuple2;
-
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
@@ -18,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.grpc.ApiStatus.OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
@@ -88,7 +85,7 @@ class CoreWalletService {
         tempLockWalletPassword = null;
     }
 
-    public Tuple2<Boolean, ApiStatus> unlockWallet(String password, long timeout) {
+    public void unlockWallet(String password, long timeout) {
         removeWalletPassword(password);
 
         TimerTask timerTask = new TimerTask() {
@@ -105,7 +102,6 @@ class CoreWalletService {
         // Cache wallet password for timeout (secs), in case
         // user wants to lock the wallet for timeout expires.
         tempLockWalletPassword = password;
-        return new Tuple2<>(true, OK);
     }
 
     // Provided for automated wallet protection method testing, despite the
