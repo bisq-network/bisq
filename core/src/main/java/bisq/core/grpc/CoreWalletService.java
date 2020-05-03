@@ -52,38 +52,33 @@ class CoreWalletService {
     }
 
     public void setWalletPassword(String password, String newPassword) {
-        try {
-            if (!walletsManager.areWalletsAvailable())
-                throw new IllegalStateException("wallet is not yet available");
+        if (!walletsManager.areWalletsAvailable())
+            throw new IllegalStateException("wallet is not yet available");
 
-            KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
-            if (keyCrypterScrypt == null)
-                throw new IllegalStateException("wallet encrypter is not available");
+        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+        if (keyCrypterScrypt == null)
+            throw new IllegalStateException("wallet encrypter is not available");
 
-            if (newPassword != null && !newPassword.isEmpty()) {
-                // TODO Validate new password before replacing old password.
-                if (!walletsManager.areWalletsEncrypted())
-                    throw new IllegalStateException("wallet is not encrypted with a password");
+        if (newPassword != null && !newPassword.isEmpty()) {
+            // TODO Validate new password before replacing old password.
+            if (!walletsManager.areWalletsEncrypted())
+                throw new IllegalStateException("wallet is not encrypted with a password");
 
-                KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
-                if (!walletsManager.checkAESKey(aesKey))
-                    throw new IllegalStateException("incorrect old password");
-
-                walletsManager.decryptWallets(aesKey);
-                aesKey = keyCrypterScrypt.deriveKey(newPassword);
-                walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-            }
-
-            if (walletsManager.areWalletsEncrypted())
-                throw new IllegalStateException("wallet is encrypted with a password");
-
-            // TODO Validate new password.
             KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+            if (!walletsManager.checkAESKey(aesKey))
+                throw new IllegalStateException("incorrect old password");
+
+            walletsManager.decryptWallets(aesKey);
+            aesKey = keyCrypterScrypt.deriveKey(newPassword);
             walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new IllegalStateException(t);
         }
+
+        if (walletsManager.areWalletsEncrypted())
+            throw new IllegalStateException("wallet is encrypted with a password");
+
+        // TODO Validate new password.
+        KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+        walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
     }
 
     public Tuple2<Boolean, ApiStatus> lockWallet() {
