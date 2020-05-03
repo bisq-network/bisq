@@ -248,7 +248,9 @@
 .list-view .list-cell:even {
     -fx-background-color: derive(-bs-background-color, 5%);
 }
+.list-view .list-cell:hover,
 .list-view .list-cell:selected,
+.table-view .table-cell:hover,
 .table-view .table-cell:selected {
     -fx-background: -fx-accent;
     -fx-background-color: -fx-selection-bar;
@@ -897,6 +899,7 @@ textfield */
     -fx-background-color: derive(-bs-background-color,-5%);
     -fx-border-color: derive(-bs-background-color,-5%);
 }
+.table-view .table-row-cell:hover .table-cell,
 .table-view .table-row-cell:selected .table-cell {
     -fx-background: -fx-accent;
     -fx-background-color: -fx-selection-bar;
