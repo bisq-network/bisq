@@ -209,16 +209,8 @@ public class CliMain {
                 }
             }
         } catch (StatusRuntimeException ex) {
-            // The actual server error message is in a nested exception and we clean it
-            // up a bit to make it more presentable.
-            Throwable t = ex.getCause() == null ? ex : ex.getCause();
-            String message = t.getMessage()
-                    .replace("FAILED_PRECONDITION: ", "")
-                    .replace("INTERNAL: ", "")
-                    .replace("INVALID_ARGUMENT: ", "")
-                    .replace("UNAUTHENTICATED: ", "")
-                    .replace("UNAVAILABLE: ", "")
-                    .replace("UNKNOWN: ", "");
+            // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message
+            String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
             err.println("Error: " + message);
             exit(EXIT_FAILURE);
         }
