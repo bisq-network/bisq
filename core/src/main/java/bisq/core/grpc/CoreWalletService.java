@@ -67,6 +67,7 @@ class CoreWalletService {
             walletsManager.decryptWallets(aesKey);
             aesKey = keyCrypterScrypt.deriveKey(newPassword);
             walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+            return;
         }
 
         if (walletsManager.areWalletsEncrypted())
