@@ -259,34 +259,34 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useCustomFee = tuple.third;
 
         useCustomFeeCheckboxListener = (observable, oldValue, newValue) -> {
-            preferences.setUseCustomWithdrawalTxFee(newValue);
+            preferences.setUseCustomTxFee(newValue);
             transactionFeeInputTextField.setEditable(newValue);
             if (!newValue) {
                 transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
                 try {
-                    preferences.setWithdrawalTxFeeInBytes(feeService.getTxFeePerByte().value);
+                    preferences.setTxFeeInBytes(feeService.getTxFeePerByte().value);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
 
-            preferences.setUseCustomWithdrawalTxFee(newValue);
+            preferences.setUseCustomTxFee(newValue);
         };
 
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
             if (oldValue && !newValue) {
                 String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
-                    int withdrawalTxFeePerByte = Integer.parseInt(transactionFeeInputTextField.getText());
+                    int txFeePerByte = Integer.parseInt(transactionFeeInputTextField.getText());
                     final long minFeePerByte = Config.baseCurrencyNetwork().getDefaultMinFeePerByte();
-                    if (withdrawalTxFeePerByte < minFeePerByte) {
+                    if (txFeePerByte < minFeePerByte) {
                         new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerByte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);
-                    } else if (withdrawalTxFeePerByte > 5000) {
+                    } else if (txFeePerByte > 5000) {
                         new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
-                        preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeePerByte);
+                        preferences.setTxFeeInBytes(txFeePerByte);
                     }
                 } catch (NumberFormatException t) {
                     log.error(t.toString());
@@ -661,11 +661,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
         selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BaseCurrencyNetwork.CURRENT_VALUE);*/
 
-        boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
-        useCustomFee.setSelected(useCustomWithdrawalTxFee);
+        boolean useCustomTxFee = preferences.isUseCustomTxFee();
+        useCustomFee.setSelected(useCustomTxFee);
 
-        transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
-        if (!useCustomWithdrawalTxFee) {
+        transactionFeeInputTextField.setEditable(useCustomTxFee);
+        if (!useCustomTxFee) {
             transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
             feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
         }
@@ -780,8 +780,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private Coin getTxFeeForWithdrawalPerByte() {
-        Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
-                Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
+        Coin fee = (preferences.isUseCustomTxFee()) ?
+                Coin.valueOf(preferences.getTxFeePerByte()) :
                 feeService.getTxFeePerByte();
         log.info("tx fee = " + fee.toFriendlyString());
         return fee;

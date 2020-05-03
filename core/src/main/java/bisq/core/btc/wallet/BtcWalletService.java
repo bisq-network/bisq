@@ -450,7 +450,7 @@ public class BtcWalletService extends WalletService {
         // typical size for a tx with 2 inputs
         int txSizeWithUnsignedInputs = 203;
         // If useCustomTxFee we allow overriding the estimated fee from preferences
-        Coin txFeePerByte = useCustomTxFee ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
+        Coin txFeePerByte = useCustomTxFee ? getTxFeePerByte() : feeService.getTxFeePerByte();
         // In case there are no change outputs we force a change by adding min dust to the BTC input
         Coin forcedChangeValue = Coin.ZERO;
 
@@ -785,7 +785,7 @@ public class BtcWalletService extends WalletService {
                         int txSize = 0;
                         Transaction tx;
                         SendRequest sendRequest;
-                        Coin txFeeForWithdrawalPerByte = getTxFeeForWithdrawalPerByte();
+                        Coin txFeeForWithdrawalPerByte = getTxFeePerByte();
                         do {
                             counter++;
                             fee = txFeeForWithdrawalPerByte.multiply(txSize);
@@ -902,7 +902,7 @@ public class BtcWalletService extends WalletService {
             int counter = 0;
             int txSize = 0;
             Transaction tx;
-            Coin txFeeForWithdrawalPerByte = getTxFeeForWithdrawalPerByte();
+            Coin txFeeForWithdrawalPerByte = getTxFeePerByte();
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
@@ -949,7 +949,7 @@ public class BtcWalletService extends WalletService {
             int counter = 0;
             int txSize = 0;
             Transaction tx;
-            Coin txFeeForWithdrawalPerByte = getTxFeeForWithdrawalPerByte();
+            Coin txFeeForWithdrawalPerByte = getTxFeePerByte();
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
@@ -974,7 +974,7 @@ public class BtcWalletService extends WalletService {
     }
 
     private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
-        long targetFee = getTxFeeForWithdrawalPerByte().multiply(tx.bitcoinSerialize().length).value;
+        long targetFee = getTxFeePerByte().multiply(tx.bitcoinSerialize().length).value;
         return counter < 10 &&
                 (tx.getFee().value < targetFee ||
                         tx.getFee().value - targetFee > 1000);

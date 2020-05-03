@@ -494,13 +494,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    public void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee) {
-        prefPayload.setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee);
+    public void setUseCustomTxFee(boolean useCustomTxFee) {
+        prefPayload.setUseCustomTxFee(useCustomTxFee);
         persist();
     }
 
-    public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) {
-        prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
+    public void setTxFeeInBytes(long txFeeInBytes) {
+        prefPayload.setTxFeePerByte(txFeeInBytes);
         persist();
     }
 
@@ -772,8 +772,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.getBridgeAddresses();
     }
 
-    public long getWithdrawalTxFeeInBytes() {
-        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), Config.baseCurrencyNetwork().getDefaultMinFeePerByte());
+    public long getTxFeePerByte() {
+        return Math.max(prefPayload.getTxFeePerByte(), Config.baseCurrencyNetwork().getDefaultMinFeePerByte());
     }
 
     public boolean isDaoFullNode() {
@@ -881,9 +881,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setBitcoinNodes(String bitcoinNodes);
 
-        void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
+        void setUseCustomTxFee(boolean useCustomTxFee);
 
-        void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
+        void getTxFeePerByte(long txFeePerByte);
 
         void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
 
@@ -929,7 +929,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         List<String> getBridgeAddresses();
 
-        long getWithdrawalTxFeeInBytes();
+        long getTxFeePerByte();
 
         void setUseStandbyMode(boolean useStandbyMode);
 

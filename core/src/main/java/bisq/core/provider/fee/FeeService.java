@@ -20,6 +20,7 @@ package bisq.core.provider.fee;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -93,6 +94,7 @@ public class FeeService {
 
     private final FeeProvider feeProvider;
     private final IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
+    private final Preferences preferences;
     private long txFeePerByte = BTC_DEFAULT_TX_FEE;
     private Map<String, Long> timeStampMap;
     private long lastRequest;
@@ -105,8 +107,12 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(FeeProvider feeProvider, DaoStateService daoStateService, PeriodService periodService) {
+    public FeeService(FeeProvider feeProvider,
+                      DaoStateService daoStateService,
+                      PeriodService periodService,
+                      Preferences preferences) {
         this.feeProvider = feeProvider;
+        this.preferences = preferences;
         FeeService.daoStateService = daoStateService;
         FeeService.periodService = periodService;
     }
@@ -135,6 +141,19 @@ public class FeeService {
     }
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
+
+        // If the user set a custom fee, use that one and skip querying the external fee API endpoint
+        if (preferences.isUseCustomTxFee()) {
+            txFeePerByte = preferences.getTxFeePerByte();
+            log.info("Using custom tx fee: {} sats/vByte", txFeePerByte);
+
+            if (resultHandler != null)
+                resultHandler.run();
+
+            return;
+        }
+
+        // If user did not set a custom fee in their preferences, then query the fee API endpoint
         long now = Instant.now().getEpochSecond();
         // We all requests only each 2 minutes
         if (now - lastRequest > MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {

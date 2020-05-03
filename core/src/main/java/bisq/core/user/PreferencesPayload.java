@@ -69,8 +69,8 @@ public final class PreferencesPayload implements UserThreadMappedPersistableEnve
     private boolean showOwnOffersInOfferBook = true;
     @Nullable
     private TradeCurrency preferredTradeCurrency;
-    private long withdrawalTxFeeInBytes = 100;
-    private boolean useCustomWithdrawalTxFee = false;
+    private long txFeePerByte = 100;
+    private boolean useCustomTxFee = false;
     private double maxPriceDistanceInPercent = 0.3;
     @Nullable
     private String offerBookChartScreenCurrencyCode;
@@ -158,8 +158,8 @@ public final class PreferencesPayload implements UserThreadMappedPersistableEnve
                 .setTacAccepted(tacAccepted)
                 .setUseTorForBitcoinJ(useTorForBitcoinJ)
                 .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-                .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
-                .setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee)
+                .setTxFeePerByte(txFeePerByte)
+                .setUseCustomTxFee(useCustomTxFee)
                 .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
                 .setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex)
                 .setResyncSpvRequested(resyncSpvRequested)
@@ -234,8 +234,8 @@ public final class PreferencesPayload implements UserThreadMappedPersistableEnve
                 proto.getUseTorForBitcoinJ(),
                 proto.getShowOwnOffersInOfferBook(),
                 proto.hasPreferredTradeCurrency() ? TradeCurrency.fromProto(proto.getPreferredTradeCurrency()) : null,
-                proto.getWithdrawalTxFeeInBytes(),
-                proto.getUseCustomWithdrawalTxFee(),
+                proto.getTxFeePerByte(),
+                proto.getUseCustomTxFee(),
                 proto.getMaxPriceDistanceInPercent(),
                 ProtoUtil.stringOrNullFromProto(proto.getOfferBookChartScreenCurrencyCode()),
                 ProtoUtil.stringOrNullFromProto(proto.getTradeChartsScreenCurrencyCode()),
