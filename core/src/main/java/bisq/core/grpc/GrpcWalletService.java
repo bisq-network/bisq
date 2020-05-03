@@ -12,6 +12,7 @@ import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.WalletGrpc;
 
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
@@ -28,16 +29,16 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
 
     @Override
     public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
-        var result = walletService.getAvailableBalance();
-        if (!result.second.equals(ApiStatus.OK)) {
-            StatusRuntimeException ex = new StatusRuntimeException(result.second.getGrpcStatus()
-                    .withDescription(result.second.getDescription()));
+        try {
+            long result = walletService.getAvailableBalance();
+            var reply = GetBalanceReply.newBuilder().setBalance(result).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
             throw ex;
         }
-        var reply = GetBalanceReply.newBuilder().setBalance(result.first).build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
     }
 
     @Override

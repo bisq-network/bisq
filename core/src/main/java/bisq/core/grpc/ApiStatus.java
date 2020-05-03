@@ -42,8 +42,6 @@ enum ApiStatus {
     WALLET_ENCRYPTER_NOT_AVAILABLE(Status.FAILED_PRECONDITION, "wallet encrypter is not available"),
 
     WALLET_IS_ENCRYPTED(Status.FAILED_PRECONDITION, "wallet is encrypted with a password"),
-    WALLET_IS_ENCRYPTED_WITH_UNLOCK_INSTRUCTION(Status.FAILED_PRECONDITION,
-            "wallet is encrypted with a password; unlock it with the 'unlock \"password\" timeout' command"),
 
     WALLET_NOT_ENCRYPTED(Status.FAILED_PRECONDITION, "wallet is not encrypted with a password"),
     WALLET_NOT_AVAILABLE(Status.UNAVAILABLE, "wallet is not available");

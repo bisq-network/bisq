@@ -36,22 +36,18 @@ class CoreWalletService {
         this.walletsManager = walletsManager;
     }
 
-    public Tuple2<Long, ApiStatus> getAvailableBalance() {
+    public long getAvailableBalance() {
         if (!walletsManager.areWalletsAvailable())
-            return new Tuple2<>(-1L, WALLET_NOT_AVAILABLE);
+            throw new IllegalStateException("wallet is not yet available");
 
         if (walletsManager.areWalletsEncrypted())
-            return new Tuple2<>(-1L, WALLET_IS_ENCRYPTED_WITH_UNLOCK_INSTRUCTION);
+            throw new IllegalStateException("wallet is locked");
 
-        try {
-            long balance = balances.getAvailableBalance().get().getValue();
-            return new Tuple2<>(balance, OK);
-        } catch (Throwable t) {
-            // TODO Derive new ApiStatus codes from server stack traces.
-            t.printStackTrace();
-            // TODO Fix bug causing NPE thrown by getAvailableBalance().
-            return new Tuple2<>(-1L, INTERNAL);
-        }
+        var balance = balances.getAvailableBalance().get();
+        if (balance == null)
+            throw new IllegalStateException("balance is not yet available");
+
+        return balance.getValue();
     }
 
     public Tuple2<Boolean, ApiStatus> setWalletPassword(String password, String newPassword) {
