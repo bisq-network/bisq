@@ -280,7 +280,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.BUY))
-                .sorted(getComparator(false))
+                .sorted(getComparatorWithSecondarySortOrder(false))
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
@@ -309,7 +309,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.SELL))
-                .sorted(getComparator(true))
+                .sorted(getComparatorWithSecondarySortOrder(true))
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
@@ -333,7 +333,14 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 
-    private Comparator<Offer> getComparator(boolean reversePrimarySortOrder) {
+    /**
+     * Returns a comparator to be used for Offers. Sorts primarily for price and
+     * secondarily for offer volume.
+     *
+     * @param reversePrimarySortOrder
+     * @return
+     */
+    private Comparator<Offer> getComparatorWithSecondarySortOrder(boolean reversePrimarySortOrder) {
         Comparator<Offer> primary = Comparator.comparing(Offer::getPrice, (o1, o2) -> {
             long a = o1 != null ? o1.getValue() : 0;
             long b = o2 != null ? o2.getValue() : 0;
