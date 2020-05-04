@@ -66,7 +66,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object3);
 
         // create a PreliminaryGetDataRequest as a Device Under Test
-        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
+        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, null, 0);
         Set<P2PDataStorage.ByteArray> result = DUT.buildPreliminaryGetDataRequest(0).getExcludedKeys().stream().map(bytes -> new P2PDataStorage.ByteArray(bytes)).collect(Collectors.toSet());
 
         // check result
@@ -99,7 +99,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object3);
 
         // craft a PreliminaryGetDataRequest as a query to get a GetDataResponse
-        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
+        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, null, 0);
         PreliminaryGetDataRequest query = new PreliminaryGetDataRequest(0, new HashSet<>(Arrays.asList(getSpecialKey(getVersion(0)).getHash())));
         Set<PersistableNetworkPayload> result = DUT.buildGetDataResponse(query, 100000, null, null, null).getPersistableNetworkPayloadSet();
 
@@ -146,7 +146,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object2);
 
         // craft a PreliminaryGetDataRequest as a query to get a GetDataResponse
-        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
+        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, null, 0);
 
         // check results
         List<String> faultyKeys = Arrays.asList("1.3.13", "1.13.3", "13.3.3", "a.3.3", "13.a.3", "ä.3.3", Version.VERSION.replace(".", "_"), Version.VERSION.replace(".", ","));
@@ -198,7 +198,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object2, object3);
 
         // craft a PreliminaryGetDataRequest as a query to get a GetDataResponse
-        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, 0);
+        P2PDataStorage DUT = new P2PDataStorage(new LocalhostNetworkNode(9999, null), null, loadDatabase(), new ProtectedDataStoreService(), null, new SequenceNumberStorageFake(), null, null, 0);
         PreliminaryGetDataRequest query = new PreliminaryGetDataRequest(0, new HashSet<>(Arrays.asList(getSpecialKey(getVersion(0)).getHash())));
         Set<PersistableNetworkPayload> result = DUT.buildGetDataResponse(query, 100000, null, null, null).getPersistableNetworkPayloadSet();
 

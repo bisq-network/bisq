@@ -29,6 +29,7 @@ import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
+import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddOncePayload;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
@@ -118,6 +119,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @VisibleForTesting
     public static final int CHECK_TTL_INTERVAL_SEC = 60;
+    private final SeedNodeRepository seedNodeRepository;
+    private final NetworkNode networkNode;
 
     private boolean initialRequestApplied = false;
 
@@ -155,15 +158,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
                           Storage<SequenceNumberMap> sequenceNumberMapStorage,
+                          SeedNodeRepository seedNodeRepository,
                           Clock clock,
                           @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge) {
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
+        this.seedNodeRepository = seedNodeRepository;
         this.clock = clock;
         this.maxSequenceNumberMapSizeBeforePurge = maxSequenceNumberBeforePurge;
-
+        this.networkNode = networkNode;
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -227,13 +232,20 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
      */
     private Set<byte[]> getKnownPayloadHashes() {
+
         // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys = this.appendOnlyDataStoreService.getMap("since " + Version.VERSION).keySet().stream()
-                .map(e -> e.bytes)
-                .collect(Collectors.toSet());
+        Set<byte[]> excludedKeys;
+        if (seedNodeRepository != null && seedNodeRepository.isSeedNode(networkNode.getNodeAddress()))
+            excludedKeys = this.appendOnlyDataStoreService.getMap().keySet().stream()
+                    .map(e -> e.bytes)
+                    .collect(Collectors.toSet());
+        else
+            excludedKeys = this.appendOnlyDataStoreService.getMap("since " + Version.VERSION).keySet().stream()
+                    .map(e -> e.bytes)
+                    .collect(Collectors.toSet());
 
         Set<byte[]> excludedKeysFromPersistedEntryMap = this.map.keySet()
                 .stream()
