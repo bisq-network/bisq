@@ -196,11 +196,12 @@ public class CliMain {
                         err.println("Error: no \"password\" specified");
                         exit(EXIT_FAILURE);
                     }
-                    var request = (nonOptionArgs.size() == 3)
-                            ? SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).setNewPassword(nonOptionArgs.get(2)).build()
-                            : SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
-                    walletService.setWalletPassword(request);
-                    out.println("wallet encrypted" + (nonOptionArgs.size() == 2 ? "" : " with new password"));
+                    var requestBuilder = SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1));
+                    var hasNewPassword = nonOptionArgs.size() == 3;
+                    if (hasNewPassword)
+                        requestBuilder.setNewPassword(nonOptionArgs.get(2));
+                    walletService.setWalletPassword(requestBuilder.build());
+                    out.println("wallet encrypted" + (hasNewPassword ? " with new password" : ""));
                     exit(EXIT_SUCCESS);
                 }
                 default: {
