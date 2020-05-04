@@ -1,5 +1,8 @@
 #!/bin/sh
 
+LAST_RELEASE='1.3.4'
+PR='reduce_initial_request_size'
+
 install()
 {
 	mkdir -p installdir/$2
@@ -45,7 +48,9 @@ staap()
 	screen -S localnet -X at "#" stuff "^C"
 	# quit all screen windows which results in killing the session
 	screen -S localnet -X at "#" kill
+	set +e
 	screen -wipe
+	set -e
 }
 
 check()
@@ -68,6 +73,8 @@ rm -rf .localnet
 rm -rf installdir
 staap
 
+set -e
+
 # deploy configuration files and start bitcoind
 make localnet
 for target in \
@@ -88,11 +95,12 @@ cp AccountAgeWitnessStore_BTC_MAINNET AccountAgeWitnessStore_BTC_REGTEST
 cp SignedWitnessStore_BTC_MAINNET SignedWitnessStore_BTC_REGTEST
 cd -
 
-# start with 1.3.2 setup
-# - get sources for 1.3.2
-git checkout v1.3.2 -f
+# start with release setup
+# - get sources for release
+git checkout release/v$LAST_RELEASE
 
 # - build initial binaries and file structure
+./gradlew clean
 ./gradlew :seednode:build
 ./gradlew :desktop:build
 
@@ -117,13 +125,13 @@ echo "##### Sanity check ###########################################" > result.l
 check
 
 # upgrade to PR
-git checkout -f reduce_initial_request_size
+git checkout $PR
 
 # create release data stores
 cd p2p/src/main/resources/
-cp TradeStatistics2Store_BTC_REGTEST TradeStatistics2Store_1.3.2_BTC_REGTEST
-cp AccountAgeWitnessStore_BTC_REGTEST AccountAgeWitnessStore_1.3.2_BTC_REGTEST
-cp SignedWitnessStore_BTC_REGTEST SignedWitnessStore_1.3.2_BTC_REGTEST
+cp TradeStatistics2Store_BTC_REGTEST TradeStatistics2Store_${LAST_RELEASE}_BTC_REGTEST
+cp AccountAgeWitnessStore_BTC_REGTEST AccountAgeWitnessStore_${LAST_RELEASE}_BTC_REGTEST
+cp SignedWitnessStore_BTC_REGTEST SignedWitnessStore_${LAST_RELEASE}_BTC_REGTEST
 cd -
 ./gradlew :seednode:build
 
