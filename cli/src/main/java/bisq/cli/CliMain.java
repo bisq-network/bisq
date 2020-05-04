@@ -165,7 +165,7 @@ public class CliMain {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("no unlock timeout specified");
 
-                    long timeout = 0;
+                    long timeout;
                     try {
                         timeout = Long.parseLong(nonOptionArgs.get(2));
                     } catch (NumberFormatException e) {
