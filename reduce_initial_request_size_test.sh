@@ -52,11 +52,13 @@ check()
 {
 	# gather data
 	for target in \
+		seednode \
+		seednode2 \
 		alice \
 		bob \
 		mediator; do \
 		echo "$target:" >> result.log; \
-		grep -o ": .* with [0-9\.]* kB" .localnet/$target/bisq.log >> result.log; \
+		grep -Eo ": (Sending .*Request|Received .*Response) with [0-9\.]* kB" .localnet/$target/bisq.log >> result.log; \
 		rm .localnet/$target/bisq.log; \
 	done;
 }
@@ -140,14 +142,16 @@ staap
 echo "##### After upgrading one seednode ###########################" >> result.log
 check
 
-exit 1
 ## install client binaries
 install desktop alice
 
 ## fire up all of it
 run
 
-read -n 1 -p "Create 2 offers and do one trade! done. proceed:" mainmenuinput
+read -p "Wrap up third test case?"
 
 # shut down anything again
 staap
+
+echo "##### After upgrading one client ###########################" >> result.log
+check
