@@ -34,7 +34,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.time.Duration;
 import java.time.Instant;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -42,14 +41,18 @@ import java.util.stream.Stream;
 @Component
 class BitcoinFeeRateProvider extends FeeRateProvider {
 
-    protected static final long MIN_FEE_RATE = 10; // satoshi/byte
-    protected static final long MAX_FEE_RATE = 1000;
+    static final long MIN_FEE_RATE = 10; // satoshi/byte
+    static final long MAX_FEE_RATE = 1000;
 
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // TODO: As of the switch to the mempool.space API this field and related members are
+    //  now dead code and should be removed, including removing the positional
+    //  command-line argument from startup scripts. Operators need to be notified of this
+    //  when it happens.
     private final int maxBlocks;
 
     public BitcoinFeeRateProvider(Environment env) {
@@ -79,11 +82,12 @@ class BitcoinFeeRateProvider extends FeeRateProvider {
         return restTemplate.exchange(
             RequestEntity
                 .get(UriComponentsBuilder
-                    // Temporarily call mempool.space centralized API endpoint
-                    // A more de-centralized solution discussed in https://github.com/bisq-network/projects/issues/27
+                    // Temporarily call mempool.space centralized API endpoint as an
+                    // alternative to the too-expensive bitcoinfees.earn.com until a more
+                    // decentralized solution is available as per
+                    // https://github.com/bisq-network/projects/issues/27
                     .fromUriString("https://mempool.space/api/v1/fees/recommended")
                     .build().toUri())
-                .header("User-Agent", "") // required to avoid 403
                 .build(),
             new ParameterizedTypeReference<Map<String, Long>>() { }
         ).getBody().entrySet().stream();

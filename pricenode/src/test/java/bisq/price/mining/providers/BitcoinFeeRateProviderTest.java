@@ -29,17 +29,16 @@ public class BitcoinFeeRateProviderTest {
 
     @Test
     public void doGet_successfulCall() {
-
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
         BitcoinFeeRateProvider feeRateProvider = new BitcoinFeeRateProvider(ctx.getEnvironment());
 
         // Make a call to the API, retrieve the recommended fee rate
-        // If the API call fails, or the response body cannot be parsed, the test will fail with an exception
+        // If the API call fails, or the response body cannot be parsed, the test will
+        // fail with an exception
         FeeRate retrievedFeeRate = feeRateProvider.doGet();
 
         // Check that the FeeRateProvider returns a fee within the defined parameters
         assertTrue(retrievedFeeRate.getPrice() >= BitcoinFeeRateProvider.MIN_FEE_RATE);
         assertTrue(retrievedFeeRate.getPrice() <= BitcoinFeeRateProvider.MAX_FEE_RATE);
     }
-
 }
