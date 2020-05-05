@@ -34,7 +34,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.time.Duration;
 import java.time.Instant;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -42,14 +41,18 @@ import java.util.stream.Stream;
 @Component
 class BitcoinFeeRateProvider extends FeeRateProvider {
 
-    private static final long MIN_FEE_RATE = 10; // satoshi/byte
-    private static final long MAX_FEE_RATE = 1000;
+    static final long MIN_FEE_RATE = 10; // satoshi/byte
+    static final long MAX_FEE_RATE = 1000;
 
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // TODO: As of the switch to the mempool.space API this field and related members are
+    //  now dead code and should be removed, including removing the positional
+    //  command-line argument from startup scripts. Operators need to be notified of this
+    //  when it happens.
     private final int maxBlocks;
 
     public BitcoinFeeRateProvider(Environment env) {
@@ -63,9 +66,9 @@ class BitcoinFeeRateProvider extends FeeRateProvider {
 
     private long getEstimatedFeeRate() {
         return getFeeRatePredictions()
-            .filter(p -> p.get("maxDelay") <= maxBlocks)
+            .filter(p -> p.getKey().equalsIgnoreCase("halfHourFee"))
+            .map(Map.Entry::getValue)
             .findFirst()
-            .map(p -> p.get("maxFee"))
             .map(r -> {
                 log.info("latest fee rate prediction is {} sat/byte", r);
                 return r;
@@ -75,19 +78,19 @@ class BitcoinFeeRateProvider extends FeeRateProvider {
             .orElse(MIN_FEE_RATE);
     }
 
-    private Stream<Map<String, Long>> getFeeRatePredictions() {
+    private Stream<Map.Entry<String, Long>> getFeeRatePredictions() {
         return restTemplate.exchange(
             RequestEntity
                 .get(UriComponentsBuilder
-                    // now using /fees/list because /fees/recommended estimates were too high
-                    .fromUriString("https://bitcoinfees.earn.com/api/v1/fees/list")
+                    // Temporarily call mempool.space centralized API endpoint as an
+                    // alternative to the too-expensive bitcoinfees.earn.com until a more
+                    // decentralized solution is available as per
+                    // https://github.com/bisq-network/projects/issues/27
+                    .fromUriString("https://mempool.space/api/v1/fees/recommended")
                     .build().toUri())
-                .header("User-Agent", "") // required to avoid 403
                 .build(),
-            new ParameterizedTypeReference<Map<String, List<Map<String, Long>>>>() {
-            }
-        ).getBody().entrySet().stream()
-            .flatMap(e -> e.getValue().stream());
+            new ParameterizedTypeReference<Map<String, Long>>() { }
+        ).getBody().entrySet().stream();
     }
 
     private static Optional<String[]> args(Environment env) {
