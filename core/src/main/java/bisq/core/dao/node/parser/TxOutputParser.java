@@ -271,12 +271,12 @@ class TxOutputParser {
 
                         // If it is the vote stake output we return false.
                         if (index == 0) {
-                            return false;
+                            break;
                         }
 
                         // There must be a vote fee left
                         if (availableInputValue <= 0) {
-                            return false;
+                            break;
                         }
 
                         // Burned BSQ output is last output before opReturn.
@@ -285,7 +285,7 @@ class TxOutputParser {
                         // We always have the BSQ change before the burned BSQ output if both are present.
                         checkArgument(optionalOpReturnIndex.isPresent());
                         if (index != optionalOpReturnIndex.get() - 1) {
-                            return false;
+                            break;
                         }
 
                         // Without checking the fee we would not be able to distinguish between 2 structurally same transactions, one
@@ -293,6 +293,7 @@ class TxOutputParser {
                         long blindVoteFee = daoStateService.getParamValueAsCoin(Param.BLIND_VOTE_FEE, tempTxOutput.getBlockHeight()).value;
                         return availableInputValue == blindVoteFee;
                     }
+                    break;
                 case VOTE_REVEAL:
                     break;
                 case LOCKUP:
