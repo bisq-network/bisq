@@ -92,6 +92,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String PROMPT_PAY_ID = "PROMPT_PAY";
     public static final String ADVANCED_CASH_ID = "ADVANCED_CASH";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
+    public static final String PICPAY_ID = "PIC_PAY";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -129,6 +130,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
+    public static PaymentMethod PIC_PAY;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -188,6 +190,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
             // Thailand
             PROMPT_PAY = new PaymentMethod(PROMPT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            //Brazil
+            PIC_PAY = new PaymentMethod(PICPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Altcoins
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
@@ -354,6 +359,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
                 id.equals(PaymentMethod.CHASE_QUICK_PAY_ID) ||
                 id.equals(PaymentMethod.POPMONEY_ID) ||
                 id.equals(PaymentMethod.MONEY_BEAM_ID) ||
-                id.equals(PaymentMethod.UPHOLD_ID);
+                id.equals(PaymentMethod.UPHOLD_ID) ||
+                id.equals(PaymentMethod.PICPAY_ID);
     }
 }
