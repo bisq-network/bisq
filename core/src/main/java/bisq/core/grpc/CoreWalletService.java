@@ -51,9 +51,7 @@ class CoreWalletService {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
 
-        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
-        if (keyCrypterScrypt == null)
-            throw new IllegalStateException("wallet encrypter is not available");
+        KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
 
         if (newPassword != null && !newPassword.isEmpty()) {
             // TODO Validate new password before replacing old password.
@@ -108,20 +106,29 @@ class CoreWalletService {
     // Provided for automated wallet protection method testing, despite the
     // security risks exposed by providing users the ability to decrypt their wallets.
     public void removeWalletPassword(String password) {
-        if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
-
-        if (!walletsManager.areWalletsEncrypted())
-            throw new IllegalStateException("wallet is not encrypted with a password");
-
-        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
-        if (keyCrypterScrypt == null)
-            throw new IllegalStateException("wallet encrypter is not available");
+        verifyWalletIsAvailableAndEncrypted();
+        KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
 
         KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
         if (!walletsManager.checkAESKey(aesKey))
             throw new IllegalStateException("incorrect password");
 
         walletsManager.decryptWallets(aesKey);
+    }
+
+    // Throws a RuntimeException if wallets are not available or not encrypted.
+    private void verifyWalletIsAvailableAndEncrypted() {
+        if (!walletsManager.areWalletsAvailable())
+            throw new IllegalStateException("wallet is not yet available");
+
+        if (!walletsManager.areWalletsEncrypted())
+            throw new IllegalStateException("wallet is not encrypted with a password");
+    }
+
+    private KeyCrypterScrypt getKeyCrypterScrypt() {
+        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+        if (keyCrypterScrypt == null)
+            throw new IllegalStateException("wallet encrypter is not available");
+        return keyCrypterScrypt;
     }
 }
