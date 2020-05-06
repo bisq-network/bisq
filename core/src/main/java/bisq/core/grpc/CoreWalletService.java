@@ -68,6 +68,7 @@ class CoreWalletService {
             walletsManager.decryptWallets(aesKey);
             aesKey = keyCrypterScrypt.deriveKey(newPassword);
             walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+            walletsManager.backupWallets();
             return;
         }
 
@@ -77,6 +78,7 @@ class CoreWalletService {
         // TODO Validate new password.
         KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
         walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+        walletsManager.backupWallets();
     }
 
     public void lockWallet() {
@@ -94,6 +96,7 @@ class CoreWalletService {
         }
 
         walletsManager.encryptWallets(tempKeyCrypterScrypt, tempAesKey);
+        walletsManager.backupWallets();
         tempKeyCrypterScrypt = null;
         tempAesKey = null;
     }
@@ -113,6 +116,7 @@ class CoreWalletService {
             throw new IllegalStateException("incorrect password");
 
         walletsManager.decryptWallets(tempAesKey);
+        walletsManager.backupWallets();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -138,6 +142,7 @@ class CoreWalletService {
             throw new IllegalStateException("incorrect password");
 
         walletsManager.decryptWallets(aesKey);
+        walletsManager.backupWallets();
     }
 
     // Throws a RuntimeException if wallets are not available or not encrypted.
