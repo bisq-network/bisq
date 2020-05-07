@@ -27,9 +27,6 @@ class CoreWalletService {
     @Nullable
     private KeyParameter tempAesKey;
 
-    @Nullable
-    KeyCrypterScrypt tempKeyCrypterScrypt;
-
     @Inject
     public CoreWalletService(Balances balances, WalletsManager walletsManager) {
         this.balances = balances;
@@ -40,7 +37,7 @@ class CoreWalletService {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
 
-        if (walletsManager.areWalletsEncrypted())
+        if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
             throw new IllegalStateException("wallet is locked");
 
         var balance = balances.getAvailableBalance().get();
@@ -82,48 +79,33 @@ class CoreWalletService {
     }
 
     public void lockWallet() {
-        if (tempKeyCrypterScrypt == null && tempAesKey == null)
+        if (!walletsManager.areWalletsEncrypted())
+            throw new IllegalStateException("wallet is not encrypted with a password");
+
+        if (tempAesKey == null)
             throw new IllegalStateException("wallet is already locked");
 
-        if (walletsManager.areWalletsEncrypted()) {
-            // This should never happen.
-            log.error("The lockwallet method found the wallet already encrypted, "
-                    + "while the tempKeyCrypterScrypt and tempAesKey values that are "
-                    + " supposed to be used on re-encrypt the wallet are not null.");
-            tempKeyCrypterScrypt = null;
-            tempAesKey = null;
-            throw new IllegalStateException("wallet is already locked");
-        }
-
-        walletsManager.encryptWallets(tempKeyCrypterScrypt, tempAesKey);
-        walletsManager.backupWallets();
-        tempKeyCrypterScrypt = null;
         tempAesKey = null;
     }
 
     public void unlockWallet(String password, long timeout) {
         verifyWalletIsAvailableAndEncrypted();
 
-        // We need to cache a temporary KeyCrypterScrypt for use in the manual lock method.
-        // Using a different crypter instance there would invalidate the password used here
-        // because it would have a different random salt value.
-        tempKeyCrypterScrypt = getKeyCrypterScrypt();
+        KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
         // The aesKey is also cached for timeout (secs) after being used to decrypt the
         // wallet, in case the user wants to manually lock the wallet before the timeout.
-        tempAesKey = tempKeyCrypterScrypt.deriveKey(password);
+        tempAesKey = keyCrypterScrypt.deriveKey(password);
 
         if (!walletsManager.checkAESKey(tempAesKey))
             throw new IllegalStateException("incorrect password");
 
-        walletsManager.decryptWallets(tempAesKey);
-        walletsManager.backupWallets();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                if (tempKeyCrypterScrypt != null && tempAesKey != null) {
+                if (tempAesKey != null) {
                     // Do not try to lock wallet after timeout if the user already has via 'lockwallet'.
                     log.info("Locking wallet after {} second timeout expired.", timeout);
-                    lockWallet();
+                    tempAesKey = null;
                 }
             }
         };
