@@ -62,7 +62,7 @@ configure(subprojects) {
         logbackVersion = '1.1.11'
         loggingVersion = '1.2'
         lombokVersion = '1.18.12'
-        mockitoVersion = '3.0.0'
+        mockitoVersion = '3.3.0'
         netlayerVersion = '0.6.8'
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
@@ -497,7 +497,7 @@ configure(project(':pricenode')) {
 
     test {
         useJUnitPlatform()
-        
+
         // Disabled by default, since spot provider tests include connections to external API endpoints
         // Can be enabled by adding -Dtest.pricenode.includeSpotProviderTests=true to the gradle command:
         // ./gradlew test -Dtest.pricenode.includeSpotProviderTests=true
