@@ -129,5 +129,10 @@ public class BisqAppMain extends BisqExecutable {
     @Override
     protected void onApplicationStarted() {
         super.onApplicationStarted();
+
+        // Relevant to have this in the logs, for support cases
+        // This can only be called after JavaFX is initialized, otherwise the version logged will be null
+        // Therefore, calling this as part of onApplicationStarted()
+        log.info("Using JavaFX {}", System.getProperty("javafx.version"));
     }
 }

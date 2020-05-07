@@ -47,7 +47,7 @@ configure(subprojects) {
         httpcoreVersion = '4.4.13'
         ioVersion = '2.6'
         jacksonVersion = '2.8.10'
-        javafxVersion = '11.0.2'
+        javafxVersion = '14'
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
