@@ -89,8 +89,7 @@ class TransactionsListItem {
                          TransactionAwareTradable transactionAwareTradable,
                          DaoFacade daoFacade,
                          CoinFormatter formatter,
-                         long ignoreDustThreshold
-                         ) {
+                         long ignoreDustThreshold) {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
         this.memo = transaction.getMemo();

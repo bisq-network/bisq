@@ -46,8 +46,7 @@ public class TransactionListItemFactory {
                                BsqWalletService bsqWalletService,
                                DaoFacade daoFacade,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
-                               Preferences preferences
-    ) {
+                               Preferences preferences) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
@@ -62,7 +61,6 @@ public class TransactionListItemFactory {
                 tradable,
                 daoFacade,
                 formatter,
-                preferences.getIgnoreDustThreshold()
-        );
+                preferences.getIgnoreDustThreshold());
     }
 }
