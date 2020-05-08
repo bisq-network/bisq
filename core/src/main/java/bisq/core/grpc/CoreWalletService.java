@@ -116,7 +116,8 @@ class CoreWalletService {
             @Override
             public void run() {
                 if (tempAesKey != null) {
-                    // Do not try to lock wallet after timeout if the user already has via 'lockwallet'.
+                    // Do not try to lock wallet after timeout if the user has already
+                    // done so via 'lockwallet'
                     log.info("Locking wallet after {} second timeout expired.", timeout);
                     tempAesKey = null;
                 }
