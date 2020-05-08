@@ -39,7 +39,6 @@ import bisq.core.support.dispute.mediation.MediationDisputeList;
 import bisq.core.support.dispute.refund.RefundDisputeList;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.statistics.TradeStatistics2Store;
-import bisq.core.transaction.TransactionsPayload;
 import bisq.core.user.PreferencesPayload;
 import bisq.core.user.UserPayload;
 
@@ -149,8 +148,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return UnconfirmedBsqChangeOutputList.fromProto(proto.getUnconfirmedBsqChangeOutputList());
                 case SIGNED_WITNESS_STORE:
                     return SignedWitnessStore.fromProto(proto.getSignedWitnessStore());
-                case TRANSACTIONS_PAYLOAD:
-                    return TransactionsPayload.fromProto(proto.getTransactionsPayload());
 
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +

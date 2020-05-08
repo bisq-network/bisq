@@ -89,12 +89,11 @@ class TransactionsListItem {
                          TransactionAwareTradable transactionAwareTradable,
                          DaoFacade daoFacade,
                          CoinFormatter formatter,
-                         long ignoreDustThreshold,
-                         bisq.core.transaction.Transaction storedTransaction
+                         long ignoreDustThreshold
                          ) {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
-        this.memo = storedTransaction.getMemo();
+        this.memo = transaction.getMemo();
 
         txId = transaction.getHashAsString();
 

@@ -1145,7 +1145,6 @@ message PersistableEnvelope {
         SignedWitnessStore signed_witness_store = 28;
         MediationDisputeList mediation_dispute_list = 29;
         RefundDisputeList refund_dispute_list = 30;
-        TransactionsPayload transactions_payload = 31;
     }
 }
 
@@ -2069,17 +2068,4 @@ message MockMailboxPayload {
 message MockPayload {
     string message_version = 1;
     string message = 2;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Transaction
-///////////////////////////////////////////////////////////////////////////////////////////
-
-message Transaction {
-    string txId = 1;
-    string memo = 2;
-}
-
-message TransactionsPayload {
-    repeated Transaction transactions = 1;
 }

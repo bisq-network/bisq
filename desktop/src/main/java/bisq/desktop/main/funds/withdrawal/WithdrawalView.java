@@ -39,7 +39,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.transaction.TransactionsPayload;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -50,7 +49,6 @@ import bisq.core.util.validation.BtcAddressValidator;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.storage.Storage;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
 
@@ -136,7 +134,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final Preferences preferences;
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
-    private final Storage<TransactionsPayload> transactionPayloadStorage;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
@@ -166,8 +163,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            Preferences preferences,
                            BtcAddressValidator btcAddressValidator,
-                           WalletPasswordWindow walletPasswordWindow,
-                           Storage<TransactionsPayload> transactionPayloadStorage
+                           WalletPasswordWindow walletPasswordWindow
     ) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
@@ -177,7 +173,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         this.preferences = preferences;
         this.btcAddressValidator = btcAddressValidator;
         this.walletPasswordWindow = walletPasswordWindow;
-        this.transactionPayloadStorage = transactionPayloadStorage;
     }
 
     @Override
@@ -393,8 +388,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
+                                            transaction.setMemo(withdrawMemoTextField.getText());
                                             log.debug("onWithdraw onSuccess tx ID:{}", transaction.getHashAsString());
-                                            storeTransaction(transaction);
                                         } else {
                                             log.error("onWithdraw transaction is null");
                                         }
@@ -428,19 +423,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 new Popup().warning(e.toString()).show();
             }
         }
-    }
-
-    private void storeTransaction(@NotNull Transaction transaction) {
-        bisq.core.transaction.Transaction transactionToBeStored = new bisq.core.transaction.Transaction(
-                transaction.getHashAsString(),
-                withdrawMemoTextField.getText()
-        );
-        TransactionsPayload transactionsPayload = transactionPayloadStorage.initAndGetPersistedWithFileName("TransactionPayload", 100);
-        if (transactionsPayload == null) {
-            transactionsPayload = new TransactionsPayload(new HashMap<>());
-        }
-        transactionsPayload.addTransaction(transactionToBeStored);
-        transactionPayloadStorage.queueUpForSave(transactionsPayload);
     }
 
     private void selectForWithdrawal(WithdrawalListItem item) {
