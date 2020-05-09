@@ -21,16 +21,21 @@ import bisq.price.mining.FeeRate;
 
 import org.springframework.context.support.GenericXmlApplicationContext;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;
 
+/**
+ * Tests specific to a {@link BitcoinFeeRateProvider} which queries one API endpoint<br/><br/>
+ *
+ * For tests related to managing parallel fee API endpoints, see {@link bisq.price.mining.FeeRateServiceTest}
+ */
 public class BitcoinFeeRateProviderTest {
 
     @Test
     public void doGet_successfulCall() {
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider feeRateProvider = new BitcoinFeeRateProvider(ctx.getEnvironment());
+        BitcoinFeeRateProvider feeRateProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment());
 
         // Make a call to the API, retrieve the recommended fee rate
         // If the API call fails, or the response body cannot be parsed, the test will

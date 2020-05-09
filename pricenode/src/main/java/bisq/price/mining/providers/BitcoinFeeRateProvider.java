@@ -21,25 +21,33 @@ import bisq.price.PriceController;
 import bisq.price.mining.FeeRate;
 import bisq.price.mining.FeeRateProvider;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CommandLinePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@Component
-public class BitcoinFeeRateProvider extends FeeRateProvider {
+/**
+ * Provider that specifically interprets the mempool.space API format to retrieve a mining fee estimate. <br/><br/>
+ * Other {@link FeeRateProvider}s can be created for other APIs.
+ */
+public abstract class BitcoinFeeRateProvider extends FeeRateProvider {
 
     public static final long MIN_FEE_RATE = 10; // satoshi/byte
     public static final long MAX_FEE_RATE = 1000;
@@ -47,7 +55,15 @@ public class BitcoinFeeRateProvider extends FeeRateProvider {
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    // Keys of properties defining the available API endpoints
+    // To enable them, simply enable and adjust the corresponding lines in application.properties
+    private static final String API_ENDPOINT_HOSTNAME_KEY_1 = "service.mining.feeEstimate.apiEndpointHostname.1";
+    private static final String API_ENDPOINT_HOSTNAME_KEY_2 = "service.mining.feeEstimate.apiEndpointHostname.2";
+    private static final String API_ENDPOINT_HOSTNAME_KEY_3 = "service.mining.feeEstimate.apiEndpointHostname.3";
+    private static final String API_ENDPOINT_HOSTNAME_KEY_4 = "service.mining.feeEstimate.apiEndpointHostname.4";
+    private static final String API_ENDPOINT_HOSTNAME_KEY_5 = "service.mining.feeEstimate.apiEndpointHostname.5";
+
+    private static final RestTemplate restTemplate = new RestTemplate();
 
     // TODO: As of the switch to the mempool.space API this field and related members are
     //  now dead code and should be removed, including removing the positional
@@ -55,13 +71,27 @@ public class BitcoinFeeRateProvider extends FeeRateProvider {
     //  when it happens.
     private final int maxBlocks;
 
+    protected Environment env;
+
     public BitcoinFeeRateProvider(Environment env) {
         super(Duration.ofMinutes(refreshInterval(env)));
+        this.env = env;
         this.maxBlocks = maxBlocks(env);
     }
 
     protected FeeRate doGet() {
-        return new FeeRate("BTC", getEstimatedFeeRate(), Instant.now().getEpochSecond());
+        // Default value is the minimum rate
+        // If the connection to the fee estimate provider fails, we fall back to this value
+        long estimatedFeeRate = MIN_FEE_RATE;
+        try {
+            estimatedFeeRate = getEstimatedFeeRate();
+        }
+        catch (Exception e) {
+            // Something happened with the connection
+            log.error("Error retrieving bitcoin mining fee estimation: " + e.getMessage());
+        }
+
+        return new FeeRate("BTC", estimatedFeeRate, Instant.now().getEpochSecond());
     }
 
     private long getEstimatedFeeRate() {
@@ -70,7 +100,7 @@ public class BitcoinFeeRateProvider extends FeeRateProvider {
             .map(Map.Entry::getValue)
             .findFirst()
             .map(r -> {
-                log.info("latest fee rate prediction is {} sat/byte", r);
+                log.info("Retrieved estimated mining fee of {} sat/byte from {}", r, getMempoolApiHostname());
                 return r;
             })
             .map(r -> Math.max(r, MIN_FEE_RATE))
@@ -82,16 +112,18 @@ public class BitcoinFeeRateProvider extends FeeRateProvider {
         return restTemplate.exchange(
             RequestEntity
                 .get(UriComponentsBuilder
-                    // Temporarily call mempool.space centralized API endpoint as an
-                    // alternative to the too-expensive bitcoinfees.earn.com until a more
-                    // decentralized solution is available as per
-                    // https://github.com/bisq-network/projects/issues/27
-                    .fromUriString("https://mempool.space/api/v1/fees/recommended")
+                    // See https://github.com/bisq-network/projects/issues/27
+                    .fromUriString("https://" + getMempoolApiHostname() + "/api/v1/fees/recommended")
                     .build().toUri())
                 .build(),
             new ParameterizedTypeReference<Map<String, Long>>() { }
         ).getBody().entrySet().stream();
     }
+
+    /**
+     * @return Hostname of the fee estimation API endpoint. No prefix (https://), no suffix (trailing slashes, etc)
+     */
+    protected abstract String getMempoolApiHostname();
 
     private static Optional<String[]> args(Environment env) {
         return Optional.ofNullable(
@@ -112,6 +144,79 @@ public class BitcoinFeeRateProvider extends FeeRateProvider {
             .orElse(DEFAULT_REFRESH_INTERVAL);
     }
 
+    @Primary
+    @Component
+    @Order(1)
+    public static class First extends BitcoinFeeRateProvider {
+
+        public First(Environment env) {
+            super(env);
+        }
+
+        protected String getMempoolApiHostname() {
+            // This is the primary instance, so if no API point is set in
+            // application.properties file, then it defaults to mempool.space
+            // This ensures there is at least one provider attempting to connect,
+            // even if the properties file is corrupt or empty
+            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_1, "mempool.space");
+        }
+    }
+
+    @Component
+    @Order(2)
+    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_2)
+    public static class Second extends BitcoinFeeRateProvider {
+
+        public Second(Environment env) {
+            super(env);
+        }
+
+        protected String getMempoolApiHostname() {
+            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_2);
+        }
+    }
+
+    @Component
+    @Order(3)
+    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_3)
+    public static class Third extends BitcoinFeeRateProvider {
+
+        public Third(Environment env) {
+            super(env);
+        }
+
+        protected String getMempoolApiHostname() {
+            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_3);
+        }
+    }
+
+    @Component
+    @Order(4)
+    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_4)
+    public static class Fourth extends BitcoinFeeRateProvider {
+
+        public Fourth(Environment env) {
+            super(env);
+        }
+
+        protected String getMempoolApiHostname() {
+            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_4);
+        }
+    }
+
+    @Component
+    @Order(5)
+    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_5)
+    public static class Fifth extends BitcoinFeeRateProvider {
+
+        public Fifth(Environment env) {
+            super(env);
+        }
+
+        protected String getMempoolApiHostname() {
+            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_5);
+        }
+    }
 
     @RestController
     class Controller extends PriceController {
