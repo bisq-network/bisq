@@ -469,6 +469,13 @@ configure(project(':pricenode')) {
         compile("org.knowm.xchange:xchange-poloniex:$knowmXchangeVersion")
         compile("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
         compile("org.springframework.boot:spring-boot-starter-actuator")
+        testCompile "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testCompile "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     task stage {
