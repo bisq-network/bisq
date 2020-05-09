@@ -86,3 +86,12 @@ curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/pricenode/ins
 
  - [README-HEROKU.md](README-HEROKU.md)
  - [docker/README.md](docker/README.md)
+
+
+## Bitcoin mining fee estimates
+
+The pricenode exposes a service API to Bisq clients under `/getFees`.
+
+This API returns a mining fee rate estimate, representing an average of several mining fee rate values retrieved from different `mempool.space` instances.
+
+To configure which `mempool.space` instances are queried to calculate this average, see the relevant section in the file `application.properties`.
