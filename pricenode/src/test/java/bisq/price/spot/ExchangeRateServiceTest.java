@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -38,6 +37,7 @@ import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -75,7 +75,7 @@ public class ExchangeRateServiceTest extends TestBase {
 
         Map<String, Object> retrievedData = service.getAllMarketPrices();
 
-        doSanityChecksForRetrievedData(retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
+        doSanityChecksForRetrievedDataSingleProvider(retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
 
         // No exchange rates provided by this exchange, two things should happen
         // A) the timestamp should be set to 0
@@ -100,10 +100,27 @@ public class ExchangeRateServiceTest extends TestBase {
 
         Map<String, Object> retrievedData = service.getAllMarketPrices();
 
-        doSanityChecksForRetrievedData(retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
+        doSanityChecksForRetrievedDataSingleProvider(retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
 
-        // One rate was provided by this exchange, so the timestamp should not be 0
+        // One rate was provided by this provider, so the timestamp should not be 0
         assertNotEquals(0L, retrievedData.get(dummyProvider.getPrefix() + "Ts"));
+    }
+
+    @Test
+    public void getAllMarketPrices_withMultipleProviders() {
+        int numberOfCurrencyPairsOnExchange = 1;
+        ExchangeRateProvider dummyProvider1 = buildDummyExchangeRateProvider(numberOfCurrencyPairsOnExchange);
+        ExchangeRateProvider dummyProvider2 = buildDummyExchangeRateProvider(numberOfCurrencyPairsOnExchange);
+        ExchangeRateService service = new ExchangeRateService(asList(dummyProvider1, dummyProvider2));
+
+        Map<String, Object> retrievedData = service.getAllMarketPrices();
+
+        doSanityChecksForRetrievedDataMultipleProviders(retrievedData,
+                asList(dummyProvider1.getPrefix(), dummyProvider2.getPrefix()));
+
+        // One rate was provided by each provider in this service, so the timestamp (for both providers) should not be 0
+        assertNotEquals(0L, retrievedData.get(dummyProvider1.getPrefix() + "Ts"));
+        assertNotEquals(0L, retrievedData.get(dummyProvider2.getPrefix() + "Ts"));
     }
 
     /**
@@ -113,17 +130,39 @@ public class ExchangeRateServiceTest extends TestBase {
      * @param providerPrefix {@link ExchangeRateProvider#getPrefix()}
      * @param numberOfCurrencyPairsOnExchange Number of currency pairs this exchange was initiated with
      */
-    private void doSanityChecksForRetrievedData(Map<String, Object> retrievedData, String providerPrefix, int numberOfCurrencyPairsOnExchange) {
-        // Check that 3 entries were present in the service response:
-        // timestamp + count + price data (stored as a list under the key "data")
-        assertEquals(3, retrievedData.size());
-        assertNotNull(retrievedData.get(providerPrefix + "Ts"));
-        assertNotNull(retrievedData.get(providerPrefix + "Count"));
-        assertNotNull(retrievedData.get("data"));
+    private void doSanityChecksForRetrievedDataSingleProvider(Map<String, Object> retrievedData,
+                                                              String providerPrefix,
+                                                              int numberOfCurrencyPairsOnExchange) {
+        // Check response structure
+        doSanityChecksForRetrievedDataMultipleProviders(retrievedData, asList(providerPrefix));
 
         // Check that the amount of provided exchange rates matches expected value
+        // For one provider, the amount of rates of that provider should be the total amount of rates in the response
         List<String> retrievedMarketPricesData = (List<String>) retrievedData.get("data");
         assertEquals(numberOfCurrencyPairsOnExchange, retrievedMarketPricesData.size());
+    }
+
+    /**
+     * Performs generic sanity checks on the response format and contents
+     *
+     * @param retrievedData Response data retrieved from the {@link ExchangeRateService}
+     * @param providerPrefixes List of all {@link ExchangeRateProvider#getPrefix()} the {@link ExchangeRateService} uses
+     */
+    private void doSanityChecksForRetrievedDataMultipleProviders(Map<String, Object> retrievedData,
+                                                              List<String> providerPrefixes) {
+        // Check the correct amount of entries were present in the service response:
+        // The timestamp and the count fields are per provider, so N providers means N times those fields
+        // timestamp (x N) + count (x N) + price data (stored as a list under the key "data")
+        // So expected size is Nx2 + 1
+        int n = providerPrefixes.size();
+        assertEquals(n * 2 + 1, retrievedData.size());
+        for (String providerPrefix : providerPrefixes) {
+            assertNotNull(retrievedData.get(providerPrefix + "Ts"));
+            assertNotNull(retrievedData.get(providerPrefix + "Count"));
+        }
+        assertNotNull(retrievedData.get("data"));
+
+        // TODO Add checks for the case when rates for the same currency pair is retrieved from multiple providers
     }
 
     private ExchangeRateProvider buildDummyExchangeRateProvider(int numberOfRatesAvailable) {
