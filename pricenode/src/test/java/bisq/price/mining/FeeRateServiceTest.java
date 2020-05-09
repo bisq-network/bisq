@@ -113,7 +113,7 @@ public class FeeRateServiceTest extends TestBase {
      */
     private BitcoinFeeRateProvider buildDummyReachableBitcoinFeeRateProvider(long feeRate) {
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider(ctx.getEnvironment()) {
+        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
             @Override
             protected FeeRate doGet() {
                 return new FeeRate("BTC", feeRate, Instant.now().getEpochSecond());
@@ -136,7 +136,7 @@ public class FeeRateServiceTest extends TestBase {
      */
     private BitcoinFeeRateProvider buildDummyUnreachableBitcoinFeeRateProvider() throws RestClientException{
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider(ctx.getEnvironment()) {
+        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
             @Override
             protected FeeRate doGet() {
                 throw new RestClientException("Simulating connection error when trying to reach API endpoint");
