@@ -39,10 +39,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @Component
-class BitcoinFeeRateProvider extends FeeRateProvider {
+public class BitcoinFeeRateProvider extends FeeRateProvider {
 
-    static final long MIN_FEE_RATE = 10; // satoshi/byte
-    static final long MAX_FEE_RATE = 1000;
+    public static final long MIN_FEE_RATE = 10; // satoshi/byte
+    public static final long MAX_FEE_RATE = 1000;
 
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;

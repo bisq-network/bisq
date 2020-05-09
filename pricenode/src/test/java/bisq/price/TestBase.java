@@ -19,10 +19,15 @@ package bisq.price;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Provide utility methods for other tests
  */
 public abstract class TestBase {
+
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected static String getRandomAlphaNumericString(int length) {
         return RandomStringUtils.random(length, true, true);
