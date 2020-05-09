@@ -200,9 +200,10 @@ public class SellerStep3View extends TradeStepView {
         }
 
         if (!isBlockChain && !trade.getOffer().getPaymentMethod().equals(PaymentMethod.F2F)) {
-            addTopLabelTextFieldWithCopyIcon(
+            TextFieldWithCopyIcon reasonForPaymentTextField = addTopLabelTextFieldWithCopyIcon(
                     gridPane, gridRow, 1, Res.get("shared.reasonForPayment"),
-                    model.dataModel.getReference(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+                    model.dataModel.getReasonForPayment(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
+            reasonForPaymentTextField.setTooltip(new Tooltip(Res.get("shared.reasonForPayment.tooltip")));
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
@@ -285,7 +286,7 @@ public class SellerStep3View extends TradeStepView {
                     if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                             !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                             !(paymentAccountPayload instanceof F2FAccountPayload)) {
-                        message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
+                        message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getReasonForPayment());
                     }
 
                     Optional<String> optionalHolderName = getOptionalHolderName();
@@ -318,7 +319,6 @@ public class SellerStep3View extends TradeStepView {
         String tradeVolumeWithCode = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
         String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
-        String id = trade.getShortId();
         if (paymentAccountPayload instanceof AssetsAccountPayload) {
             String address = ((AssetsAccountPayload) paymentAccountPayload).getAddress();
             String explorerOrWalletString = trade.getOffer().getCurrencyCode().equals("XMR") ?
@@ -327,11 +327,11 @@ public class SellerStep3View extends TradeStepView {
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
-                message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
+                message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, trade.getReasonForPayment());
             } else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                     !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                     !(paymentAccountPayload instanceof F2FAccountPayload)) {
-                message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
+                message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, trade.getReasonForPayment());
             }
 
             String part = Res.get("portfolio.pending.step3_seller.openDispute");
@@ -357,7 +357,7 @@ public class SellerStep3View extends TradeStepView {
         }
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", trade.getShortId()))
                     .attention(message)
                     .show();
         }

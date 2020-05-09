@@ -38,6 +38,7 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.MathUtils;
+import bisq.common.util.ReasonsForPayment;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -319,6 +320,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // utils
     public String getShortId() {
         return Utilities.getShortId(offerPayload.getId());
+    }
+
+    public String getReasonForPayment() {
+        return ReasonsForPayment.getReason(getShortId());
     }
 
     @Nullable

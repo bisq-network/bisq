@@ -53,6 +53,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.storage.Storage;
 import bisq.common.taskrunner.Model;
+import bisq.common.util.ReasonsForPayment;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -1026,6 +1027,10 @@ public abstract class Trade implements Tradable, Model {
     @Override
     public String getShortId() {
         return offer.getShortId();
+    }
+
+    public String getReasonForPayment() {
+        return ReasonsForPayment.getReason(getShortId());
     }
 
     public Price getTradePrice() {

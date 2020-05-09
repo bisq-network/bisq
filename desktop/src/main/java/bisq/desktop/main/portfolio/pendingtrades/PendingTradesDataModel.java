@@ -408,8 +408,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             return null;
     }
 
-    public String getReference() {
-        return getOffer() != null ? getOffer().getShortId() : "";
+    public String getReasonForPayment() {
+        return getOffer() != null ? getOffer().getReasonForPayment() : "";
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

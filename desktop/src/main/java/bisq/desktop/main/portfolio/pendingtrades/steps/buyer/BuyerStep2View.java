@@ -231,7 +231,7 @@ public class BuyerStep2View extends TradeStepView {
         if (!(paymentAccountPayload instanceof AssetsAccountPayload) &&
                 !(paymentAccountPayload instanceof F2FAccountPayload))
             addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
-                    Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
+                    Res.get("shared.reasonForPayment"), model.dataModel.getReasonForPayment(),
                     Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
         switch (paymentMethodId) {
