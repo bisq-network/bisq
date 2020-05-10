@@ -139,12 +139,8 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
             case PROPOSAL_FEE:
             case BLIND_VOTE_FEE:
                 break;
-
             case COMPENSATION_REQUEST_MIN_AMOUNT:
             case REIMBURSEMENT_MIN_AMOUNT:
-                checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
-                break;
             case COMPENSATION_REQUEST_MAX_AMOUNT:
             case REIMBURSEMENT_MAX_AMOUNT:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
@@ -152,7 +148,6 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
                 checkArgument(inputValueAsCoin.value <= 200000000,
                         Res.get("validation.inputTooLarge", "200 000 BSQ"));
                 break;
-
             case QUORUM_COMP_REQUEST:
             case QUORUM_REIMBURSEMENT:
             case QUORUM_CHANGE_PARAM:
