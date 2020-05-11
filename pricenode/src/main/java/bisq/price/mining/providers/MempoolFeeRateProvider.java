@@ -50,13 +50,13 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;
 
-    // Keys of properties defining the available API endpoints. To enable them, simply
-    // uncomment and adjust the corresponding lines in application.properties
-    private static final String API_ENDPOINT_HOSTNAME_KEY_1 = "service.mining.feeEstimate.apiEndpointHostname.1";
-    private static final String API_ENDPOINT_HOSTNAME_KEY_2 = "service.mining.feeEstimate.apiEndpointHostname.2";
-    private static final String API_ENDPOINT_HOSTNAME_KEY_3 = "service.mining.feeEstimate.apiEndpointHostname.3";
-    private static final String API_ENDPOINT_HOSTNAME_KEY_4 = "service.mining.feeEstimate.apiEndpointHostname.4";
-    private static final String API_ENDPOINT_HOSTNAME_KEY_5 = "service.mining.feeEstimate.apiEndpointHostname.5";
+    // Keys of properties defining the available Mempool API endpoints. To enable them,
+    // simply uncomment and adjust the corresponding lines in application.properties
+    private static final String MEMPOOL_HOSTNAME_KEY_1 = "bisq.price.mining.providers.mempoolHostname.1";
+    private static final String MEMPOOL_HOSTNAME_KEY_2 = "bisq.price.mining.providers.mempoolHostname.2";
+    private static final String MEMPOOL_HOSTNAME_KEY_3 = "bisq.price.mining.providers.mempoolHostname.3";
+    private static final String MEMPOOL_HOSTNAME_KEY_4 = "bisq.price.mining.providers.mempoolHostname.4";
+    private static final String MEMPOOL_HOSTNAME_KEY_5 = "bisq.price.mining.providers.mempoolHostname.5";
 
     private static final RestTemplate restTemplate = new RestTemplate();
 
@@ -154,13 +154,13 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
             // application.properties file, then it defaults to mempool.space
             // This ensures there is at least one provider attempting to connect,
             // even if the properties file is corrupt or empty
-            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_1, "mempool.space");
+            return env.getProperty(MEMPOOL_HOSTNAME_KEY_1, "mempool.space");
         }
     }
 
     @Component
     @Order(2)
-    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_2)
+    @ConditionalOnProperty(name = MEMPOOL_HOSTNAME_KEY_2)
     public static class Second extends MempoolFeeRateProvider {
 
         public Second(Environment env) {
@@ -168,13 +168,13 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
         }
 
         protected String getMempoolApiHostname() {
-            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_2);
+            return env.getProperty(MEMPOOL_HOSTNAME_KEY_2);
         }
     }
 
     @Component
     @Order(3)
-    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_3)
+    @ConditionalOnProperty(name = MEMPOOL_HOSTNAME_KEY_3)
     public static class Third extends MempoolFeeRateProvider {
 
         public Third(Environment env) {
@@ -182,13 +182,13 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
         }
 
         protected String getMempoolApiHostname() {
-            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_3);
+            return env.getProperty(MEMPOOL_HOSTNAME_KEY_3);
         }
     }
 
     @Component
     @Order(4)
-    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_4)
+    @ConditionalOnProperty(name = MEMPOOL_HOSTNAME_KEY_4)
     public static class Fourth extends MempoolFeeRateProvider {
 
         public Fourth(Environment env) {
@@ -196,13 +196,13 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
         }
 
         protected String getMempoolApiHostname() {
-            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_4);
+            return env.getProperty(MEMPOOL_HOSTNAME_KEY_4);
         }
     }
 
     @Component
     @Order(5)
-    @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_5)
+    @ConditionalOnProperty(name = MEMPOOL_HOSTNAME_KEY_5)
     public static class Fifth extends MempoolFeeRateProvider {
 
         public Fifth(Environment env) {
@@ -210,7 +210,7 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
         }
 
         protected String getMempoolApiHostname() {
-            return env.getProperty(API_ENDPOINT_HOSTNAME_KEY_5);
+            return env.getProperty(MEMPOOL_HOSTNAME_KEY_5);
         }
     }
 
