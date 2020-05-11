@@ -17,7 +17,7 @@
 
 package bisq.price.spot;
 
-import bisq.price.TestBase;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.time.Duration;
 
@@ -43,8 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
-public class ExchangeRateServiceTest extends TestBase {
+public class ExchangeRateServiceTest {
 
     /**
      * Logback version of the Slf4j logger used by {@link ExchangeRateService}. This
@@ -203,5 +202,9 @@ public class ExchangeRateServiceTest extends TestBase {
         dummyProvider.stop();
 
         return dummyProvider;
+    }
+
+    private static String getRandomAlphaNumericString(int length) {
+        return RandomStringUtils.random(length, true, true);
     }
 }

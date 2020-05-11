@@ -1,6 +1,5 @@
 package bisq.price.mining;
 
-import bisq.price.TestBase;
 import bisq.price.mining.providers.BitcoinFeeRateProvider;
 
 import org.springframework.context.support.GenericXmlApplicationContext;
@@ -13,6 +12,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.junit.jupiter.api.Test;
 
 import static java.util.Arrays.asList;
@@ -24,7 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
  * several {@link FeeRateProvider}s.
  * @see bisq.price.mining.providers.BitcoinFeeRateProviderTest
  */
-public class FeeRateServiceTest extends TestBase {
+public class FeeRateServiceTest {
+
+    private static final Logger log = LoggerFactory.getLogger(FeeRateServiceTest.class);
 
     @Test
     public void getFees_noWorkingProvider() {
