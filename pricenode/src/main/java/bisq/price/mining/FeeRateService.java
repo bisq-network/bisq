@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +38,8 @@ class FeeRateService {
     private final List<FeeRateProvider> providers;
 
     /**
-     * Construct an {@link FeeRateService} with a list of all
-     * {@link FeeRateProvider} implementations discovered via classpath scanning.
+     * Construct a {@link FeeRateService} with a list of all {@link FeeRateProvider}
+     * implementations discovered via classpath scanning.
      *
      * @param providers all {@link FeeRateProvider} implementations in ascending
      *                  order of precedence
@@ -76,7 +75,8 @@ class FeeRateService {
         averageFeeRate = Math.min(averageFeeRate, BitcoinFeeRateProvider.MAX_FEE_RATE);
 
         // Prepare response: Add timestamp of now
-        // Since this is an average, the timestamp is associated with when the moment in time when the avg was computed
+        // Since this is an average, the timestamp is associated with when the moment in
+        // time when the avg was computed
         metadata.put("bitcoinFeesTs", Instant.now().getEpochSecond());
 
         // Prepare response: Add the fee average

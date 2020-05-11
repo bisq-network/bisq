@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
- * Tests the {@link bisq.price.mining.FeeRateService}, which can aggregate data from several {@link FeeRateProvider}s
- * <br/><br/>
+ * Tests the {@link bisq.price.mining.FeeRateService}, which can aggregate data from
+ * several {@link FeeRateProvider}s.
  * @see bisq.price.mining.providers.BitcoinFeeRateProviderTest
  */
 public class FeeRateServiceTest extends TestBase {
@@ -42,7 +42,8 @@ public class FeeRateServiceTest extends TestBase {
 
         Map<String, Object> retrievedData = service.getFees();
 
-        // Even with no working providers, we expect the service to return pre-configured minimum fee rate
+        // Even with no working providers, we expect the service to return pre-configured
+        // minimum fee rate
         doSanityChecksForRetrievedData(retrievedData, BitcoinFeeRateProvider.MIN_FEE_RATE);
     }
 
@@ -56,7 +57,8 @@ public class FeeRateServiceTest extends TestBase {
 
         Map<String, Object> retrievedData = service.getFees();
 
-        // When the provider returns a value below the expected min, the service should return the min
+        // When the provider returns a value below the expected min, the service should
+        // return the min
         doSanityChecksForRetrievedData(retrievedData, BitcoinFeeRateProvider.MIN_FEE_RATE);
     }
 
@@ -70,18 +72,18 @@ public class FeeRateServiceTest extends TestBase {
 
         Map<String, Object> retrievedData = service.getFees();
 
-        // When the provider returns a value above the expected max, the service should return the max
+        // When the provider returns a value above the expected max, the service should
+        // return the max
         doSanityChecksForRetrievedData(retrievedData, BitcoinFeeRateProvider.MAX_FEE_RATE);
     }
 
     @Test
     public void getFees_multipleProviders() {
         // 3 providers, returning 1xMIN, 2xMIN, 3xMIN
-        FeeRateService service = new FeeRateService(
-                asList(
-                        buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 1),
-                        buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 2),
-                        buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 3)));
+        FeeRateService service = new FeeRateService(asList(
+                buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 1),
+                buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 2),
+                buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 3)));
 
         Map<String, Object> retrievedData = service.getFees();
 
@@ -91,14 +93,11 @@ public class FeeRateServiceTest extends TestBase {
 
     /**
      * Performs a few basic sanity checks on the returned data object
-     *
-     * @param retrievedData
-     * @param expectedFeeRate
      */
     private void doSanityChecksForRetrievedData(Map<String, Object> retrievedData, long expectedFeeRate) {
-        // Check if the response has the expected format
-        // Since the timestamp is that of the average (not that of the individual fee rates reported
-        // by the individual providers), we always expect a non-zero timestamp
+        // Check if the response has the expected format. Since the timestamp is that of
+        // the average (not that of the individual fee rates reported by the individual
+        // providers), we always expect a non-zero timestamp
         assertNotEquals(0L, retrievedData.get("bitcoinFeesTs"));
 
         Map<String, String> retrievedDataMap = (Map<String, String>) retrievedData.get("dataMap");
@@ -108,8 +107,6 @@ public class FeeRateServiceTest extends TestBase {
 
     /**
      * Simulates a reachable provider, which successfully returns an API response
-     * @param feeRate
-     * @return
      */
     private BitcoinFeeRateProvider buildDummyReachableBitcoinFeeRateProvider(long feeRate) {
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
@@ -128,13 +125,11 @@ public class FeeRateServiceTest extends TestBase {
     }
 
     /**
-     * Simulates an unreachable provider, which for whatever reason cannot deliver a response to the API.<br/><br/>
-     * Reasons for that could be: host went offline, connection timeout, connection cannot be established (expired
-     * certificate), etc.
-     *
-     * @return
+     * Simulates an unreachable provider, which for whatever reason cannot deliver a
+     * response to the API. Reasons for that could be: host went offline, connection
+     * timeout, connection cannot be established (expired certificate), etc.
      */
-    private BitcoinFeeRateProvider buildDummyUnreachableBitcoinFeeRateProvider() throws RestClientException{
+    private BitcoinFeeRateProvider buildDummyUnreachableBitcoinFeeRateProvider() throws RestClientException {
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
         BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
             @Override

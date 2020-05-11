@@ -26,9 +26,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests specific to a {@link BitcoinFeeRateProvider} which queries one API endpoint<br/><br/>
- *
- * For tests related to managing parallel fee API endpoints, see {@link bisq.price.mining.FeeRateServiceTest}
+ * Tests specific to a {@link BitcoinFeeRateProvider} which queries one API endpoint. For
+ * tests related to managing parallel fee API endpoints, see
+ * {@link bisq.price.mining.FeeRateServiceTest}
  */
 public class BitcoinFeeRateProviderTest {
 

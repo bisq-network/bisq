@@ -31,21 +31,19 @@ import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Provider that specifically interprets the mempool.space API format to retrieve a mining fee estimate. <br/><br/>
- * Other {@link FeeRateProvider}s can be created for other APIs.
+ * Provider that specifically interprets the mempool.space API format to retrieve a mining
+ * fee estimate. Other {@link FeeRateProvider}s can be created for other APIs.
  */
 public abstract class BitcoinFeeRateProvider extends FeeRateProvider {
 
@@ -55,8 +53,8 @@ public abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;
 
-    // Keys of properties defining the available API endpoints
-    // To enable them, simply enable and adjust the corresponding lines in application.properties
+    // Keys of properties defining the available API endpoints. To enable them, simply
+    // uncomment and adjust the corresponding lines in application.properties
     private static final String API_ENDPOINT_HOSTNAME_KEY_1 = "service.mining.feeEstimate.apiEndpointHostname.1";
     private static final String API_ENDPOINT_HOSTNAME_KEY_2 = "service.mining.feeEstimate.apiEndpointHostname.2";
     private static final String API_ENDPOINT_HOSTNAME_KEY_3 = "service.mining.feeEstimate.apiEndpointHostname.3";
@@ -80,8 +78,8 @@ public abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     }
 
     protected FeeRate doGet() {
-        // Default value is the minimum rate
-        // If the connection to the fee estimate provider fails, we fall back to this value
+        // Default value is the minimum rate. If the connection to the fee estimate
+        // provider fails, we fall back to this value.
         long estimatedFeeRate = MIN_FEE_RATE;
         try {
             estimatedFeeRate = getEstimatedFeeRate();
@@ -121,7 +119,8 @@ public abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     }
 
     /**
-     * @return Hostname of the fee estimation API endpoint. No prefix (https://), no suffix (trailing slashes, etc)
+     * Return the hostname of the fee estimation API endpoint. No prefix (https://), no
+     * suffix (trailing slashes, etc).
      */
     protected abstract String getMempoolApiHostname();
 

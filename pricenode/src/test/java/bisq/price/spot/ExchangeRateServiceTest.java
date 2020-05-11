@@ -47,20 +47,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ExchangeRateServiceTest extends TestBase {
 
     /**
-     * Logback version of the Slfj logger used by {@link ExchangeRateService}. This
-     * allows us to test if specific messages were logged <br/><br/>
-     *
+     * Logback version of the Slf4j logger used by {@link ExchangeRateService}. This
+     * allows us to test if specific messages were logged.
      * See https://stackoverflow.com/a/52229629
      */
     private static Logger exchangeRateServiceLogger;
     private static final String LIST_APPENDER_NAME = "testListAppender";
 
     @BeforeAll
-    static void setup () {
+    static void setup() {
         // Get the logger object for logs in ExchangeRateService
         exchangeRateServiceLogger = (Logger) LoggerFactory.getLogger(ExchangeRateService.class);
 
-        // Initiate and append a ListAppender, which allows us to programmatically inspect log messages
+        // Initiate and append a ListAppender, which allows us to programmatically inspect
+        // log messages
         ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
         listAppender.setName(LIST_APPENDER_NAME);
         listAppender.start();
@@ -75,7 +75,8 @@ public class ExchangeRateServiceTest extends TestBase {
 
         Map<String, Object> retrievedData = service.getAllMarketPrices();
 
-        doSanityChecksForRetrievedDataSingleProvider(retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
+        doSanityChecksForRetrievedDataSingleProvider(
+                retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
 
         // No exchange rates provided by this exchange, two things should happen
         // A) the timestamp should be set to 0
@@ -86,7 +87,8 @@ public class ExchangeRateServiceTest extends TestBase {
         assertEquals(0L, retrievedData.get(dummyProvider.getPrefix() + "Ts"));
 
         // B) Check that an error is logged
-        // Log msg has the format: java.lang.IllegalStateException: No exchange rate data found for ExchangeName-JzfP1
+        // Log msg has the format: java.lang.IllegalStateException: No exchange rate data
+        // found for ExchangeName-JzfP1
         List<ILoggingEvent> logsList = ((ListAppender) exchangeRateServiceLogger.getAppender(LIST_APPENDER_NAME)).list;
         assertEquals(Level.ERROR, logsList.get(0).getLevel());
         assertTrue(logsList.get(0).getMessage().endsWith("No exchange rate data found for " + dummyProvider.getName()));
@@ -100,7 +102,8 @@ public class ExchangeRateServiceTest extends TestBase {
 
         Map<String, Object> retrievedData = service.getAllMarketPrices();
 
-        doSanityChecksForRetrievedDataSingleProvider(retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
+        doSanityChecksForRetrievedDataSingleProvider(
+                retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
 
         // One rate was provided by this provider, so the timestamp should not be 0
         assertNotEquals(0L, retrievedData.get(dummyProvider.getPrefix() + "Ts"));
@@ -118,13 +121,14 @@ public class ExchangeRateServiceTest extends TestBase {
         doSanityChecksForRetrievedDataMultipleProviders(retrievedData,
                 asList(dummyProvider1.getPrefix(), dummyProvider2.getPrefix()));
 
-        // One rate was provided by each provider in this service, so the timestamp (for both providers) should not be 0
+        // One rate was provided by each provider in this service, so the timestamp
+        // (for both providers) should not be 0
         assertNotEquals(0L, retrievedData.get(dummyProvider1.getPrefix() + "Ts"));
         assertNotEquals(0L, retrievedData.get(dummyProvider2.getPrefix() + "Ts"));
     }
 
     /**
-     * Performs generic sanity checks on the response format and contents
+     * Performs generic sanity checks on the response format and contents.
      *
      * @param retrievedData Response data retrieved from the {@link ExchangeRateService}
      * @param providerPrefix {@link ExchangeRateProvider#getPrefix()}
@@ -143,17 +147,18 @@ public class ExchangeRateServiceTest extends TestBase {
     }
 
     /**
-     * Performs generic sanity checks on the response format and contents
+     * Performs generic sanity checks on the response format and contents.
      *
      * @param retrievedData Response data retrieved from the {@link ExchangeRateService}
-     * @param providerPrefixes List of all {@link ExchangeRateProvider#getPrefix()} the {@link ExchangeRateService} uses
+     * @param providerPrefixes List of all {@link ExchangeRateProvider#getPrefix()} the
+     * {@link ExchangeRateService} uses
      */
     private void doSanityChecksForRetrievedDataMultipleProviders(Map<String, Object> retrievedData,
-                                                              List<String> providerPrefixes) {
+                                                                 List<String> providerPrefixes) {
         // Check the correct amount of entries were present in the service response:
-        // The timestamp and the count fields are per provider, so N providers means N times those fields
-        // timestamp (x N) + count (x N) + price data (stored as a list under the key "data")
-        // So expected size is Nx2 + 1
+        // The timestamp and the count fields are per provider, so N providers means N
+        // times those fields timestamp (x N) + count (x N) + price data (stored as a list
+        // under the key "data"). So expected size is Nx2 + 1.
         int n = providerPrefixes.size();
         assertEquals(n * 2 + 1, retrievedData.size());
         for (String providerPrefix : providerPrefixes) {
