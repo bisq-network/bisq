@@ -98,7 +98,8 @@ public class P2PDataStorageRequestDataTest {
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSupportedCapabilities(), Capabilities.app);
-        Assert.assertTrue(getDataRequest.getExcludedKeys().isEmpty());
+        Assert.assertEquals(1, getDataRequest.getExcludedKeys().size());
+        Assert.assertTrue(getDataRequest.getExcludedKeys().stream().map(bytes -> new String(bytes).trim()).filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$")).findFirst().isPresent());
     }
 
     // TESTCASE: P2PDataStorage with no entries returns an empty PreliminaryGetDataRequest
@@ -109,7 +110,8 @@ public class P2PDataStorageRequestDataTest {
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSenderNodeAddress(), this.localNodeAddress);
-        Assert.assertTrue(getDataRequest.getExcludedKeys().isEmpty());
+        Assert.assertEquals(1, getDataRequest.getExcludedKeys().size());
+        Assert.assertTrue(getDataRequest.getExcludedKeys().stream().map(bytes -> new String(bytes).trim()).filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$")).findFirst().isPresent());
     }
 
     // TESTCASE: P2PDataStorage with PersistableNetworkPayloads and ProtectedStorageEntry generates
@@ -131,7 +133,8 @@ public class P2PDataStorageRequestDataTest {
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSupportedCapabilities(), Capabilities.app);
-        Assert.assertEquals(4, getDataRequest.getExcludedKeys().size());
+        Assert.assertEquals(5, getDataRequest.getExcludedKeys().size());
+        Assert.assertTrue(getDataRequest.getExcludedKeys().stream().map(bytes -> new String(bytes).trim()).filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$")).findFirst().isPresent());
         Assert.assertTrue(byteSetContains(getDataRequest.getExcludedKeys(), toAdd1.getHash()));
         Assert.assertTrue(byteSetContains(getDataRequest.getExcludedKeys(), toAdd2.getHash()));
         Assert.assertTrue(byteSetContains(getDataRequest.getExcludedKeys(),
@@ -160,7 +163,8 @@ public class P2PDataStorageRequestDataTest {
 
         Assert.assertEquals(getDataRequest.getNonce(), 1);
         Assert.assertEquals(getDataRequest.getSenderNodeAddress(), this.localNodeAddress);
-        Assert.assertEquals(4, getDataRequest.getExcludedKeys().size());
+        Assert.assertEquals(5, getDataRequest.getExcludedKeys().size());
+        Assert.assertTrue(getDataRequest.getExcludedKeys().stream().map(bytes -> new String(bytes).trim()).filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$")).findFirst().isPresent());
         Assert.assertTrue(byteSetContains(getDataRequest.getExcludedKeys(), toAdd1.getHash()));
         Assert.assertTrue(byteSetContains(getDataRequest.getExcludedKeys(), toAdd2.getHash()));
         Assert.assertTrue(byteSetContains(getDataRequest.getExcludedKeys(),
