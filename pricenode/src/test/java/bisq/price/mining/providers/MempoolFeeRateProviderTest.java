@@ -20,7 +20,8 @@ package bisq.price.mining.providers;
 import bisq.price.mining.FeeRate;
 import bisq.price.mining.FeeRateProvider;
 
-import org.springframework.context.support.GenericXmlApplicationContext;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.web.client.RestClientException;
 
 import java.time.Instant;
@@ -36,10 +37,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class MempoolFeeRateProviderTest {
 
+    private static final Environment env = new StandardEnvironment();
+
     @Test
     public void doGet_successfulCall() {
-        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        MempoolFeeRateProvider feeRateProvider = new MempoolFeeRateProvider.First(ctx.getEnvironment());
+        MempoolFeeRateProvider feeRateProvider = new MempoolFeeRateProvider.First(env);
 
         // Make a call to the API, retrieve the recommended fee rate
         // If the API call fails, or the response body cannot be parsed, the test will
@@ -55,8 +57,7 @@ public class MempoolFeeRateProviderTest {
      * Simulates a reachable provider, which successfully returns an API response
      */
     public static FeeRateProvider buildDummyReachableMempoolFeeRateProvider(long feeRate) {
-        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(ctx.getEnvironment()) {
+        MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(env) {
             @Override
             protected FeeRate doGet() {
                 return new FeeRate("BTC", feeRate, Instant.now().getEpochSecond());
@@ -76,8 +77,7 @@ public class MempoolFeeRateProviderTest {
      * timeout, connection cannot be established (expired certificate), etc.
      */
     public static FeeRateProvider buildDummyUnreachableMempoolFeeRateProvider() throws RestClientException {
-        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(ctx.getEnvironment()) {
+        MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(env) {
             @Override
             protected FeeRate doGet() {
                 throw new RestClientException("Simulating connection error when trying to reach API endpoint");
