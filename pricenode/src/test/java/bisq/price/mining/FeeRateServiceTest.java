@@ -1,12 +1,5 @@
 package bisq.price.mining;
 
-import bisq.price.mining.providers.BitcoinFeeRateProvider;
-
-import org.springframework.context.support.GenericXmlApplicationContext;
-import org.springframework.web.client.RestClientException;
-
-import java.time.Instant;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import org.junit.jupiter.api.Test;
 
+import static bisq.price.mining.providers.BitcoinFeeRateProviderTest.buildDummyReachableBitcoinFeeRateProvider;
+import static bisq.price.mining.providers.BitcoinFeeRateProviderTest.buildDummyUnreachableBitcoinFeeRateProvider;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -48,13 +43,13 @@ public class FeeRateServiceTest {
 
         // Even with no working providers, we expect the service to return pre-configured
         // minimum fee rate
-        doSanityChecksForRetrievedData(retrievedData, BitcoinFeeRateProvider.MIN_FEE_RATE);
+        doSanityChecksForRetrievedData(retrievedData, FeeRateProvider.MIN_FEE_RATE);
     }
 
     @Test
     public void getFees_singleProvider_feeBelowMin() {
         // One working provider, which returns a fee lower than the minimum
-        long providerFee = BitcoinFeeRateProvider.MIN_FEE_RATE - 3;
+        long providerFee = FeeRateProvider.MIN_FEE_RATE - 3;
         FeeRateService service = new FeeRateService(
                 Collections.singletonList(
                         buildDummyReachableBitcoinFeeRateProvider(providerFee)));
@@ -63,13 +58,13 @@ public class FeeRateServiceTest {
 
         // When the provider returns a value below the expected min, the service should
         // return the min
-        doSanityChecksForRetrievedData(retrievedData, BitcoinFeeRateProvider.MIN_FEE_RATE);
+        doSanityChecksForRetrievedData(retrievedData, FeeRateProvider.MIN_FEE_RATE);
     }
 
     @Test
     public void getFees_singleProvider_feeAboveMax() {
         // One working provider, which returns a fee greater than the maximum
-        long providerFee = BitcoinFeeRateProvider.MAX_FEE_RATE + 13;
+        long providerFee = FeeRateProvider.MAX_FEE_RATE + 13;
         FeeRateService service = new FeeRateService(
                 Collections.singletonList(
                         buildDummyReachableBitcoinFeeRateProvider(providerFee)));
@@ -78,21 +73,21 @@ public class FeeRateServiceTest {
 
         // When the provider returns a value above the expected max, the service should
         // return the max
-        doSanityChecksForRetrievedData(retrievedData, BitcoinFeeRateProvider.MAX_FEE_RATE);
+        doSanityChecksForRetrievedData(retrievedData, FeeRateProvider.MAX_FEE_RATE);
     }
 
     @Test
     public void getFees_multipleProviders() {
         // 3 providers, returning 1xMIN, 2xMIN, 3xMIN
         FeeRateService service = new FeeRateService(asList(
-                buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 1),
-                buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 2),
-                buildDummyReachableBitcoinFeeRateProvider(BitcoinFeeRateProvider.MIN_FEE_RATE * 3)));
+                buildDummyReachableBitcoinFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 1),
+                buildDummyReachableBitcoinFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 2),
+                buildDummyReachableBitcoinFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 3)));
 
         Map<String, Object> retrievedData = service.getFees();
 
         // The service should then return the average, which is 2xMIN
-        doSanityChecksForRetrievedData(retrievedData, BitcoinFeeRateProvider.MIN_FEE_RATE * 2);
+        doSanityChecksForRetrievedData(retrievedData, FeeRateProvider.MIN_FEE_RATE * 2);
     }
 
     /**
@@ -107,45 +102,5 @@ public class FeeRateServiceTest {
         Map<String, String> retrievedDataMap = (Map<String, String>) retrievedData.get("dataMap");
         assertEquals(1, retrievedDataMap.size());
         assertEquals(expectedFeeRate, retrievedDataMap.get("btcTxFee"));
-    }
-
-    /**
-     * Simulates a reachable provider, which successfully returns an API response
-     */
-    private BitcoinFeeRateProvider buildDummyReachableBitcoinFeeRateProvider(long feeRate) {
-        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
-            @Override
-            protected FeeRate doGet() {
-                return new FeeRate("BTC", feeRate, Instant.now().getEpochSecond());
-            }
-        };
-
-        // Initialize provider
-        dummyProvider.start();
-        dummyProvider.stop();
-
-        return dummyProvider;
-    }
-
-    /**
-     * Simulates an unreachable provider, which for whatever reason cannot deliver a
-     * response to the API. Reasons for that could be: host went offline, connection
-     * timeout, connection cannot be established (expired certificate), etc.
-     */
-    private BitcoinFeeRateProvider buildDummyUnreachableBitcoinFeeRateProvider() throws RestClientException {
-        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
-            @Override
-            protected FeeRate doGet() {
-                throw new RestClientException("Simulating connection error when trying to reach API endpoint");
-            }
-        };
-
-        // Initialize provider
-        dummyProvider.start();
-        dummyProvider.stop();
-
-        return dummyProvider;
     }
 }

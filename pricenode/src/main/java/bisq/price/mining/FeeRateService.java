@@ -17,8 +17,6 @@
 
 package bisq.price.mining;
 
-import bisq.price.mining.providers.BitcoinFeeRateProvider;
-
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -68,11 +66,11 @@ class FeeRateService {
         // Calculate the average
         long averageFeeRate = (amountOfFeeRates.intValue() > 0)
                 ? sumOfAllFeeRates.longValue() / amountOfFeeRates.intValue()
-                : BitcoinFeeRateProvider.MIN_FEE_RATE;
+                : FeeRateProvider.MIN_FEE_RATE;
 
         // Make sure the returned value is within the min-max range
-        averageFeeRate = Math.max(averageFeeRate, BitcoinFeeRateProvider.MIN_FEE_RATE);
-        averageFeeRate = Math.min(averageFeeRate, BitcoinFeeRateProvider.MAX_FEE_RATE);
+        averageFeeRate = Math.max(averageFeeRate, FeeRateProvider.MIN_FEE_RATE);
+        averageFeeRate = Math.min(averageFeeRate, FeeRateProvider.MAX_FEE_RATE);
 
         // Prepare response: Add timestamp of now
         // Since this is an average, the timestamp is associated with when the moment in

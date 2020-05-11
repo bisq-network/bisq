@@ -45,10 +45,7 @@ import java.util.stream.Stream;
  * Provider that specifically interprets the mempool.space API format to retrieve a mining
  * fee estimate. Other {@link FeeRateProvider}s can be created for other APIs.
  */
-public abstract class BitcoinFeeRateProvider extends FeeRateProvider {
-
-    public static final long MIN_FEE_RATE = 10; // satoshi/byte
-    public static final long MAX_FEE_RATE = 1000;
+abstract class BitcoinFeeRateProvider extends FeeRateProvider {
 
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;

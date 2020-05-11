@@ -18,8 +18,12 @@
 package bisq.price.mining.providers;
 
 import bisq.price.mining.FeeRate;
+import bisq.price.mining.FeeRateProvider;
 
 import org.springframework.context.support.GenericXmlApplicationContext;
+import org.springframework.web.client.RestClientException;
+
+import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +47,47 @@ public class BitcoinFeeRateProviderTest {
         FeeRate retrievedFeeRate = feeRateProvider.doGet();
 
         // Check that the FeeRateProvider returns a fee within the defined parameters
-        assertTrue(retrievedFeeRate.getPrice() >= BitcoinFeeRateProvider.MIN_FEE_RATE);
-        assertTrue(retrievedFeeRate.getPrice() <= BitcoinFeeRateProvider.MAX_FEE_RATE);
+        assertTrue(retrievedFeeRate.getPrice() >= FeeRateProvider.MIN_FEE_RATE);
+        assertTrue(retrievedFeeRate.getPrice() <= FeeRateProvider.MAX_FEE_RATE);
+    }
+
+    /**
+     * Simulates a reachable provider, which successfully returns an API response
+     */
+    public static FeeRateProvider buildDummyReachableBitcoinFeeRateProvider(long feeRate) {
+        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
+        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
+            @Override
+            protected FeeRate doGet() {
+                return new FeeRate("BTC", feeRate, Instant.now().getEpochSecond());
+            }
+        };
+
+        // Initialize provider
+        dummyProvider.start();
+        dummyProvider.stop();
+
+        return dummyProvider;
+    }
+
+    /**
+     * Simulates an unreachable provider, which for whatever reason cannot deliver a
+     * response to the API. Reasons for that could be: host went offline, connection
+     * timeout, connection cannot be established (expired certificate), etc.
+     */
+    public static FeeRateProvider buildDummyUnreachableBitcoinFeeRateProvider() throws RestClientException {
+        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
+        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
+            @Override
+            protected FeeRate doGet() {
+                throw new RestClientException("Simulating connection error when trying to reach API endpoint");
+            }
+        };
+
+        // Initialize provider
+        dummyProvider.start();
+        dummyProvider.stop();
+
+        return dummyProvider;
     }
 }
