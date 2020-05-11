@@ -30,16 +30,16 @@ import org.junit.jupiter.api.Test;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests specific to a {@link BitcoinFeeRateProvider} which queries one API endpoint. For
+ * Tests specific to a {@link MempoolFeeRateProvider} which queries one API endpoint. For
  * tests related to managing parallel fee API endpoints, see
  * {@link bisq.price.mining.FeeRateServiceTest}
  */
-public class BitcoinFeeRateProviderTest {
+public class MempoolFeeRateProviderTest {
 
     @Test
     public void doGet_successfulCall() {
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider feeRateProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment());
+        MempoolFeeRateProvider feeRateProvider = new MempoolFeeRateProvider.First(ctx.getEnvironment());
 
         // Make a call to the API, retrieve the recommended fee rate
         // If the API call fails, or the response body cannot be parsed, the test will
@@ -54,9 +54,9 @@ public class BitcoinFeeRateProviderTest {
     /**
      * Simulates a reachable provider, which successfully returns an API response
      */
-    public static FeeRateProvider buildDummyReachableBitcoinFeeRateProvider(long feeRate) {
+    public static FeeRateProvider buildDummyReachableMempoolFeeRateProvider(long feeRate) {
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
+        MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(ctx.getEnvironment()) {
             @Override
             protected FeeRate doGet() {
                 return new FeeRate("BTC", feeRate, Instant.now().getEpochSecond());
@@ -75,9 +75,9 @@ public class BitcoinFeeRateProviderTest {
      * response to the API. Reasons for that could be: host went offline, connection
      * timeout, connection cannot be established (expired certificate), etc.
      */
-    public static FeeRateProvider buildDummyUnreachableBitcoinFeeRateProvider() throws RestClientException {
+    public static FeeRateProvider buildDummyUnreachableMempoolFeeRateProvider() throws RestClientException {
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
-        BitcoinFeeRateProvider dummyProvider = new BitcoinFeeRateProvider.First(ctx.getEnvironment()) {
+        MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(ctx.getEnvironment()) {
             @Override
             protected FeeRate doGet() {
                 throw new RestClientException("Simulating connection error when trying to reach API endpoint");

@@ -42,10 +42,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Provider that specifically interprets the mempool.space API format to retrieve a mining
- * fee estimate. Other {@link FeeRateProvider}s can be created for other APIs.
+ * {@link FeeRateProvider} that interprets the Mempool API format to retrieve a mining
+ * fee estimate. See https://mempool.space.
  */
-abstract class BitcoinFeeRateProvider extends FeeRateProvider {
+abstract class MempoolFeeRateProvider extends FeeRateProvider {
 
     private static final int DEFAULT_MAX_BLOCKS = 2;
     private static final int DEFAULT_REFRESH_INTERVAL = 2;
@@ -68,7 +68,7 @@ abstract class BitcoinFeeRateProvider extends FeeRateProvider {
 
     protected Environment env;
 
-    public BitcoinFeeRateProvider(Environment env) {
+    public MempoolFeeRateProvider(Environment env) {
         super(Duration.ofMinutes(refreshInterval(env)));
         this.env = env;
         this.maxBlocks = maxBlocks(env);
@@ -143,7 +143,7 @@ abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     @Primary
     @Component
     @Order(1)
-    public static class First extends BitcoinFeeRateProvider {
+    public static class First extends MempoolFeeRateProvider {
 
         public First(Environment env) {
             super(env);
@@ -161,7 +161,7 @@ abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     @Component
     @Order(2)
     @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_2)
-    public static class Second extends BitcoinFeeRateProvider {
+    public static class Second extends MempoolFeeRateProvider {
 
         public Second(Environment env) {
             super(env);
@@ -175,7 +175,7 @@ abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     @Component
     @Order(3)
     @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_3)
-    public static class Third extends BitcoinFeeRateProvider {
+    public static class Third extends MempoolFeeRateProvider {
 
         public Third(Environment env) {
             super(env);
@@ -189,7 +189,7 @@ abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     @Component
     @Order(4)
     @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_4)
-    public static class Fourth extends BitcoinFeeRateProvider {
+    public static class Fourth extends MempoolFeeRateProvider {
 
         public Fourth(Environment env) {
             super(env);
@@ -203,7 +203,7 @@ abstract class BitcoinFeeRateProvider extends FeeRateProvider {
     @Component
     @Order(5)
     @ConditionalOnProperty(name = API_ENDPOINT_HOSTNAME_KEY_5)
-    public static class Fifth extends BitcoinFeeRateProvider {
+    public static class Fifth extends MempoolFeeRateProvider {
 
         public Fifth(Environment env) {
             super(env);

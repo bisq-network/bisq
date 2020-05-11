@@ -1,5 +1,7 @@
 package bisq.price.mining;
 
+import bisq.price.mining.providers.MempoolFeeRateProviderTest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.price.mining.providers.BitcoinFeeRateProviderTest.buildDummyReachableBitcoinFeeRateProvider;
-import static bisq.price.mining.providers.BitcoinFeeRateProviderTest.buildDummyUnreachableBitcoinFeeRateProvider;
+import static bisq.price.mining.providers.MempoolFeeRateProviderTest.buildDummyReachableMempoolFeeRateProvider;
+import static bisq.price.mining.providers.MempoolFeeRateProviderTest.buildDummyUnreachableMempoolFeeRateProvider;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -19,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 /**
  * Tests the {@link bisq.price.mining.FeeRateService}, which can aggregate data from
  * several {@link FeeRateProvider}s.
- * @see bisq.price.mining.providers.BitcoinFeeRateProviderTest
+ * @see MempoolFeeRateProviderTest
  */
 public class FeeRateServiceTest {
 
@@ -31,7 +33,7 @@ public class FeeRateServiceTest {
         List<FeeRateProvider> listOfProviders = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             try {
-                listOfProviders.add(buildDummyUnreachableBitcoinFeeRateProvider());
+                listOfProviders.add(buildDummyUnreachableMempoolFeeRateProvider());
             } catch (Exception e) {
                 // Expected
                 log.info("We encountered an expected exception: " + e.getMessage());
@@ -52,7 +54,7 @@ public class FeeRateServiceTest {
         long providerFee = FeeRateProvider.MIN_FEE_RATE - 3;
         FeeRateService service = new FeeRateService(
                 Collections.singletonList(
-                        buildDummyReachableBitcoinFeeRateProvider(providerFee)));
+                        buildDummyReachableMempoolFeeRateProvider(providerFee)));
 
         Map<String, Object> retrievedData = service.getFees();
 
@@ -67,7 +69,7 @@ public class FeeRateServiceTest {
         long providerFee = FeeRateProvider.MAX_FEE_RATE + 13;
         FeeRateService service = new FeeRateService(
                 Collections.singletonList(
-                        buildDummyReachableBitcoinFeeRateProvider(providerFee)));
+                        buildDummyReachableMempoolFeeRateProvider(providerFee)));
 
         Map<String, Object> retrievedData = service.getFees();
 
@@ -80,9 +82,9 @@ public class FeeRateServiceTest {
     public void getFees_multipleProviders() {
         // 3 providers, returning 1xMIN, 2xMIN, 3xMIN
         FeeRateService service = new FeeRateService(asList(
-                buildDummyReachableBitcoinFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 1),
-                buildDummyReachableBitcoinFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 2),
-                buildDummyReachableBitcoinFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 3)));
+                buildDummyReachableMempoolFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 1),
+                buildDummyReachableMempoolFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 2),
+                buildDummyReachableMempoolFeeRateProvider(FeeRateProvider.MIN_FEE_RATE * 3)));
 
         Map<String, Object> retrievedData = service.getFees();
 
