@@ -354,10 +354,18 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             }
         });
 
+        // 1st comparator: sort by price
+        // - ascending, if showing offers to buyers
+        // - descending, if showing offers to sellers
         if (reversePrimarySortOrder)
             primary = primary.reversed();
 
-        return primary.thenComparing(Offer::getAmount);
+        // 2nd comparator: sort by amount, in descending order
+        // The goal is to show the more attractive offers at the top
+        // Both buyers and sellers would prefer to see higher amounts first (for offers with the same price)
+        Comparator<Offer> secondary = Comparator.comparing(Offer::getAmount, Comparator.reverseOrder());
+
+        return primary.thenComparing(secondary);
     }
 
     private void buildChartAndTableEntries(List<Offer> sortedList,
