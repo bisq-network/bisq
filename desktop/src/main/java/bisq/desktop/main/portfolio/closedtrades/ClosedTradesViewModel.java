@@ -91,7 +91,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if (item == null)
             return "";
         Tradable tradable = item.getTradable();
-        if (tradable instanceof Trade)
+        if (!wasMyOffer(tradable) && (tradable instanceof Trade))
             return formatter.formatCoin(((Trade) tradable).getTxFee());
         else
             return formatter.formatCoin(tradable.getOffer().getTxFee());
@@ -101,7 +101,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if (item == null)
             return "";
         Tradable tradable = item.getTradable();
-        if (tradable instanceof Trade)
+        if (!wasMyOffer(tradable) && (tradable instanceof Trade))
             return formatter.formatCoin(((Trade) tradable).getTakerFee());
         else
             return formatter.formatCoin(tradable.getOffer().getMakerFee());
@@ -194,5 +194,9 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         ((Trade) e).getTradingPeerNodeAddress().getFullAddress().equals(((Trade) tradable).getTradingPeerNodeAddress().getFullAddress()))
                 .collect(Collectors.toSet())
                 .size();
+    }
+
+    boolean wasMyOffer(Tradable tradable) {
+        return dataModel.closedTradableManager.wasMyOffer(tradable.getOffer());
     }
 }
