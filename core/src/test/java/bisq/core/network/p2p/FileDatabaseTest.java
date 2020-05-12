@@ -114,6 +114,48 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
     }
 
     /**
+     * TEST CASE: test migration scenario from old database file model to new one but the
+     * user skipped some releases before upgrading<br><br>
+     *
+     * USE CASE:
+     * We migrate from just having one working-dir database file to having multiple. In
+     * detail, the user starts with having one database file in her working directory and
+     * multiple data store files in her resources. This can happen if the user does not
+     * upgrade at the first possible moment. After the update, however, there is all of the
+     * resource files copied to her working directory plus the live data store.<br><br>
+     *
+     * RESULT:
+     * There are 2 data stores in her working directory, one holding the live database,
+     * the other one being the exact and readonly copy of the database in resources. Plus,
+     * the 2 data stores do not share any set of objects.
+     */
+    @Test
+    public void migrationScenario2() throws Exception {
+        // setup scenario
+        // - create one data store in working directory
+        createDatabase(createFile(false, "AccountAgeWitnessStore"), object1, object2);
+        // - create one data store in resources with new naming scheme
+        createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
+        createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
+
+        // beware of the nasty hack!
+        // TODO replace as soon as we have at least one version string in history
+        setFinalStatic(Version.class.getField("history"), Arrays.asList(getVersion(-1)));
+
+        // simulate bisq startup
+        final AppendOnlyDataStoreService DUT = loadDatabase();
+
+        // check result
+        // - check total number of elements
+        Assert.assertEquals(2, DUT.getMap().size());
+        // - are there 2 data stores in working-dir
+        Assert.assertEquals(3, storageDir.list((dir, name) -> name.startsWith("AccountAgeWitnessStore") && !name.endsWith("_TEST")).length);
+        // - do the 2 data stores share objects
+        Assert.assertEquals(0, DUT.getMap("since " + getVersion(0)).size());
+        Assert.assertEquals(1, DUT.getMap("since " + getVersion(-1)).size());
+    }
+
+    /**
      * TEST CASE: test Bisq software update scenario<br><br>
      *
      * USE CASE:
