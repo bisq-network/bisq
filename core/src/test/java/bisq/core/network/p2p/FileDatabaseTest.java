@@ -166,11 +166,8 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * RESULT:
      * There are n + 1 data stores in the users working directory, one holding the live
      * database, the other 2 being the exact and readonly copy of the data stores in
-     * resources. Plus, the data stores in the working dir do not share any set of objects.<br><br>
-     *
-     * Ignored because file-based tests do not work well with CI.
+     * resources. Plus, the data stores in the working dir do not share any set of objects.
      */
-    @Ignore
     @Test
     public void updateScenario() throws Exception {
         // setup scenario
@@ -183,7 +180,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
 
         // beware of the nasty hack!
         // TODO replace as soon as we have at least one version string in history
-        setFinalStatic(Version.class.getField("history"), Arrays.asList("1.3.1"));
+        setFinalStatic(Version.class.getField("history"), Arrays.asList(getVersion(-1)));
 
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -206,11 +203,8 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * and none in the working directory.<br><br>
      *
      * RESULT:
-     * After startup, there should be 3 data stores in the working directory.<br><br>
-     *
-     * Ignored because file-based tests do not work well with CI.
+     * After startup, there should be 3 data stores in the working directory.
      */
-    @Ignore
     @Test
     public void freshInstallScenario() throws Exception {
         // setup scenario
@@ -220,7 +214,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
 
         // beware of the nasty hack!
         // TODO replace as soon as we have at least one version string in history
-        setFinalStatic(Version.class.getField("history"), Arrays.asList("1.3.1"));
+        setFinalStatic(Version.class.getField("history"), Arrays.asList(getVersion(-1)));
 
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
