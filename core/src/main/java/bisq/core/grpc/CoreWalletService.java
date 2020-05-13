@@ -25,6 +25,9 @@ class CoreWalletService {
     private final WalletsManager walletsManager;
 
     @Nullable
+    private TimerTask lockTask;
+
+    @Nullable
     private KeyParameter tempAesKey;
 
     @Inject
@@ -99,7 +102,17 @@ class CoreWalletService {
         if (!walletsManager.checkAESKey(tempAesKey))
             throw new IllegalStateException("incorrect password");
 
-        TimerTask timerTask = new TimerTask() {
+        if (lockTask != null) {
+            // The user is overriding a prior unlock timeout.  Cancel the existing
+            // lock TimerTask to prevent it from calling lockWallet() before or after the
+            // new timer task does.
+            lockTask.cancel();
+            // Avoid the synchronized(lock) overhead of an unnecessary lockTask.cancel()
+            // call the next time 'unlockwallet' is called.
+            lockTask = null;
+        }
+
+        lockTask = new TimerTask() {
             @Override
             public void run() {
                 if (tempAesKey != null) {
@@ -110,7 +123,7 @@ class CoreWalletService {
             }
         };
         Timer timer = new Timer("Lock Wallet Timer");
-        timer.schedule(timerTask, SECONDS.toMillis(timeout));
+        timer.schedule(lockTask, SECONDS.toMillis(timeout));
     }
 
     // Provided for automated wallet protection method testing, despite the
