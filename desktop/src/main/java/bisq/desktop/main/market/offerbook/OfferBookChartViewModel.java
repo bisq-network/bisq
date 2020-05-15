@@ -276,22 +276,24 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private void updateChartData() {
+
+        // Offer price can be null (if price feed unavailable), thus a null-tolerant comparator is used.
+        Comparator<Offer> offerPriceComparator = Comparator.comparing(Offer::getPrice, Comparator.nullsLast(Comparator.naturalOrder()));
+        // Offer amounts are used for the secondary sort. They are sorted from high to low.
+        Comparator<Offer> offerAmountComparator = Comparator.comparing(Offer::getAmount).reversed();
+
+        var buyOfferSortComparator =
+            offerPriceComparator.reversed() // Buy offers, as opposed to sell offers, are primarily sorted from high price to low.
+            .thenComparing(offerAmountComparator);
+        var sellOfferSortComparator =
+            offerPriceComparator
+            .thenComparing(offerAmountComparator);
+
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.BUY))
-                .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b) {
-                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
-                            return a > b ? 1 : -1;
-                        else
-                            return a < b ? 1 : -1;
-                    } else {
-                        return 0;
-                    }
-                })
+                .sorted(buyOfferSortComparator)
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
@@ -320,18 +322,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.SELL))
-                .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b) {
-                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
-                            return a < b ? 1 : -1;
-                        else
-                            return a > b ? 1 : -1;
-                    } else {
-                        return 0;
-                    }
-                })
+                .sorted(sellOfferSortComparator)
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
