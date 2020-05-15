@@ -163,8 +163,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            Preferences preferences,
                            BtcAddressValidator btcAddressValidator,
-                           WalletPasswordWindow walletPasswordWindow
-    ) {
+                           WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.p2PService = p2PService;
