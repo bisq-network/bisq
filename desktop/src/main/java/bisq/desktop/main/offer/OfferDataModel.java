@@ -73,9 +73,10 @@ public abstract class OfferDataModel extends ActivatableDataModel {
             balance.set(tradeWalletBalance);
         }
         if (totalToPayAsCoin.get() != null) {
-            missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
-            if (missingCoin.get().isNegative())
-                missingCoin.set(Coin.ZERO);
+            Coin missing = totalToPayAsCoin.get().subtract(balance.get());
+            if (missing.isNegative())
+                missing = Coin.ZERO;
+            missingCoin.set(missing);
         }
 
         isBtcWalletFunded.set(isBalanceSufficient(balance.get()));
