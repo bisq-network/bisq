@@ -122,7 +122,7 @@ public class BuyerStep4View extends TradeStepView {
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        useSavingsWalletButton = new AutoTooltipButton(Res.get("portfolio.pending.step5_buyer.moveToBisqWallet"));
+        useSavingsWalletButton = new AutoTooltipButton(Res.get("portfolio.pending.step5_buyer.keepInBisqWallet"));
         useSavingsWalletButton.setDefaultButton(true);
         useSavingsWalletButton.getStyleClass().add("action-button");
         Label label = new AutoTooltipLabel(Res.get("shared.OR"));
