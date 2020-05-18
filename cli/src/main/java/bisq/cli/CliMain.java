@@ -17,15 +17,18 @@
 
 package bisq.cli;
 
-import bisq.proto.grpc.GetBalanceGrpc;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
+import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.RemoveWalletPasswordRequest;
+import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.WalletGrpc;
 
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
-import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
@@ -41,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
@@ -51,15 +55,25 @@ import static java.lang.System.out;
 @Slf4j
 public class CliMain {
 
-    private static final int EXIT_SUCCESS = 0;
-    private static final int EXIT_FAILURE = 1;
-
     private enum Method {
         getversion,
-        getbalance
+        getbalance,
+        lockwallet,
+        unlockwallet,
+        removewalletpassword,
+        setwalletpassword
     }
 
     public static void main(String[] args) {
+        try {
+            run(args);
+        } catch (Throwable t) {
+            err.println("Error: " + t.getMessage());
+            exit(1);
+        }
+    }
+
+    public static void run(String[] args) {
         var parser = new OptionParser();
 
         var helpOpt = parser.accepts("help", "Print this help text")
@@ -77,43 +91,33 @@ public class CliMain {
         var passwordOpt = parser.accepts("password", "rpc server password")
                 .withRequiredArg();
 
-        OptionSet options = null;
-        try {
-            options = parser.parse(args);
-        } catch (OptionException ex) {
-            err.println("Error: " + ex.getMessage());
-            exit(EXIT_FAILURE);
-        }
+        OptionSet options = parser.parse(args);
 
         if (options.has(helpOpt)) {
             printHelp(parser, out);
-            exit(EXIT_SUCCESS);
+            return;
         }
 
         @SuppressWarnings("unchecked")
         var nonOptionArgs = (List<String>) options.nonOptionArguments();
         if (nonOptionArgs.isEmpty()) {
             printHelp(parser, err);
-            err.println("Error: no method specified");
-            exit(EXIT_FAILURE);
+            throw new IllegalArgumentException("no method specified");
         }
 
         var methodName = nonOptionArgs.get(0);
-        Method method = null;
+        final Method method;
         try {
             method = Method.valueOf(methodName);
         } catch (IllegalArgumentException ex) {
-            err.printf("Error: '%s' is not a supported method\n", methodName);
-            exit(EXIT_FAILURE);
+            throw new IllegalArgumentException(format("'%s' is not a supported method", methodName));
         }
 
         var host = options.valueOf(hostOpt);
         var port = options.valueOf(portOpt);
         var password = options.valueOf(passwordOpt);
-        if (password == null) {
-            err.println("Error: missing required 'password' option");
-            exit(EXIT_FAILURE);
-        }
+        if (password == null)
+            throw new IllegalArgumentException("missing required 'password' option");
 
         var credentials = new PasswordCallCredentials(password);
 
@@ -122,43 +126,87 @@ public class CliMain {
             try {
                 channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
             } catch (InterruptedException ex) {
-                ex.printStackTrace(err);
-                exit(EXIT_FAILURE);
+                throw new RuntimeException(ex);
             }
         }));
+
+        var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        var walletService = WalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
 
         try {
             switch (method) {
                 case getversion: {
-                    var stub = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = GetVersionRequest.newBuilder().build();
-                    var version = stub.getVersion(request).getVersion();
+                    var version = versionService.getVersion(request).getVersion();
                     out.println(version);
-                    exit(EXIT_SUCCESS);
+                    return;
                 }
                 case getbalance: {
-                    var stub = GetBalanceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
                     var request = GetBalanceRequest.newBuilder().build();
-                    var balance = stub.getBalance(request).getBalance();
-                    if (balance == -1) {
-                        err.println("Error: server is still initializing");
-                        exit(EXIT_FAILURE);
+                    var reply = walletService.getBalance(request);
+                    var satoshiBalance = reply.getBalance();
+                    var satoshiDivisor = new BigDecimal(100000000);
+                    var btcFormat = new DecimalFormat("###,##0.00000000");
+                    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+                    var btcBalance = btcFormat.format(BigDecimal.valueOf(satoshiBalance).divide(satoshiDivisor));
+                    out.println(btcBalance);
+                    return;
+                }
+                case lockwallet: {
+                    var request = LockWalletRequest.newBuilder().build();
+                    walletService.lockWallet(request);
+                    out.println("wallet locked");
+                    return;
+                }
+                case unlockwallet: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no password specified");
+
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("no unlock timeout specified");
+
+                    long timeout;
+                    try {
+                        timeout = Long.parseLong(nonOptionArgs.get(2));
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
                     }
-                    out.println(formatBalance(balance));
-                    exit(EXIT_SUCCESS);
+                    var request = UnlockWalletRequest.newBuilder()
+                            .setPassword(nonOptionArgs.get(1))
+                            .setTimeout(timeout).build();
+                    walletService.unlockWallet(request);
+                    out.println("wallet unlocked");
+                    return;
+                }
+                case removewalletpassword: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no password specified");
+
+                    var request = RemoveWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
+                    walletService.removeWalletPassword(request);
+                    out.println("wallet decrypted");
+                    return;
+                }
+                case setwalletpassword: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no password specified");
+
+                    var requestBuilder = SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1));
+                    var hasNewPassword = nonOptionArgs.size() == 3;
+                    if (hasNewPassword)
+                        requestBuilder.setNewPassword(nonOptionArgs.get(2));
+                    walletService.setWalletPassword(requestBuilder.build());
+                    out.println("wallet encrypted" + (hasNewPassword ? " with new password" : ""));
+                    return;
                 }
                 default: {
-                    err.printf("Error: unhandled method '%s'\n", method);
-                    exit(EXIT_FAILURE);
-                }
+                    throw new RuntimeException(format("unhandled method '%s'", method));
+               }
             }
         } catch (StatusRuntimeException ex) {
-            // This exception is thrown if the client-provided password credentials do not
-            // match the value set on the server. The actual error message is in a nested
-            // exception and we clean it up a bit to make it more presentable.
-            Throwable t = ex.getCause() == null ? ex : ex.getCause();
-            err.println("Error: " + t.getMessage().replace("UNAUTHENTICATED: ", ""));
-            exit(EXIT_FAILURE);
+            // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message
+            String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
+            throw new RuntimeException(message, ex);
         }
     }
 
@@ -166,24 +214,22 @@ public class CliMain {
         try {
             stream.println("Bisq RPC Client");
             stream.println();
-            stream.println("Usage: bisq-cli [options] <method>");
+            stream.println("Usage: bisq-cli [options] <method> [params]");
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.println("Method      Description");
-            stream.println("------      -----------");
-            stream.println("getversion  Get server version");
-            stream.println("getbalance  Get server wallet balance");
+            stream.format("%-19s%-30s%s%n", "Method", "Params", "Description");
+            stream.format("%-19s%-30s%s%n", "------", "------", "------------");
+            stream.format("%-19s%-30s%s%n", "getversion", "", "Get server version");
+            stream.format("%-19s%-30s%s%n", "getbalance", "", "Get server wallet balance");
+            stream.format("%-19s%-30s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
+            stream.format("%-19s%-30s%s%n", "unlockwallet", "password timeout",
+                    "Store wallet password in memory for timeout seconds");
+            stream.format("%-19s%-30s%s%n", "setwalletpassword", "password [newpassword]",
+                    "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.println();
         } catch (IOException ex) {
             ex.printStackTrace(stream);
         }
-    }
-
-    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    private static String formatBalance(long satoshis) {
-        var btcFormat = new DecimalFormat("###,##0.00000000");
-        var satoshiDivisor = new BigDecimal(100000000);
-        return btcFormat.format(BigDecimal.valueOf(satoshis).divide(satoshiDivisor));
     }
 }
