@@ -48,11 +48,11 @@ abstract class PeerGroupProxy {
         return this.bitcoinjPeerGroup.broadcastTransaction(tx);
     }
 
-    public void addAddress(PeerAddress peerAddress) {
+    protected void addAddress(PeerAddress peerAddress) {
         this.bitcoinjPeerGroup.addAddress(peerAddress);
     }
 
-    public void addPeerDiscovery(PeerDiscovery peerDiscovery) {
+    protected void addPeerDiscovery(PeerDiscovery peerDiscovery) {
         this.bitcoinjPeerGroup.addPeerDiscovery(peerDiscovery);
     }
 
@@ -76,7 +76,7 @@ abstract class PeerGroupProxy {
         this.bitcoinjPeerGroup.setUserAgent(name, version);
     }
 
-    public void setMaxConnections(int maxConnections) {
+    protected void setMaxConnections(int maxConnections) {
         this.bitcoinjPeerGroup.setMaxConnections(maxConnections);
     }
 

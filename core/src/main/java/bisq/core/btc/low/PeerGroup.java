@@ -2,7 +2,12 @@ package bisq.core.btc.low;
 
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.PeerAddress;
+import org.bitcoinj.params.RegTestParams;
+
 import org.bitcoinj.net.BlockingClientManager;
+import org.bitcoinj.net.discovery.PeerDiscovery;
+import org.bitcoinj.net.discovery.DnsDiscovery;
 
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.nodes.LocalBitcoinNode;
@@ -69,6 +74,25 @@ final public class PeerGroup extends PeerGroupProxy {
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;
+    }
+
+    public void setupPeerAddressesOrDiscovery(
+            PeerAddress[] peerAddresses,
+            int numConnectionsForBtc,
+            NetworkParameters params,
+            PeerDiscovery discovery
+    ) {
+        if (peerAddresses != null) {
+            for (PeerAddress addr : peerAddresses) this.addAddress(addr);
+            int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
+            //log.info("We try to connect to {} btc nodes", maxConnections);
+            this.setMaxConnections(maxConnections);
+            this.setAddPeersFromAddressMessage(false);
+            peerAddresses = null;
+        } else if (!params.equals(RegTestParams.get())) {
+            this.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
+        }
+
     }
 
 }
