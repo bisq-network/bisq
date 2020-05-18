@@ -16,8 +16,6 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 final public class PeerGroup extends PeerGroupProxy {
 
-    // These constructors will be subsequently factored out of this class
-
     private PeerGroup(
             NetworkParameters params,
             BlockChain vChain
