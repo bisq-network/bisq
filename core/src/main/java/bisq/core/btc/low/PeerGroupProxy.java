@@ -60,11 +60,11 @@ abstract class PeerGroupProxy {
         this.bitcoinjPeerGroup.addWallet(wallet);
     }
 
-    public void setUseLocalhostPeerWhenPossible(boolean useLocalhostPeerWhenPossible) {
+    protected void setUseLocalhostPeerWhenPossible(boolean useLocalhostPeerWhenPossible) {
         this.bitcoinjPeerGroup.setUseLocalhostPeerWhenPossible(useLocalhostPeerWhenPossible);
     }
 
-    public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+    protected void setConnectTimeoutMillis(int connectTimeoutMillis) {
         this.bitcoinjPeerGroup.setConnectTimeoutMillis(connectTimeoutMillis);
     }
 

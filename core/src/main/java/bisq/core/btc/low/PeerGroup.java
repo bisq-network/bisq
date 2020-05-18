@@ -18,15 +18,14 @@ final public class PeerGroup extends PeerGroupProxy {
 
     // These constructors will be subsequently factored out of this class
 
-    public PeerGroup(
+    private PeerGroup(
             NetworkParameters params,
             BlockChain vChain
     ) {
-
         super(new org.bitcoinj.core.PeerGroup(params, vChain));
     }
 
-    public PeerGroup(
+    private PeerGroup(
             NetworkParameters params,
             BlockChain vChain,
             BlockingClientManager blockingClientManager
