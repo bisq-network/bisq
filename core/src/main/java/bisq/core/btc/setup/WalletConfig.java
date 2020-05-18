@@ -216,35 +216,6 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    private PeerGroup createPeerGroup() {
-        PeerGroup peerGroup;
-        // no proxy case.
-        if (socks5Proxy == null) {
-            peerGroup = new PeerGroup(params, vChain);
-        } else {
-            // proxy case (tor).
-            Proxy proxy = new Proxy(Proxy.Type.SOCKS,
-                    new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
-                            socks5Proxy.getPort()));
-
-            ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
-            // We don't use tor mode if we have a local node running
-            BlockingClientManager blockingClientManager = config.ignoreLocalBtcNode ?
-                    new BlockingClientManager() :
-                    new BlockingClientManager(proxySocketFactory);
-
-            peerGroup = new PeerGroup(params, vChain, blockingClientManager);
-
-            blockingClientManager.setConnectTimeoutMillis(TOR_SOCKET_TIMEOUT);
-            peerGroup.setConnectTimeoutMillis(TOR_VERSION_EXCHANGE_TIMEOUT);
-        }
-
-        if (!localBitcoinNode.shouldBeUsed())
-            peerGroup.setUseLocalhostPeerWhenPossible(false);
-
-        return peerGroup;
-    }
-
     /**
      * Will only connect to the given addresses. Cannot be called after startup.
      */
@@ -422,7 +393,8 @@ public class WalletConfig extends AbstractIdleService {
                 }
             }
             vChain = new BlockChain(params, vStore);
-            vPeerGroup = createPeerGroup();
+            vPeerGroup = PeerGroup.createPeerGroup(
+                    socks5Proxy, params, vChain, localBitcoinNode, config, TOR_SOCKET_TIMEOUT, TOR_VERSION_EXCHANGE_TIMEOUT);
 
             if (minBroadcastConnections > 0)
                 vPeerGroup.setMinBroadcastConnections(minBroadcastConnections);
