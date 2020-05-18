@@ -20,6 +20,7 @@ package bisq.core.btc.setup;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
+import bisq.core.btc.low.PeerGroup;
 
 import bisq.common.app.Version;
 import bisq.common.config.Config;
@@ -29,7 +30,6 @@ import org.bitcoinj.core.CheckpointManager;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerAddress;
-import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.core.listeners.PeerDataEventListener;

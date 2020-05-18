@@ -19,11 +19,11 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.exceptions.TxBroadcastTimeoutException;
+import bisq.core.btc.low.PeerGroup;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 
-import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 

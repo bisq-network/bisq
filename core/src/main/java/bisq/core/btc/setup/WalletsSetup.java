@@ -28,6 +28,7 @@ import bisq.core.btc.nodes.BtcNodes.BtcNode;
 import bisq.core.btc.nodes.BtcNodesRepository;
 import bisq.core.btc.nodes.BtcNodesSetupPreferences;
 import bisq.core.user.Preferences;
+import bisq.core.btc.low.PeerGroup;
 
 import bisq.network.Socks5MultiDiscovery;
 import bisq.network.Socks5ProxyProvider;
@@ -45,7 +46,6 @@ import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
-import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.RejectMessage;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.params.RegTestParams;
