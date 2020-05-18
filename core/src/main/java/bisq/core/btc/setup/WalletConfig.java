@@ -403,16 +403,8 @@ public class WalletConfig extends AbstractIdleService {
 
             // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
             // before we're actually connected the broadcast waits for an appropriate number of connections.
-            if (peerAddresses != null) {
-                for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
-                log.info("We try to connect to {} btc nodes", maxConnections);
-                vPeerGroup.setMaxConnections(maxConnections);
-                vPeerGroup.setAddPeersFromAddressMessage(false);
-                peerAddresses = null;
-            } else if (!params.equals(RegTestParams.get())) {
-                vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
-            }
+            setupPeerAddressesOrDiscovery(vPeerGroup, peerAddresses, numConnectionsForBtc, params, discovery);
+
             vChain.addWallet(vBtcWallet);
             vPeerGroup.addWallet(vBtcWallet);
 
@@ -451,6 +443,26 @@ public class WalletConfig extends AbstractIdleService {
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
+    }
+
+    static void setupPeerAddressesOrDiscovery(
+            PeerGroup vPeerGroup,
+            PeerAddress[] peerAddresses,
+            int numConnectionsForBtc,
+            NetworkParameters params,
+            PeerDiscovery discovery
+    ) {
+        if (peerAddresses != null) {
+            for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
+            int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
+            log.info("We try to connect to {} btc nodes", maxConnections);
+            vPeerGroup.setMaxConnections(maxConnections);
+            vPeerGroup.setAddPeersFromAddressMessage(false);
+            peerAddresses = null;
+        } else if (!params.equals(RegTestParams.get())) {
+            vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
+        }
+
     }
 
     void setPeerNodesForLocalHost() {
