@@ -36,6 +36,16 @@ final public class PeerGroup extends PeerGroupProxy {
         super(new org.bitcoinj.core.PeerGroup(params, vChain, blockingClientManager));
     }
 
+    /* major elements in this method:
+     * - a proxy / no proxy
+     * - tor / no tor
+     * - should local / remote bitcoin node be used
+     * - config says / doesn't say to ignore local node when found
+     * - blocking / async client manager
+     *
+     * Could use model checking to check if logic is correct;
+     * would be especially necessary when changing it.
+     */
     public static PeerGroup createPeerGroup(
             Socks5Proxy socks5Proxy,
             NetworkParameters params,
@@ -46,23 +56,34 @@ final public class PeerGroup extends PeerGroupProxy {
             int torVersionExchangeTimeout
     ) {
         PeerGroup peerGroup;
-        // no proxy case.
-        if (socks5Proxy == null) {
+        var notUsingProxy = socks5Proxy == null;
+        if (notUsingProxy) {
+            // no proxy case.
             peerGroup = new PeerGroup(params, vChain);
         } else {
             // proxy case (tor).
-            Proxy proxy = new Proxy(Proxy.Type.SOCKS,
-                    new InetSocketAddress(
-                        socks5Proxy.getInetAddress().getHostName(),
-                        socks5Proxy.getPort()));
+            BlockingClientManager blockingClientManager;
 
-            ProxySocketFactory proxySocketFactory =
-                new ProxySocketFactory(proxy);
+            // [Start of original comment]
             // We don't use tor mode if we have a local node running
-            BlockingClientManager blockingClientManager =
-                config.ignoreLocalBtcNode ?
-                new BlockingClientManager() :
-                new BlockingClientManager(proxySocketFactory);
+            // [End of original comment]
+            // This variable doesn't show if a local node is running,
+            // but whether or not we're configured to ignore one when it is.
+            var ignoreLocalBtcNode = config.ignoreLocalBtcNode;
+            if (ignoreLocalBtcNode) {
+                blockingClientManager = new BlockingClientManager();
+            } else {
+                Proxy proxy = new Proxy(
+                        Proxy.Type.SOCKS,
+                        new InetSocketAddress(
+                            socks5Proxy.getInetAddress().getHostName(),
+                            socks5Proxy.getPort()
+                            ));
+                ProxySocketFactory proxySocketFactory =
+                    new ProxySocketFactory(proxy);
+                blockingClientManager =
+                    new BlockingClientManager(proxySocketFactory);
+            }
 
             peerGroup = new PeerGroup(params, vChain, blockingClientManager);
 
