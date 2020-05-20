@@ -97,9 +97,8 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
 
         // TODO do a proper language, possibly classes
         if (filter.startsWith("since ")) {
-            filter = filter.replace("since ", "");
-            if (!filter.equals(Version.VERSION)) {
-                String finalFilter = filter;
+            String finalFilter = filter.replace("since ", "");
+            if (!finalFilter.equals(Version.VERSION)) {
                 history.entrySet().stream()
                         .filter(entry -> parseSpecialKey(entry.getKey()) > parseSpecialKey(finalFilter))
                         .forEach(entry -> result.putAll(entry.getValue().getMap()));

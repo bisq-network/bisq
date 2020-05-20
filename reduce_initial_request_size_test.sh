@@ -5,9 +5,9 @@ PR='reduce_initial_request_size'
 
 install()
 {
-	mkdir -p installdir/$2
-	cp bisq-$1 installdir/$2/
-	cp -r lib installdir/$2/
+	mkdir -p "installdir/$2"
+	cp "bisq-$1" "installdir/$2/"
+	cp -r lib "installdir/$2/"
 }
 
 declare -A cmd

@@ -223,6 +223,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
 
         @Override
         public void setNumMaxBackupFiles(int numMaxBackupFiles) {
+            // left empty intentionally
         }
     }
 
