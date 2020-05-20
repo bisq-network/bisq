@@ -92,7 +92,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -213,6 +213,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
     }
 
+    /**
+     * Create the special key. <br><br>
+     *
+     * For example: "1.3.4" encoded into a 20 byte array.
+     *
+     * @return the special key
+     */
     private byte[] getSpecialKey() {
         byte[] result = new byte[20];
         Arrays.fill(result, (byte) 0);
@@ -220,12 +227,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return result;
     }
 
-    private String containsSpecialKey(Set<P2PDataStorage.ByteArray> collection) {
-        Optional<String> result = collection.stream().map(byteArray -> new String(byteArray.bytes).trim()).filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$")).findFirst();
-        if (result.isPresent())
-            return result.get();
-        else
-            return "";
+    /**
+     * See if the request contains a "special key".
+     *
+     * @param knownPayloadHashes
+     * @throws NoSuchElementException if there is no "special key" in the list
+     * @return the "special key"
+     */
+    private String containsSpecialKey(Set<P2PDataStorage.ByteArray> knownPayloadHashes) {
+        return knownPayloadHashes.stream()
+                .map(byteArray -> new String(byteArray.bytes).trim())
+                .filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$"))
+                .findFirst()
+                .orElseThrow();
     }
 
     /**
@@ -238,14 +252,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
         Set<byte[]> excludedKeys;
-        if (seedNodeRepository != null && seedNodeRepository.isSeedNode(networkNode.getNodeAddress()))
+        if (seedNodeRepository != null && seedNodeRepository.isSeedNode(networkNode.getNodeAddress())) {
             excludedKeys = this.appendOnlyDataStoreService.getMap().keySet().stream()
                     .map(e -> e.bytes)
                     .collect(Collectors.toSet());
-        else
+        } else {
             excludedKeys = this.appendOnlyDataStoreService.getMap("since " + Version.VERSION).keySet().stream()
                     .map(e -> e.bytes)
                     .collect(Collectors.toSet());
+        }
 
         Set<byte[]> excludedKeysFromPersistedEntryMap = this.map.keySet()
                 .stream()
@@ -299,18 +314,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
-        String specialKey = containsSpecialKey(excludedKeysAsByteArray);
-
-        Map<ByteArray, PersistableNetworkPayload> tmp;
-        if ("".equals(specialKey))
-            tmp = this.appendOnlyDataStoreService.getMap();
-        else {
-            tmp = this.appendOnlyDataStoreService.getMap("since " + specialKey);
+        // In case we get a "new" data request, ie. with a "special key" like "1.3.4", we
+        // pre-filter the data. If there is no "special key", we use all data.
+        Map<ByteArray, PersistableNetworkPayload> prefilteredData;
+        try {
+            String specialKey = containsSpecialKey(excludedKeysAsByteArray);
+            prefilteredData = this.appendOnlyDataStoreService.getMap("since " + specialKey);
+        } catch (NoSuchElementException e) {
+            prefilteredData = this.appendOnlyDataStoreService.getMap();
         }
 
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
-                        tmp,
+                        prefilteredData,
                         Function.identity(),
                         excludedKeysAsByteArray,
                         peerCapabilities,
