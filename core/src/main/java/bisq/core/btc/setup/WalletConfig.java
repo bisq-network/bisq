@@ -81,7 +81,6 @@ public class WalletConfig extends AbstractIdleService {
     protected static final Logger log = LoggerFactory.getLogger(WalletConfig.class);
 
     protected final NetworkParameters params;
-    protected final Script.ScriptType preferredOutputScriptType;
     protected final String filePrefix;
     protected volatile BlockChain vChain;
     protected volatile SPVBlockStore vStore;
@@ -119,25 +118,16 @@ public class WalletConfig extends AbstractIdleService {
      * Creates a new WalletConfig, with a newly created {@link Context}. Files will be stored in the given directory.
      */
     public WalletConfig(NetworkParameters params, File directory, String filePrefix) {
-        this(new Context(params), Script.ScriptType.P2PKH, directory, filePrefix);
-    }
-
-    /**
-     * Creates a new WalletConfig, with a newly created {@link Context}. Files will be stored in the given directory.
-     */
-    public WalletConfig(NetworkParameters params, Script.ScriptType preferredOutputScriptType,
-                        File directory, String filePrefix) {
-        this(new Context(params), preferredOutputScriptType, directory, filePrefix);
+        this(new Context(params), directory, filePrefix);
     }
 
     /**
      * Creates a new WalletConfig, with the given {@link Context}. Files will be stored in the given directory.
      */
-    public WalletConfig(Context context, Script.ScriptType preferredOutputScriptType,
+    public WalletConfig(Context context,
                         File directory, String filePrefix) {
         this.context = context;
         this.params = checkNotNull(context.getParams());
-        this.preferredOutputScriptType = checkNotNull(preferredOutputScriptType);
         this.directory = checkDir(directory);
         this.filePrefix = checkNotNull(filePrefix);
     }
@@ -495,6 +485,8 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     protected Wallet createWallet(boolean isBsqWallet) {
+        // Change preferredOutputScriptType of btc wallet to P2WPKH to start using segwit
+        Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2PKH;
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
         KeyChainGroup.Builder kcg = KeyChainGroup.builder(params, structure);
         if (restoreFromSeed != null)
