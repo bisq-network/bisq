@@ -59,7 +59,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
      * Test whether our client creates the correct query.
      */
     @Test
-    public void query() throws IOException {
+    public void query() throws Exception {
         // setup scenario
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object2);
@@ -92,7 +92,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
      * Given the new query, see if another peer would respond correctly
      */
     @Test
-    public void response() throws IOException {
+    public void response() throws Exception {
         // setup scenario
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object2);
@@ -140,7 +140,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
      * However, we add an additional test to ensure Bisq version follows a strict pattern.
      */
     @Test
-    public void faultySpecialKey() throws IOException {
+    public void faultySpecialKey() throws Exception {
         // setup scenario
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object1);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object2);
@@ -192,7 +192,7 @@ public class RequestDataTest extends FileDatabaseTestUtils {
      * <li>is a sane way of reacting to a newer client</li></ul>
      */
     @Test
-    public void futureSpecialKey() throws IOException {
+    public void futureSpecialKey() throws Exception {
         // setup scenario
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object2, object3);

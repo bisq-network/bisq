@@ -115,8 +115,16 @@ public class FileDatabaseTestUtils {
      * @param offset
      * @return relative version string to the Version.VERSION constant
      */
-    public String getVersion(int offset) {
-        return new StringBuilder().append(Integer.valueOf(Version.VERSION.replace(".", "")) + offset).insert(2, ".").insert(1, ".").toString();
+    public String getVersion(int offset) throws Exception {
+        String result = new StringBuilder().append(Integer.valueOf(Version.VERSION.replace(".", "")) + offset).insert(2, ".").insert(1, ".").toString();
+
+        if (offset < 0 && !Version.history.contains(result)) {
+            // beware of the nasty hack!
+            // FIXME replace as soon as we have at least one version string in history
+            setFinalStatic(Version.class.getField("history"), Arrays.asList(result));
+        }
+
+        return result;
     }
 
     /**

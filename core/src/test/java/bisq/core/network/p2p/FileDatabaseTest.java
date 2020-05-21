@@ -60,7 +60,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * This does not test any business logic, just makes sure the test setup is correct.
      */
     @Test
-    public void checkTestFixtures() throws IOException, InterruptedException {
+    public void checkTestFixtures() throws Exception {
         checkTestFixturesHelper(object1);
         checkTestFixturesHelper(object1, object2);
         checkTestFixturesHelper(object2);
@@ -68,7 +68,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
         checkTestFixturesHelper(object3);
     }
 
-    private void checkTestFixturesHelper(AccountAgeWitness... objects) throws IOException, InterruptedException {
+    private void checkTestFixturesHelper(AccountAgeWitness... objects) throws Exception {
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), objects);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), objects);
         AppendOnlyDataStoreService DUT = loadDatabase();
@@ -93,7 +93,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * the 2 data stores do not share any set of objects.
      */
     @Test
-    public void migrationScenario() throws IOException, InterruptedException {
+    public void migrationScenario() throws Exception {
         // setup scenario
         // - create one data store in working directory
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object1, object2);
@@ -138,10 +138,6 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
         createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
         createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
 
-        // beware of the nasty hack!
-        // TODO replace as soon as we have at least one version string in history
-        setFinalStatic(Version.class.getField("history"), Arrays.asList(getVersion(-1)));
-
         // simulate bisq startup
         final AppendOnlyDataStoreService DUT = loadDatabase();
 
@@ -178,10 +174,6 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
         createDatabase(createFile(false, "AccountAgeWitnessStore"), object2, object3);
 
-        // beware of the nasty hack!
-        // TODO replace as soon as we have at least one version string in history
-        setFinalStatic(Version.class.getField("history"), Arrays.asList(getVersion(-1)));
-
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
 
@@ -212,10 +204,6 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
         createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(-1) + "_TEST"), object1);
         createDatabase(createFile(true, "AccountAgeWitnessStore_" + getVersion(0) + "_TEST"), object2);
 
-        // beware of the nasty hack!
-        // TODO replace as soon as we have at least one version string in history
-        setFinalStatic(Version.class.getField("history"), Arrays.asList(getVersion(-1)));
-
         // simulate bisq startup
         AppendOnlyDataStoreService DUT = loadDatabase();
 
@@ -242,7 +230,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * getMap returns all elements stored in the various database files.
      */
     @Test
-    public void getMap() throws IOException, InterruptedException {
+    public void getMap() throws Exception {
         // setup scenario
         // - create 2 data stores containing historical data and a live database
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
@@ -271,7 +259,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * getMap(since x) returns all elements added after snapshot x
      */
     @Test
-    public void getMapSinceFilter() throws IOException, InterruptedException {
+    public void getMapSinceFilter() throws Exception {
         // setup scenario
         // - create 2 data stores containing historical data and a live database
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(-1)), object1);
@@ -304,7 +292,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * map.put should only add data to the live database. Other data stores are read-only!
      */
     @Test
-    public void put() throws IOException, InterruptedException {
+    public void put() throws Exception {
         // setup scenario
         // - create one database containing historical data and a live database
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object1);
@@ -337,7 +325,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
      * Check for duplicates
      */
     @Test
-    public void putDuplicates() throws IOException {
+    public void putDuplicates() throws Exception {
         // setup scenario
         // - create one database containing historical data and a live database
         createDatabase(createFile(false, "AccountAgeWitnessStore_" + getVersion(0)), object1);
