@@ -211,7 +211,7 @@ public class FileDatabaseTest extends FileDatabaseTestUtils {
         // - check total number of elements
         Assert.assertEquals(2, DUT.getMap().size());
         // - are there 2 data stores in working-dir
-        Assert.assertEquals(2, storageDir.list((dir, name) -> name.startsWith("AccountAgeWitnessStore") && !name.endsWith("_TEST")).length);
+        Assert.assertEquals(3, storageDir.list((dir, name) -> name.startsWith("AccountAgeWitnessStore") && !name.endsWith("_TEST")).length);
         // - do the 3 data stores share objects
         Assert.assertEquals(0, DUT.getMap("since " + getVersion(0)).size());
         Assert.assertEquals(1, DUT.getMap("since " + getVersion(-1)).size());

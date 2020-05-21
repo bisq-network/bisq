@@ -42,16 +42,7 @@ public class FileDatabaseTestUtils {
 
     @After
     public void cleanup() {
-        try {
-            boolean done = false;
-            while (!done) {
-                Thread.sleep(100);
-                Set<Thread> threads = Thread.getAllStackTraces().keySet();
-                done = threads.stream().noneMatch(thread -> thread.getName().startsWith("Save-file-task"));
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        waitForFile();
 
         for (File file : files) {
             file.delete();
@@ -81,12 +72,28 @@ public class FileDatabaseTestUtils {
         return tmp;
     }
 
+    public void waitForFile() {
+        try {
+            boolean done = false;
+            while (!done) {
+                Thread.sleep(100);
+                Set<Thread> threads = Thread.getAllStackTraces().keySet();
+                done = threads.stream().noneMatch(thread -> thread.getName().startsWith("Save-file-task"));
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     protected AppendOnlyDataStoreService loadDatabase() {
         Storage<AccountAgeWitnessStore> storage = new Storage<>(storageDir, new CorePersistenceProtoResolver(null, null, null, null), null);
         AccountAgeWitnessStorageService storageService = new AccountAgeWitnessStorageService(storageDir, storage);
         final AppendOnlyDataStoreService protectedDataStoreService = new AppendOnlyDataStoreService();
         protectedDataStoreService.addService(storageService);
         protectedDataStoreService.readFromResources("_TEST");
+
+        waitForFile();
+
         return protectedDataStoreService;
     }
 

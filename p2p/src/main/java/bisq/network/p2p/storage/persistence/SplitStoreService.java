@@ -8,8 +8,6 @@ import bisq.common.storage.FileUtil;
 import bisq.common.storage.ResourceNotFoundException;
 import bisq.common.storage.Storage;
 
-import java.nio.file.Paths;
-
 import java.io.File;
 
 import java.util.ArrayList;
@@ -121,39 +119,28 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
      */
     @Override
     protected void readFromResources(String postFix) {
-        // check Version.VERSION and see if we have latest r/o data store file in working directory
-        if (!new File(absolutePathOfStorageDir, getFileName() + "_" + Version.VERSION).exists())
-            makeFileFromResourceFile(postFix); // if we have the latest file, we are good, else do stuff // TODO are we?
-        else {
-            // if we have the r/o data stores in our working directory already, we can proceed on loading them.
-            File dbDir = new File(absolutePathOfStorageDir);
-            List<File> resourceFiles = Arrays.asList(dbDir.list((dir, name) -> name.startsWith(getFileName() + "_")))
-                    .stream()
-                    .map(s -> new File(s))
-                    .collect(Collectors.toList());
+        // initialize here in case this method gets called twice
+        history = new HashMap<>();
 
-            history = new HashMap<>();
-            store = readStore(getFileName());
-            resourceFiles.forEach(file -> {
-                SplitStore tmp = readStore(file.getName().replace(postFix, ""));
-                history.put(extractSpecialKey(file.getName(), postFix), tmp);
-            });
-        }
-    }
+        // load our live data store
+        store = readStore(getFileName());
 
-    /**
-     * Extracts the special key from a file name.<br><br>
-     *
-     * Example: "TradeStatistics2Store_1.3.4_BTC_MAINNET" becomes "1.3.4"
-     *
-     * @param name the file name to begin with
-     * @param postFix the postfix eg. "BTC_MAINNET"
-     * @return the special key eg. "1.3.4"
-     */
-    private String extractSpecialKey(String name, String postFix) {
-        return name.replace(postFix, "") // remove the postfix
-                .replace("_", "") // remove the spacings
-                .replace(getFileName(), ""); // remove the file name
+        // create file list of files we should have by now
+        List<String> versions = new ArrayList<>();
+        versions.add(Version.VERSION);
+        versions.addAll(Version.history);
+
+        // go through the list one by one
+        versions.forEach(version -> {
+            String filename = getFileName() + "_" + version + postFix; // postFix has a preceding "_"
+            if (new File(absolutePathOfStorageDir, filename).exists()) {
+                // if it is there already, load
+                history.put(version, readStore(getFileName() + "_" + version));
+            } else {
+                // either copy and split
+                history.put(version, copyAndSplit(version, postFix));
+            }
+        });
     }
 
     /**
@@ -179,60 +166,36 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
     }
 
     /**
-     * We compile a list of files available in resources and:<br>
-     * <ul><li>copy them to our working directory</li>
-     * <li>load the freshly copied stores</li>
-     * <li>remove the contents from our live data store</li>
-     * <li>persist the cleaned-up live store</li></ul>
+     * Copy the missing data store from resources and remove its object from the live store.
      *
-     * @param postFix
+     * @param version to identify the data store eg. "1.3.4"
+     * @param postFix the global postfix eg. "_BTC_MAINNET"
+     * @return the freshly copied and loaded data store
      */
-    @Override
-    protected void makeFileFromResourceFile(String postFix) {
-        File dbDir = new File(absolutePathOfStorageDir);
-        if (!dbDir.exists() && !dbDir.mkdir())
-            log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
-
-        // check resources for files
-        List<String> versions = new ArrayList<>();
-        versions.add(Version.VERSION);
-        versions.addAll(Version.history);
-        List<String> resourceFiles = versions.stream()
-                .map(s -> getFileName() + "_" + s + postFix)
-                .collect(Collectors.toList());
-
+    private SplitStore copyAndSplit(String version, String postFix) {
         // if not, copy and split
-        resourceFiles.forEach(resourceFileName -> {
-            final File destinationFile = new File(absolutePathOfStorageDir, resourceFileName.replace(postFix, ""));
-            if (!destinationFile.exists()) {
-                try {
-                    log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
-                    FileUtil.resourceToFile(resourceFileName, destinationFile);
-                } catch (ResourceNotFoundException e) {
-                    log.info("Could not find resourceFile {}. That is expected if none is provided yet.", resourceFileName);
-                } catch (Throwable e) {
-                    log.error("Could not copy resourceFile {} to {}.\n{}", resourceFileName, destinationFile.getAbsolutePath(), e.getMessage());
-                    e.printStackTrace();
-                }
-            } else {
-                log.debug(resourceFileName + " file exists already.");
-            }
-        });
+        final File destinationFile = new File(absolutePathOfStorageDir, getFileName() + "_" + version);
+        String resourceFileName = destinationFile.getName() + postFix;
+        try {
+            log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
+            FileUtil.resourceToFile(resourceFileName, destinationFile);
+        } catch (ResourceNotFoundException e) {
+            log.info("Could not find resourceFile {}. That is expected if none is provided yet.", resourceFileName);
+        } catch (Throwable e) {
+            log.error("Could not copy resourceFile {} to {}.\n{}", resourceFileName, destinationFile.getAbsolutePath(), e.getMessage());
+            e.printStackTrace();
+        }
 
         // split
         // - get all
-        history = new HashMap<>();
-        store = readStore(getFileName());
-        resourceFiles.forEach(file -> {
-            SplitStore tmp = readStore(file.replace(postFix, ""));
-            history.put(extractSpecialKey(file, postFix), tmp);
-            // - subtract all that is in resource files
-            store.getMap().keySet().removeAll(tmp.getMap().keySet());
-        });
+        SplitStore historicalStore = readStore(destinationFile.getName());
+        // - subtract all that is in resource files
+        store.getMap().keySet().removeAll(historicalStore.getMap().keySet());
 
         // - create new file with leftovers
         storage.initAndGetPersisted(store, 0);
         storage.queueUpForSave();
 
+        return historicalStore;
     }
 }
