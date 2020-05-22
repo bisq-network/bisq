@@ -132,7 +132,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
 
         // go through the list one by one
         versions.forEach(version -> {
-            String filename = getFileName() + "_" + version + postFix; // postFix has a preceding "_"
+            String filename = getFileName() + "_" + version;
             if (new File(absolutePathOfStorageDir, filename).exists()) {
                 // if it is there already, load
                 history.put(version, readStore(getFileName() + "_" + version));
@@ -175,7 +175,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
     private SplitStore copyAndSplit(String version, String postFix) {
         // if not, copy and split
         final File destinationFile = new File(absolutePathOfStorageDir, getFileName() + "_" + version);
-        String resourceFileName = destinationFile.getName() + postFix;
+        String resourceFileName = destinationFile.getName() + postFix; // postFix has a preceding "_" already
         try {
             log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
             FileUtil.resourceToFile(resourceFileName, destinationFile);
