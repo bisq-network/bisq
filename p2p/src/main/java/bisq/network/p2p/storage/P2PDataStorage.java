@@ -92,7 +92,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -231,15 +230,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * See if the request contains a "special key".
      *
      * @param knownPayloadHashes
-     * @throws NoSuchElementException if there is no "special key" in the list
-     * @return the "special key"
+     * @return the "special key" or <code>null</code> if no special key has been found
      */
-    private String containsSpecialKey(Set<P2PDataStorage.ByteArray> knownPayloadHashes) {
+    private String findSpecialKey(Set<P2PDataStorage.ByteArray> knownPayloadHashes) {
         return knownPayloadHashes.stream()
                 .map(byteArray -> new String(byteArray.bytes).trim())
                 .filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$"))
                 .findFirst()
-                .orElseThrow();
+                .orElse(null);
     }
 
     /**
@@ -317,11 +315,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // In case we get a "new" data request, ie. with a "special key" like "1.3.4", we
         // pre-filter the data. If there is no "special key", we use all data.
         Map<ByteArray, PersistableNetworkPayload> prefilteredData;
-        try {
-            String specialKey = containsSpecialKey(excludedKeysAsByteArray);
-            prefilteredData = this.appendOnlyDataStoreService.getMap("since " + specialKey);
-        } catch (NoSuchElementException e) {
+        String specialKey = findSpecialKey(excludedKeysAsByteArray);
+        if (specialKey == null) {
             prefilteredData = this.appendOnlyDataStoreService.getMap();
+        } else {
+            prefilteredData = this.appendOnlyDataStoreService.getMap("since " + specialKey);
         }
 
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
