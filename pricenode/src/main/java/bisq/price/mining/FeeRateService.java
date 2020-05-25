@@ -19,9 +19,13 @@ package bisq.price.mining;
 
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * High-level mining {@link FeeRate} operations.
@@ -29,9 +33,16 @@ import java.util.Set;
 @Service
 class FeeRateService {
 
-    private final Set<FeeRateProvider> providers;
+    private final List<FeeRateProvider> providers;
 
-    public FeeRateService(Set<FeeRateProvider> providers) {
+    /**
+     * Construct a {@link FeeRateService} with a list of all {@link FeeRateProvider}
+     * implementations discovered via classpath scanning.
+     *
+     * @param providers all {@link FeeRateProvider} implementations in ascending
+     *                  order of precedence
+     */
+    public FeeRateService(List<FeeRateProvider> providers) {
         this.providers = providers;
     }
 
@@ -39,16 +50,38 @@ class FeeRateService {
         Map<String, Long> metadata = new HashMap<>();
         Map<String, Long> allFeeRates = new HashMap<>();
 
+        AtomicLong sumOfAllFeeRates = new AtomicLong();
+        AtomicInteger amountOfFeeRates = new AtomicInteger();
+
+        // Process each provider, retrieve and store their fee rate
         providers.forEach(p -> {
             FeeRate feeRate = p.get();
             String currency = feeRate.getCurrency();
             if ("BTC".equals(currency)) {
-                metadata.put("bitcoinFeesTs", feeRate.getTimestamp());
+                sumOfAllFeeRates.getAndAdd(feeRate.getPrice());
+                amountOfFeeRates.getAndAdd(1);
             }
-            allFeeRates.put(currency.toLowerCase() + "TxFee", feeRate.getPrice());
         });
 
-        return new HashMap<String, Object>() {{
+        // Calculate the average
+        long averageFeeRate = (amountOfFeeRates.intValue() > 0)
+                ? sumOfAllFeeRates.longValue() / amountOfFeeRates.intValue()
+                : FeeRateProvider.MIN_FEE_RATE;
+
+        // Make sure the returned value is within the min-max range
+        averageFeeRate = Math.max(averageFeeRate, FeeRateProvider.MIN_FEE_RATE);
+        averageFeeRate = Math.min(averageFeeRate, FeeRateProvider.MAX_FEE_RATE);
+
+        // Prepare response: Add timestamp of now
+        // Since this is an average, the timestamp is associated with when the moment in
+        // time when the avg was computed
+        metadata.put("bitcoinFeesTs", Instant.now().getEpochSecond());
+
+        // Prepare response: Add the fee average
+        allFeeRates.put("btcTxFee", averageFeeRate);
+
+        // Build response
+        return new HashMap<>() {{
             putAll(metadata);
             put("dataMap", allFeeRates);
         }};
