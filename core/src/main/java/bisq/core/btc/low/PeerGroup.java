@@ -37,10 +37,10 @@ final public class PeerGroup extends PeerGroupProxy {
     }
 
     public static PeerGroup createPeerGroup(
-            Socks5Proxy socks5Proxy,
             NetworkParameters params,
             BlockChain vChain,
             LocalBitcoinNode localBitcoinNode,
+            Socks5Proxy socks5Proxy,
             int torSocketTimeout,
             int torVersionExchangeTimeout
     ) {
@@ -51,33 +51,51 @@ final public class PeerGroup extends PeerGroupProxy {
          * - BitcoinJ uses a local BTC node by default. Thus we disable its use
          *   when we're told it shouldn't be used.
          */
-        PeerGroup peerGroup;
         if (localBitcoinNode.shouldBeUsed()) {
+            return createLocalPeerGroup(params, vChain);
+        } else {
+            return createRemotePeerGroup(params, vChain,
+                    socks5Proxy, torSocketTimeout, torVersionExchangeTimeout);
+        }
+    }
+
+    private static PeerGroup createLocalPeerGroup(
+            NetworkParameters params,
+            BlockChain vChain
+    ) {
+        return new PeerGroup(params, vChain);
+    }
+
+    private static PeerGroup createRemotePeerGroup(
+            NetworkParameters params,
+            BlockChain vChain,
+            Socks5Proxy socks5Proxy,
+            int torSocketTimeout,
+            int torVersionExchangeTimeout
+    ) {
+        PeerGroup peerGroup;
+        var notUsingProxy = socks5Proxy == null;
+        if (notUsingProxy) {
             peerGroup = new PeerGroup(params, vChain);
         } else {
-            var notUsingProxy = socks5Proxy == null;
-            if (notUsingProxy) {
-                peerGroup = new PeerGroup(params, vChain);
-            } else {
-                Proxy proxy = new Proxy(
-                        Proxy.Type.SOCKS,
-                        new InetSocketAddress(
-                            socks5Proxy.getInetAddress().getHostName(),
-                            socks5Proxy.getPort()
-                            ));
-                ProxySocketFactory proxySocketFactory =
-                    new ProxySocketFactory(proxy);
-                BlockingClientManager blockingClientManager =
-                    new BlockingClientManager(proxySocketFactory);
+            Proxy proxy = new Proxy(
+                    Proxy.Type.SOCKS,
+                    new InetSocketAddress(
+                        socks5Proxy.getInetAddress().getHostName(),
+                        socks5Proxy.getPort()
+                        ));
+            ProxySocketFactory proxySocketFactory =
+                new ProxySocketFactory(proxy);
+            BlockingClientManager blockingClientManager =
+                new BlockingClientManager(proxySocketFactory);
 
-                peerGroup = new PeerGroup(params, vChain, blockingClientManager);
+            peerGroup = new PeerGroup(params, vChain, blockingClientManager);
 
-                blockingClientManager.setConnectTimeoutMillis(torSocketTimeout);
-                peerGroup.setConnectTimeoutMillis(torVersionExchangeTimeout);
-            }
-            peerGroup.setUseLocalhostPeerWhenPossible(false);
+            blockingClientManager.setConnectTimeoutMillis(torSocketTimeout);
+            peerGroup.setConnectTimeoutMillis(torVersionExchangeTimeout);
         }
-
+        // Keep remote PeerGroup from using a local BTC node.
+        peerGroup.setUseLocalhostPeerWhenPossible(false);
         return peerGroup;
     }
 

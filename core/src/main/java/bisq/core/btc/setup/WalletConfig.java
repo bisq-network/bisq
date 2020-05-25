@@ -394,7 +394,7 @@ public class WalletConfig extends AbstractIdleService {
             }
             vChain = new BlockChain(params, vStore);
             vPeerGroup = PeerGroup.createPeerGroup(
-                    socks5Proxy, params, vChain, localBitcoinNode, config, TOR_SOCKET_TIMEOUT, TOR_VERSION_EXCHANGE_TIMEOUT);
+                    params, vChain, localBitcoinNode, socks5Proxy, TOR_SOCKET_TIMEOUT, TOR_VERSION_EXCHANGE_TIMEOUT);
 
             if (minBroadcastConnections > 0)
                 vPeerGroup.setMinBroadcastConnections(minBroadcastConnections);
