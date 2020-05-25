@@ -60,10 +60,8 @@ final public class PeerGroup extends PeerGroupProxy {
         } else {
             var notUsingProxy = socks5Proxy == null;
             if (notUsingProxy) {
-                // no proxy case.
                 peerGroup = new PeerGroup(params, vChain);
             } else {
-                // proxy case (tor).
                 Proxy proxy = new Proxy(
                         Proxy.Type.SOCKS,
                         new InetSocketAddress(
@@ -80,7 +78,7 @@ final public class PeerGroup extends PeerGroupProxy {
                 blockingClientManager.setConnectTimeoutMillis(torSocketTimeout);
                 peerGroup.setConnectTimeoutMillis(torVersionExchangeTimeout);
             }
-        peerGroup.setUseLocalhostPeerWhenPossible(false);
+            peerGroup.setUseLocalhostPeerWhenPossible(false);
         }
 
         return peerGroup;
