@@ -112,7 +112,7 @@ final public class PeerGroup extends PeerGroupProxy {
         return blockingClientManager;
     }
 
-    public void setPeerAddressesToBeUsedExclusively(
+    public void setCustomPeersToBeUsedExclusively(
             PeerAddress[] peerAddresses,
             int numConnectionsForBtc
     ) {

@@ -404,7 +404,7 @@ public class WalletConfig extends AbstractIdleService {
             // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
-                vPeerGroup.setPeerAddressesToBeUsedExclusively(peerAddresses, numConnectionsForBtc);
+                vPeerGroup.setCustomPeersToBeUsedExclusively(peerAddresses, numConnectionsForBtc);
             } else {
                 setupDiscovery(vPeerGroup, params, discovery);
             }
