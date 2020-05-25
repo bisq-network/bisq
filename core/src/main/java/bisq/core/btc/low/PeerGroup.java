@@ -119,16 +119,26 @@ final public class PeerGroup extends PeerGroupProxy {
             PeerDiscovery discovery
     ) {
         if (peerAddresses != null) {
-            for (PeerAddress addr : peerAddresses) this.addAddress(addr);
-            int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
-            //log.info("We try to connect to {} btc nodes", maxConnections);
-            this.setMaxConnections(maxConnections);
-            this.setAddPeersFromAddressMessage(false);
-            peerAddresses = null;
-        } else if (!params.equals(RegTestParams.get())) {
-            this.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
+            setPeerAddressesToBeUsedExclusively(peerAddresses, numConnectionsForBtc);
+        } else {
+            var isRegTest = params.equals(RegTestParams.get());
+            if (!isRegTest) {
+                this.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
+            }
         }
 
+    }
+
+    private void setPeerAddressesToBeUsedExclusively(
+            PeerAddress[] peerAddresses,
+            int numConnectionsForBtc
+    ) {
+        for (PeerAddress addr : peerAddresses) this.addAddress(addr);
+        int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
+        //log.info("We try to connect to {} btc nodes", maxConnections);
+        this.setMaxConnections(maxConnections);
+        this.setAddPeersFromAddressMessage(false);
+        peerAddresses = null;
     }
 
 }
