@@ -56,43 +56,45 @@ final public class PeerGroup extends PeerGroupProxy {
             int torVersionExchangeTimeout
     ) {
         PeerGroup peerGroup;
-        var notUsingProxy = socks5Proxy == null;
-        if (notUsingProxy) {
-            // no proxy case.
+        if (localBitcoinNode.shouldBeUsed()) {
             peerGroup = new PeerGroup(params, vChain);
         } else {
-            // proxy case (tor).
-            BlockingClientManager blockingClientManager;
-
-            // [Start of original comment]
-            // We don't use tor mode if we have a local node running
-            // [End of original comment]
-            // This variable doesn't show if a local node is running,
-            // but whether or not we're configured to ignore one when it is.
-            var ignoreLocalBtcNode = config.ignoreLocalBtcNode;
-            if (ignoreLocalBtcNode) {
-                blockingClientManager = new BlockingClientManager();
+            var notUsingProxy = socks5Proxy == null;
+            if (notUsingProxy) {
+                // no proxy case.
+                peerGroup = new PeerGroup(params, vChain);
             } else {
-                Proxy proxy = new Proxy(
-                        Proxy.Type.SOCKS,
-                        new InetSocketAddress(
-                            socks5Proxy.getInetAddress().getHostName(),
-                            socks5Proxy.getPort()
-                            ));
-                ProxySocketFactory proxySocketFactory =
-                    new ProxySocketFactory(proxy);
-                blockingClientManager =
-                    new BlockingClientManager(proxySocketFactory);
+                // proxy case (tor).
+                BlockingClientManager blockingClientManager;
+
+                // [Start of original comment]
+                // We don't use tor mode if we have a local node running
+                // [End of original comment]
+                // This variable doesn't show if a local node is running,
+                // but whether or not we're configured to ignore one when it is.
+                var ignoreLocalBtcNode = config.ignoreLocalBtcNode;
+                if (ignoreLocalBtcNode) {
+                    blockingClientManager = new BlockingClientManager();
+                } else {
+                    Proxy proxy = new Proxy(
+                            Proxy.Type.SOCKS,
+                            new InetSocketAddress(
+                                socks5Proxy.getInetAddress().getHostName(),
+                                socks5Proxy.getPort()
+                                ));
+                    ProxySocketFactory proxySocketFactory =
+                        new ProxySocketFactory(proxy);
+                    blockingClientManager =
+                        new BlockingClientManager(proxySocketFactory);
+                }
+
+                peerGroup = new PeerGroup(params, vChain, blockingClientManager);
+
+                blockingClientManager.setConnectTimeoutMillis(torSocketTimeout);
+                peerGroup.setConnectTimeoutMillis(torVersionExchangeTimeout);
             }
-
-            peerGroup = new PeerGroup(params, vChain, blockingClientManager);
-
-            blockingClientManager.setConnectTimeoutMillis(torSocketTimeout);
-            peerGroup.setConnectTimeoutMillis(torVersionExchangeTimeout);
+        peerGroup.setUseLocalhostPeerWhenPossible(false);
         }
-
-        if (!localBitcoinNode.shouldBeUsed())
-            peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;
     }
