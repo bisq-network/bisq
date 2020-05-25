@@ -51,7 +51,6 @@ final public class PeerGroup extends PeerGroupProxy {
             NetworkParameters params,
             BlockChain vChain,
             LocalBitcoinNode localBitcoinNode,
-            Config config,
             int torSocketTimeout,
             int torVersionExchangeTimeout
     ) {
@@ -65,28 +64,16 @@ final public class PeerGroup extends PeerGroupProxy {
                 peerGroup = new PeerGroup(params, vChain);
             } else {
                 // proxy case (tor).
-                BlockingClientManager blockingClientManager;
-
-                // [Start of original comment]
-                // We don't use tor mode if we have a local node running
-                // [End of original comment]
-                // This variable doesn't show if a local node is running,
-                // but whether or not we're configured to ignore one when it is.
-                var ignoreLocalBtcNode = config.ignoreLocalBtcNode;
-                if (ignoreLocalBtcNode) {
-                    blockingClientManager = new BlockingClientManager();
-                } else {
-                    Proxy proxy = new Proxy(
-                            Proxy.Type.SOCKS,
-                            new InetSocketAddress(
-                                socks5Proxy.getInetAddress().getHostName(),
-                                socks5Proxy.getPort()
-                                ));
-                    ProxySocketFactory proxySocketFactory =
-                        new ProxySocketFactory(proxy);
-                    blockingClientManager =
-                        new BlockingClientManager(proxySocketFactory);
-                }
+                Proxy proxy = new Proxy(
+                        Proxy.Type.SOCKS,
+                        new InetSocketAddress(
+                            socks5Proxy.getInetAddress().getHostName(),
+                            socks5Proxy.getPort()
+                            ));
+                ProxySocketFactory proxySocketFactory =
+                    new ProxySocketFactory(proxy);
+                BlockingClientManager blockingClientManager =
+                    new BlockingClientManager(proxySocketFactory);
 
                 peerGroup = new PeerGroup(params, vChain, blockingClientManager);
 
