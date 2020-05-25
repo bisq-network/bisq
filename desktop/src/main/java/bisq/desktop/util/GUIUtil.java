@@ -1152,7 +1152,7 @@ public class GUIUtil {
                 ")";                                                   // (IPv4-Embedded IPv6 Address)
         ipv6RegexPattern = String.format("(?:%1$s)|(?:\\[%1$s\\]\\:%2$s)", ipv6RegexPattern, portRegexPattern);
         String fqdnRegexPattern = String.format("(((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\\.)+(?!onion)[a-zA-Z]{2,63}(?:\\:%1$s)?)", portRegexPattern);
-        regexValidator.setPattern(String.format("^(?:(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)),)*(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s))*$",
+        regexValidator.setPattern(String.format("^(?:(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)),\\s*)*(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s))*$",
                 onionV2RegexPattern, ipv4RegexPattern, ipv6RegexPattern, fqdnRegexPattern));
         return regexValidator;
     }
