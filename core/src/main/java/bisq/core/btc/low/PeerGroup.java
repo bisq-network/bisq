@@ -112,24 +112,7 @@ final public class PeerGroup extends PeerGroupProxy {
         return blockingClientManager;
     }
 
-    public void setupPeerAddressesOrDiscovery(
-            PeerAddress[] peerAddresses,
-            int numConnectionsForBtc,
-            NetworkParameters params,
-            PeerDiscovery discovery
-    ) {
-        if (peerAddresses != null) {
-            setPeerAddressesToBeUsedExclusively(peerAddresses, numConnectionsForBtc);
-        } else {
-            var isRegTest = params.equals(RegTestParams.get());
-            if (!isRegTest) {
-                this.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
-            }
-        }
-
-    }
-
-    private void setPeerAddressesToBeUsedExclusively(
+    public void setPeerAddressesToBeUsedExclusively(
             PeerAddress[] peerAddresses,
             int numConnectionsForBtc
     ) {

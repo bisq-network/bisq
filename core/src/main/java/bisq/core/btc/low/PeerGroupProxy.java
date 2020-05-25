@@ -52,7 +52,7 @@ abstract class PeerGroupProxy {
         this.bitcoinjPeerGroup.addAddress(peerAddress);
     }
 
-    protected void addPeerDiscovery(PeerDiscovery peerDiscovery) {
+    public void addPeerDiscovery(PeerDiscovery peerDiscovery) {
         this.bitcoinjPeerGroup.addPeerDiscovery(peerDiscovery);
     }
 
