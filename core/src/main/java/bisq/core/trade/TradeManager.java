@@ -360,12 +360,12 @@ public class TradeManager implements PersistedDataHost {
     private void cleanUpAddressEntries() {
         // We check if we have address entries which are not in our pending trades and clean up those entries.
         // They might be either from closed or failed trades or from trades we do not have at all in our data base files.
-        Set<String> tradesIdSet = getTradesStreamWithFundsLockedIn()
+        Set<String> activeTrades = getTradableList().stream()
                 .map(Tradable::getId)
                 .collect(Collectors.toSet());
 
         btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> !tradesIdSet.contains(e.getOfferId()))
+                .filter(e -> !activeTrades.contains(e.getOfferId()))
                 .forEach(e -> {
                     log.warn("We found an outdated addressEntry for trade {}: entry={}", e.getOfferId(), e);
                     btcWalletService.resetAddressEntriesForPendingTrade(e.getOfferId());
