@@ -8,6 +8,7 @@ import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.DnsDiscovery;
+import org.bitcoinj.net.ClientConnectionManager;
 
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.nodes.LocalBitcoinNode;
@@ -31,9 +32,9 @@ final public class PeerGroup extends PeerGroupProxy {
     private PeerGroup(
             NetworkParameters params,
             BlockChain vChain,
-            BlockingClientManager blockingClientManager
+            ClientConnectionManager clientConnectionManager
     ) {
-        super(new org.bitcoinj.core.PeerGroup(params, vChain, blockingClientManager));
+        super(new org.bitcoinj.core.PeerGroup(params, vChain, clientConnectionManager));
     }
 
     public static PeerGroup createPeerGroup(
@@ -78,25 +79,37 @@ final public class PeerGroup extends PeerGroupProxy {
         if (notUsingProxy) {
             peerGroup = new PeerGroup(params, vChain);
         } else {
-            Proxy proxy = new Proxy(
-                    Proxy.Type.SOCKS,
-                    new InetSocketAddress(
-                        socks5Proxy.getInetAddress().getHostName(),
-                        socks5Proxy.getPort()
-                        ));
-            ProxySocketFactory proxySocketFactory =
-                new ProxySocketFactory(proxy);
-            BlockingClientManager blockingClientManager =
-                new BlockingClientManager(proxySocketFactory);
-
-            peerGroup = new PeerGroup(params, vChain, blockingClientManager);
-
-            blockingClientManager.setConnectTimeoutMillis(torSocketTimeout);
+            ClientConnectionManager socks5ProxyClientConnectionManager =
+                getSocks5ProxyClientConnectionManager(
+                        socks5Proxy, torSocketTimeout);
+            peerGroup = new PeerGroup(
+                    params, vChain, socks5ProxyClientConnectionManager);
             peerGroup.setConnectTimeoutMillis(torVersionExchangeTimeout);
         }
         // Keep remote PeerGroup from using a local BTC node.
         peerGroup.setUseLocalhostPeerWhenPossible(false);
         return peerGroup;
+    }
+
+    /* This method returns the more general ClientConnectionManager (instead of
+     * BlockingClientManager), presuming that the rest of the code shouldn't
+     * care if we're using a blocking or an async connection manager.
+     */
+    private static ClientConnectionManager getSocks5ProxyClientConnectionManager(
+            Socks5Proxy socks5Proxy,
+            int torSocketTimeout
+    ) {
+        var inetAddress = socks5Proxy.getInetAddress().getHostName();
+        var port = socks5Proxy.getPort();
+        Proxy proxy = new Proxy(
+                Proxy.Type.SOCKS,
+                new InetSocketAddress(inetAddress, port));
+        ProxySocketFactory proxySocketFactory =
+            new ProxySocketFactory(proxy);
+        BlockingClientManager blockingClientManager =
+            new BlockingClientManager(proxySocketFactory);
+        blockingClientManager.setConnectTimeoutMillis(torSocketTimeout);
+        return blockingClientManager;
     }
 
     public void setupPeerAddressesOrDiscovery(
