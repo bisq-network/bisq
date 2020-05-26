@@ -18,6 +18,7 @@ import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+@Deprecated
 class GrpcWalletService extends WalletGrpc.WalletImplBase {
 
     private final CoreWalletService walletService;

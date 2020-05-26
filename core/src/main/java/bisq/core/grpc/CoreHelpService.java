@@ -3,7 +3,7 @@ package bisq.core.grpc;
 import static java.lang.String.format;
 
 class CoreHelpService {
-    
+
     private final String help = "Bisq Client" +
             "\n" +
             "Usage: bisq-cli [options] <method> [params]" +

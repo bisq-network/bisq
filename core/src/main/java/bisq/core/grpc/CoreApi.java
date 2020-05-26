@@ -53,21 +53,52 @@ public class CoreApi {
     private final OpenOfferManager openOfferManager;
     private final User user;
 
+    private final CoreHelpService helpService;
+    private final CoreWalletService walletService;
+
     @Inject
     public CoreApi(OfferBookService offerBookService,
                    TradeStatisticsManager tradeStatisticsManager,
                    CreateOfferService createOfferService,
                    OpenOfferManager openOfferManager,
-                   User user) {
+                   User user,
+                   CoreHelpService helpService,
+                   CoreWalletService walletService) {
         this.offerBookService = offerBookService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.createOfferService = createOfferService;
         this.openOfferManager = openOfferManager;
         this.user = user;
+        this.helpService = helpService;
+        this.walletService = walletService;
+    }
+    
+    public String getHelp(Method method) {
+        return method == null ? helpService.getHelp() : helpService.getHelp(method);
     }
 
     public String getVersion() {
         return Version.VERSION;
+    }
+
+    public long getBalance() {
+        return walletService.getAvailableBalance();
+    }
+
+    public void setWalletPassword(String password, String newPassword) {
+        walletService.setWalletPassword(password, newPassword);
+    }
+
+    public void removeWalletPassword(String password) {
+        walletService.removeWalletPassword(password);
+    }
+
+    public void unlockWallet(String password, long timeout) {
+        walletService.unlockWallet(password, timeout);
+    }
+
+    public void lockWallet() {
+        walletService.lockWallet();
     }
 
     public List<TradeStatistics2> getTradeStatistics() {

@@ -60,10 +60,13 @@ public class GrpcServer {
     private final Server server;
 
     @Inject
-    public GrpcServer(Config config, CoreApi coreApi, GrpcWalletService walletService) {
+    public GrpcServer(Config config, CoreApi coreApi,
+                      GrpcCallService callService,
+                      GrpcWalletService walletService) {
         this.coreApi = coreApi;
         this.server = ServerBuilder.forPort(config.apiPort)
-                .addService(new GetVersionService())
+                .addService(callService)
+                .addService(new GetVersionService()) // TODO deprecate old gRPC services.
                 .addService(new GetTradeStatisticsService())
                 .addService(new GetOffersService())
                 .addService(new GetPaymentAccountsService())
@@ -94,7 +97,6 @@ public class GrpcServer {
             responseObserver.onCompleted();
         }
     }
-
 
     class GetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
         @Override
