@@ -8,6 +8,10 @@ import com.google.gson.GsonBuilder;
 
 import javax.inject.Inject;
 
+import java.text.DecimalFormat;
+
+import java.math.BigDecimal;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +84,120 @@ class GrpcCoreBridge {
             }
         }
 
-        return "TODO";
+        // Call the CoreApi method.  Catch and wrap exceptions in a gRPC
+        // StatusRuntimeException (so REST clients receive a proper HTTP status).
+        // If the params came from the HTTP 1.1 proxy, wrap the response in json.
+        try {
+            switch (method) {
+                case help: {
+                    String cmd = (paramTokens.size() > 1) ? paramTokens.get(1) : null;
+                    if (cmd != null) {
+                        try {
+                            return formatResponse(coreApi.getHelp(Method.valueOf(cmd)), isGatewayRequest);
+                        } catch (IllegalArgumentException ex) {
+                            throw new StatusRuntimeException(
+                                    Status.INVALID_ARGUMENT.withDescription(
+                                            format("'%s\n\n%s' is not a supported method", cmd, coreApi.getHelp(null))));
+                        }
+                    } else {
+                        return formatResponse(coreApi.getHelp(null), isGatewayRequest);
+                    }
+                }
+                case getversion: {
+                    return formatResponse(coreApi.getVersion(), isGatewayRequest);
+                }
+                case getbalance: {
+                    try {
+                        var satoshiBalance = coreApi.getBalance();
+                        var satoshiDivisor = new BigDecimal(100000000);
+                        var btcFormat = new DecimalFormat("###,##0.00000000");
+                        @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+                        var btcBalance = btcFormat.format(BigDecimal.valueOf(satoshiBalance).divide(satoshiDivisor));
+                        return formatResponse(btcBalance, isGatewayRequest);
+                    } catch (IllegalStateException ex) {
+                        throw new StatusRuntimeException(
+                                Status.UNKNOWN.withDescription(ex.getMessage()));
+                    }
+                }
+                case lockwallet: {
+                    try {
+                        coreApi.lockWallet();
+                        return formatResponse("wallet locked", isGatewayRequest);
+                    } catch (IllegalStateException ex) {
+                        throw new StatusRuntimeException(
+                                Status.UNKNOWN.withDescription(ex.getMessage()));
+                    }
+                }
+                case unlockwallet: {
+                    if (paramTokens.size() < 2)
+                        throw new StatusRuntimeException(
+                                Status.INVALID_ARGUMENT.withDescription("no password specified"));
+
+                    var password = paramTokens.get(1);
+
+                    if (paramTokens.size() < 3)
+                        throw new StatusRuntimeException(
+                                Status.INVALID_ARGUMENT.withDescription("no unlock timeout specified"));
+
+                    long timeout;
+                    try {
+                        timeout = Long.parseLong(paramTokens.get(2));
+                    } catch (NumberFormatException ex) {
+                        throw new StatusRuntimeException(
+                                Status.INVALID_ARGUMENT
+                                        .withDescription(format("'%s' is not a number", paramTokens.get(2))));
+                    }
+
+                    try {
+                        coreApi.unlockWallet(password, timeout);
+                        return formatResponse("wallet unlocked", isGatewayRequest);
+                    } catch (IllegalStateException ex) {
+                        throw new StatusRuntimeException(
+                                Status.UNKNOWN.withDescription(ex.getMessage()));
+                    }
+                }
+                case setwalletpassword: {
+                    if (paramTokens.size() < 2)
+                        throw new StatusRuntimeException(
+                                Status.INVALID_ARGUMENT.withDescription("no password specified"));
+
+                    var password = paramTokens.get(1);
+                    var newPassword = paramTokens.size() == 3 ? paramTokens.get(2).trim() : "";
+                    try {
+                        coreApi.setWalletPassword(password, newPassword);
+                        return formatResponse("wallet encrypted"
+                                        + (!newPassword.isEmpty() ? " with new password" : ""),
+                                isGatewayRequest);
+                    } catch (IllegalStateException ex) {
+                        throw new StatusRuntimeException(
+                                Status.UNKNOWN.withDescription(ex.getMessage()));
+                    }
+                }
+                case removewalletpassword: {
+                    if (paramTokens.size() < 2)
+                        throw new StatusRuntimeException(
+                                Status.INVALID_ARGUMENT.withDescription("no password specified"));
+
+                    var password = paramTokens.get(1);
+                    try {
+                        coreApi.removeWalletPassword(password);
+                        return formatResponse("wallet decrypted", isGatewayRequest);
+                    } catch (IllegalStateException ex) {
+                        throw new StatusRuntimeException(
+                                Status.UNKNOWN.withDescription(ex.getMessage()));
+                    }
+                }
+                default: {
+                    throw new StatusRuntimeException(
+                            Status.INVALID_ARGUMENT.withDescription(
+                                    format("unhandled method '%s'", method)));
+                }
+            }
+        } catch (StatusRuntimeException ex) {
+            // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message
+            String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
+            throw new RuntimeException(message, ex);
+        }
     }
 
     private List<String> getParamTokens(String params) {
