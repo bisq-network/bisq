@@ -1,5 +1,8 @@
 package bisq.core.grpc;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -47,6 +50,12 @@ class GrpcCoreBridge {
 
     public String call(String params, boolean isGatewayRequest) {
         log.info("RPC request: '{}'", params);
+
+        if (params.isEmpty()) {
+            throw new StatusRuntimeException(
+                    Status.INVALID_ARGUMENT.withDescription("no method specified"));
+        }
+
         return "TODO";
     }
 
