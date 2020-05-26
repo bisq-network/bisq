@@ -4,11 +4,14 @@ import bisq.proto.grpc.CallServiceGrpc;
 import bisq.proto.grpc.Params;
 import bisq.proto.grpc.Response;
 
+import io.grpc.Context;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
+
+import static bisq.core.grpc.PasswordAuthInterceptor.HTTP1_REQUEST_CTX_KEY;
 
 public class GrpcCallService extends CallServiceGrpc.CallServiceImplBase {
 
@@ -22,10 +25,8 @@ public class GrpcCallService extends CallServiceGrpc.CallServiceImplBase {
     @Override
     public void call(Params req, StreamObserver<Response> responseObserver) {
         try {
-            // TODO Extract the gRPC Context Key HTTP1_REQUEST_CTX_KEY value and pass it
-            //  to the GrpcCoreBridge, which will be responsible for wrapping the
-            //  response in json if the HTTP1_REQUEST_CTX_KEY value == true.
-            String result = bridge.call(req.getParams(), false /*todo*/);
+            boolean isGatewayRequest = HTTP1_REQUEST_CTX_KEY.get(Context.current());
+            String result = bridge.call(req.getParams(), isGatewayRequest);
             var reply = Response.newBuilder().setResult(result).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
