@@ -82,6 +82,8 @@ import java.security.PublicKey;
 
 import java.time.Clock;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -222,7 +224,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private byte[] getSpecialKey() {
         byte[] result = new byte[20];
         Arrays.fill(result, (byte) 0);
-        System.arraycopy(Version.VERSION.getBytes(), 0, result, 0, Version.VERSION.length());
+        System.arraycopy(Version.VERSION.getBytes(StandardCharsets.UTF_8), 0, result, 0, Version.VERSION.length());
         return result;
     }
 
@@ -234,7 +236,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     private String findSpecialKey(Set<P2PDataStorage.ByteArray> knownPayloadHashes) {
         return knownPayloadHashes.stream()
-                .map(byteArray -> new String(byteArray.bytes).trim())
+                .map(byteArray -> new String(byteArray.bytes, StandardCharsets.UTF_8).trim())
                 .filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$"))
                 .findFirst()
                 .orElse(null);
