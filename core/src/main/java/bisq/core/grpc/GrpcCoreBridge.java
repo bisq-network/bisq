@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static java.lang.String.format;
+
 /**
  * The bridge between the single gRPC service implemented by
  * {@code GrpcCallService} and the {@code CoreApi}.
@@ -54,6 +56,17 @@ class GrpcCoreBridge {
         if (params.isEmpty()) {
             throw new StatusRuntimeException(
                     Status.INVALID_ARGUMENT.withDescription("no method specified"));
+        }
+
+        var paramTokens = getParamTokens(params);
+        var methodName = paramTokens.get(0);
+        final Method method;
+        try {
+            method = Method.valueOf(methodName);
+        } catch (IllegalArgumentException ex) {
+            throw new StatusRuntimeException(
+                    Status.INVALID_ARGUMENT.withDescription(
+                            format("'%s' is not a supported method", methodName)));
         }
 
         return "TODO";
