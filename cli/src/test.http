@@ -1,0 +1,79 @@
+# curl -v -X POST http://localhost:8080/v1/call -H "Authorization:xyz"
+POST http://localhost:8080/v1/call
+Authorization: xyz
+
+###
+
+
+# curl -v -X POST http://localhost:8080/v1/call -H "Authorization:xyz"  -H "Content-Type: application/json" -d '{"params": "help"}'
+POST http://localhost:8080/v1/call
+Authorization: xyz
+Content-Type: application/json
+
+{
+    "params": "help"
+}
+
+###
+
+
+
+# curl -v -X POST http://localhost:8080/v1/call -H "Authorization:xyz"  -H "Content-Type: application/json" -d '{"params": "getversion"}'
+POST http://localhost:8080/v1/call
+Authorization: xyz
+Content-Type: application/json
+
+{
+    "params": "getversion"
+}
+
+###
+
+# curl -v  -X POST http://localhost:8080/v1/call -H "Authorization:xyz"  -H "Content-Type: application/json" -d '{"params": "getbalance"}'
+POST http://localhost:8080/v1/call
+Authorization: xyz
+Content-Type: application/json
+
+{
+    "params": "getbalance"
+}
+
+###
+
+
+
+
+# curl -v -X POST http://localhost:8080/v1/call -H "Authorization:xyz"  -H "Content-Type: application/json" -d '{"params": "setwalletpassword abc"}'
+POST http://localhost:8080/v1/call
+Authorization: xyz
+Content-Type: application/json
+
+{
+    "params": "setwalletpassword abc"
+}
+
+###
+
+
+# curl -v -X POST http://localhost:8080/v1/call -H "Authorization:xyz"  -H "Content-Type: application/json" -d '{"params": "setwalletpassword abc \"def\""}'
+POST http://localhost:8080/v1/call
+Authorization: xyz
+Content-Type: application/json
+
+{
+    "params": "setwalletpassword abc \"def\""
+}
+
+###
+
+
+# curl -v -X POST http://localhost:8080/v1/call -H "Authorization:xyz"  -H "Content-Type: application/json" -d '{"params": "removewalletpassword \"def\""}'
+POST http://localhost:8080/v1/call
+Authorization: xyz
+Content-Type: application/json
+
+{
+    "params": "removewalletpassword \"def\""
+}
+
+
