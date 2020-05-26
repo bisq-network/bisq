@@ -69,6 +69,17 @@ class GrpcCoreBridge {
                             format("'%s' is not a supported method", methodName)));
         }
 
+        try {
+            // If the wallet or balance is unavailable, you can't do anything.
+            coreApi.getBalance();
+        } catch (IllegalStateException ex) {
+            String reason = ex.getMessage();
+            if (reason.equals("wallet is not yet available") || reason.equals("balance is not yet available")) {
+                throw new StatusRuntimeException(
+                        Status.UNAVAILABLE.withDescription("server not available"));
+            }
+        }
+
         return "TODO";
     }
 
