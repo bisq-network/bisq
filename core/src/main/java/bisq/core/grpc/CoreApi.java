@@ -72,7 +72,7 @@ public class CoreApi {
         this.helpService = helpService;
         this.walletService = walletService;
     }
-    
+
     public String getHelp(Method method) {
         return method == null ? helpService.getHelp() : helpService.getHelp(method);
     }
