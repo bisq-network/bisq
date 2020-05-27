@@ -134,7 +134,7 @@ public class WalletConfig extends AbstractIdleService {
     private volatile PeerGroup vPeerGroup;
     private boolean useAutoSave = true;
     private PeerAddress[] peerAddresses;
-    private DownloadProgressTracker downloadListener;
+    private DownloadProgressTracker downloadTracker;
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
@@ -235,8 +235,8 @@ public class WalletConfig extends AbstractIdleService {
         return this;
     }
 
-    public WalletConfig setDownloadListener(DownloadProgressTracker listener) {
-        this.downloadListener = listener;
+    public WalletConfig setDownloadTracker(DownloadProgressTracker listener) {
+        this.downloadTracker = listener;
         return this;
     }
 
@@ -413,7 +413,7 @@ public class WalletConfig extends AbstractIdleService {
 
             installShutdownHook(autoStop, WalletConfig.this);
 
-            startPeerGroupWithDownloadListener(vPeerGroup, downloadListener, blockingStartup);
+            startPeerGroupWithDownloadTracker(vPeerGroup, downloadTracker, blockingStartup);
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
@@ -486,23 +486,23 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    private static void startPeerGroupWithDownloadListener(
+    private static void startPeerGroupWithDownloadTracker(
             PeerGroup vPeerGroup,
-            DownloadProgressTracker passedDownloadListener,
+            DownloadProgressTracker passedDownloadTracker,
             boolean blockingStartup
     ) throws InterruptedException {
-        DownloadProgressTracker downloadListener =
-            passedDownloadListener == null ?
-            new DownloadProgressTracker() : passedDownloadListener;
+        DownloadProgressTracker downloadTracker =
+            passedDownloadTracker == null ?
+            new DownloadProgressTracker() : passedDownloadTracker;
         if (blockingStartup) {
             vPeerGroup.start();
-            vPeerGroup.startBlockChainDownload(downloadListener);
-            downloadListener.await(); // throws InterruptedException TODO improve handling
+            vPeerGroup.startBlockChainDownload(downloadTracker);
+            downloadTracker.await(); // throws InterruptedException TODO improve handling
         } else {
             Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
                 @Override
                 public void onSuccess(@Nullable Object result) {
-                    vPeerGroup.startBlockChainDownload(downloadListener);
+                    vPeerGroup.startBlockChainDownload(downloadTracker);
                 }
 
                 @Override
