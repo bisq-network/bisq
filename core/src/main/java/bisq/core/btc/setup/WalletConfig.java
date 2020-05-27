@@ -134,7 +134,7 @@ public class WalletConfig extends AbstractIdleService {
     private volatile PeerGroup vPeerGroup;
     private boolean useAutoSave = true;
     private PeerAddress[] peerAddresses;
-    private PeerDataEventListener downloadListener;
+    private DownloadProgressTracker downloadListener;
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
@@ -235,7 +235,7 @@ public class WalletConfig extends AbstractIdleService {
         return this;
     }
 
-    public WalletConfig setDownloadListener(PeerDataEventListener listener) {
+    public WalletConfig setDownloadListener(DownloadProgressTracker listener) {
         this.downloadListener = listener;
         return this;
     }
@@ -488,21 +488,21 @@ public class WalletConfig extends AbstractIdleService {
 
     private static void startPeerGroupWithDownloadListener(
             PeerGroup vPeerGroup,
-            PeerDataEventListener downloadListener,
+            DownloadProgressTracker passedDownloadListener,
             boolean blockingStartup
     ) throws InterruptedException {
+        DownloadProgressTracker downloadListener =
+            passedDownloadListener == null ?
+            new DownloadProgressTracker() : passedDownloadListener;
         if (blockingStartup) {
             vPeerGroup.start();
-            final DownloadProgressTracker listener = new DownloadProgressTracker();
-            vPeerGroup.startBlockChainDownload(listener);
-            listener.await(); // throws InterruptedException TODO improve handling
+            vPeerGroup.startBlockChainDownload(downloadListener);
+            downloadListener.await(); // throws InterruptedException TODO improve handling
         } else {
             Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
                 @Override
                 public void onSuccess(@Nullable Object result) {
-                    final PeerDataEventListener listener = downloadListener == null ?
-                        new DownloadProgressTracker() : downloadListener;
-                    vPeerGroup.startBlockChainDownload(listener);
+                    vPeerGroup.startBlockChainDownload(downloadListener);
                 }
 
                 @Override
