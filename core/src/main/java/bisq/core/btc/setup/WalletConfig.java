@@ -411,29 +411,7 @@ public class WalletConfig extends AbstractIdleService {
 
             onSetupCompleted();
 
-            if (blockingStartup) {
-                vPeerGroup.start();
-                // Make sure we shut down cleanly.
-                installShutdownHook();
-
-                final DownloadProgressTracker listener = new DownloadProgressTracker();
-                vPeerGroup.startBlockChainDownload(listener);
-                listener.await();
-            } else {
-                Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
-                    @Override
-                    public void onSuccess(@Nullable Object result) {
-                        final PeerDataEventListener listener = downloadListener == null ?
-                                new DownloadProgressTracker() : downloadListener;
-                        vPeerGroup.startBlockChainDownload(listener);
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-                });
-            }
+            startPeerGroupWithDownloadListener(vPeerGroup, downloadListener, blockingStartup, autoStop, WalletConfig.this);
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
@@ -506,6 +484,37 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
+    private static void startPeerGroupWithDownloadListener(
+            PeerGroup vPeerGroup,
+            PeerDataEventListener downloadListener,
+            boolean blockingStartup,
+            boolean autoStop,
+            WalletConfig walletConfig
+    ) throws InterruptedException {
+        if (blockingStartup) {
+            vPeerGroup.start();
+            // Make sure we shut down cleanly.
+            installShutdownHook(autoStop, walletConfig);
+
+            final DownloadProgressTracker listener = new DownloadProgressTracker();
+            vPeerGroup.startBlockChainDownload(listener);
+            listener.await(); // throws InterruptedException TODO improve handling
+        } else {
+            Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
+                @Override
+                public void onSuccess(@Nullable Object result) {
+                    final PeerDataEventListener listener = downloadListener == null ?
+                        new DownloadProgressTracker() : downloadListener;
+                    vPeerGroup.startBlockChainDownload(listener);
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable t) {
+                    throw new RuntimeException(t);
+                }
+            });
+        }
+    }
 
     void setPeerNodesForLocalHost() {
         try {
@@ -581,11 +590,11 @@ public class WalletConfig extends AbstractIdleService {
         return walletFactory.create(params, keyChainGroup, isBsqWallet);
     }
 
-    private void installShutdownHook() {
+    private static void installShutdownHook(boolean autoStop, WalletConfig walletConfig) {
         if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                WalletConfig.this.stopAsync();
-                WalletConfig.this.awaitTerminated();
+                walletConfig.stopAsync();
+                walletConfig.awaitTerminated();
             } catch (Throwable ignore) {
             }
         }, "WalletConfig ShutdownHook"));
