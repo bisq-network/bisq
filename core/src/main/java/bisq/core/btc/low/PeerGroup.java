@@ -37,14 +37,14 @@ final public class PeerGroup extends PeerGroupProxy {
         super(new org.bitcoinj.core.PeerGroup(params, vChain, clientConnectionManager));
     }
 
-    private static PeerGroup createLocalPeerGroup(
+    public static PeerGroup createLocalPeerGroup(
             NetworkParameters params,
             BlockChain vChain
     ) {
         return new PeerGroup(params, vChain);
     }
 
-    private static PeerGroup createRemotePeerGroup(
+    public static PeerGroup createRemotePeerGroup(
             NetworkParameters params,
             BlockChain vChain,
             Socks5Proxy socks5Proxy,

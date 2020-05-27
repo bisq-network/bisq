@@ -393,7 +393,7 @@ public class WalletConfig extends AbstractIdleService {
                 }
             }
             vChain = new BlockChain(params, vStore);
-            vPeerGroup = PeerGroup.createPeerGroup(
+            vPeerGroup = createPeerGroup(
                     params, vChain, localBitcoinNode, socks5Proxy, TOR_SOCKET_TIMEOUT, TOR_VERSION_EXCHANGE_TIMEOUT);
 
             if (minBroadcastConnections > 0)
@@ -449,7 +449,7 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    public static PeerGroup createPeerGroup(
+    private static PeerGroup createPeerGroup(
             NetworkParameters params,
             BlockChain vChain,
             LocalBitcoinNode localBitcoinNode,
@@ -465,9 +465,9 @@ public class WalletConfig extends AbstractIdleService {
          *   when we're told it shouldn't be used.
          */
         if (localBitcoinNode.shouldBeUsed()) {
-            return createLocalPeerGroup(params, vChain);
+            return PeerGroup.createLocalPeerGroup(params, vChain);
         } else {
-            return createRemotePeerGroup(params, vChain,
+            return PeerGroup.createRemotePeerGroup(params, vChain,
                     socks5Proxy, torSocketTimeout, torVersionExchangeTimeout);
         }
     }
