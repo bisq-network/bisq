@@ -401,23 +401,13 @@ public class WalletConfig extends AbstractIdleService {
 
             vPeerGroup.setUserAgent(userAgent, Version.VERSION);
 
-            // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
-            // before we're actually connected the broadcast waits for an appropriate number of connections.
-            if (peerAddresses != null) {
-                vPeerGroup.setCustomPeersToBeUsedExclusively(peerAddresses, numConnectionsForBtc);
-            } else {
-                setupDiscovery(vPeerGroup, params, discovery);
-            }
+            // Set up source of peers (custom peer addresses or discovery)
+            // first, so if wallet extensions try to broadcast a transaction
+            // before we're actually connected the broadcast waits for an
+            // appropriate number of connections.
+            setupSourceOfPeers(vPeerGroup, peerAddresses, numConnectionsForBtc, params, discovery);
 
-            vChain.addWallet(vBtcWallet);
-            vPeerGroup.addWallet(vBtcWallet);
-
-            if (vBsqWallet != null) {
-                //noinspection ConstantConditions
-                vChain.addWallet(vBsqWallet);
-                //noinspection ConstantConditions
-                vPeerGroup.addWallet(vBsqWallet);
-            }
+            attachWallets(vChain, vPeerGroup, vBtcWallet, vBsqWallet);
 
             onSetupCompleted();
 
@@ -472,6 +462,21 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
+    private static void setupSourceOfPeers(
+            PeerGroup vPeerGroup,
+            PeerAddress[] peerAddresses,
+            int numConnectionsForBtc,
+            NetworkParameters params,
+            PeerDiscovery discovery
+    ) {
+        if (peerAddresses != null) {
+            // TODO why is numConnectionsForBtc only taken into account when using custom peers?
+            vPeerGroup.setCustomPeersToBeUsedExclusively(peerAddresses, numConnectionsForBtc);
+        } else {
+            setupDiscovery(vPeerGroup, params, discovery);
+        }
+    }
+
     private static void setupDiscovery(
             PeerGroup vPeerGroup,
             NetworkParameters params,
@@ -481,6 +486,23 @@ public class WalletConfig extends AbstractIdleService {
         if (!isRegTest) {
             var discoveryToUse = discovery != null ? discovery : new DnsDiscovery(params);
             vPeerGroup.addPeerDiscovery(discoveryToUse);
+        }
+    }
+
+    private static void attachWallets(
+            BlockChain vChain,
+            PeerGroup vPeerGroup,
+            Wallet vBtcWallet,
+            Wallet vBsqWallet
+    ) {
+        vChain.addWallet(vBtcWallet);
+        vPeerGroup.addWallet(vBtcWallet);
+
+        if (vBsqWallet != null) {
+            //noinspection ConstantConditions
+            vChain.addWallet(vBsqWallet);
+            //noinspection ConstantConditions
+            vPeerGroup.addWallet(vBsqWallet);
         }
     }
 
