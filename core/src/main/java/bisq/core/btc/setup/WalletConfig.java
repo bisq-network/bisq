@@ -411,7 +411,9 @@ public class WalletConfig extends AbstractIdleService {
 
             onSetupCompleted();
 
-            startPeerGroupWithDownloadListener(vPeerGroup, downloadListener, blockingStartup, autoStop, WalletConfig.this);
+            installShutdownHook(autoStop, WalletConfig.this);
+
+            startPeerGroupWithDownloadListener(vPeerGroup, downloadListener, blockingStartup);
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
@@ -487,15 +489,10 @@ public class WalletConfig extends AbstractIdleService {
     private static void startPeerGroupWithDownloadListener(
             PeerGroup vPeerGroup,
             PeerDataEventListener downloadListener,
-            boolean blockingStartup,
-            boolean autoStop,
-            WalletConfig walletConfig
+            boolean blockingStartup
     ) throws InterruptedException {
         if (blockingStartup) {
             vPeerGroup.start();
-            // Make sure we shut down cleanly.
-            installShutdownHook(autoStop, walletConfig);
-
             final DownloadProgressTracker listener = new DownloadProgressTracker();
             vPeerGroup.startBlockChainDownload(listener);
             listener.await(); // throws InterruptedException TODO improve handling
