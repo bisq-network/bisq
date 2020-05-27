@@ -37,29 +37,6 @@ final public class PeerGroup extends PeerGroupProxy {
         super(new org.bitcoinj.core.PeerGroup(params, vChain, clientConnectionManager));
     }
 
-    public static PeerGroup createPeerGroup(
-            NetworkParameters params,
-            BlockChain vChain,
-            LocalBitcoinNode localBitcoinNode,
-            Socks5Proxy socks5Proxy,
-            int torSocketTimeout,
-            int torVersionExchangeTimeout
-    ) {
-        /* Below algorithm tries to satisfy following requirements:
-         * - Using a local BTC node implies not using a proxy.
-         * - When using a proxy, a blocking client must be used.
-         * - We only want to use a blocking client when we're using a proxy.
-         * - BitcoinJ uses a local BTC node by default. Thus we disable its use
-         *   when we're told it shouldn't be used.
-         */
-        if (localBitcoinNode.shouldBeUsed()) {
-            return createLocalPeerGroup(params, vChain);
-        } else {
-            return createRemotePeerGroup(params, vChain,
-                    socks5Proxy, torSocketTimeout, torVersionExchangeTimeout);
-        }
-    }
-
     private static PeerGroup createLocalPeerGroup(
             NetworkParameters params,
             BlockChain vChain
