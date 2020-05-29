@@ -224,6 +224,17 @@ public class WalletConfig extends AbstractIdleService {
         return this;
     }
 
+    void setPeerNodesForLocalHost() {
+        try {
+            setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
+        } catch (UnknownHostException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            // Borked machine with no loopback adapter configured properly.
+            throw new RuntimeException(e);
+        }
+    }
+
 
     /**
      * If true, the wallet will save itself to disk automatically whenever it changes.
@@ -471,17 +482,6 @@ public class WalletConfig extends AbstractIdleService {
             vChain.addWallet(vBsqWallet);
             //noinspection ConstantConditions
             vPeerGroup.addWallet(vBsqWallet);
-        }
-    }
-
-    void setPeerNodesForLocalHost() {
-        try {
-            setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
-        } catch (UnknownHostException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-            // Borked machine with no loopback adapter configured properly.
-            throw new RuntimeException(e);
         }
     }
 
