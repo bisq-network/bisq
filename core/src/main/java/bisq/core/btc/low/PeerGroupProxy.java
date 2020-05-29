@@ -20,7 +20,7 @@ import java.util.concurrent.Executor;
 
 abstract class PeerGroupProxy {
 
-    protected final org.bitcoinj.core.PeerGroup bitcoinjPeerGroup;
+    private final org.bitcoinj.core.PeerGroup bitcoinjPeerGroup;
 
     protected PeerGroupProxy(org.bitcoinj.core.PeerGroup bitcoinjPeerGroup) {
         this.bitcoinjPeerGroup = bitcoinjPeerGroup;
