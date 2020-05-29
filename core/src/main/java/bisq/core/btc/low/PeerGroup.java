@@ -3,6 +3,8 @@ package bisq.core.btc.low;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerAddress;
+import org.bitcoinj.core.listeners.DownloadProgressTracker;
+
 import org.bitcoinj.params.RegTestParams;
 
 import org.bitcoinj.net.BlockingClientManager;
@@ -18,7 +20,15 @@ import bisq.common.config.Config;
 import java.net.Proxy;
 import java.net.InetSocketAddress;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListenableFuture;
+
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
 
 final public class PeerGroup extends PeerGroupProxy {
 
@@ -99,6 +109,25 @@ final public class PeerGroup extends PeerGroupProxy {
         this.setMaxConnections(maxConnections);
         this.setAddPeersFromAddressMessage(false);
         peerAddresses = null;
+    }
+
+    public void startWithDownloadTracker(
+            DownloadProgressTracker passedDownloadTracker
+    ) throws InterruptedException {
+        DownloadProgressTracker downloadTracker =
+            passedDownloadTracker == null ?
+            new DownloadProgressTracker() : passedDownloadTracker;
+        Futures.addCallback(
+                (ListenableFuture<?>) this.startAsync(),
+                new FutureCallback<Object>() {
+                    @Override
+                    public void onSuccess(@Nullable Object result) {
+                        PeerGroup.this.startBlockChainDownload(downloadTracker);
+                    }
+                    @Override
+                    public void onFailure(@NotNull Throwable t) {
+                        throw new RuntimeException(t);
+                    }});
     }
 
 }

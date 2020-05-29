@@ -32,7 +32,7 @@ abstract class PeerGroupProxy {
         this.bitcoinjPeerGroup.start();
     }
 
-    public ListenableFuture startAsync() {
+    protected ListenableFuture startAsync() {
         return this.bitcoinjPeerGroup.startAsync();
     }
 
@@ -40,7 +40,7 @@ abstract class PeerGroupProxy {
         this.bitcoinjPeerGroup.stop();
     }
 
-    public void startBlockChainDownload(PeerDataEventListener listener) {
+    protected void startBlockChainDownload(PeerDataEventListener listener) {
         this.bitcoinjPeerGroup.startBlockChainDownload(listener);
     }
 

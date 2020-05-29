@@ -401,7 +401,7 @@ public class WalletConfig extends AbstractIdleService {
 
             installShutdownHook(autoStop, WalletConfig.this);
 
-            startPeerGroupWithDownloadTracker(vPeerGroup, downloadTracker);
+            vPeerGroup.startWithDownloadTracker(downloadTracker);
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
@@ -472,26 +472,6 @@ public class WalletConfig extends AbstractIdleService {
             //noinspection ConstantConditions
             vPeerGroup.addWallet(vBsqWallet);
         }
-    }
-
-    private static void startPeerGroupWithDownloadTracker(
-            PeerGroup vPeerGroup,
-            DownloadProgressTracker passedDownloadTracker
-    ) throws InterruptedException {
-        DownloadProgressTracker downloadTracker =
-            passedDownloadTracker == null ?
-            new DownloadProgressTracker() : passedDownloadTracker;
-        Futures.addCallback(
-                (ListenableFuture<?>) vPeerGroup.startAsync(),
-                new FutureCallback<Object>() {
-                    @Override
-                    public void onSuccess(@Nullable Object result) {
-                        vPeerGroup.startBlockChainDownload(downloadTracker);
-                    }
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        throw new RuntimeException(t);
-                    }});
     }
 
     void setPeerNodesForLocalHost() {
