@@ -111,14 +111,19 @@ final public class PeerGroup extends PeerGroupProxy {
         peerAddresses = null;
     }
 
-    public void startWithDownloadTracker(
+    /* Ideally we would just run PeerGroup.startAsync() and have a method for
+     * attaching a download tracker separately, but that would require
+     * switching to using PeerGroup lifecycle hooks, which can be finicky and
+     * difficult to understand, so we leave it as is for the moment. */
+    public ListenableFuture startAsyncWithDownloadTracker(
             DownloadProgressTracker passedDownloadTracker
     ) throws InterruptedException {
         DownloadProgressTracker downloadTracker =
             passedDownloadTracker == null ?
             new DownloadProgressTracker() : passedDownloadTracker;
+        ListenableFuture startFuture = this.startAsync();
         Futures.addCallback(
-                (ListenableFuture<?>) this.startAsync(),
+                startFuture,
                 new FutureCallback<Object>() {
                     @Override
                     public void onSuccess(@Nullable Object result) {
@@ -128,6 +133,7 @@ final public class PeerGroup extends PeerGroupProxy {
                     public void onFailure(@NotNull Throwable t) {
                         throw new RuntimeException(t);
                     }});
+        return startFuture;
     }
 
 }

@@ -401,7 +401,7 @@ public class WalletConfig extends AbstractIdleService {
 
             installShutdownHook(autoStop, WalletConfig.this);
 
-            vPeerGroup.startWithDownloadTracker(downloadTracker);
+            vPeerGroup.startAsyncWithDownloadTracker(downloadTracker);
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
