@@ -481,17 +481,17 @@ public class WalletConfig extends AbstractIdleService {
         DownloadProgressTracker downloadTracker =
             passedDownloadTracker == null ?
             new DownloadProgressTracker() : passedDownloadTracker;
-        Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
-            @Override
-            public void onSuccess(@Nullable Object result) {
-                vPeerGroup.startBlockChainDownload(downloadTracker);
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                throw new RuntimeException(t);
-            }
-        });
+        Futures.addCallback(
+                (ListenableFuture<?>) vPeerGroup.startAsync(),
+                new FutureCallback<Object>() {
+                    @Override
+                    public void onSuccess(@Nullable Object result) {
+                        vPeerGroup.startBlockChainDownload(downloadTracker);
+                    }
+                    @Override
+                    public void onFailure(@NotNull Throwable t) {
+                        throw new RuntimeException(t);
+                    }});
     }
 
     void setPeerNodesForLocalHost() {
