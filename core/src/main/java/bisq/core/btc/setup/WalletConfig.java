@@ -325,7 +325,7 @@ public class WalletConfig extends AbstractIdleService {
         // Runs in a separate thread.
         Context.propagate(context);
         log.info("Wallet directory: {}", directory);
-        try {
+        try { // TODO reduce extent of try-catch
             File chainFile = new File(directory, spvChainFileName);
             boolean chainFileExists = chainFile.exists();
 
