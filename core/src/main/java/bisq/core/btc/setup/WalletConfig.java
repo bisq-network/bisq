@@ -137,7 +137,6 @@ public class WalletConfig extends AbstractIdleService {
     private DownloadProgressTracker downloadTracker;
     private boolean autoStop = true;
     private InputStream checkpoints;
-    private boolean blockingStartup = true;
     @Getter
     @Setter
     private int minBroadcastConnections;
@@ -256,17 +255,6 @@ public class WalletConfig extends AbstractIdleService {
         if (this.checkpoints != null)
             Utils.closeUnchecked(this.checkpoints);
         this.checkpoints = checkNotNull(checkpoints);
-    }
-
-    /**
-     * If true (the default) then the startup of this service won't be considered complete until the network has been
-     * brought up, peer connections established and the block chain synchronised. Therefore startAndWait() can
-     * potentially take a very long time. If false, then startup is considered complete once the network activity
-     * begins and peer connections/block chain sync will continue in the background.
-     */
-    public WalletConfig setBlockingStartup(@SuppressWarnings("SameParameterValue") boolean blockingStartup) {
-        this.blockingStartup = blockingStartup;
-        return this;
     }
 
     /**
@@ -413,7 +401,7 @@ public class WalletConfig extends AbstractIdleService {
 
             installShutdownHook(autoStop, WalletConfig.this);
 
-            startPeerGroupWithDownloadTracker(vPeerGroup, downloadTracker, blockingStartup);
+            startPeerGroupWithDownloadTracker(vPeerGroup, downloadTracker);
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
@@ -488,29 +476,22 @@ public class WalletConfig extends AbstractIdleService {
 
     private static void startPeerGroupWithDownloadTracker(
             PeerGroup vPeerGroup,
-            DownloadProgressTracker passedDownloadTracker,
-            boolean blockingStartup
+            DownloadProgressTracker passedDownloadTracker
     ) throws InterruptedException {
         DownloadProgressTracker downloadTracker =
             passedDownloadTracker == null ?
             new DownloadProgressTracker() : passedDownloadTracker;
-        if (blockingStartup) {
-            vPeerGroup.start();
-            vPeerGroup.startBlockChainDownload(downloadTracker);
-            downloadTracker.await(); // throws InterruptedException TODO improve handling
-        } else {
-            Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
-                @Override
-                public void onSuccess(@Nullable Object result) {
-                    vPeerGroup.startBlockChainDownload(downloadTracker);
-                }
+        Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
+            @Override
+            public void onSuccess(@Nullable Object result) {
+                vPeerGroup.startBlockChainDownload(downloadTracker);
+            }
 
-                @Override
-                public void onFailure(@NotNull Throwable t) {
-                    throw new RuntimeException(t);
-                }
-            });
-        }
+            @Override
+            public void onFailure(@NotNull Throwable t) {
+                throw new RuntimeException(t);
+            }
+        });
     }
 
     void setPeerNodesForLocalHost() {
