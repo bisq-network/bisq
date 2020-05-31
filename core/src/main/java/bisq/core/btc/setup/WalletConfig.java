@@ -235,6 +235,20 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
+    void configPeerNodesForRegTestServer() {
+        try {
+            if (RegTestHost.HOST.endsWith(".onion")) {
+                setPeerNodes(new PeerAddress(RegTestHost.HOST, params.getPort()));
+            } else {
+                setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.HOST), params.getPort()));
+            }
+        } catch (UnknownHostException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
 
     /**
      * If true, the wallet will save itself to disk automatically whenever it changes.

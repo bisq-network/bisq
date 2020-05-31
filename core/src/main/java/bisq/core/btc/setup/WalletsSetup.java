@@ -267,7 +267,7 @@ public class WalletsSetup {
             if (regTestHost == RegTestHost.LOCALHOST) {
                 walletConfig.setToOnlyUseLocalhostPeerNode();
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
-                configPeerNodesForRegTestServer();
+                walletConfig.configPeerNodesForRegTestServer();
             } else {
                 try {
                     configPeerNodes(socks5Proxy);
@@ -354,20 +354,6 @@ public class WalletsSetup {
             }
         }
         return mode;
-    }
-
-    private void configPeerNodesForRegTestServer() {
-        try {
-            if (RegTestHost.HOST.endsWith(".onion")) {
-                walletConfig.setPeerNodes(new PeerAddress(RegTestHost.HOST, params.getPort()));
-            } else {
-                walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.HOST), params.getPort()));
-            }
-        } catch (UnknownHostException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
     }
 
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {
