@@ -108,6 +108,7 @@ final public class PeerGroup extends PeerGroupProxy {
         //log.info("We try to connect to {} btc nodes", maxConnections);
         this.setMaxConnections(maxConnections);
         this.setAddPeersFromAddressMessage(false);
+        // TODO what is the purpose of nulling/mutating this input variable?
         peerAddresses = null;
     }
 
