@@ -263,10 +263,20 @@ public class WalletsSetup {
         };
 
         setupSourceOfPeers(
+            walletConfig,
             socks5Proxy,
+            localBitcoinNode,
+            params,
+            regTestHost,
             timeoutTimer,
-            exceptionHandler
+            walletsSetupFailed,
+            exceptionHandler,
+            preferences,
+            btcNodes,
+            useAllProvidedNodes,
+            socks5DiscoverMode
             );
+
 
         walletConfig.setDownloadTracker(downloadListener);
 
@@ -286,10 +296,19 @@ public class WalletsSetup {
         walletConfig.startAsync();
     }
 
-    private void setupSourceOfPeers(
+    private static void setupSourceOfPeers(
+            WalletConfig walletConfig,
             Socks5Proxy socks5Proxy,
+            LocalBitcoinNode localBitcoinNode,
+            NetworkParameters params,
+            RegTestHost regTestHost,
             Timer timeoutTimer,
-            ExceptionHandler exceptionHandler
+            BooleanProperty walletsSetupFailed,
+            ExceptionHandler exceptionHandler,
+            Preferences preferences,
+            BtcNodes btcNodes,
+            boolean useAllProvidedNodes,
+            int socks5DiscoverMode
     ) {
         if (params == RegTestParams.get()) {
             walletConfig.setMinBroadcastConnections(1);
@@ -299,7 +318,15 @@ public class WalletsSetup {
                 walletConfig.setToOnlyUseRegTestHostPeerNode();
             } else {
                 try {
-                    configPeerNodes(socks5Proxy);
+                    configPeerNodes(
+                            socks5Proxy,
+                            preferences,
+                            btcNodes,
+                            useAllProvidedNodes,
+                            walletConfig,
+                            params,
+                            socks5DiscoverMode
+                            );
                 } catch (IllegalArgumentException e) {
                     timeoutTimer.stop();
                     walletsSetupFailed.set(true);
@@ -312,7 +339,15 @@ public class WalletsSetup {
             walletConfig.setToOnlyUseLocalhostPeerNode();
         } else {
             try {
-                configPeerNodes(socks5Proxy);
+                configPeerNodes(
+                        socks5Proxy,
+                        preferences,
+                        btcNodes,
+                        useAllProvidedNodes,
+                        walletConfig,
+                        params,
+                        socks5DiscoverMode
+                        );
             } catch (IllegalArgumentException e) {
                 timeoutTimer.stop();
                 walletsSetupFailed.set(true);
@@ -368,7 +403,15 @@ public class WalletsSetup {
         return mode;
     }
 
-    private void configPeerNodes(@Nullable Socks5Proxy proxy) {
+    private static void configPeerNodes(
+            @Nullable Socks5Proxy socks5Proxy,
+            Preferences preferences,
+            BtcNodes btcNodes,
+            boolean useAllProvidedNodes,
+            WalletConfig walletConfig,
+            NetworkParameters params,
+            int socks5DiscoverMode
+            ) {
         BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences);
 
         List<BtcNode> nodes = btcNodesSetupPreferences.selectPreferredNodes(btcNodes);
@@ -377,9 +420,9 @@ public class WalletsSetup {
 
         BtcNodesRepository repository = new BtcNodesRepository(nodes);
         boolean isUseClearNodesWithProxies = (useAllProvidedNodes || btcNodesSetupPreferences.isUseCustomNodes());
-        List<PeerAddress> peers = repository.getPeerAddresses(proxy, isUseClearNodesWithProxies);
+        List<PeerAddress> peers = repository.getPeerAddresses(socks5Proxy, isUseClearNodesWithProxies);
 
-        BtcNetworkConfig networkConfig = new BtcNetworkConfig(walletConfig, params, socks5DiscoverMode, proxy);
+        BtcNetworkConfig networkConfig = new BtcNetworkConfig(walletConfig, params, socks5DiscoverMode, socks5Proxy);
         networkConfig.proposePeers(peers);
     }
 
