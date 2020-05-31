@@ -94,7 +94,7 @@ public class SignSpecificWitnessWindow extends Overlay<SignSpecificWitnessWindow
 
         searchAutoComplete = new JFXAutoCompletePopup<>();
         searchAutoComplete.setPrefWidth(400);
-        searchAutoComplete.getSuggestions().addAll(accountAgeWitnessService.getAccountAgeWitnessMap().values());
+        searchAutoComplete.getSuggestions().addAll(accountAgeWitnessService.getOrphanSignedWitnesses());
         searchAutoComplete.setSuggestionsCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(AccountAgeWitness item, boolean empty) {
@@ -160,7 +160,8 @@ public class SignSpecificWitnessWindow extends Overlay<SignSpecificWitnessWindow
                 var arbitratorPubKeyAsHex = Utils.HEX.encode(arbitratorKey.getPubKey());
                 var isKeyValid = arbitratorManager.isPublicKeyInList(arbitratorPubKeyAsHex);
                 if (isKeyValid) {
-                    var result = accountAgeWitnessService.arbitratorSignAccountAgeWitness(selectedWitness, arbitratorKey,
+                    var result = accountAgeWitnessService.arbitratorSignOrphanWitness(selectedWitness,
+                            arbitratorKey,
                             datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000);
                     if (result.isEmpty()) {
                         addSuccessContent();

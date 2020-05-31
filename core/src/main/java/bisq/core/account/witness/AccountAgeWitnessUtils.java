@@ -55,18 +55,23 @@ public class AccountAgeWitnessUtils {
 
     // Log tree of signed witnesses
     public void logSignedWitnesses() {
-        var orphanSigners = signedWitnessService.getRootSignedWitnessSet(false);
+        var orphanSigners = signedWitnessService.getRootSignedWitnessSet(true);
         log.info("Orphaned signed account age witnesses:");
         orphanSigners.forEach(w -> {
-            log.warn("{}: {}", w.getVerificationMethod().toString(),
-                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getSignerPubKey())));
+            log.info("{}: Signer PKH: {} Owner PKH: {} time: {}", w.getVerificationMethod().toString(),
+                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getSignerPubKey())).substring(0,7),
+                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getWitnessOwnerPubKey())).substring(0,7),
+                    w.getDate());
             logChild(w, "  ", new Stack<>());
         });
     }
 
     private void logChild(SignedWitness sigWit, String initString, Stack<P2PDataStorage.ByteArray> excluded) {
         var allSig = signedWitnessService.getSignedWitnessMap();
-        log.warn("{}{}", initString, Utilities.bytesAsHexString(sigWit.getAccountAgeWitnessHash()));
+        log.info("{}AEW: {} PKH: {} time: {}", initString,
+                Utilities.bytesAsHexString(sigWit.getAccountAgeWitnessHash()).substring(0, 7),
+                Utilities.bytesAsHexString(Hash.getRipemd160hash(sigWit.getWitnessOwnerPubKey())).substring(0, 7),
+                sigWit.getDate());
         allSig.values().forEach(w -> {
             if (!excluded.contains(new P2PDataStorage.ByteArray(w.getWitnessOwnerPubKey())) &&
                     Arrays.equals(w.getSignerPubKey(), sigWit.getWitnessOwnerPubKey())) {

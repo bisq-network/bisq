@@ -17,7 +17,6 @@
 
 package bisq.core.account.witness;
 
-import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
@@ -67,22 +66,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -248,7 +243,7 @@ public class AccountAgeWitnessService {
     }
 
     Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
-                                                    PubKeyRing pubKeyRing) {
+                                            PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
@@ -640,17 +635,24 @@ public class AccountAgeWitnessService {
         signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
     }
 
-    public String arbitratorSignAccountAgeWitness(AccountAgeWitness accountAgeWitness,
-                                                  ECKey key,
-                                                  long time) {
-        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, null, time);
+    public String arbitratorSignOrphanWitness(AccountAgeWitness accountAgeWitness,
+                                              ECKey key,
+                                              long time) {
+        // Find AccountAgeWitness as signedwitness
+        var signedWitness = signedWitnessService.getSignedWitnessMap().values().stream()
+                .filter(sw -> Arrays.equals(sw.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
+                .findAny()
+                .orElse(null);
+        checkNotNull(signedWitness);
+        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, signedWitness.getWitnessOwnerPubKey(),
+                time);
     }
 
-    public String arbitratorSignAccountAgeWitness(AccountAgeWitness accountAgeWitness,
-                                                  ECKey key,
-                                                  byte[] tradersPubKey,
-                                                  long time) {
-        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, tradersPubKey, time);
+    public void arbitratorSignAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+                                                ECKey key,
+                                                byte[] tradersPubKey,
+                                                long time) {
+        signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, tradersPubKey, time);
     }
 
     public void traderSignPeersAccountAgeWitness(Trade trade) {
