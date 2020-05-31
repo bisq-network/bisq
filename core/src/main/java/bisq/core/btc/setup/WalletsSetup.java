@@ -310,8 +310,10 @@ public class WalletsSetup {
             boolean useAllProvidedNodes,
             int socks5DiscoverMode
     ) {
+        // This setMinBroadcastConnections call is overidden in
+        // configPeerNodes, but holds for the rest of the branches.
+        walletConfig.setMinBroadcastConnections(1);
         if (params == RegTestParams.get()) {
-            walletConfig.setMinBroadcastConnections(1);
             if (regTestHost == RegTestHost.LOCALHOST) {
                 walletConfig.setToOnlyUseLocalhostPeerNode();
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
@@ -335,7 +337,6 @@ public class WalletsSetup {
                 }
             }
         } else if (localBitcoinNode.shouldBeUsed()) {
-            walletConfig.setMinBroadcastConnections(1);
             walletConfig.setToOnlyUseLocalhostPeerNode();
         } else {
             try {
