@@ -102,8 +102,8 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Setup wallets and use WalletConfig for BitcoinJ wiring.
-// Other like WalletConfig we are here always on the user thread. That is one reason why we do not
-// merge WalletsSetup with WalletConfig to one class.
+// Unlike WalletConfig, in WalletsSetup we are always on the user thread. That is one reason why we do not
+// merge WalletsSetup and WalletConfig into one class.
 @Slf4j
 public class WalletsSetup {
 
