@@ -224,7 +224,7 @@ public class WalletConfig extends AbstractIdleService {
         return this;
     }
 
-    void setPeerNodesForLocalHost() {
+    void setToOnlyUseLocalhostPeerNode() {
         try {
             setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
         } catch (UnknownHostException e) {

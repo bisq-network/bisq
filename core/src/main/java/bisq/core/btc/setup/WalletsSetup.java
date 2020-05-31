@@ -265,7 +265,7 @@ public class WalletsSetup {
         if (params == RegTestParams.get()) {
             walletConfig.setMinBroadcastConnections(1);
             if (regTestHost == RegTestHost.LOCALHOST) {
-                walletConfig.setPeerNodesForLocalHost();
+                walletConfig.setToOnlyUseLocalhostPeerNode();
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
                 configPeerNodesForRegTestServer();
             } else {
@@ -280,7 +280,7 @@ public class WalletsSetup {
             }
         } else if (localBitcoinNode.shouldBeUsed()) {
             walletConfig.setMinBroadcastConnections(1);
-            walletConfig.setPeerNodesForLocalHost();
+            walletConfig.setToOnlyUseLocalhostPeerNode();
         } else {
             try {
                 configPeerNodes(socks5Proxy);
