@@ -235,7 +235,7 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    void configPeerNodesForRegTestServer() {
+    void setToOnlyUseRegTestHostPeerNode() {
         try {
             if (RegTestHost.HOST.endsWith(".onion")) {
                 setPeerNodes(new PeerAddress(RegTestHost.HOST, params.getPort()));

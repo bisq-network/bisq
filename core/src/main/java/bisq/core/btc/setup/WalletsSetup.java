@@ -267,7 +267,7 @@ public class WalletsSetup {
             if (regTestHost == RegTestHost.LOCALHOST) {
                 walletConfig.setToOnlyUseLocalhostPeerNode();
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
-                walletConfig.configPeerNodesForRegTestServer();
+                walletConfig.setToOnlyUseRegTestHostPeerNode();
             } else {
                 try {
                     configPeerNodes(socks5Proxy);
