@@ -262,6 +262,35 @@ public class WalletsSetup {
             }
         };
 
+        setupSourceOfPeers(
+            socks5Proxy,
+            timeoutTimer,
+            exceptionHandler
+            );
+
+        walletConfig.setDownloadTracker(downloadListener);
+
+        // If seed is non-null it means we are restoring from backup.
+        walletConfig.setSeed(seed);
+
+        walletConfig.addListener(new Service.Listener() {
+            @Override
+            public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
+                walletConfig = null;
+                log.error("Service failure from state: {}; failure={}", from, failure);
+                timeoutTimer.stop();
+                UserThread.execute(() -> exceptionHandler.handleException(failure));
+            }
+        }, Threading.USER_THREAD);
+
+        walletConfig.startAsync();
+    }
+
+    private void setupSourceOfPeers(
+            Socks5Proxy socks5Proxy,
+            Timer timeoutTimer,
+            ExceptionHandler exceptionHandler
+    ) {
         if (params == RegTestParams.get()) {
             walletConfig.setMinBroadcastConnections(1);
             if (regTestHost == RegTestHost.LOCALHOST) {
@@ -291,23 +320,6 @@ public class WalletsSetup {
                 return;
             }
         }
-
-        walletConfig.setDownloadTracker(downloadListener);
-
-        // If seed is non-null it means we are restoring from backup.
-        walletConfig.setSeed(seed);
-
-        walletConfig.addListener(new Service.Listener() {
-            @Override
-            public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
-                walletConfig = null;
-                log.error("Service failure from state: {}; failure={}", from, failure);
-                timeoutTimer.stop();
-                UserThread.execute(() -> exceptionHandler.handleException(failure));
-            }
-        }, Threading.USER_THREAD);
-
-        walletConfig.startAsync();
     }
 
     public void shutDown() {
