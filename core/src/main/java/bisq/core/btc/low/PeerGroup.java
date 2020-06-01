@@ -26,11 +26,16 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
 final public class PeerGroup extends PeerGroupProxy {
+
+    private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
 
     private PeerGroup(
             NetworkParameters params,
@@ -105,7 +110,7 @@ final public class PeerGroup extends PeerGroupProxy {
     ) {
         for (PeerAddress addr : peerAddresses) this.addAddress(addr);
         int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
-        //log.info("We try to connect to {} btc nodes", maxConnections);
+        log.info("We try to connect to {} btc nodes", maxConnections);
         this.setMaxConnections(maxConnections);
         this.setAddPeersFromAddressMessage(false);
         // TODO what is the purpose of nulling/mutating this input variable?
