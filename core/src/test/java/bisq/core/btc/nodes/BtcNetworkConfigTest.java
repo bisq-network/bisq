@@ -39,40 +39,34 @@ import static org.mockito.Mockito.verify;
 public class BtcNetworkConfigTest {
     private static final int MODE = 0;
 
-    private WalletConfig delegate;
+    private WalletConfig walletConfig;
 
     @Before
     public void setUp() {
-        delegate = mock(WalletConfig.class);
+        walletConfig = mock(WalletConfig.class);
     }
 
     @Test
     public void testProposePeersWhenProxyPresentAndNoPeers() {
-        BtcNetworkConfig config = new BtcNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
-                mock(Socks5Proxy.class));
-        config.proposePeers(Collections.emptyList());
+        BtcNetworkConfig.proposePeers(Collections.emptyList(), walletConfig, mock(Socks5Proxy.class), MODE, mock(NetworkParameters.class));
 
-        verify(delegate, never()).setPeerNodes(any());
-        verify(delegate).setDiscovery(any(Socks5MultiDiscovery.class));
+        verify(walletConfig, never()).setPeerNodes(any());
+        verify(walletConfig).setDiscovery(any(Socks5MultiDiscovery.class));
     }
 
     @Test
     public void testProposePeersWhenProxyNotPresentAndNoPeers() {
-        BtcNetworkConfig config = new BtcNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
-                null);
-        config.proposePeers(Collections.emptyList());
+        BtcNetworkConfig.proposePeers(Collections.emptyList(), walletConfig, null, MODE, mock(NetworkParameters.class));
 
-        verify(delegate, never()).setDiscovery(any(Socks5MultiDiscovery.class));
-        verify(delegate, never()).setPeerNodes(any());
+        verify(walletConfig, never()).setDiscovery(any(Socks5MultiDiscovery.class));
+        verify(walletConfig, never()).setPeerNodes(any());
     }
 
     @Test
     public void testProposePeersWhenPeersPresent() {
-        BtcNetworkConfig config = new BtcNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
-                null);
-        config.proposePeers(Collections.singletonList(mock(PeerAddress.class)));
+        BtcNetworkConfig.proposePeers(Collections.singletonList(mock(PeerAddress.class)), walletConfig, null, MODE, mock(NetworkParameters.class));
 
-        verify(delegate, never()).setDiscovery(any(Socks5MultiDiscovery.class));
-        verify(delegate).setPeerNodes(any());
+        verify(walletConfig, never()).setDiscovery(any(Socks5MultiDiscovery.class));
+        verify(walletConfig).setPeerNodes(any());
     }
 }
