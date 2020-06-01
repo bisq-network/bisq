@@ -262,21 +262,23 @@ public class WalletsSetup {
             }
         };
 
-        setupSourceOfPeers(
-            walletConfig,
-            socks5Proxy,
-            localBitcoinNode,
-            params,
-            regTestHost,
-            timeoutTimer,
-            walletsSetupFailed,
-            exceptionHandler,
-            preferences,
-            btcNodes,
-            useAllProvidedNodes,
-            socks5DiscoverMode
-            );
-
+        try {
+            setupSourceOfPeers(
+                    walletConfig,
+                    socks5Proxy,
+                    localBitcoinNode,
+                    params,
+                    regTestHost,
+                    preferences,
+                    btcNodes,
+                    useAllProvidedNodes,
+                    socks5DiscoverMode
+                    );
+        } catch (IllegalArgumentException e) {
+            timeoutTimer.stop();
+            walletsSetupFailed.set(true);
+            exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
+        }
 
         walletConfig.setDownloadTracker(downloadListener);
 
@@ -302,9 +304,6 @@ public class WalletsSetup {
             LocalBitcoinNode localBitcoinNode,
             NetworkParameters params,
             RegTestHost regTestHost,
-            Timer timeoutTimer,
-            BooleanProperty walletsSetupFailed,
-            ExceptionHandler exceptionHandler,
             Preferences preferences,
             BtcNodes btcNodes,
             boolean useAllProvidedNodes,
@@ -319,27 +318,6 @@ public class WalletsSetup {
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
                 walletConfig.setToOnlyUseRegTestHostPeerNode();
             } else {
-                try {
-                    proposePeersFromBtcNodesRepository(
-                            socks5Proxy,
-                            preferences,
-                            btcNodes,
-                            useAllProvidedNodes,
-                            walletConfig,
-                            params,
-                            socks5DiscoverMode
-                            );
-                } catch (IllegalArgumentException e) {
-                    timeoutTimer.stop();
-                    walletsSetupFailed.set(true);
-                    exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
-                    return;
-                }
-            }
-        } else if (localBitcoinNode.shouldBeUsed()) {
-            walletConfig.setToOnlyUseLocalhostPeerNode();
-        } else {
-            try {
                 proposePeersFromBtcNodesRepository(
                         socks5Proxy,
                         preferences,
@@ -349,12 +327,19 @@ public class WalletsSetup {
                         params,
                         socks5DiscoverMode
                         );
-            } catch (IllegalArgumentException e) {
-                timeoutTimer.stop();
-                walletsSetupFailed.set(true);
-                exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
-                return;
             }
+        } else if (localBitcoinNode.shouldBeUsed()) {
+            walletConfig.setToOnlyUseLocalhostPeerNode();
+        } else {
+            proposePeersFromBtcNodesRepository(
+                    socks5Proxy,
+                    preferences,
+                    btcNodes,
+                    useAllProvidedNodes,
+                    walletConfig,
+                    params,
+                    socks5DiscoverMode
+                    );
         }
     }
 
