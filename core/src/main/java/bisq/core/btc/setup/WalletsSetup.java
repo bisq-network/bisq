@@ -298,51 +298,6 @@ public class WalletsSetup {
         walletConfig.startAsync();
     }
 
-    private static void setupSourceOfPeers(
-            WalletConfig walletConfig,
-            Socks5Proxy socks5Proxy,
-            LocalBitcoinNode localBitcoinNode,
-            NetworkParameters params,
-            RegTestHost regTestHost,
-            Preferences preferences,
-            BtcNodes btcNodes,
-            boolean useAllProvidedNodes,
-            int socks5DiscoverMode
-    ) {
-        // This setMinBroadcastConnections call is overidden in
-        // proposePeersFromBtcNodesRepository, but holds for the rest of the branches.
-        walletConfig.setMinBroadcastConnections(1);
-        if (params == RegTestParams.get()) {
-            if (regTestHost == RegTestHost.LOCALHOST) {
-                walletConfig.setToOnlyUseLocalhostPeerNode();
-            } else if (regTestHost == RegTestHost.REMOTE_HOST) {
-                walletConfig.setToOnlyUseRegTestHostPeerNode();
-            } else {
-                proposePeersFromBtcNodesRepository(
-                        socks5Proxy,
-                        preferences,
-                        btcNodes,
-                        useAllProvidedNodes,
-                        walletConfig,
-                        params,
-                        socks5DiscoverMode
-                        );
-            }
-        } else if (localBitcoinNode.shouldBeUsed()) {
-            walletConfig.setToOnlyUseLocalhostPeerNode();
-        } else {
-            proposePeersFromBtcNodesRepository(
-                    socks5Proxy,
-                    preferences,
-                    btcNodes,
-                    useAllProvidedNodes,
-                    walletConfig,
-                    params,
-                    socks5DiscoverMode
-                    );
-        }
-    }
-
     public void shutDown() {
         if (walletConfig != null) {
             try {
@@ -387,6 +342,51 @@ public class WalletsSetup {
             }
         }
         return mode;
+    }
+
+    private static void setupSourceOfPeers(
+            WalletConfig walletConfig,
+            Socks5Proxy socks5Proxy,
+            LocalBitcoinNode localBitcoinNode,
+            NetworkParameters params,
+            RegTestHost regTestHost,
+            Preferences preferences,
+            BtcNodes btcNodes,
+            boolean useAllProvidedNodes,
+            int socks5DiscoverMode
+    ) {
+        // This setMinBroadcastConnections call is overidden in
+        // proposePeersFromBtcNodesRepository, but holds for the rest of the branches.
+        walletConfig.setMinBroadcastConnections(1);
+        if (params == RegTestParams.get()) {
+            if (regTestHost == RegTestHost.LOCALHOST) {
+                walletConfig.setToOnlyUseLocalhostPeerNode();
+            } else if (regTestHost == RegTestHost.REMOTE_HOST) {
+                walletConfig.setToOnlyUseRegTestHostPeerNode();
+            } else {
+                proposePeersFromBtcNodesRepository(
+                        socks5Proxy,
+                        preferences,
+                        btcNodes,
+                        useAllProvidedNodes,
+                        walletConfig,
+                        params,
+                        socks5DiscoverMode
+                        );
+            }
+        } else if (localBitcoinNode.shouldBeUsed()) {
+            walletConfig.setToOnlyUseLocalhostPeerNode();
+        } else {
+            proposePeersFromBtcNodesRepository(
+                    socks5Proxy,
+                    preferences,
+                    btcNodes,
+                    useAllProvidedNodes,
+                    walletConfig,
+                    params,
+                    socks5DiscoverMode
+                    );
+        }
     }
 
     private static void proposePeersFromBtcNodesRepository(
