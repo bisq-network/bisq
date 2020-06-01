@@ -29,6 +29,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Utilities;
@@ -63,6 +64,8 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.common.util.Utilities.distinctByKey;
 
 @Slf4j
 public class SignedWitnessService {
@@ -344,6 +347,13 @@ public class SignedWitnessService {
                 .filter(witness -> getSignedWitnessSetByOwnerPubKey(witness.getSignerPubKey(), new Stack<>()).isEmpty())
                 .filter(witness -> includeSignedByArbitrator ||
                         witness.getVerificationMethod() != SignedWitness.VerificationMethod.ARBITRATOR)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<byte[]> getUnsignedSignersPubKeys() {
+        return getRootSignedWitnessSet(false).stream()
+                .map(SignedWitness::getSignerPubKey)
+                .filter(distinctByKey(key -> Utilities.bytesAsHexString(Hash.getRipemd160hash(key))))
                 .collect(Collectors.toSet());
     }
 

@@ -32,6 +32,7 @@ import bisq.common.util.Utilities;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,7 +85,7 @@ public class AccountAgeWitnessUtils {
 
     // Log signers per
     public void logSigners() {
-        log.info("signers per AEW");
+        log.info("Signers per AEW");
         var allSig = signedWitnessService.getSignedWitnessMap();
         allSig.values().forEach(w -> {
                     log.info("AEW {}", Utilities.bytesAsHexString(w.getAccountAgeWitnessHash()));
@@ -95,6 +96,12 @@ public class AccountAgeWitnessUtils {
                     });
                 }
         );
+    }
+
+    public void logUnsignedSignerPubKeys() {
+        log.info("Unsigned signer pubkeys");
+        signedWitnessService.getUnsignedSignersPubKeys().forEach(pubKey ->
+                log.info("PK hash {}",Utilities.bytesAsHexString(Hash.getRipemd160hash(pubKey))));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
