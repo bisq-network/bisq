@@ -36,7 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-public class BtcNetworkConfigTest {
+public class WalletConfigTest {
     private static final int MODE = 0;
 
     private WalletConfig walletConfig;
@@ -48,7 +48,7 @@ public class BtcNetworkConfigTest {
 
     @Test
     public void testProposePeersWhenProxyPresentAndNoPeers() {
-        BtcNetworkConfig.proposePeers(Collections.emptyList(), walletConfig, mock(Socks5Proxy.class), MODE, mock(NetworkParameters.class));
+        WalletConfig.proposePeers(Collections.emptyList(), walletConfig, mock(Socks5Proxy.class), MODE, mock(NetworkParameters.class));
 
         verify(walletConfig, never()).setPeerNodes(any());
         verify(walletConfig).setDiscovery(any(Socks5MultiDiscovery.class));
@@ -56,7 +56,7 @@ public class BtcNetworkConfigTest {
 
     @Test
     public void testProposePeersWhenProxyNotPresentAndNoPeers() {
-        BtcNetworkConfig.proposePeers(Collections.emptyList(), walletConfig, null, MODE, mock(NetworkParameters.class));
+        WalletConfig.proposePeers(Collections.emptyList(), walletConfig, null, MODE, mock(NetworkParameters.class));
 
         verify(walletConfig, never()).setDiscovery(any(Socks5MultiDiscovery.class));
         verify(walletConfig, never()).setPeerNodes(any());
@@ -64,7 +64,7 @@ public class BtcNetworkConfigTest {
 
     @Test
     public void testProposePeersWhenPeersPresent() {
-        BtcNetworkConfig.proposePeers(Collections.singletonList(mock(PeerAddress.class)), walletConfig, null, MODE, mock(NetworkParameters.class));
+        WalletConfig.proposePeers(Collections.singletonList(mock(PeerAddress.class)), walletConfig, null, MODE, mock(NetworkParameters.class));
 
         verify(walletConfig, never()).setDiscovery(any(Socks5MultiDiscovery.class));
         verify(walletConfig).setPeerNodes(any());

@@ -25,6 +25,8 @@ import bisq.core.btc.low.PeerGroup;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 
+import bisq.network.Socks5MultiDiscovery;
+
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.CheckpointManager;
 import org.bitcoinj.core.Context;
@@ -249,6 +251,34 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
+    public static void proposePeers(
+            List<PeerAddress> peers,
+            WalletConfig walletConfig,
+            Socks5Proxy socks5Proxy,
+            int socks5DiscoverMode,
+            NetworkParameters parameters
+    ) {
+        if (!peers.isEmpty()) {
+            log.info("You connect with peerAddresses: {}", peers);
+            PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[peers.size()]);
+            walletConfig.setPeerNodes(peerAddresses);
+        } else if (socks5Proxy != null) {
+            if (log.isWarnEnabled()) {
+                MainNetParams mainNetParams = MainNetParams.get();
+                if (parameters.equals(mainNetParams)) {
+                    log.warn("You use the public Bitcoin network and are exposed to privacy issues " +
+                            "caused by the broken bloom filters. See https://bisq.network/blog/privacy-in-bitsquare/ " +
+                            "for more info. It is recommended to use the provided nodes.");
+                }
+            }
+            // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
+            walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, parameters, socks5DiscoverMode));
+        } else if (Config.baseCurrencyNetwork().isMainnet()) {
+            log.warn("You don't use tor and use the public Bitcoin network and are exposed to privacy issues " +
+                    "caused by the broken bloom filters. See https://bisq.network/blog/privacy-in-bitsquare/ " +
+                    "for more info. It is recommended to use Tor and the provided nodes.");
+        }
+    }
 
     /**
      * If true, the wallet will save itself to disk automatically whenever it changes.

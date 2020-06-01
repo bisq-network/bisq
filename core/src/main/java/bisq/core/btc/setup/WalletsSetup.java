@@ -408,7 +408,7 @@ public class WalletsSetup {
         boolean isUseClearNodesWithProxies = (useAllProvidedNodes || btcNodesSetupPreferences.isUseCustomNodes());
         List<PeerAddress> peers = repository.getPeerAddresses(socks5Proxy, isUseClearNodesWithProxies);
 
-        BtcNetworkConfig.proposePeers(peers, walletConfig, socks5Proxy, socks5DiscoverMode, params);
+        WalletConfig.proposePeers(peers, walletConfig, socks5Proxy, socks5DiscoverMode, params);
     }
 
 
