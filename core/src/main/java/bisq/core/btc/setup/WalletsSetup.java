@@ -311,7 +311,7 @@ public class WalletsSetup {
             int socks5DiscoverMode
     ) {
         // This setMinBroadcastConnections call is overidden in
-        // configPeerNodes, but holds for the rest of the branches.
+        // proposePeersFromBtcNodesRepository, but holds for the rest of the branches.
         walletConfig.setMinBroadcastConnections(1);
         if (params == RegTestParams.get()) {
             if (regTestHost == RegTestHost.LOCALHOST) {
@@ -320,7 +320,7 @@ public class WalletsSetup {
                 walletConfig.setToOnlyUseRegTestHostPeerNode();
             } else {
                 try {
-                    configPeerNodes(
+                    proposePeersFromBtcNodesRepository(
                             socks5Proxy,
                             preferences,
                             btcNodes,
@@ -340,7 +340,7 @@ public class WalletsSetup {
             walletConfig.setToOnlyUseLocalhostPeerNode();
         } else {
             try {
-                configPeerNodes(
+                proposePeersFromBtcNodesRepository(
                         socks5Proxy,
                         preferences,
                         btcNodes,
@@ -404,7 +404,7 @@ public class WalletsSetup {
         return mode;
     }
 
-    private static void configPeerNodes(
+    private static void proposePeersFromBtcNodesRepository(
             @Nullable Socks5Proxy socks5Proxy,
             Preferences preferences,
             BtcNodes btcNodes,
@@ -412,7 +412,7 @@ public class WalletsSetup {
             WalletConfig walletConfig,
             NetworkParameters params,
             int socks5DiscoverMode
-            ) {
+    ) {
         BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences);
 
         List<BtcNode> nodes = btcNodesSetupPreferences.selectPreferredNodes(btcNodes);
