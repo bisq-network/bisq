@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.nodes;
+package bisq.core.btc.setup;
 
 import bisq.core.btc.setup.WalletConfig;
+import bisq.core.btc.setup.WalletsSetup;
 
 import bisq.network.Socks5MultiDiscovery;
 
@@ -36,7 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-public class WalletConfigTest {
+public class WalletsSetupTest {
     private static final int MODE = 0;
 
     private WalletConfig walletConfig;
@@ -48,7 +49,7 @@ public class WalletConfigTest {
 
     @Test
     public void testProposePeersWhenProxyPresentAndNoPeers() {
-        WalletConfig.proposePeers(Collections.emptyList(), walletConfig, mock(Socks5Proxy.class), MODE, mock(NetworkParameters.class));
+        WalletsSetup.proposePeers(Collections.emptyList(), walletConfig, mock(Socks5Proxy.class), MODE, mock(NetworkParameters.class));
 
         verify(walletConfig, never()).setPeerNodes(any());
         verify(walletConfig).setDiscovery(any(Socks5MultiDiscovery.class));
@@ -56,7 +57,7 @@ public class WalletConfigTest {
 
     @Test
     public void testProposePeersWhenProxyNotPresentAndNoPeers() {
-        WalletConfig.proposePeers(Collections.emptyList(), walletConfig, null, MODE, mock(NetworkParameters.class));
+        WalletsSetup.proposePeers(Collections.emptyList(), walletConfig, null, MODE, mock(NetworkParameters.class));
 
         verify(walletConfig, never()).setDiscovery(any(Socks5MultiDiscovery.class));
         verify(walletConfig, never()).setPeerNodes(any());
@@ -64,7 +65,7 @@ public class WalletConfigTest {
 
     @Test
     public void testProposePeersWhenPeersPresent() {
-        WalletConfig.proposePeers(Collections.singletonList(mock(PeerAddress.class)), walletConfig, null, MODE, mock(NetworkParameters.class));
+        WalletsSetup.proposePeers(Collections.singletonList(mock(PeerAddress.class)), walletConfig, null, MODE, mock(NetworkParameters.class));
 
         verify(walletConfig, never()).setDiscovery(any(Socks5MultiDiscovery.class));
         verify(walletConfig).setPeerNodes(any());

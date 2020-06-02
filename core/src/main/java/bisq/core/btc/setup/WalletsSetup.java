@@ -22,7 +22,6 @@ import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
-import bisq.core.btc.nodes.BtcNetworkConfig;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.nodes.BtcNodes.BtcNode;
 import bisq.core.btc.nodes.BtcNodesRepository;
@@ -48,6 +47,7 @@ import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.RejectMessage;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -408,9 +408,38 @@ public class WalletsSetup {
         boolean isUseClearNodesWithProxies = (useAllProvidedNodes || btcNodesSetupPreferences.isUseCustomNodes());
         List<PeerAddress> peers = repository.getPeerAddresses(socks5Proxy, isUseClearNodesWithProxies);
 
-        WalletConfig.proposePeers(peers, walletConfig, socks5Proxy, socks5DiscoverMode, params);
+        proposePeers(peers, walletConfig, socks5Proxy, socks5DiscoverMode, params);
     }
 
+    @VisibleForTesting
+    static void proposePeers(
+            List<PeerAddress> peers,
+            WalletConfig walletConfig,
+            Socks5Proxy socks5Proxy,
+            int socks5DiscoverMode,
+            NetworkParameters parameters
+    ) {
+        if (!peers.isEmpty()) {
+            log.info("You connect with peerAddresses: {}", peers);
+            PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[peers.size()]);
+            walletConfig.setPeerNodes(peerAddresses);
+        } else if (socks5Proxy != null) {
+            if (log.isWarnEnabled()) {
+                MainNetParams mainNetParams = MainNetParams.get();
+                if (parameters.equals(mainNetParams)) {
+                    log.warn("You use the public Bitcoin network and are exposed to privacy issues " +
+                            "caused by the broken bloom filters. See https://bisq.network/blog/privacy-in-bitsquare/ " +
+                            "for more info. It is recommended to use the provided nodes.");
+                }
+            }
+            // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
+            walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, parameters, socks5DiscoverMode));
+        } else if (Config.baseCurrencyNetwork().isMainnet()) {
+            log.warn("You don't use tor and use the public Bitcoin network and are exposed to privacy issues " +
+                    "caused by the broken bloom filters. See https://bisq.network/blog/privacy-in-bitsquare/ " +
+                    "for more info. It is recommended to use Tor and the provided nodes.");
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Backup
