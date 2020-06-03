@@ -32,7 +32,6 @@ import bisq.common.util.Utilities;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,8 +59,8 @@ public class AccountAgeWitnessUtils {
         log.info("Orphaned signed account age witnesses:");
         orphanSigners.forEach(w -> {
             log.info("{}: Signer PKH: {} Owner PKH: {} time: {}", w.getVerificationMethod().toString(),
-                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getSignerPubKey())).substring(0,7),
-                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getWitnessOwnerPubKey())).substring(0,7),
+                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getSignerPubKey())).substring(0, 7),
+                    Utilities.bytesAsHexString(Hash.getRipemd160hash(w.getWitnessOwnerPubKey())).substring(0, 7),
                     w.getDate());
             logChild(w, "  ", new Stack<>());
         });
@@ -100,8 +99,10 @@ public class AccountAgeWitnessUtils {
 
     public void logUnsignedSignerPubKeys() {
         log.info("Unsigned signer pubkeys");
-        signedWitnessService.getUnsignedSignersPubKeys().forEach(pubKey ->
-                log.info("PK hash {}",Utilities.bytesAsHexString(Hash.getRipemd160hash(pubKey))));
+        signedWitnessService.getUnsignedSignerPubKeys().forEach(signedWitness ->
+                log.info("PK hash {} date {}",
+                        Utilities.bytesAsHexString(Hash.getRipemd160hash(signedWitness.getSignerPubKey())),
+                        signedWitness.getDate()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

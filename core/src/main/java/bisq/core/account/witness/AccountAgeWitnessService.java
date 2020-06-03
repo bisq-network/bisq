@@ -17,6 +17,7 @@
 
 package bisq.core.account.witness;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
@@ -648,6 +649,12 @@ public class AccountAgeWitnessService {
                 time);
     }
 
+    public String arbitratorSignOrphanPubKey(ECKey key,
+                                             byte[] peersPubKey,
+                                             long childSignTime) {
+        return signedWitnessService.signTraderPubKey(key, peersPubKey, childSignTime);
+    }
+
     public void arbitratorSignAccountAgeWitness(AccountAgeWitness accountAgeWitness,
                                                 ECKey key,
                                                 byte[] tradersPubKey,
@@ -805,5 +812,9 @@ public class AccountAgeWitnessService {
                 .map(signedWitness -> getWitnessByHash(signedWitness.getAccountAgeWitnessHash()).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+    }
+
+    public Set<SignedWitness> getUnsignedSignerPubKeys() {
+        return signedWitnessService.getUnsignedSignerPubKeys();
     }
 }

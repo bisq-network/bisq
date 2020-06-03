@@ -42,10 +42,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
-import javax.crypto.Cipher;
-
-import java.security.NoSuchAlgorithmException;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -462,8 +458,7 @@ public class Utilities {
     }
 
     // Helper to filter unique elements by key
-    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor)
-    {
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }

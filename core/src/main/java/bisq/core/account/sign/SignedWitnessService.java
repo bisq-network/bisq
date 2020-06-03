@@ -65,8 +65,6 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.common.util.Utilities.distinctByKey;
-
 @Slf4j
 public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
@@ -225,6 +223,15 @@ public class SignedWitnessService {
     }
 
     // Arbitrators sign with EC key
+    public String signTraderPubKey(ECKey key,
+                                   byte[] peersPubKey,
+                                   long childSignTime) {
+        var time = childSignTime - SIGNER_AGE - 1;
+        var dummyAccountAgeWitness = new AccountAgeWitness(Hash.getRipemd160hash(peersPubKey), time);
+        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, dummyAccountAgeWitness, key, peersPubKey, time);
+    }
+
+    // Arbitrators sign with EC key
     private String signAccountAgeWitness(Coin tradeAmount,
                                          AccountAgeWitness accountAgeWitness,
                                          ECKey key,
@@ -350,11 +357,14 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
-    public Set<byte[]> getUnsignedSignersPubKeys() {
-        return getRootSignedWitnessSet(false).stream()
-                .map(SignedWitness::getSignerPubKey)
-                .filter(distinctByKey(key -> Utilities.bytesAsHexString(Hash.getRipemd160hash(key))))
-                .collect(Collectors.toSet());
+    // Find first (in time) SignedWitness per missing signer
+    public Set<SignedWitness> getUnsignedSignerPubKeys() {
+        var oldestUnsignedSigners = new HashMap<P2PDataStorage.ByteArray, SignedWitness>();
+        getRootSignedWitnessSet(false).forEach(signedWitness ->
+                oldestUnsignedSigners.compute(new P2PDataStorage.ByteArray(signedWitness.getSignerPubKey()),
+                (key, oldValue) -> oldValue == null ? signedWitness :
+                        oldValue.getDate() > signedWitness.getDate() ? signedWitness : oldValue));
+        return new HashSet<>(oldestUnsignedSigners.values());
     }
 
     // We go one level up by using the signer Key to lookup for SignedWitness objects which contain the signerKey as
