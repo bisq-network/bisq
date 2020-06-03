@@ -58,6 +58,8 @@ class BtcNodeConverter {
         try {
             // OnionCatConverter.onionHostToInetAddress converts onion to ipv6 representation
             // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
+            // TODO if inetAddress is not used, should wallet persistence be changed
+            // to allow it not being passed?
             InetAddress inetAddress = facade.onionHostToInetAddress(onionAddress);
             PeerAddress result = new PeerAddress(onionAddress, node.getPort());
             result.setAddr(inetAddress);

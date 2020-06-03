@@ -104,6 +104,7 @@ final public class PeerGroup extends PeerGroupProxy {
         return blockingClientManager;
     }
 
+    // TODO rename to setPeers...
     public void setCustomPeersToBeUsedExclusively(
             PeerAddress[] peerAddresses,
             int numConnectionsForBtc
