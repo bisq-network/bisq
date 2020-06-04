@@ -42,6 +42,8 @@ import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
     private final CoinFormatter btcFormatter;
@@ -116,6 +118,17 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
             return "";
 
         return CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode());
+    }
+
+    String getPaymentMethod(OpenOfferListItem item) {
+        String result = "";
+        if (item != null) {
+            Offer offer = item.getOffer();
+            checkNotNull(offer);
+            checkNotNull(offer.getPaymentMethod());
+            result = offer.getPaymentMethodNameWithCountryCode();
+        }
+        return result;
     }
 
     String getDate(OpenOfferListItem item) {
