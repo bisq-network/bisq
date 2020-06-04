@@ -190,8 +190,8 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         preImageTextField.setValidator(new InputValidator());
 
         updateList();
-        GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 2, 4);
-        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 100);
+        GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 4, 6);
+        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 10);
         updateButtonState();
     }
 
@@ -265,13 +265,12 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                 .map(myProofOfBurn -> new MyProofOfBurnListItem(myProofOfBurn, proofOfBurnService, bsqFormatter))
                 .sorted(Comparator.comparing(MyProofOfBurnListItem::getDate).reversed())
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 2, 4);
-
+        GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 4, 6);
 
         allItemsObservableList.setAll(proofOfBurnService.getProofOfBurnTxList().stream()
                 .map(tx -> new ProofOfBurnListItem(tx, proofOfBurnService, bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 100);
+        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 10);
     }
 
     private void updateButtonState() {
