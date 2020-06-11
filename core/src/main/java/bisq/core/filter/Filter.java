@@ -250,8 +250,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 CollectionUtils.isEmpty(proto.getMediatorsList()) ? null : new ArrayList<>(proto.getMediatorsList()),
                 CollectionUtils.isEmpty(proto.getRefundAgentsList()) ? null : new ArrayList<>(proto.getRefundAgentsList()),
                 CollectionUtils.isEmpty(proto.getBannedSignerPubKeysList()) ?
-                        null : new ArrayList<>(proto.getBannedSignerPubKeysList()));
-                CollectionUtils.isEmpty(proto.getBtcFeeReceiverAddressesList()) ? null : new ArrayList<>(proto.getBtcFeeReceiverAddressesList()));
+                        null : new ArrayList<>(proto.getBannedSignerPubKeysList()),
+                CollectionUtils.isEmpty(proto.getBtcFeeReceiverAddressesList()) ? null :
+                        new ArrayList<>(proto.getBtcFeeReceiverAddressesList()));
     }
 
 

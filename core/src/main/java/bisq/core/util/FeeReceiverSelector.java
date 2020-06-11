@@ -19,10 +19,15 @@ package bisq.core.util;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.param.Param;
-import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 
+import org.bitcoinj.core.Coin;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,18 +35,44 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FeeReceiverSelector {
     public static String getAddress(DaoFacade daoFacade, FilterManager filterManager) {
-        // We keep default value as fallback in case no filter value is available or user has old version.
-        String feeReceiver = daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS);
+        return getAddress(daoFacade, filterManager, new Random());
+    }
 
-        Filter filter = filterManager.getFilter();
-        if (filter != null) {
-            List<String> feeReceivers = filter.getBtcFeeReceiverAddresses();
-            if (feeReceivers != null && !feeReceivers.isEmpty()) {
-                int index = new Random().nextInt(feeReceivers.size());
-                feeReceiver = feeReceivers.get(index);
+    @VisibleForTesting
+    static String getAddress(DaoFacade daoFacade, FilterManager filterManager, Random rnd) {
+        List<String> feeReceivers = Optional.ofNullable(filterManager.getFilter())
+                .flatMap(f -> Optional.ofNullable(f.getBtcFeeReceiverAddresses()))
+                .orElse(List.of());
+
+        List<Long> amountList = new ArrayList<>();
+        List<String> receiverAddressList = new ArrayList<>();
+
+        feeReceivers.forEach(e -> {
+            try {
+                String[] tokens = e.split("#");
+                amountList.add(Coin.parseCoin(tokens[1]).longValue()); // total amount the victim should receive
+                receiverAddressList.add(tokens[0]);                    // victim's receiver address
+            } catch (RuntimeException ignore) {
+                // If input format is not as expected we ignore entry
             }
+        });
+
+        if (!amountList.isEmpty()) {
+            return receiverAddressList.get(weightedSelection(amountList, rnd));
         }
 
-        return feeReceiver;
+        // We keep default value as fallback in case no filter value is available or user has old version.
+        return daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS);
+    }
+
+    @VisibleForTesting
+    static int weightedSelection(List<Long> weights, Random rnd) {
+        long sum = weights.stream().mapToLong(n -> n).sum();
+        long target = rnd.longs(0, sum).findFirst().orElseThrow();
+        int i;
+        for (i = 0; i < weights.size() && target >= 0; i++) {
+            target -= weights.get(i);
+        }
+        return i - 1;
     }
 }
