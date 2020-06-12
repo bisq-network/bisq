@@ -141,6 +141,9 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
                 history.put(version, copyAndSplit(version, postFix));
             }
         });
+
+        // load our live data store again - ie to make sure our storage is indeed our live store
+        store = readStore(getFileName());
     }
 
     /**
