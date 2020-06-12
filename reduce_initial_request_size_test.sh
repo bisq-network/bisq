@@ -1,6 +1,6 @@
 #!/bin/sh
 
-LAST_RELEASE='1.3.4'
+LAST_RELEASE='1.3.5'
 PR='reduce_initial_request_size'
 
 install()
