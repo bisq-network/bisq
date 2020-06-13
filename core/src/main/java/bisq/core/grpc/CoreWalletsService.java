@@ -1,21 +1,33 @@
 package bisq.core.grpc;
 
 import bisq.core.btc.Balances;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
+import java.text.DecimalFormat;
+
+import java.math.BigDecimal;
+
+import java.util.List;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
@@ -23,6 +35,7 @@ class CoreWalletsService {
 
     private final Balances balances;
     private final WalletsManager walletsManager;
+    private final BtcWalletService btcWalletService;
 
     @Nullable
     private TimerTask lockTask;
@@ -30,10 +43,19 @@ class CoreWalletsService {
     @Nullable
     private KeyParameter tempAesKey;
 
+    private final BigDecimal satoshiDivisor = new BigDecimal(100000000);
+    private final DecimalFormat btcFormat = new DecimalFormat("###,##0.00000000");
+    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+    private final Function<Long, String> formatSatoshis = (sats) ->
+            btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
+
     @Inject
-    public CoreWalletsService(Balances balances, WalletsManager walletsManager) {
+    public CoreWalletsService(Balances balances,
+                              WalletsManager walletsManager,
+                              BtcWalletService btcWalletService) {
         this.balances = balances;
         this.walletsManager = walletsManager;
+        this.btcWalletService = btcWalletService;
     }
 
     public long getAvailableBalance() {
@@ -48,6 +70,64 @@ class CoreWalletsService {
             throw new IllegalStateException("balance is not yet available");
 
         return balance.getValue();
+    }
+
+    public long getAddressBalance(String addressString) {
+        Address address = getAddressEntry(addressString).getAddress();
+        return btcWalletService.getBalanceForAddress(address).value;
+    }
+
+    public String getFundingAddresses() {
+        if (!walletsManager.areWalletsAvailable())
+            throw new IllegalStateException("wallet is not yet available");
+
+        if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
+            throw new IllegalStateException("wallet is locked");
+
+        // TODO populate a List<Tuple3<String, Long, Integer>> to avoid repeated calls to
+        //  fundingAddress.getAddressString() and getAddressBalance(addressString)
+        List<AddressEntry> fundingAddresses = btcWalletService.getAvailableAddressEntries();
+
+        // Create a new address with a zero balance if no addresses exist.
+        if (fundingAddresses.size() == 0) {
+            btcWalletService.getFreshAddressEntry();
+            fundingAddresses = btcWalletService.getAvailableAddressEntries();
+        }
+
+        // Check to see if at least one of the existing addresses has a 0 balance.
+        boolean hasZeroBalance = false;
+        for (AddressEntry fundingAddress : fundingAddresses) {
+            if (getAddressBalance(fundingAddress.getAddressString()) == 0) {
+                hasZeroBalance = true;
+                break;
+            }
+        }
+        if (!hasZeroBalance) {
+            // None of the existing addresses have a zero balance, create a new one.
+            btcWalletService.getFreshAddressEntry();
+            fundingAddresses = btcWalletService.getAvailableAddressEntries();
+        }
+
+        StringBuilder addressInfoBuilder = new StringBuilder();
+        fundingAddresses.forEach(a -> {
+            var addressString = a.getAddressString();
+            var satoshiBalance = getAddressBalance(addressString);
+            var btcBalance = formatSatoshis.apply(satoshiBalance);
+            var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
+            String addressInfo = "" + addressString
+                    + " balance: " + btcBalance
+                    + ((satoshiBalance > 0) ? (" confirmations: " + numConfirmations) : "")
+                    + "\n";
+            addressInfoBuilder.append(addressInfo);
+        });
+
+        return addressInfoBuilder.toString().trim();
+    }
+
+    public int getNumConfirmationsForMostRecentTransaction(String addressString) {
+        Address address = getAddressEntry(addressString).getAddress();
+        TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(address);
+        return confidence == null ? 0 : confidence.getDepthInBlocks();
     }
 
     public void setWalletPassword(String password, String newPassword) {
@@ -155,5 +235,17 @@ class CoreWalletsService {
         if (keyCrypterScrypt == null)
             throw new IllegalStateException("wallet encrypter is not available");
         return keyCrypterScrypt;
+    }
+
+    private AddressEntry getAddressEntry(String addressString) {
+        Optional<AddressEntry> addressEntry =
+                btcWalletService.getAddressEntryListAsImmutableList().stream()
+                        .filter(e -> addressString.equals(e.getAddressString()))
+                        .findFirst();
+
+        if (!addressEntry.isPresent())
+            throw new IllegalStateException(format("address %s not found in wallet", addressString));
+
+        return addressEntry.get();
     }
 }

@@ -18,6 +18,7 @@
 package bisq.cli;
 
 import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
@@ -58,6 +59,7 @@ public class CliMain {
     private enum Method {
         getversion,
         getbalance,
+        getfundingaddresses,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -152,6 +154,12 @@ public class CliMain {
                     out.println(btcBalance);
                     return;
                 }
+                case getfundingaddresses: {
+                    var request = GetFundingAddressesRequest.newBuilder().build();
+                    var reply = walletService.getFundingAddresses(request);
+                    out.println(reply.getFundingAddressesInfo());
+                    return;
+                }
                 case lockwallet: {
                     var request = LockWalletRequest.newBuilder().build();
                     walletService.lockWallet(request);
@@ -201,7 +209,7 @@ public class CliMain {
                 }
                 default: {
                     throw new RuntimeException(format("unhandled method '%s'", method));
-               }
+                }
             }
         } catch (StatusRuntimeException ex) {
             // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message

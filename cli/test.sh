@@ -147,6 +147,11 @@
   [ "$output" = "0.00000000" ]
 }
 
+@test "test getfundingaddresses" {
+  run ./bisq-cli --password=xyz getfundingaddresses
+  [ "$status" -eq 0 ]
+}
+
 @test "test help displayed on stderr if no options or arguments" {
   run ./bisq-cli
   [ "$status" -eq 1 ]
