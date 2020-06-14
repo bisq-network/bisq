@@ -230,6 +230,7 @@ public class CliMain {
             stream.format("%-19s%-30s%s%n", "------", "------", "------------");
             stream.format("%-19s%-30s%s%n", "getversion", "", "Get server version");
             stream.format("%-19s%-30s%s%n", "getbalance", "", "Get server wallet balance");
+            stream.format("%-19s%-30s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format("%-19s%-30s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
             stream.format("%-19s%-30s%s%n", "unlockwallet", "password timeout",
                     "Store wallet password in memory for timeout seconds");

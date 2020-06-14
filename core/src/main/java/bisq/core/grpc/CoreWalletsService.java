@@ -5,6 +5,8 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 
+import bisq.common.util.Tuple3;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -22,6 +24,7 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,39 +87,43 @@ class CoreWalletsService {
         if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
             throw new IllegalStateException("wallet is locked");
 
-        // TODO populate a List<Tuple3<String, Long, Integer>> to avoid repeated calls to
-        //  fundingAddress.getAddressString() and getAddressBalance(addressString)
-        List<AddressEntry> fundingAddresses = btcWalletService.getAvailableAddressEntries();
-
-        // Create a new address with a zero balance if no addresses exist.
-        if (fundingAddresses.size() == 0) {
+        // Create a new funding address if none exists.
+        if (btcWalletService.getAvailableAddressEntries().size() == 0)
             btcWalletService.getFreshAddressEntry();
-            fundingAddresses = btcWalletService.getAvailableAddressEntries();
-        }
 
-        // Check to see if at least one of the existing addresses has a 0 balance.
+        // Populate a list of Tuple3<AddressString, Balance, NumConfirmations>
+        List<Tuple3<String, Long, Integer>> addrBalanceConfirms =
+                btcWalletService.getAvailableAddressEntries().stream()
+                        .map(a -> new Tuple3<>(a.getAddressString(),
+                                getAddressBalance(a.getAddressString()),
+                                getNumConfirmationsForMostRecentTransaction(a.getAddressString())))
+                        .collect(Collectors.toList());
+
+        // Check to see if at least one of the existing addresses has a zero balance.
         boolean hasZeroBalance = false;
-        for (AddressEntry fundingAddress : fundingAddresses) {
-            if (getAddressBalance(fundingAddress.getAddressString()) == 0) {
+        for (Tuple3<String, Long, Integer> abc : addrBalanceConfirms) {
+            if (abc.second == 0) {
                 hasZeroBalance = true;
                 break;
             }
         }
         if (!hasZeroBalance) {
-            // None of the existing addresses have a zero balance, create a new one.
-            btcWalletService.getFreshAddressEntry();
-            fundingAddresses = btcWalletService.getAvailableAddressEntries();
+            // None of the existing addresses have a zero balance, create a new address.
+            addrBalanceConfirms.add(
+                    new Tuple3<>(btcWalletService.getFreshAddressEntry().getAddressString(),
+                            0L,
+                            0));
         }
 
+        // Iterate the list of Tuple3<AddressString, Balance, NumConfirmations> objects
+        // and build the formatted info string.
         StringBuilder addressInfoBuilder = new StringBuilder();
-        fundingAddresses.forEach(a -> {
-            var addressString = a.getAddressString();
-            var satoshiBalance = getAddressBalance(addressString);
-            var btcBalance = formatSatoshis.apply(satoshiBalance);
-            var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
-            String addressInfo = "" + addressString
-                    + " balance: " + btcBalance
-                    + ((satoshiBalance > 0) ? (" confirmations: " + numConfirmations) : "")
+        addrBalanceConfirms.forEach(a -> {
+            var btcBalance = formatSatoshis.apply(a.second);
+            var numConfirmations = getNumConfirmationsForMostRecentTransaction(a.first);
+            String addressInfo = "" + a.first
+                    + "  balance: " + format("%13s", btcBalance)
+                    + ((a.second > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "")
                     + "\n";
             addressInfoBuilder.append(addressInfo);
         });
