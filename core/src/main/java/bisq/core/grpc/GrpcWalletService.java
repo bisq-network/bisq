@@ -1,5 +1,7 @@
 package bisq.core.grpc;
 
+import bisq.proto.grpc.GetAddressBalanceReply;
+import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceReply;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesReply;
@@ -42,7 +44,22 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
             throw ex;
         }
     }
-    
+
+    @Override
+    public void getAddressBalance(GetAddressBalanceRequest req,
+                                  StreamObserver<GetAddressBalanceReply> responseObserver) {
+        try {
+            String result = walletsService.getAddressBalanceInfo(req.getAddress());
+            var reply = GetAddressBalanceReply.newBuilder().setAddressBalanceInfo(result).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
     @Override
     public void getFundingAddresses(GetFundingAddressesRequest req,
                                     StreamObserver<GetFundingAddressesReply> responseObserver) {

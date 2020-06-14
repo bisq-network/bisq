@@ -152,6 +152,20 @@
   [ "$status" -eq 0 ]
 }
 
+@test "test getaddressbalance missing address argument" {
+  run ./bisq-cli --password=xyz getaddressbalance
+  [ "$status" -eq 1 ]
+  echo "actual output:  $output" >&2
+  [ "$output" = "Error: no address specified" ]
+}
+
+@test "test getaddressbalance bogus address argument" {
+  run ./bisq-cli --password=xyz getaddressbalance bogus
+  [ "$status" -eq 1 ]
+  echo "actual output:  $output" >&2
+  [ "$output" = "Error: address bogus not found in wallet" ]
+}
+
 @test "test help displayed on stderr if no options or arguments" {
   run ./bisq-cli
   [ "$status" -eq 1 ]

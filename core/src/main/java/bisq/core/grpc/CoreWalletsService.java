@@ -80,6 +80,15 @@ class CoreWalletsService {
         return btcWalletService.getBalanceForAddress(address).value;
     }
 
+    public String getAddressBalanceInfo(String addressString) {
+        var satoshiBalance = getAddressBalance(addressString);
+        var btcBalance = formatSatoshis.apply(satoshiBalance);
+        var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
+        return addressString
+                + "  balance: " + format("%13s", btcBalance)
+                + ((numConfirmations > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
+    }
+
     public String getFundingAddresses() {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");

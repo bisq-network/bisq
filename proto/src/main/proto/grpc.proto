@@ -119,6 +119,8 @@ message PlaceOfferReply {
 service Wallet {
     rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
     }
+    rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
+    }
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
     }
     rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
@@ -136,6 +138,14 @@ message GetBalanceRequest {
 
 message GetBalanceReply {
     uint64 balance = 1;
+}
+
+message GetAddressBalanceRequest {
+    string address = 1;
+}
+
+message GetAddressBalanceReply {
+    string addressBalanceInfo = 1;
 }
 
 message GetFundingAddressesRequest {

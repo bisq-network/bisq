@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetVersionGrpc;
@@ -59,6 +60,7 @@ public class CliMain {
     private enum Method {
         getversion,
         getbalance,
+        getaddressbalance,
         getfundingaddresses,
         lockwallet,
         unlockwallet,
@@ -154,6 +156,16 @@ public class CliMain {
                     out.println(btcBalance);
                     return;
                 }
+                case getaddressbalance: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no address specified");
+
+                    var request = GetAddressBalanceRequest.newBuilder()
+                            .setAddress(nonOptionArgs.get(1)).build();
+                    var reply = walletService.getAddressBalance(request);
+                    out.println(reply.getAddressBalanceInfo());
+                    return;
+                }
                 case getfundingaddresses: {
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletService.getFundingAddresses(request);
@@ -230,6 +242,7 @@ public class CliMain {
             stream.format("%-19s%-30s%s%n", "------", "------", "------------");
             stream.format("%-19s%-30s%s%n", "getversion", "", "Get server version");
             stream.format("%-19s%-30s%s%n", "getbalance", "", "Get server wallet balance");
+            stream.format("%-19s%-30s%s%n", "getaddressbalance", "", "Get server wallet address balance");
             stream.format("%-19s%-30s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format("%-19s%-30s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
             stream.format("%-19s%-30s%s%n", "unlockwallet", "password timeout",
