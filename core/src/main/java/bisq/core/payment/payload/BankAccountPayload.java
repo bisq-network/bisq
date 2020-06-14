@@ -179,4 +179,9 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
 
         return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
     }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
+    }
 }
