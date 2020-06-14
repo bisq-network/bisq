@@ -267,32 +267,39 @@ public class CurrencyUtil {
         return currencies;
     }
 
-    //https://www.revolut.com/pa/faq#can-i-hold-multiple-currencies
+    // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
     public static List<TradeCurrency> getAllRevolutCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("USD"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("ILS"),
                 new FiatCurrency("AED"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("BGN"),
                 new FiatCurrency("CAD"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("CZK"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("HRK"),
                 new FiatCurrency("HUF"),
-                new FiatCurrency("INR"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("ISK"),
                 new FiatCurrency("JPY"),
                 new FiatCurrency("MAD"),
+                new FiatCurrency("MXN"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("PLN"),
                 new FiatCurrency("QAR"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("RSD"),
+                new FiatCurrency("RUB"),
+                new FiatCurrency("SAR"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("SGD"),
                 new FiatCurrency("THB"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("USD"),
                 new FiatCurrency("ZAR")
         ));
 
