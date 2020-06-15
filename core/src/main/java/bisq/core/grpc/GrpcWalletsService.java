@@ -14,7 +14,7 @@ import bisq.proto.grpc.SetWalletPasswordReply;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
-import bisq.proto.grpc.WalletGrpc;
+import bisq.proto.grpc.WalletsGrpc;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -22,19 +22,19 @@ import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
-class GrpcWalletService extends WalletGrpc.WalletImplBase {
+class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
 
-    private final CoreWalletsService walletsService;
+    private final CoreApi coreApi;
 
     @Inject
-    public GrpcWalletService(CoreWalletsService walletsService) {
-        this.walletsService = walletsService;
+    public GrpcWalletsService(CoreApi coreApi) {
+        this.coreApi = coreApi;
     }
 
     @Override
     public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
         try {
-            long result = walletsService.getAvailableBalance();
+            long result = coreApi.getAvailableBalance();
             var reply = GetBalanceReply.newBuilder().setBalance(result).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -49,7 +49,7 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     public void getAddressBalance(GetAddressBalanceRequest req,
                                   StreamObserver<GetAddressBalanceReply> responseObserver) {
         try {
-            String result = walletsService.getAddressBalanceInfo(req.getAddress());
+            String result = coreApi.getAddressBalanceInfo(req.getAddress());
             var reply = GetAddressBalanceReply.newBuilder().setAddressBalanceInfo(result).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -64,7 +64,7 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     public void getFundingAddresses(GetFundingAddressesRequest req,
                                     StreamObserver<GetFundingAddressesReply> responseObserver) {
         try {
-            String result = walletsService.getFundingAddresses();
+            String result = coreApi.getFundingAddresses();
             var reply = GetFundingAddressesReply.newBuilder().setFundingAddressesInfo(result).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -79,7 +79,7 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     public void setWalletPassword(SetWalletPasswordRequest req,
                                   StreamObserver<SetWalletPasswordReply> responseObserver) {
         try {
-            walletsService.setWalletPassword(req.getPassword(), req.getNewPassword());
+            coreApi.setWalletPassword(req.getPassword(), req.getNewPassword());
             var reply = SetWalletPasswordReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -94,7 +94,7 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     public void removeWalletPassword(RemoveWalletPasswordRequest req,
                                      StreamObserver<RemoveWalletPasswordReply> responseObserver) {
         try {
-            walletsService.removeWalletPassword(req.getPassword());
+            coreApi.removeWalletPassword(req.getPassword());
             var reply = RemoveWalletPasswordReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -109,7 +109,7 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     public void lockWallet(LockWalletRequest req,
                            StreamObserver<LockWalletReply> responseObserver) {
         try {
-            walletsService.lockWallet();
+            coreApi.lockWallet();
             var reply = LockWalletReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -124,7 +124,7 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
     public void unlockWallet(UnlockWalletRequest req,
                              StreamObserver<UnlockWalletReply> responseObserver) {
         try {
-            walletsService.unlockWallet(req.getPassword(), req.getTimeout());
+            coreApi.unlockWallet(req.getPassword(), req.getTimeout());
             var reply = UnlockWalletReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

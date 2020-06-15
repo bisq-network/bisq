@@ -28,7 +28,7 @@ import bisq.proto.grpc.PaymentAccountsGrpc;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
-import bisq.proto.grpc.WalletGrpc;
+import bisq.proto.grpc.WalletsGrpc;
 
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -139,7 +139,7 @@ public class CliMain {
 
         var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         var paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var walletService = WalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        var walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
 
         try {
             switch (method) {
@@ -151,7 +151,7 @@ public class CliMain {
                 }
                 case getbalance: {
                     var request = GetBalanceRequest.newBuilder().build();
-                    var reply = walletService.getBalance(request);
+                    var reply = walletsService.getBalance(request);
                     var satoshiBalance = reply.getBalance();
                     var satoshiDivisor = new BigDecimal(100000000);
                     var btcFormat = new DecimalFormat("###,##0.00000000");
@@ -166,13 +166,13 @@ public class CliMain {
 
                     var request = GetAddressBalanceRequest.newBuilder()
                             .setAddress(nonOptionArgs.get(1)).build();
-                    var reply = walletService.getAddressBalance(request);
+                    var reply = walletsService.getAddressBalance(request);
                     out.println(reply.getAddressBalanceInfo());
                     return;
                 }
                 case getfundingaddresses: {
                     var request = GetFundingAddressesRequest.newBuilder().build();
-                    var reply = walletService.getFundingAddresses(request);
+                    var reply = walletsService.getFundingAddresses(request);
                     out.println(reply.getFundingAddressesInfo());
                     return;
                 }
@@ -202,7 +202,7 @@ public class CliMain {
                 }
                 case lockwallet: {
                     var request = LockWalletRequest.newBuilder().build();
-                    walletService.lockWallet(request);
+                    walletsService.lockWallet(request);
                     out.println("wallet locked");
                     return;
                 }
@@ -222,7 +222,7 @@ public class CliMain {
                     var request = UnlockWalletRequest.newBuilder()
                             .setPassword(nonOptionArgs.get(1))
                             .setTimeout(timeout).build();
-                    walletService.unlockWallet(request);
+                    walletsService.unlockWallet(request);
                     out.println("wallet unlocked");
                     return;
                 }
@@ -231,7 +231,7 @@ public class CliMain {
                         throw new IllegalArgumentException("no password specified");
 
                     var request = RemoveWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
-                    walletService.removeWalletPassword(request);
+                    walletsService.removeWalletPassword(request);
                     out.println("wallet decrypted");
                     return;
                 }
@@ -243,7 +243,7 @@ public class CliMain {
                     var hasNewPassword = nonOptionArgs.size() == 3;
                     if (hasNewPassword)
                         requestBuilder.setNewPassword(nonOptionArgs.get(2));
-                    walletService.setWalletPassword(requestBuilder.build());
+                    walletsService.setWalletPassword(requestBuilder.build());
                     out.println("wallet encrypted" + (hasNewPassword ? " with new password" : ""));
                     return;
                 }

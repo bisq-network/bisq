@@ -59,7 +59,7 @@ public class GrpcServer {
     public GrpcServer(Config config,
                       CoreApi coreApi,
                       GrpcPaymentAccountsService paymentAccountsService,
-                      GrpcWalletService walletService) {
+                      GrpcWalletsService walletService) {
         this.coreApi = coreApi;
         this.server = ServerBuilder.forPort(config.apiPort)
                 .addService(new GetVersionService())

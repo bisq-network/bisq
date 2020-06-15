@@ -48,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreApi {
     private final CorePaymentAccountsService paymentAccountsService;
+    private final CoreWalletsService walletsService;
     private final OfferBookService offerBookService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final CreateOfferService createOfferService;
@@ -56,12 +57,14 @@ public class CoreApi {
 
     @Inject
     public CoreApi(CorePaymentAccountsService paymentAccountsService,
+                   CoreWalletsService walletsService,
                    OfferBookService offerBookService,
                    TradeStatisticsManager tradeStatisticsManager,
                    CreateOfferService createOfferService,
                    OpenOfferManager openOfferManager,
                    User user) {
         this.paymentAccountsService = paymentAccountsService;
+        this.walletsService = walletsService;
         this.offerBookService = offerBookService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.createOfferService = createOfferService;
@@ -73,20 +76,52 @@ public class CoreApi {
         return Version.VERSION;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Wallets
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public long getAvailableBalance() {
+        return walletsService.getAvailableBalance();
+    }
+
+    public long getAddressBalance(String addressString) {
+        return walletsService.getAddressBalance(addressString);
+    }
+
+    public String getAddressBalanceInfo(String addressString) {
+        return walletsService.getAddressBalanceInfo(addressString);
+    }
+
+    public String getFundingAddresses() {
+        return walletsService.getFundingAddresses();
+    }
+
+    public void setWalletPassword(String password, String newPassword) {
+        walletsService.setWalletPassword(password, newPassword);
+    }
+
+    public void lockWallet() {
+        walletsService.lockWallet();
+    }
+
+    public void unlockWallet(String password, long timeout) {
+        walletsService.unlockWallet(password, timeout);
+    }
+
+    public void removeWalletPassword(String password) {
+        walletsService.removeWalletPassword(password);
+    }
+
     public List<TradeStatistics2> getTradeStatistics() {
         return new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
     }
 
+    public int getNumConfirmationsForMostRecentTransaction(String addressString) {
+        return walletsService.getNumConfirmationsForMostRecentTransaction(addressString);
+    }
+
     public List<Offer> getOffers() {
         return offerBookService.getOffers();
-    }
-
-    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
-        paymentAccountsService.createPaymentAccount(accountName, accountNumber, fiatCurrencyCode);
-    }
-
-    public Set<PaymentAccount> getPaymentAccounts() {
-        return paymentAccountsService.getPaymentAccounts();
     }
 
     public void placeOffer(String currencyCode,
@@ -152,4 +187,15 @@ public class CoreApi {
                 log::error);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PaymentAccounts
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
+        paymentAccountsService.createPaymentAccount(accountName, accountNumber, fiatCurrencyCode);
+    }
+
+    public Set<PaymentAccount> getPaymentAccounts() {
+        return paymentAccountsService.getPaymentAccounts();
+    }
 }

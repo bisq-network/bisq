@@ -124,10 +124,10 @@ message PlaceOfferReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Wallet
+// Wallets
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service Wallet {
+service Wallets {
     rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
     }
     rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
