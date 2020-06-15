@@ -18,7 +18,6 @@
 package bisq.core.grpc;
 
 import bisq.core.offer.Offer;
-import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 
@@ -27,9 +26,6 @@ import bisq.common.config.Config;
 import bisq.proto.grpc.GetOffersGrpc;
 import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
-import bisq.proto.grpc.GetPaymentAccountsGrpc;
-import bisq.proto.grpc.GetPaymentAccountsReply;
-import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetTradeStatisticsGrpc;
 import bisq.proto.grpc.GetTradeStatisticsReply;
 import bisq.proto.grpc.GetTradeStatisticsRequest;
@@ -60,14 +56,17 @@ public class GrpcServer {
     private final Server server;
 
     @Inject
-    public GrpcServer(Config config, CoreApi coreApi, GrpcWalletService walletService) {
+    public GrpcServer(Config config,
+                      CoreApi coreApi,
+                      GrpcPaymentAccountsService paymentAccountsService,
+                      GrpcWalletService walletService) {
         this.coreApi = coreApi;
         this.server = ServerBuilder.forPort(config.apiPort)
                 .addService(new GetVersionService())
                 .addService(new GetTradeStatisticsService())
                 .addService(new GetOffersService())
-                .addService(new GetPaymentAccountsService())
                 .addService(new PlaceOfferService())
+                .addService(paymentAccountsService)
                 .addService(walletService)
                 .intercept(new PasswordAuthInterceptor(config.apiPassword))
                 .build();
@@ -120,21 +119,6 @@ public class GrpcServer {
                     .collect(Collectors.toList());
 
             var reply = GetOffersReply.newBuilder().addAllOffers(tradeStatistics).build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        }
-    }
-
-    class GetPaymentAccountsService extends GetPaymentAccountsGrpc.GetPaymentAccountsImplBase {
-        @Override
-        public void getPaymentAccounts(GetPaymentAccountsRequest req,
-                                       StreamObserver<GetPaymentAccountsReply> responseObserver) {
-
-            var tradeStatistics = coreApi.getPaymentAccounts().stream()
-                    .map(PaymentAccount::toProtoMessage)
-                    .collect(Collectors.toList());
-
-            var reply = GetPaymentAccountsReply.newBuilder().addAllPaymentAccounts(tradeStatistics).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }

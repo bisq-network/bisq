@@ -72,12 +72,23 @@ message GetOffersReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// PaymentAccount
+// PaymentAccounts
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service GetPaymentAccounts {
+service PaymentAccounts {
+    rpc CreatePaymentAccount (CreatePaymentAccountRequest) returns (CreatePaymentAccountReply) {
+    }
     rpc GetPaymentAccounts (GetPaymentAccountsRequest) returns (GetPaymentAccountsReply) {
     }
+}
+
+message CreatePaymentAccountRequest {
+    string accountName = 1;
+    string accountNumber = 2;
+    string fiatCurrencyCode = 3;
+}
+
+message CreatePaymentAccountReply {
 }
 
 message GetPaymentAccountsRequest {

@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CoreApi {
+    private final CorePaymentAccountsService paymentAccountsService;
     private final OfferBookService offerBookService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final CreateOfferService createOfferService;
@@ -54,11 +55,13 @@ public class CoreApi {
     private final User user;
 
     @Inject
-    public CoreApi(OfferBookService offerBookService,
+    public CoreApi(CorePaymentAccountsService paymentAccountsService,
+                   OfferBookService offerBookService,
                    TradeStatisticsManager tradeStatisticsManager,
                    CreateOfferService createOfferService,
                    OpenOfferManager openOfferManager,
                    User user) {
+        this.paymentAccountsService = paymentAccountsService;
         this.offerBookService = offerBookService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.createOfferService = createOfferService;
@@ -78,8 +81,12 @@ public class CoreApi {
         return offerBookService.getOffers();
     }
 
+    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
+        paymentAccountsService.createPaymentAccount(accountName, accountNumber, fiatCurrencyCode);
+    }
+
     public Set<PaymentAccount> getPaymentAccounts() {
-        return user.getPaymentAccounts();
+        return paymentAccountsService.getPaymentAccounts();
     }
 
     public void placeOffer(String currencyCode,

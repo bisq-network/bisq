@@ -17,12 +17,14 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.PaymentAccountsGrpc;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
@@ -58,6 +60,7 @@ import static java.lang.System.out;
 public class CliMain {
 
     private enum Method {
+        createpaymentacct,
         getversion,
         getbalance,
         getaddressbalance,
@@ -135,6 +138,7 @@ public class CliMain {
         }));
 
         var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        var paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         var walletService = WalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
 
         try {
@@ -170,6 +174,30 @@ public class CliMain {
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletService.getFundingAddresses(request);
                     out.println(reply.getFundingAddressesInfo());
+                    return;
+                }
+                case createpaymentacct: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no account name specified");
+
+                    var accountName = nonOptionArgs.get(1);
+
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("no account number specified");
+
+                    var accountNumber = nonOptionArgs.get(2);
+
+                    if (nonOptionArgs.size() < 4)
+                        throw new IllegalArgumentException("no fiat currency specified");
+
+                    var fiatCurrencyCode = nonOptionArgs.get(3).toUpperCase();
+
+                    var request = CreatePaymentAccountRequest.newBuilder()
+                            .setAccountName(accountName)
+                            .setAccountNumber(accountNumber)
+                            .setFiatCurrencyCode(fiatCurrencyCode).build();
+                    paymentAccountsService.createPaymentAccount(request);
+                    out.println(format("payment account %s saved", accountName));
                     return;
                 }
                 case lockwallet: {
@@ -238,16 +266,17 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.format("%-19s%-30s%s%n", "Method", "Params", "Description");
-            stream.format("%-19s%-30s%s%n", "------", "------", "------------");
-            stream.format("%-19s%-30s%s%n", "getversion", "", "Get server version");
-            stream.format("%-19s%-30s%s%n", "getbalance", "", "Get server wallet balance");
-            stream.format("%-19s%-30s%s%n", "getaddressbalance", "", "Get server wallet address balance");
-            stream.format("%-19s%-30s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
-            stream.format("%-19s%-30s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
-            stream.format("%-19s%-30s%s%n", "unlockwallet", "password timeout",
+            stream.format("%-22s%-50s%s%n", "Method", "Params", "Description");
+            stream.format("%-22s%-50s%s%n", "------", "------", "------------");
+            stream.format("%-22s%-50s%s%n", "getversion", "", "Get server version");
+            stream.format("%-22s%-50s%s%n", "getbalance", "", "Get server wallet balance");
+            stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
+            stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
+            stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
+            stream.format("%-22s%-50s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
+            stream.format("%-22s%-50s%s%n", "unlockwallet", "password timeout",
                     "Store wallet password in memory for timeout seconds");
-            stream.format("%-19s%-30s%s%n", "setwalletpassword", "password [newpassword]",
+            stream.format("%-22s%-50s%s%n", "setwalletpassword", "password [newpassword]",
                     "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.println();
         } catch (IOException ex) {
