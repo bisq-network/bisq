@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -267,17 +268,17 @@ public class SignedWitnessService {
     }
 
     // Any peer can sign with DSA key
-    public void signAccountAgeWitness(Coin tradeAmount,
-                                      AccountAgeWitness accountAgeWitness,
-                                      PublicKey peersPubKey) throws CryptoException {
+    public Optional<SignedWitness> signAccountAgeWitness(Coin tradeAmount,
+                                                         AccountAgeWitness accountAgeWitness,
+                                                         PublicKey peersPubKey) throws CryptoException {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
-            return;
+            return Optional.empty();
         }
 
         if (!isSufficientTradeAmountForSigning(tradeAmount)) {
             log.warn("Trader tried to sign account with too little trade amount");
-            return;
+            return Optional.empty();
         }
 
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
@@ -290,6 +291,7 @@ public class SignedWitnessService {
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
         log.info("Trader signed witness {}", signedWitness.toString());
+        return Optional.of(signedWitness);
     }
 
     public boolean verifySignature(SignedWitness signedWitness) {
@@ -366,8 +368,8 @@ public class SignedWitnessService {
         var oldestUnsignedSigners = new HashMap<P2PDataStorage.ByteArray, SignedWitness>();
         getRootSignedWitnessSet(false).forEach(signedWitness ->
                 oldestUnsignedSigners.compute(new P2PDataStorage.ByteArray(signedWitness.getSignerPubKey()),
-                (key, oldValue) -> oldValue == null ? signedWitness :
-                        oldValue.getDate() > signedWitness.getDate() ? signedWitness : oldValue));
+                        (key, oldValue) -> oldValue == null ? signedWitness :
+                                oldValue.getDate() > signedWitness.getDate() ? signedWitness : oldValue));
         return new HashSet<>(oldestUnsignedSigners.values());
     }
 
