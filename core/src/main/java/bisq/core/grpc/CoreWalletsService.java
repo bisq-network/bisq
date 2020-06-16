@@ -65,8 +65,7 @@ class CoreWalletsService {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
 
-        if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
-            throw new IllegalStateException("wallet is locked");
+        verifyEncryptedWalletIsUnlocked();
 
         var balance = balances.getAvailableBalance().get();
         if (balance == null)
@@ -93,8 +92,7 @@ class CoreWalletsService {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
 
-        if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
-            throw new IllegalStateException("wallet is locked");
+        verifyEncryptedWalletIsUnlocked();
 
         // Create a new funding address if none exists.
         if (btcWalletService.getAvailableAddressEntries().size() == 0)
@@ -244,6 +242,12 @@ class CoreWalletsService {
 
         if (!walletsManager.areWalletsEncrypted())
             throw new IllegalStateException("wallet is not encrypted with a password");
+    }
+
+    // Throws a RuntimeException if wallets are encrypted and locked.
+    private void verifyEncryptedWalletIsUnlocked() {
+        if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
+            throw new IllegalStateException("wallet is locked");
     }
 
     private KeyCrypterScrypt getKeyCrypterScrypt() {
