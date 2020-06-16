@@ -679,6 +679,10 @@ public class AccountAgeWitnessService {
         return Optional.empty();
     }
 
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
+        return signedWitnessService.publishOwnSignedWitness(signedWitness);
+    }
+
     // Arbitrator signing
     public List<TraderDataItem> getTraderPaymentAccounts(long safeDate,
                                                          PaymentMethod paymentMethod,

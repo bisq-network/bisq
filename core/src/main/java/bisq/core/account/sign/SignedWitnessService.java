@@ -206,6 +206,17 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
+        if (!Arrays.equals(signedWitness.getWitnessOwnerPubKey(), keyRing.getPubKeyRing().getSignaturePubKeyBytes()) ||
+                !verifySigner(signedWitness)) {
+            return false;
+        }
+
+        log.info("Publish own signedWitness {}", signedWitness);
+        publishSignedWitness(signedWitness);
+        return true;
+    }
+
     // Arbitrators sign with EC key
     public void signAccountAgeWitness(Coin tradeAmount,
                                       AccountAgeWitness accountAgeWitness,
@@ -391,6 +402,11 @@ public class SignedWitnessService {
         return !tradeAmount.isLessThan(MINIMUM_TRADE_AMOUNT_FOR_SIGNING);
     }
 
+    private boolean verifySigner(SignedWitness signedWitness) {
+        return getSignedWitnessSetByOwnerPubKey(signedWitness.getWitnessOwnerPubKey(), new Stack<>()).stream()
+                .anyMatch(w -> isValidSignerWitnessInternal(w, signedWitness.getDate(), new Stack<>()));
+    }
+
     /**
      * Checks whether the accountAgeWitness has a valid signature from a peer/arbitrator and is allowed to sign
      * other accounts.
@@ -415,7 +431,7 @@ public class SignedWitnessService {
      * Helper to isValidAccountAgeWitness(accountAgeWitness)
      *
      * @param signedWitness                the signedWitness to validate
-     * @param childSignedWitnessDateMillis the date the child SignedWitness was signed or current time if it is a leave.
+     * @param childSignedWitnessDateMillis the date the child SignedWitness was signed or current time if it is a leaf.
      * @param excludedPubKeys              stack to prevent recursive loops
      * @return true if signedWitness is valid, false otherwise.
      */
