@@ -17,30 +17,18 @@
 
 package bisq.price.spot.providers;
 
-import bisq.price.spot.ExchangeRate;
-import bisq.price.spot.ExchangeRateProvider;
+import bisq.price.ExchangeTestBase;
 
-import org.knowm.xchange.poloniex.PoloniexExchange;
+import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
+@Slf4j
+public class KrakenTest extends ExchangeTestBase {
 
-import java.util.Set;
-
-@Component
-@Order(4)
-public class Poloniex extends ExchangeRateProvider {
-
-    public Poloniex() {
-        super("POLO", "poloniex", Duration.ofMinutes(1));
+    @Test
+    public void doGet_successfulCall() {
+        doGet_successfulCall(new Kraken());
     }
 
-    @Override
-    public Set<ExchangeRate> doGet() {
-        // Supported fiat: -
-        // Supported alts: DASH, DCR, DOGE, ETC, ETH, GRIN, LTC, XMR, ZEC
-        return doGet(PoloniexExchange.class);
-    }
 }

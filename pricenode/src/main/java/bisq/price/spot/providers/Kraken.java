@@ -20,7 +20,7 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
-import org.knowm.xchange.poloniex.PoloniexExchange;
+import org.knowm.xchange.kraken.KrakenExchange;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -30,17 +30,17 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-@Order(4)
-public class Poloniex extends ExchangeRateProvider {
+@Order(7)
+public class Kraken extends ExchangeRateProvider {
 
-    public Poloniex() {
-        super("POLO", "poloniex", Duration.ofMinutes(1));
+    public Kraken() {
+        super("KRAKEN", "kraken", Duration.ofMinutes(1));
     }
 
     @Override
     public Set<ExchangeRate> doGet() {
-        // Supported fiat: -
-        // Supported alts: DASH, DCR, DOGE, ETC, ETH, GRIN, LTC, XMR, ZEC
-        return doGet(PoloniexExchange.class);
+        // Supported fiat: AUD, CAD, CHF, EUR, GBP, JPY, USD
+        // Supported alts: DASH, DOGE, ETC, ETH, LTC, XMR, ZEC
+        return doGet(KrakenExchange.class);
     }
 }
