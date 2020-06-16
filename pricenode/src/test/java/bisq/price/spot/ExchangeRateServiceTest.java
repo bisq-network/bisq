@@ -17,14 +17,20 @@
 
 package bisq.price.spot;
 
+import com.google.common.collect.Sets;
+
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.time.Duration;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -108,7 +114,7 @@ public class ExchangeRateServiceTest {
     }
 
     @Test
-    public void getAllMarketPrices_withMultipleProviders() {
+    public void getAllMarketPrices_withMultipleProviders_differentCurrencyCodes() {
         int numberOfCurrencyPairsOnExchange = 1;
         ExchangeRateProvider dummyProvider1 = buildDummyExchangeRateProvider(numberOfCurrencyPairsOnExchange);
         ExchangeRateProvider dummyProvider2 = buildDummyExchangeRateProvider(numberOfCurrencyPairsOnExchange);
@@ -119,6 +125,31 @@ public class ExchangeRateServiceTest {
         doSanityChecksForRetrievedDataMultipleProviders(retrievedData, asList(dummyProvider1, dummyProvider2));
 
         // One rate was provided by each provider in this service, so the timestamp
+        // (for both providers) should not be 0
+        assertNotEquals(0L, retrievedData.get(dummyProvider1.getPrefix() + "Ts"));
+        assertNotEquals(0L, retrievedData.get(dummyProvider2.getPrefix() + "Ts"));
+    }
+
+    /**
+     * Tests the scenario when multiple providers have rates for the same currencies
+     */
+    @Test
+    public void getAllMarketPrices_withMultipleProviders_overlappingCurrencyCodes() {
+
+        // List of currencies for which multiple providers will have exchange rates
+        Set<String> rateCurrencyCodes = Sets.newHashSet("CURRENCY-1", "CURRENCY-2", "CURRENCY-3");
+
+        // Create several dummy providers, each providing their own rates for the same set of currencies
+        ExchangeRateProvider dummyProvider1 = buildDummyExchangeRateProvider(rateCurrencyCodes);
+        ExchangeRateProvider dummyProvider2 = buildDummyExchangeRateProvider(rateCurrencyCodes);
+
+        ExchangeRateService service = new ExchangeRateService(asList(dummyProvider1, dummyProvider2));
+
+        Map<String, Object> retrievedData = service.getAllMarketPrices();
+
+        doSanityChecksForRetrievedDataMultipleProviders(retrievedData, asList(dummyProvider1, dummyProvider2));
+
+        // At least one rate was provided by each provider in this service, so the timestamp
         // (for both providers) should not be 0
         assertNotEquals(0L, retrievedData.get(dummyProvider1.getPrefix() + "Ts"));
         assertNotEquals(0L, retrievedData.get(dummyProvider2.getPrefix() + "Ts"));
@@ -163,11 +194,61 @@ public class ExchangeRateServiceTest {
             assertNotNull(retrievedData.get(providerPrefix + "Ts"));
             assertNotNull(retrievedData.get(providerPrefix + "Count"));
         }
-        assertNotNull(retrievedData.get("data"));
 
-        // TODO Add checks for the case when rates for the same currency pair is retrieved from multiple providers
+        // Check validity of the data field
+        List<ExchangeRate> retrievedRates = (List<ExchangeRate>) retrievedData.get("data");
+        assertNotNull(retrievedRates);
+
+        // It should contain no duplicate ExchangeRate objects
+        int uniqueRates = Sets.newHashSet(retrievedRates).size();
+        int totalRates = retrievedRates.size();
+        assertEquals(uniqueRates, totalRates, "Found duplicate rates in data field");
+
+        // There should be only one ExchangeRate per currency
+        // In other words, even if multiple providers return rates for the same currency, the ExchangeRateService
+        // should expose only one (aggregate) ExchangeRate for that currency
+        Map<String, ExchangeRate> currencyCodeToExchangeRateFromService = retrievedRates.stream()
+                .collect(Collectors.toMap(
+                        ExchangeRate::getCurrency, exchangeRate -> exchangeRate
+                ));
+        int uniqueCurrencyCodes = currencyCodeToExchangeRateFromService.keySet().size();
+        assertEquals(uniqueCurrencyCodes, uniqueRates, "Found currency code with multiple exchange rates");
+
+        // Collect all ExchangeRates from all providers and group them by currency code
+        Map<String, List<ExchangeRate>> currencyCodeToExchangeRatesFromProviders = new HashMap<>();
+        for (ExchangeRateProvider p : providers) {
+            for (ExchangeRate exchangeRate : p.get()) {
+                String currencyCode = exchangeRate.getCurrency();
+                if (currencyCodeToExchangeRatesFromProviders.containsKey(currencyCode)) {
+                    List<ExchangeRate> l = new ArrayList<>(currencyCodeToExchangeRatesFromProviders.get(currencyCode));
+                    l.add(exchangeRate);
+                    currencyCodeToExchangeRatesFromProviders.put(currencyCode, l);
+                } else {
+                    currencyCodeToExchangeRatesFromProviders.put(currencyCode, asList(exchangeRate));
+                }
+            }
+        }
+
+        // For each ExchangeRate which is covered by multiple providers, ensure the rate value is an average
+        currencyCodeToExchangeRatesFromProviders.forEach((currencyCode, exchangeRateList) -> {
+            ExchangeRate rateFromService = currencyCodeToExchangeRateFromService.get(currencyCode);
+            double priceFromService = rateFromService.getPrice();
+
+            OptionalDouble opt = exchangeRateList.stream().mapToDouble(ExchangeRate::getPrice).average();
+            double priceAvgFromProviders = opt.getAsDouble();
+
+            // Ensure that the ExchangeRateService correctly aggregates exchange rates from multiple providers
+            // If multiple providers contain rates for a currency, the service should return a single aggregate rate
+            // Expected value for aggregate rate = avg(provider rates)
+            // This formula works for one, as well as many, providers for a specific currency
+            assertEquals(priceFromService, priceAvgFromProviders, "Service returned incorrect aggregate rate");
+        });
     }
 
+    /**
+     * @param numberOfRatesAvailable Number of exchange rates this provider returns
+     * @return Dummy {@link ExchangeRateProvider} providing rates for "numberOfRatesAvailable" random currency codes
+     */
     private ExchangeRateProvider buildDummyExchangeRateProvider(int numberOfRatesAvailable) {
         ExchangeRateProvider dummyProvider = new ExchangeRateProvider(
                 "ExchangeName-" + getRandomAlphaNumericString(5),
@@ -187,7 +268,42 @@ public class ExchangeRateServiceTest {
                 for (int i = 0; i < numberOfRatesAvailable; i++) {
                     exchangeRates.add(new ExchangeRate(
                             "DUM-" + getRandomAlphaNumericString(3), // random symbol, avoid duplicates
-                            0,
+                            RandomUtils.nextDouble(1, 1000), // random price
+                            System.currentTimeMillis(),
+                            getName())); // ExchangeRateProvider name
+                }
+
+                return exchangeRates;
+            }
+        };
+
+        // Initialize provider
+        dummyProvider.start();
+        dummyProvider.stop();
+
+        return dummyProvider;
+    }
+
+    private ExchangeRateProvider buildDummyExchangeRateProvider(Set<String> rateCurrencyCodes) {
+        ExchangeRateProvider dummyProvider = new ExchangeRateProvider(
+                "ExchangeName-" + getRandomAlphaNumericString(5),
+                "EXCH-" + getRandomAlphaNumericString(3),
+                Duration.ofDays(1)) {
+
+            @Override
+            public boolean isRunning() {
+                return true;
+            }
+
+            @Override
+            protected Set<ExchangeRate> doGet() {
+                HashSet<ExchangeRate> exchangeRates = new HashSet<>();
+
+                // Simulate the required amount of rates
+                for (String rateCurrencyCode : rateCurrencyCodes) {
+                    exchangeRates.add(new ExchangeRate(
+                            rateCurrencyCode,
+                            RandomUtils.nextDouble(1, 1000), // random price
                             System.currentTimeMillis(),
                             getName())); // ExchangeRateProvider name
                 }
