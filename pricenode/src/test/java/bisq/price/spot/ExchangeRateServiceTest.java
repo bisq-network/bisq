@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
@@ -74,8 +75,7 @@ public class ExchangeRateServiceTest {
 
         Map<String, Object> retrievedData = service.getAllMarketPrices();
 
-        doSanityChecksForRetrievedDataSingleProvider(
-                retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
+        doSanityChecksForRetrievedDataSingleProvider(retrievedData, dummyProvider, numberOfCurrencyPairsOnExchange);
 
         // No exchange rates provided by this exchange, two things should happen
         // A) the timestamp should be set to 0
@@ -101,8 +101,7 @@ public class ExchangeRateServiceTest {
 
         Map<String, Object> retrievedData = service.getAllMarketPrices();
 
-        doSanityChecksForRetrievedDataSingleProvider(
-                retrievedData, dummyProvider.getPrefix(), numberOfCurrencyPairsOnExchange);
+        doSanityChecksForRetrievedDataSingleProvider(retrievedData, dummyProvider, numberOfCurrencyPairsOnExchange);
 
         // One rate was provided by this provider, so the timestamp should not be 0
         assertNotEquals(0L, retrievedData.get(dummyProvider.getPrefix() + "Ts"));
@@ -117,8 +116,7 @@ public class ExchangeRateServiceTest {
 
         Map<String, Object> retrievedData = service.getAllMarketPrices();
 
-        doSanityChecksForRetrievedDataMultipleProviders(retrievedData,
-                asList(dummyProvider1.getPrefix(), dummyProvider2.getPrefix()));
+        doSanityChecksForRetrievedDataMultipleProviders(retrievedData, asList(dummyProvider1, dummyProvider2));
 
         // One rate was provided by each provider in this service, so the timestamp
         // (for both providers) should not be 0
@@ -130,14 +128,14 @@ public class ExchangeRateServiceTest {
      * Performs generic sanity checks on the response format and contents.
      *
      * @param retrievedData Response data retrieved from the {@link ExchangeRateService}
-     * @param providerPrefix {@link ExchangeRateProvider#getPrefix()}
+     * @param provider {@link ExchangeRateProvider} available to the {@link ExchangeRateService}
      * @param numberOfCurrencyPairsOnExchange Number of currency pairs this exchange was initiated with
      */
     private void doSanityChecksForRetrievedDataSingleProvider(Map<String, Object> retrievedData,
-                                                              String providerPrefix,
+                                                              ExchangeRateProvider provider,
                                                               int numberOfCurrencyPairsOnExchange) {
         // Check response structure
-        doSanityChecksForRetrievedDataMultipleProviders(retrievedData, asList(providerPrefix));
+        doSanityChecksForRetrievedDataMultipleProviders(retrievedData, asList(provider));
 
         // Check that the amount of provided exchange rates matches expected value
         // For one provider, the amount of rates of that provider should be the total amount of rates in the response
@@ -149,18 +147,19 @@ public class ExchangeRateServiceTest {
      * Performs generic sanity checks on the response format and contents.
      *
      * @param retrievedData Response data retrieved from the {@link ExchangeRateService}
-     * @param providerPrefixes List of all {@link ExchangeRateProvider#getPrefix()} the
+     * @param providers List of all {@link ExchangeRateProvider#getPrefix()} the
      * {@link ExchangeRateService} uses
      */
     private void doSanityChecksForRetrievedDataMultipleProviders(Map<String, Object> retrievedData,
-                                                                 List<String> providerPrefixes) {
+                                                                 List<ExchangeRateProvider> providers) {
         // Check the correct amount of entries were present in the service response:
         // The timestamp and the count fields are per provider, so N providers means N
         // times those fields timestamp (x N) + count (x N) + price data (stored as a list
         // under the key "data"). So expected size is Nx2 + 1.
-        int n = providerPrefixes.size();
+        int n = providers.size();
         assertEquals(n * 2 + 1, retrievedData.size());
-        for (String providerPrefix : providerPrefixes) {
+        for (ExchangeRateProvider provider : providers) {
+            String providerPrefix = provider.getPrefix();
             assertNotNull(retrievedData.get(providerPrefix + "Ts"));
             assertNotNull(retrievedData.get(providerPrefix + "Count"));
         }
