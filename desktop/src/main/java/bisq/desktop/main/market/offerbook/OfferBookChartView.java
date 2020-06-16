@@ -226,7 +226,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
                                 final String withCryptoPrecision = FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
-                                if (withCryptoPrecision.equals("0.000")) {
+                                if (withCryptoPrecision.substring(0,3).equals("0.0")) {
                                     cryptoPrecision = 8;
                                     return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 } else {
