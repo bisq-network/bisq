@@ -26,6 +26,7 @@ import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.mediation.BroadcastMediatedPayoutTx;
@@ -228,6 +229,15 @@ public abstract class TradeProtocol {
         taskRunner.run();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Peer has sent a SignedWitness
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void handle(TraderSignedWitnessMessage tradeMessage, NodeAddress sender) {
+        // Publish signed witness, if it is valid and ours
+        processModel.getAccountAgeWitnessService().publishOwnSignedWitness(tradeMessage.getSignedWitness());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispatcher
@@ -240,6 +250,8 @@ public abstract class TradeProtocol {
             handle((MediatedPayoutTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
+            handle((TraderSignedWitnessMessage) tradeMessage, sender);
         }
     }
 
@@ -287,6 +299,8 @@ public abstract class TradeProtocol {
             handle((MediatedPayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
+            handle((TraderSignedWitnessMessage) tradeMessage, peerNodeAddress);
         }
     }
 
