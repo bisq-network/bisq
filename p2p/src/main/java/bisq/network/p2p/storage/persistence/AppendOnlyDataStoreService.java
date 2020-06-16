@@ -56,7 +56,11 @@ public class AppendOnlyDataStoreService {
     }
 
     /**
-     * TODO to be implemented
+     * Same as {@link AppendOnlyDataStoreService#getMap()}, but takes a filter string.
+     * Currently, a string of format "since " + a version string is supported. Eg. "since 1.3.5".
+     *
+     * The filter string is kept generic so that we may not need to change the API again
+     * once other filters become necessary in the future.
      *
      * @param filter
      * @return
