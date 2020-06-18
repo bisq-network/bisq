@@ -10,14 +10,15 @@ Highly recommended to use SSD! Minimum specs:
 
 ## Software
 
-The following OS are known to work well:
+The following OS's are known to work well:
 
-* Ubuntu 18
+* Ubuntu 18.04
+* Ubuntu 20.04
 * FreeBSD 12
 
 ### Installation
 
-Start with a clean Ubuntu 18.04 LTS server installation, and run the script
+Start with a clean Ubuntu server installation, and run the script
 ```bash
 curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/seednode/install_seednode_debian.sh | sudo bash
 ```
