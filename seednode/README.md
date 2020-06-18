@@ -66,7 +66,7 @@ macOS:
 If you run a main seednode, you also are obliged to activate the monitoring feed by running
 
 ```bash
-curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh | sudo bash
+bash <(curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh)
 ```
 Follow the instruction given by the script and report your certificate to the seednode group!
 
