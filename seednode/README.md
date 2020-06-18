@@ -79,8 +79,7 @@ sudo -u bisq -s
 cd bisq
 git fetch origin
 git checkout v1.2.5 # new tag
-./gradlew clean
-./gradlew build -x test
+./gradlew clean build -x test
 exit
 sudo service bisq restart
 sudo journalctl --unit bisq --follow
