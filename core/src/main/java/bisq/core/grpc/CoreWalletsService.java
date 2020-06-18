@@ -30,6 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
+
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -88,6 +92,20 @@ class CoreWalletsService {
                 + ((numConfirmations > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
     }
 
+    /**
+     * Memoization stores the results of expensive function calls and returns
+     * the cached result when the same input occurs again.
+     *
+     * Resulting LoadingCache is used by calling `.get(input I)` or
+     * `.getUnchecked(input I)`, depending on whether or not `f` can return null.
+     * That's because CacheLoader throws an exception on null output from `f`.
+     */
+    private static <I,O> LoadingCache<I,O> memoize(Function<I,O> f) {
+        // f::apply is used, because Guava 20.0 Function doesn't yet extend
+        // Java Function.
+        return CacheBuilder.newBuilder().build(CacheLoader.from(f::apply));
+    }
+
     public String getFundingAddresses() {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
@@ -98,44 +116,43 @@ class CoreWalletsService {
         if (btcWalletService.getAvailableAddressEntries().size() == 0)
             btcWalletService.getFreshAddressEntry();
 
-        // Populate a list of Tuple3<AddressString, Balance, NumConfirmations>
-        List<Tuple3<String, Long, Integer>> addrBalanceConfirms =
-                btcWalletService.getAvailableAddressEntries().stream()
-                        .map(a -> new Tuple3<>(a.getAddressString(),
-                                getAddressBalance(a.getAddressString()),
-                                getNumConfirmationsForMostRecentTransaction(a.getAddressString())))
-                        .collect(Collectors.toList());
+        List<String> addressStrings =
+            btcWalletService
+            .getAvailableAddressEntries()
+            .stream()
+            .map(addressEntry -> addressEntry.getAddressString())
+            .collect(Collectors.toList());
 
-        // Check to see if at least one of the existing addresses has a zero balance.
-        boolean hasZeroBalance = false;
-        for (Tuple3<String, Long, Integer> abc : addrBalanceConfirms) {
-            if (abc.second == 0) {
-                hasZeroBalance = true;
-                break;
-            }
-        }
-        if (!hasZeroBalance) {
-            // None of the existing addresses have a zero balance, create a new address.
-            addrBalanceConfirms.add(
-                    new Tuple3<>(btcWalletService.getFreshAddressEntry().getAddressString(),
-                            0L,
-                            0));
+        // getAddressBalance is memoized, because we'll map it over addresses twice.
+        // To get the balances, we'll be using .getUnchecked, because we know that
+        // this::getAddressBalance cannot return null.
+        var balances = memoize(this::getAddressBalance);
+
+        boolean noAddressHasZeroBalance =
+            addressStrings.stream()
+            .allMatch(addressString -> balances.getUnchecked(addressString) != 0);
+
+        if (noAddressHasZeroBalance) {
+            var newZeroBalanceAddress = btcWalletService.getFreshAddressEntry();
+            addressStrings.add(newZeroBalanceAddress.getAddressString());
         }
 
-        // Iterate the list of Tuple3<AddressString, Balance, NumConfirmations> objects
-        // and build the formatted info string.
-        StringBuilder addressInfoBuilder = new StringBuilder();
-        addrBalanceConfirms.forEach(a -> {
-            var btcBalance = formatSatoshis.apply(a.second);
-            var numConfirmations = getNumConfirmationsForMostRecentTransaction(a.first);
-            String addressInfo = "" + a.first
-                    + "  balance: " + format("%13s", btcBalance)
-                    + ((a.second > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "")
-                    + "\n";
-            addressInfoBuilder.append(addressInfo);
-        });
+        String fundingAddressTable =
+            addressStrings.stream()
+            .map(addressString -> {
+                var balance = balances.getUnchecked(addressString);
+                var stringFormattedBalance = formatSatoshis.apply(balance);
+                var numConfirmations =
+                    getNumConfirmationsForMostRecentTransaction(addressString);
+                String addressInfo =
+                    "" + addressString
+                    + "  balance: " + format("%13s", stringFormattedBalance)
+                    + ((balance > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
+                return addressInfo;
+            })
+            .collect(Collectors.joining("\n"));
 
-        return addressInfoBuilder.toString().trim();
+        return fundingAddressTable;
     }
 
     public int getNumConfirmationsForMostRecentTransaction(String addressString) {
