@@ -54,7 +54,6 @@ class CoreWalletsService {
     private final Function<Long, String> formatSatoshis = (sats) ->
             btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
 
-
     @Inject
     public CoreWalletsService(Balances balances,
                               WalletsManager walletsManager,
