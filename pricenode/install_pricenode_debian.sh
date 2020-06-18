@@ -34,6 +34,11 @@ echo "[*] Upgrading apt packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get update -q
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq -y
 
+echo "[*] Installing Git LFS"
+sudo -H -i -u "${ROOT_USER}" curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+sudo -H -i -u "${ROOT_USER}" apt-get install git-lfs
+sudo -H -i -u "${ROOT_USER}" git lfs install
+
 echo "[*] Installing Tor"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y "${TOR_PKG}"
 
@@ -60,6 +65,9 @@ sudo -H -i -u "${ROOT_USER}" "${BISQ_HOME}/${BISQ_REPO_NAME}/scripts/install_jav
 
 echo "[*] Checking out Bisq ${BISQ_LATEST_RELEASE}"
 sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git checkout ${BISQ_LATEST_RELEASE}"
+
+echo "[*] Performing Git LFS pull"
+sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git lfs pull"
 
 echo "[*] Building Bisq from source"
 sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew :pricenode:installDist  -x test < /dev/null" # redirect from /dev/null is necessary to workaround gradlew non-interactive shell hanging issue
