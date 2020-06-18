@@ -5,13 +5,15 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 
-import bisq.common.util.Tuple3;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
@@ -29,10 +31,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.LoadingCache;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -55,6 +53,7 @@ class CoreWalletsService {
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     private final Function<Long, String> formatSatoshis = (sats) ->
             btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
+
 
     @Inject
     public CoreWalletsService(Balances balances,
@@ -92,19 +91,6 @@ class CoreWalletsService {
                 + ((numConfirmations > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
     }
 
-    /**
-     * Memoization stores the results of expensive function calls and returns
-     * the cached result when the same input occurs again.
-     *
-     * Resulting LoadingCache is used by calling `.get(input I)` or
-     * `.getUnchecked(input I)`, depending on whether or not `f` can return null.
-     * That's because CacheLoader throws an exception on null output from `f`.
-     */
-    private static <I,O> LoadingCache<I,O> memoize(Function<I,O> f) {
-        // f::apply is used, because Guava 20.0 Function doesn't yet extend
-        // Java Function.
-        return CacheBuilder.newBuilder().build(CacheLoader.from(f::apply));
-    }
 
     public String getFundingAddresses() {
         if (!walletsManager.areWalletsAvailable())
@@ -117,11 +103,11 @@ class CoreWalletsService {
             btcWalletService.getFreshAddressEntry();
 
         List<String> addressStrings =
-            btcWalletService
-            .getAvailableAddressEntries()
-            .stream()
-            .map(addressEntry -> addressEntry.getAddressString())
-            .collect(Collectors.toList());
+                btcWalletService
+                        .getAvailableAddressEntries()
+                        .stream()
+                        .map(AddressEntry::getAddressString)
+                        .collect(Collectors.toList());
 
         // getAddressBalance is memoized, because we'll map it over addresses twice.
         // To get the balances, we'll be using .getUnchecked, because we know that
@@ -129,30 +115,25 @@ class CoreWalletsService {
         var balances = memoize(this::getAddressBalance);
 
         boolean noAddressHasZeroBalance =
-            addressStrings.stream()
-            .allMatch(addressString -> balances.getUnchecked(addressString) != 0);
+                addressStrings.stream()
+                        .allMatch(addressString -> balances.getUnchecked(addressString) != 0);
 
         if (noAddressHasZeroBalance) {
             var newZeroBalanceAddress = btcWalletService.getFreshAddressEntry();
             addressStrings.add(newZeroBalanceAddress.getAddressString());
         }
 
-        String fundingAddressTable =
-            addressStrings.stream()
-            .map(addressString -> {
-                var balance = balances.getUnchecked(addressString);
-                var stringFormattedBalance = formatSatoshis.apply(balance);
-                var numConfirmations =
-                    getNumConfirmationsForMostRecentTransaction(addressString);
-                String addressInfo =
-                    "" + addressString
-                    + "  balance: " + format("%13s", stringFormattedBalance)
-                    + ((balance > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
-                return addressInfo;
-            })
-            .collect(Collectors.joining("\n"));
-
-        return fundingAddressTable;
+        return addressStrings.stream()
+                .map(addressString -> {
+                    var balance = balances.getUnchecked(addressString);
+                    var stringFormattedBalance = formatSatoshis.apply(balance);
+                    var numConfirmations =
+                            getNumConfirmationsForMostRecentTransaction(addressString);
+                    return "" + addressString
+                            + "  balance: " + format("%13s", stringFormattedBalance)
+                            + ((balance > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
+                })
+                .collect(Collectors.joining("\n"));
     }
 
     public int getNumConfirmationsForMostRecentTransaction(String addressString) {
@@ -284,5 +265,19 @@ class CoreWalletsService {
             throw new IllegalStateException(format("address %s not found in wallet", addressString));
 
         return addressEntry.get();
+    }
+
+    /**
+     * Memoization stores the results of expensive function calls and returns
+     * the cached result when the same input occurs again.
+     *
+     * Resulting LoadingCache is used by calling `.get(input I)` or
+     * `.getUnchecked(input I)`, depending on whether or not `f` can return null.
+     * That's because CacheLoader throws an exception on null output from `f`.
+     */
+    private static <I, O> LoadingCache<I, O> memoize(Function<I, O> f) {
+        // f::apply is used, because Guava 20.0 Function doesn't yet extend
+        // Java Function.
+        return CacheBuilder.newBuilder().build(CacheLoader.from(f::apply));
     }
 }
