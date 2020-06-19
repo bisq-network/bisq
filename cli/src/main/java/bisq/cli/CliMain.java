@@ -21,6 +21,7 @@ import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
@@ -45,6 +46,7 @@ import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +63,7 @@ public class CliMain {
 
     private enum Method {
         createpaymentacct,
+        getpaymentaccts,
         getversion,
         getbalance,
         getaddressbalance,
@@ -200,6 +203,20 @@ public class CliMain {
                     out.println(format("payment account %s saved", accountName));
                     return;
                 }
+                case getpaymentaccts: {
+                    var request = GetPaymentAccountsRequest.newBuilder().build();
+                    var reply = paymentAccountsService.getPaymentAccounts(request);
+                    var columnFormatSpec = "%-41s %-25s %-14s %s";
+                    out.println(format(columnFormatSpec, "ID", "Name", "Currency", "Payment Method"));
+                    out.println(reply.getPaymentAccountsList().stream()
+                            .map(a -> format(columnFormatSpec,
+                                    a.getId(),
+                                    a.getAccountName(),
+                                    a.getSelectedTradeCurrency().getCode(),
+                                    a.getPaymentMethod().getId()))
+                            .collect(Collectors.joining("\n")));
+                    return;
+                }
                 case lockwallet: {
                     var request = LockWalletRequest.newBuilder().build();
                     walletsService.lockWallet(request);
@@ -273,6 +290,7 @@ public class CliMain {
             stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
             stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
+            stream.format("%-22s%-50s%s%n", "getpaymentaccts", "", "Get user payment accounts");
             stream.format("%-22s%-50s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
             stream.format("%-22s%-50s%s%n", "unlockwallet", "password timeout",
                     "Store wallet password in memory for timeout seconds");

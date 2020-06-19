@@ -171,6 +171,11 @@
   [ "$status" -eq 0 ]
 }
 
+@test "test getpaymentaccts" {
+  run ./bisq-cli --password=xyz getpaymentaccts
+  [ "$status" -eq 0 ]
+}
+
 @test "test help displayed on stderr if no options or arguments" {
   run ./bisq-cli
   [ "$status" -eq 1 ]
