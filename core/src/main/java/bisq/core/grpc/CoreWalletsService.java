@@ -4,6 +4,7 @@ import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.grpc.model.AddressBalanceInfo;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionConfidence;
@@ -16,10 +17,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import org.spongycastle.crypto.params.KeyParameter;
-
-import java.text.DecimalFormat;
-
-import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,12 +45,6 @@ class CoreWalletsService {
     @Nullable
     private KeyParameter tempAesKey;
 
-    private final BigDecimal satoshiDivisor = new BigDecimal(100000000);
-    private final DecimalFormat btcFormat = new DecimalFormat("###,##0.00000000");
-    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    private final Function<Long, String> formatSatoshis = (sats) ->
-            btcFormat.format(BigDecimal.valueOf(sats).divide(satoshiDivisor));
-
     @Inject
     public CoreWalletsService(Balances balances,
                               WalletsManager walletsManager,
@@ -81,17 +72,13 @@ class CoreWalletsService {
         return btcWalletService.getBalanceForAddress(address).value;
     }
 
-    public String getAddressBalanceInfo(String addressString) {
+    public AddressBalanceInfo getAddressBalanceInfo(String addressString) {
         var satoshiBalance = getAddressBalance(addressString);
-        var btcBalance = formatSatoshis.apply(satoshiBalance);
         var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
-        return addressString
-                + "  balance: " + format("%13s", btcBalance)
-                + ((numConfirmations > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
+        return new AddressBalanceInfo(addressString, satoshiBalance, numConfirmations);
     }
 
-
-    public String getFundingAddresses() {
+    public List<AddressBalanceInfo> getFundingAddresses() {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
 
@@ -122,17 +109,11 @@ class CoreWalletsService {
             addressStrings.add(newZeroBalanceAddress.getAddressString());
         }
 
-        return addressStrings.stream()
-                .map(addressString -> {
-                    var balance = balances.getUnchecked(addressString);
-                    var stringFormattedBalance = formatSatoshis.apply(balance);
-                    var numConfirmations =
-                            getNumConfirmationsForMostRecentTransaction(addressString);
-                    return "" + addressString
-                            + "  balance: " + format("%13s", stringFormattedBalance)
-                            + ((balance > 0) ? ("  confirmations: " + format("%6d", numConfirmations)) : "");
-                })
-                .collect(Collectors.joining("\n"));
+        return addressStrings.stream().map(address ->
+                new AddressBalanceInfo(address,
+                        balances.getUnchecked(address),
+                        getNumConfirmationsForMostRecentTransaction(address)))
+                .collect(Collectors.toList());
     }
 
     public int getNumConfirmationsForMostRecentTransaction(String addressString) {

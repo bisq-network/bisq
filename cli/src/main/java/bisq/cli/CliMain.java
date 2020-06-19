@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
@@ -46,6 +47,7 @@ import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +62,12 @@ import static java.lang.System.out;
  */
 @Slf4j
 public class CliMain {
+
+    private static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
+    private static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
+    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+    private static final Function<Long, String> formatSatoshis = (sats) ->
+            BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
 
     private enum Method {
         createpaymentacct,
@@ -155,11 +163,7 @@ public class CliMain {
                 case getbalance: {
                     var request = GetBalanceRequest.newBuilder().build();
                     var reply = walletsService.getBalance(request);
-                    var satoshiBalance = reply.getBalance();
-                    var satoshiDivisor = new BigDecimal(100000000);
-                    var btcFormat = new DecimalFormat("###,##0.00000000");
-                    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-                    var btcBalance = btcFormat.format(BigDecimal.valueOf(satoshiBalance).divide(satoshiDivisor));
+                    var btcBalance = formatSatoshis.apply(reply.getBalance());
                     out.println(btcBalance);
                     return;
                 }
@@ -170,13 +174,16 @@ public class CliMain {
                     var request = GetAddressBalanceRequest.newBuilder()
                             .setAddress(nonOptionArgs.get(1)).build();
                     var reply = walletsService.getAddressBalance(request);
-                    out.println(reply.getAddressBalanceInfo());
+                    out.println(addressBalanceInfoHeader());
+                    out.println(addressBalanceInfoDetail(reply.getAddressBalanceInfo()));
                     return;
                 }
                 case getfundingaddresses: {
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletsService.getFundingAddresses(request);
-                    out.println(reply.getFundingAddressesInfo());
+                    out.println(addressBalanceInfoHeader());
+                    reply.getAddressBalanceInfoList().forEach(balanceInfo ->
+                            out.println(addressBalanceInfoDetail(balanceInfo)));
                     return;
                 }
                 case createpaymentacct: {
@@ -300,5 +307,16 @@ public class CliMain {
         } catch (IOException ex) {
             ex.printStackTrace(stream);
         }
+    }
+
+    private static String addressBalanceInfoHeader() {
+        return format("%-35s %13s  %s", "Address", "Balance", "Confirmations");
+    }
+
+    private static String addressBalanceInfoDetail(AddressBalanceInfo addressBalanceInfo) {
+        return format("%-35s %13s %14d",
+                addressBalanceInfo.getAddress(),
+                formatSatoshis.apply(addressBalanceInfo.getBalance()),
+                addressBalanceInfo.getNumConfirmations());
     }
 }

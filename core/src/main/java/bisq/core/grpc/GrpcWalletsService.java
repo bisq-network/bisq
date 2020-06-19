@@ -1,5 +1,7 @@
 package bisq.core.grpc;
 
+import bisq.core.grpc.model.AddressBalanceInfo;
+
 import bisq.proto.grpc.GetAddressBalanceReply;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceReply;
@@ -21,6 +23,9 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
 
@@ -49,8 +54,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void getAddressBalance(GetAddressBalanceRequest req,
                                   StreamObserver<GetAddressBalanceReply> responseObserver) {
         try {
-            String result = coreApi.getAddressBalanceInfo(req.getAddress());
-            var reply = GetAddressBalanceReply.newBuilder().setAddressBalanceInfo(result).build();
+            AddressBalanceInfo result = coreApi.getAddressBalanceInfo(req.getAddress());
+            var reply = GetAddressBalanceReply.newBuilder().setAddressBalanceInfo(result.toProtoMessage()).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalStateException cause) {
@@ -64,8 +69,13 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void getFundingAddresses(GetFundingAddressesRequest req,
                                     StreamObserver<GetFundingAddressesReply> responseObserver) {
         try {
-            String result = coreApi.getFundingAddresses();
-            var reply = GetFundingAddressesReply.newBuilder().setFundingAddressesInfo(result).build();
+            List<AddressBalanceInfo> result = coreApi.getFundingAddresses();
+            var reply = GetFundingAddressesReply.newBuilder()
+                    .addAllAddressBalanceInfo(
+                            result.stream()
+                                    .map(AddressBalanceInfo::toProtoMessage)
+                                    .collect(Collectors.toList()))
+                    .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalStateException cause) {

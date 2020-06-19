@@ -156,14 +156,14 @@ message GetAddressBalanceRequest {
 }
 
 message GetAddressBalanceReply {
-    string addressBalanceInfo = 1;
+    AddressBalanceInfo addressBalanceInfo = 1;
 }
 
 message GetFundingAddressesRequest {
 }
 
 message GetFundingAddressesReply {
-    string fundingAddressesInfo = 1;
+    repeated AddressBalanceInfo addressBalanceInfo = 1;
 }
 
 message SetWalletPasswordRequest {
@@ -193,4 +193,10 @@ message UnlockWalletRequest {
 }
 
 message UnlockWalletReply {
+}
+
+message AddressBalanceInfo {
+    string address = 1;
+    int64 balance = 2;
+    int64 numConfirmations = 3;
 }

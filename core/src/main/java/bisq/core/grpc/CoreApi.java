@@ -17,6 +17,7 @@
 
 package bisq.core.grpc;
 
+import bisq.core.grpc.model.AddressBalanceInfo;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
@@ -88,11 +89,11 @@ public class CoreApi {
         return walletsService.getAddressBalance(addressString);
     }
 
-    public String getAddressBalanceInfo(String addressString) {
+    public AddressBalanceInfo getAddressBalanceInfo(String addressString) {
         return walletsService.getAddressBalanceInfo(addressString);
     }
 
-    public String getFundingAddresses() {
+    public List<AddressBalanceInfo> getFundingAddresses() {
         return walletsService.getFundingAddresses();
     }
 
