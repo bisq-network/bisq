@@ -65,8 +65,6 @@ import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 import static java.util.Collections.singletonList;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
 
 /**
  * A command-line client for the Bisq gRPC API.
@@ -223,7 +221,7 @@ public class CliMain {
                             "Payment Method", "Creation Date", "ID"));
                     out.println(reply.getOffersList().stream()
                             .map(o -> format("%-8s %22s  %-25s %12s  %-14s %-24s  %s",
-                                    o.getDirection().equals(BUY.name()) ? SELL.name() : BUY.name(),
+                                    o.getDirection().equals("BUY") ? "SELL" : "BUY",
                                     formatPrice(o.getPrice()),
                                     o.getMinAmount() != o.getAmount() ? formatSatoshis.apply(o.getMinAmount())
                                             + " - " + formatSatoshis.apply(o.getAmount())
