@@ -25,8 +25,6 @@ import bisq.proto.grpc.GetPaymentAccountsReply;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.PaymentAccountsGrpc;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -46,32 +44,20 @@ public class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccou
     @Override
     public void createPaymentAccount(CreatePaymentAccountRequest req,
                                      StreamObserver<CreatePaymentAccountReply> responseObserver) {
-        try {
-            coreApi.createPaymentAccount(req.getAccountName(), req.getAccountNumber(), req.getFiatCurrencyCode());
-            var reply = CreatePaymentAccountReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        } catch (Exception cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
-        }
+        coreApi.createPaymentAccount(req.getAccountName(), req.getAccountNumber(), req.getFiatCurrencyCode());
+        var reply = CreatePaymentAccountReply.newBuilder().build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
     }
 
     @Override
     public void getPaymentAccounts(GetPaymentAccountsRequest req,
                                    StreamObserver<GetPaymentAccountsReply> responseObserver) {
-        try {
-            var tradeStatistics = coreApi.getPaymentAccounts().stream()
-                    .map(PaymentAccount::toProtoMessage)
-                    .collect(Collectors.toList());
-            var reply = GetPaymentAccountsReply.newBuilder().addAllPaymentAccounts(tradeStatistics).build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        } catch (Exception cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
-        }
+        var tradeStatistics = coreApi.getPaymentAccounts().stream()
+                .map(PaymentAccount::toProtoMessage)
+                .collect(Collectors.toList());
+        var reply = GetPaymentAccountsReply.newBuilder().addAllPaymentAccounts(tradeStatistics).build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
     }
 }
