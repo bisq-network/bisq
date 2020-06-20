@@ -94,16 +94,18 @@ public class OfferInfo implements Payload {
 
     public static OfferInfo fromProto(bisq.proto.grpc.OfferInfo proto) {
         /*
-        TODO (needed by createoffer)
+        TODO (will be needed by the createoffer method)
         return new OfferInfo(proto.getOfferPayload().getId(),
                 proto.getOfferPayload().getDate());
         */
         return null;
     }
 
-    /**
-     * OfferInfoBuilder helps avoid bungling use of the OfferInfo constructor
-     * argument list, which is large, of all one type, and not wise to overload.
+    /*
+     * OfferInfoBuilder helps avoid bungling use of a large OfferInfo constructor
+     * argument list.  If consecutive argument values of the same type are not
+     * ordered correctly, the compiler won't complain but the resulting bugs could
+     * be hard to find and fix.
      */
     public static class OfferInfoBuilder {
         private String id;
