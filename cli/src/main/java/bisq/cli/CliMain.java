@@ -22,10 +22,12 @@ import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.OffersGrpc;
 import bisq.proto.grpc.PaymentAccountsGrpc;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
@@ -38,14 +40,20 @@ import io.grpc.StatusRuntimeException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import java.io.IOException;
 import java.io.PrintStream;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -57,6 +65,8 @@ import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 import static java.util.Collections.singletonList;
+import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferPayload.Direction.SELL;
 
 /**
  * A command-line client for the Bisq gRPC API.
@@ -65,6 +75,7 @@ import static java.util.Collections.singletonList;
 @Slf4j
 public class CliMain {
 
+    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
     private static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
     private static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
@@ -72,6 +83,7 @@ public class CliMain {
             BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
 
     private enum Method {
+        getoffers,
         createpaymentacct,
         getpaymentaccts,
         getversion,
@@ -151,6 +163,7 @@ public class CliMain {
         }));
 
         var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        var offersService = OffersGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         var paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         var walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
 
@@ -183,6 +196,45 @@ public class CliMain {
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletsService.getFundingAddresses(request);
                     out.println(formatTable(reply.getAddressBalanceInfoList()));
+                    return;
+                }
+                case getoffers: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no buy/sell direction specified");
+
+                    var direction = nonOptionArgs.get(1).toUpperCase();
+                    if (!direction.equals("BUY") && !direction.equals("SELL"))
+                        throw new IllegalArgumentException("no buy/sell direction specified");
+
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("no fiat currency specified");
+
+                    var fiatCurrency = nonOptionArgs.get(2).toUpperCase();
+
+                    var request = GetOffersRequest.newBuilder()
+                            .setDirection(direction)
+                            .setFiatCurrencyCode(fiatCurrency)
+                            .build();
+                    var reply = offersService.getOffers(request);
+
+                    // TODO Calculate these format specifiers on the fly?
+                    out.println(format("%-8s Price in %s for 1 BTC  %s  %-23s %-14s %-24s  %s",
+                            "Buy/Sell", fiatCurrency, "BTC(min - max)", "        " + fiatCurrency + "(min - max)",
+                            "Payment Method", "Creation Date", "ID"));
+                    out.println(reply.getOffersList().stream()
+                            .map(o -> format("%-8s %22s  %-25s %12s  %-14s %-24s  %s",
+                                    o.getDirection().equals(BUY.name()) ? SELL.name() : BUY.name(),
+                                    formatPrice(o.getPrice()),
+                                    o.getMinAmount() != o.getAmount() ? formatSatoshis.apply(o.getMinAmount())
+                                            + " - " + formatSatoshis.apply(o.getAmount())
+                                            : formatSatoshis.apply(o.getAmount()),
+                                    o.getMinVolume() != o.getVolume() ? formatVolume(o.getMinVolume())
+                                            + " - " + formatVolume(o.getVolume())
+                                            : formatVolume(o.getVolume()),
+                                    o.getPaymentMethodShortName(),
+                                    formatDateTime(o.getDate(), true),
+                                    o.getId()))
+                            .collect(Collectors.joining("\n")));
                     return;
                 }
                 case createpaymentacct: {
@@ -295,6 +347,7 @@ public class CliMain {
             stream.format("%-22s%-50s%s%n", "getbalance", "", "Get server wallet balance");
             stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
             stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
+            stream.format("%-22s%-50s%s%n", "getoffers", "buy | sell, fiat currency code", "Get current offers");
             stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format("%-22s%-50s%s%n", "getpaymentaccts", "", "Get user payment accounts");
             stream.format("%-22s%-50s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
@@ -316,5 +369,43 @@ public class CliMain {
                         formatSatoshis.apply(info.getBalance()),
                         info.getNumConfirmations()))
                 .collect(Collectors.joining("\n"));
+    }
+
+    // TODO Find a proper home for these formatting methods, with minimum duplication
+    //  of the :core and :desktop utils they were copied from.
+
+    // Copied from bisq.core.util.FormattingUtils (pass formatted date as well to client)
+    private static String formatDateTime(long timestamp, boolean useLocaleAndLocalTimezone) {
+        Date date = new Date(timestamp);
+        Locale locale = useLocaleAndLocalTimezone ? Locale.getDefault() : Locale.US;
+        DateFormat dateInstance = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
+        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
+        if (!useLocaleAndLocalTimezone) {
+            dateInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
+            timeInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
+        }
+        return formatDateTime(date, dateInstance, timeInstance);
+    }
+
+    // Copied from bisq.core.util.FormattingUtils (pass formatted date as well to client)
+    private static String formatDateTime(Date date, DateFormat dateFormatter, DateFormat timeFormatter) {
+        if (date != null) {
+            return dateFormatter.format(date) + " " + timeFormatter.format(date);
+        } else {
+            return "";
+        }
+    }
+
+    private static String formatPrice(long price) {
+        NUMBER_FORMAT.setMaximumFractionDigits(4);
+        NUMBER_FORMAT.setMinimumFractionDigits(4);
+        NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
+        return NUMBER_FORMAT.format((double) price / 10000);
+    }
+
+    private static String formatVolume(long volume) {
+        NUMBER_FORMAT.setMaximumFractionDigits(0);
+        NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
+        return NUMBER_FORMAT.format((double) volume / 10000);
     }
 }
