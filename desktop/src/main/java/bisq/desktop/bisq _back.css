@@ -65,8 +65,8 @@
 }
 
 .headline-label {
-    /*-fx-font-weight: bold;*/
-    -fx-font-size: 1.892em;
+    -fx-font-weight: bold;
+    -fx-font-size: 1.692em;
 }
 
 .warning-box {
@@ -86,8 +86,7 @@
 }
 
 .zero-decimals {
-    -fx-text-fill: -bs-decimals;
-    -fx-fill: -bs-decimals;
+    -fx-text-fill: -bs-color-gray-3;
 }
 
 .confirmation-label {
@@ -155,7 +154,7 @@
     -fx-pref-height: 32;
     -fx-min-height: -fx-pref-height;
     -fx-padding: 0 40 0 40;
-    /*-fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 2, 0, 0, 0, 1);*/
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 2, 0, 0, 0, 1);
     -fx-cursor: hand;
 }
 
@@ -198,58 +197,44 @@
 .jfx-check-box .box,
 .jfx-check-box:indeterminate .box,
 .jfx-check-box:indeterminate:selected .box {
-    -fx-border-radius: 1;
+    -fx-border-radius: 0;
     -fx-border-width: 1;
-    -fx-pref-width: 15;
-    -fx-pref-height: 15;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
 }
 
 .jfx-check-box .mark,
 .jfx-check-box .indeterminate-mark {
-    -fx-border-radius: 1;
+    -fx-border-radius: 0;
     -fx-border-width: 1;
 }
-
 
 .jfx-combo-box {
     -jfx-focus-color: -bs-color-primary;
     -jfx-unfocus-color: -bs-color-gray-line;
     -fx-background-color: -bs-background-color;
-    /*-jfx-disable-animation: true;*/
 }
-
-
-.combo-box-popup > .list-view{
-    -fx-background-color:  -bs-background-color;
-}
-
-
-
 
 .jfx-combo-box > .list-cell {
     -fx-text-fill: -bs-text-color;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
-
-
-
 .jfx-combo-box > .arrow-button > .arrow {
     -fx-background-color: null;
-    -fx-border-color: -bs-color-gray-13;
+    -fx-border-color: -jfx-unfocus-color;
     -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
 }
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background: -bs-combobox-selected;
-    -fx-background-color: -bs-combobox-selected;
+    -fx-background: -fx-selection-bar;
+    -fx-background-color: -fx-selection-bar;
 }
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    -fx-background:-bs-combobox-hover;
-    -fx-background-color: -bs-combobox-hover;
-    -fx-text-fill: -bs-text-color;
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
 }
 
 .list-view:focused,
@@ -260,38 +245,9 @@
 tree-table-view:focused {
     -fx-background-insets: 0;
 }
-
-
-/* list view */
-.list-view .list-cell {
-    -fx-background-color: -bs-background-color;
-}
-
-.list-view .list-cell:odd, .list-view .list-cell:even {
-    -fx-background-color: -bs-background-color;
-    -fx-border-width: 0;
-}
-
-.list-view .list-cell:selected,
-.table-view .table-cell:selected {
-    -fx-background: -fx-accent;
-    -fx-background-color: -fx-selection-bar;
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-}
-
-.number-column.table-cell {
-    -fx-background-color: -bs-background-color;
-}
-
-
-.list-view, .list-view:focused {
-    -fx-border-color: -bs-content-background-gray;
-    -fx-border-width: 1;
-}
-.list-view .list-cell, .list-view .list-cell:focused {
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
+.list-view:focused {
+    -fx-background-color: -bs-color-primary;
+    -fx-background-insets: 0;
 }
 
 /* Selected rows */
@@ -317,38 +273,21 @@ tree-table-view:focused {
 .jfx-text-field {
     -jfx-focus-color: -bs-color-primary;
     -fx-background-color: -bs-background-color;
-    -fx-background-radius: 4;
+    -fx-background-radius: 3 3 0 0;
     -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
-    /*-jfx-disable-animation: true;*/
 }
 
-
-
-.jfx-combo-box:focused,
-.jfx-combo-box:focused > .arrow-button,
-.jfx-combo-box:focused > .text-input,
-.jfx-text-field:focused{
-  -fx-background-color: derive(-bs-background-color, 8%);
+.jfx-text-field > .input-line {
+    -fx-translate-x: -0.333333em;
 }
 
-.jfx-combo-box:error,
-.jfx-text-field:error{
-  -fx-text-fill: -bs-rd-error-red;
-  -fx-background-color: -bs-rd-error-field;
+.jfx-text-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
 }
 
-
-.jfx-combo-box:error:focused,
-.jfx-text-field:error:focused{
-  -fx-text-fill: -bs-rd-error-red;
-  -fx-background-color: derive(-bs-rd-error-field, -5%);
+.jfx-text-field-top-label {
+    -fx-text-fill: -bs-color-gray-dim;
 }
-
-
-
-
-
-
 
 .jfx-text-field:readonly, .hyperlink-with-icon {
     -fx-background-color: -bs-color-gray-1;
@@ -373,35 +312,23 @@ tree-table-view:focused {
     -fx-border-width: 0;
 }
 
-
-
-
-/* Hide bottom line in all combo boxes and text fields*/
-.jfx-combo-box > .input-line,
-.jfx-text-field > .input-line,
-.jfx-combo-box > .input-focused-line,
-.jfx-text-field > .input-focused-line,
-.jfx-password-field > .input-line,
-.jfx-password-field > .input-focused-line {
-    -fx-translate-x: -0.333333em;
-    -fx-background-color: transparent;
-    -jfx-disable-animation: true;
-}
-
-
-
-
-
-
 #info-field {
     -fx-prompt-text-fill: -bs-text-color;
 }
 
 .jfx-password-field {
     -fx-background-color: -bs-background-color;
-    -fx-background-radius: 3;
+    -fx-background-radius: 3 3 0 0;
     -jfx-focus-color: -bs-color-primary;
     -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-password-field > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-password-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
 }
 
 .jfx-text-field:error, .jfx-password-field:error, .jfx-text-area:error {
@@ -420,15 +347,10 @@ tree-table-view:focused {
     -fx-font-size: 1em;
 }
 
-
-.field-label {
-  /*-fx-text-fill: red;*/
-}
-
 .input-with-border {
     -fx-background-color: -bs-background-color;
-    -fx-border-width: 0;
-    -fx-border-color: -bs-background-color;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-background-gray;
     -fx-border-radius: 3;
     -fx-pref-height: 43;
     -fx-pref-width: 310;
@@ -471,7 +393,7 @@ tree-table-view:focused {
 .input-with-border-readonly > .input-label {
     -fx-font-size: 0.692em;
     -fx-min-width: 30;
-    -fx-padding: 16;
+    -fx-padding: 8;
     -fx-alignment: center;
 }
 
@@ -508,9 +430,6 @@ tree-table-view:focused {
 .jfx-toggle-button:focused:selected {
     -jfx-toggle-color: -bs-color-primary-dark;
     -jfx-size: 8;
-    -jfx-disable-visual-focus: true;
-    /*-jfx-disable-animation: true;*/
-    -fx-padding: 0 0 0 -3;
 }
 
 .jfx-text-area {
@@ -526,7 +445,6 @@ tree-table-view:focused {
 
 .jfx-text-area > .input-line {
     -fx-translate-x: -0.333333em;
-    -fx-background-color: transparent;
 }
 
 .jfx-text-area > .input-focused-line {
@@ -552,7 +470,6 @@ tree-table-view:focused {
 
 .jfx-date-picker .jfx-text-field > .input-line {
     -fx-translate-x: 0em;
-    -fx-background-color: transparent;
 }
 
 .jfx-date-picker .jfx-text-field > .input-focused-line {
@@ -673,9 +590,7 @@ tree-table-view:focused {
 }
 
 .content-pane {
-    /*-fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);*/
-    -fx-background-color: -bs-content-background-gray;
-    -jfx-disable-animation: true;
+    -fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);
 }
 
 #footer-pane {
@@ -696,10 +611,10 @@ tree-table-view:focused {
 /* Main navigation */
 .top-navigation {
     -fx-background-color: -bs-rd-nav-background;
-    -fx-border-width: 0 0 0 0;
+    -fx-border-width: 0 0 1 0;
     -fx-border-color: -bs-rd-nav-primary-border;
     -fx-pref-height: 57;
-    -fx-padding: 0 7 0 0;
+    -fx-padding: 0 11 0 0;
 }
 
 .top-navigation .separator:vertical .line {
@@ -722,7 +637,7 @@ tree-table-view:focused {
 .nav-price-balance {
     -fx-background-color: -bs-color-gray-background;
     -fx-background-radius: 3;
-    /*-fx-effect: innershadow(gaussian, -bs-text-color-transparent, 3, 0, 0, 1);*/
+    -fx-effect: innershadow(gaussian, -bs-text-color-transparent, 3, 0, 0, 1);
     -fx-pref-height: 41;
     -fx-padding: 0 10 0 0;
 }
@@ -735,7 +650,6 @@ tree-table-view:focused {
 
 .nav-price-balance .jfx-combo-box > .input-line {
     -fx-pref-height: 0px;
-    -fx-background-color: transparent;
 }
 
 .jfx-badge > .nav-button {
@@ -760,28 +674,13 @@ tree-table-view:focused {
 
 .nav-button:selected {
     -fx-background-color: -bs-background-color;
-    -fx-background-color: derive(-bs-color-primary-dark, -10%);
     -fx-border-radius: 4;
-    /*-fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);*/
-}
-
-
-.nav-button:hover {
-    -fx-background-color: -bs-rd-nav-button-hover;
-}
-
-.nav-primary .nav-button:selected {
-    -fx-background-color: derive(-bs-color-primary-dark, -5%);
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
 }
 
 .nav-button:selected .text {
     -fx-fill: -bs-rd-nav-selected;
-
 }
-
-
-
-
 
 .nav-balance-display {
     -fx-alignment: center-left;
@@ -970,19 +869,18 @@ textfield */
  ******************************************************************************/
 .table-view .table-cell {
     -fx-alignment: center-left;
-    -fx-padding: 6 0 4 0;
+    -fx-padding: 2 0 2 0;
     /*-fx-padding: 3 0 2 0;*/
-    -fx-text-fill: -bs-text-color;
 }
 
 .table-view .table-cell.last-column {
     -fx-alignment: center-right;
-    -fx-padding: 6 10 4 0;
+    -fx-padding: 2 10 2 0;
 }
 
 .table-view .table-cell.last-column.avatar-column {
     -fx-alignment: center;
-    -fx-padding: 6 0 4 0;
+    -fx-padding: 2 0 2 0;
 }
 
 .table-view .column-header.last-column {
@@ -1002,7 +900,7 @@ textfield */
 }
 
 .table-view .table-cell.first-column {
-    -fx-padding: 6 0 4 10;
+    -fx-padding: 2 0 2 10;
 }
 
 .table-view .column-header.first-column {
@@ -1233,19 +1131,7 @@ textfield */
     -fx-padding: 14;
     -fx-font-size: 0.769em;
     -fx-font-weight: normal;
-    -fx-cursor: hand;
-    -jfx-disable-animation: true;
 }
-
-.jfx-tab-pane .headers-region .tab .tab-container .tab-label:hover {
-    -fx-background-color: -bs-tab-content-label-hover;
-    -jfx-disable-animation: true;
-}
-
-.jfx-tab-pane {
-    -jfx-disable-animation: true;
-}
-
 
 .jfx-tab-pane .depth-container {
     -fx-effect: none;
@@ -1272,12 +1158,12 @@ textfield */
 }
 
 #form-header-text {
-    /*-fx-font-weight: bold;*/
-    -fx-font-size: 2.077em;
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
 }
 
 #form-title {
-    /*-fx-font-weight: bold;*/
+    -fx-font-weight: bold;
 }
 
 /* scroll-pane */
@@ -1301,11 +1187,9 @@ textfield */
 
 /* Account */
 #content-pane-top {
-    /*
     -fx-background-color: -bs-color-gray-2,
     linear-gradient(-bs-color-gray-2 0%, -bs-color-gray-3 100%),
     linear-gradient(-bs-color-gray-2 0%, -bs-background-gray 100%);
-    */
     -fx-background-insets: 0 0 0 0, 0, 1;
 }
 
@@ -1391,7 +1275,7 @@ textfield */
 }
 
 .combo-box-editor-bold {
-    /*-fx-font-weight: bold;*/
+    -fx-font-weight: bold;
     -fx-padding: 5 8 5 8 !important;
     -fx-text-fill: -bs-text-color;
     -fx-font-family: "IBM Plex Sans Medium";
@@ -1579,7 +1463,7 @@ textfield */
 
 .titled-group-bg, .titled-group-bg-active {
     -fx-body-color: -bs-color-gray-background;
-    -fx-border-color: -bs-rd-separator-dark;
+    -fx-border-color: -bs-rd-separator;
     -fx-border-width: 0 0 1 0;
     -fx-background-color: transparent;
     -fx-background-insets: 0;
@@ -1625,8 +1509,6 @@ textfield */
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background-color: -bs-background-color;
 }
-
-
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
     -fx-background-color: -bs-background-color;
@@ -2188,3 +2070,4 @@ textfield */
     -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
     -fx-fill: -bs-background-color !important;
 }
+
