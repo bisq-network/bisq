@@ -56,10 +56,12 @@ import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.util.Collections.singletonList;
 
 /**
  * A command-line client for the Bisq gRPC API.
  */
+@SuppressWarnings("ResultOfMethodCallIgnored")
 @Slf4j
 public class CliMain {
 
@@ -174,16 +176,13 @@ public class CliMain {
                     var request = GetAddressBalanceRequest.newBuilder()
                             .setAddress(nonOptionArgs.get(1)).build();
                     var reply = walletsService.getAddressBalance(request);
-                    out.println(addressBalanceInfoHeader());
-                    out.println(addressBalanceInfoDetail(reply.getAddressBalanceInfo()));
+                    out.println(formatTable(singletonList(reply.getAddressBalanceInfo())));
                     return;
                 }
                 case getfundingaddresses: {
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletsService.getFundingAddresses(request);
-                    out.println(addressBalanceInfoHeader());
-                    reply.getAddressBalanceInfoList().forEach(balanceInfo ->
-                            out.println(addressBalanceInfoDetail(balanceInfo)));
+                    out.println(formatTable(reply.getAddressBalanceInfoList()));
                     return;
                 }
                 case createpaymentacct: {
@@ -309,14 +308,13 @@ public class CliMain {
         }
     }
 
-    private static String addressBalanceInfoHeader() {
-        return format("%-35s %13s  %s", "Address", "Balance", "Confirmations");
-    }
-
-    private static String addressBalanceInfoDetail(AddressBalanceInfo addressBalanceInfo) {
-        return format("%-35s %13s %14d",
-                addressBalanceInfo.getAddress(),
-                formatSatoshis.apply(addressBalanceInfo.getBalance()),
-                addressBalanceInfo.getNumConfirmations());
+    private static String formatTable(List<AddressBalanceInfo> addressBalanceInfo) {
+        return format("%-35s %13s  %s%n", "Address", "Balance", "Confirmations")
+                + addressBalanceInfo.stream()
+                .map(info -> format("%-35s %13s %14d",
+                        info.getAddress(),
+                        formatSatoshis.apply(info.getBalance()),
+                        info.getNumConfirmations()))
+                .collect(Collectors.joining("\n"));
     }
 }
