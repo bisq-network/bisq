@@ -34,6 +34,7 @@
             <TableColumn fx:id="addressColumn" minWidth="260"/>
             <TableColumn fx:id="transactionColumn" minWidth="180"/>
             <TableColumn fx:id="amountColumn" minWidth="130" maxWidth="130"/>
+            <TableColumn fx:id="memoColumn" minWidth="50" maxWidth="50"/>
             <TableColumn fx:id="confidenceColumn" minWidth="130" maxWidth="130"/>
             <TableColumn fx:id="revertTxColumn" sortable="false" minWidth="110" maxWidth="110" visible="false"/>
         </columns>

@@ -1115,7 +1115,7 @@ message PersistableEnvelope {
         NavigationPath navigation_path = 5;
 
         TradableList tradable_list = 6;
-        TradeStatisticsList trade_statistics_list = 7 [deprecated = true]; // Was used in pre v0.6.0 version. Not used anymore.
+        // TradeStatisticsList trade_statistics_list = 7; // Was used in pre v0.6.0 version. Not used anymore.
         ArbitrationDisputeList arbitration_dispute_list = 8;
 
         PreferencesPayload preferences_payload = 9;
@@ -1128,10 +1128,7 @@ message PersistableEnvelope {
         AccountAgeWitnessStore account_age_witness_store = 13;
         TradeStatistics2Store trade_statistics2_store = 14;
 
-        // we need to keep id 15 here otherwise the reading of the old data structure would not work anymore.
-        // can be removed after most people have updated as the reading of the PersistableNetworkPayloadList
-        // is not mandatory.
-        PersistableNetworkPayloadList persistable_network_payload_list = 15 [deprecated = true];
+        // PersistableNetworkPayloadList persistable_network_payload_list = 15; // long deprecated & migration away from it is already done
 
         ProposalStore proposal_store = 16;
         TempProposalStore temp_proposal_store = 17;
@@ -1176,11 +1173,6 @@ message MapValue {
 // deprecated. Not used anymore.
 message PersistedEntryMap {
     map<string, ProtectedStorageEntry> persisted_entry_map = 1;
-}
-
-// deprecated. Not used anymore.
-message PersistableNetworkPayloadList {
-    repeated PersistableNetworkPayload items = 1;
 }
 
 // We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
@@ -1237,11 +1229,6 @@ message PaymentAccountList {
 
 message TradableList {
     repeated Tradable tradable = 1;
-}
-
-// deprecated  Was used in pre v0.6.0 version. Not used anymore but leave it as it is used in PersistableEnvelope
-message TradeStatisticsList {
-    repeated TradeStatistics trade_statistics = 1;
 }
 
 message Offer {

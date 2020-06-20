@@ -150,6 +150,7 @@
     -bs-chart-dao-line2: -bs-color-blue-2;
 }
 
+<<<<<<< HEAD
 
 
 /* table view */
@@ -180,6 +181,8 @@
     -fx-background: -fx-accent;
     -fx-background-color: -bs-color-gray-6;
 }
+=======
+>>>>>>> upstream/master
 
 /* tab pane */
 .jfx-tab-pane .tab-content-area {

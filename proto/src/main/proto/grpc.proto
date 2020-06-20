@@ -40,22 +40,6 @@ message GetVersionReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Balance
-///////////////////////////////////////////////////////////////////////////////////////////
-
-service GetBalance {
-    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
-    }
-}
-
-message GetBalanceRequest {
-}
-
-message GetBalanceReply {
-    uint64 balance = 1;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 // TradeStatistics
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -126,4 +110,57 @@ message PlaceOfferRequest {
 
 message PlaceOfferReply {
     bool result = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Wallet
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Wallet {
+    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
+    }
+    rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
+    }
+    rpc RemoveWalletPassword (RemoveWalletPasswordRequest) returns (RemoveWalletPasswordReply) {
+    }
+    rpc LockWallet (LockWalletRequest) returns (LockWalletReply) {
+    }
+    rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
+    }
+}
+
+message GetBalanceRequest {
+}
+
+message GetBalanceReply {
+    uint64 balance = 1;
+}
+
+message SetWalletPasswordRequest {
+    string password = 1;
+    string newPassword = 2;
+}
+
+message SetWalletPasswordReply {
+}
+
+message RemoveWalletPasswordRequest {
+    string password = 1;
+}
+
+message RemoveWalletPasswordReply {
+}
+
+message LockWalletRequest {
+}
+
+message LockWalletReply {
+}
+
+message UnlockWalletRequest {
+    string password = 1;
+    uint64 timeout = 2;
+}
+
+message UnlockWalletReply {
 }

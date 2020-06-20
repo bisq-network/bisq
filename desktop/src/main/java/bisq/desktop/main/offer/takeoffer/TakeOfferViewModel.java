@@ -361,7 +361,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     dataModel.applyAmount(adjustedAmountForHalCash);
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
                 } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())) {
-                    if (!isAmountEqualMinAmount(dataModel.getAmount().get())) {
+                    if (!isAmountEqualMinAmount(dataModel.getAmount().get()) && (!isAmountEqualMaxAmount(dataModel.getAmount().get()))) {
                         // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                         // Otherwise we could get an amount lower then the minAmount set by rounding
                         Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
@@ -644,7 +644,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             if (price != null) {
                 if (dataModel.isHalCashAccount()) {
                     amount = OfferUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
-                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode()) && !isAmountEqualMinAmount(amount)) {
+                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())
+                        && !isAmountEqualMinAmount(amount) && !isAmountEqualMaxAmount(amount)) {
                     // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                     // Otherwise we could get an amount lower then the minAmount set by rounding
                     amount = OfferUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
@@ -658,6 +659,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return amount.value == offer.getMinAmount().value;
     }
 
+    private boolean isAmountEqualMaxAmount(Coin amount) {
+        return amount.value == offer.getAmount().value;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

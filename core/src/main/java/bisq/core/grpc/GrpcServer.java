@@ -24,9 +24,6 @@ import bisq.core.trade.statistics.TradeStatistics2;
 
 import bisq.common.config.Config;
 
-import bisq.proto.grpc.GetBalanceGrpc;
-import bisq.proto.grpc.GetBalanceReply;
-import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetOffersGrpc;
 import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
@@ -43,10 +40,14 @@ import bisq.proto.grpc.PlaceOfferGrpc;
 import bisq.proto.grpc.PlaceOfferReply;
 import bisq.proto.grpc.PlaceOfferRequest;
 
+import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
+import javax.inject.Inject;
+
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import java.util.stream.Collectors;
 
@@ -56,32 +57,32 @@ import lombok.extern.slf4j.Slf4j;
 public class GrpcServer {
 
     private final CoreApi coreApi;
-    private final int port;
+    private final Server server;
 
-    public GrpcServer(Config config, CoreApi coreApi) {
+    @Inject
+    public GrpcServer(Config config, CoreApi coreApi, GrpcWalletService walletService) {
         this.coreApi = coreApi;
-        this.port = config.apiPort;
+        this.server = ServerBuilder.forPort(config.apiPort)
+                .addService(new GetVersionService())
+                .addService(new GetTradeStatisticsService())
+                .addService(new GetOffersService())
+                .addService(new GetPaymentAccountsService())
+                .addService(new PlaceOfferService())
+                .addService(walletService)
+                .intercept(new PasswordAuthInterceptor(config.apiPassword))
+                .build();
+    }
 
+    public void start() {
         try {
-            var server = ServerBuilder.forPort(port)
-                    .addService(new GetVersionService())
-                    .addService(new GetBalanceService())
-                    .addService(new GetTradeStatisticsService())
-                    .addService(new GetOffersService())
-                    .addService(new GetPaymentAccountsService())
-                    .addService(new PlaceOfferService())
-                    .intercept(new PasswordAuthInterceptor(config.apiPassword))
-                    .build()
-                    .start();
-
-            log.info("listening on port {}", port);
+            server.start();
+            log.info("listening on port {}", server.getPort());
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 server.shutdown();
                 log.info("shutdown complete");
             }));
-
-        } catch (IOException e) {
-            log.error(e.toString(), e);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -94,14 +95,6 @@ public class GrpcServer {
         }
     }
 
-    class GetBalanceService extends GetBalanceGrpc.GetBalanceImplBase {
-        @Override
-        public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
-            var reply = GetBalanceReply.newBuilder().setBalance(coreApi.getAvailableBalance()).build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        }
-    }
 
     class GetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
         @Override

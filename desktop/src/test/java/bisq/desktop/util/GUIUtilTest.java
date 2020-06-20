@@ -129,6 +129,7 @@ public class GUIUtilTest {
         // onion V2 addresses
         assertTrue(regexValidator.validate("abcdefghij234567.onion").isValid);
         assertTrue(regexValidator.validate("abcdefghijklmnop.onion,abcdefghijklmnop.onion").isValid);
+        assertTrue(regexValidator.validate("abcdefghijklmnop.onion, abcdefghijklmnop.onion").isValid);
         assertTrue(regexValidator.validate("qrstuvwxyzABCDEF.onion,qrstuvwxyzABCDEF.onion,aaaaaaaaaaaaaaaa.onion").isValid);
         assertTrue(regexValidator.validate("GHIJKLMNOPQRSTUV.onion:9999").isValid);
         assertTrue(regexValidator.validate("WXYZ234567abcdef.onion,GHIJKLMNOPQRSTUV.onion:9999").isValid);

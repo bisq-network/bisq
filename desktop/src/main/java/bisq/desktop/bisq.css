@@ -252,6 +252,30 @@
     -fx-text-fill: -bs-text-color;
 }
 
+
+/* list view */
+.list-view .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+.list-view .list-cell:odd {
+    -fx-background-color: derive(-bs-background-color, -5%);
+}
+.list-view .list-cell:even {
+    -fx-background-color: derive(-bs-background-color, 5%);
+}
+.list-view .list-cell:hover,
+.list-view .list-cell:selected,
+.table-view .table-cell:hover,
+.table-view .table-cell:selected {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+}
+
+.number-column.table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
 .list-view:focused,
 .tree-view:focused,
 .table-view:focused,
@@ -968,6 +992,32 @@ textfield */
  * Table                                                                       *
  *                                                                             *
  ******************************************************************************/
+.table-view .table-row-cell:even .table-cell {
+    -fx-background-color: derive(-bs-background-color, 5%);
+    -fx-border-color: derive(-bs-background-color,5%);
+}
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: derive(-bs-background-color,-5%);
+    -fx-border-color: derive(-bs-background-color,-5%);
+}
+.table-view .table-row-cell:hover .table-cell,
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+}
+.table-row-cell {
+    -fx-border-color: -bs-background-color;
+}
+.table-row-cell:empty, .table-row-cell:empty:even, .table-row-cell:empty:odd {
+    -fx-background-color: -bs-background-color;
+    -fx-min-height: 36;
+}
+.offer-table .table-row-cell {
+    -fx-background: -fx-accent;
+    -fx-background-color: -bs-color-gray-6;
+}
+
 .table-view .table-cell {
     -fx-alignment: center-left;
     -fx-padding: 6 0 4 0;

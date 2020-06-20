@@ -17,7 +17,6 @@
 
 package bisq.core.grpc;
 
-import bisq.core.btc.Balances;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
@@ -25,7 +24,6 @@ import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.presentation.BalancePresentation;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -49,8 +47,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CoreApi {
-    private final Balances balances;
-    private final BalancePresentation balancePresentation;
     private final OfferBookService offerBookService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final CreateOfferService createOfferService;
@@ -58,15 +54,11 @@ public class CoreApi {
     private final User user;
 
     @Inject
-    public CoreApi(Balances balances,
-                   BalancePresentation balancePresentation,
-                   OfferBookService offerBookService,
+    public CoreApi(OfferBookService offerBookService,
                    TradeStatisticsManager tradeStatisticsManager,
                    CreateOfferService createOfferService,
                    OpenOfferManager openOfferManager,
                    User user) {
-        this.balances = balances;
-        this.balancePresentation = balancePresentation;
         this.offerBookService = offerBookService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.createOfferService = createOfferService;
@@ -76,14 +68,6 @@ public class CoreApi {
 
     public String getVersion() {
         return Version.VERSION;
-    }
-
-    public long getAvailableBalance() {
-        return balances.getAvailableBalance().get().getValue();
-    }
-
-    public String getAvailableBalanceAsString() {
-        return balancePresentation.getAvailableBalance().get();
     }
 
     public List<TradeStatistics2> getTradeStatistics() {
@@ -160,4 +144,5 @@ public class CoreApi {
                 resultHandler,
                 log::error);
     }
+
 }
