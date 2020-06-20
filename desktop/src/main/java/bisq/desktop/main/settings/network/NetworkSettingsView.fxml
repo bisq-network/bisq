@@ -162,5 +162,3 @@
         <ColumnConstraints hgrow="ALWAYS" minWidth="500"/>
     </columnConstraints>
 </GridPane>
-
-

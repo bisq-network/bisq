@@ -423,7 +423,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setRowSpan(fiatTuple.third, listRowSpan);
 
         GridPane.setValignment(fiatTuple.third, VPos.TOP);
-        GridPane.setMargin(fiatTuple.third, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(fiatTuple.third, new Insets(0, 0, 0, 0));
         fiatCurrenciesListView = fiatTuple.second;
         fiatCurrenciesListView.setMinHeight(9 * Layout.LIST_ROW_HEIGHT + 2);
         fiatCurrenciesListView.setPrefHeight(10 * Layout.LIST_ROW_HEIGHT + 2);

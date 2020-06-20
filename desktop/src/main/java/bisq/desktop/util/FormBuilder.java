@@ -1106,6 +1106,7 @@ public class FormBuilder {
     private static Label getTopLabel(String title) {
         Label label = new AutoTooltipLabel(title);
         label.getStyleClass().add("small-text");
+        label.getStyleClass().add("field-label");
         return label;
     }
 

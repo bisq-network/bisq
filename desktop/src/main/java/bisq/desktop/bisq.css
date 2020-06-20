@@ -250,6 +250,7 @@
     -fx-background:-bs-combobox-hover;
     -fx-background-color: -bs-combobox-hover;
     -fx-text-fill: -bs-text-color;
+<<<<<<< HEAD
 }
 
 
@@ -274,6 +275,8 @@
 
 .number-column.table-cell {
     -fx-background-color: -bs-background-color;
+=======
+>>>>>>> 37baf1b8540243bfcfc4d6ede33b6f723722d8b5
 }
 
 .list-view:focused,
@@ -1285,6 +1288,7 @@ textfield */
     -fx-font-weight: normal;
     -fx-cursor: hand;
     -jfx-disable-animation: true;
+<<<<<<< HEAD
 }
 
 .jfx-tab-pane .headers-region .tab .tab-container .tab-label:hover {
@@ -1292,6 +1296,15 @@ textfield */
     -jfx-disable-animation: true;
 }
 
+=======
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-label:hover {
+    -fx-background-color: -bs-tab-content-label-hover;
+    -jfx-disable-animation: true;
+}
+
+>>>>>>> 37baf1b8540243bfcfc4d6ede33b6f723722d8b5
 .jfx-tab-pane {
     -jfx-disable-animation: true;
 }
