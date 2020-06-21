@@ -17,7 +17,6 @@
 
 package bisq.cli;
 
-import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
@@ -40,26 +39,18 @@ import io.grpc.StatusRuntimeException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-
 import java.io.IOException;
 import java.io.PrintStream;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.cli.TableFormat.formatAddressBalanceTbl;
+import static bisq.cli.TableFormat.formatOfferTable;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -72,13 +63,6 @@ import static java.util.Collections.singletonList;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 @Slf4j
 public class CliMain {
-
-    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
-    private static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
-    private static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
-    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    private static final Function<Long, String> formatSatoshis = (sats) ->
-            BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
 
     private enum Method {
         getoffers,
@@ -176,7 +160,7 @@ public class CliMain {
                 case getbalance: {
                     var request = GetBalanceRequest.newBuilder().build();
                     var reply = walletsService.getBalance(request);
-                    var btcBalance = formatSatoshis.apply(reply.getBalance());
+                    var btcBalance = formatSatoshis(reply.getBalance());
                     out.println(btcBalance);
                     return;
                 }
@@ -187,13 +171,13 @@ public class CliMain {
                     var request = GetAddressBalanceRequest.newBuilder()
                             .setAddress(nonOptionArgs.get(1)).build();
                     var reply = walletsService.getAddressBalance(request);
-                    out.println(formatTable(singletonList(reply.getAddressBalanceInfo())));
+                    out.println(formatAddressBalanceTbl(singletonList(reply.getAddressBalanceInfo())));
                     return;
                 }
                 case getfundingaddresses: {
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletsService.getFundingAddresses(request);
-                    out.println(formatTable(reply.getAddressBalanceInfoList()));
+                    out.println(formatAddressBalanceTbl(reply.getAddressBalanceInfoList()));
                     return;
                 }
                 case getoffers: {
@@ -214,25 +198,7 @@ public class CliMain {
                             .setFiatCurrencyCode(fiatCurrency)
                             .build();
                     var reply = offersService.getOffers(request);
-
-                    // TODO Calculate these format specifiers on the fly?
-                    out.println(format("%-8s Price in %s for 1 BTC  %s  %-23s %-14s %-24s  %s",
-                            "Buy/Sell", fiatCurrency, "BTC(min - max)", "        " + fiatCurrency + "(min - max)",
-                            "Payment Method", "Creation Date", "ID"));
-                    out.println(reply.getOffersList().stream()
-                            .map(o -> format("%-8s %22s  %-25s %12s  %-14s %-24s  %s",
-                                    o.getDirection().equals("BUY") ? "SELL" : "BUY",
-                                    formatPrice(o.getPrice()),
-                                    o.getMinAmount() != o.getAmount() ? formatSatoshis.apply(o.getMinAmount())
-                                            + " - " + formatSatoshis.apply(o.getAmount())
-                                            : formatSatoshis.apply(o.getAmount()),
-                                    o.getMinVolume() != o.getVolume() ? formatVolume(o.getMinVolume())
-                                            + " - " + formatVolume(o.getVolume())
-                                            : formatVolume(o.getVolume()),
-                                    o.getPaymentMethodShortName(),
-                                    formatDateTime(o.getDate(), true),
-                                    o.getId()))
-                            .collect(Collectors.joining("\n")));
+                    out.println(formatOfferTable(reply.getOffersList(), fiatCurrency));
                     return;
                 }
                 case createpaymentacct: {
@@ -357,53 +323,5 @@ public class CliMain {
         } catch (IOException ex) {
             ex.printStackTrace(stream);
         }
-    }
-
-    private static String formatTable(List<AddressBalanceInfo> addressBalanceInfo) {
-        return format("%-35s %13s  %s%n", "Address", "Balance", "Confirmations")
-                + addressBalanceInfo.stream()
-                .map(info -> format("%-35s %13s %14d",
-                        info.getAddress(),
-                        formatSatoshis.apply(info.getBalance()),
-                        info.getNumConfirmations()))
-                .collect(Collectors.joining("\n"));
-    }
-
-    // TODO Find a proper home for these formatting methods, with minimum duplication
-    //  of the :core and :desktop utils they were copied from.
-
-    // Copied from bisq.core.util.FormattingUtils (pass formatted date as well to client)
-    private static String formatDateTime(long timestamp, boolean useLocaleAndLocalTimezone) {
-        Date date = new Date(timestamp);
-        Locale locale = useLocaleAndLocalTimezone ? Locale.getDefault() : Locale.US;
-        DateFormat dateInstance = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
-        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
-        if (!useLocaleAndLocalTimezone) {
-            dateInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
-            timeInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
-        return formatDateTime(date, dateInstance, timeInstance);
-    }
-
-    // Copied from bisq.core.util.FormattingUtils (pass formatted date as well to client)
-    private static String formatDateTime(Date date, DateFormat dateFormatter, DateFormat timeFormatter) {
-        if (date != null) {
-            return dateFormatter.format(date) + " " + timeFormatter.format(date);
-        } else {
-            return "";
-        }
-    }
-
-    private static String formatPrice(long price) {
-        NUMBER_FORMAT.setMaximumFractionDigits(4);
-        NUMBER_FORMAT.setMinimumFractionDigits(4);
-        NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
-        return NUMBER_FORMAT.format((double) price / 10000);
-    }
-
-    private static String formatVolume(long volume) {
-        NUMBER_FORMAT.setMaximumFractionDigits(0);
-        NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
-        return NUMBER_FORMAT.format((double) volume / 10000);
     }
 }
