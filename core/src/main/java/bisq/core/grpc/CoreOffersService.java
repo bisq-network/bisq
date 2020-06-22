@@ -60,8 +60,8 @@ public class CoreOffersService {
 
     public List<Offer> getOffers(String direction, String fiatCurrencyCode) {
         List<Offer> offers = offerBookService.getOffers().stream()
-                .filter(o -> !o.getDirection().name().equals(direction)
-                        && o.getOfferPayload().getCounterCurrencyCode().equals(fiatCurrencyCode))
+                .filter(o -> !o.getDirection().name().equalsIgnoreCase(direction)
+                        && o.getOfferPayload().getCounterCurrencyCode().equalsIgnoreCase(fiatCurrencyCode))
                 .collect(Collectors.toList());
 
         if (direction.equals(BUY.name()))

@@ -58,7 +58,7 @@ public class CorePaymentAccountsService {
         paymentAccount.init();
         paymentAccount.setAccountName(accountName);
         ((PerfectMoneyAccount) paymentAccount).setAccountNr(accountNumber);
-        paymentAccount.setSingleTradeCurrency(new FiatCurrency(fiatCurrencyCode));
+        paymentAccount.setSingleTradeCurrency(new FiatCurrency(fiatCurrencyCode.toUpperCase()));
         user.addPaymentAccount(paymentAccount);
 
         // Don't do this on mainnet until thoroughly tested.

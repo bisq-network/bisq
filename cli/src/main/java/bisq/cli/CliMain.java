@@ -184,14 +184,14 @@ public class CliMain {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("no buy/sell direction specified");
 
-                    var direction = nonOptionArgs.get(1).toUpperCase();
-                    if (!direction.equals("BUY") && !direction.equals("SELL"))
+                    var direction = nonOptionArgs.get(1);
+                    if (!direction.equalsIgnoreCase("BUY") && !direction.equalsIgnoreCase("SELL"))
                         throw new IllegalArgumentException("no buy/sell direction specified");
 
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("no fiat currency specified");
 
-                    var fiatCurrency = nonOptionArgs.get(2).toUpperCase();
+                    var fiatCurrency = nonOptionArgs.get(2);
 
                     var request = GetOffersRequest.newBuilder()
                             .setDirection(direction)
@@ -215,7 +215,7 @@ public class CliMain {
                     if (nonOptionArgs.size() < 4)
                         throw new IllegalArgumentException("no fiat currency specified");
 
-                    var fiatCurrencyCode = nonOptionArgs.get(3).toUpperCase();
+                    var fiatCurrencyCode = nonOptionArgs.get(3);
 
                     var request = CreatePaymentAccountRequest.newBuilder()
                             .setAccountName(accountName)
