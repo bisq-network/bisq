@@ -176,6 +176,35 @@
   [ "$status" -eq 0 ]
 }
 
+@test "test getoffers missing direction argument" {
+  run ./bisq-cli --password=xyz getoffers
+  [ "$status" -eq 1 ]
+  echo "actual output:  $output" >&2
+  [ "$output" = "Error: no buy/sell direction specified" ]
+}
+
+@test "test getoffers missing ccy argument" {
+  run ./bisq-cli --password=xyz getoffers buy
+  [ "$status" -eq 1 ]
+  echo "actual output:  $output" >&2
+  [ "$output" = "Error: no fiat currency specified" ]
+}
+
+@test "test getoffers buy eur check return status" {
+  run ./bisq-cli --password=xyz getoffers buy eur
+  [ "$status" -eq 0 ]
+}
+
+@test "test getoffers buy eur check return status" {
+  run ./bisq-cli --password=xyz getoffers buy eur
+  [ "$status" -eq 0 ]
+}
+
+@test "test getoffers sell gbp check return status" {
+  run ./bisq-cli --password=xyz getoffers sell gbp
+  [ "$status" -eq 0 ]
+}
+
 @test "test help displayed on stderr if no options or arguments" {
   run ./bisq-cli
   [ "$status" -eq 1 ]
