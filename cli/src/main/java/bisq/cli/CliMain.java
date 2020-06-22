@@ -44,13 +44,13 @@ import java.io.PrintStream;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.TableFormat.formatAddressBalanceTbl;
 import static bisq.cli.TableFormat.formatOfferTable;
+import static bisq.cli.TableFormat.formatPaymentAcctTbl;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -228,15 +228,7 @@ public class CliMain {
                 case getpaymentaccts: {
                     var request = GetPaymentAccountsRequest.newBuilder().build();
                     var reply = paymentAccountsService.getPaymentAccounts(request);
-                    var columnFormatSpec = "%-41s %-25s %-14s %s";
-                    out.println(format(columnFormatSpec, "ID", "Name", "Currency", "Payment Method"));
-                    out.println(reply.getPaymentAccountsList().stream()
-                            .map(a -> format(columnFormatSpec,
-                                    a.getId(),
-                                    a.getAccountName(),
-                                    a.getSelectedTradeCurrency().getCode(),
-                                    a.getPaymentMethod().getId()))
-                            .collect(Collectors.joining("\n")));
+                    out.println(formatPaymentAcctTbl(reply.getPaymentAccountsList()));
                     return;
                 }
                 case lockwallet: {

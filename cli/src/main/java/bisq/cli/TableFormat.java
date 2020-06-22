@@ -3,6 +3,8 @@ package bisq.cli;
 import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.OfferInfo;
 
+import protobuf.PaymentAccount;
+
 import java.text.DateFormat;
 
 import java.util.Date;
@@ -38,7 +40,9 @@ class TableFormat {
     private static final String COL_HEADER_BALANCE = padStart("Balance", 12, ' ');
     private static final String COL_HEADER_CONFIRMATIONS = "Confirmations";
     private static final String COL_HEADER_CREATION_DATE = padEnd("Creation Date", 24, ' ');
+    private static final String COL_HEADER_CURRENCY = "Currency";
     private static final String COL_HEADER_DIRECTION = "Buy/Sell";  // TODO "Take Offer to
+    private static final String COL_HEADER_NAME = "Name";
     private static final String COL_HEADER_PAYMENT_METHOD = "Payment Method";
     private static final String COL_HEADER_PRICE = "Price in %-3s for 1 BTC";
     private static final String COL_HEADER_VOLUME = padEnd("%-3s(min - max)", 15, ' ');
@@ -66,7 +70,7 @@ class TableFormat {
         int paymentMethodColWidth = getLengthOfLongestColumn(
                 COL_HEADER_PAYMENT_METHOD.length(),
                 offerInfo.stream()
-                        .map(o -> o.getPaymentMethodShortName())
+                        .map(OfferInfo::getPaymentMethodShortName)
                         .collect(Collectors.toList()));
 
         String headersFormat = COL_HEADER_DIRECTION + COL_HEADER_DELIMITER
@@ -98,30 +102,39 @@ class TableFormat {
                 .collect(Collectors.joining("\n"));
     }
 
-    static String formatPaymentAcctTbl() {
-        /*
-        case getpaymentaccts: {
-                    var request = GetPaymentAccountsRequest.newBuilder().build();
-                    var reply = paymentAccountsService.getPaymentAccounts(request);
-                    var columnFormatSpec = "%-41s %-25s %-14s %s";
-                    out.println(format(columnFormatSpec, "ID", "Name", "Currency", "Payment Method"));
-                    out.println(reply.getPaymentAccountsList().stream()
-                            .map(a -> format(columnFormatSpec,
-                                    a.getId(),
-                                    a.getAccountName(),
-                                    a.getSelectedTradeCurrency().getCode(),
-                                    a.getPaymentMethod().getId()))
-                            .collect(Collectors.joining("\n")));
-                    return;
-                }
-         */
-        return "";
+    static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
+        // Some column values might be longer than header, so we need to calculated them.
+        int nameColWidth = getLengthOfLongestColumn(
+                COL_HEADER_NAME.length(),
+                paymentAccounts.stream().map(PaymentAccount::getAccountName)
+                        .collect(Collectors.toList()));
+        int paymentMethodColWidth = getLengthOfLongestColumn(
+                COL_HEADER_PAYMENT_METHOD.length(),
+                paymentAccounts.stream().map(a -> a.getPaymentMethod().getId())
+                        .collect(Collectors.toList()));
+
+        String headerLine = padEnd(COL_HEADER_NAME, nameColWidth, ' ') + COL_HEADER_DELIMITER
+                + COL_HEADER_CURRENCY + COL_HEADER_DELIMITER
+                + padEnd(COL_HEADER_PAYMENT_METHOD, paymentMethodColWidth, ' ') + COL_HEADER_DELIMITER
+                + COL_HEADER_UUID + COL_HEADER_DELIMITER + "\n";
+        String colDataFormat = "%-" + nameColWidth + "s"        // left justify
+                + "  %" + COL_HEADER_CURRENCY.length() + "s"    // right justify
+                + "  %-" + paymentMethodColWidth + "s"          // left justify
+                + "  %-" + COL_HEADER_UUID.length() + "s";      // left justify
+        return headerLine
+                + paymentAccounts.stream()
+                .map(a -> format(colDataFormat,
+                        a.getAccountName(),
+                        a.getSelectedTradeCurrency().getCode(),
+                        a.getPaymentMethod().getId(),
+                        a.getId()))
+                .collect(Collectors.joining("\n"));
     }
 
     // Return length of the longest string value, or the header.len, whichever is greater.
     private static int getLengthOfLongestColumn(int headerLength, List<String> strings) {
-        int longest = max(strings, comparing(s -> s.length())).length();
-        return longest > headerLength ? longest : headerLength;
+        int longest = max(strings, comparing(String::length)).length();
+        return Math.max(longest, headerLength);
     }
 
     private static String formatDateTime(long timestamp, boolean useLocaleAndLocalTimezone) {
