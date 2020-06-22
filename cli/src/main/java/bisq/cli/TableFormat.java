@@ -15,6 +15,7 @@ import static bisq.cli.CurrencyFormat.formatOfferPrice;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.CurrencyFormat.formatVolumeRange;
 import static com.google.common.base.Strings.padEnd;
+import static com.google.common.base.Strings.padStart;
 import static java.lang.String.format;
 import static java.text.DateFormat.DEFAULT;
 import static java.text.DateFormat.getDateInstance;
@@ -32,18 +33,27 @@ class TableFormat {
     // such as COL_HEADER_CREATION_DATE, COL_HEADER_VOLUME and COL_HEADER_UUID, the
     // expected max data string length is accounted for.  In others, the column header length
     // are expected to be greater than any column value length.
+    private static final String COL_HEADER_ADDRESS = padEnd("Address", 34, ' ');
     private static final String COL_HEADER_AMOUNT = padEnd("BTC(min - max)", 24, ' ');
+    private static final String COL_HEADER_BALANCE = padStart("Balance", 12, ' ');
+    private static final String COL_HEADER_CONFIRMATIONS = "Confirmations";
     private static final String COL_HEADER_CREATION_DATE = padEnd("Creation Date", 24, ' ');
-    private static final String COL_HEADER_DIRECTION = "Buy/Sell";
+    private static final String COL_HEADER_DIRECTION = "Buy/Sell";  // TODO "Take Offer to
     private static final String COL_HEADER_PAYMENT_METHOD = "Payment Method";
     private static final String COL_HEADER_PRICE = "Price in %-3s for 1 BTC";
     private static final String COL_HEADER_VOLUME = padEnd("%-3s(min - max)", 15, ' ');
     private static final String COL_HEADER_UUID = padEnd("ID", 52, ' ');
 
     static String formatAddressBalanceTbl(List<AddressBalanceInfo> addressBalanceInfo) {
-        return format("%-35s %13s  %s%n", "Address", "Balance", "Confirmations")
+        String headerLine = (COL_HEADER_ADDRESS + COL_HEADER_DELIMITER
+                + COL_HEADER_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_CONFIRMATIONS + COL_HEADER_DELIMITER + "\n");
+        String colDataFormat = "%-" + COL_HEADER_ADDRESS.length() + "s" // left justify
+                + "  %" + COL_HEADER_BALANCE.length() + "s" // right justify
+                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"; // right justify
+        return headerLine
                 + addressBalanceInfo.stream()
-                .map(info -> format("%-35s %13s %14d",
+                .map(info -> format(colDataFormat,
                         info.getAddress(),
                         formatSatoshis(info.getBalance()),
                         info.getNumConfirmations()))
@@ -86,6 +96,26 @@ class TableFormat {
                         formatDateTime(o.getDate(), true),
                         o.getId()))
                 .collect(Collectors.joining("\n"));
+    }
+
+    static String formatPaymentAcctTbl() {
+        /*
+        case getpaymentaccts: {
+                    var request = GetPaymentAccountsRequest.newBuilder().build();
+                    var reply = paymentAccountsService.getPaymentAccounts(request);
+                    var columnFormatSpec = "%-41s %-25s %-14s %s";
+                    out.println(format(columnFormatSpec, "ID", "Name", "Currency", "Payment Method"));
+                    out.println(reply.getPaymentAccountsList().stream()
+                            .map(a -> format(columnFormatSpec,
+                                    a.getId(),
+                                    a.getAccountName(),
+                                    a.getSelectedTradeCurrency().getCode(),
+                                    a.getPaymentMethod().getId()))
+                            .collect(Collectors.joining("\n")));
+                    return;
+                }
+         */
+        return "";
     }
 
     // Return length of the longest string value, or the header.len, whichever is greater.
