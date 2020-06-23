@@ -92,7 +92,7 @@ class TableFormat {
         return headerLine
                 + offerInfo.stream()
                 .map(o -> format(colDataFormat,
-                        o.getDirection().equals("BUY") ? "SELL" : "BUY",
+                        o.getDirection(),
                         formatOfferPrice(o.getPrice()),
                         formatAmountRange(o.getMinAmount(), o.getAmount()),
                         formatVolumeRange(o.getMinVolume(), o.getVolume()),

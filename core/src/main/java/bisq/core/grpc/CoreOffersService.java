@@ -60,14 +60,19 @@ public class CoreOffersService {
 
     public List<Offer> getOffers(String direction, String fiatCurrencyCode) {
         List<Offer> offers = offerBookService.getOffers().stream()
-                .filter(o -> !o.getDirection().name().equalsIgnoreCase(direction)
-                        && o.getOfferPayload().getCounterCurrencyCode().equalsIgnoreCase(fiatCurrencyCode))
+                .filter(o -> {
+                    var offerOfWantedDirection = o.getDirection().name().equalsIgnoreCase(direction);
+                    var offerInWantedCurrency = o.getOfferPayload().getCounterCurrencyCode().equalsIgnoreCase(fiatCurrencyCode);
+                    return offerOfWantedDirection && offerInWantedCurrency;
+                })
                 .collect(Collectors.toList());
 
-        if (direction.equals(BUY.name()))
-            offers.sort(Comparator.comparing(Offer::getPrice));
-        else
+        // A buyer probably wants to see sell orders in price ascending order.
+        // A seller probably wants to see buy orders in price descending order.
+        if (direction.equalsIgnoreCase(BUY.name()))
             offers.sort(Comparator.comparing(Offer::getPrice).reversed());
+        else
+            offers.sort(Comparator.comparing(Offer::getPrice));
 
         return offers;
     }
