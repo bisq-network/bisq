@@ -54,11 +54,11 @@ public class Restrictions {
     }
 
     public static double getDefaultBuyerSecurityDepositAsPercent() {
-        return 0.15; // 15% of trade amount.
+        return 0.30; // 30% of trade amount.
     }
 
     public static double getMinBuyerSecurityDepositAsPercent() {
-        return 0.15; // 15% of trade amount.
+        return 0.30; // 30% of trade amount.
     }
 
     public static double getMaxBuyerSecurityDepositAsPercent() {
@@ -75,7 +75,7 @@ public class Restrictions {
 
 
     public static double getSellerSecurityDepositAsPercent() {
-        return 0.15; // 15% of trade amount.
+        return 0.30; // 30% of trade amount.
     }
 
     public static Coin getMinSellerSecurityDepositAsCoin() {
