@@ -202,19 +202,12 @@ public class CliMain {
                     return;
                 }
                 case createpaymentacct: {
-                    if (nonOptionArgs.size() < 2)
-                        throw new IllegalArgumentException("no account name specified");
+                    if (nonOptionArgs.size() < 4)
+                        throw new IllegalArgumentException(
+                                "incorrect parameter count, expecting account name, account number, currency code");
 
                     var accountName = nonOptionArgs.get(1);
-
-                    if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("no account number specified");
-
                     var accountNumber = nonOptionArgs.get(2);
-
-                    if (nonOptionArgs.size() < 4)
-                        throw new IllegalArgumentException("no fiat currency specified");
-
                     var fiatCurrencyCode = nonOptionArgs.get(3);
 
                     var request = CreatePaymentAccountRequest.newBuilder()
