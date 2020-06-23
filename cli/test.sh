@@ -187,14 +187,7 @@
   run ./bisq-cli --password=xyz getoffers
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "Error: no buy/sell direction specified" ]
-}
-
-@test "test getoffers missing ccy argument" {
-  run ./bisq-cli --password=xyz getoffers buy
-  [ "$status" -eq 1 ]
-  echo "actual output:  $output" >&2
-  [ "$output" = "Error: no fiat currency specified" ]
+  [ "$output" = "Error: incorrect parameter count, expecting direction (buy|sell), currency code" ]
 }
 
 @test "test getoffers buy eur check return status" {

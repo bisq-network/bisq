@@ -181,16 +181,10 @@ public class CliMain {
                     return;
                 }
                 case getoffers: {
-                    if (nonOptionArgs.size() < 2)
-                        throw new IllegalArgumentException("no buy/sell direction specified");
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting direction (buy|sell), currency code");
 
                     var direction = nonOptionArgs.get(1);
-                    if (!direction.equalsIgnoreCase("BUY") && !direction.equalsIgnoreCase("SELL"))
-                        throw new IllegalArgumentException("no buy/sell direction specified");
-
-                    if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("no fiat currency specified");
-
                     var fiatCurrency = nonOptionArgs.get(2);
 
                     var request = GetOffersRequest.newBuilder()
