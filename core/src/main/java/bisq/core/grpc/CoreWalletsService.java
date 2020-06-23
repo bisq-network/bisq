@@ -72,9 +72,7 @@ class CoreWalletsService {
     }
 
     public long getAvailableBalance() {
-        if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
-
+        verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
         var balance = balances.getAvailableBalance().get();
@@ -96,9 +94,7 @@ class CoreWalletsService {
     }
 
     public List<AddressBalanceInfo> getFundingAddresses() {
-        if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
-
+        verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
         // Create a new funding address if none exists.
@@ -140,8 +136,7 @@ class CoreWalletsService {
     }
 
     public void setWalletPassword(String password, String newPassword) {
-        if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
+        verifyWalletsAreAvailable();
 
         KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
 
@@ -228,6 +223,12 @@ class CoreWalletsService {
 
         walletsManager.decryptWallets(aesKey);
         walletsManager.backupWallets();
+    }
+
+    // Throws a RuntimeException if wallets are not available (encrypted or not).
+    private void verifyWalletsAreAvailable() {
+        if (!walletsManager.areWalletsAvailable())
+            throw new IllegalStateException("wallet is not yet available");
     }
 
     // Throws a RuntimeException if wallets are not available or not encrypted.
