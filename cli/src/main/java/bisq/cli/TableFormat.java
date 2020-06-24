@@ -5,11 +5,11 @@ import bisq.proto.grpc.OfferInfo;
 
 import protobuf.PaymentAccount;
 
-import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import static bisq.cli.CurrencyFormat.formatAmountRange;
@@ -19,14 +19,14 @@ import static bisq.cli.CurrencyFormat.formatVolumeRange;
 import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.padStart;
 import static java.lang.String.format;
-import static java.text.DateFormat.DEFAULT;
-import static java.text.DateFormat.getDateInstance;
-import static java.text.DateFormat.getTimeInstance;
 import static java.util.Collections.max;
 import static java.util.Comparator.comparing;
 import static java.util.TimeZone.getTimeZone;
 
 class TableFormat {
+
+    private static final TimeZone TZ_UTC = getTimeZone("UTC");
+    private static final SimpleDateFormat DATE_FORMAT_ISO_8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     // For inserting 2 spaces between column headers.
     private static final String COL_HEADER_DELIMITER = "  ";
@@ -39,7 +39,7 @@ class TableFormat {
     private static final String COL_HEADER_AMOUNT = padEnd("BTC(min - max)", 24, ' ');
     private static final String COL_HEADER_BALANCE = padStart("Balance", 12, ' ');
     private static final String COL_HEADER_CONFIRMATIONS = "Confirmations";
-    private static final String COL_HEADER_CREATION_DATE = padEnd("Creation Date", 24, ' ');
+    private static final String COL_HEADER_CREATION_DATE = padEnd("Creation Date (UTC)", 20, ' ');
     private static final String COL_HEADER_CURRENCY = "Currency";
     private static final String COL_HEADER_DIRECTION = "Buy/Sell";  // TODO "Take Offer to
     private static final String COL_HEADER_NAME = "Name";
@@ -97,7 +97,7 @@ class TableFormat {
                         formatAmountRange(o.getMinAmount(), o.getAmount()),
                         formatVolumeRange(o.getMinVolume(), o.getVolume()),
                         o.getPaymentMethodShortName(),
-                        formatDateTime(o.getDate(), true),
+                        formatTimestamp(o.getDate()),
                         o.getId()))
                 .collect(Collectors.joining("\n"));
     }
@@ -137,23 +137,8 @@ class TableFormat {
         return Math.max(longest, headerLength);
     }
 
-    private static String formatDateTime(long timestamp, boolean useLocaleAndLocalTimezone) {
-        Date date = new Date(timestamp);
-        Locale locale = useLocaleAndLocalTimezone ? Locale.getDefault() : Locale.US;
-        DateFormat dateInstance = getDateInstance(DEFAULT, locale);
-        DateFormat timeInstance = getTimeInstance(DEFAULT, locale);
-        if (!useLocaleAndLocalTimezone) {
-            dateInstance.setTimeZone(getTimeZone("UTC"));
-            timeInstance.setTimeZone(getTimeZone("UTC"));
-        }
-        return formatDateTime(date, dateInstance, timeInstance);
-    }
-
-    private static String formatDateTime(Date date, DateFormat dateFormatter, DateFormat timeFormatter) {
-        if (date != null) {
-            return dateFormatter.format(date) + " " + timeFormatter.format(date);
-        } else {
-            return "";
-        }
+    private static String formatTimestamp(long timestamp) {
+        DATE_FORMAT_ISO_8601.setTimeZone(TZ_UTC);
+        return DATE_FORMAT_ISO_8601.format(new Date(timestamp));
     }
 }
