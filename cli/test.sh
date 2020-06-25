@@ -166,6 +166,13 @@
   [ "$output" = "Error: address bogus not found in wallet" ]
 }
 
+@test "test createpaymentacct PerfectMoneyDummy (missing nbr, ccy params)" {
+  run ./bisq-cli --password=xyz createpaymentacct PerfectMoneyDummy
+  [ "$status" -eq 1 ]
+ echo "actual output:  $output" >&2
+  [ "$output" = "Error: incorrect parameter count, expecting account name, account number, currency code" ]
+}
+
 @test "test createpaymentacct PerfectMoneyDummy 0123456789 USD" {
   run ./bisq-cli --password=xyz createpaymentacct PerfectMoneyDummy 0123456789 USD
   [ "$status" -eq 0 ]
@@ -173,6 +180,28 @@
 
 @test "test getpaymentaccts" {
   run ./bisq-cli --password=xyz getpaymentaccts
+  [ "$status" -eq 0 ]
+}
+
+@test "test getoffers missing direction argument" {
+  run ./bisq-cli --password=xyz getoffers
+  [ "$status" -eq 1 ]
+  echo "actual output:  $output" >&2
+  [ "$output" = "Error: incorrect parameter count, expecting direction (buy|sell), currency code" ]
+}
+
+@test "test getoffers buy eur check return status" {
+  run ./bisq-cli --password=xyz getoffers buy eur
+  [ "$status" -eq 0 ]
+}
+
+@test "test getoffers buy eur check return status" {
+  run ./bisq-cli --password=xyz getoffers buy eur
+  [ "$status" -eq 0 ]
+}
+
+@test "test getoffers sell gbp check return status" {
+  run ./bisq-cli --password=xyz getoffers sell gbp
   [ "$status" -eq 0 ]
 }
 

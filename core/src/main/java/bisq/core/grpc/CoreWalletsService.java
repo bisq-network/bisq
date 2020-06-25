@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.core.grpc;
 
 import bisq.core.btc.Balances;
@@ -55,9 +72,7 @@ class CoreWalletsService {
     }
 
     public long getAvailableBalance() {
-        if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
-
+        verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
         var balance = balances.getAvailableBalance().get();
@@ -79,9 +94,7 @@ class CoreWalletsService {
     }
 
     public List<AddressBalanceInfo> getFundingAddresses() {
-        if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
-
+        verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
         // Create a new funding address if none exists.
@@ -123,8 +136,7 @@ class CoreWalletsService {
     }
 
     public void setWalletPassword(String password, String newPassword) {
-        if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
+        verifyWalletsAreAvailable();
 
         KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
 
@@ -211,6 +223,12 @@ class CoreWalletsService {
 
         walletsManager.decryptWallets(aesKey);
         walletsManager.backupWallets();
+    }
+
+    // Throws a RuntimeException if wallets are not available (encrypted or not).
+    private void verifyWalletsAreAvailable() {
+        if (!walletsManager.areWalletsAvailable())
+            throw new IllegalStateException("wallet is not yet available");
     }
 
     // Throws a RuntimeException if wallets are not available or not encrypted.
