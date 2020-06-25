@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
-class CoreWalletService {
+class CoreWalletsService {
 
     private final Balances balances;
     private final WalletsManager walletsManager;
@@ -31,7 +31,7 @@ class CoreWalletService {
     private KeyParameter tempAesKey;
 
     @Inject
-    public CoreWalletService(Balances balances, WalletsManager walletsManager) {
+    public CoreWalletsService(Balances balances, WalletsManager walletsManager) {
         this.balances = balances;
         this.walletsManager = walletsManager;
     }
