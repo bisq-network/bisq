@@ -17,7 +17,6 @@
 
 package bisq.core.filter;
 
-import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -153,7 +152,7 @@ public class FilterManager {
                     protectedStorageEntries.forEach(protectedStorageEntry -> {
                         if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
                             Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
-                            if (verifySignature(filter))
+                            if (verifySignature(filter) && getFilter().equals(filter))
                                 resetFilters();
                         }
                     });
