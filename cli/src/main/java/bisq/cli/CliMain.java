@@ -17,7 +17,9 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
@@ -58,6 +60,8 @@ public class CliMain {
     private enum Method {
         getversion,
         getbalance,
+        getaddressbalance,
+        getfundingaddresses,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -152,6 +156,22 @@ public class CliMain {
                     out.println(btcBalance);
                     return;
                 }
+                case getaddressbalance: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no address specified");
+
+                    var request = GetAddressBalanceRequest.newBuilder()
+                            .setAddress(nonOptionArgs.get(1)).build();
+                    var reply = walletService.getAddressBalance(request);
+                    out.println(reply.getAddressBalanceInfo());
+                    return;
+                }
+                case getfundingaddresses: {
+                    var request = GetFundingAddressesRequest.newBuilder().build();
+                    var reply = walletService.getFundingAddresses(request);
+                    out.println(reply.getFundingAddressesInfo());
+                    return;
+                }
                 case lockwallet: {
                     var request = LockWalletRequest.newBuilder().build();
                     walletService.lockWallet(request);
@@ -201,7 +221,7 @@ public class CliMain {
                 }
                 default: {
                     throw new RuntimeException(format("unhandled method '%s'", method));
-               }
+                }
             }
         } catch (StatusRuntimeException ex) {
             // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message
@@ -222,6 +242,8 @@ public class CliMain {
             stream.format("%-19s%-30s%s%n", "------", "------", "------------");
             stream.format("%-19s%-30s%s%n", "getversion", "", "Get server version");
             stream.format("%-19s%-30s%s%n", "getbalance", "", "Get server wallet balance");
+            stream.format("%-19s%-30s%s%n", "getaddressbalance", "", "Get server wallet address balance");
+            stream.format("%-19s%-30s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format("%-19s%-30s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
             stream.format("%-19s%-30s%s%n", "unlockwallet", "password timeout",
                     "Store wallet password in memory for timeout seconds");

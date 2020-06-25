@@ -1,7 +1,11 @@
 package bisq.core.grpc;
 
+import bisq.proto.grpc.GetAddressBalanceReply;
+import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceReply;
 import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetFundingAddressesReply;
+import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.LockWalletReply;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RemoveWalletPasswordReply;
@@ -32,6 +36,36 @@ class GrpcWalletService extends WalletGrpc.WalletImplBase {
         try {
             long result = walletsService.getAvailableBalance();
             var reply = GetBalanceReply.newBuilder().setBalance(result).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void getAddressBalance(GetAddressBalanceRequest req,
+                                  StreamObserver<GetAddressBalanceReply> responseObserver) {
+        try {
+            String result = walletsService.getAddressBalanceInfo(req.getAddress());
+            var reply = GetAddressBalanceReply.newBuilder().setAddressBalanceInfo(result).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void getFundingAddresses(GetFundingAddressesRequest req,
+                                    StreamObserver<GetFundingAddressesReply> responseObserver) {
+        try {
+            String result = walletsService.getFundingAddresses();
+            var reply = GetFundingAddressesReply.newBuilder().setFundingAddressesInfo(result).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalStateException cause) {
