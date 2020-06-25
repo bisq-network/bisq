@@ -17,16 +17,20 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.AddressBalanceInfo;
+import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.PaymentAccountsGrpc;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
-import bisq.proto.grpc.WalletGrpc;
+import bisq.proto.grpc.WalletsGrpc;
 
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -43,6 +47,8 @@ import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,14 +56,24 @@ import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.util.Collections.singletonList;
 
 /**
  * A command-line client for the Bisq gRPC API.
  */
+@SuppressWarnings("ResultOfMethodCallIgnored")
 @Slf4j
 public class CliMain {
 
+    private static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
+    private static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
+    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+    private static final Function<Long, String> formatSatoshis = (sats) ->
+            BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
+
     private enum Method {
+        createpaymentacct,
+        getpaymentaccts,
         getversion,
         getbalance,
         getaddressbalance,
@@ -135,7 +151,8 @@ public class CliMain {
         }));
 
         var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var walletService = WalletGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        var paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        var walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
 
         try {
             switch (method) {
@@ -147,12 +164,8 @@ public class CliMain {
                 }
                 case getbalance: {
                     var request = GetBalanceRequest.newBuilder().build();
-                    var reply = walletService.getBalance(request);
-                    var satoshiBalance = reply.getBalance();
-                    var satoshiDivisor = new BigDecimal(100000000);
-                    var btcFormat = new DecimalFormat("###,##0.00000000");
-                    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-                    var btcBalance = btcFormat.format(BigDecimal.valueOf(satoshiBalance).divide(satoshiDivisor));
+                    var reply = walletsService.getBalance(request);
+                    var btcBalance = formatSatoshis.apply(reply.getBalance());
                     out.println(btcBalance);
                     return;
                 }
@@ -162,19 +175,57 @@ public class CliMain {
 
                     var request = GetAddressBalanceRequest.newBuilder()
                             .setAddress(nonOptionArgs.get(1)).build();
-                    var reply = walletService.getAddressBalance(request);
-                    out.println(reply.getAddressBalanceInfo());
+                    var reply = walletsService.getAddressBalance(request);
+                    out.println(formatTable(singletonList(reply.getAddressBalanceInfo())));
                     return;
                 }
                 case getfundingaddresses: {
                     var request = GetFundingAddressesRequest.newBuilder().build();
-                    var reply = walletService.getFundingAddresses(request);
-                    out.println(reply.getFundingAddressesInfo());
+                    var reply = walletsService.getFundingAddresses(request);
+                    out.println(formatTable(reply.getAddressBalanceInfoList()));
+                    return;
+                }
+                case createpaymentacct: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no account name specified");
+
+                    var accountName = nonOptionArgs.get(1);
+
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("no account number specified");
+
+                    var accountNumber = nonOptionArgs.get(2);
+
+                    if (nonOptionArgs.size() < 4)
+                        throw new IllegalArgumentException("no fiat currency specified");
+
+                    var fiatCurrencyCode = nonOptionArgs.get(3).toUpperCase();
+
+                    var request = CreatePaymentAccountRequest.newBuilder()
+                            .setAccountName(accountName)
+                            .setAccountNumber(accountNumber)
+                            .setFiatCurrencyCode(fiatCurrencyCode).build();
+                    paymentAccountsService.createPaymentAccount(request);
+                    out.println(format("payment account %s saved", accountName));
+                    return;
+                }
+                case getpaymentaccts: {
+                    var request = GetPaymentAccountsRequest.newBuilder().build();
+                    var reply = paymentAccountsService.getPaymentAccounts(request);
+                    var columnFormatSpec = "%-41s %-25s %-14s %s";
+                    out.println(format(columnFormatSpec, "ID", "Name", "Currency", "Payment Method"));
+                    out.println(reply.getPaymentAccountsList().stream()
+                            .map(a -> format(columnFormatSpec,
+                                    a.getId(),
+                                    a.getAccountName(),
+                                    a.getSelectedTradeCurrency().getCode(),
+                                    a.getPaymentMethod().getId()))
+                            .collect(Collectors.joining("\n")));
                     return;
                 }
                 case lockwallet: {
                     var request = LockWalletRequest.newBuilder().build();
-                    walletService.lockWallet(request);
+                    walletsService.lockWallet(request);
                     out.println("wallet locked");
                     return;
                 }
@@ -194,7 +245,7 @@ public class CliMain {
                     var request = UnlockWalletRequest.newBuilder()
                             .setPassword(nonOptionArgs.get(1))
                             .setTimeout(timeout).build();
-                    walletService.unlockWallet(request);
+                    walletsService.unlockWallet(request);
                     out.println("wallet unlocked");
                     return;
                 }
@@ -203,7 +254,7 @@ public class CliMain {
                         throw new IllegalArgumentException("no password specified");
 
                     var request = RemoveWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
-                    walletService.removeWalletPassword(request);
+                    walletsService.removeWalletPassword(request);
                     out.println("wallet decrypted");
                     return;
                 }
@@ -215,7 +266,7 @@ public class CliMain {
                     var hasNewPassword = nonOptionArgs.size() == 3;
                     if (hasNewPassword)
                         requestBuilder.setNewPassword(nonOptionArgs.get(2));
-                    walletService.setWalletPassword(requestBuilder.build());
+                    walletsService.setWalletPassword(requestBuilder.build());
                     out.println("wallet encrypted" + (hasNewPassword ? " with new password" : ""));
                     return;
                 }
@@ -238,20 +289,32 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.format("%-19s%-30s%s%n", "Method", "Params", "Description");
-            stream.format("%-19s%-30s%s%n", "------", "------", "------------");
-            stream.format("%-19s%-30s%s%n", "getversion", "", "Get server version");
-            stream.format("%-19s%-30s%s%n", "getbalance", "", "Get server wallet balance");
-            stream.format("%-19s%-30s%s%n", "getaddressbalance", "", "Get server wallet address balance");
-            stream.format("%-19s%-30s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
-            stream.format("%-19s%-30s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
-            stream.format("%-19s%-30s%s%n", "unlockwallet", "password timeout",
+            stream.format("%-22s%-50s%s%n", "Method", "Params", "Description");
+            stream.format("%-22s%-50s%s%n", "------", "------", "------------");
+            stream.format("%-22s%-50s%s%n", "getversion", "", "Get server version");
+            stream.format("%-22s%-50s%s%n", "getbalance", "", "Get server wallet balance");
+            stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
+            stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
+            stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
+            stream.format("%-22s%-50s%s%n", "getpaymentaccts", "", "Get user payment accounts");
+            stream.format("%-22s%-50s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
+            stream.format("%-22s%-50s%s%n", "unlockwallet", "password timeout",
                     "Store wallet password in memory for timeout seconds");
-            stream.format("%-19s%-30s%s%n", "setwalletpassword", "password [newpassword]",
+            stream.format("%-22s%-50s%s%n", "setwalletpassword", "password [newpassword]",
                     "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.println();
         } catch (IOException ex) {
             ex.printStackTrace(stream);
         }
+    }
+
+    private static String formatTable(List<AddressBalanceInfo> addressBalanceInfo) {
+        return format("%-35s %13s  %s%n", "Address", "Balance", "Confirmations")
+                + addressBalanceInfo.stream()
+                .map(info -> format("%-35s %13s %14d",
+                        info.getAddress(),
+                        formatSatoshis.apply(info.getBalance()),
+                        info.getNumConfirmations()))
+                .collect(Collectors.joining("\n"));
     }
 }

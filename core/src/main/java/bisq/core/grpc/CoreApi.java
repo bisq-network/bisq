@@ -17,6 +17,7 @@
 
 package bisq.core.grpc;
 
+import bisq.core.grpc.model.AddressBalanceInfo;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
@@ -47,6 +48,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CoreApi {
+    private final CorePaymentAccountsService paymentAccountsService;
+    private final CoreWalletsService walletsService;
     private final OfferBookService offerBookService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final CreateOfferService createOfferService;
@@ -54,11 +57,15 @@ public class CoreApi {
     private final User user;
 
     @Inject
-    public CoreApi(OfferBookService offerBookService,
+    public CoreApi(CorePaymentAccountsService paymentAccountsService,
+                   CoreWalletsService walletsService,
+                   OfferBookService offerBookService,
                    TradeStatisticsManager tradeStatisticsManager,
                    CreateOfferService createOfferService,
                    OpenOfferManager openOfferManager,
                    User user) {
+        this.paymentAccountsService = paymentAccountsService;
+        this.walletsService = walletsService;
         this.offerBookService = offerBookService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.createOfferService = createOfferService;
@@ -70,16 +77,52 @@ public class CoreApi {
         return Version.VERSION;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Wallets
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public long getAvailableBalance() {
+        return walletsService.getAvailableBalance();
+    }
+
+    public long getAddressBalance(String addressString) {
+        return walletsService.getAddressBalance(addressString);
+    }
+
+    public AddressBalanceInfo getAddressBalanceInfo(String addressString) {
+        return walletsService.getAddressBalanceInfo(addressString);
+    }
+
+    public List<AddressBalanceInfo> getFundingAddresses() {
+        return walletsService.getFundingAddresses();
+    }
+
+    public void setWalletPassword(String password, String newPassword) {
+        walletsService.setWalletPassword(password, newPassword);
+    }
+
+    public void lockWallet() {
+        walletsService.lockWallet();
+    }
+
+    public void unlockWallet(String password, long timeout) {
+        walletsService.unlockWallet(password, timeout);
+    }
+
+    public void removeWalletPassword(String password) {
+        walletsService.removeWalletPassword(password);
+    }
+
     public List<TradeStatistics2> getTradeStatistics() {
         return new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
     }
 
-    public List<Offer> getOffers() {
-        return offerBookService.getOffers();
+    public int getNumConfirmationsForMostRecentTransaction(String addressString) {
+        return walletsService.getNumConfirmationsForMostRecentTransaction(addressString);
     }
 
-    public Set<PaymentAccount> getPaymentAccounts() {
-        return user.getPaymentAccounts();
+    public List<Offer> getOffers() {
+        return offerBookService.getOffers();
     }
 
     public void placeOffer(String currencyCode,
@@ -145,4 +188,15 @@ public class CoreApi {
                 log::error);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PaymentAccounts
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
+        paymentAccountsService.createPaymentAccount(accountName, accountNumber, fiatCurrencyCode);
+    }
+
+    public Set<PaymentAccount> getPaymentAccounts() {
+        return paymentAccountsService.getPaymentAccounts();
+    }
 }

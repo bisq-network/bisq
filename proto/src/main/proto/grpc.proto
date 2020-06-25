@@ -72,12 +72,23 @@ message GetOffersReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// PaymentAccount
+// PaymentAccounts
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service GetPaymentAccounts {
+service PaymentAccounts {
+    rpc CreatePaymentAccount (CreatePaymentAccountRequest) returns (CreatePaymentAccountReply) {
+    }
     rpc GetPaymentAccounts (GetPaymentAccountsRequest) returns (GetPaymentAccountsReply) {
     }
+}
+
+message CreatePaymentAccountRequest {
+    string accountName = 1;
+    string accountNumber = 2;
+    string fiatCurrencyCode = 3;
+}
+
+message CreatePaymentAccountReply {
 }
 
 message GetPaymentAccountsRequest {
@@ -113,10 +124,10 @@ message PlaceOfferReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Wallet
+// Wallets
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service Wallet {
+service Wallets {
     rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
     }
     rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
@@ -145,14 +156,14 @@ message GetAddressBalanceRequest {
 }
 
 message GetAddressBalanceReply {
-    string addressBalanceInfo = 1;
+    AddressBalanceInfo addressBalanceInfo = 1;
 }
 
 message GetFundingAddressesRequest {
 }
 
 message GetFundingAddressesReply {
-    string fundingAddressesInfo = 1;
+    repeated AddressBalanceInfo addressBalanceInfo = 1;
 }
 
 message SetWalletPasswordRequest {
@@ -182,4 +193,10 @@ message UnlockWalletRequest {
 }
 
 message UnlockWalletReply {
+}
+
+message AddressBalanceInfo {
+    string address = 1;
+    int64 balance = 2;
+    int64 numConfirmations = 3;
 }
