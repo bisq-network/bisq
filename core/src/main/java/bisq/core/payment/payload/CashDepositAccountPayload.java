@@ -224,4 +224,9 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
 
         return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
     }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
+    }
 }

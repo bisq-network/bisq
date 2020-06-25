@@ -169,4 +169,8 @@ public abstract class PaymentAccount implements PersistablePayload {
     public String getSaltAsHex() {
         return Utilities.bytesAsHexString(getSalt());
     }
+
+    public String getOwnerId() {
+        return paymentAccountPayload.getOwnerId();
+    }
 }

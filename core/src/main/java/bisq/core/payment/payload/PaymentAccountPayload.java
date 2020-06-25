@@ -135,4 +135,8 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     protected byte[] getAgeWitnessInputData(byte[] data) {
         return ArrayUtils.addAll(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
+
+    public String getOwnerId() {
+        return null;
+    }
 }
