@@ -106,4 +106,9 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
         // slight changes in holder name (e.g. add or remove middle name)
         return super.getAgeWitnessInputData(emailOrMobileNr.getBytes(StandardCharsets.UTF_8));
     }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
+    }
 }

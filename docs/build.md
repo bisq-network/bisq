@@ -22,7 +22,7 @@ You do _not_ need to install Gradle to complete the following command. The `grad
     ./gradlew build
 
 If on Windows run `gradlew.bat build` instead.
-
+If in need to install JAVA check out - https://github.com/bisq-network/bisq/tree/master/scripts
 
 ## Run
 
@@ -33,7 +33,7 @@ Note: bisq runs fine on jdk10 and jdk11. jdk12 is currently not supported.
     ./bisq-desktop
 
 If on Windows use the `bisq-desktop.bat` script instead.
-
+If in need to install JAVA checkout the install_java scripts at https://github.com/bisq-network/bisq/tree/master/scripts
 
 ## See also
 

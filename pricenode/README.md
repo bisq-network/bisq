@@ -72,7 +72,7 @@ curl http://localhost:8080/info
 If you run a main pricenode, you also are obliged to activate the monitoring feed by running
 
 ```bash
-curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh | sudo bash
+bash <(curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh)
 ```
 Follow the instruction given by the script and report your certificate to the [@bisq-network/monitoring](https://github.com/orgs/bisq-network/teams/monitoring-operators) team or via the [Keybase](https://keybase.io/team/bisq) `#monitoring` channel!
 

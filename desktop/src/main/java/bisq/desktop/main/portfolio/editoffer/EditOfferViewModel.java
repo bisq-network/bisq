@@ -30,8 +30,8 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -107,5 +107,11 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
 
     public boolean isSecurityDepositValid() {
         return securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid;
+    }
+
+    @Override
+    public void triggerFocusOutOnAmountFields() {
+        // do not update BTC Amount or minAmount here
+        // issue 2798: "after a few edits of offer the BTC amount has increased"
     }
 }

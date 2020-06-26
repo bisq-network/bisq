@@ -10,14 +10,15 @@ Highly recommended to use SSD! Minimum specs:
 
 ## Software
 
-The following OS are known to work well:
+The following OS's are known to work well:
 
-* Ubuntu 18
+* Ubuntu 18.04
+* Ubuntu 20.04
 * FreeBSD 12
 
 ### Installation
 
-Start with a clean Ubuntu 18.04 LTS server installation, and run the script
+Start with a clean Ubuntu server installation, and run the script
 ```bash
 curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/seednode/install_seednode_debian.sh | sudo bash
 ```
@@ -66,7 +67,7 @@ macOS:
 If you run a main seednode, you also are obliged to activate the monitoring feed by running
 
 ```bash
-curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh | sudo bash
+bash <(curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh)
 ```
 Follow the instruction given by the script and report your certificate to the seednode group!
 
@@ -78,8 +79,7 @@ sudo -u bisq -s
 cd bisq
 git fetch origin
 git checkout v1.2.5 # new tag
-./gradlew clean
-./gradlew build -x test
+./gradlew clean build -x test
 exit
 sudo service bisq restart
 sudo journalctl --unit bisq --follow
