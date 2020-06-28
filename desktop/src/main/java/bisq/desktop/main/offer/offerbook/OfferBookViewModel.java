@@ -47,8 +47,8 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -168,9 +168,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.sortedItems = new SortedList<>(filteredItems);
 
-        tradeCurrencyListChangeListener = c -> {
-            fillAllTradeCurrencies();
-        };
+        tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
 
         filterItemsListener = c -> {
             final Optional<OfferBookListItem> highestAmountOffer = filteredItems.stream()
@@ -645,4 +643,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         else
             return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
+
+    public String formatDepositString(Coin deposit, long amount) {
+        return btcFormatter.formatCoinWithCode(deposit) + " (" + deposit.getValue() / (double) amount + "%)";
+    }
+
 }

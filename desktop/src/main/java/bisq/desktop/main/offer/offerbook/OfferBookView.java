@@ -38,7 +38,6 @@ import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.CssTheme;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -130,7 +129,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
-            priceColumn, paymentMethodColumn, signingStateColumn, avatarColumn;
+            priceColumn, paymentMethodColumn, depositColumn, signingStateColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -224,6 +223,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(volumeColumn);
         paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
+        depositColumn = getDepositColumn();
+        tableView.getColumns().add(depositColumn);
         signingStateColumn = getSigningStateColumn();
         tableView.getColumns().add(signingStateColumn);
         avatarColumn = getAvatarColumn();
@@ -919,6 +920,52 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     setGraphic(null);
                                     if (field != null)
                                         field.setOnAction(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getDepositColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(
+                Res.get("offerbook.deposit"),
+                Res.get("offerbook.deposit.help")) {
+            {
+                setMinWidth(70);
+                setSortable(true);
+            }
+        };
+
+        column.getStyleClass().add("number-column");
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OfferBookListItem, OfferBookListItem> call(
+                            TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    var isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+                                    var deposit = isSellOffer ? item.getOffer().getBuyerSecurityDeposit() :
+                                            item.getOffer().getSellerSecurityDeposit();
+                                    if (deposit == null) {
+                                        setText(Res.get("shared.na"));
+                                        setGraphic(null);
+                                    } else {
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.formatDepositString(
+                                                deposit, item.getOffer().getAmount().getValue()),
+                                                GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
+                                    }
+                                } else {
+                                    setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
