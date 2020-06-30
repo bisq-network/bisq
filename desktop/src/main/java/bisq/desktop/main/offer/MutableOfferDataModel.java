@@ -303,7 +303,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         Tuple2<Coin, Integer> estimatedFeeAndTxSize = createOfferService.getEstimatedFeeAndTxSize(amount.get(),
                 direction,
                 buyerSecurityDeposit.get(),
-                createOfferService.getSellerSecurityDepositAsDouble());
+                createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit.get()));
         txFeeFromFeeService = estimatedFeeAndTxSize.first;
         feeTxSize = estimatedFeeAndTxSize.second;
     }
@@ -701,7 +701,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         if (amountAsCoin == null)
             amountAsCoin = Coin.ZERO;
 
-        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(createOfferService.getSellerSecurityDepositAsDouble(), amountAsCoin);
+        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(
+                createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit.get()), amountAsCoin);
         return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 

@@ -118,6 +118,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("bsq.bisq.cc (@m52go)", "https://bsq.bisq.cc/tx.html?tx=", "https://bsq.bisq.cc/Address.html?addr=")
     ));
 
+    public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
+
+
     // payload is initialized so the default values are available for Property initialization.
     @Setter
     @Delegate(excludes = ExcludesDelegateMethods.class)

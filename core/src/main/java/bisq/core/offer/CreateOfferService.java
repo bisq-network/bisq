@@ -181,7 +181,7 @@ public class CreateOfferService {
         List<String> acceptedCountryCodes = PaymentAccountUtil.getAcceptedCountryCodes(paymentAccount);
         String bankId = PaymentAccountUtil.getBankId(paymentAccount);
         List<String> acceptedBanks = PaymentAccountUtil.getAcceptedBanks(paymentAccount);
-        double sellerSecurityDeposit = getSellerSecurityDepositAsDouble();
+        double sellerSecurityDeposit = getSellerSecurityDepositAsDouble(buyerSecurityDepositAsDouble);
         Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDepositAsDouble, sellerSecurityDeposit).first;
         Coin makerFeeAsCoin = getMakerFee(amount);
         boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
@@ -285,8 +285,9 @@ public class CreateOfferService {
                 getSellerSecurityDeposit(amount, sellerSecurityDeposit);
     }
 
-    public double getSellerSecurityDepositAsDouble() {
-        return Restrictions.getSellerSecurityDepositAsPercent();
+    public double getSellerSecurityDepositAsDouble(double buyerSecurityDeposit) {
+        return Preferences.USE_SYMMETRIC_SECURITY_DEPOSIT ? buyerSecurityDeposit :
+                Restrictions.getSellerSecurityDepositAsPercent();
     }
 
     public Coin getMakerFee(Coin amount) {

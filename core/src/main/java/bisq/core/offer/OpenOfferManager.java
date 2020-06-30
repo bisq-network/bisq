@@ -22,8 +22,8 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
-import bisq.core.locale.Res;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.Res;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
@@ -353,7 +353,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         Coin reservedFundsForOffer = createOfferService.getReservedFundsForOffer(offer.getDirection(),
                 offer.getAmount(),
                 buyerSecurityDeposit,
-                createOfferService.getSellerSecurityDepositAsDouble());
+                createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit));
 
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
