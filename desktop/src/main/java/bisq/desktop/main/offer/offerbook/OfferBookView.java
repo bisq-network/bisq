@@ -934,7 +934,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Res.get("offerbook.deposit"),
                 Res.get("offerbook.deposit.help")) {
             {
-                setMinWidth(70);
+                setMinWidth(80);
                 setSortable(true);
             }
         };

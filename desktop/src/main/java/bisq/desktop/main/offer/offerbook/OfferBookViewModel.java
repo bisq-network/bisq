@@ -645,7 +645,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     public String formatDepositString(Coin deposit, long amount) {
-        return btcFormatter.formatCoinWithCode(deposit) + " (" + deposit.getValue() / (double) amount + "%)";
+        var percentage = FormattingUtils.formatToPercentWithSymbol(deposit.getValue() / (double) amount);
+        return btcFormatter.formatCoin(deposit) + " (" + percentage + ")";
     }
-
 }
