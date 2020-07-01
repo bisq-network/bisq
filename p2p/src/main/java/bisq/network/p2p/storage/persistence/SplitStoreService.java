@@ -143,7 +143,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
         });
 
         // load our live data store again - ie to make sure our storage is indeed our live store
-        store = readStore(getFileName());
+        storage.initAndGetPersistedWithFileName(getFileName(), 10);
     }
 
     /**
