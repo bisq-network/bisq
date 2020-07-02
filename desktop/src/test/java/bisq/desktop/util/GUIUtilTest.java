@@ -141,7 +141,8 @@ public class GUIUtilTest {
         assertFalse(regexValidator.validate("abcdefghijklmnop.onion:").isValid);
 
         // onion v3 addresses
-        assertFalse(regexValidator.validate("32zzibxmqi2ybxpqyggwwuwz7a3lbvtzoloti7cxoevyvijexvgsfeid.onion:8333").isValid);
+        assertFalse(regexValidator.validate("32zzibxmqi2ybxpqyggwwuwz7a3lbvtzoloti7cxoevyvijexvgsfei.onion:8333").isValid); // 1 missing char 
+        assertTrue(regexValidator.validate("wizseedscybbttk4bmb2lzvbuk2jtect37lcpva4l3twktmkzemwbead.onion:8000").isValid);
 
         // ipv4 addresses
         assertTrue(regexValidator.validate("12.34.56.78").isValid);
