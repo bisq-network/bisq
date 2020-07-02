@@ -81,7 +81,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -347,21 +346,17 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 .filter(e -> e.getTradeDate().compareTo(startDate) >= 0)
                 .sorted(Comparator.comparing(TradeStatistics2::getTradeDate))
                 .collect(Collectors.toList());
-        var movingAverage = new MathUtils.MovingAverage(10);
-        var rangedMovingAverage = new ArrayList<Double>();
+        var movingAverage = new MathUtils.MovingAverage(10, 0.2);
+        double[] extremes = {Double.MAX_VALUE, Double.MIN_VALUE};
         sortedRangeData.forEach(e -> {
-            var nextVal = movingAverage.next(e.getTradePrice().getValue());
-            if (movingAverage.fullWindow()) {
-                rangedMovingAverage.add(nextVal);
-            }
+            var price = e.getTradePrice().getValue();
+            movingAverage.next(price).ifPresent(val -> {
+                if (val < extremes[0]) extremes[0] = val;
+                if (val > extremes[1]) extremes[1] = val;
+            });
         });
-
-        var min = rangedMovingAverage.stream()
-                .min(Double::compareTo)
-                .orElse(0d);
-        var max = rangedMovingAverage.stream()
-                .max(Double::compareTo)
-                .orElse(0d);
+        var min = extremes[0];
+        var max = extremes[1];
         if (min == 0d || max == 0d) {
             setBuyerSecurityDeposit(minSecurityDeposit, false);
             return;
