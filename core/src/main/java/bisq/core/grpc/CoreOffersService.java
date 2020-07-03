@@ -123,12 +123,14 @@ public class CoreOffersService {
                             PaymentAccount paymentAccount,
                             boolean useSavingsWallet,
                             TransactionResultHandler resultHandler) {
+        Coin useDefaultTxFee = Coin.ZERO;
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
                 currencyCode,
                 amount,
                 minAmount,
                 price,
+                useDefaultTxFee,
                 useMarketBasedPrice,
                 marketPriceMargin,
                 buyerSecurityDeposit,
