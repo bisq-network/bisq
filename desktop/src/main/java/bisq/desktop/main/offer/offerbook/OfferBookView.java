@@ -246,6 +246,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod()));
         avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
+        depositColumn.setComparator(Comparator.comparing(o -> {
+            var isSellOffer = o.getOffer().getDirection() == OfferPayload.Direction.SELL;
+            var deposit = isSellOffer ? o.getOffer().getBuyerSecurityDeposit() :
+                    o.getOffer().getSellerSecurityDeposit();
+
+            return (deposit == null) ? 0.0 : deposit.getValue() / (double) o.getOffer().getAmount().getValue();
+
+        }, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         nrOfOffersLabel = new AutoTooltipLabel("");
         nrOfOffersLabel.setId("num-offers");
