@@ -23,6 +23,8 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.SignPaymentAccountsWindow;
+import bisq.desktop.main.overlays.windows.SignSpecificWitnessWindow;
+import bisq.desktop.main.overlays.windows.SignUnsignedPubKeysWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
@@ -49,6 +51,8 @@ import javax.inject.Inject;
 public class ArbitratorView extends DisputeAgentView {
 
     private final SignPaymentAccountsWindow signPaymentAccountsWindow;
+    private final SignSpecificWitnessWindow signSpecificWitnessWindow;
+    private final SignUnsignedPubKeysWindow signUnsignedPubKeysWindow;
 
     @Inject
     public ArbitratorView(ArbitrationManager arbitrationManager,
@@ -61,7 +65,9 @@ public class ArbitratorView extends DisputeAgentView {
                           TradeDetailsWindow tradeDetailsWindow,
                           AccountAgeWitnessService accountAgeWitnessService,
                           @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
-                          SignPaymentAccountsWindow signPaymentAccountsWindow) {
+                          SignPaymentAccountsWindow signPaymentAccountsWindow,
+                          SignSpecificWitnessWindow signSpecificWitnessWindow,
+                          SignUnsignedPubKeysWindow signUnsignedPubKeysWindow) {
         super(arbitrationManager,
                 keyRing,
                 tradeManager,
@@ -73,6 +79,8 @@ public class ArbitratorView extends DisputeAgentView {
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
         this.signPaymentAccountsWindow = signPaymentAccountsWindow;
+        this.signSpecificWitnessWindow = signSpecificWitnessWindow;
+        this.signUnsignedPubKeysWindow = signUnsignedPubKeysWindow;
     }
 
     @Override
@@ -89,6 +97,10 @@ public class ArbitratorView extends DisputeAgentView {
     protected void handleKeyPressed(KeyEvent event) {
         if (Utilities.isAltOrCtrlPressed(KeyCode.S, event)) {
             signPaymentAccountsWindow.show();
+        } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, event)) {
+            signSpecificWitnessWindow.show();
+        } else if (Utilities.isAltOrCtrlPressed(KeyCode.O, event)) {
+            signUnsignedPubKeysWindow.show();
         }
     }
 }

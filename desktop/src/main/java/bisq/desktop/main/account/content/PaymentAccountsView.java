@@ -16,6 +16,8 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.util.Utilities;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,9 +28,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 
 import javafx.beans.value.ChangeListener;
+
+import javafx.event.EventHandler;
 
 import javafx.collections.ObservableList;
 
@@ -41,8 +47,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     protected ListView<PaymentAccount> paymentAccountsListView;
     private ChangeListener<PaymentAccount> paymentAccountChangeListener;
     protected Button addAccountButton, exportButton, importButton;
-    SignedWitnessService signedWitnessService;
     protected AccountAgeWitnessService accountAgeWitnessService;
+    private EventHandler<KeyEvent> keyEventEventHandler;
 
     public PaymentAccountsView(M model, AccountAgeWitnessService accountAgeWitnessService) {
         super(model);
@@ -51,6 +57,16 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
 
     @Override
     public void initialize() {
+        keyEventEventHandler = event -> {
+            if (Utilities.isCtrlShiftPressed(KeyCode.L, event)) {
+                accountAgeWitnessService.getAccountAgeWitnessUtils().logSignedWitnesses();
+            } else if (Utilities.isCtrlShiftPressed(KeyCode.S, event)) {
+                accountAgeWitnessService.getAccountAgeWitnessUtils().logSigners();
+            } else if (Utilities.isCtrlShiftPressed(KeyCode.U, event)) {
+                accountAgeWitnessService.getAccountAgeWitnessUtils().logUnsignedSignerPubKeys();
+            }
+        };
+
         buildForm();
         paymentAccountChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
@@ -68,6 +84,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
         addAccountButton.setOnAction(event -> addNewAccount());
         exportButton.setOnAction(event -> exportAccounts());
         importButton.setOnAction(event -> importAccounts());
+        if (root.getScene() != null)
+            root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     @Override
@@ -76,6 +94,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
         addAccountButton.setOnAction(null);
         exportButton.setOnAction(null);
         importButton.setOnAction(null);
+        if (root.getScene() != null)
+            root.getScene().removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     protected void onDeleteAccount(PaymentAccount paymentAccount) {

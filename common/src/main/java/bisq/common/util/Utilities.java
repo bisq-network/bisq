@@ -42,10 +42,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
-import javax.crypto.Cipher;
-
-import java.security.NoSuchAlgorithmException;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -56,15 +52,19 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -330,6 +330,10 @@ public class Utilities {
         return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
     }
 
+    public static boolean isCtrlShiftPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return new KeyCodeCombination(keyCode, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN).match(keyEvent);
+    }
+
     public static byte[] concatenateByteArrays(byte[] array1, byte[] array2) {
         return ArrayUtils.addAll(array1, array2);
     }
@@ -451,5 +455,11 @@ public class Utilities {
             result = result << 8 | aByte & 0xff;
         }
         return result;
+    }
+
+    // Helper to filter unique elements by key
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 }

@@ -358,6 +358,6 @@ public class ProcessModel implements Model, PersistablePayload {
     }
 
     void logTrade(Trade trade) {
-        accountAgeWitnessService.witnessDebugLog(trade, null);
+        accountAgeWitnessService.getAccountAgeWitnessUtils().witnessDebugLog(trade, null);
     }
 }

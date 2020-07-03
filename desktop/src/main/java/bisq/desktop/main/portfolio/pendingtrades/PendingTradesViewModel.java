@@ -374,7 +374,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         checkNotNull(trade.getOffer(), "offer must not be null");
         AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(dataModel.getSellersPaymentAccountPayload());
 
-        accountAgeWitnessService.witnessDebugLog(trade, myWitness);
+        accountAgeWitnessService.getAccountAgeWitnessUtils().witnessDebugLog(trade, myWitness);
 
         return accountAgeWitnessService.accountIsSigner(myWitness) &&
                 !accountAgeWitnessService.peerHasSignedWitness(trade) &&

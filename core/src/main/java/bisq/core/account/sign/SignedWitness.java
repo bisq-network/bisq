@@ -168,7 +168,7 @@ public class SignedWitness implements ProcessOncePersistableNetworkPayload, Pers
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    P2PDataStorage.ByteArray getHashAsByteArray() {
+    public P2PDataStorage.ByteArray getHashAsByteArray() {
         return new P2PDataStorage.ByteArray(hash);
     }
 

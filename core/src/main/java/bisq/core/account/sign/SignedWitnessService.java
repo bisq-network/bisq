@@ -29,6 +29,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Utilities;
@@ -52,25 +53,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
     private static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
-    static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = Coin.parseCoin("0.0025");
+    public static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = Coin.parseCoin("0.0025");
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
     private final User user;
 
+    @Getter
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
     private final FilterManager filterManager;
 
@@ -123,6 +127,8 @@ public class SignedWitnessService {
                 }
             });
         }
+        // TODO: Enable cleaning of signed witness list when necessary
+        // cleanSignedWitnesses();
     }
 
     private void onBootstrapComplete() {
@@ -176,7 +182,14 @@ public class SignedWitnessService {
                 .anyMatch(ownerPubKey -> filterManager.isSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
     }
 
-    public String ownerPubKey(AccountAgeWitness accountAgeWitness) {
+    private byte[] ownerPubKey(AccountAgeWitness accountAgeWitness) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .map(SignedWitness::getWitnessOwnerPubKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public String ownerPubKeyAsString(AccountAgeWitness accountAgeWitness) {
         return getSignedWitnessSet(accountAgeWitness).stream()
                 .map(signedWitness -> Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))
                 .findFirst()
@@ -195,9 +208,42 @@ public class SignedWitnessService {
                                       AccountAgeWitness accountAgeWitness,
                                       ECKey key,
                                       PublicKey peersPubKey) {
+        signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey.getEncoded(), new Date().getTime());
+    }
+
+    // Arbitrators sign with EC key
+    public String signAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+                                        ECKey key,
+                                        byte[] peersPubKey,
+                                        long time) {
+        var witnessPubKey = peersPubKey == null ? ownerPubKey(accountAgeWitness) : peersPubKey;
+        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, key, witnessPubKey, time);
+    }
+
+    // Arbitrators sign with EC key
+    public String signTraderPubKey(ECKey key,
+                                   byte[] peersPubKey,
+                                   long childSignTime) {
+        var time = childSignTime - SIGNER_AGE - 1;
+        var dummyAccountAgeWitness = new AccountAgeWitness(Hash.getRipemd160hash(peersPubKey), time);
+        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, dummyAccountAgeWitness, key, peersPubKey, time);
+    }
+
+    // Arbitrators sign with EC key
+    private String signAccountAgeWitness(Coin tradeAmount,
+                                         AccountAgeWitness accountAgeWitness,
+                                         ECKey key,
+                                         byte[] peersPubKey,
+                                         long time) {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
-            log.warn("Arbitrator trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
-            return;
+            var err = "Arbitrator trying to sign already signed accountagewitness " + accountAgeWitness.toString();
+            log.warn(err);
+            return err;
+        }
+        if (peersPubKey == null) {
+            var err = "Trying to sign accountAgeWitness " + accountAgeWitness.toString() + "\nwith owner pubkey=null";
+            log.warn(err);
+            return err;
         }
 
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
@@ -206,11 +252,12 @@ public class SignedWitnessService {
                 accountAgeWitness.getHash(),
                 signatureBase64.getBytes(Charsets.UTF_8),
                 key.getPubKey(),
-                peersPubKey.getEncoded(),
-                new Date().getTime(),
+                peersPubKey,
+                time,
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
         log.info("Arbitrator signed witness {}", signedWitness.toString());
+        return "";
     }
 
     public void selfSignAccountAgeWitness(AccountAgeWitness accountAgeWitness) throws CryptoException {
@@ -304,6 +351,24 @@ public class SignedWitnessService {
                 .filter(e -> !e.isSignedByArbitrator())
                 .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
+    }
+
+    public Set<SignedWitness> getRootSignedWitnessSet(boolean includeSignedByArbitrator) {
+        return signedWitnessMap.values().stream()
+                .filter(witness -> getSignedWitnessSetByOwnerPubKey(witness.getSignerPubKey(), new Stack<>()).isEmpty())
+                .filter(witness -> includeSignedByArbitrator ||
+                        witness.getVerificationMethod() != SignedWitness.VerificationMethod.ARBITRATOR)
+                .collect(Collectors.toSet());
+    }
+
+    // Find first (in time) SignedWitness per missing signer
+    public Set<SignedWitness> getUnsignedSignerPubKeys() {
+        var oldestUnsignedSigners = new HashMap<P2PDataStorage.ByteArray, SignedWitness>();
+        getRootSignedWitnessSet(false).forEach(signedWitness ->
+                oldestUnsignedSigners.compute(new P2PDataStorage.ByteArray(signedWitness.getSignerPubKey()),
+                (key, oldValue) -> oldValue == null ? signedWitness :
+                        oldValue.getDate() > signedWitness.getDate() ? signedWitness : oldValue));
+        return new HashSet<>(oldestUnsignedSigners.values());
     }
 
     // We go one level up by using the signer Key to lookup for SignedWitness objects which contain the signerKey as
@@ -405,7 +470,6 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     void addToMap(SignedWitness signedWitness) {
-        // TODO: Perhaps filter out all but one signedwitness per accountagewitness
         signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
     }
 
@@ -420,4 +484,19 @@ public class SignedWitnessService {
     private void doRepublishAllSignedWitnesses() {
         signedWitnessMap.forEach((e, signedWitness) -> p2PService.addPersistableNetworkPayload(signedWitness, true));
     }
+
+    // Remove SignedWitnesses that are signed by TRADE that also have an ARBITRATOR signature
+    // for the same ownerPubKey and AccountAgeWitnessHash
+//    private void cleanSignedWitnesses() {
+//        var orphans = getRootSignedWitnessSet(false);
+//        var signedWitnessesCopy = new HashSet<>(signedWitnessMap.values());
+//        signedWitnessesCopy.forEach(sw -> orphans.forEach(orphan -> {
+//            if (sw.getVerificationMethod() == SignedWitness.VerificationMethod.ARBITRATOR &&
+//                    Arrays.equals(sw.getWitnessOwnerPubKey(), orphan.getWitnessOwnerPubKey()) &&
+//                    Arrays.equals(sw.getAccountAgeWitnessHash(), orphan.getAccountAgeWitnessHash())) {
+//                signedWitnessMap.remove(orphan.getHashAsByteArray());
+//                log.info("Remove duplicate SignedWitness: {}", orphan.toString());
+//            }
+//        }));
+//    }
 }
