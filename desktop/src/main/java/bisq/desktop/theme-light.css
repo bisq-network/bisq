@@ -107,3 +107,7 @@
     -bs-chart-dao-line1: -bs-color-green-3;
     -bs-chart-dao-line2: -bs-color-blue-5;
 }
+
+.warning-box {
+    -fx-background-color: -bs-yellow-light;
+}

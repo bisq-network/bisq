@@ -219,3 +219,7 @@
 .small-icon-label {
     -fx-fill: -bs-text-color;
 }
+
+.warning-box {
+    -fx-background-color: -bs-color-primary-dark;
+}
