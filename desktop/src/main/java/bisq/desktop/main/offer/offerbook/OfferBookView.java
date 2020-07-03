@@ -934,7 +934,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Res.get("offerbook.deposit"),
                 Res.get("offerbook.deposit.help")) {
             {
-                setMinWidth(80);
+                setMinWidth(70);
                 setSortable(true);
             }
         };
@@ -977,7 +977,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.actions")) {
             {
-                setMinWidth(200);
+                setMinWidth(180);
                 setSortable(false);
             }
         };
@@ -1194,8 +1194,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
         AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
             {
-                setMinWidth(80);
-                setMaxWidth(80);
+                setMinWidth(60);
+                setMaxWidth(60);
                 setSortable(true);
             }
         };
