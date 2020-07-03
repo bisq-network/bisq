@@ -53,18 +53,18 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelListView;
+import static bisq.desktop.util.FormBuilder.removeRowsFromGridPane;
 
 @Slf4j
 public class SignUnsignedPubKeysWindow extends Overlay<SignUnsignedPubKeysWindow> {
 
-    private InputTextField searchTextField;
     private ListView<SignedWitness> unsignedPubKeys = new ListView<>();
     private InputTextField privateKey;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
-    private ListView<SignedWitness> signedWitnessListView = new ListView<>();
-    private ListView<String> failedView = new ListView<>();
     private List<SignedWitness> signedWitnessList = new ArrayList<>();
     private List<String> failed = new ArrayList<>();
     private Callback<ListView<SignedWitness>, ListCell<SignedWitness>> signedWitnessCellFactory;
@@ -168,12 +168,12 @@ public class SignUnsignedPubKeysWindow extends Overlay<SignUnsignedPubKeysWindow
 
         Tuple3<Label, ListView<SignedWitness>, VBox> signedTuple = addTopLabelListView(gridPane, ++rowIndex,
                 Res.get("popup.accountSigning.unsignedPubKeys.result.signed"));
-        signedWitnessListView = signedTuple.second;
+        ListView<SignedWitness> signedWitnessListView = signedTuple.second;
         signedWitnessListView.setCellFactory(signedWitnessCellFactory);
         signedWitnessListView.setItems(FXCollections.observableArrayList(signedWitnessList));
         Tuple3<Label, ListView<String>, VBox> failedTuple = addTopLabelListView(gridPane, ++rowIndex,
                 Res.get("popup.accountSigning.unsignedPubKeys.result.failed"));
-        failedView = failedTuple.second;
+        ListView<String> failedView = failedTuple.second;
         failedView.setItems(FXCollections.observableArrayList(failed));
 
         ((AutoTooltipButton) actionButton).updateText(Res.get("shared.ok"));

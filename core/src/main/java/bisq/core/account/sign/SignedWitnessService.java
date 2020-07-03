@@ -51,7 +51,6 @@ import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -489,16 +487,16 @@ public class SignedWitnessService {
 
     // Remove SignedWitnesses that are signed by TRADE that also have an ARBITRATOR signature
     // for the same ownerPubKey and AccountAgeWitnessHash
-    private void cleanSignedWitnesses() {
-        var orphans = getRootSignedWitnessSet(false);
-        var signedWitnessesCopy = new HashSet<>(signedWitnessMap.values());
-        signedWitnessesCopy.forEach(sw -> orphans.forEach(orphan -> {
-            if (sw.getVerificationMethod() == SignedWitness.VerificationMethod.ARBITRATOR &&
-                    Arrays.equals(sw.getWitnessOwnerPubKey(), orphan.getWitnessOwnerPubKey()) &&
-                    Arrays.equals(sw.getAccountAgeWitnessHash(), orphan.getAccountAgeWitnessHash())) {
-                signedWitnessMap.remove(orphan.getHashAsByteArray());
-                log.info("Remove duplicate SignedWitness: {}", orphan.toString());
-            }
-        }));
-    }
+//    private void cleanSignedWitnesses() {
+//        var orphans = getRootSignedWitnessSet(false);
+//        var signedWitnessesCopy = new HashSet<>(signedWitnessMap.values());
+//        signedWitnessesCopy.forEach(sw -> orphans.forEach(orphan -> {
+//            if (sw.getVerificationMethod() == SignedWitness.VerificationMethod.ARBITRATOR &&
+//                    Arrays.equals(sw.getWitnessOwnerPubKey(), orphan.getWitnessOwnerPubKey()) &&
+//                    Arrays.equals(sw.getAccountAgeWitnessHash(), orphan.getAccountAgeWitnessHash())) {
+//                signedWitnessMap.remove(orphan.getHashAsByteArray());
+//                log.info("Remove duplicate SignedWitness: {}", orphan.toString());
+//            }
+//        }));
+//    }
 }
