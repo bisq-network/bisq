@@ -106,4 +106,9 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(venmoUserName.getBytes(StandardCharsets.UTF_8));
     }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
+    }
 }

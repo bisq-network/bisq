@@ -276,13 +276,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             Offer offer = item.getTrade().getOffer();
             checkNotNull(offer);
             checkNotNull(offer.getPaymentMethod());
-            String method = Res.get(offer.getPaymentMethod().getId() + "_SHORT");
-            String methodCountryCode = offer.getCountryCode();
-
-            if (methodCountryCode != null)
-                result = method + " (" + methodCountryCode + ")";
-            else
-                result = method;
+            result = offer.getPaymentMethodNameWithCountryCode();
         }
         return result;
     }

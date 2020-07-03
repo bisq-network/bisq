@@ -185,16 +185,22 @@ public class AccountAgeWitnessService {
         });
 
         if (p2PService.isBootstrapped()) {
-            republishAllFiatAccounts();
+            onBootStrapped();
         } else {
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
                 public void onUpdatedDataReceived() {
-                    republishAllFiatAccounts();
+                    onBootStrapped();
                 }
             });
         }
     }
+
+    private void onBootStrapped() {
+        republishAllFiatAccounts();
+        signSameNameAccounts();
+    }
+
 
     // At startup we re-publish the witness data of all fiat accounts to ensure we got our data well distributed.
     private void republishAllFiatAccounts() {
@@ -812,6 +818,30 @@ public class AccountAgeWitnessService {
                 .map(signedWitness -> getWitnessByHash(signedWitness.getAccountAgeWitnessHash()).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+    }
+
+    public void signSameNameAccounts() {
+        // Collect accounts that have ownerId to sign unsigned accounts with the same ownderId
+        var signerAccounts = Objects.requireNonNull(user.getPaymentAccounts()).stream()
+                .filter(account -> account.getOwnerId() != null &&
+                        accountIsSigner(getMyWitness(account.getPaymentAccountPayload())))
+                .collect(Collectors.toSet());
+        var unsignedAccounts = user.getPaymentAccounts().stream()
+                .filter(account -> account.getOwnerId() != null &&
+                        !signedWitnessService.isSignedAccountAgeWitness(
+                                getMyWitness(account.getPaymentAccountPayload())))
+                .collect(Collectors.toSet());
+
+        signerAccounts.forEach(signer -> unsignedAccounts.forEach(unsigned -> {
+            if (signer.getOwnerId().equals(unsigned.getOwnerId())) {
+                try {
+                    signedWitnessService.selfSignAccountAgeWitness(
+                            getMyWitness(unsigned.getPaymentAccountPayload()));
+                } catch (CryptoException e) {
+                    log.warn("Self signing failed, exception {}", e.toString());
+                }
+            }
+        }));
     }
 
     public Set<SignedWitness> getUnsignedSignerPubKeys() {

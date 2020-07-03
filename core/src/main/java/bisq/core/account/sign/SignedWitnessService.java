@@ -262,6 +262,12 @@ public class SignedWitnessService {
         return "";
     }
 
+    public void selfSignAccountAgeWitness(AccountAgeWitness accountAgeWitness) throws CryptoException {
+        log.info("Sign own accountAgeWitness {}", accountAgeWitness);
+        signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness,
+                keyRing.getSignatureKeyPair().getPublic());
+    }
+
     // Any peer can sign with DSA key
     public void signAccountAgeWitness(Coin tradeAmount,
                                       AccountAgeWitness accountAgeWitness,

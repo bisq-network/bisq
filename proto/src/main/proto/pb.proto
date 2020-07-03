@@ -629,6 +629,7 @@ message Filter {
     repeated string mediators = 17;
     repeated string refundAgents = 18;
     repeated string bannedSignerPubKeys = 19;
+    repeated string btc_fee_receiver_addresses = 20;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older

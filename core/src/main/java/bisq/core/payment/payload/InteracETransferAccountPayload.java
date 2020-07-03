@@ -120,4 +120,9 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 ArrayUtils.addAll(question.getBytes(StandardCharsets.UTF_8),
                         answer.getBytes(StandardCharsets.UTF_8))));
     }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
+    }
 }

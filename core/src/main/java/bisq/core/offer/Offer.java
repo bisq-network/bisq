@@ -365,6 +365,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
+    public String getPaymentMethodNameWithCountryCode() {
+        String method = this.getPaymentMethod().getShortName();
+        String methodCountryCode = this.getCountryCode();
+        if (methodCountryCode != null)
+            method = method + " (" + methodCountryCode + ")";
+        return method;
+    }
+
     // domain properties
     public Offer.State getState() {
         return stateProperty.get();

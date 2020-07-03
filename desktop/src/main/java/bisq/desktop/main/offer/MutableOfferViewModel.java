@@ -812,12 +812,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             // We want to trigger a recalculation of the volume and minAmount
             UserThread.execute(() -> {
                 onFocusOutVolumeTextField(true, false);
-                // do not update BTC Amount or minAmount here
-                // issue 2798: "after a few edits of offer the BTC amount has increased"
-                // intentionally removed: onFocusOutAmountTextField(true, false);
-                // intentionally removed: onFocusOutMinAmountTextField(true, false);
+                triggerFocusOutOnAmountFields();
             });
         }
+    }
+
+    public void triggerFocusOutOnAmountFields() {
+        onFocusOutAmountTextField(true, false);
+        onFocusOutMinAmountTextField(true, false);
     }
 
     public void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {

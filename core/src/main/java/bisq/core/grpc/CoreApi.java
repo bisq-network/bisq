@@ -17,17 +17,14 @@
 
 package bisq.core.grpc;
 
+import bisq.core.grpc.model.AddressBalanceInfo;
 import bisq.core.monetary.Price;
-import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.user.User;
 
 import bisq.common.app.Version;
 
@@ -47,61 +44,70 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CoreApi {
-    private final OfferBookService offerBookService;
+
+    private final CoreOffersService coreOffersService;
+    private final CorePaymentAccountsService paymentAccountsService;
+    private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final CreateOfferService createOfferService;
-    private final OpenOfferManager openOfferManager;
-    private final User user;
 
     @Inject
-    public CoreApi(OfferBookService offerBookService,
-                   TradeStatisticsManager tradeStatisticsManager,
-                   CreateOfferService createOfferService,
-                   OpenOfferManager openOfferManager,
-                   User user) {
-        this.offerBookService = offerBookService;
+    public CoreApi(CoreOffersService coreOffersService,
+                   CorePaymentAccountsService paymentAccountsService,
+                   CoreWalletsService walletsService,
+                   TradeStatisticsManager tradeStatisticsManager) {
+        this.coreOffersService = coreOffersService;
+        this.paymentAccountsService = paymentAccountsService;
+        this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.createOfferService = createOfferService;
-        this.openOfferManager = openOfferManager;
-        this.user = user;
     }
 
     public String getVersion() {
         return Version.VERSION;
     }
 
-    public List<TradeStatistics2> getTradeStatistics() {
-        return new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Offers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<Offer> getOffers(String direction, String fiatCurrencyCode) {
+        return coreOffersService.getOffers(direction, fiatCurrencyCode);
     }
 
-    public List<Offer> getOffers() {
-        return offerBookService.getOffers();
+    public void createOffer(String currencyCode,
+                            String directionAsString,
+                            long priceAsLong,
+                            boolean useMarketBasedPrice,
+                            double marketPriceMargin,
+                            long amountAsLong,
+                            long minAmountAsLong,
+                            double buyerSecurityDeposit,
+                            String paymentAccountId,
+                            TransactionResultHandler resultHandler) {
+        coreOffersService.createOffer(currencyCode,
+                directionAsString,
+                priceAsLong,
+                useMarketBasedPrice,
+                marketPriceMargin,
+                amountAsLong,
+                minAmountAsLong,
+                buyerSecurityDeposit,
+                paymentAccountId,
+                resultHandler);
     }
 
-    public Set<PaymentAccount> getPaymentAccounts() {
-        return user.getPaymentAccounts();
-    }
-
-    public void placeOffer(String currencyCode,
-                           String directionAsString,
-                           long priceAsLong,
-                           boolean useMarketBasedPrice,
-                           double marketPriceMargin,
-                           long amountAsLong,
-                           long minAmountAsLong,
-                           double buyerSecurityDeposit,
-                           String paymentAccountId,
-                           TransactionResultHandler resultHandler) {
-        String offerId = createOfferService.getRandomOfferId();
-        OfferPayload.Direction direction = OfferPayload.Direction.valueOf(directionAsString);
-        Price price = Price.valueOf(currencyCode, priceAsLong);
-        Coin amount = Coin.valueOf(amountAsLong);
-        Coin minAmount = Coin.valueOf(minAmountAsLong);
-        PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
-        // We don't support atm funding from external wallet to keep it simple
-        boolean useSavingsWallet = true;
-
-        placeOffer(offerId,
+    public void createOffer(String offerId,
+                            String currencyCode,
+                            OfferPayload.Direction direction,
+                            Price price,
+                            boolean useMarketBasedPrice,
+                            double marketPriceMargin,
+                            Coin amount,
+                            Coin minAmount,
+                            double buyerSecurityDeposit,
+                            PaymentAccount paymentAccount,
+                            boolean useSavingsWallet,
+                            TransactionResultHandler resultHandler) {
+        coreOffersService.createOffer(offerId,
                 currencyCode,
                 direction,
                 price,
@@ -115,34 +121,59 @@ public class CoreApi {
                 resultHandler);
     }
 
-    public void placeOffer(String offerId,
-                           String currencyCode,
-                           OfferPayload.Direction direction,
-                           Price price,
-                           boolean useMarketBasedPrice,
-                           double marketPriceMargin,
-                           Coin amount,
-                           Coin minAmount,
-                           double buyerSecurityDeposit,
-                           PaymentAccount paymentAccount,
-                           boolean useSavingsWallet,
-                           TransactionResultHandler resultHandler) {
-        Offer offer = createOfferService.createAndGetOffer(offerId,
-                direction,
-                currencyCode,
-                amount,
-                minAmount,
-                price,
-                useMarketBasedPrice,
-                marketPriceMargin,
-                buyerSecurityDeposit,
-                paymentAccount);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PaymentAccounts
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        openOfferManager.placeOffer(offer,
-                buyerSecurityDeposit,
-                useSavingsWallet,
-                resultHandler,
-                log::error);
+    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
+        paymentAccountsService.createPaymentAccount(accountName, accountNumber, fiatCurrencyCode);
     }
 
+    public Set<PaymentAccount> getPaymentAccounts() {
+        return paymentAccountsService.getPaymentAccounts();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Wallets
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public long getAvailableBalance() {
+        return walletsService.getAvailableBalance();
+    }
+
+    public long getAddressBalance(String addressString) {
+        return walletsService.getAddressBalance(addressString);
+    }
+
+    public AddressBalanceInfo getAddressBalanceInfo(String addressString) {
+        return walletsService.getAddressBalanceInfo(addressString);
+    }
+
+    public List<AddressBalanceInfo> getFundingAddresses() {
+        return walletsService.getFundingAddresses();
+    }
+
+    public void setWalletPassword(String password, String newPassword) {
+        walletsService.setWalletPassword(password, newPassword);
+    }
+
+    public void lockWallet() {
+        walletsService.lockWallet();
+    }
+
+    public void unlockWallet(String password, long timeout) {
+        walletsService.unlockWallet(password, timeout);
+    }
+
+    public void removeWalletPassword(String password) {
+        walletsService.removeWalletPassword(password);
+    }
+
+    public List<TradeStatistics2> getTradeStatistics() {
+        return new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
+    }
+
+    public int getNumConfirmationsForMostRecentTransaction(String addressString) {
+        return walletsService.getNumConfirmationsForMostRecentTransaction(addressString);
+    }
 }

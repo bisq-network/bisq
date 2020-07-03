@@ -103,4 +103,9 @@ public final class PopmoneyAccountPayload extends PaymentAccountPayload {
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(accountId.getBytes(StandardCharsets.UTF_8));
     }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
+    }
 }

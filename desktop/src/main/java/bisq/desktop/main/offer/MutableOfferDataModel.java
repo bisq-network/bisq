@@ -282,6 +282,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 amount.get(),
                 minAmount.get(),
                 price.get(),
+                txFeeFromFeeService,
                 useMarketBasedPrice.get(),
                 marketPriceMargin,
                 buyerSecurityDeposit.get(),

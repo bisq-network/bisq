@@ -313,6 +313,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, riskFactor));
     }
 
+    public String getShortName() {
+        // in cases where translation is not found, Res.get() simply returns the key string
+        // so no need for special error-handling code.
+        return Res.get(this.id + "_SHORT");
+    }
+
     @Override
     public int compareTo(@NotNull PaymentMethod other) {
         return id.compareTo(other.id);

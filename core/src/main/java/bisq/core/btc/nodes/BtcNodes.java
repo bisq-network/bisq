@@ -75,9 +75,10 @@ public class BtcNodes {
                         new BtcNode("btc.bisq.cc", "4nnuyxm5k5tlyjq3.onion", "167.71.168.194", BtcNode.DEFAULT_PORT, "@m52go"),
 
                         // wiz
-                        new BtcNode("node100.wiz.network", "m3yqzythryowgedc.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
-                        new BtcNode("node130.wiz.network", "22tg6ufbwz6o3l2u.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
-                        new BtcNode("node140.wiz.network", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node100.hnl.wiz.biz", "m3yqzythryowgedc.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node140.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node210.fmt.wiz.biz", "orsy2v63ecrmdj55.onion", "103.99.170.210", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node220.fmt.wiz.biz", "z6mbqq7llxlrn4kq.onion", "103.99.170.220", BtcNode.DEFAULT_PORT, "@wiz"),
 
                         // Rob Kaandorp
                         new BtcNode(null, "2pj2o2mrawj7yotg.onion", null, BtcNode.DEFAULT_PORT, "@robkaandorp") // cannot provide IP because no static IP
