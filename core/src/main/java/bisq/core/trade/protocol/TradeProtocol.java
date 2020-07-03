@@ -233,7 +233,7 @@ public abstract class TradeProtocol {
     // Peer has sent a SignedWitness
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(TraderSignedWitnessMessage tradeMessage, NodeAddress sender) {
+    private void handle(TraderSignedWitnessMessage tradeMessage) {
         // Publish signed witness, if it is valid and ours
         processModel.getAccountAgeWitnessService().publishOwnSignedWitness(tradeMessage.getSignedWitness());
     }
@@ -251,7 +251,7 @@ public abstract class TradeProtocol {
         } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
-            handle((TraderSignedWitnessMessage) tradeMessage, sender);
+            handle((TraderSignedWitnessMessage) tradeMessage);
         }
     }
 
@@ -300,7 +300,7 @@ public abstract class TradeProtocol {
         } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
-            handle((TraderSignedWitnessMessage) tradeMessage, peerNodeAddress);
+            handle((TraderSignedWitnessMessage) tradeMessage);
         }
     }
 
