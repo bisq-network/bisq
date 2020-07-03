@@ -90,4 +90,9 @@ public class Restrictions {
             MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.003"); // 0.003 BTC about 21 USD @ 7000 USD/BTC
         return MIN_REFUND_AT_MEDIATED_DISPUTE;
     }
+
+    public static int getLockTime(boolean isAsset) {
+        // 10 days for altcoins, 20 days for other payment methods
+        return isAsset ? 144 * 10 : 144 * 20;
+    }
 }

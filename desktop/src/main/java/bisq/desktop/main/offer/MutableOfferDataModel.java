@@ -43,6 +43,8 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
+import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -79,8 +81,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -126,6 +131,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private boolean marketPriceAvailable;
     private int feeTxSize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_SIZE;
     protected boolean allowAmountUpdate = true;
+    private final TradeStatisticsManager tradeStatisticsManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,6 +151,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  FeeService feeService,
                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                  MakerFeeProvider makerFeeProvider,
+                                 TradeStatisticsManager tradeStatisticsManager,
                                  Navigation navigation) {
         super(btcWalletService);
 
@@ -160,6 +167,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.btcFormatter = btcFormatter;
         this.makerFeeProvider = makerFeeProvider;
         this.navigation = navigation;
+        this.tradeStatisticsManager = tradeStatisticsManager;
 
         offerId = createOfferService.getRandomOfferId();
         shortOfferId = Utilities.getShortId(offerId);
@@ -257,6 +265,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         calculateVolume();
         calculateTotalToPay();
         updateBalance();
+        setSuggestedSecurityDeposit(getPaymentAccount());
 
         return true;
     }
@@ -294,7 +303,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         Tuple2<Coin, Integer> estimatedFeeAndTxSize = createOfferService.getEstimatedFeeAndTxSize(amount.get(),
                 direction,
                 buyerSecurityDeposit.get(),
-                createOfferService.getSellerSecurityDepositAsDouble());
+                createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit.get()));
         txFeeFromFeeService = estimatedFeeAndTxSize.first;
         feeTxSize = estimatedFeeAndTxSize.second;
     }
@@ -317,13 +326,48 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             this.paymentAccount = paymentAccount;
 
             setTradeCurrencyFromPaymentAccount(paymentAccount);
-
-            buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent(getPaymentAccount()));
+            setSuggestedSecurityDeposit(getPaymentAccount());
 
             if (amount.get() != null)
                 this.amount.set(Coin.valueOf(Math.min(amount.get().value, getMaxTradeLimit())));
         }
     }
+
+    private void setSuggestedSecurityDeposit(PaymentAccount paymentAccount) {
+        var minSecurityDeposit = preferences.getBuyerSecurityDepositAsPercent(getPaymentAccount());
+        if (getTradeCurrency() == null) {
+            setBuyerSecurityDeposit(minSecurityDeposit, false);
+            return;
+        }
+        // Get average historic prices over for the prior trade period equaling the lock time
+        var blocksRange = Restrictions.getLockTime(paymentAccount.getPaymentMethod().isAsset());
+        var startDate = new Date(System.currentTimeMillis() - blocksRange * 10 * 60000);
+        var sortedRangeData = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> e.getCurrencyCode().equals(getTradeCurrency().getCode()))
+                .filter(e -> e.getTradeDate().compareTo(startDate) >= 0)
+                .sorted(Comparator.comparing(TradeStatistics2::getTradeDate))
+                .collect(Collectors.toList());
+        var movingAverage = new MathUtils.MovingAverage(10, 0.2);
+        double[] extremes = {Double.MAX_VALUE, Double.MIN_VALUE};
+        sortedRangeData.forEach(e -> {
+            var price = e.getTradePrice().getValue();
+            movingAverage.next(price).ifPresent(val -> {
+                if (val < extremes[0]) extremes[0] = val;
+                if (val > extremes[1]) extremes[1] = val;
+            });
+        });
+        var min = extremes[0];
+        var max = extremes[1];
+        if (min == 0d || max == 0d) {
+            setBuyerSecurityDeposit(minSecurityDeposit, false);
+            return;
+        }
+        // Suggested deposit is double the trade range over the previous lock time period, bounded by min/max deposit
+        var suggestedSecurityDeposit =
+                Math.min(2 * (max - min) / max, Restrictions.getMaxBuyerSecurityDepositAsPercent());
+        buyerSecurityDeposit.set(Math.max(suggestedSecurityDeposit, minSecurityDeposit));
+    }
+
 
     private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {
         if (!paymentAccount.getTradeCurrencies().contains(tradeCurrency)) {
@@ -591,9 +635,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.volume.set(volume);
     }
 
-    void setBuyerSecurityDeposit(double value) {
+    void setBuyerSecurityDeposit(double value, boolean persist) {
         this.buyerSecurityDeposit.set(value);
-        preferences.setBuyerSecurityDepositAsPercent(value, getPaymentAccount());
+        if (persist) {
+            // Only expected to persist for manually changed deposit values
+            preferences.setBuyerSecurityDepositAsPercent(value, getPaymentAccount());
+        }
     }
 
     protected boolean isUseMarketBasedPriceValue() {
@@ -650,7 +697,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         if (amountAsCoin == null)
             amountAsCoin = Coin.ZERO;
 
-        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(createOfferService.getSellerSecurityDepositAsDouble(), amountAsCoin);
+        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(
+                createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit.get()), amountAsCoin);
         return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 

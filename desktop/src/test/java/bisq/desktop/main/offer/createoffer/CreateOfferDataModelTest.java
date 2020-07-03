@@ -15,10 +15,13 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import org.bitcoinj.core.Coin;
+
+import javafx.collections.FXCollections;
 
 import java.util.HashSet;
 import java.util.UUID;
@@ -52,17 +55,19 @@ public class CreateOfferDataModelTest {
         CreateOfferService createOfferService = mock(CreateOfferService.class);
         preferences = mock(Preferences.class);
         user = mock(User.class);
+        var tradeStats = mock(TradeStatisticsManager.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(preferences.isUsePercentageBasedPrice()).thenReturn(true);
         when(preferences.getBuyerSecurityDepositAsPercent(null)).thenReturn(0.01);
         when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
+        when(tradeStats.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
 
         makerFeeProvider = mock(MakerFeeProvider.class);
         model = new CreateOfferDataModel(createOfferService, null, btcWalletService,
                 null, preferences, user, null,
                 priceFeedService, null,
-                feeService, null, makerFeeProvider, null);
+                feeService, null, makerFeeProvider, tradeStats, null);
     }
 
     @Test
