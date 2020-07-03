@@ -668,7 +668,7 @@ public class AccountAgeWitnessService {
         signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, tradersPubKey, time);
     }
 
-    public void traderSignPeersAccountAgeWitness(Trade trade) {
+    public Optional<SignedWitness> traderSignPeersAccountAgeWitness(Trade trade) {
         AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
         Coin tradeAmount = trade.getTradeAmount();
         checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
@@ -678,10 +678,15 @@ public class AccountAgeWitnessService {
         checkNotNull(peersPubKey, "Peers pub key must not be null");
 
         try {
-            signedWitnessService.signAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
+            return signedWitnessService.signAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
         } catch (CryptoException e) {
             log.warn("Trader failed to sign witness, exception {}", e.toString());
         }
+        return Optional.empty();
+    }
+
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
+        return signedWitnessService.publishOwnSignedWitness(signedWitness);
     }
 
     // Arbitrator signing

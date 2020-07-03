@@ -117,7 +117,7 @@ public class SignedWitness implements ProcessOncePersistableNetworkPayload, Pers
         return protobuf.PersistableNetworkPayload.newBuilder().setSignedWitness(builder).build();
     }
 
-    protobuf.SignedWitness toProtoSignedWitness() {
+    public protobuf.SignedWitness toProtoSignedWitness() {
         return toProtoMessage().getSignedWitness();
     }
 

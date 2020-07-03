@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -203,6 +204,17 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
+        if (!Arrays.equals(signedWitness.getWitnessOwnerPubKey(), keyRing.getPubKeyRing().getSignaturePubKeyBytes()) ||
+                !verifySigner(signedWitness)) {
+            return false;
+        }
+
+        log.info("Publish own signedWitness {}", signedWitness);
+        publishSignedWitness(signedWitness);
+        return true;
+    }
+
     // Arbitrators sign with EC key
     public void signAccountAgeWitness(Coin tradeAmount,
                                       AccountAgeWitness accountAgeWitness,
@@ -267,17 +279,17 @@ public class SignedWitnessService {
     }
 
     // Any peer can sign with DSA key
-    public void signAccountAgeWitness(Coin tradeAmount,
-                                      AccountAgeWitness accountAgeWitness,
-                                      PublicKey peersPubKey) throws CryptoException {
+    public Optional<SignedWitness> signAccountAgeWitness(Coin tradeAmount,
+                                                         AccountAgeWitness accountAgeWitness,
+                                                         PublicKey peersPubKey) throws CryptoException {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
-            return;
+            return Optional.empty();
         }
 
         if (!isSufficientTradeAmountForSigning(tradeAmount)) {
             log.warn("Trader tried to sign account with too little trade amount");
-            return;
+            return Optional.empty();
         }
 
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
@@ -290,6 +302,7 @@ public class SignedWitnessService {
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
         log.info("Trader signed witness {}", signedWitness.toString());
+        return Optional.of(signedWitness);
     }
 
     public boolean verifySignature(SignedWitness signedWitness) {
@@ -366,8 +379,8 @@ public class SignedWitnessService {
         var oldestUnsignedSigners = new HashMap<P2PDataStorage.ByteArray, SignedWitness>();
         getRootSignedWitnessSet(false).forEach(signedWitness ->
                 oldestUnsignedSigners.compute(new P2PDataStorage.ByteArray(signedWitness.getSignerPubKey()),
-                (key, oldValue) -> oldValue == null ? signedWitness :
-                        oldValue.getDate() > signedWitness.getDate() ? signedWitness : oldValue));
+                        (key, oldValue) -> oldValue == null ? signedWitness :
+                                oldValue.getDate() > signedWitness.getDate() ? signedWitness : oldValue));
         return new HashSet<>(oldestUnsignedSigners.values());
     }
 
@@ -391,6 +404,11 @@ public class SignedWitnessService {
 
     public boolean isSufficientTradeAmountForSigning(Coin tradeAmount) {
         return !tradeAmount.isLessThan(MINIMUM_TRADE_AMOUNT_FOR_SIGNING);
+    }
+
+    private boolean verifySigner(SignedWitness signedWitness) {
+        return getSignedWitnessSetByOwnerPubKey(signedWitness.getWitnessOwnerPubKey(), new Stack<>()).stream()
+                .anyMatch(w -> isValidSignerWitnessInternal(w, signedWitness.getDate(), new Stack<>()));
     }
 
     /**
@@ -417,7 +435,7 @@ public class SignedWitnessService {
      * Helper to isValidAccountAgeWitness(accountAgeWitness)
      *
      * @param signedWitness                the signedWitness to validate
-     * @param childSignedWitnessDateMillis the date the child SignedWitness was signed or current time if it is a leave.
+     * @param childSignedWitnessDateMillis the date the child SignedWitness was signed or current time if it is a leaf.
      * @param excludedPubKeys              stack to prevent recursive loops
      * @return true if signedWitness is valid, false otherwise.
      */
