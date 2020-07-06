@@ -694,6 +694,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         coinSelection.gathered.forEach(tx::addInput);
         try {
             Coin change = bsqCoinSelector.getChange(fee, coinSelection);
+            // Change can be ZERO, then no change output is created so don't rely on a BSQ change output
             if (change.isPositive()) {
                 checkArgument(Restrictions.isAboveDust(change),
                         "The change output of " + change.value / 100d + " BSQ is below the min. dust value of "
