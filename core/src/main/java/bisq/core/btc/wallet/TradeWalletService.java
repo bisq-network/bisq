@@ -58,6 +58,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -219,13 +220,24 @@ public class TradeWalletService {
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee + burned BSQ fee
 
-        // In case of txs for burned BSQ fees we have no receiver output and it might be that there are no change outputs
+        // In case all BSQ were burnt as fees we have no receiver output and it might be that there are no change outputs
         // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
         // for BTC to force an additional change output.
 
         final int preparedBsqTxInputsSize = preparedBsqTx.getInputs().size();
+        final boolean hasBsqOutputs = !preparedBsqTx.getOutputs().isEmpty();
 
+        // If there are no BSQ change outputs an output larger than the burnt BSQ amount has to be added as the first
+        // output to make sure the reserved funds are in output 1, deposit tx input creation depends on the reserve
+        // being output 1. The amount has to be larger than the BSQ input to make sure the inputs get burnt.
+        // The BTC changeAddress is used, so it might get used for both output 0 and output 2.
+        if (!hasBsqOutputs) {
+            var bsqInputValue = preparedBsqTx.getInputs().stream()
+                    .map(TransactionInput::getValue)
+                    .reduce(Coin.valueOf(0), Coin::add);
 
+            preparedBsqTx.addOutput(bsqInputValue.add(Coin.valueOf(1)), changeAddress);
+        }
         // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
         preparedBsqTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -233,11 +245,6 @@ public class TradeWalletService {
         // wait for 1 confirmation)
         // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
 
-        // If BSQ trade fee > reservedFundsForOffer we would create a BSQ output instead of a BTC output.
-        // As the min. reservedFundsForOffer is 0.001 BTC which is 1000 BSQ this is an unrealistic scenario and not
-        // handled atm (if BTC price is 1M USD and BSQ price is 0.1 USD, then fee would be 10% which still is unrealistic).
-
-        // WalletService.printTx("preparedBsqTx", preparedBsqTx);
         SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
@@ -335,6 +342,8 @@ public class TradeWalletService {
 
         // We created the take offer fee tx in the structure that the second output is for the funds for the deposit tx.
         TransactionOutput reservedForTradeOutput = takeOfferFeeTx.getOutputs().get(1);
+        checkArgument(reservedForTradeOutput.getValue().equals(inputAmount),
+                "Reserve amount does not equal input amount");
         dummyTX.addInput(reservedForTradeOutput);
 
         WalletService.removeSignatures(dummyTX);
