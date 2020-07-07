@@ -65,8 +65,6 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -93,7 +91,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -310,7 +307,7 @@ public class TradeManager implements PersistedDataHost {
                                 trade.getDelayedPayoutTx(),
                                 daoFacade,
                                 btcWalletService);
-                    } catch (DelayedPayoutTxValidation.DonationAddressException |
+                    } catch (DonationAddressValidation.DonationAddressException |
                             DelayedPayoutTxValidation.InvalidTxException |
                             DelayedPayoutTxValidation.InvalidLockTimeException |
                             DelayedPayoutTxValidation.MissingDelayedPayoutTxException |

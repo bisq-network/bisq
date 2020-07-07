@@ -23,6 +23,7 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
 import bisq.core.trade.DelayedPayoutTxValidation;
+import bisq.core.trade.DonationAddressValidation;
 
 public class BuyerStep1View extends TradeStepView {
 
@@ -43,7 +44,7 @@ public class BuyerStep1View extends TradeStepView {
                     trade.getDelayedPayoutTx(),
                     model.dataModel.daoFacade,
                     model.dataModel.btcWalletService);
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
+        } catch (DonationAddressValidation.DonationAddressException |
                 DelayedPayoutTxValidation.InvalidTxException |
                 DelayedPayoutTxValidation.AmountMismatchException |
                 DelayedPayoutTxValidation.InvalidLockTimeException e) {

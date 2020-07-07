@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.trade.DelayedPayoutTxValidation;
+import bisq.core.trade.DonationAddressValidation;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -55,7 +56,7 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             DelayedPayoutTxValidation.validatePayoutTxInput(depositTx, delayedPayoutTx);
 
             complete();
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
+        } catch (DonationAddressValidation.DonationAddressException |
                 DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
                 DelayedPayoutTxValidation.InvalidTxException |
                 DelayedPayoutTxValidation.InvalidLockTimeException |

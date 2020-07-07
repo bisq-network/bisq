@@ -70,6 +70,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.DelayedPayoutTxValidation;
+import bisq.core.trade.DonationAddressValidation;
 import bisq.core.trade.Trade;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -120,7 +121,7 @@ public class BuyerStep2View extends TradeStepView {
                     trade.getDelayedPayoutTx(),
                     model.dataModel.daoFacade,
                     model.dataModel.btcWalletService);
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
+        } catch (DonationAddressValidation.DonationAddressException |
                 DelayedPayoutTxValidation.InvalidTxException |
                 DelayedPayoutTxValidation.AmountMismatchException |
                 DelayedPayoutTxValidation.InvalidLockTimeException e) {
