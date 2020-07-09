@@ -37,6 +37,7 @@ import static bisq.apitest.config.BisqAppConfig.*;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
+import static java.lang.System.out;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
@@ -92,12 +93,12 @@ public class ApiTestMain {
 
             config = new ApiTestConfig(args);
             if (config.helpRequested) {
-                config.printHelp(System.out,
+                config.printHelp(out,
                         new BisqHelpFormatter(
                                 "Bisq ApiTest",
                                 "bisq-apitest",
                                 "0.1.0"));
-                System.exit(EXIT_SUCCESS);
+                exit(EXIT_SUCCESS);
             }
 
             // Start each background process from an executor, then add a shutdown hook.
@@ -292,13 +293,13 @@ public class ApiTestMain {
                     bitcoindTask.getLinuxProcess().shutdown();
 
             } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                throw new IllegalStateException(ex);
             }
         }));
     }
 
     private void verifyNotWindows() {
         if (Utilities.isWindows())
-            throw new RuntimeException("ApiTest not supported on Windows");
+            throw new IllegalStateException("ApiTest not supported on Windows");
     }
 }
