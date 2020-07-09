@@ -64,7 +64,7 @@ public class RunningTor extends TorMode {
         Tor result;
         if (!password.isEmpty())
             result = new ExternalTor(controlPort, password);
-        else if (cookieFile.exists())
+        else if (cookieFile != null && cookieFile.exists())
             result = new ExternalTor(controlPort, cookieFile, useSafeCookieAuthentication);
         else
             result = new ExternalTor(controlPort);
