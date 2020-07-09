@@ -299,7 +299,7 @@ public class ApiTestConfig {
             installBitcoinBlocknotify();
 
         } catch (OptionException ex) {
-            throw new RuntimeException(format("Problem parsing option '%s': %s",
+            throw new IllegalStateException(format("Problem parsing option '%s': %s",
                     ex.options().get(0),
                     ex.getCause() != null ?
                             ex.getCause().getMessage() :
@@ -351,10 +351,8 @@ public class ApiTestConfig {
     }
 
     private Optional<OptionSet> parseOptionsFrom(File configFile, OptionSpec<?>[] disallowedOpts) {
-        if (!configFile.exists()) {
-            if (!configFile.equals(absoluteConfigFile(userDir, DEFAULT_CONFIG_FILE_NAME)))
-                throw new RuntimeException(format("The specified config file '%s' does not exist.", configFile));
-        }
+        if (!configFile.exists() && !configFile.equals(absoluteConfigFile(userDir, DEFAULT_CONFIG_FILE_NAME)))
+            throw new IllegalStateException(format("The specified config file '%s' does not exist.", configFile));
 
         Properties properties = getProperties(configFile);
         List<String> optionLines = new ArrayList<>();
@@ -365,7 +363,7 @@ public class ApiTestConfig {
         OptionSet configFileOpts = parser.parse(optionLines.toArray(new String[0]));
         for (OptionSpec<?> disallowedOpt : disallowedOpts)
             if (configFileOpts.has(disallowedOpt))
-                throw new RuntimeException(
+                throw new IllegalStateException(
                         format("The '%s' option is disallowed in config files",
                                 disallowedOpt.options().get(0)));
 
@@ -378,7 +376,7 @@ public class ApiTestConfig {
             properties.load(new FileInputStream(configFile.getAbsolutePath()));
             return properties;
         } catch (IOException ex) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     format("Could not load properties from config file %s",
                             configFile.getAbsolutePath()), ex);
         }
@@ -400,7 +398,7 @@ public class ApiTestConfig {
             FileUtil.renameFile(tempFile, file);
             Files.setPosixFilePermissions(Paths.get(file.toURI()), PosixFilePermissions.fromString(posixFilePermissions));
         } catch (IOException ex) {
-            throw new RuntimeException(format("Error saving %s/%s to disk", parentDir, relativeConfigFilePath), ex);
+            throw new IllegalStateException(format("Error saving %s/%s to disk", parentDir, relativeConfigFilePath), ex);
         } finally {
             if (tempFile != null && tempFile.exists()) {
                 log.warn("Temp file still exists after failed save; deleting {} now.", tempFile.getAbsolutePath());
