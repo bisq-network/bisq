@@ -98,7 +98,8 @@ configure([project(':cli'),
            project(':relay'),
            project(':seednode'),
            project(':statsnode'),
-           project(':pricenode')]) {
+           project(':pricenode'),
+           project(':apitest')]) {
 
     apply plugin: 'application'
 
@@ -141,6 +142,16 @@ configure([project(':cli'),
                 def script = file("${rootProject.projectDir}/bisq-$applicationName")
                 script.text = script.text.replace(
                     'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=4g"')
+            }
+
+            if (applicationName == 'apitest') {
+                // Give apitest more MaxRAM, and pass the logback config file as a system
+                // property to avoid chatty logback startup due to multiple logback.xml
+                // files in the classpath (:daemon & :cli).
+                def script = file("${rootProject.projectDir}/bisq-$applicationName")
+                script.text = script.text.replace(
+                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=6g' +
+                    ' -Dlogback.configurationFile=apitest/build/resources/main/logback.xml"')
             }
 
             if (osdetector.os != 'windows')
@@ -551,3 +562,55 @@ configure(project(':daemon')) {
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
+
+configure(project(':apitest')) {
+    mainClassName = 'bisq.apitest.ApiTestMain'
+
+    // The external dao-setup.gradle file contains tasks to install and clean dao-setup
+    // files downloaded from
+    //          https://github.com/bisq-network/bisq/raw/master/docs/dao-setup.zip
+    // These tasks are not run by the default build, but they can can be run during
+    // full or partial builds, or by themselves.
+    // To run a full Bisq clean build, test, and install dao-setup files:
+    //      ./gradlew clean build :apitest:installDaoSetup
+    // To install or re-install dao-setup file only:
+    //      ./gradlew :apitest:installDaoSetup -x test
+    // To clean installed dao-setup files:
+    //      ./gradlew :apitest:cleanDaoSetup -x test
+    apply from: 'dao-setup.gradle'
+
+    sourceSets {
+        main {
+            resources {
+                exclude 'dao-setup'
+                exclude 'dao-setup.zip'
+            }
+        }
+    }
+
+    dependencies {
+        compile project(':common')
+        compile project(':seednode')
+        compile project(':desktop')
+        compile project(':daemon')
+        compile project(':cli')
+        implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation("io.grpc:grpc-protobuf:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
