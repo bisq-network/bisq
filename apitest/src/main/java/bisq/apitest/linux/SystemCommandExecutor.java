@@ -66,7 +66,7 @@ class SystemCommandExecutor {
      */
     public SystemCommandExecutor(final List<String> cmdOptions) {
         if (cmdOptions == null)
-            throw new NullPointerException("No command params specified.");
+            throw new IllegalStateException("No command params specified.");
 
         this.cmdOptions = cmdOptions;
         this.sudoPassword = null;
