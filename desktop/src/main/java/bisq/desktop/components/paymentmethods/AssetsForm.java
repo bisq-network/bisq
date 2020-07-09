@@ -110,6 +110,7 @@ public class AssetsForm extends PaymentMethodForm {
             tradeInstant = tradeInstantCheckBox.isSelected();
             if (tradeInstant)
                 new Popup().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
+            paymentLimitationsTextField.setText(getLimitationsText());
         });
 
         gridPane.getChildren().remove(tradeInstantCheckBox);

@@ -53,6 +53,7 @@ import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
@@ -86,6 +87,7 @@ public abstract class PaymentMethodForm {
 
     protected int gridRowFrom;
     InputTextField accountNameTextField;
+    protected TextField paymentLimitationsTextField;
     ToggleButton useCustomAccountNameToggleButton;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
@@ -164,22 +166,20 @@ public abstract class PaymentMethodForm {
         return time;
     }
 
-    protected void addLimitations(boolean isDisplayForm) {
+    protected String getLimitationsText() {
+        final PaymentAccount paymentAccount = getPaymentAccount();
         long hours = paymentAccount.getMaxTradePeriod() / 3600_000;
-
         final TradeCurrency tradeCurrency;
         if (paymentAccount.getSingleTradeCurrency() != null)
             tradeCurrency = paymentAccount.getSingleTradeCurrency();
         else if (paymentAccount.getSelectedTradeCurrency() != null)
             tradeCurrency = paymentAccount.getSelectedTradeCurrency();
-        else if (!paymentAccount.getTradeCurrencies().isEmpty())
+        else if (!paymentAccount.getTradeCurrencies().isEmpty() && paymentAccount.getTradeCurrencies().get(0) != null)
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
             tradeCurrency = paymentAccount instanceof AssetAccount ?
                     CurrencyUtil.getAllSortedCryptoCurrencies().iterator().next() :
                     CurrencyUtil.getDefaultTradeCurrency();
-
-
         final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
         final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
 
@@ -196,9 +196,14 @@ public abstract class PaymentMethodForm {
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(
                                 paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.SELL))),
                         DisplayUtils.formatAccountAge(accountAge));
+        return limitationsText;
+    }
+
+    protected void addLimitations(boolean isDisplayForm) {
+        final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
 
         if (isDisplayForm) {
-            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), getLimitationsText());
 
             String accountSigningStateText;
             MaterialDesignIcon icon;
@@ -233,8 +238,9 @@ public abstract class PaymentMethodForm {
                 accountSigningField.setContent(icon, accountSigningStateText, "", 0.4);
             }
 
-        } else
-            addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+        } else {
+            paymentLimitationsTextField = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), getLimitationsText()).second;
+        }
 
         if (!(paymentAccount instanceof AssetAccount)) {
             if (isAddAccountScreen) {
