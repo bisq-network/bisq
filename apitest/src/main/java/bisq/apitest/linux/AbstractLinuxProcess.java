@@ -64,23 +64,23 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
 
         File berkeleyDbLibPath = new File(config.berkeleyDbLibPath);
         if (!berkeleyDbLibPath.exists() || !berkeleyDbLibPath.canExecute())
-            throw new IllegalStateException(berkeleyDbLibPath + "cannot be found or executed");
+            throw new IllegalStateException(berkeleyDbLibPath + " cannot be found or executed");
 
         File bitcoindExecutable = new File(config.bitcoinPath);
         if (!bitcoindExecutable.exists() || !bitcoindExecutable.canExecute())
-            throw new IllegalStateException(bitcoindExecutable + "cannot be found or executed");
+            throw new IllegalStateException(bitcoindExecutable + " cannot be found or executed");
 
         File bitcoindDatadir = new File(config.bitcoinDatadir);
         if (!bitcoindDatadir.exists() || !bitcoindDatadir.canWrite())
-            throw new IllegalStateException(bitcoindDatadir + "cannot be found or written to");
+            throw new IllegalStateException(bitcoindDatadir + " cannot be found or written to");
 
         File bitcoinConf = new File(bitcoindDatadir, "bitcoin.conf");
         if (!bitcoinConf.exists() || !bitcoinConf.canRead())
-            throw new IllegalStateException(bitcoindDatadir + "cannot be found or read");
+            throw new IllegalStateException(bitcoindDatadir + " cannot be found or read");
 
         File blocknotify = new File(bitcoindDatadir, "blocknotify");
         if (!blocknotify.exists() || !blocknotify.canExecute())
-            throw new IllegalStateException(bitcoindDatadir + "cannot be found or executed");
+            throw new IllegalStateException(bitcoindDatadir + " cannot be found or executed");
     }
 
     public void verifyBitcoindRunning() throws IOException, InterruptedException {
