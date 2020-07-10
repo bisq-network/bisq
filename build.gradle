@@ -145,13 +145,13 @@ configure([project(':cli'),
             }
 
             if (applicationName == 'apitest') {
-                // Give apitest more MaxRAM, and pass the logback config file as a system
-                // property to avoid chatty logback startup due to multiple logback.xml
-                // files in the classpath (:daemon & :cli).
+                // Pass the logback config file as a system property to avoid chatty
+                // logback startup due to multiple logback.xml files in the classpath
+                // (:daemon & :cli).
                 def script = file("${rootProject.projectDir}/bisq-$applicationName")
                 script.text = script.text.replace(
-                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=6g' +
-                    ' -Dlogback.configurationFile=apitest/build/resources/main/logback.xml"')
+                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="' +
+                    '-Dlogback.configurationFile=apitest/build/resources/main/logback.xml"')
             }
 
             if (osdetector.os != 'windows')
