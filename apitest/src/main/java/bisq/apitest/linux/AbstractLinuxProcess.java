@@ -76,11 +76,11 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
 
         File bitcoinConf = new File(bitcoindDatadir, "bitcoin.conf");
         if (!bitcoinConf.exists() || !bitcoinConf.canRead())
-            throw new IllegalStateException(bitcoindDatadir + " cannot be found or read");
+            throw new IllegalStateException(bitcoindDatadir + "/bitcoin.conf cannot be found or read");
 
         File blocknotify = new File(bitcoindDatadir, "blocknotify");
         if (!blocknotify.exists() || !blocknotify.canExecute())
-            throw new IllegalStateException(bitcoindDatadir + " cannot be found or executed");
+            throw new IllegalStateException(bitcoindDatadir + "/blocknotify cannot be found or executed");
     }
 
     public void verifyBitcoindRunning() throws IOException, InterruptedException {
