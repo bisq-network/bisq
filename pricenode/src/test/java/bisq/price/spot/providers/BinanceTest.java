@@ -17,14 +17,14 @@
 
 package bisq.price.spot.providers;
 
-import bisq.price.ExchangeTestBase;
+import bisq.price.AbstractExchangeRateProviderTest;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class BinanceTest extends ExchangeTestBase {
+public class BinanceTest extends AbstractExchangeRateProviderTest {
 
     @Test
     public void doGet_successfulCall() {

@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
-public class ExchangeTestBase {
+public abstract class AbstractExchangeRateProviderTest {
 
     protected void doGet_successfulCall(ExchangeRateProvider exchangeProvider) {
 
