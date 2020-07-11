@@ -74,7 +74,15 @@ class SystemCommandExecutor {
 
     // Execute a system command and return its status code (0 or 1).
     // The system command's output (stderr or stdout) can be accessed from accessors.
-    public int execCommand() throws IOException, InterruptedException {
+    public int exec() throws IOException, InterruptedException {
+        return exec(true);
+    }
+
+    // Execute a system command and return its status code (0 or 1).
+    // The system command's output (stderr or stdout) can be accessed from accessors
+    // if the waitOnErrStream flag is true, else the method will not wait on (join)
+    // the error stream handler thread.
+    public int exec(boolean waitOnErrStream) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(cmdOptions).start();
 
         // you need this if you're going to write something to the command's input stream
@@ -101,8 +109,11 @@ class SystemCommandExecutor {
 
         inputStreamHandler.interrupt();
         errorStreamHandler.interrupt();
+
         inputStreamHandler.join();
-        errorStreamHandler.join();
+        if (waitOnErrStream)
+            errorStreamHandler.join();
+
         return exitStatus;
     }
 

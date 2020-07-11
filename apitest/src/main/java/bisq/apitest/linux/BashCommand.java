@@ -53,15 +53,26 @@ public class BashCommand {
 
     public BashCommand run() throws IOException, InterruptedException {
         SystemCommandExecutor commandExecutor = new SystemCommandExecutor(tokenizeSystemCommand());
-        exitStatus = commandExecutor.execCommand();
+        exitStatus = commandExecutor.exec();
+        processOutput(commandExecutor);
+        return this;
+    }
 
+    public BashCommand runInBackground() throws IOException, InterruptedException {
+        SystemCommandExecutor commandExecutor = new SystemCommandExecutor(tokenizeSystemCommand());
+        exitStatus = commandExecutor.exec(false);
+        processOutput(commandExecutor);
+        return this;
+    }
+
+    private void processOutput(SystemCommandExecutor commandExecutor) throws IOException, InterruptedException {
         // Get the error status and stderr from system command.
         StringBuilder stderr = commandExecutor.getStandardErrorFromCommand();
         if (stderr.length() > 0)
             error = stderr.toString();
 
         if (exitStatus != 0)
-            return this;
+            return;
 
         // Format and cache the stdout from system command.
         StringBuilder stdout = commandExecutor.getStandardOutputFromCommand();
@@ -73,7 +84,6 @@ public class BashCommand {
             truncatedLines.append(line).append((i < limit - 1) ? "\n" : "");
         }
         output = truncatedLines.toString();
-        return this;
     }
 
     public String getCommand() {

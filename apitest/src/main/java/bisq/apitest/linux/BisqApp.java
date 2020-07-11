@@ -173,7 +173,7 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
                 : bisqAppConfig.startupScript + " -> " + bisqAppConfig.appName;
         BashCommand bashCommand = new BashCommand(bisqCmd);
         log.info("Starting {} ...\n$ {}", cmdDescription, bashCommand.getCommand());
-        bashCommand.run();
+        bashCommand.runInBackground();
 
         if (bashCommand.getExitStatus() != 0)
             throw new IllegalStateException(format("Error starting BisqApp\n%s\nError: %s",
