@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-public class Bitfinex extends ExchangeRateProvider {
+class Bitfinex extends ExchangeRateProvider {
 
     public Bitfinex() {
         super("BITFINEX", "bitfinex", Duration.ofMinutes(1));

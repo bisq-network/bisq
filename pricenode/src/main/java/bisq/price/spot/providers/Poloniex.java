@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-public class Poloniex extends ExchangeRateProvider {
+class Poloniex extends ExchangeRateProvider {
 
     public Poloniex() {
         super("POLO", "poloniex", Duration.ofMinutes(1));

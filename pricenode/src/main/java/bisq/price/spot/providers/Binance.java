@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-public class Binance extends ExchangeRateProvider {
+class Binance extends ExchangeRateProvider {
 
     public Binance() {
         super("BINANCE", "binance", Duration.ofMinutes(1));

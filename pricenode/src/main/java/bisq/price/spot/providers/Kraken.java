@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-public class Kraken extends ExchangeRateProvider {
+class Kraken extends ExchangeRateProvider {
 
     public Kraken() {
         super("KRAKEN", "kraken", Duration.ofMinutes(1));
