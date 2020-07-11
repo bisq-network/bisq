@@ -22,7 +22,6 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.bitfinex.BitfinexExchange;
 
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -30,7 +29,6 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-@Order(6)
 public class Bitfinex extends ExchangeRateProvider {
 
     public Bitfinex() {

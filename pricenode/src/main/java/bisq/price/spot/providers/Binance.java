@@ -22,7 +22,6 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.binance.BinanceExchange;
 
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -30,7 +29,6 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-@Order(5)
 public class Binance extends ExchangeRateProvider {
 
     public Binance() {

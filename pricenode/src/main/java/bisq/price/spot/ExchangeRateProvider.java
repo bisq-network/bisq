@@ -41,14 +41,11 @@ import java.util.stream.Collectors;
 /**
  * Abstract base class for providers of bitcoin {@link ExchangeRate} data. Implementations
  * are marked with the {@link org.springframework.stereotype.Component} annotation in
- * order to be discovered via classpath scanning. Implementations are also marked with the
- * {@link org.springframework.core.annotation.Order} annotation to determine their
- * precedence over each other in the case of two or more services returning exchange rate
- * data for the same currency pair. In such cases, results from the provider with the
- * higher order value will take precedence over the provider with a lower value,
- * presuming that such providers are being iterated over in an ordered list.
+ * order to be discovered via classpath scanning. If multiple
+ * {@link ExchangeRateProvider}s retrieve rates for the same currency, then the
+ * {@link ExchangeRateService} will average them out and expose an aggregate rate.
  *
- * @see ExchangeRateService#ExchangeRateService(java.util.List)
+ * @see ExchangeRateService#getAllMarketPrices()
  */
 public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRate>> {
 

@@ -22,7 +22,6 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.kraken.KrakenExchange;
 
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -30,7 +29,6 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-@Order(7)
 public class Kraken extends ExchangeRateProvider {
 
     public Kraken() {
