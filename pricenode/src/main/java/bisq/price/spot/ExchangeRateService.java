@@ -65,7 +65,8 @@ class ExchangeRateService {
         providers.forEach(p -> {
             Set<ExchangeRate> exchangeRates = p.get();
 
-            // Specific metadata fields for specific providers are expected by the client, mostly for historical reasons
+            // Specific metadata fields for specific providers are expected by the client,
+            // mostly for historical reasons
             // Therefore, add metadata fields for all known providers
             // Rates are encapsulated in the "data" map below
             metadata.putAll(getMetadata(p, exchangeRates));
@@ -73,8 +74,8 @@ class ExchangeRateService {
 
         return new LinkedHashMap<String, Object>() {{
             putAll(metadata);
-            // Use a sorted list by currency code to make comparision of json data between different
-            // price nodes easier
+            // Use a sorted list by currency code to make comparision of json data between
+            // different price nodes easier
             List<ExchangeRate> values = new ArrayList<>(aggregateExchangeRates.values());
             values.sort(Comparator.comparing(ExchangeRate::getCurrency));
             put("data", values);
@@ -82,29 +83,34 @@ class ExchangeRateService {
     }
 
     /**
-     * For each currency, create an aggregate {@link ExchangeRate} based on the currency's rates from all providers.
-     * If multiple providers have rates for the currency, then aggregate price = average of retrieved prices.
-     * If a single provider has rates for the currency, then aggregate price = the rate from that provider.
+     * For each currency, create an aggregate {@link ExchangeRate} based on the currency's
+     * rates from all providers. If multiple providers have rates for the currency, then
+     * aggregate price = average of retrieved prices. If a single provider has rates for
+     * the currency, then aggregate price = the rate from that provider.
      *
-     * @return Aggregate {@link ExchangeRate}s based on info from all providers, indexed by currency code
+     * @return Aggregate {@link ExchangeRate}s based on info from all providers, indexed
+     * by currency code
      */
     private Map<String, ExchangeRate> getAggregateExchangeRates() {
         Map<String, ExchangeRate> aggregateExchangeRates = new HashMap<>();
 
-        // Query all known providers and collect all exchange rates, grouped by currency code
+        // Query all providers and collect all exchange rates, grouped by currency code
         Map<String, List<ExchangeRate>> currencyCodeToExchangeRates = getCurrencyCodeToExchangeRates();
 
         // For each currency code, calculate aggregate rate
         currencyCodeToExchangeRates.forEach((currencyCode, exchangeRateList) -> {
             ExchangeRate aggregateExchangeRate;
             if (exchangeRateList.size() == 1) {
-                // If a single provider has rates for this currency, then aggregate = rate from that provider
+                // If a single provider has rates for this currency, then aggregate = rate
+                // from that provider
                 aggregateExchangeRate = exchangeRateList.get(0);
             }
             else if (exchangeRateList.size() > 1) {
-                // If multiple providers have rates for this currency, then aggregate = average of the rates
+                // If multiple providers have rates for this currency, then
+                // aggregate = average of the rates
                 OptionalDouble opt = exchangeRateList.stream().mapToDouble(ExchangeRate::getPrice).average();
-                double priceAvg = opt.orElseThrow(IllegalStateException::new); // List size > 1, so opt is always set
+                // List size > 1, so opt is always set
+                double priceAvg = opt.orElseThrow(IllegalStateException::new);
 
                 aggregateExchangeRate = new ExchangeRate(
                         currencyCode,
@@ -113,7 +119,8 @@ class ExchangeRateService {
                         "Bisq-Aggregate");
             }
             else {
-                // If the map was built incorrectly and this currency points to an empty list of rates, skip it
+                // If the map was built incorrectly and this currency points to an empty
+                // list of rates, skip it
                return;
             }
             aggregateExchangeRates.put(aggregateExchangeRate.getCurrency(), aggregateExchangeRate);
@@ -145,9 +152,10 @@ class ExchangeRateService {
     private Map<String, Object> getMetadata(ExchangeRateProvider provider, Set<ExchangeRate> exchangeRates) {
         Map<String, Object> metadata = new LinkedHashMap<>();
 
-        // In case a provider is not available we still want to deliver the data of the other providers, so we catch
-        // a possible exception and leave timestamp at 0. The Bisq app will check if the timestamp is in a tolerance
-        // window and if it is too old it will show that the price is not available.
+        // In case a provider is not available we still want to deliver the data of the
+        // other providers, so we catch a possible exception and leave timestamp at 0. The
+        // Bisq app will check if the timestamp is in a tolerance window and if it is too
+        // old it will show that the price is not available.
         long timestamp = 0;
         try {
             timestamp = getTimestamp(provider, exchangeRates);

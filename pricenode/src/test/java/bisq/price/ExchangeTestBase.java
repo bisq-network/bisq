@@ -27,7 +27,8 @@ public class ExchangeTestBase {
         Set<ExchangeRate> retrievedExchangeRates = exchangeProvider.doGet();
 
         // Log the valid exchange rates which were retrieved
-        // Useful when running the tests, to easily identify which exchanges provide useful pairs
+        // Useful when running the tests, to easily identify which exchanges provide
+        // useful pairs
         retrievedExchangeRates.forEach(e -> log.info("Found exchange rate " + e.toString()));
 
         // Sanity checks

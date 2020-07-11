@@ -77,8 +77,10 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
     }
 
     /**
-     * @param exchangeClass Class of the {@link Exchange} for which the rates should be polled
-     * @return Exchange rates for Bisq-supported fiat currencies and altcoins in the specified {@link Exchange}
+     * @param exchangeClass Class of the {@link Exchange} for which the rates should be
+     *                      polled
+     * @return Exchange rates for Bisq-supported fiat currencies and altcoins in the
+     * specified {@link Exchange}
      *
      * @see CurrencyUtil#getAllSortedFiatCurrencies()
      * @see CurrencyUtil#getAllSortedCryptoCurrencies()
@@ -117,12 +119,16 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                                 this.getName()
                         ));
                     } catch (CurrencyPairNotValidException cpnve) {
-                        // Some exchanges support certain currency pairs for other services but not for spot markets
-                        // In that case, trying to retrieve the market ticker for that pair may fail with this specific type of exception
+                        // Some exchanges support certain currency pairs for other
+                        // services but not for spot markets. In that case, trying to
+                        // retrieve the market ticker for that pair may fail with this
+                        // specific type of exception
                         log.info("Currency pair " + cp + " not supported in Spot Markets: " + cpnve.getMessage());
                     } catch (Exception e) {
-                        // Catch any other type of generic exception (IO, network level, rate limit reached, etc)
-                        log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " + e.getMessage());
+                        // Catch any other type of generic exception (IO, network level,
+                        // rate limit reached, etc)
+                        log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " +
+                                e.getMessage());
                     }
                 });
 
@@ -142,12 +148,16 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                                 this.getName()
                         ));
                     } catch (CurrencyPairNotValidException cpnve) {
-                        // Some exchanges support certain currency pairs for other services but not for spot markets
-                        // In that case, trying to retrieve the market ticker for that pair may fail with this specific type of exception
+                        // Some exchanges support certain currency pairs for other
+                        // services but not for spot markets. In that case, trying to
+                        // retrieve the market ticker for that pair may fail with this
+                        // specific type of exception
                         log.info("Currency pair " + cp + " not supported in Spot Markets: " + cpnve.getMessage());
                     } catch (Exception e) {
-                        // Catch any other type of generic exception (IO, network level, rate limit reached, etc)
-                        log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " + e.getMessage());
+                        // Catch any other type of generic exception (IO, network level,
+                        // rate limit reached, etc)
+                        log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " +
+                                e.getMessage());
                     }
                 });
 
