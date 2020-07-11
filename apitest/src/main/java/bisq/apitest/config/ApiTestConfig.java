@@ -50,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.lang.System.getenv;
+import static joptsimple.internal.Strings.EMPTY;
 
 @Slf4j
 public class ApiTestConfig {
@@ -151,7 +152,7 @@ public class ApiTestConfig {
         ArgumentAcceptingOptionSpec<String> berkeleyDbLibPathOpt =
                 parser.accepts(BERKELEYDB_LIB_PATH, "Berkeley DB lib path")
                         .withRequiredArg()
-                        .ofType(String.class).defaultsTo("/usr/local/BerkeleyDB.4.8/lib");
+                        .ofType(String.class).defaultsTo(EMPTY);
 
         ArgumentAcceptingOptionSpec<String> bitcoinPathOpt =
                 parser.accepts(BITCOIN_PATH, "Bitcoin path")

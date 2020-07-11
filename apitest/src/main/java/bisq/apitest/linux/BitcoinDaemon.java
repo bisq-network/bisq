@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.linux.BashCommand.isAlive;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static joptsimple.internal.Strings.EMPTY;
 
 
 
@@ -44,8 +45,15 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
 
     @Override
     public void start() throws InterruptedException, IOException {
-        String bitcoindCmd = "export LD_LIBRARY_PATH=" + config.berkeleyDbLibPath + ";"
-                + " " + config.bitcoinPath + "/bitcoind"
+
+        // If the bitcoind binary is dynamically linked to berkeley db libs, export the
+        // configured berkeley-db lib path.  If statically linked, the berkeley db lib
+        // path will not be exported.
+        String berkeleyDbLibPathExport = config.berkeleyDbLibPath.equals(EMPTY) ? EMPTY
+                : "export LD_LIBRARY_PATH=" + config.berkeleyDbLibPath + "; ";
+
+        String bitcoindCmd = berkeleyDbLibPathExport
+                + config.bitcoinPath + "/bitcoind"
                 + " -datadir=" + config.bitcoinDatadir
                 + " -daemon";
 

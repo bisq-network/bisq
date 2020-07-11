@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.linux.BashCommand.isAlive;
 import static java.lang.String.format;
+import static joptsimple.internal.Strings.EMPTY;
 
 
 
@@ -48,6 +49,7 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
         return this.name;
     }
 
+    @SuppressWarnings("unused")
     public void verifyBitcoinConfig() {
         verifyBitcoinConfig(false);
     }
@@ -62,9 +64,11 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
                     "bitcoin.conf", config.bitcoinDatadir + "/bitcoin.conf",
                     "blocknotify", config.bitcoinDatadir + "/blocknotify"));
 
-        File berkeleyDbLibPath = new File(config.berkeleyDbLibPath);
-        if (!berkeleyDbLibPath.exists() || !berkeleyDbLibPath.canExecute())
-            throw new IllegalStateException(berkeleyDbLibPath + " cannot be found or executed");
+        if (!config.berkeleyDbLibPath.equals(EMPTY)) {
+            File berkeleyDbLibPath = new File(config.berkeleyDbLibPath);
+            if (!berkeleyDbLibPath.exists() || !berkeleyDbLibPath.canExecute())
+                throw new IllegalStateException(berkeleyDbLibPath + " cannot be found or executed");
+        }
 
         File bitcoindExecutable = new File(config.bitcoinPath);
         if (!bitcoindExecutable.exists() || !bitcoindExecutable.canExecute())
@@ -76,11 +80,11 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
 
         File bitcoinConf = new File(bitcoindDatadir, "bitcoin.conf");
         if (!bitcoinConf.exists() || !bitcoinConf.canRead())
-            throw new IllegalStateException(bitcoindDatadir + "/bitcoin.conf cannot be found or read");
+            throw new IllegalStateException(bitcoinConf.getAbsolutePath() + " cannot be found or read");
 
         File blocknotify = new File(bitcoindDatadir, "blocknotify");
         if (!blocknotify.exists() || !blocknotify.canExecute())
-            throw new IllegalStateException(bitcoindDatadir + "/blocknotify cannot be found or executed");
+            throw new IllegalStateException(blocknotify.getAbsolutePath() + " cannot be found or executed");
     }
 
     public void verifyBitcoindRunning() throws IOException, InterruptedException {
