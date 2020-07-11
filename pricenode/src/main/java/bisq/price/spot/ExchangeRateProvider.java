@@ -118,17 +118,17 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                                 t.getTimestamp() == null ? new Date() : t.getTimestamp(),
                                 this.getName()
                         ));
-                    } catch (CurrencyPairNotValidException cpnve) {
+                    } catch (CurrencyPairNotValidException ex) {
                         // Some exchanges support certain currency pairs for other
                         // services but not for spot markets. In that case, trying to
                         // retrieve the market ticker for that pair may fail with this
                         // specific type of exception
-                        log.info("Currency pair " + cp + " not supported in Spot Markets: " + cpnve.getMessage());
-                    } catch (Exception e) {
+                        log.info("Currency pair " + cp + " not supported in Spot Markets: " + ex.getMessage());
+                    } catch (Exception ex) {
                         // Catch any other type of generic exception (IO, network level,
                         // rate limit reached, etc)
                         log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " +
-                                e.getMessage());
+                                ex.getMessage());
                     }
                 });
 
@@ -147,17 +147,17 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                                 t.getTimestamp() == null ? new Date() : t.getTimestamp(),
                                 this.getName()
                         ));
-                    } catch (CurrencyPairNotValidException cpnve) {
+                    } catch (CurrencyPairNotValidException ex) {
                         // Some exchanges support certain currency pairs for other
                         // services but not for spot markets. In that case, trying to
                         // retrieve the market ticker for that pair may fail with this
                         // specific type of exception
-                        log.info("Currency pair " + cp + " not supported in Spot Markets: " + cpnve.getMessage());
-                    } catch (Exception e) {
+                        log.info("Currency pair " + cp + " not supported in Spot Markets: " + ex.getMessage());
+                    } catch (Exception ex) {
                         // Catch any other type of generic exception (IO, network level,
                         // rate limit reached, etc)
                         log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " +
-                                e.getMessage());
+                                ex.getMessage());
                     }
                 });
 
