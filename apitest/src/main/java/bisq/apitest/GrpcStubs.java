@@ -100,12 +100,10 @@ public class GrpcStubs {
             });
         }
 
-        /**
-         * An experimental api.  A noop but never called; tries to make it clearer to
-         * implementors that they may break in the future.
-         */
         @Override
         public void thisUsesUnstableApi() {
+            // An experimental api.  A noop but never called; tries to make it clearer to
+            // implementors that they may break in the future.
         }
     }
 }
