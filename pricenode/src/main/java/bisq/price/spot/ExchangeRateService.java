@@ -17,8 +17,6 @@
 
 package bisq.price.spot;
 
-import bisq.price.spot.providers.BitcoinAverage;
-
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -165,10 +163,6 @@ class ExchangeRateService {
             log.error(t.toString());
             if (log.isDebugEnabled())
                 t.printStackTrace();
-        }
-
-        if (provider instanceof BitcoinAverage.Local) {
-            metadata.put("btcAverageTs", timestamp);
         }
 
         String prefix = provider.getPrefix();

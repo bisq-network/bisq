@@ -469,7 +469,6 @@ configure(project(':pricenode')) {
             exclude(module: 'commons-codec')
         }
         compile("org.knowm.xchange:xchange-bitbay:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-bitcoinaverage:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-btcmarkets:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-binance:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-bitfinex:$knowmXchangeVersion")
