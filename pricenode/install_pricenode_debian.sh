@@ -36,7 +36,7 @@ sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq 
 
 echo "[*] Installing Git LFS"
 sudo -H -i -u "${ROOT_USER}" curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-sudo -H -i -u "${ROOT_USER}" apt-get install git-lfs
+sudo -H -i -u "${ROOT_USER}" apt-get -y install git-lfs
 sudo -H -i -u "${ROOT_USER}" git lfs install
 
 echo "[*] Installing Tor"
