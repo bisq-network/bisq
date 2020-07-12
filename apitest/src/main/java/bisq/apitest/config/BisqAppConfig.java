@@ -80,7 +80,8 @@ public enum BisqAppConfig {
             "\"-XX:MaxRAM=4g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
             BisqAppMain.class.getName(),
             8888,
-            5123, -1);
+            5123,
+            -1);
 
     public final String appName;
     public final String startupScript;
