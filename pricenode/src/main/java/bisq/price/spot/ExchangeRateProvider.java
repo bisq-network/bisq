@@ -27,16 +27,23 @@ import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.Ticker;
-import org.knowm.xchange.exceptions.CurrencyPairNotValidException;
 import org.knowm.xchange.service.marketdata.MarketDataService;
+import org.knowm.xchange.service.marketdata.params.CurrencyPairsParam;
+import org.knowm.xchange.service.marketdata.params.Params;
 
 import java.time.Duration;
 
+import java.io.IOException;
+
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Abstract base class for providers of bitcoin {@link ExchangeRate} data. Implementations
@@ -48,6 +55,14 @@ import java.util.stream.Collectors;
  * @see ExchangeRateService#getAllMarketPrices()
  */
 public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRate>> {
+
+    private static final Set<String> supportedCryptoCurrencies = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+            .map(TradeCurrency::getCode)
+            .collect(Collectors.toSet());
+
+    private static final Set<String> supportedFiatCurrencies = CurrencyUtil.getAllSortedFiatCurrencies().stream()
+            .map(TradeCurrency::getCode)
+            .collect(Collectors.toSet());
 
     private final String name;
     private final String prefix;
@@ -90,74 +105,120 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
         MarketDataService marketDataService = exchange.getMarketDataService();
 
         // Retrieve all currency pairs supported by the exchange
-        List<CurrencyPair> currencyPairs = exchange.getExchangeSymbols();
+        List<CurrencyPair> allCurrencyPairsOnExchange = exchange.getExchangeSymbols();
 
-        Set<String> supportedCryptoCurrencies = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-                .map(TradeCurrency::getCode)
-                .collect(Collectors.toSet());
+        // Find out which currency pairs we are interested in polling ("desired pairs")
+        // This will be the intersection of:
+        // 1) the pairs available on the exchange, and
+        // 2) the pairs Bisq considers relevant / valid
+        // This will result in two lists of desired pairs (fiat and alts)
 
-        Set<String> supportedFiatCurrencies = CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                .map(TradeCurrency::getCode)
-                .collect(Collectors.toSet());
-
-        // Filter the supported fiat currencies (currency pair format is BTC-FIAT)
-        currencyPairs.stream()
+        // Find the desired fiat pairs (pair format is BTC-FIAT)
+        List<CurrencyPair> desiredFiatPairs = allCurrencyPairsOnExchange.stream()
                 .filter(cp -> cp.base.equals(Currency.BTC))
                 .filter(cp -> supportedFiatCurrencies.contains(cp.counter.getCurrencyCode()))
-                .forEach(cp -> {
-                    try {
-                        Ticker t = marketDataService.getTicker(new CurrencyPair(cp.base, cp.counter));
+                .collect(Collectors.toList());
 
-                        result.add(new ExchangeRate(
-                                cp.counter.getCurrencyCode(),
-                                t.getLast(),
-                                // Some exchanges do not provide timestamps
-                                t.getTimestamp() == null ? new Date() : t.getTimestamp(),
-                                this.getName()
-                        ));
-                    } catch (CurrencyPairNotValidException ex) {
-                        // Some exchanges support certain currency pairs for other
-                        // services but not for spot markets. In that case, trying to
-                        // retrieve the market ticker for that pair may fail with this
-                        // specific type of exception
-                        log.info("Currency pair " + cp + " not supported in Spot Markets: " + ex.getMessage());
-                    } catch (Exception ex) {
-                        // Catch any other type of generic exception (IO, network level,
-                        // rate limit reached, etc)
-                        log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " +
-                                ex.getMessage());
-                    }
-                });
-
-        // Filter the supported altcoins (currency pair format is ALT-BTC)
-        currencyPairs.stream()
+        // Find the desired altcoin pairs (pair format is ALT-BTC)
+        List<CurrencyPair> desiredCryptoPairs = allCurrencyPairsOnExchange.stream()
                 .filter(cp -> cp.counter.equals(Currency.BTC))
                 .filter(cp -> supportedCryptoCurrencies.contains(cp.base.getCurrencyCode()))
-                .forEach(cp -> {
-                    try {
-                        Ticker t = marketDataService.getTicker(new CurrencyPair(cp.base, cp.counter));
+                .collect(Collectors.toList());
 
-                        result.add(new ExchangeRate(
-                                cp.base.getCurrencyCode(),
-                                t.getLast(),
-                                // Some exchanges do not provide timestamps
-                                t.getTimestamp() == null ? new Date() : t.getTimestamp(),
-                                this.getName()
-                        ));
-                    } catch (CurrencyPairNotValidException ex) {
-                        // Some exchanges support certain currency pairs for other
-                        // services but not for spot markets. In that case, trying to
-                        // retrieve the market ticker for that pair may fail with this
-                        // specific type of exception
-                        log.info("Currency pair " + cp + " not supported in Spot Markets: " + ex.getMessage());
-                    } catch (Exception ex) {
-                        // Catch any other type of generic exception (IO, network level,
-                        // rate limit reached, etc)
-                        log.info("Exception encountered while retrieving rate for currency pair " + cp + ": " +
-                                ex.getMessage());
+        // Retrieve in bulk all tickers offered by the exchange
+        // The benefits of this approach (vs polling each ticker) are twofold:
+        // 1) the polling of the exchange is faster (one HTTP call vs several)
+        // 2) it's easier to stay below any API rate limits the exchange might have
+        List<Ticker> tickersRetrievedFromExchange;
+        try {
+            tickersRetrievedFromExchange = marketDataService.getTickers(new CurrencyPairsParam() {
+
+                /**
+                 * The {@link MarketDataService#getTickers(Params)} interface requires a
+                 * {@link CurrencyPairsParam} argument when polling for tickers in bulk.
+                 * This parameter is meant to indicate a list of currency pairs for which
+                 * the tickers should be polled. However, the actual implementations for
+                 * the different exchanges differ, for example:
+                 * - some will ignore it (and retrieve all available tickers)
+                 * - some will require it (and will fail if a null or empty list is given)
+                 * - some will properly handle it
+                 *
+                 * We take a simplistic approach, namely:
+                 * - for providers that require such a filter, specify one
+                 * - for all others, do not specify one
+                 *
+                 * We make this distinction using
+                 * {@link ExchangeRateProvider#requiresFilterDuringBulkTickerRetrieval}
+                 *
+                 * @return Filter (list of desired currency pairs) to be used during bulk
+                 * ticker retrieval
+                 */
+                @Override
+                public Collection<CurrencyPair> getCurrencyPairs() {
+                    // If required by the exchange implementation, specify a filter
+                    // (list of pairs which should be retrieved)
+                    if (requiresFilterDuringBulkTickerRetrieval())
+                        return Stream.of(desiredFiatPairs, desiredCryptoPairs)
+                                .flatMap(Collection::stream)
+                                .collect(Collectors.toList());
+
+                    // Otherwise, specify an empty list, indicating that the API should
+                    // simply return all available tickers
+                    return Collections.emptyList();
+                }
+            });
+        } catch (IOException e) {
+            // If there was a problem with polling this exchange, return right away,
+            // since there are no results to parse and process
+            log.error("Could not query tickers for provider " + getName(), e);
+            return result;
+        }
+
+        // Create an ExchangeRate for each desired currency pair ticker that was retrieved
+        Predicate<Ticker> isDesiredFiatPair = t -> desiredFiatPairs.contains(t.getCurrencyPair());
+        Predicate<Ticker> isDesiredCryptoPair = t -> desiredCryptoPairs.contains(t.getCurrencyPair());
+        tickersRetrievedFromExchange.stream()
+                .filter(isDesiredFiatPair.or(isDesiredCryptoPair)) // Only consider desired pairs
+                .forEach(t -> {
+                    // All tickers here match all requirements
+
+                    // We have two kinds of currency pairs, BTC-FIAT and ALT-BTC
+                    // In the first one, BTC is the first currency of the pair
+                    // In the second type, BTC is listed as the second currency
+                    // Distinguish between the two and create ExchangeRates accordingly
+
+                    // In every Bisq ExchangeRate, BTC is one currency in the pair
+                    // Extract the other currency from the ticker, to create ExchangeRates
+                    String otherExchangeRateCurrency;
+                    if (t.getCurrencyPair().base.equals(Currency.BTC)) {
+                        otherExchangeRateCurrency = t.getCurrencyPair().counter.getCurrencyCode();
                     }
+                    else {
+                        otherExchangeRateCurrency = t.getCurrencyPair().base.getCurrencyCode();
+                    }
+
+                    result.add(new ExchangeRate(
+                            otherExchangeRateCurrency,
+                            t.getLast(),
+                            // Some exchanges do not provide timestamps
+                            t.getTimestamp() == null ? new Date() : t.getTimestamp(),
+                            this.getName()
+                    ));
                 });
 
         return result;
+    }
+
+    /**
+     * @return Whether or not the bulk retrieval of tickers from the exchange requires an
+     * explicit filter (list of desired pairs) or not. If true, the
+     * {@link MarketDataService#getTickers(Params)} call will be constructed and given as
+     * argument, which acts as a filter indicating for which pairs the ticker should be
+     * retrieved. If false, {@link MarketDataService#getTickers(Params)} will be called
+     * with an empty argument, indicating that the API should simply return all available
+     * tickers on the exchange
+     */
+    protected boolean requiresFilterDuringBulkTickerRetrieval() {
+        return false;
     }
 }

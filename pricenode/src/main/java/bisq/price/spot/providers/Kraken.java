@@ -41,4 +41,9 @@ class Kraken extends ExchangeRateProvider {
         // Supported alts: DASH, DOGE, ETC, ETH, LTC, XMR, ZEC
         return doGet(KrakenExchange.class);
     }
+
+    @Override
+    protected boolean requiresFilterDuringBulkTickerRetrieval() {
+        return true;
+    }
 }
