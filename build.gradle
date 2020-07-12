@@ -589,6 +589,7 @@ configure(project(':apitest')) {
     }
 
     dependencies {
+        compile project(':proto')
         compile project(':common')
         compile project(':seednode')
         compile project(':desktop')
