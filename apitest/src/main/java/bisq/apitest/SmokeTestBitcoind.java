@@ -37,7 +37,7 @@ class SmokeTestBitcoind {
         this.config = config;
     }
 
-    public void runSmokeTest() throws IOException, InterruptedException {
+    public void run() throws IOException, InterruptedException {
         runBitcoinGetWalletInfo();   // smoke test bitcoin-cli
         String newBitcoinAddress = getNewAddress();
         generateToAddress(1, newBitcoinAddress);
