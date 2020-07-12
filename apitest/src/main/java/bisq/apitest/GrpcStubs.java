@@ -61,7 +61,7 @@ public class GrpcStubs {
             try {
                 channel.shutdown().awaitTermination(1, SECONDS);
             } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
+                throw new IllegalStateException(ex);
             }
         }));
 
@@ -100,6 +100,10 @@ public class GrpcStubs {
             });
         }
 
+        /**
+         * An experimental api.  A noop but never called; tries to make it clearer to
+         * implementors that they may break in the future.
+         */
         @Override
         public void thisUsesUnstableApi() {
         }
