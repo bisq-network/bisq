@@ -48,14 +48,14 @@
   run ./bisq-cli --password="xyz" getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.4" ]
+  [ "$output" = "1.3.5" ]
 }
 
 @test "test getversion" {
   run ./bisq-cli --password=xyz getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.4" ]
+  [ "$output" = "1.3.5" ]
 }
 
 @test "test setwalletpassword \"a b c\"" {
