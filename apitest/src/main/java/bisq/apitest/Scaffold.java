@@ -18,9 +18,18 @@
 package bisq.apitest;
 
 import bisq.common.config.BisqHelpFormatter;
+import bisq.common.storage.FileUtil;
 import bisq.common.util.Utilities;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -38,6 +47,7 @@ import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -46,6 +56,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import bisq.apitest.config.ApiTestConfig;
 import bisq.apitest.config.BisqAppConfig;
+import bisq.apitest.linux.BashCommand;
 import bisq.apitest.linux.BisqApp;
 import bisq.apitest.linux.BitcoinDaemon;
 
@@ -101,6 +112,8 @@ public class Scaffold {
 
     public Scaffold setUp() {
         try {
+            installDaoSetupDirectories();
+
             // Start each background process from an executor, then add a shutdown hook.
             CountDownLatch countdownLatch = new CountDownLatch(config.numSetupTasks);
             startBackgroundProcesses(executor, countdownLatch);
@@ -143,6 +156,142 @@ public class Scaffold {
                 log.info("Teardown complete");
             } catch (Exception ex) {
                 throw new IllegalStateException(ex);
+            }
+        }
+    }
+
+    public void installDaoSetupDirectories() {
+        cleanDaoSetupDirectories();
+
+        String srcResourcesDir = Paths.get("apitest", "src", "main", "resources", "dao-setup").toFile().getAbsolutePath();
+        String buildDataDir = config.rootAppDataDir.getAbsolutePath();
+        try {
+            if (!new File(srcResourcesDir).exists())
+                throw new FileNotFoundException(
+                        format("Dao setup dir '%s' not found.  Run gradle :apitest:installDaoSetup"
+                                        + " to download dao-setup.zip and extract contents to resources folder",
+                                srcResourcesDir));
+
+            BashCommand copyBitcoinRegtestDir = new BashCommand(
+                    "cp -rf " + srcResourcesDir + "/Bitcoin-regtest/regtest"
+                            + " " + config.bitcoinDatadir);
+            if (copyBitcoinRegtestDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not install bitcoin regtest dir");
+
+            BashCommand copyAliceDataDir = new BashCommand(
+                    "cp -rf " + srcResourcesDir + "/" + alicedaemon.appName
+                            + " " + config.rootAppDataDir);
+            if (copyAliceDataDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not install alice data dir");
+
+            BashCommand copyBobDataDir = new BashCommand(
+                    "cp -rf " + srcResourcesDir + "/" + bobdaemon.appName
+                            + " " + config.rootAppDataDir);
+            if (copyBobDataDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not install bob data dir");
+
+            log.info("Installed dao-setup files into {}", buildDataDir);
+
+            // Write a bitcoin.conf file with the correct path to the blocknotify script,
+            // and save it to the build resource dir.
+            installBitcoinConf();
+
+            // Copy the blocknotify script from the src resources dir to the
+            // build resources dir.  Users may want to edit it sometimes,
+            // when all default block notifcation ports are being used.
+            installBitcoinBlocknotify();
+
+        } catch (IOException | InterruptedException ex) {
+            throw new IllegalStateException("Could not install dao-setup files from " + srcResourcesDir, ex);
+        }
+    }
+
+    private void cleanDaoSetupDirectories() {
+        String buildDataDir = config.rootAppDataDir.getAbsolutePath();
+        log.info("Cleaning dao-setup data in {}", buildDataDir);
+
+        try {
+            BashCommand rmBobDataDir = new BashCommand("rm -rf " + config.rootAppDataDir + "/" + bobdaemon.appName);
+            if (rmBobDataDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not delete bob data dir");
+
+            BashCommand rmAliceDataDir = new BashCommand("rm -rf " + config.rootAppDataDir + "/" + alicedaemon.appName);
+            if (rmAliceDataDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not delete alice data dir");
+
+            BashCommand rmArbNodeDataDir = new BashCommand("rm -rf " + config.rootAppDataDir + "/" + arbdaemon.appName);
+            if (rmArbNodeDataDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not delete arbitrator data dir");
+
+            BashCommand rmSeedNodeDataDir = new BashCommand("rm -rf " + config.rootAppDataDir + "/" + seednode.appName);
+            if (rmSeedNodeDataDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not delete seednode data dir");
+
+            BashCommand rmBitcoinRegtestDir = new BashCommand("rm -rf " + config.bitcoinDatadir + "/regtest");
+            if (rmBitcoinRegtestDir.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not clean bitcoind regtest dir");
+
+        } catch (IOException | InterruptedException ex) {
+            throw new IllegalStateException("Could not clean dao-setup files from " + buildDataDir, ex);
+        }
+    }
+
+    private void installBitcoinConf() {
+        // We write out and install a bitcoin.conf file for regtest/dao mode because
+        // the path to the blocknotify script is not known until runtime.
+        String bitcoinConf = "\n"
+                + "regtest=1\n"
+                + "[regtest]\n"
+                + "peerbloomfilters=1\n"
+                + "rpcport=18443\n"
+                + "server=1\n"
+                + "txindex=1\n"
+                + "debug=net\n"
+                + "deprecatedrpc=generate\n"
+                + "rpcuser=apitest\n"
+                + "rpcpassword=apitest\n"
+                + "blocknotify=" + config.bashPath + " " + config.bitcoinDatadir + "/blocknotify %\n";
+        String chmod644Perms = "rw-r--r--";
+        saveToFile(bitcoinConf, config.bitcoinDatadir, "bitcoin.conf", chmod644Perms);
+        log.info("Installed {} with perms {}.", config.bitcoinDatadir + "/bitcoin.conf", chmod644Perms);
+    }
+
+    private void installBitcoinBlocknotify() {
+        // gradle is not working for this
+        try {
+            Path srcPath = Paths.get("apitest", "src", "main", "resources", "blocknotify");
+            Path destPath = Paths.get(config.bitcoinDatadir, "blocknotify");
+            Files.copy(srcPath, destPath, REPLACE_EXISTING);
+            String chmod700Perms = "rwx------";
+            Files.setPosixFilePermissions(destPath, PosixFilePermissions.fromString(chmod700Perms));
+            log.info("Installed {} with perms {}.", destPath.toString(), chmod700Perms);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveToFile(String content,
+                            String parentDir,
+                            @SuppressWarnings("SameParameterValue") String relativeFilePath,
+                            String posixFilePermissions) {
+        File tempFile = null;
+        File file;
+        try {
+            file = Paths.get(parentDir, relativeFilePath).toFile();
+            tempFile = File.createTempFile("temp", relativeFilePath, file.getParentFile());
+            tempFile.deleteOnExit();
+            try (PrintWriter out = new PrintWriter(tempFile)) {
+                out.println(content);
+            }
+            FileUtil.renameFile(tempFile, file);
+            Files.setPosixFilePermissions(Paths.get(file.toURI()), PosixFilePermissions.fromString(posixFilePermissions));
+        } catch (IOException ex) {
+            throw new IllegalStateException(format("Error saving %s/%s to disk", parentDir, relativeFilePath), ex);
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                log.warn("Temp file still exists after failed save; deleting {} now.", tempFile.getAbsolutePath());
+                if (!tempFile.delete())
+                    log.error("Cannot delete temp file.");
             }
         }
     }
