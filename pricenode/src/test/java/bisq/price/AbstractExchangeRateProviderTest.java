@@ -48,25 +48,19 @@ public abstract class AbstractExchangeRateProviderTest {
                 .map(ExchangeRate::getCurrency)
                 .collect(Collectors.toSet());
 
-        Set<String> supportedCryptoCurrencies = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-                .map(TradeCurrency::getCode)
-                .collect(Collectors.toSet());
-
-        Set<String> supportedFiatCurrencies = CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                .map(TradeCurrency::getCode)
-                .collect(Collectors.toSet());
-
-        Set<String> supportedFiatCurrenciesRetrieved = supportedFiatCurrencies.stream()
+        Set<String> supportedFiatCurrenciesRetrieved = ExchangeRateProvider.SUPPORTED_FIAT_CURRENCIES.stream()
                 .filter(f -> retrievedRatesCurrencies.contains(f))
                 .collect(Collectors.toCollection(TreeSet::new));
         log.info("Retrieved rates for supported fiat currencies: " + supportedFiatCurrenciesRetrieved);
 
-        Set<String> supportedCryptoCurrenciesRetrieved = supportedCryptoCurrencies.stream()
+        Set<String> supportedCryptoCurrenciesRetrieved = ExchangeRateProvider.SUPPORTED_CRYPTO_CURRENCIES.stream()
                 .filter(c -> retrievedRatesCurrencies.contains(c))
                 .collect(Collectors.toCollection(TreeSet::new));
         log.info("Retrieved rates for supported altcoins: " + supportedCryptoCurrenciesRetrieved);
 
-        Set<String> supportedCurrencies = Sets.union(supportedCryptoCurrencies, supportedFiatCurrencies);
+        Set<String> supportedCurrencies = Sets.union(
+                ExchangeRateProvider.SUPPORTED_CRYPTO_CURRENCIES,
+                ExchangeRateProvider.SUPPORTED_FIAT_CURRENCIES);
 
         Set unsupportedCurrencies = Sets.difference(retrievedRatesCurrencies, supportedCurrencies);
         assertTrue("Retrieved exchange rates contain unsupported currencies: " + unsupportedCurrencies,

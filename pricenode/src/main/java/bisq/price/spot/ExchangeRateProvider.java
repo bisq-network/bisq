@@ -56,11 +56,11 @@ import java.util.stream.Stream;
  */
 public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRate>> {
 
-    private static final Set<String> supportedCryptoCurrencies = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+    public static final Set<String> SUPPORTED_CRYPTO_CURRENCIES = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
             .map(TradeCurrency::getCode)
             .collect(Collectors.toSet());
 
-    private static final Set<String> supportedFiatCurrencies = CurrencyUtil.getAllSortedFiatCurrencies().stream()
+    public static final Set<String> SUPPORTED_FIAT_CURRENCIES = CurrencyUtil.getAllSortedFiatCurrencies().stream()
             .map(TradeCurrency::getCode)
             .collect(Collectors.toSet());
 
@@ -116,13 +116,13 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
         // Find the desired fiat pairs (pair format is BTC-FIAT)
         List<CurrencyPair> desiredFiatPairs = allCurrencyPairsOnExchange.stream()
                 .filter(cp -> cp.base.equals(Currency.BTC))
-                .filter(cp -> supportedFiatCurrencies.contains(cp.counter.getCurrencyCode()))
+                .filter(cp -> SUPPORTED_FIAT_CURRENCIES.contains(cp.counter.getCurrencyCode()))
                 .collect(Collectors.toList());
 
         // Find the desired altcoin pairs (pair format is ALT-BTC)
         List<CurrencyPair> desiredCryptoPairs = allCurrencyPairsOnExchange.stream()
                 .filter(cp -> cp.counter.equals(Currency.BTC))
-                .filter(cp -> supportedCryptoCurrencies.contains(cp.base.getCurrencyCode()))
+                .filter(cp -> SUPPORTED_CRYPTO_CURRENCIES.contains(cp.base.getCurrencyCode()))
                 .collect(Collectors.toList());
 
         // Retrieve in bulk all tickers offered by the exchange
