@@ -63,7 +63,6 @@ task installDaoSetup(dependsOn: 'cleanDaoSetup') {
                 .renameTo(file(buildResourcesDir + '/bisq-BTC_REGTEST_Alice_dao'))
         file(buildResourcesDir + '/dao-setup/bisq-BTC_REGTEST_Bob_dao')
                 .renameTo(file(buildResourcesDir + '/bisq-BTC_REGTEST_Bob_dao'))
-        // delete dir build/resources/main/dao-setup
         delete file(buildResourcesDir + '/dao-setup')
     }
 }
