@@ -64,5 +64,6 @@ public class GetVersionTest extends MethodTest {
     }
 
     public void tearDown() {
+        // noop
     }
 }

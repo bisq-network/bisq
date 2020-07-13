@@ -97,5 +97,6 @@ public class SimpleWalletPasswordTest extends MethodTest {
     }
 
     public void tearDown() {
+        // noop
     }
 }

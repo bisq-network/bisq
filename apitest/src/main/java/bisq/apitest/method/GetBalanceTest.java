@@ -62,5 +62,6 @@ public class GetBalanceTest extends MethodTest {
     }
 
     public void tearDown() {
+        // noop
     }
 }
