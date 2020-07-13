@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.apitest;
 
 import bisq.common.config.BisqHelpFormatter;
@@ -5,7 +22,6 @@ import bisq.common.util.Utilities;
 
 import java.io.IOException;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -22,6 +38,7 @@ import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -38,7 +55,7 @@ public class Scaffold {
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
 
-    final ApiTestConfig config;
+    public final ApiTestConfig config;
 
     @Nullable
     private SetupTask bitcoindTask;
@@ -104,25 +121,25 @@ public class Scaffold {
         return this;
     }
 
-    public ApiTestConfig getConfig() {
-        return config;
-    }
-
     public void tearDown() {
         if (!executor.isTerminated()) {
             try {
                 log.info("Shutting down executor service ...");
                 executor.shutdownNow();
                 executor.awaitTermination(config.numSetupTasks * 2000, MILLISECONDS);
-                SetupTask[] orderedTasks = new SetupTask[]{bobNodeTask, aliceNodeTask, arbNodeTask, seedNodeTask, bitcoindTask};
-                Arrays.stream(orderedTasks).filter(t -> t != null && t.getLinuxProcess() != null).forEachOrdered(t -> {
-                    try {
-                        t.getLinuxProcess().shutdown();
-                        MILLISECONDS.sleep(1500);
-                    } catch (IOException | InterruptedException ex) {
-                        throw new IllegalStateException(ex);
-                    }
-                });
+
+                SetupTask[] orderedTasks = new SetupTask[]{
+                        bobNodeTask, aliceNodeTask, arbNodeTask, seedNodeTask, bitcoindTask};
+                stream(orderedTasks).filter(t -> t != null && t.getLinuxProcess() != null)
+                        .forEachOrdered(t -> {
+                            try {
+                                t.getLinuxProcess().shutdown();
+                                MILLISECONDS.sleep(1000);
+                            } catch (IOException | InterruptedException ex) {
+                                throw new IllegalStateException(ex);
+                            }
+                        });
+
                 log.info("Teardown complete");
             } catch (Exception ex) {
                 throw new IllegalStateException(ex);
@@ -131,11 +148,9 @@ public class Scaffold {
     }
 
     private void installShutdownHook() {
-        // A test may shut down background apps, or they may be left running until
-        // the jvm is manually shutdown, so we add a shutdown hook for that use case.
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            tearDown();
-        }));
+        // Background apps can be left running until the jvm is manually shutdown,
+        // so we add a shutdown hook for that use case.
+        Runtime.getRuntime().addShutdownHook(new Thread(this::tearDown));
     }
 
     // Starts bitcoind and bisq apps (seednode, arbnode, etc...)
