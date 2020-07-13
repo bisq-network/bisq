@@ -17,8 +17,6 @@
 
 package bisq.apitest.config;
 
-import bisq.common.storage.FileUtil;
-
 import joptsimple.AbstractOptionSpec;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.HelpFormatter;
@@ -27,17 +25,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.PosixFilePermissions;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 
 import java.util.ArrayList;
@@ -294,11 +287,6 @@ public class ApiTestConfig {
             // Assign values to special-case static fields.
             BASH_PATH_VALUE = bashPath;
 
-            // Write and save bitcoin.conf to disk, with the correct path to
-            // the blocknotify script.
-            installBitcoinConf();
-            installBitcoinBlocknotify();
-
         } catch (OptionException ex) {
             throw new IllegalStateException(format("Problem parsing option '%s': %s",
                     ex.options().get(0),
@@ -314,40 +302,6 @@ public class ApiTestConfig {
             parser.printHelpOn(sink);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
-        }
-    }
-
-    private void installBitcoinConf() {
-        // We write out and install a bitcoin.conf file for regtest/dao mode because
-        // the path to the blocknotify script is not known until runtime.
-        String bitcoinConf = "\n"
-                + "regtest=1\n"
-                + "[regtest]\n"
-                + "peerbloomfilters=1\n"
-                + "rpcport=18443\n"
-                + "server=1\n"
-                + "txindex=1\n"
-                + "debug=net\n"
-                + "deprecatedrpc=generate\n"
-                + "rpcuser=apitest\n"
-                + "rpcpassword=apitest\n"
-                + "blocknotify=" + bashPath + " " + bitcoinDatadir + "/blocknotify %\n";
-        String chmod644Perms = "rw-r--r--";
-        saveToFile(bitcoinConf, bitcoinDatadir, "bitcoin.conf", chmod644Perms);
-        log.info("Installed {} with perms {}.", bitcoinDatadir + "/bitcoin.conf", chmod644Perms);
-    }
-
-    private void installBitcoinBlocknotify() {
-        // gradle is not working for this
-        try {
-            Path srcPath = Paths.get("apitest", "src", "main", "resources", "blocknotify");
-            Path destPath = Paths.get(bitcoinDatadir, "blocknotify");
-            Files.copy(srcPath, destPath, StandardCopyOption.REPLACE_EXISTING);
-            String chmod700Perms = "rwx------";
-            Files.setPosixFilePermissions(destPath, PosixFilePermissions.fromString(chmod700Perms));
-            log.info("Installed {} with perms {}.", destPath.toString(), chmod700Perms);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -380,32 +334,6 @@ public class ApiTestConfig {
             throw new IllegalStateException(
                     format("Could not load properties from config file %s",
                             configFile.getAbsolutePath()), ex);
-        }
-    }
-
-    private void saveToFile(String content,
-                            String parentDir,
-                            @SuppressWarnings("SameParameterValue") String relativeConfigFilePath,
-                            String posixFilePermissions) {
-        File tempFile = null;
-        File file;
-        try {
-            file = absoluteConfigFile(parentDir, relativeConfigFilePath);
-            tempFile = File.createTempFile("temp", relativeConfigFilePath, file.getParentFile());
-            tempFile.deleteOnExit();
-            try (PrintWriter out = new PrintWriter(tempFile)) {
-                out.println(content);
-            }
-            FileUtil.renameFile(tempFile, file);
-            Files.setPosixFilePermissions(Paths.get(file.toURI()), PosixFilePermissions.fromString(posixFilePermissions));
-        } catch (IOException ex) {
-            throw new IllegalStateException(format("Error saving %s/%s to disk", parentDir, relativeConfigFilePath), ex);
-        } finally {
-            if (tempFile != null && tempFile.exists()) {
-                log.warn("Temp file still exists after failed save; deleting {} now.", tempFile.getAbsolutePath());
-                if (!tempFile.delete())
-                    log.error("Cannot delete temp file.");
-            }
         }
     }
 
