@@ -65,8 +65,8 @@ class SmokeTestBitcoind {
 
     public void generateToAddress(int blocks, String address) throws IOException, InterruptedException {
         String generateToAddressCmd = format("generatetoaddress %d \"%s\"", blocks, address);
-        BitcoinCli newAddress = new BitcoinCli(config, generateToAddressCmd).run();
+        BitcoinCli generateToAddress = new BitcoinCli(config, generateToAddressCmd).run();
         // Return value is an array of TxIDs.
-        log.info("{}\n{}", newAddress.getCommandWithOptions(), newAddress.getOutputValueAsStringArray());
+        log.info("{}\n{}", generateToAddress.getCommandWithOptions(), generateToAddress.getOutputValueAsStringArray());
     }
 }
