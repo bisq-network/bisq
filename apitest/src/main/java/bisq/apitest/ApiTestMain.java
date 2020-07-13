@@ -21,14 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.Scaffold.EXIT_FAILURE;
 import static bisq.apitest.Scaffold.EXIT_SUCCESS;
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 
 
 
 import bisq.apitest.config.ApiTestConfig;
-import bisq.apitest.method.MethodTestSuite;
 
 /**
  * ApiTest Application
@@ -53,9 +51,6 @@ public class ApiTestMain {
                 log.info("Skipping tests ...");
             } else {
                 new SmokeTestBitcoind(config).run();
-                GrpcStubs grpcStubs = new GrpcStubs(alicedaemon, config).init();
-                MethodTestSuite methodTestSuite = new MethodTestSuite(grpcStubs);
-                methodTestSuite.run();
             }
 
             if (config.shutdownAfterTests) {
