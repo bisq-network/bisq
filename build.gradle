@@ -609,6 +609,7 @@ configure(project(':apitest')) {
         implementation "org.slf4j:slf4j-api:$slf4jVersion"
         implementation "ch.qos.logback:logback-core:$logbackVersion"
         implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        implementation "junit:junit:$junitVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
