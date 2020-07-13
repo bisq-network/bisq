@@ -55,7 +55,7 @@ public class GrpcStubs {
         this.port = bisqAppConfig.apiPort;
     }
 
-    GrpcStubs init() {
+    public GrpcStubs init() {
         var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
