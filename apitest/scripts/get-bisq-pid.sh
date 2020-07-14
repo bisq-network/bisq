@@ -12,4 +12,4 @@ APP_NAME=$2
 
 # TODO args validation
 
-ps aux | grep java | grep ${MAIN_CLASS_NAME} | grep ${APP_NAME} | awk '{print $2}'
+ps aux | grep java | grep "${MAIN_CLASS_NAME}" | grep "${APP_NAME}" | awk '{print $2}'
