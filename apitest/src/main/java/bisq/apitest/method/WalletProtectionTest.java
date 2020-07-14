@@ -28,8 +28,8 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(1)
     public void testSetWalletPassword() {
-        var setPasswordRequest = createSetWalletPasswordRequest("password");
-        grpcStubs.walletsService.setWalletPassword(setPasswordRequest);
+        var request = createSetWalletPasswordRequest("password");
+        grpcStubs.walletsService.setWalletPassword(request);
     }
 
     @Test
@@ -42,10 +42,65 @@ public class WalletProtectionTest extends MethodTest {
 
     @Test
     @Order(3)
+    public void testUnlockWalletFor4Seconds() {
+        var request = createUnlockWalletRequest("password", 4);
+        grpcStubs.walletsService.unlockWallet(request);
+        getBalance(); // should not throw 'wallet locked' exception
+
+        sleep(4500); // let unlock timeout expire
+        exceptionRule.expect(StatusRuntimeException.class);
+        exceptionRule.expectMessage("UNKNOWN: wallet is locked");
+        getBalance();
+    }
+
+    @Test
+    @Order(4)
+    public void testGetBalanceAfterUnlockTimeExpiryShouldThrowException() {
+        var request = createUnlockWalletRequest("password", 3);
+        grpcStubs.walletsService.unlockWallet(request);
+        sleep(4000); // let unlock timeout expire
+        exceptionRule.expect(StatusRuntimeException.class);
+        exceptionRule.expectMessage("UNKNOWN: wallet is locked");
+        getBalance();
+    }
+
+    @Test
+    @Order(5)
+    public void testLockWalletBeforeUnlockTimeoutExpiry() {
+        unlockWallet("password", 60);
+        var request = createLockWalletRequest();
+        grpcStubs.walletsService.lockWallet(request);
+
+        exceptionRule.expect(StatusRuntimeException.class);
+        exceptionRule.expectMessage("UNKNOWN: wallet is locked");
+        getBalance();
+    }
+
+    @Test
+    @Order(6)
+    public void testLockWalletWhenWalletAlreadyLockedShouldThrowException() {
+        exceptionRule.expect(StatusRuntimeException.class);
+        exceptionRule.expectMessage("UNKNOWN: wallet is already locked");
+        var request = createLockWalletRequest();
+        grpcStubs.walletsService.lockWallet(request);
+    }
+
+    @Test
+    @Order(7)
+    public void testUnlockWalletTimeoutOverride() {
+        unlockWallet("password", 2);
+        sleep(500); // override unlock timeout after 0.5s
+        unlockWallet("password", 6);
+        sleep(5000);
+        getBalance();   // getbalance 5s after resetting unlock timeout to 6s
+    }
+
+    @Test
+    @Order(8)
     public void testRemoveWalletPassword() {
-        var removePasswordRequest = createRemoveWalletPasswordRequest("password");
-        grpcStubs.walletsService.removeWalletPassword(removePasswordRequest);
-        getBalance(); // should not throw exception
+        var request = createRemoveWalletPasswordRequest("password");
+        grpcStubs.walletsService.removeWalletPassword(request);
+        getBalance(); // should not throw 'wallet locked' exception
     }
 
     @AfterClass

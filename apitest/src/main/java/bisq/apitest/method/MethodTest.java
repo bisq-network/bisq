@@ -18,8 +18,10 @@
 package bisq.apitest.method;
 
 import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.UnlockWalletRequest;
 
 
 
@@ -41,9 +43,25 @@ public class MethodTest extends ApiTestCase {
         return RemoveWalletPasswordRequest.newBuilder().setPassword("password").build();
     }
 
+    protected final UnlockWalletRequest createUnlockWalletRequest(String password, long timeout) {
+        return UnlockWalletRequest.newBuilder().setPassword(password).setTimeout(timeout).build();
+    }
+
+    protected final LockWalletRequest createLockWalletRequest() {
+        return LockWalletRequest.newBuilder().build();
+    }
+
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
     protected final long getBalance() {
         return grpcStubs.walletsService.getBalance(createBalanceRequest()).getBalance();
+    }
+
+    protected final void unlockWallet(String password, long timeout) {
+        grpcStubs.walletsService.unlockWallet(createUnlockWalletRequest(password, timeout));
+    }
+
+    protected final void lockWallet() {
+        grpcStubs.walletsService.lockWallet(createLockWalletRequest());
     }
 }
