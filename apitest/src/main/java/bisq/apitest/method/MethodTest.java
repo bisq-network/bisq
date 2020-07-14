@@ -39,8 +39,12 @@ public class MethodTest extends ApiTestCase {
         return SetWalletPasswordRequest.newBuilder().setPassword(password).build();
     }
 
+    protected final SetWalletPasswordRequest createSetWalletPasswordRequest(String oldPassword, String newPassword) {
+        return SetWalletPasswordRequest.newBuilder().setPassword(oldPassword).setNewPassword(newPassword).build();
+    }
+
     protected final RemoveWalletPasswordRequest createRemoveWalletPasswordRequest(String password) {
-        return RemoveWalletPasswordRequest.newBuilder().setPassword("password").build();
+        return RemoveWalletPasswordRequest.newBuilder().setPassword(password).build();
     }
 
     protected final UnlockWalletRequest createUnlockWalletRequest(String password, long timeout) {

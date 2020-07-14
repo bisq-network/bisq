@@ -28,7 +28,7 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(1)
     public void testSetWalletPassword() {
-        var request = createSetWalletPasswordRequest("password");
+        var request = createSetWalletPasswordRequest("first-password");
         grpcStubs.walletsService.setWalletPassword(request);
     }
 
@@ -43,7 +43,7 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(3)
     public void testUnlockWalletFor4Seconds() {
-        var request = createUnlockWalletRequest("password", 4);
+        var request = createUnlockWalletRequest("first-password", 4);
         grpcStubs.walletsService.unlockWallet(request);
         getBalance(); // should not throw 'wallet locked' exception
 
@@ -56,7 +56,7 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(4)
     public void testGetBalanceAfterUnlockTimeExpiryShouldThrowException() {
-        var request = createUnlockWalletRequest("password", 3);
+        var request = createUnlockWalletRequest("first-password", 3);
         grpcStubs.walletsService.unlockWallet(request);
         sleep(4000); // let unlock timeout expire
         exceptionRule.expect(StatusRuntimeException.class);
@@ -67,7 +67,7 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(5)
     public void testLockWalletBeforeUnlockTimeoutExpiry() {
-        unlockWallet("password", 60);
+        unlockWallet("first-password", 60);
         var request = createLockWalletRequest();
         grpcStubs.walletsService.lockWallet(request);
 
@@ -88,17 +88,37 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(7)
     public void testUnlockWalletTimeoutOverride() {
-        unlockWallet("password", 2);
+        unlockWallet("first-password", 2);
         sleep(500); // override unlock timeout after 0.5s
-        unlockWallet("password", 6);
+        unlockWallet("first-password", 6);
         sleep(5000);
         getBalance();   // getbalance 5s after resetting unlock timeout to 6s
     }
 
     @Test
     @Order(8)
-    public void testRemoveWalletPassword() {
-        var request = createRemoveWalletPasswordRequest("password");
+    public void testSetNewWalletPassword() {
+        var request = createSetWalletPasswordRequest("first-password", "second-password");
+        grpcStubs.walletsService.setWalletPassword(request);
+
+        unlockWallet("second-password", 2);
+        getBalance();
+        sleep(2500); // allow time for wallet save
+    }
+
+    @Test
+    @Order(9)
+    public void testSetNewWalletPasswordWithIncorrectNewPasswordShouldThrowException() {
+        exceptionRule.expect(StatusRuntimeException.class);
+        exceptionRule.expectMessage("UNKNOWN: incorrect old password");
+        var request = createSetWalletPasswordRequest("bad old password", "irrelevant");
+        grpcStubs.walletsService.setWalletPassword(request);
+    }
+
+    @Test
+    @Order(10)
+    public void testRemoveNewWalletPassword() {
+        var request = createRemoveWalletPasswordRequest("second-password");
         grpcStubs.walletsService.removeWalletPassword(request);
         getBalance(); // should not throw 'wallet locked' exception
     }
