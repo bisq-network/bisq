@@ -50,7 +50,7 @@ public class MethodTestMain {
                     result.getIgnoreCount());
 
             if (result.wasSuccessful()) {
-                log.info("All tests passed", result.getRunCount());
+                log.info("All tests passed");
             } else if (result.getFailureCount() > 0) {
                 log.error("{} test(s) failed", result.getFailureCount());
                 result.getFailures().iterator().forEachRemaining(f -> log.error(format("%s.%s()%n\t%s",

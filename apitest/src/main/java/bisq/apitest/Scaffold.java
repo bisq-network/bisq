@@ -91,14 +91,34 @@ public class Scaffold {
 
     private final ExecutorService executor;
 
+    /**
+     * Constructor for passing comma delimited list of supporting apps to
+     * ApiTestConfig, e.g., "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon".
+     *
+     * @param supportingApps String
+     */
+    public Scaffold(String supportingApps) {
+        this(new ApiTestConfig(new String[]{"--supportingApps", supportingApps}));
+    }
+
+    /**
+     * Constructor for passing options accepted by ApiTestConfig.
+     *
+     * @param args String[]
+     */
     public Scaffold(String[] args) {
         this(new ApiTestConfig(args));
     }
 
+    /**
+     * Constructor for passing ApiTestConfig instance.
+     *
+     * @param config ApiTestConfig
+     */
     public Scaffold(ApiTestConfig config) {
         verifyNotWindows();
         this.config = config;
-        this.executor = Executors.newFixedThreadPool(config.numSetupTasks);
+        this.executor = Executors.newFixedThreadPool(config.supportingApps.size());
         if (config.helpRequested) {
             config.printHelp(out,
                     new BisqHelpFormatter(
@@ -115,7 +135,7 @@ public class Scaffold {
             installDaoSetupDirectories();
 
             // Start each background process from an executor, then add a shutdown hook.
-            CountDownLatch countdownLatch = new CountDownLatch(config.numSetupTasks);
+            CountDownLatch countdownLatch = new CountDownLatch(config.supportingApps.size());
             startBackgroundProcesses(executor, countdownLatch);
             installShutdownHook();
 
@@ -139,7 +159,7 @@ public class Scaffold {
             try {
                 log.info("Shutting down executor service ...");
                 executor.shutdownNow();
-                executor.awaitTermination(config.numSetupTasks * 2000, MILLISECONDS);
+                executor.awaitTermination(config.supportingApps.size() * 2000, MILLISECONDS);
 
                 SetupTask[] orderedTasks = new SetupTask[]{
                         bobNodeTask, aliceNodeTask, arbNodeTask, seedNodeTask, bitcoindTask};
@@ -306,39 +326,29 @@ public class Scaffold {
     private void startBackgroundProcesses(ExecutorService executor,
                                           CountDownLatch countdownLatch)
             throws InterruptedException, IOException {
-        // The configured number of setup tasks determines which bisq apps are started in
-        // the background, and in what order.
-        //
-        // If config.numSetupTasks = 0, no setup tasks are run.  If 1, the bitcoind
-        // process is started in the background.  If 2, bitcoind and seednode.
-        // If 3, bitcoind, seednode and arbnode are started.  If 4, bitcoind, seednode,
-        // arbnode, and alicenode are started.  If 5,  bitcoind, seednode, arbnode,
-        // alicenode and bobnode are started.
-        //
-        // This affords an easier way to choose which setup tasks are run, rather than
-        // commenting and uncommenting code blocks.  You have to remember seednode
-        // depends on bitcoind, arbnode on seednode, and that bob & alice cannot trade
-        // unless arbnode is running with a registered mediator and refund agent.
-        if (config.numSetupTasks > 0) {
+
+        log.info("Starting supporting apps {}", config.supportingApps.toString());
+
+        if (config.hasSupportingApp("bitcoind")) {
             BitcoinDaemon bitcoinDaemon = new BitcoinDaemon(config);
             bitcoinDaemon.verifyBitcoinConfig(true);
             bitcoindTask = new SetupTask(bitcoinDaemon, countdownLatch);
             bitcoindTaskFuture = executor.submit(bitcoindTask);
-            SECONDS.sleep(5);
+            MILLISECONDS.sleep(3500);
             bitcoinDaemon.verifyBitcoindRunning();
         }
-        if (config.numSetupTasks > 1) {
+
+        if (config.hasSupportingApp(seednode.name()))
             startBisqApp(seednode, executor, countdownLatch);
-        }
-        if (config.numSetupTasks > 2) {
+
+        if (config.hasSupportingApp(arbdaemon.name(), arbdesktop.name()))
             startBisqApp(config.runArbNodeAsDesktop ? arbdesktop : arbdaemon, executor, countdownLatch);
-        }
-        if (config.numSetupTasks > 3) {
+
+        if (config.hasSupportingApp(alicedaemon.name(), alicedesktop.name()))
             startBisqApp(config.runAliceNodeAsDesktop ? alicedesktop : alicedaemon, executor, countdownLatch);
-        }
-        if (config.numSetupTasks > 4) {
+
+        if (config.hasSupportingApp(bobdaemon.name(), bobdesktop.name()))
             startBisqApp(config.runBobNodeAsDesktop ? bobdesktop : bobdaemon, executor, countdownLatch);
-        }
     }
 
     private void startBisqApp(BisqAppConfig bisqAppConfig,
@@ -393,19 +403,19 @@ public class Scaffold {
 
     private void verifyStartupCompleted()
             throws ExecutionException, InterruptedException {
-        if (config.numSetupTasks > 0)
+        if (bitcoindTaskFuture != null)
             verifyStartupCompleted(bitcoindTaskFuture);
 
-        if (config.numSetupTasks > 1)
+        if (seedNodeTaskFuture != null)
             verifyStartupCompleted(seedNodeTaskFuture);
 
-        if (config.numSetupTasks > 2)
+        if (arbNodeTaskFuture != null)
             verifyStartupCompleted(arbNodeTaskFuture);
 
-        if (config.numSetupTasks > 3)
+        if (aliceNodeTaskFuture != null)
             verifyStartupCompleted(aliceNodeTaskFuture);
 
-        if (config.numSetupTasks > 4)
+        if (bobNodeTaskFuture != null)
             verifyStartupCompleted(bobNodeTaskFuture);
     }
 
@@ -422,7 +432,7 @@ public class Scaffold {
                 // We are giving the thread more time to terminate after the countdown
                 // latch reached 0.  If we are running only bitcoind, we need to be even
                 // more lenient.
-                SECONDS.sleep(config.numSetupTasks == 1 ? 2 : 1);
+                SECONDS.sleep(config.supportingApps.size() == 1 ? 2 : 1);
             }
         }
         throw new IllegalStateException(format("%s did not complete startup", futureStatus.get().getName()));

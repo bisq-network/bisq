@@ -43,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.lang.System.getenv;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static joptsimple.internal.Strings.EMPTY;
 
 @Slf4j
@@ -66,7 +68,7 @@ public class ApiTestConfig {
     static final String RUN_BOB_NODE_AS_DESKTOP = "runBobNodeAsDesktop";
     static final String SKIP_TESTS = "skipTests";
     static final String SHUTDOWN_AFTER_TESTS = "shutdownAfterTests";
-    static final String NUM_SETUP_TASKS = "numSetupTasks";
+    static final String SUPPORTING_APPS = "supportingApps";
 
     // Default values for certain options
     static final String DEFAULT_CONFIG_FILE_NAME = "apitest.properties";
@@ -98,7 +100,7 @@ public class ApiTestConfig {
     public final boolean runBobNodeAsDesktop;
     public final boolean skipTests;
     public final boolean shutdownAfterTests;
-    public final int numSetupTasks;
+    public final List<String> supportingApps;
 
     // Immutable system configurations.
     public final String bitcoinDatadir;
@@ -219,12 +221,12 @@ public class ApiTestConfig {
                         .ofType(Boolean.class)
                         .defaultsTo(true);
 
-        ArgumentAcceptingOptionSpec<Integer> numSetupTasksOpt =
-                parser.accepts(NUM_SETUP_TASKS,
-                        "Number of test setup tasks")
+        ArgumentAcceptingOptionSpec<String> supportingAppsOpt =
+                parser.accepts(SUPPORTING_APPS,
+                        "Comma delimited list of supporting apps (bitcoind,seednode,arbdaemon,...")
                         .withRequiredArg()
-                        .ofType(Integer.class)
-                        .defaultsTo(4);
+                        .ofType(String.class)
+                        .defaultsTo("bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon");
 
         try {
             CompositeOptionSet options = new CompositeOptionSet();
@@ -282,7 +284,7 @@ public class ApiTestConfig {
             this.runBobNodeAsDesktop = options.valueOf(runBobNodeAsDesktopOpt);
             this.skipTests = options.valueOf(skipTestsOpt);
             this.shutdownAfterTests = options.valueOf(shutdownAfterTestsOpt);
-            this.numSetupTasks = options.valueOf(numSetupTasksOpt);
+            this.supportingApps = asList(options.valueOf(supportingAppsOpt).split(","));
 
             // Assign values to special-case static fields.
             BASH_PATH_VALUE = bashPath;
@@ -294,6 +296,10 @@ public class ApiTestConfig {
                             ex.getCause().getMessage() :
                             ex.getMessage()));
         }
+    }
+
+    public boolean hasSupportingApp(String... supportingApp) {
+        return stream(supportingApp).anyMatch(a -> this.supportingApps.contains(a));
     }
 
     public void printHelp(OutputStream sink, HelpFormatter formatter) {

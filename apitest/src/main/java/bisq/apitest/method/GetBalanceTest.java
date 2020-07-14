@@ -46,7 +46,7 @@ public class GetBalanceTest extends MethodTest {
     @BeforeClass
     public static void setUp() {
         try {
-            setUpScaffold();
+            setUpScaffold("bitcoind,seednode,arbdaemon,alicedaemon");
 
             String newAddress = new BitcoinCli(config, "getnewaddress").run().getOutput();
             String generateToAddressCmd = format("generatetoaddress %d \"%s\"", 1, newAddress);

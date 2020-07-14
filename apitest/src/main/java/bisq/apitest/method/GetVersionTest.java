@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.common.app.Version.VERSION;
 import static org.junit.Assert.assertEquals;
 
@@ -40,7 +41,7 @@ public class GetVersionTest extends MethodTest {
 
     @BeforeClass
     public static void setUp() {
-        setUpScaffold();
+        setUpScaffold(alicedaemon.name());
     }
 
     @Test

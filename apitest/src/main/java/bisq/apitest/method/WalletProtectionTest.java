@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+
 
 
 import bisq.apitest.OrderedRunner;
@@ -25,7 +27,7 @@ public class WalletProtectionTest extends MethodTest {
 
     @BeforeClass
     public static void setUp() {
-        setUpScaffold();
+        setUpScaffold(alicedaemon.name());
     }
 
     @Test

@@ -36,6 +36,14 @@ public class MethodTest extends ApiTestCase {
     static ApiTestConfig config;
     static GrpcStubs grpcStubs;
 
+    public static void setUpScaffold(String supportingApps) {
+        // The supportingApps argument is a comma delimited string of supporting app
+        // names, e.g. "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon"
+        scaffold = new Scaffold(supportingApps).setUp();
+        config = scaffold.config;
+        grpcStubs = new GrpcStubs(alicedaemon, config).init();
+    }
+
     public static void setUpScaffold() {
         scaffold = new Scaffold(new String[]{}).setUp();
         config = scaffold.config;
