@@ -17,24 +17,43 @@
 
 package bisq.apitest;
 
-import java.lang.reflect.Method;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 
-import static java.lang.String.format;
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+
+
+import bisq.apitest.config.ApiTestConfig;
 
 public class ApiTestCase {
 
-    protected static final char CHECK = '\u2714';
-    protected static final char CROSS_MARK = '\u274c';
+    // The gRPC service stubs are used by method & scenario tests, but not e2e tests.
+    protected static GrpcStubs grpcStubs;
 
-    protected Method getMethod(String methodName) {
-        try {
-            return this.getClass().getMethod(methodName);
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalStateException(format("No method '%s' exists in class '%s'",
-                    methodName, this.getClass().getName()),
-                    ex);
-        }
+    protected static Scaffold scaffold;
+    protected static ApiTestConfig config;
+
+    @Rule
+    public ExpectedException exceptionRule = ExpectedException.none();
+
+    public static void setUpScaffold(String supportingApps) {
+        // The supportingApps argument is a comma delimited string of supporting app
+        // names, e.g. "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon"
+        scaffold = new Scaffold(supportingApps).setUp();
+        config = scaffold.config;
+        grpcStubs = new GrpcStubs(alicedaemon, config).init();
+    }
+
+    public static void setUpScaffold() {
+        scaffold = new Scaffold(new String[]{}).setUp();
+        config = scaffold.config;
+        grpcStubs = new GrpcStubs(alicedaemon, config).init();
+    }
+
+    public static void tearDownScaffold() {
+        scaffold.tearDown();
     }
 
     protected void sleep(long ms) {

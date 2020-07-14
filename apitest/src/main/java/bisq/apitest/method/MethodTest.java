@@ -21,38 +21,11 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-
 
 
 import bisq.apitest.ApiTestCase;
-import bisq.apitest.GrpcStubs;
-import bisq.apitest.Scaffold;
-import bisq.apitest.config.ApiTestConfig;
 
 public class MethodTest extends ApiTestCase {
-
-    static Scaffold scaffold;
-    static ApiTestConfig config;
-    static GrpcStubs grpcStubs;
-
-    public static void setUpScaffold(String supportingApps) {
-        // The supportingApps argument is a comma delimited string of supporting app
-        // names, e.g. "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon"
-        scaffold = new Scaffold(supportingApps).setUp();
-        config = scaffold.config;
-        grpcStubs = new GrpcStubs(alicedaemon, config).init();
-    }
-
-    public static void setUpScaffold() {
-        scaffold = new Scaffold(new String[]{}).setUp();
-        config = scaffold.config;
-        grpcStubs = new GrpcStubs(alicedaemon, config).init();
-    }
-
-    public static void tearDownScaffold() {
-        scaffold.tearDown();
-    }
 
     // Convenience methods for building gRPC request objects
 
