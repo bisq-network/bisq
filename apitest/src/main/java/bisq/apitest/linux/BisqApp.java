@@ -98,14 +98,20 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
             if (new BashCommand(killCmd).run().getExitStatus() != 0)
                 throw new IllegalStateException(format("Could not shut down %s", bisqAppConfig.appName));
 
-            MILLISECONDS.sleep(4000); // allow it time to shutdown
-            log.info("{} stopped", bisqAppConfig.appName);
+            // Be lenient about the time it takes for a java app to shut down.
+            for (int i = 0; i < 5; i++) {
+                if (!isAlive(pid)) {
+                    log.info("{} stopped", bisqAppConfig.appName);
+                    break;
+                }
+                MILLISECONDS.sleep(2500);
+            }
+
+            if (isAlive(pid))
+                throw new IllegalStateException(format("%s shutdown did not work", bisqAppConfig.appName));
+
         } catch (Exception e) {
             throw new IllegalStateException(format("Error shutting down %s", bisqAppConfig.appName), e);
-        } finally {
-            if (isAlive(pid))
-                //noinspection ThrowFromFinallyBlock
-                throw new IllegalStateException(format("%s shutdown did not work", bisqAppConfig.appName));
         }
     }
 
