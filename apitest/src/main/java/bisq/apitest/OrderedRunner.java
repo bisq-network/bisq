@@ -28,7 +28,7 @@ import org.junit.runners.model.InitializationError;
 
 import bisq.apitest.annotation.Order;
 
-// Credit to Aman Goel
+// Credit to Aman Goel for providing an example of ordering JUnit tests at
 // https://stackoverflow.com/questions/3693626/how-to-run-test-methods-in-specific-order-in-junit4
 
 public class OrderedRunner extends BlockJUnit4ClassRunner {
@@ -44,10 +44,8 @@ public class OrderedRunner extends BlockJUnit4ClassRunner {
         copy.sort((f1, f2) -> {
             Order o1 = f1.getAnnotation(Order.class);
             Order o2 = f2.getAnnotation(Order.class);
-
-            if (o1 == null || o2 == null) {
+            if (o1 == null || o2 == null)
                 return -1;
-            }
 
             return o1.value() - o2.value();
         });

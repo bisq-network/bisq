@@ -22,9 +22,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// Credit to Aman Goel
-// https://stackoverflow.com/questions/3693626/how-to-run-test-methods-in-specific-order-in-junit4
-
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface Order {
