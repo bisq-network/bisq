@@ -263,13 +263,13 @@ public class Scaffold {
                 + "regtest=1\n"
                 + "[regtest]\n"
                 + "peerbloomfilters=1\n"
-                + "rpcport=18443\n"
+                + "rpcport=" + config.bitcoinRpcPort + "\n"
                 + "server=1\n"
                 + "txindex=1\n"
                 + "debug=net\n"
                 + "deprecatedrpc=generate\n"
-                + "rpcuser=apitest\n"
-                + "rpcpassword=apitest\n"
+                + "rpcuser=" + config.bitcoinRpcUser + "\n"
+                + "rpcpassword=" + config.bitcoinRpcPassword + "\n"
                 + "blocknotify=" + config.bashPath + " " + config.bitcoinDatadir + "/blocknotify %\n";
         String chmod644Perms = "rw-r--r--";
         saveToFile(bitcoinConf, config.bitcoinDatadir, "bitcoin.conf", chmod644Perms);
