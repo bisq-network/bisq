@@ -65,7 +65,7 @@ public class BashCommand {
         return this;
     }
 
-    private void processOutput(SystemCommandExecutor commandExecutor) throws IOException, InterruptedException {
+    private void processOutput(SystemCommandExecutor commandExecutor) {
         // Get the error status and stderr from system command.
         StringBuilder stderr = commandExecutor.getStandardErrorFromCommand();
         if (stderr.length() > 0)
