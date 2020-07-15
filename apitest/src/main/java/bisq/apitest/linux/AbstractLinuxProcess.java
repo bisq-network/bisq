@@ -17,6 +17,8 @@
 
 package bisq.apitest.linux;
 
+import java.nio.file.Paths;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -70,9 +72,13 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
                 throw new IllegalStateException(berkeleyDbLibPath + " cannot be found or executed");
         }
 
-        File bitcoindExecutable = new File(config.bitcoinPath);
+        File bitcoindExecutable = Paths.get(config.bitcoinPath, "bitcoind").toFile();
         if (!bitcoindExecutable.exists() || !bitcoindExecutable.canExecute())
-            throw new IllegalStateException(bitcoindExecutable + " cannot be found or executed");
+            throw new IllegalStateException(format("'%s' cannot be found or executed.%n"
+                            + "A bitcoin-core v0.19.X installation is required, and" +
+                            " a '--bitcoinPath' option must be passed on the command line"
+                            + " or added to 'apitest.properties'",
+                    bitcoindExecutable.getAbsolutePath()));
 
         File bitcoindDatadir = new File(config.bitcoinDatadir);
         if (!bitcoindDatadir.exists() || !bitcoindDatadir.canWrite())
