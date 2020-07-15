@@ -382,9 +382,10 @@ public class Scaffold {
                 bobNodeTaskFuture = executor.submit(bobNodeTask);
                 break;
             default:
-                throw new IllegalStateException("Unknown Bisq App " + bisqAppConfig.appName);
+                throw new IllegalStateException("Unknown BisqAppConfig " + bisqAppConfig.name());
         }
-        SECONDS.sleep(5);
+        log.info("Giving {} ms for {} to initialize ...", config.bisqAppInitTime, bisqAppConfig.appName);
+        MILLISECONDS.sleep(config.bisqAppInitTime);
         if (bisqApp.hasStartupExceptions()) {
             for (Throwable t : bisqApp.getStartupExceptions()) {
                 log.error("", t);

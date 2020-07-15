@@ -66,6 +66,7 @@ public class ApiTestConfig {
     static final String RUN_ARB_NODE_AS_DESKTOP = "runArbNodeAsDesktop";
     static final String RUN_ALICE_NODE_AS_DESKTOP = "runAliceNodeAsDesktop";
     static final String RUN_BOB_NODE_AS_DESKTOP = "runBobNodeAsDesktop";
+    static final String BISQ_APP_INIT_TIME = "bisqAppInitTime";
     static final String SKIP_TESTS = "skipTests";
     static final String SHUTDOWN_AFTER_TESTS = "shutdownAfterTests";
     static final String SUPPORTING_APPS = "supportingApps";
@@ -98,6 +99,7 @@ public class ApiTestConfig {
     public final boolean runArbNodeAsDesktop;
     public final boolean runAliceNodeAsDesktop;
     public final boolean runBobNodeAsDesktop;
+    public final long bisqAppInitTime;
     public final boolean skipTests;
     public final boolean shutdownAfterTests;
     public final List<String> supportingApps;
@@ -207,6 +209,13 @@ public class ApiTestConfig {
                         .ofType(Boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Long> bisqAppInitTimeOpt =
+                parser.accepts(BISQ_APP_INIT_TIME,
+                        "Amount of time (ms) to wait for a Bisq instance's initialization")
+                        .withRequiredArg()
+                        .ofType(Long.class)
+                        .defaultsTo(4000L);
+
         ArgumentAcceptingOptionSpec<Boolean> skipTestsOpt =
                 parser.accepts(SKIP_TESTS,
                         "Start apps, but skip tests")
@@ -282,6 +291,7 @@ public class ApiTestConfig {
             this.runArbNodeAsDesktop = options.valueOf(runArbNodeAsDesktopOpt);
             this.runAliceNodeAsDesktop = options.valueOf(runAliceNodeAsDesktopOpt);
             this.runBobNodeAsDesktop = options.valueOf(runBobNodeAsDesktopOpt);
+            this.bisqAppInitTime = options.valueOf(bisqAppInitTimeOpt);
             this.skipTests = options.valueOf(skipTestsOpt);
             this.shutdownAfterTests = options.valueOf(shutdownAfterTestsOpt);
             this.supportingApps = asList(options.valueOf(supportingAppsOpt).split(","));
