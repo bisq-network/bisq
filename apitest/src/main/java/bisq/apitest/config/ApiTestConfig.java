@@ -211,10 +211,10 @@ public class ApiTestConfig {
 
         ArgumentAcceptingOptionSpec<Long> bisqAppInitTimeOpt =
                 parser.accepts(BISQ_APP_INIT_TIME,
-                        "Amount of time (ms) to wait for a Bisq instance's initialization")
+                        "Amount of time (ms) to wait on a Bisq instance's initialization")
                         .withRequiredArg()
                         .ofType(Long.class)
-                        .defaultsTo(4000L);
+                        .defaultsTo(5000L);
 
         ArgumentAcceptingOptionSpec<Boolean> skipTestsOpt =
                 parser.accepts(SKIP_TESTS,
