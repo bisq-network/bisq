@@ -22,6 +22,7 @@ import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.linux.BashCommand.isAlive;
+import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static joptsimple.internal.Strings.EMPTY;
 
@@ -60,8 +61,12 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
         BashCommand cmd = new BashCommand(bitcoindCmd).run();
         log.info("Starting ...\n$ {}", cmd.getCommand());
 
-        if (cmd.getExitStatus() != 0)
-            throw new IllegalStateException("Error starting bitcoind:\n" + cmd.getError());
+        if (cmd.getExitStatus() != 0) {
+            startupExceptions.add(new IllegalStateException(
+                    format("Error starting bitcoind%nstatus: %d%nerror msg: %s",
+                            cmd.getExitStatus(), cmd.getError())));
+            return;
+        }
 
         pid = BashCommand.getPid("bitcoind");
         if (!isAlive(pid))

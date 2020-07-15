@@ -25,8 +25,10 @@ import java.util.concurrent.CountDownLatch;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.apitest.Scaffold.EXIT_FAILURE;
 import static java.lang.String.format;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.lang.System.exit;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 
@@ -46,8 +48,15 @@ public class SetupTask implements Callable<SetupTask.Status> {
     @Override
     public Status call() throws Exception {
         try {
-            linuxProcess.start();       // always runs in background
-            SECONDS.sleep(10);  // give time for bg process to init
+            linuxProcess.start();              // always runs in background
+            MILLISECONDS.sleep(1000);  // give 1s for bg process to init
+            if (linuxProcess.hasStartupExceptions()) {
+                for (Throwable t : linuxProcess.getStartupExceptions()) {
+                    log.error("", t);
+                }
+                exit(EXIT_FAILURE);
+            }
+
         } catch (InterruptedException ex) {
             throw new IllegalStateException(format("Error starting %s", linuxProcess.getName()), ex);
         }

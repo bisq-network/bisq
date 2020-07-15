@@ -53,7 +53,6 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
     private final boolean useLocalhostForP2P;
     public final boolean useDevPrivilegeKeys;
     private final String findBisqPidScript;
-    private final List<Throwable> startupExceptions;
 
     public BisqApp(BisqAppConfig bisqAppConfig, ApiTestConfig config) {
         super(bisqAppConfig.appName, config);
@@ -67,7 +66,6 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
         this.useLocalhostForP2P = true;
         this.useDevPrivilegeKeys = true;
         this.findBisqPidScript = config.userDir + "/apitest/scripts/get-bisq-pid.sh";
-        this.startupExceptions = new ArrayList<>();
     }
 
     @Override
@@ -138,14 +136,6 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
             default:
                 break;
         }
-    }
-
-    public boolean hasStartupExceptions() {
-        return !startupExceptions.isEmpty();
-    }
-
-    public List<Throwable> getStartupExceptions() {
-        return startupExceptions;
     }
 
     // This is the non-default way of running a Bisq app (--runSubprojectJars=true).

@@ -19,12 +19,18 @@ package bisq.apitest.linux;
 
 import java.io.IOException;
 
+import java.util.List;
+
 public interface LinuxProcess {
     void start() throws InterruptedException, IOException;
 
     String getName();
 
     long getPid();
+
+    boolean hasStartupExceptions();
+
+    List<Throwable> getStartupExceptions();
 
     void shutdown() throws IOException, InterruptedException;
 }

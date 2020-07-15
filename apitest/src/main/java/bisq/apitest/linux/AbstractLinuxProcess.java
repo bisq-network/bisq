@@ -22,6 +22,9 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.linux.BashCommand.isAlive;
@@ -40,15 +43,27 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
     protected long pid;
 
     protected final ApiTestConfig config;
+    protected final List<Throwable> startupExceptions;
 
     public AbstractLinuxProcess(String name, ApiTestConfig config) {
         this.name = name;
         this.config = config;
+        this.startupExceptions = new ArrayList<>();
     }
 
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public boolean hasStartupExceptions() {
+        return !startupExceptions.isEmpty();
+    }
+
+    @Override
+    public List<Throwable> getStartupExceptions() {
+        return startupExceptions;
     }
 
     @SuppressWarnings("unused")
