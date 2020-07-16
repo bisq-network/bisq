@@ -20,8 +20,6 @@ package bisq.apitest.linux;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,49 +58,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class ThreadedStreamHandler extends Thread {
     final InputStream inputStream;
-    String adminPassword;
-    @SuppressWarnings("unused")
-    OutputStream outputStream;
-    PrintWriter printWriter;
     final StringBuilder outputBuffer = new StringBuilder();
-    private boolean sudoIsRequested = false;
 
-    /**
-     * A simple constructor for when the sudo command is not necessary.
-     * This constructor will just run the command you provide, without
-     * running sudo before the command, and without expecting a password.
-     *
-     * @param inputStream InputStream
-     */
     ThreadedStreamHandler(InputStream inputStream) {
         this.inputStream = inputStream;
     }
 
-    /**
-     * Use this constructor when you want to invoke the 'sudo' command.
-     * The outputStream must not be null. If it is, you'll regret it. :)
-     *
-     * TODO this currently hangs if the admin password given for the sudo command is wrong.
-     *
-     * @param inputStream InputStream
-     * @param outputStream OutputStream
-     * @param adminPassword String
-     */
-    ThreadedStreamHandler(InputStream inputStream, OutputStream outputStream, String adminPassword) {
-        this.inputStream = inputStream;
-        this.outputStream = outputStream;
-        this.printWriter = new PrintWriter(outputStream);
-        this.adminPassword = adminPassword;
-        this.sudoIsRequested = true;
-    }
-
     public void run() {
-        // On mac os x 10.5.x, the admin password needs to be written immediately.
-        if (sudoIsRequested) {
-            printWriter.println(adminPassword);
-            printWriter.flush();
-        }
-
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = bufferedReader.readLine()) != null)

@@ -26,11 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.apitest.config.ApiTestConfig.BASH_PATH_VALUE;
 import static java.lang.management.ManagementFactory.getRuntimeMXBean;
-
-
-
-import bisq.apitest.config.ApiTestConfig;
 
 @Slf4j
 public class BashCommand {
@@ -107,7 +104,7 @@ public class BashCommand {
     @NotNull
     private List<String> tokenizeSystemCommand() {
         return new ArrayList<>() {{
-            add(ApiTestConfig.BASH_PATH_VALUE);
+            add(BASH_PATH_VALUE);
             add("-c");
             add(command);
         }};

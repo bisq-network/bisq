@@ -19,11 +19,12 @@ package bisq.apitest.linux;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static java.lang.System.exit;
 
 /**
  * This class can be used to execute a system command from a Java application.
@@ -54,22 +55,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class SystemCommandExecutor {
     private final List<String> cmdOptions;
-    private final String sudoPassword;
     private ThreadedStreamHandler inputStreamHandler;
     private ThreadedStreamHandler errorStreamHandler;
 
-    /*
-     * Note: I've removed the other constructor that was here to support executing
-     *       the sudo command. I'll add that back in when I get the sudo command
-     *       working to the point where it won't hang when the given password is
-     *       wrong.
-     */
     public SystemCommandExecutor(final List<String> cmdOptions) {
+        if (log.isDebugEnabled())
+            log.debug("cmd options {}", cmdOptions.toString());
+
+        if (cmdOptions.contains("sudo")) {
+            log.error("", new IllegalStateException("'sudo' commands are prohibited."));
+            exit(1);
+        }
+
         if (cmdOptions == null)
             throw new IllegalStateException("No command params specified.");
 
         this.cmdOptions = cmdOptions;
-        this.sudoPassword = null;
     }
 
     // Execute a system command and return its status code (0 or 1).
@@ -85,23 +86,18 @@ class SystemCommandExecutor {
     public int exec(boolean waitOnErrStream) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(cmdOptions).start();
 
-        // you need this if you're going to write something to the command's input stream
-        // (such as when invoking the 'sudo' command, and it prompts you for a password).
-        OutputStream stdOutput = process.getOutputStream();
-
-        // i'm currently doing these on a separate line here in case i need to set them to null
+        // I'm currently doing these on a separate line here in case i need to set them to null
         // to get the threads to stop.
         // see http://java.sun.com/j2se/1.5.0/docs/guide/misc/threadPrimitiveDeprecation.html
         InputStream inputStream = process.getInputStream();
         InputStream errorStream = process.getErrorStream();
 
-        // these need to run as java threads to get the standard output and error from the command.
+        // These need to run as java threads to get the standard output and error from the command.
         // the inputstream handler gets a reference to our stdOutput in case we need to write
-        // something to it, such as with the sudo command
-        inputStreamHandler = new ThreadedStreamHandler(inputStream, stdOutput, sudoPassword);
+        // something to it.
+        inputStreamHandler = new ThreadedStreamHandler(inputStream);
         errorStreamHandler = new ThreadedStreamHandler(errorStream);
 
-        // TODO the inputStreamHandler has a nasty side-effect of hanging if the given password is wrong; fix it.
         inputStreamHandler.start();
         errorStreamHandler.start();
 
@@ -116,7 +112,6 @@ class SystemCommandExecutor {
 
         return exitStatus;
     }
-
 
     // Get the standard error from an executed system command.
     public StringBuilder getStandardErrorFromCommand() {
