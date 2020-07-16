@@ -1,11 +1,11 @@
-package bisq.apitest.method;
+package bisq.apitest.scenario;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.JUnitHelper.runTests;
 
 /**
- * Driver for running API method tests.
+ * Driver for running API scenario tests.
  *
  * This may not seem necessary, but test cases are contained in the apitest sub
  * project's main sources, not its test sources.  An IDE may not automatically configure
@@ -15,9 +15,9 @@ import static bisq.apitest.JUnitHelper.runTests;
  * JUnit test, and new gradle tasks should be provided to run all, some, or one test.
  */
 @Slf4j
-public class MethodTestMain {
+public class ScenarioTestMain {
 
     public static void main(String[] args) {
-        runTests(GetVersionTest.class, GetBalanceTest.class, WalletProtectionTest.class);
+        runTests(FundWalletScenarioTest.class);
     }
 }
