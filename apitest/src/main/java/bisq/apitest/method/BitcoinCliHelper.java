@@ -20,6 +20,7 @@ package bisq.apitest.method;
 import java.io.IOException;
 
 import static java.lang.String.format;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
@@ -39,7 +40,9 @@ public final class BitcoinCliHelper {
 
     public String getNewBtcAddress() {
         try {
-            return new BitcoinCli(config, "getnewaddress").run().getOutput();
+            String newAddress = new BitcoinCli(config, "getnewaddress").run().getOutput();
+            assertNotNull(newAddress);
+            return newAddress;
         } catch (IOException | InterruptedException ex) {
             fail(ex.getMessage());
             return null;
@@ -50,8 +53,9 @@ public final class BitcoinCliHelper {
         try {
             String generateToAddressCmd = format("generatetoaddress %d \"%s\"", blocks, address);
             BitcoinCli generateToAddress = new BitcoinCli(config, generateToAddressCmd).run();
-            // Return an array of transaction ids.
-            return generateToAddress.getOutputValueAsStringArray();
+            String[] txids = generateToAddress.getOutputValueAsStringArray();
+            assertNotNull(txids);
+            return txids;
         } catch (IOException | InterruptedException ex) {
             fail(ex.getMessage());
             return null;
@@ -60,5 +64,23 @@ public final class BitcoinCliHelper {
 
     public void generateBlocks(int blocks) {
         generateToAddress(blocks, getNewBtcAddress());
+    }
+
+    public String sendToAddress(String address, double amount) {
+        // sendtoaddress "address" amount \
+        //              ( "comment" "comment_to" subtractfeefromamount \
+        //                          replaceable conf_target "estimate_mode" )
+        // returns a transaction id
+        try {
+            String sendToAddressCmd = format("sendtoaddress \"%s\" %s \"\" \"\" true",
+                    address, amount);
+            BitcoinCli sendToAddress = new BitcoinCli(config, sendToAddressCmd).run();
+            String txid = sendToAddress.getOutput();
+            assertNotNull(txid);
+            return txid;
+        } catch (IOException | InterruptedException ex) {
+            fail(ex.getMessage());
+            return null;
+        }
     }
 }

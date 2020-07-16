@@ -18,6 +18,7 @@
 package bisq.apitest.method;
 
 import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
@@ -55,6 +56,10 @@ public class MethodTest extends ApiTestCase {
         return LockWalletRequest.newBuilder().build();
     }
 
+    protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
+        return GetFundingAddressesRequest.newBuilder().build();
+    }
+
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
     protected final long getBalance() {
@@ -62,10 +67,23 @@ public class MethodTest extends ApiTestCase {
     }
 
     protected final void unlockWallet(String password, long timeout) {
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.walletsService.unlockWallet(createUnlockWalletRequest(password, timeout));
     }
 
     protected final void lockWallet() {
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.walletsService.lockWallet(createLockWalletRequest());
+    }
+
+    protected final String getUnusedBtcAddress() {
+        return grpcStubs.walletsService.getFundingAddresses(createGetFundingAddressesRequest())
+                .getAddressBalanceInfoList()
+                .stream()
+                .filter(a -> a.getBalance() == 0 && a.getNumConfirmations() == 0)
+                .findFirst()
+                .get()
+                .getAddress();
+
     }
 }
