@@ -19,8 +19,6 @@ package bisq.apitest.method;
 
 import bisq.proto.grpc.GetBalanceRequest;
 
-import java.io.IOException;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.AfterClass;
@@ -28,7 +26,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -37,7 +34,6 @@ import static org.junit.Assert.fail;
 
 import bisq.apitest.OrderedRunner;
 import bisq.apitest.annotation.Order;
-import bisq.apitest.linux.BitcoinCli;
 
 @Slf4j
 @RunWith(OrderedRunner.class)
@@ -46,16 +42,14 @@ public class GetBalanceTest extends MethodTest {
     @BeforeClass
     public static void setUp() {
         try {
-            setUpScaffold("bitcoind,seednode,arbdaemon,alicedaemon");
+            setUpScaffold("bitcoind,seednode,alicedaemon");
 
-            String newAddress = new BitcoinCli(config, "getnewaddress").run().getOutput();
-            String generateToAddressCmd = format("generatetoaddress %d \"%s\"", 1, newAddress);
+            // Have to generate 1 regtest block for alice's wallet to show 10 BTC balance.
+            bitcoinCli.generateBlocks(1);
 
-            BitcoinCli generateToAddress = new BitcoinCli(config, generateToAddressCmd).run();
-            log.info("{}\n{}", generateToAddress.getCommandWithOptions(), generateToAddress.getOutputValueAsStringArray());
-            MILLISECONDS.sleep(1500); // give bisq app time to parse block
-
-        } catch (IOException | InterruptedException ex) {
+            // Give the alicedaemon time to parse the new block.
+            MILLISECONDS.sleep(1500);
+        } catch (InterruptedException ex) {
             fail(ex.getMessage());
         }
     }

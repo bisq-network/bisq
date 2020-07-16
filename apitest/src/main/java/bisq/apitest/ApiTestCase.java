@@ -26,6 +26,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 import bisq.apitest.config.ApiTestConfig;
+import bisq.apitest.method.BitcoinCliHelper;
 
 public class ApiTestCase {
 
@@ -34,6 +35,7 @@ public class ApiTestCase {
 
     protected static Scaffold scaffold;
     protected static ApiTestConfig config;
+    protected static BitcoinCliHelper bitcoinCli;
 
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
@@ -43,6 +45,7 @@ public class ApiTestCase {
         // names, e.g. "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon"
         scaffold = new Scaffold(supportingApps).setUp();
         config = scaffold.config;
+        bitcoinCli = new BitcoinCliHelper((config));
         grpcStubs = new GrpcStubs(alicedaemon, config).init();
     }
 
