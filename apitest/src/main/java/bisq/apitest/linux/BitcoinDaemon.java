@@ -88,7 +88,7 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
             if (!isAlive(pid))
                 throw new IllegalStateException("bitcoind already shut down");
 
-            if (new BashCommand("killall bitcoind").run().getExitStatus() != 0)
+            if (new BashCommand("kill -15 " + pid).run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not shut down bitcoind; probably already stopped.");
 
             MILLISECONDS.sleep(2000); // allow it time to shutdown
