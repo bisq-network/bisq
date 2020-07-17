@@ -66,13 +66,13 @@ public final class BitcoinCliHelper {
         generateToAddress(blocks, getNewBtcAddress());
     }
 
-    public String sendToAddress(String address, double amount) {
+    public String sendToAddress(String address, String amount) {
         // sendtoaddress "address" amount \
         //              ( "comment" "comment_to" subtractfeefromamount \
         //                          replaceable conf_target "estimate_mode" )
         // returns a transaction id
         try {
-            String sendToAddressCmd = format("sendtoaddress \"%s\" %s \"\" \"\" true",
+            String sendToAddressCmd = format("sendtoaddress \"%s\" %s \"\" \"\" false",
                     address, amount);
             BitcoinCli sendToAddress = new BitcoinCli(config, sendToAddressCmd).run();
             String txid = sendToAddress.getOutput();
