@@ -67,18 +67,17 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
     }
 
     @SuppressWarnings("unused")
-    public void verifyBitcoinConfig() {
-        verifyBitcoinConfig(false);
+    public void verifyBitcoinPathsExist() {
+        verifyBitcoinPathsExist(false);
     }
 
-    public void verifyBitcoinConfig(boolean verbose) {
+    public void verifyBitcoinPathsExist(boolean verbose) {
         if (verbose)
             log.info(format("Checking bitcoind env...%n"
-                            + "\t%-20s%s%n\t%-20s%s%n\t%-20s%s%n\t%-20s%s%n\t%-20s%s",
+                            + "\t%-20s%s%n\t%-20s%s%n\t%-20s%s%n\t%-20s%s",
                     "berkeleyDbLibPath", config.berkeleyDbLibPath,
                     "bitcoinPath", config.bitcoinPath,
                     "bitcoinDatadir", config.bitcoinDatadir,
-                    "bitcoin.conf", config.bitcoinDatadir + "/bitcoin.conf",
                     "blocknotify", config.bitcoinDatadir + "/blocknotify"));
 
         if (!config.berkeleyDbLibPath.equals(EMPTY)) {
@@ -98,10 +97,6 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
         File bitcoindDatadir = new File(config.bitcoinDatadir);
         if (!bitcoindDatadir.exists() || !bitcoindDatadir.canWrite())
             throw new IllegalStateException(bitcoindDatadir + " cannot be found or written to");
-
-        File bitcoinConf = new File(bitcoindDatadir, "bitcoin.conf");
-        if (!bitcoinConf.exists() || !bitcoinConf.canRead())
-            throw new IllegalStateException(bitcoinConf.getAbsolutePath() + " cannot be found or read");
 
         File blocknotify = new File(bitcoindDatadir, "blocknotify");
         if (!blocknotify.exists() || !blocknotify.canExecute())

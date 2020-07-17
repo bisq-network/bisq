@@ -18,7 +18,6 @@
 package bisq.apitest;
 
 import bisq.common.config.BisqHelpFormatter;
-import bisq.common.storage.FileUtil;
 import bisq.common.util.Utilities;
 
 import java.nio.file.Files;
@@ -29,7 +28,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -212,13 +210,10 @@ public class Scaffold {
 
             log.info("Installed dao-setup files into {}", buildDataDir);
 
-            // Write a bitcoin.conf file with the correct path to the blocknotify script,
-            // and save it to the build resource dir.
-            installBitcoinConf();
-
-            // Copy the blocknotify script from the src resources dir to the
-            // build resources dir.  Users may want to edit it sometimes,
-            // when all default block notifcation ports are being used.
+            // Copy the blocknotify script from the src resources dir to the build
+            // resources dir.  Users may want to edit comment out some lines when all
+            // of the default block notifcation ports being will not be used (to avoid
+            // seeing rpc notifcation warnings in log files).
             installBitcoinBlocknotify();
 
         } catch (IOException | InterruptedException ex) {
@@ -256,26 +251,6 @@ public class Scaffold {
         }
     }
 
-    private void installBitcoinConf() {
-        // We write out and install a bitcoin.conf file for regtest/dao mode because
-        // the path to the blocknotify script is not known until runtime.
-        String bitcoinConf = "\n"
-                + "regtest=1\n"
-                + "[regtest]\n"
-                + "peerbloomfilters=1\n"
-                + "rpcport=" + config.bitcoinRpcPort + "\n"
-                + "server=1\n"
-                + "txindex=1\n"
-                + "debug=net\n"
-                + "deprecatedrpc=generate\n"
-                + "rpcuser=" + config.bitcoinRpcUser + "\n"
-                + "rpcpassword=" + config.bitcoinRpcPassword + "\n"
-                + "blocknotify=" + config.bashPath + " " + config.bitcoinDatadir + "/blocknotify %\n";
-        String chmod644Perms = "rw-r--r--";
-        saveToFile(bitcoinConf, config.bitcoinDatadir, "bitcoin.conf", chmod644Perms);
-        log.info("Installed {} with perms {}.", config.bitcoinDatadir + "/bitcoin.conf", chmod644Perms);
-    }
-
     private void installBitcoinBlocknotify() {
         // gradle is not working for this
         try {
@@ -287,32 +262,6 @@ public class Scaffold {
             log.info("Installed {} with perms {}.", destPath.toString(), chmod700Perms);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void saveToFile(String content,
-                            String parentDir,
-                            @SuppressWarnings("SameParameterValue") String relativeFilePath,
-                            String posixFilePermissions) {
-        File tempFile = null;
-        File file;
-        try {
-            file = Paths.get(parentDir, relativeFilePath).toFile();
-            tempFile = File.createTempFile("temp", relativeFilePath, file.getParentFile());
-            tempFile.deleteOnExit();
-            try (PrintWriter out = new PrintWriter(tempFile)) {
-                out.println(content);
-            }
-            FileUtil.renameFile(tempFile, file);
-            Files.setPosixFilePermissions(Paths.get(file.toURI()), PosixFilePermissions.fromString(posixFilePermissions));
-        } catch (IOException ex) {
-            throw new IllegalStateException(format("Error saving %s/%s to disk", parentDir, relativeFilePath), ex);
-        } finally {
-            if (tempFile != null && tempFile.exists()) {
-                log.warn("Temp file still exists after failed save; deleting {} now.", tempFile.getAbsolutePath());
-                if (!tempFile.delete())
-                    log.error("Cannot delete temp file.");
-            }
         }
     }
 
@@ -331,7 +280,7 @@ public class Scaffold {
 
         if (config.hasSupportingApp("bitcoind")) {
             BitcoinDaemon bitcoinDaemon = new BitcoinDaemon(config);
-            bitcoinDaemon.verifyBitcoinConfig(true);
+            bitcoinDaemon.verifyBitcoinPathsExist(true);
             bitcoindTask = new SetupTask(bitcoinDaemon, countdownLatch);
             bitcoindTaskFuture = executor.submit(bitcoindTask);
             MILLISECONDS.sleep(3500);

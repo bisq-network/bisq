@@ -140,7 +140,7 @@ public class BitcoinCli extends AbstractLinuxProcess implements LinuxProcess {
 
     @Override
     public void start() throws InterruptedException, IOException {
-        verifyBitcoinConfig(false);
+        verifyBitcoinPathsExist(false);
         verifyBitcoindRunning();
         commandWithOptions = config.bitcoinPath + "/bitcoin-cli -regtest "
                 + " -rpcuser=" + config.bitcoinRpcUser

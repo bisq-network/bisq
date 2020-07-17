@@ -30,13 +30,6 @@ import static joptsimple.internal.Strings.EMPTY;
 
 import bisq.apitest.config.ApiTestConfig;
 
-// Some cmds:
-// bitcoin-cli -regtest generatetoaddress 1 "2MyBq4jbtDF6CfKNrrQdp7qkRc8mKuCpKno"
-// bitcoin-cli -regtest getbalance
-// note:  getbalance does not include immature coins (<100 blks deep)
-// bitcoin-cli -regtest getbalances
-// bitcoin-cli -regtest getrpcinfo
-
 @Slf4j
 public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess {
 
@@ -56,7 +49,15 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
         String bitcoindCmd = berkeleyDbLibPathExport
                 + config.bitcoinPath + "/bitcoind"
                 + " -datadir=" + config.bitcoinDatadir
-                + " -daemon";
+                + " -daemon"
+                + " -regtest=1"
+                + " -server=1"
+                + " -txindex=1"
+                + " -peerbloomfilters=1"
+                + " -debug=net"
+                + " -rpcuser=" + config.bitcoinRpcUser
+                + " -rpcpassword=" + config.bitcoinRpcPassword
+                + " -blocknotify=" + config.bitcoinDatadir + "/blocknotify";
 
         BashCommand cmd = new BashCommand(bitcoindCmd).run();
         log.info("Starting ...\n$ {}", cmd.getCommand());
