@@ -96,7 +96,7 @@ public class Scaffold {
      * @param supportingApps String
      */
     public Scaffold(String supportingApps) {
-        this(new ApiTestConfig(new String[]{"--supportingApps", supportingApps}));
+        this(new ApiTestConfig("--supportingApps", supportingApps));
     }
 
     /**
@@ -181,29 +181,29 @@ public class Scaffold {
     public void installDaoSetupDirectories() {
         cleanDaoSetupDirectories();
 
-        String srcResourcesDir = Paths.get("apitest", "src", "main", "resources", "dao-setup").toFile().getAbsolutePath();
+        String daoSetupDir = Paths.get(config.baseSrcResourcesDir, "dao-setup").toFile().getAbsolutePath();
         String buildDataDir = config.rootAppDataDir.getAbsolutePath();
         try {
-            if (!new File(srcResourcesDir).exists())
+            if (!new File(daoSetupDir).exists())
                 throw new FileNotFoundException(
                         format("Dao setup dir '%s' not found.  Run gradle :apitest:installDaoSetup"
                                         + " to download dao-setup.zip and extract contents to resources folder",
-                                srcResourcesDir));
+                                daoSetupDir));
 
             BashCommand copyBitcoinRegtestDir = new BashCommand(
-                    "cp -rf " + srcResourcesDir + "/Bitcoin-regtest/regtest"
+                    "cp -rf " + daoSetupDir + "/Bitcoin-regtest/regtest"
                             + " " + config.bitcoinDatadir);
             if (copyBitcoinRegtestDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install bitcoin regtest dir");
 
             BashCommand copyAliceDataDir = new BashCommand(
-                    "cp -rf " + srcResourcesDir + "/" + alicedaemon.appName
+                    "cp -rf " + daoSetupDir + "/" + alicedaemon.appName
                             + " " + config.rootAppDataDir);
             if (copyAliceDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install alice data dir");
 
             BashCommand copyBobDataDir = new BashCommand(
-                    "cp -rf " + srcResourcesDir + "/" + bobdaemon.appName
+                    "cp -rf " + daoSetupDir + "/" + bobdaemon.appName
                             + " " + config.rootAppDataDir);
             if (copyBobDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install bob data dir");
@@ -217,7 +217,7 @@ public class Scaffold {
             installBitcoinBlocknotify();
 
         } catch (IOException | InterruptedException ex) {
-            throw new IllegalStateException("Could not install dao-setup files from " + srcResourcesDir, ex);
+            throw new IllegalStateException("Could not install dao-setup files from " + daoSetupDir, ex);
         }
     }
 
@@ -254,7 +254,7 @@ public class Scaffold {
     private void installBitcoinBlocknotify() {
         // gradle is not working for this
         try {
-            Path srcPath = Paths.get("apitest", "src", "main", "resources", "blocknotify");
+            Path srcPath = Paths.get(config.baseSrcResourcesDir, "blocknotify");
             Path destPath = Paths.get(config.bitcoinDatadir, "blocknotify");
             Files.copy(srcPath, destPath, REPLACE_EXISTING);
             String chmod700Perms = "rwx------";
@@ -283,7 +283,7 @@ public class Scaffold {
             bitcoinDaemon.verifyBitcoinPathsExist(true);
             bitcoindTask = new SetupTask(bitcoinDaemon, countdownLatch);
             bitcoindTaskFuture = executor.submit(bitcoindTask);
-            MILLISECONDS.sleep(3500);
+            MILLISECONDS.sleep(3500);  // todo make configurable
             bitcoinDaemon.verifyBitcoindRunning();
         }
 

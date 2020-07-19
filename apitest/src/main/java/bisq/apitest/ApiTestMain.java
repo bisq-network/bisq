@@ -29,9 +29,19 @@ import static java.lang.System.exit;
 import bisq.apitest.config.ApiTestConfig;
 
 /**
- * ApiTest Application
+ * ApiTestMain is a placeholder for the gradle build file, which requires a valid
+ * 'mainClassName' property in the :apitest subproject configuration.
  *
- * Runs all method tests, scenario tests, and end to end tests (e2e).
+ * It does has some uses:
+ *
+ * It can be used to print test scaffolding options:  bisq-apitest --help.
+ *
+ * It can be used to smoke test your bitcoind environment:  bisq-apitest.
+ *
+ * It can be used to run the regtest/dao environment for release testing:
+ * bisq-test --shutdownAfterTests=false
+ *
+ * All method, scenario and end to end tests are found in the test sources folder.
  *
  * Requires bitcoind v0.19.x
  */

@@ -104,20 +104,32 @@ public class ApiTestConfig {
     public final boolean shutdownAfterTests;
     public final List<String> supportingApps;
 
-    // Immutable system configurations.
+    // Immutable system configurations set in the constructor.
     public final String bitcoinDatadir;
     public final String userDir;
+    public final boolean isRunningTest;
+    public final String rootProjectDir;
+    public final String baseBuildResourcesDir;
+    public final String baseSrcResourcesDir;
+
 
     // The parser that will be used to parse both cmd line and config file options
     private final OptionParser parser = new OptionParser();
 
     public ApiTestConfig(String... args) {
-        this.defaultConfigFile = absoluteConfigFile(
-                Paths.get("apitest", "build", "resources", "main").toFile().getAbsolutePath(),
-                DEFAULT_CONFIG_FILE_NAME);
-        this.bitcoinDatadir = Paths.get("apitest", "build", "resources", "main", "Bitcoin-regtest")
-                .toFile().getAbsolutePath();
         this.userDir = getProperty("user.dir");
+        // If running a @Test, the current working directory is the :apitest subproject
+        // folder.  If running ApiTestMain, the current working directory is the
+        // bisq root project folder.
+        this.isRunningTest = Paths.get(userDir).getFileName().toString().equals("apitest");
+        this.rootProjectDir = isRunningTest
+                ? Paths.get(userDir).getParent().toFile().getAbsolutePath()
+                : Paths.get(userDir).toFile().getAbsolutePath();
+        this.baseBuildResourcesDir = Paths.get(rootProjectDir, "apitest", "build", "resources", "main").toFile().getAbsolutePath();
+        this.baseSrcResourcesDir = Paths.get(rootProjectDir, "apitest", "src", "main", "resources").toFile().getAbsolutePath();
+
+        this.defaultConfigFile = absoluteConfigFile(baseBuildResourcesDir, DEFAULT_CONFIG_FILE_NAME);
+        this.bitcoinDatadir = Paths.get(baseBuildResourcesDir, "Bitcoin-regtest").toFile().getAbsolutePath();
 
         AbstractOptionSpec<Void> helpOpt =
                 parser.accepts(HELP, "Print this help text")
@@ -134,8 +146,7 @@ public class ApiTestConfig {
                 parser.accepts(ROOT_APP_DATA_DIR, "Application data directory")
                         .withRequiredArg()
                         .ofType(File.class)
-                        .defaultsTo(Paths.get("apitest", "build", "resources", "main")
-                                .toFile().getAbsoluteFile());
+                        .defaultsTo(new File(baseBuildResourcesDir));
 
         ArgumentAcceptingOptionSpec<String> bashPathOpt =
                 parser.accepts(BASH_PATH, "Bash path")
@@ -193,7 +204,7 @@ public class ApiTestConfig {
                         "Run Arbitration node as desktop")
                         .withRequiredArg()
                         .ofType(Boolean.class)
-                        .defaultsTo(false); // TODO how do I register arbitrator?
+                        .defaultsTo(false); // TODO how do I register mediator?
 
         ArgumentAcceptingOptionSpec<Boolean> runAliceNodeAsDesktopOpt =
                 parser.accepts(RUN_ALICE_NODE_AS_DESKTOP,
@@ -309,7 +320,7 @@ public class ApiTestConfig {
     }
 
     public boolean hasSupportingApp(String... supportingApp) {
-        return stream(supportingApp).anyMatch(a -> this.supportingApps.contains(a));
+        return stream(supportingApp).anyMatch(this.supportingApps::contains);
     }
 
     public void printHelp(OutputStream sink, HelpFormatter formatter) {

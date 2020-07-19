@@ -62,13 +62,13 @@ class SystemCommandExecutor {
         if (log.isDebugEnabled())
             log.debug("cmd options {}", cmdOptions.toString());
 
+        if (cmdOptions.isEmpty())
+            throw new IllegalStateException("No command params specified.");
+
         if (cmdOptions.contains("sudo")) {
             log.error("", new IllegalStateException("'sudo' commands are prohibited."));
             exit(1);
         }
-
-        if (cmdOptions == null)
-            throw new IllegalStateException("No command params specified.");
 
         this.cmdOptions = cmdOptions;
     }

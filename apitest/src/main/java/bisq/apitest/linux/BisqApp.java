@@ -65,11 +65,12 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
         this.fullDaoNode = true;
         this.useLocalhostForP2P = true;
         this.useDevPrivilegeKeys = true;
-        this.findBisqPidScript = config.userDir + "/apitest/scripts/get-bisq-pid.sh";
+        this.findBisqPidScript = (config.isRunningTest ? "." : "./apitest")
+                + "/scripts/get-bisq-pid.sh";
     }
 
     @Override
-    public void start() throws InterruptedException, IOException {
+    public void start() {
         try {
             if (config.runSubprojectJars)
                 runJar();           // run subproject/build/lib/*.jar (not full build)
@@ -86,7 +87,7 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
     }
 
     @Override
-    public void shutdown() throws IOException, InterruptedException {
+    public void shutdown() {
         try {
             log.info("Shutting down {} ...", bisqAppConfig.appName);
             if (!isAlive(pid))
@@ -156,8 +157,10 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
     // It runs a bisq-* startup script, and depends on a full build.  Bisq jars
     // are loaded from the root project's lib directory.
     private void runStartupScript() throws IOException, InterruptedException {
+        String startupScriptPath = config.rootProjectDir
+                + "/" + bisqAppConfig.startupScript;
         String bisqCmd = getJavaOptsSpec()
-                + " " + config.userDir + "/" + bisqAppConfig.startupScript
+                + " " + startupScriptPath
                 + " " + String.join(" ", getOptsList())
                 + " &"; // run in background without nohup
         runBashCommand(bisqCmd);
@@ -172,7 +175,8 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
         bashCommand.runInBackground();
 
         if (bashCommand.getExitStatus() != 0)
-            throw new IllegalStateException(format("Error starting BisqApp\n%s\nError: %s",
+            throw new IllegalStateException(format("Error starting BisqApp%n%s%nError: %s",
+                    bisqAppConfig.appName,
                     bashCommand.getError()));
 
         // Sometimes it takes a little extra time to find the linux process id.

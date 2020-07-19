@@ -579,12 +579,27 @@ configure(project(':apitest')) {
     //      ./gradlew :apitest:cleanDaoSetup -x test
     apply from: 'dao-setup.gradle'
 
+    // We have to disable the :apitest 'test' task by default because we do not want
+    // to interfere with normal builds.  To run JUnit tests in this subproject:
+    // Run a normal build and install dao-setup files:
+    //              'gradle clean build :apitest:installDaoSetup'
+    // Run apitest tests cases
+    //              'gradle  :apitest:test'  -Dforce=true
+    test.enabled = System.getProperty("force") == "true"
+
     sourceSets {
         main {
             resources {
                 exclude 'dao-setup'
                 exclude 'dao-setup.zip'
             }
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
         }
     }
 
@@ -609,10 +624,17 @@ configure(project(':apitest')) {
         implementation "org.slf4j:slf4j-api:$slf4jVersion"
         implementation "ch.qos.logback:logback-core:$logbackVersion"
         implementation "ch.qos.logback:logback-classic:$logbackVersion"
-        implementation "junit:junit:$junitVersion"
+
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testCompile "org.junit.jupiter:junit-jupiter-api:5.6.2"
+        testCompile "org.junit.jupiter:junit-jupiter-params:5.6.2"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testRuntime "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        testRuntime("org.junit.jupiter:junit-jupiter-engine:5.6.2")
     }
 }
 
