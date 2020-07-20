@@ -24,8 +24,6 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static java.lang.System.exit;
-
 /**
  * This class can be used to execute a system command from a Java application.
  * See the documentation for the public methods of this class for more
@@ -65,10 +63,8 @@ class SystemCommandExecutor {
         if (cmdOptions.isEmpty())
             throw new IllegalStateException("No command params specified.");
 
-        if (cmdOptions.contains("sudo")) {
-            log.error("", new IllegalStateException("'sudo' commands are prohibited."));
-            exit(1);
-        }
+        if (cmdOptions.contains("sudo"))
+            throw new IllegalStateException("'sudo' commands are prohibited.");
 
         this.cmdOptions = cmdOptions;
     }

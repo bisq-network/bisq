@@ -27,9 +27,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -41,8 +40,8 @@ public class FundWalletScenarioTest extends ScenarioTest {
             setUpScaffold("bitcoind,seednode,alicedaemon");
             bitcoinCli.generateBlocks(1);
             MILLISECONDS.sleep(1500);
-        } catch (InterruptedException ex) {
-            fail(ex.getMessage());
+        } catch (Exception ex) {
+            fail(ex);
         }
     }
 

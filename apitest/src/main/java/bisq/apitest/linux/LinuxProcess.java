@@ -19,8 +19,6 @@ package bisq.apitest.linux;
 
 import java.io.IOException;
 
-import java.util.List;
-
 public interface LinuxProcess {
     void start() throws InterruptedException, IOException;
 
@@ -30,7 +28,7 @@ public interface LinuxProcess {
 
     boolean hasStartupExceptions();
 
-    List<Throwable> getStartupExceptions();
+    IllegalStateException startupIllegalStateException(org.slf4j.Logger log);
 
     void shutdown() throws IOException, InterruptedException;
 }

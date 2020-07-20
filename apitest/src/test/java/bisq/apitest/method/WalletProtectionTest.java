@@ -2,8 +2,6 @@ package bisq.apitest.method;
 
 import io.grpc.StatusRuntimeException;
 
-import java.util.concurrent.TimeUnit;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -13,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -24,11 +24,11 @@ public class WalletProtectionTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
-        setUpScaffold(alicedaemon.name());
         try {
-            TimeUnit.MILLISECONDS.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            setUpScaffold(alicedaemon.name());
+            MILLISECONDS.sleep(2000);
+        } catch (Exception ex) {
+            fail(ex);
         }
     }
 

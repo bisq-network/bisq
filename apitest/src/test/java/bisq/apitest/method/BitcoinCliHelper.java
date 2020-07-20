@@ -20,8 +20,8 @@ package bisq.apitest.method;
 import java.io.IOException;
 
 import static java.lang.String.format;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 
@@ -44,7 +44,7 @@ public final class BitcoinCliHelper {
             assertNotNull(newAddress);
             return newAddress;
         } catch (IOException | InterruptedException ex) {
-            fail(ex.getMessage());
+            fail(ex);
             return null;
         }
     }
@@ -57,7 +57,7 @@ public final class BitcoinCliHelper {
             assertNotNull(txids);
             return txids;
         } catch (IOException | InterruptedException ex) {
-            fail(ex.getMessage());
+            fail(ex);
             return null;
         }
     }
@@ -79,7 +79,7 @@ public final class BitcoinCliHelper {
             assertNotNull(txid);
             return txid;
         } catch (IOException | InterruptedException ex) {
-            fail(ex.getMessage());
+            fail(ex);
             return null;
         }
     }

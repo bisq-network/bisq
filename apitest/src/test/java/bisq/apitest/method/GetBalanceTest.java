@@ -47,14 +47,16 @@ public class GetBalanceTest extends MethodTest {
 
             // Give the alicedaemon time to parse the new block.
             MILLISECONDS.sleep(1500);
-        } catch (InterruptedException ex) {
-            fail(ex.getMessage());
+        } catch (Exception ex) {
+            fail(ex);
         }
     }
 
     @Test
     @Order(1)
     public void testGetBalance() {
+        // All tests depend on the DAO / regtest environment, and Alice's wallet is
+        // initialized with 10 BTC during the scaffolding setup.
         var balance = grpcStubs.walletsService.getBalance(GetBalanceRequest.newBuilder().build()).getBalance();
         assertEquals(1000000000, balance);
     }

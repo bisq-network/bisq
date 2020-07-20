@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.common.app.Version.VERSION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 
@@ -39,7 +40,11 @@ public class GetVersionTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
-        setUpScaffold(alicedaemon.name());
+        try {
+            setUpScaffold(alicedaemon.name());
+        } catch (Exception ex) {
+            fail(ex);
+        }
     }
 
     @Test

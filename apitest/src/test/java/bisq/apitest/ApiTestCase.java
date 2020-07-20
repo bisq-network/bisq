@@ -17,6 +17,10 @@
 
 package bisq.apitest;
 
+import java.io.IOException;
+
+import java.util.concurrent.ExecutionException;
+
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -59,7 +63,8 @@ public class ApiTestCase {
     protected static ApiTestConfig config;
     protected static BitcoinCliHelper bitcoinCli;
 
-    public static void setUpScaffold(String supportingApps) {
+    public static void setUpScaffold(String supportingApps)
+            throws InterruptedException, ExecutionException, IOException {
         // The supportingApps argument is a comma delimited string of supporting app
         // names, e.g. "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon"
         scaffold = new Scaffold(supportingApps).setUp();
@@ -68,7 +73,8 @@ public class ApiTestCase {
         grpcStubs = new GrpcStubs(alicedaemon, config).init();
     }
 
-    public static void setUpScaffold() {
+    public static void setUpScaffold()
+            throws InterruptedException, ExecutionException, IOException {
         scaffold = new Scaffold(new String[]{}).setUp();
         config = scaffold.config;
         grpcStubs = new GrpcStubs(alicedaemon, config).init();

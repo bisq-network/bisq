@@ -42,7 +42,6 @@ import javax.annotation.Nullable;
 
 import static bisq.apitest.config.BisqAppConfig.*;
 import static java.lang.String.format;
-import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -128,27 +127,19 @@ public class Scaffold {
     }
 
 
-    public Scaffold setUp() {
-        try {
-            installDaoSetupDirectories();
+    public Scaffold setUp() throws IOException, InterruptedException, ExecutionException {
+        installDaoSetupDirectories();
 
-            // Start each background process from an executor, then add a shutdown hook.
-            CountDownLatch countdownLatch = new CountDownLatch(config.supportingApps.size());
-            startBackgroundProcesses(executor, countdownLatch);
-            installShutdownHook();
+        // Start each background process from an executor, then add a shutdown hook.
+        CountDownLatch countdownLatch = new CountDownLatch(config.supportingApps.size());
+        startBackgroundProcesses(executor, countdownLatch);
+        installShutdownHook();
 
-            // Wait for all submitted startup tasks to decrement the count of the latch.
-            Objects.requireNonNull(countdownLatch).await();
+        // Wait for all submitted startup tasks to decrement the count of the latch.
+        Objects.requireNonNull(countdownLatch).await();
 
-            // Verify each startup task's future is done.
-            verifyStartupCompleted();
-
-        } catch (Throwable ex) {
-            err.println("Fault: An unexpected error occurred. " +
-                    "Please file a report at https://bisq.network/issues");
-            ex.printStackTrace(err);
-            exit(EXIT_FAILURE);
-        }
+        // Verify each startup task's future is done.
+        verifyStartupCompleted();
         return this;
     }
 
@@ -336,10 +327,7 @@ public class Scaffold {
         log.info("Giving {} ms for {} to initialize ...", config.bisqAppInitTime, bisqAppConfig.appName);
         MILLISECONDS.sleep(config.bisqAppInitTime);
         if (bisqApp.hasStartupExceptions()) {
-            for (Throwable t : bisqApp.getStartupExceptions()) {
-                log.error("", t);
-            }
-            exit(EXIT_FAILURE);
+            throw bisqApp.startupIllegalStateException(log);
         }
     }
 

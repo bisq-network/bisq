@@ -62,8 +62,13 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
     }
 
     @Override
-    public List<Throwable> getStartupExceptions() {
-        return startupExceptions;
+    public IllegalStateException startupIllegalStateException(org.slf4j.Logger log) {
+        StringBuilder errorBuilder = new StringBuilder();
+        for (Throwable t : startupExceptions) {
+            log.error("", t);
+            errorBuilder.append(t.getMessage()).append("\n");
+        }
+        return new IllegalStateException(errorBuilder.toString().trim(), startupExceptions.get(0));
     }
 
     @SuppressWarnings("unused")
