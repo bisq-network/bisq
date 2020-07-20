@@ -25,6 +25,31 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import bisq.apitest.config.ApiTestConfig;
 import bisq.apitest.method.BitcoinCliHelper;
 
+/**
+ * Base class for all test types:  'method', 'scenario' and 'e2e'.
+ * <p>
+ * During scaffold setup, various combinations of bitcoind and bisq instances
+ * can be started in the background before test cases are run.  Currently, this test
+ * harness supports only the "Bisq DAO development environment running against a
+ * local Bitcoin regtest network" as described in
+ * <a href="https://github.com/bisq-network/bisq/blob/master/docs/dev-setup.md">dev-setup.md</a>
+ * and <a href="https://github.com/bisq-network/bisq/blob/master/docs/dao-setup.md">dao-setup.md</a>.
+ * <p>
+ * Those documents contain information about the configurations used by this test harness:
+ * bitcoin-core's bitcoin.conf and blocknotify values, bisq instance options, the DAO genesis
+ * transaction id, initial BSQ and BTC balances for Bob & Alice accounts, and default
+ * PerfectMoney dummy payment accounts (USD) for Bob and Alice.
+ * <p>
+ * During a build, the
+ * <a href="https://github.com/bisq-network/bisq/blob/master/docs/dao-setup.zip">dao-setup.zip</a>
+ * file is downloaded and extracted if necessary.  In each test case's @BeforeClass
+ * method, the DAO setup files are re-installed into the run time's data directories
+ * (each test case runs on a refreshed DAO/regtest environment setup).
+ * <p>
+ * Initial Alice balances & accounts:  10.0 BTC, 1000000.00 BSQ, USD PerfectMoney dummy
+ * <p>
+ * Initial Bob balances & accounts:    10.0 BTC, 1500000.00 BSQ, USD PerfectMoney dummy
+ */
 public class ApiTestCase {
 
     // The gRPC service stubs are used by method & scenario tests, but not e2e tests.
