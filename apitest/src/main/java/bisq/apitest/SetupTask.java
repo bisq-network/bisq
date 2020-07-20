@@ -52,9 +52,8 @@ public class SetupTask implements Callable<SetupTask.Status> {
             throw new IllegalStateException(format("Error starting %s", linuxProcess.getName()), ex);
         }
 
-        if (linuxProcess.hasStartupExceptions()) {
+        if (linuxProcess.hasStartupExceptions())
             throw linuxProcess.startupIllegalStateException(log);
-        }
 
         Objects.requireNonNull(countdownLatch).countDown();
         return new Status(linuxProcess.getName(), LocalDateTime.now());

@@ -326,9 +326,8 @@ public class Scaffold {
         }
         log.info("Giving {} ms for {} to initialize ...", config.bisqAppInitTime, bisqAppConfig.appName);
         MILLISECONDS.sleep(config.bisqAppInitTime);
-        if (bisqApp.hasStartupExceptions()) {
+        if (bisqApp.hasStartupExceptions())
             throw bisqApp.startupIllegalStateException(log);
-        }
     }
 
     private BisqApp createBisqApp(BisqAppConfig bisqAppConfig)
