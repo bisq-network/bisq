@@ -95,8 +95,7 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
         if (!bitcoindExecutable.exists() || !bitcoindExecutable.canExecute())
             throw new IllegalStateException(format("'%s' cannot be found or executed.%n"
                             + "A bitcoin-core v0.19.X installation is required, and" +
-                            " a '--bitcoinPath' option must be passed on the command line"
-                            + " or added to 'apitest.properties'",
+                            " the 'bitcoinPath' must be configured in 'apitest.properties'",
                     bitcoindExecutable.getAbsolutePath()));
 
         File bitcoindDatadir = new File(config.bitcoinDatadir);
