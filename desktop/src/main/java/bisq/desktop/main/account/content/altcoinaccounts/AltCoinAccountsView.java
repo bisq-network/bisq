@@ -221,7 +221,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         gridRow = paymentMethodForm.getGridRow();
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.deleteAccount"), Res.get("shared.cancel"));
         Button deleteAccountButton = tuple.first;
-        deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
+        deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentAccount));
         Button cancelButton = tuple.second;
         cancelButton.setOnAction(event -> removeSelectAccountForm());
         GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
