@@ -20,7 +20,7 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
-import org.knowm.xchange.poloniex.PoloniexExchange;
+import org.knowm.xchange.exmo.ExmoExchange;
 
 import org.springframework.stereotype.Component;
 
@@ -29,16 +29,18 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-class Poloniex extends ExchangeRateProvider {
+class Exmo extends ExchangeRateProvider {
 
-    public Poloniex() {
-        super("POLO", "poloniex", Duration.ofMinutes(1));
+    public Exmo() {
+        // API rate limit = 10 calls / second from the same IP ( see https://exmo.com/en/api )
+        super("EXMO", "exmo", Duration.ofMinutes(1));
     }
 
     @Override
     public Set<ExchangeRate> doGet() {
-        // Supported fiat: -
-        // Supported alts: DASH, DCR, DOGE, ETC, ETH, LTC, XMR, ZEC
-        return doGet(PoloniexExchange.class);
+        // Supported fiat: EUR, PLN, RUB, UAH (Ukrainian hryvnia), USD
+        // Supported alts: DASH, DOGE, ETC, ETH, LTC, XMR, ZEC
+        return doGet(ExmoExchange.class);
     }
+
 }

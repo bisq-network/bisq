@@ -27,6 +27,7 @@ import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.Ticker;
+import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.service.marketdata.params.CurrencyPairsParam;
 import org.knowm.xchange.service.marketdata.params.Params;
@@ -35,6 +36,7 @@ import java.time.Duration;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -129,7 +131,7 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
         // The benefits of this approach (vs polling each ticker) are twofold:
         // 1) the polling of the exchange is faster (one HTTP call vs several)
         // 2) it's easier to stay below any API rate limits the exchange might have
-        List<Ticker> tickersRetrievedFromExchange;
+        List<Ticker> tickersRetrievedFromExchange = new ArrayList<>();
         try {
             tickersRetrievedFromExchange = marketDataService.getTickers(new CurrencyPairsParam() {
 
@@ -167,7 +169,49 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                     return Collections.emptyList();
                 }
             });
-        } catch (IOException e) {
+
+            if (tickersRetrievedFromExchange.isEmpty()) {
+                // If the bulk ticker retrieval went through, but no tickers were
+                // retrieved, this is a strong indication that this specific exchange
+                // needs a specific list of pairs given as argument, for bulk retrieval to
+                // work. See requiresFilterDuringBulkTickerRetrieval()
+                throw new IllegalArgumentException("No tickers retrieved, " +
+                        "exchange requires explicit filter argument during bulk retrieval?");
+            }
+        }
+        catch (NotYetImplementedForExchangeException e) {
+            // Thrown when a provider has no marketDataService.getTickers() implementation
+            // either because the exchange API does not provide it, or because it has not
+            // been implemented yet in the knowm xchange library
+
+            // In this case (retrieval of bulk tickers is not possible) retrieve the
+            // tickers one by one
+            List<Ticker> finalTickersRetrievedFromExchange = tickersRetrievedFromExchange;
+            Stream.of(desiredFiatPairs, desiredCryptoPairs)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList())
+                    .forEach(cp -> {
+                        try {
+
+                            // This is done in a loop, and can therefore result in a burst
+                            // of API calls. Some exchanges do not allow bursts
+                            // A simplistic solution is to delay every call by 1 second
+                            // TODO Switch to using a more elegant solution (per exchange)
+                            // like ResilienceSpecification (needs knowm xchange libs v5)
+                            if (getMarketDataCallDelay() > 0) {
+                                Thread.sleep(getMarketDataCallDelay());
+                            }
+
+                            Ticker ticker = marketDataService.getTicker(cp);
+                            finalTickersRetrievedFromExchange.add(ticker);
+
+                        } catch (IOException | InterruptedException ioException) {
+                            ioException.printStackTrace();
+                            log.error("Could not query tickers for " + getName(), e);
+                        }
+                    });
+        }
+        catch (Exception e) {
             // If there was a problem with polling this exchange, return right away,
             // since there are no results to parse and process
             log.error("Could not query tickers for provider " + getName(), e);
@@ -207,6 +251,18 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                 });
 
         return result;
+    }
+
+    /**
+     * Specifies optional delay between certain kind of API calls that can result in
+     * bursts. We want to avoid bursts, because this can cause certain exchanges to
+     * temporarily restrict access to the pricenode IP.
+     *
+     * @return Amount of milliseconds of delay between marketDataService.getTicker calls.
+     * By default 0, but can be overwritten by each provider.
+     */
+    protected long getMarketDataCallDelay() {
+        return 0;
     }
 
     /**

@@ -20,7 +20,7 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
-import org.knowm.xchange.poloniex.PoloniexExchange;
+import org.knowm.xchange.luno.LunoExchange;
 
 import org.springframework.stereotype.Component;
 
@@ -29,16 +29,24 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-class Poloniex extends ExchangeRateProvider {
+class Luno extends ExchangeRateProvider {
 
-    public Poloniex() {
-        super("POLO", "poloniex", Duration.ofMinutes(1));
+    public Luno() {
+        super("LUNO", "luno", Duration.ofMinutes(1));
     }
 
     @Override
     public Set<ExchangeRate> doGet() {
-        // Supported fiat: -
-        // Supported alts: DASH, DCR, DOGE, ETC, ETH, LTC, XMR, ZEC
-        return doGet(PoloniexExchange.class);
+        // Supported fiat: IDR (Indonesian rupiah), MYR (Malaysian ringgit),
+        // NGN (Nigerian Naira), ZAR (South African rand)
+        // Supported alts: -
+        return doGet(LunoExchange.class);
+    }
+
+    @Override
+    protected long getMarketDataCallDelay() {
+        // Luno allows only 1 MarketData call per second
+        // (see https://www.luno.com/en/developers/api )
+        return 1000;
     }
 }

@@ -20,7 +20,7 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
-import org.knowm.xchange.poloniex.PoloniexExchange;
+import org.knowm.xchange.quoine.QuoineExchange;
 
 import org.springframework.stereotype.Component;
 
@@ -29,16 +29,21 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-class Poloniex extends ExchangeRateProvider {
+class Quoine extends ExchangeRateProvider {
 
-    public Poloniex() {
-        super("POLO", "poloniex", Duration.ofMinutes(1));
+    public Quoine() {
+        super("QUOINE", "quoine", Duration.ofMinutes(1));
     }
 
     @Override
     public Set<ExchangeRate> doGet() {
-        // Supported fiat: -
-        // Supported alts: DASH, DCR, DOGE, ETC, ETH, LTC, XMR, ZEC
-        return doGet(PoloniexExchange.class);
+        // Supported fiat: AUD, CNY, EUR, HKD, IDR, INR, JPY, PHP, SGD, USD
+        // Supported alts: ETH
+        return doGet(QuoineExchange.class);
+    }
+
+    @Override
+    protected boolean requiresFilterDuringBulkTickerRetrieval() {
+        return true;
     }
 }
