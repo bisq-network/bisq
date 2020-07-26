@@ -42,6 +42,7 @@ import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+import bisq.core.trade.asset.xmr.XmrProofResultWithTradeId;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;
@@ -59,6 +60,8 @@ import javafx.scene.layout.Priority;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javafx.beans.value.ChangeListener;
+
 import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
@@ -73,6 +76,8 @@ public class SellerStep3View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
+    private final ChangeListener<XmrProofResultWithTradeId> xmrProofResultWithTradeIdListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -80,6 +85,10 @@ public class SellerStep3View extends TradeStepView {
 
     public SellerStep3View(PendingTradesViewModel model) {
         super(model);
+
+        xmrProofResultWithTradeIdListener = (observable, oldValue, newValue) -> {
+            processXmrProofResult(newValue);
+        };
     }
 
     @Override
@@ -139,6 +148,9 @@ public class SellerStep3View extends TradeStepView {
                 }
             }
         });
+
+        model.dataModel.tradeManager.getProofResultWithTradeIdProperty().addListener(xmrProofResultWithTradeIdListener);
+        processXmrProofResult(model.dataModel.tradeManager.getProofResultWithTradeIdProperty().get());
     }
 
     @Override
@@ -154,6 +166,9 @@ public class SellerStep3View extends TradeStepView {
 
         if (timeoutTimer != null)
             timeoutTimer.stop();
+
+        model.dataModel.tradeManager.getProofResultWithTradeIdProperty().removeListener(xmrProofResultWithTradeIdListener);
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -216,6 +231,20 @@ public class SellerStep3View extends TradeStepView {
         peersPaymentDetailsTextField.setMouseTransparent(false);
         peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
 
+        String counterCurrencyTxId = trade.getCounterCurrencyTxId();
+        String counterCurrencyExtraData = trade.getCounterCurrencyExtraData();
+        if (counterCurrencyTxId != null && !counterCurrencyTxId.isEmpty() &&
+                counterCurrencyExtraData != null && !counterCurrencyExtraData.isEmpty()) {
+            TextFieldWithCopyIcon txHashTextField = addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    0, Res.get("portfolio.pending.step3_seller.xmrTxHash"), counterCurrencyTxId).second;
+            txHashTextField.setMouseTransparent(false);
+            txHashTextField.setTooltip(new Tooltip(myPaymentDetails));
+
+            TextFieldWithCopyIcon txKeyDetailsTextField = addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow,
+                    1, Res.get("portfolio.pending.step3_seller.xmrTxKey"), counterCurrencyExtraData).second;
+            txKeyDetailsTextField.setMouseTransparent(false);
+            txKeyDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
+        }
 
         Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
                 Res.get("portfolio.pending.step3_seller.confirmReceipt"));
@@ -294,7 +323,7 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                if (model.isSignWitnessTrade()) {
+                if (model.dataModel.isSignWitnessTrade()) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
                 }
                 new Popup()
@@ -351,7 +380,7 @@ public class SellerStep3View extends TradeStepView {
                 message += Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
             }
 
-            if (model.isSignWitnessTrade()) {
+            if (model.dataModel.isSignWitnessTrade()) {
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
             }
         }
@@ -370,7 +399,7 @@ public class SellerStep3View extends TradeStepView {
         if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
-        model.maybeSignWitness();
+        model.dataModel.maybeSignWitness();
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed.
@@ -405,6 +434,47 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected void deactivatePaymentButtons(boolean isDisabled) {
         confirmButton.setDisable(isDisabled);
+    }
+
+    private void processXmrProofResult(XmrProofResultWithTradeId result) {
+        if (result == null) {
+            return;
+        }
+
+        Trade trade = model.dataModel.getTrade();
+        if (trade == null) {
+            return;
+        }
+
+        if (result.getTradeId().equals(trade.getId())) {
+            boolean hasFailed;
+            switch (result.getXmrProofResult()) {
+                case TX_NOT_CONFIRMED:
+                case PROOF_OK:
+                    hasFailed = false;
+                    break;
+                case UNKNOWN_ERROR:
+                case TX_KEY_REUSED:
+                case TX_NEVER_FOUND:
+                case TX_HASH_INVALID:
+                case TX_KEY_INVALID:
+                case ADDRESS_INVALID:
+                case AMOUNT_NOT_MATCHING:
+                case PROOF_FAILED:
+                default:
+                    hasFailed = true;
+                    break;
+            }
+
+            if (hasFailed) {
+                // We don't show yet translated messages for the diff. error cases but the ENUM name.
+                new Popup().warning(Res.get("portfolio.pending.step3_seller.xmrTxVerificationError",
+                        result.getTradeId(),
+                        result.getXmrProofResult().toString()))
+                        .width(800)
+                        .show();
+            }
+        }
     }
 }
 

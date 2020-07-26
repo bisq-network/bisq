@@ -188,8 +188,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         final Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
-        // TODO UI not impl yet
-        trade.setCounterCurrencyTxId("");
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
@@ -702,6 +700,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public void addTradeToFailedTrades() {
         tradeManager.addTradeToFailedTrades(selectedTrade);
+    }
+
+    public boolean isSignWitnessTrade() {
+        return accountAgeWitnessService.isSignWitnessTrade(selectedTrade);
+    }
+
+    public void maybeSignWitness() {
+        accountAgeWitnessService.maybeSignWitness(selectedTrade);
     }
 }
 

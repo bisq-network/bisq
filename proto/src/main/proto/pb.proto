@@ -293,6 +293,7 @@ message CounterCurrencyTransferStartedMessage {
     bytes buyer_signature = 4;
     string counter_currency_tx_id = 5;
     string uid = 6;
+    string counter_currency_extra_data = 7;
 }
 
 message FinalizePayoutTxRequest {
@@ -1385,6 +1386,7 @@ message Trade {
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;
     int64 last_refresh_request_date = 36;
+    string counter_currency_extra_data = 37;
 }
 
 message BuyerAsMakerTrade {
@@ -1545,6 +1547,7 @@ message PreferencesPayload {
     int32 block_notify_port = 53;
     int32 css_theme = 54;
     bool tac_accepted_v120 = 55;
+    bool auto_confirm_xmr = 56;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

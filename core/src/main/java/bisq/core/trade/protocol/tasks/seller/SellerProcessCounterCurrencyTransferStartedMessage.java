@@ -49,7 +49,17 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            trade.setCounterCurrencyTxId(message.getCounterCurrencyTxId());
+
+            String counterCurrencyTxId = message.getCounterCurrencyTxId();
+            if (counterCurrencyTxId != null && counterCurrencyTxId.length() < 100) {
+                trade.setCounterCurrencyTxId(counterCurrencyTxId);
+            }
+
+            String counterCurrencyExtraData = message.getCounterCurrencyExtraData();
+            if (counterCurrencyExtraData != null && counterCurrencyExtraData.length() < 100) {
+                trade.setCounterCurrencyExtraData(counterCurrencyExtraData);
+                processModel.getTradeManager().processCounterCurrencyExtraData(trade);
+            }
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);

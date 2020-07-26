@@ -17,8 +17,8 @@
 
 package bisq.core.user;
 
-import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -391,6 +391,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setTacAcceptedV120(boolean tacAccepted) {
         prefPayload.setTacAcceptedV120(tacAccepted);
+        persist();
+    }
+
+    public void setAutoConfirmXmr(boolean autoConfirmXmr) {
+        prefPayload.setAutoConfirmXmr(autoConfirmXmr);
         persist();
     }
 
@@ -965,5 +970,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         int getBlockNotifyPort();
 
         void setTacAcceptedV120(boolean tacAccepted);
+
+        void setAutoConfirmXmr(boolean autoConfirmXmr);
     }
 }
