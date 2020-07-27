@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -43,6 +44,7 @@ class XmrTransferProofRequester {
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "XmrTransferProofService", 3, 5, 10 * 60);
     private final XmrTxProofHttpClient httpClient;
+    private final Date tradeDate;
     private final String txHash;
     private final String txKey;
     private final String recipientAddress;
@@ -61,6 +63,7 @@ class XmrTransferProofRequester {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     XmrTransferProofRequester(XmrTxProofHttpClient httpClient,
+                              Date tradeDate,
                               String txHash,
                               String txKey,
                               String recipientAddress,
@@ -68,6 +71,7 @@ class XmrTransferProofRequester {
                               Consumer<XmrProofResult> resultHandler,
                               FaultHandler faultHandler) {
         this.httpClient = httpClient;
+        this.tradeDate = tradeDate;
         this.txHash = txHash;
         this.txKey = txKey;
         this.recipientAddress = recipientAddress;
@@ -122,12 +126,24 @@ class XmrTransferProofRequester {
     }
 
     private XmrProofResult parseResult(String json) {
-        //TODO parse json
-        //TODO need service to check diff. error conditions
+
+        // Avoid Codacy warning by using amount temporarily...
+        log.info("json " + json);
+        log.info("amount " + amount);
+        log.info("tradeDate " + tradeDate);
+
+        // TODO parse json
+        // TODO need service to check diff. error conditions
+        // TODO check amount
+
+        // TODO check if date of tx is after tradeDate (allow some tolerance to avoid clock sync issues). Otherwise a
+        //  scammer could send an old txKey from a prev trade with same amount before seller has updated to new feature,
+        //  thus the check for duplication would not detect the scam.
+
         return XmrProofResult.PROOF_OK;
         // check recipientAddress and amount
-        // json example
-                    /*
+        // json example (verify if that json is up to date before using it for dev)
+/*
 
 {
     "data": {
@@ -153,6 +169,6 @@ class XmrTransferProofRequester {
   "status": "success"
 }
 
-             */
+*/
     }
 }

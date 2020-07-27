@@ -21,6 +21,7 @@ import bisq.common.handlers.FaultHandler;
 
 import javax.inject.Inject;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -44,6 +45,7 @@ public class XmrTransferProofService {
     }
 
     public void requestProof(String tradeId,
+                             Date tradeDate,
                              String txHash,
                              String txKey,
                              String recipientAddress,
@@ -56,6 +58,7 @@ public class XmrTransferProofService {
         }
 
         XmrTransferProofRequester requester = new XmrTransferProofRequester(httpClient,
+                tradeDate,
                 txHash,
                 txKey,
                 recipientAddress,

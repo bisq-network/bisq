@@ -939,6 +939,7 @@ public class TradeManager implements PersistedDataHost {
                 // 8.90259736 is dev test value
                 long amount = (long) Float.parseFloat("8.90259736") * 100000000; // todo check XMR denomination
                 xmrTransferProofService.requestProof(trade.getId(),
+                        trade.getDate(),
                         txHash,
                         txKey,
                         address,
