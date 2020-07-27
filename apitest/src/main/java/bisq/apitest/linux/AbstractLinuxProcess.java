@@ -87,7 +87,6 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
         return shutdownExceptions;
     }
 
-
     @SuppressWarnings("unused")
     public void verifyBitcoinPathsExist() {
         verifyBitcoinPathsExist(false);
