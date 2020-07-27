@@ -480,6 +480,7 @@ configure(project(':pricenode')) {
         compile("org.knowm.xchange:xchange-coinmarketcap:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-coinone:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-exmo:$knowmXchangeVersion")
+        compile("org.knowm.xchange:xchange-hitbtc:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-huobi:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-independentreserve:$knowmXchangeVersion")
         compile("org.knowm.xchange:xchange-kraken:$knowmXchangeVersion")
