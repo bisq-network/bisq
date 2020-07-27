@@ -30,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -56,6 +57,7 @@ import bisq.apitest.config.BisqAppConfig;
 import bisq.apitest.linux.BashCommand;
 import bisq.apitest.linux.BisqApp;
 import bisq.apitest.linux.BitcoinDaemon;
+import bisq.apitest.linux.LinuxProcess;
 
 @Slf4j
 public class Scaffold {
@@ -152,17 +154,30 @@ public class Scaffold {
 
                 SetupTask[] orderedTasks = new SetupTask[]{
                         bobNodeTask, aliceNodeTask, arbNodeTask, seedNodeTask, bitcoindTask};
+                final Optional<Throwable>[] firstShutdownException = new Optional[]{Optional.empty()};
                 stream(orderedTasks).filter(t -> t != null && t.getLinuxProcess() != null)
                         .forEachOrdered(t -> {
                             try {
-                                t.getLinuxProcess().shutdown();
+                                LinuxProcess p = t.getLinuxProcess();
+                                p.shutdown();
                                 MILLISECONDS.sleep(1000);
-                            } catch (IOException | InterruptedException ex) {
-                                throw new IllegalStateException(ex);
+                                if (p.hasShutdownExceptions()) {
+                                    // We log shutdown exceptions, but do not throw
+                                    // one from here until the rest of the background
+                                    // instances have been shut down.
+                                    p.logExceptions(p.getShutdownExceptions(), log);
+                                    firstShutdownException[0] = Optional.of(p.getShutdownExceptions().get(0));
+                                }
+                            } catch (InterruptedException ignored) {
                             }
                         });
 
-                log.info("Teardown complete");
+                if (firstShutdownException[0].isPresent())
+                    throw new IllegalStateException("There were errors shutting down one or more background instances.",
+                            firstShutdownException[0].get());
+                else
+                    log.info("Teardown complete");
+
             } catch (Exception ex) {
                 throw new IllegalStateException(ex);
             }
@@ -274,7 +289,14 @@ public class Scaffold {
             bitcoinDaemon.verifyBitcoinPathsExist(true);
             bitcoindTask = new SetupTask(bitcoinDaemon, countdownLatch);
             bitcoindTaskFuture = executor.submit(bitcoindTask);
-            MILLISECONDS.sleep(3500);  // todo make configurable
+            MILLISECONDS.sleep(config.bisqAppInitTime);
+
+            LinuxProcess bitcoindProcess = bitcoindTask.getLinuxProcess();
+            if (bitcoindProcess.hasStartupExceptions()) {
+                bitcoindProcess.logExceptions(bitcoindProcess.getStartupExceptions(), log);
+                throw new IllegalStateException(bitcoindProcess.getStartupExceptions().get(0));
+            }
+
             bitcoinDaemon.verifyBitcoindRunning();
         }
 
@@ -326,8 +348,10 @@ public class Scaffold {
         }
         log.info("Giving {} ms for {} to initialize ...", config.bisqAppInitTime, bisqAppConfig.appName);
         MILLISECONDS.sleep(config.bisqAppInitTime);
-        if (bisqApp.hasStartupExceptions())
-            throw bisqApp.startupIllegalStateException(log);
+        if (bisqApp.hasStartupExceptions()) {
+            bisqApp.logExceptions(bisqApp.getStartupExceptions(), log);
+            throw new IllegalStateException(bisqApp.getStartupExceptions().get(0));
+        }
     }
 
     private BisqApp createBisqApp(BisqAppConfig bisqAppConfig)

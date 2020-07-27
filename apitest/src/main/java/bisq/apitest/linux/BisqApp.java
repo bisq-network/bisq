@@ -90,12 +90,16 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
     public void shutdown() {
         try {
             log.info("Shutting down {} ...", bisqAppConfig.appName);
-            if (!isAlive(pid))
-                throw new IllegalStateException(format("%s already shut down", bisqAppConfig.appName));
+            if (!isAlive(pid)) {
+                this.shutdownExceptions.add(new IllegalStateException(format("%s already shut down", bisqAppConfig.appName)));
+                return;
+            }
 
             String killCmd = "kill -15 " + pid;
-            if (new BashCommand(killCmd).run().getExitStatus() != 0)
-                throw new IllegalStateException(format("Could not shut down %s", bisqAppConfig.appName));
+            if (new BashCommand(killCmd).run().getExitStatus() != 0) {
+                this.shutdownExceptions.add(new IllegalStateException(format("Could not shut down %s", bisqAppConfig.appName)));
+                return;
+            }
 
             // Be lenient about the time it takes for a java app to shut down.
             for (int i = 0; i < 5; i++) {
@@ -106,11 +110,13 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
                 MILLISECONDS.sleep(2500);
             }
 
-            if (isAlive(pid))
-                throw new IllegalStateException(format("%s shutdown did not work", bisqAppConfig.appName));
+            if (isAlive(pid)) {
+                this.shutdownExceptions.add(new IllegalStateException(format("%s shutdown did not work", bisqAppConfig.appName)));
+                return;
+            }
 
         } catch (Exception e) {
-            throw new IllegalStateException(format("Error shutting down %s", bisqAppConfig.appName), e);
+            this.shutdownExceptions.add(new IllegalStateException(format("Error shutting down %s", bisqAppConfig.appName), e));
         }
     }
 

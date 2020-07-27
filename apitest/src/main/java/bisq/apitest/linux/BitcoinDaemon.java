@@ -83,23 +83,32 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
     }
 
     @Override
-    public void shutdown() throws IOException, InterruptedException {
+    public void shutdown() {
         try {
             log.info("Shutting down bitcoind daemon...");
-            if (!isAlive(pid))
-                throw new IllegalStateException("bitcoind already shut down");
 
-            if (new BashCommand("kill -15 " + pid).run().getExitStatus() != 0)
-                throw new IllegalStateException("Could not shut down bitcoind; probably already stopped.");
+            if (!isAlive(pid)) {
+                this.shutdownExceptions.add(new IllegalStateException("Bitcoind already shut down."));
+                return;
+            }
 
-            MILLISECONDS.sleep(2000); // allow it time to shutdown
+            if (new BashCommand("kill -15 " + pid).run().getExitStatus() != 0) {
+                this.shutdownExceptions.add(new IllegalStateException("Could not shut down bitcoind; probably already stopped."));
+                return;
+            }
+
+            MILLISECONDS.sleep(2500); // allow it time to shutdown
+
+            if (isAlive(pid)) {
+                this.shutdownExceptions.add(new IllegalStateException(
+                        format("Could not kill bitcoind process with pid %d.", pid)));
+                return;
+            }
+
             log.info("Stopped");
-        } catch (Exception e) {
-            throw new IllegalStateException("Error shutting down bitcoind", e);
-        } finally {
-            if (isAlive(pid))
-                //noinspection ThrowFromFinallyBlock
-                throw new IllegalStateException("bitcoind shutdown did not work");
+        } catch (InterruptedException ignored) {
+        } catch (IOException e) {
+            this.shutdownExceptions.add(new IllegalStateException("Error shutting down bitcoind.", e));
         }
     }
 }

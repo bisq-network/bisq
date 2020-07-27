@@ -39,16 +39,18 @@ import bisq.apitest.config.ApiTestConfig;
 abstract class AbstractLinuxProcess implements LinuxProcess {
 
     protected final String name;
+    protected final ApiTestConfig config;
 
     protected long pid;
 
-    protected final ApiTestConfig config;
     protected final List<Throwable> startupExceptions;
+    protected final List<Throwable> shutdownExceptions;
 
     public AbstractLinuxProcess(String name, ApiTestConfig config) {
         this.name = name;
         this.config = config;
         this.startupExceptions = new ArrayList<>();
+        this.shutdownExceptions = new ArrayList<>();
     }
 
     @Override
@@ -62,14 +64,29 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
     }
 
     @Override
-    public IllegalStateException startupIllegalStateException(org.slf4j.Logger log) {
+    public boolean hasShutdownExceptions() {
+        return !shutdownExceptions.isEmpty();
+    }
+
+    @Override
+    public void logExceptions(List<Throwable> exceptions, org.slf4j.Logger log) {
         StringBuilder errorBuilder = new StringBuilder();
-        for (Throwable t : startupExceptions) {
+        for (Throwable t : exceptions) {
             log.error("", t);
             errorBuilder.append(t.getMessage()).append("\n");
         }
-        return new IllegalStateException(errorBuilder.toString().trim(), startupExceptions.get(0));
     }
+
+    @Override
+    public List<Throwable> getStartupExceptions() {
+        return startupExceptions;
+    }
+
+    @Override
+    public List<Throwable> getShutdownExceptions() {
+        return shutdownExceptions;
+    }
+
 
     @SuppressWarnings("unused")
     public void verifyBitcoinPathsExist() {
