@@ -27,6 +27,8 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
@@ -40,18 +42,25 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             runInterceptHook();
 
             Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+            checkNotNull(delayedPayoutTx, "trade.getDelayedPayoutTx() must not be null");
             // Check again tx
             DelayedPayoutTxValidation.validatePayoutTx(trade,
                     delayedPayoutTx,
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
 
+            // Now as we know the deposit tx we can also verify the input
+            Transaction depositTx = trade.getDepositTx();
+            checkNotNull(depositTx, "trade.getDepositTx() must not be null");
+            DelayedPayoutTxValidation.validatePayoutTxInput(depositTx, delayedPayoutTx);
+
             complete();
         } catch (DelayedPayoutTxValidation.DonationAddressException |
                 DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
                 DelayedPayoutTxValidation.InvalidTxException |
                 DelayedPayoutTxValidation.InvalidLockTimeException |
-                DelayedPayoutTxValidation.AmountMismatchException e) {
+                DelayedPayoutTxValidation.AmountMismatchException |
+                DelayedPayoutTxValidation.InvalidInputException e) {
             failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);
