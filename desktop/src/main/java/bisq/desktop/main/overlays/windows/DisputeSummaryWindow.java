@@ -737,7 +737,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             text += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
         }
 
-        disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
+        checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
             UserThread.runAfter(() -> new Popup()

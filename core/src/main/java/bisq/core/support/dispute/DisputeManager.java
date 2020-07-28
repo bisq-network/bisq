@@ -376,7 +376,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
         if (donationAddressOfDelayedPayoutTx != null) {
             checkArgument(address.toString().equals(donationAddressOfDelayedPayoutTx),
-                    "donationAddressOfDelayedPayoutTx from peers dispute must match own address");
+                    "donationAddressOfDelayedPayoutTx from peers dispute must match address used in delayedPayoutTx");
         }
 
         if (!isAgent(dispute)) {

@@ -48,6 +48,7 @@ import java.util.Set;
 public abstract class DisputeAgentView extends DisputeView {
 
     private final DaoFacade daoFacade;
+    private ListChangeListener<Dispute> disputesWithInvalidDonationAddressListener;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                             KeyRing keyRing,
@@ -80,7 +81,7 @@ public abstract class DisputeAgentView extends DisputeView {
         filterBox.setVisible(true);
         filterBox.setManaged(true);
 
-        ListChangeListener<Dispute> disputesWithInvalidDonationAddressListener = c -> {
+        disputesWithInvalidDonationAddressListener = c -> {
             c.next();
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(dispute -> {
@@ -92,7 +93,18 @@ public abstract class DisputeAgentView extends DisputeView {
                 });
             }
         };
+    }
+
+    @Override
+    protected void activate() {
+        super.activate();
         disputeManager.getDisputesWithInvalidDonationAddress().addListener(disputesWithInvalidDonationAddressListener);
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+        disputeManager.getDisputesWithInvalidDonationAddress().removeListener(disputesWithInvalidDonationAddressListener);
     }
 
     @Override

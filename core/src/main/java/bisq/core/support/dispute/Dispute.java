@@ -275,10 +275,7 @@ public final class Dispute implements NetworkPayload {
             dispute.setDelayedPayoutTxId(delayedPayoutTxId);
         }
 
-        String donationAddressOfDelayedPayoutTx = proto.getDonationAddressOfDelayedPayoutTx();
-        if (!donationAddressOfDelayedPayoutTx.isEmpty()) {
-            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx);
-        }
+        dispute.setDonationAddressOfDelayedPayoutTx(ProtoUtil.stringOrNullFromProto(proto.getDonationAddressOfDelayedPayoutTx()));
 
         return dispute;
     }
