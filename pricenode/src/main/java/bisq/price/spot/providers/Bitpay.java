@@ -22,6 +22,8 @@ import bisq.price.spot.ExchangeRateProvider;
 import bisq.price.util.bitpay.BitpayMarketData;
 import bisq.price.util.bitpay.BitpayTicker;
 
+import org.knowm.xchange.utils.BigDecimalUtils;
+
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -57,9 +62,24 @@ class Bitpay extends ExchangeRateProvider {
         getTickers()
                 .filter(isDesiredFiatPair.or(isDesiredCryptoPair))
                 .forEach(ticker -> {
+                    boolean useInverseRate = false;
+                    if (SUPPORTED_CRYPTO_CURRENCIES.contains(ticker.getCode())) {
+                        // Use inverse rate for alts, because the API returns the
+                        // conversion rate in the opposite direction than what we need
+                        // API returns the BTC/Alt rate, we need the Alt/BTC rate
+                        useInverseRate = true;
+                    }
+
+                    BigDecimal rate = ticker.getRate();
+                    // Find the inverse rate, while using enough decimals to reflect very
+                    // small exchange rates
+                    BigDecimal inverseRate = (rate.compareTo(BigDecimal.ZERO) > 0) ?
+                            BigDecimal.ONE.divide(rate, 8, RoundingMode.HALF_UP) :
+                            BigDecimal.ZERO;
+
                     result.add(new ExchangeRate(
                             ticker.getCode(),
-                            ticker.getRate(),
+                            (useInverseRate ? inverseRate : rate),
                             new Date(),
                             this.getName()
                     ));
