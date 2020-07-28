@@ -29,6 +29,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.List;
@@ -66,6 +67,12 @@ public class DelayedPayoutTxValidation {
 
     public static class InvalidLockTimeException extends Exception {
         InvalidLockTimeException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class InvalidInputException extends Exception {
+        InvalidInputException(String msg) {
             super(msg);
         }
     }
@@ -182,6 +189,21 @@ public class DelayedPayoutTxValidation {
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new DonationAddressException(errorMsg);
+        }
+    }
+
+    public static void validatePayoutTxInput(Transaction depositTx,
+                                             Transaction delayedPayoutTx)
+            throws InvalidInputException {
+        TransactionInput input = delayedPayoutTx.getInput(0);
+        checkNotNull(input, "delayedPayoutTx.getInput(0) must not be null");
+        // input.getConnectedOutput() is null as the tx is not committed at that point
+
+        TransactionOutPoint outpoint = input.getOutpoint();
+        if (!outpoint.getHash().toString().equals(depositTx.getHashAsString()) || outpoint.getIndex() != 0) {
+            throw new InvalidInputException("Input of delayed payout transaction does not point to output of deposit tx.\n" +
+                    "Delayed payout tx=" + delayedPayoutTx + "\n" +
+                    "Deposit tx=" + depositTx);
         }
     }
 }
