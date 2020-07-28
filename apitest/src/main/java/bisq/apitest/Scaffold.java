@@ -46,7 +46,6 @@ import static java.lang.String.format;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -154,27 +153,12 @@ public class Scaffold {
 
                 SetupTask[] orderedTasks = new SetupTask[]{
                         bobNodeTask, aliceNodeTask, arbNodeTask, seedNodeTask, bitcoindTask};
-                final Optional<Throwable>[] firstShutdownException = new Optional[]{Optional.empty()};
-                stream(orderedTasks).filter(t -> t != null && t.getLinuxProcess() != null)
-                        .forEachOrdered(t -> {
-                            try {
-                                LinuxProcess p = t.getLinuxProcess();
-                                p.shutdown();
-                                MILLISECONDS.sleep(1000);
-                                if (p.hasShutdownExceptions()) {
-                                    // We log shutdown exceptions, but do not throw
-                                    // one from here until the rest of the background
-                                    // instances have been shut down.
-                                    p.logExceptions(p.getShutdownExceptions(), log);
-                                    firstShutdownException[0] = Optional.of(p.getShutdownExceptions().get(0));
-                                }
-                            } catch (InterruptedException ignored) {
-                            }
-                        });
+                Optional<Throwable> firstException = shutDownAll(orderedTasks);
 
-                if (firstShutdownException[0].isPresent())
-                    throw new IllegalStateException("There were errors shutting down one or more background instances.",
-                            firstShutdownException[0].get());
+                if (firstException.isPresent())
+                    throw new IllegalStateException(
+                            "There were errors shutting down one or more background instances.",
+                            firstException.get());
                 else
                     log.info("Teardown complete");
 
@@ -182,6 +166,32 @@ public class Scaffold {
                 throw new IllegalStateException(ex);
             }
         }
+    }
+
+    private Optional<Throwable> shutDownAll(SetupTask[] orderedTasks) {
+        Optional<Throwable> firstException = Optional.empty();
+        for (SetupTask t : orderedTasks) {
+            if (t != null && t.getLinuxProcess() != null) {
+                try {
+                    LinuxProcess p = t.getLinuxProcess();
+                    p.shutdown();
+                    MILLISECONDS.sleep(1000);
+                    if (p.hasShutdownExceptions()) {
+                        // We log shutdown exceptions, but do not throw any from here
+                        // because all of the background instances must be shut down.
+                        p.logExceptions(p.getShutdownExceptions(), log);
+
+                        // We cache only the 1st shutdown exception and move on to the
+                        // next process to be shutdown.  This cached exception will be the
+                        // one thrown to the calling test case (the @AfterAll method).
+                        if (!firstException.isPresent())
+                            firstException = Optional.of(p.getShutdownExceptions().get(0));
+                    }
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+        return firstException;
     }
 
     public void installDaoSetupDirectories() {
