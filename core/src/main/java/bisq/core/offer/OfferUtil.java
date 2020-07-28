@@ -140,6 +140,10 @@ public class OfferUtil {
         if (makerFee == null)
             return true;
 
+        Coin surplusFunds = availableBalance.subtract(makerFee);
+        if (Restrictions.isDust(surplusFunds)) {
+            return false; // we can't be left with dust
+        }
         return !availableBalance.subtract(makerFee).isNegative();
     }
 
@@ -171,6 +175,10 @@ public class OfferUtil {
         if (takerFee == null)
             return true;
 
+        Coin surplusFunds = availableBalance.subtract(takerFee);
+        if (Restrictions.isDust(surplusFunds)) {
+            return false; // we can't be left with dust
+        }
         return !availableBalance.subtract(takerFee).isNegative();
     }
 
