@@ -124,6 +124,7 @@ public class CreateOfferService {
                                    Coin amount,
                                    Coin minAmount,
                                    Price price,
+                                   Coin txFee,
                                    boolean useMarketBasedPrice,
                                    double marketPriceMargin,
                                    double buyerSecurityDepositAsDouble,
@@ -181,8 +182,9 @@ public class CreateOfferService {
         List<String> acceptedCountryCodes = PaymentAccountUtil.getAcceptedCountryCodes(paymentAccount);
         String bankId = PaymentAccountUtil.getBankId(paymentAccount);
         List<String> acceptedBanks = PaymentAccountUtil.getAcceptedBanks(paymentAccount);
-        double sellerSecurityDeposit = getSellerSecurityDepositAsDouble();
+        double sellerSecurityDeposit = getSellerSecurityDepositAsDouble(buyerSecurityDepositAsDouble);
         Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDepositAsDouble, sellerSecurityDeposit).first;
+        Coin txFeeToUse = txFee.isPositive() ? txFee : txFeeFromFeeService;
         Coin makerFeeAsCoin = getMakerFee(amount);
         boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
         Coin buyerSecurityDepositAsCoin = getBuyerSecurityDeposit(amount, buyerSecurityDepositAsDouble);
@@ -233,7 +235,7 @@ public class CreateOfferService {
                 acceptedBanks,
                 Version.VERSION,
                 btcWalletService.getLastBlockSeenHeight(),
-                txFeeFromFeeService.value,
+                txFeeToUse.value,
                 makerFeeAsCoin.value,
                 isCurrencyForMakerFeeBtc,
                 buyerSecurityDepositAsCoin.value,
@@ -285,8 +287,9 @@ public class CreateOfferService {
                 getSellerSecurityDeposit(amount, sellerSecurityDeposit);
     }
 
-    public double getSellerSecurityDepositAsDouble() {
-        return Restrictions.getSellerSecurityDepositAsPercent();
+    public double getSellerSecurityDepositAsDouble(double buyerSecurityDeposit) {
+        return Preferences.USE_SYMMETRIC_SECURITY_DEPOSIT ? buyerSecurityDeposit :
+                Restrictions.getSellerSecurityDepositAsPercent();
     }
 
     public Coin getMakerFee(Coin amount) {

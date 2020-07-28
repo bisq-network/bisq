@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.Restrictions;
@@ -33,13 +34,17 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.messages.RefreshTradeStateRequest;
+import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.ClockWatcher;
 import bisq.common.app.DevEnv;
@@ -58,6 +63,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -276,13 +282,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             Offer offer = item.getTrade().getOffer();
             checkNotNull(offer);
             checkNotNull(offer.getPaymentMethod());
-            String method = Res.get(offer.getPaymentMethod().getId() + "_SHORT");
-            String methodCountryCode = offer.getCountryCode();
-
-            if (methodCountryCode != null)
-                result = method + " (" + methodCountryCode + ")";
-            else
-                result = method;
+            result = offer.getPaymentMethodNameWithCountryCode();
         }
         return result;
     }
@@ -380,7 +380,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         checkNotNull(trade.getOffer(), "offer must not be null");
         AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(dataModel.getSellersPaymentAccountPayload());
 
-        accountAgeWitnessService.witnessDebugLog(trade, myWitness);
+        accountAgeWitnessService.getAccountAgeWitnessUtils().witnessDebugLog(trade, myWitness);
 
         return accountAgeWitnessService.accountIsSigner(myWitness) &&
                 !accountAgeWitnessService.peerHasSignedWitness(trade) &&
@@ -389,8 +389,43 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public void maybeSignWitness() {
         if (isSignWitnessTrade()) {
-            accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
+            var signedWitness = accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
+            signedWitness.ifPresent(this::sendSignedWitnessToPeer);
         }
+    }
+
+    private void sendSignedWitnessToPeer(SignedWitness signedWitness) {
+        Trade trade = getTrade();
+        if (trade == null) return;
+
+        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+        var traderSignedWitnessMessage = new TraderSignedWitnessMessage(UUID.randomUUID().toString(), trade.getId(),
+                tradingPeerNodeAddress, signedWitness);
+
+        p2PService.sendEncryptedMailboxMessage(
+                tradingPeerNodeAddress,
+                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
+                traderSignedWitnessMessage,
+                new SendMailboxMessageListener() {
+                    @Override
+                    public void onArrived() {
+                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {} SignedWitness {}",
+                                trade.getId(), tradingPeerNodeAddress, signedWitness);
+                    }
+
+                    @Override
+                    public void onStoredInMailbox() {
+                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {} SignedWitness {}",
+                                trade.getId(), tradingPeerNodeAddress, signedWitness);
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage) {
+                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {} SignedWitness {}",
+                                trade.getId(), tradingPeerNodeAddress, signedWitness);
+                    }
+                }
+        );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

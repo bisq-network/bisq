@@ -83,7 +83,7 @@ public class AboutView extends ActivatableView<GridPane, Void> {
                 "Poloniex (https://poloniex.com)",
                 "Coinmarketcap (https://coinmarketcap.com)"));
         if (isBtc)
-            addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "Earn.com (https://bitcoinfees.earn.com)");
+            addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "mempool.space (https://mempool.space)");
 
         addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
         addCompactTopLabelTextField(root, gridRow, Res.get("setting.about.version"), Version.VERSION, Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);

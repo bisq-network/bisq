@@ -129,6 +129,7 @@ public class GUIUtilTest {
         // onion V2 addresses
         assertTrue(regexValidator.validate("abcdefghij234567.onion").isValid);
         assertTrue(regexValidator.validate("abcdefghijklmnop.onion,abcdefghijklmnop.onion").isValid);
+        assertTrue(regexValidator.validate("abcdefghijklmnop.onion, abcdefghijklmnop.onion").isValid);
         assertTrue(regexValidator.validate("qrstuvwxyzABCDEF.onion,qrstuvwxyzABCDEF.onion,aaaaaaaaaaaaaaaa.onion").isValid);
         assertTrue(regexValidator.validate("GHIJKLMNOPQRSTUV.onion:9999").isValid);
         assertTrue(regexValidator.validate("WXYZ234567abcdef.onion,GHIJKLMNOPQRSTUV.onion:9999").isValid);
@@ -140,7 +141,8 @@ public class GUIUtilTest {
         assertFalse(regexValidator.validate("abcdefghijklmnop.onion:").isValid);
 
         // onion v3 addresses
-        assertFalse(regexValidator.validate("32zzibxmqi2ybxpqyggwwuwz7a3lbvtzoloti7cxoevyvijexvgsfeid.onion:8333").isValid);
+        assertFalse(regexValidator.validate("32zzibxmqi2ybxpqyggwwuwz7a3lbvtzoloti7cxoevyvijexvgsfei.onion:8333").isValid); // 1 missing char 
+        assertTrue(regexValidator.validate("wizseedscybbttk4bmb2lzvbuk2jtect37lcpva4l3twktmkzemwbead.onion:8000").isValid);
 
         // ipv4 addresses
         assertTrue(regexValidator.validate("12.34.56.78").isValid);

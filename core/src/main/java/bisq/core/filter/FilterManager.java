@@ -152,7 +152,7 @@ public class FilterManager {
                     protectedStorageEntries.forEach(protectedStorageEntry -> {
                         if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
                             Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
-                            if (verifySignature(filter))
+                            if (verifySignature(filter) && getFilter().equals(filter))
                                 resetFilters();
                         }
                     });
@@ -332,6 +332,7 @@ public class FilterManager {
 
         Optional.ofNullable(filter.getBannedCurrencies()).ifPresent(builder::addAllBannedCurrencies);
         Optional.ofNullable(filter.getBannedPaymentMethods()).ifPresent(builder::addAllBannedPaymentMethods);
+        Optional.ofNullable(filter.getBannedSignerPubKeys()).ifPresent(builder::addAllBannedSignerPubKeys);
 
         return Utils.HEX.encode(builder.build().toByteArray());
     }
@@ -417,4 +418,12 @@ public class FilterManager {
                             }
                         });
     }
+
+    public boolean isSignerPubKeyBanned(String signerPubKeyAsHex) {
+        return getFilter() != null &&
+                getFilter().getBannedSignerPubKeys() != null &&
+                getFilter().getBannedSignerPubKeys().stream()
+                        .anyMatch(e -> e.equals(signerPubKeyAsHex));
+    }
+
 }

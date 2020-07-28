@@ -286,6 +286,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 availableForVoting = Coin.valueOf(0);
             stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
                     bsqFormatter.formatCoinWithCode(availableForVoting)));
+
+            BsqValidator stakeInputTextFieldValidator = new BsqValidator(bsqFormatter);
+            stakeInputTextFieldValidator.setMaxValue(availableForVoting);
+
+            stakeInputTextField.setValidator(stakeInputTextFieldValidator);
         } else
             stakeInputTextField.setPromptText("");
     }

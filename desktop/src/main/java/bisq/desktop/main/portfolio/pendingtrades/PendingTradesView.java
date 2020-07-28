@@ -260,6 +260,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         root.getChildren().add(selectedSubView);
                     else if (root.getChildren().size() == 2)
                         root.getChildren().set(1, selectedSubView);
+
+                    // create and register a callback so we can be notified when the subview
+                    // wants to open the chat window
+                    ChatCallback chatCallback = this::openChat;
+                    selectedSubView.setChatCallback(chatCallback);
                 }
 
                 updateTableSelection();
@@ -437,8 +442,26 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
         // and after a short moment in the correct position
         UserThread.execute(() -> chatPopupStage.setOpacity(1));
+        updateChatMessageCount(trade, badgeByTrade.get(trade.getId()));
     }
 
+    private void updateChatMessageCount(Trade trade, JFXBadge badge) {
+        if (!trade.getId().equals(tradeIdOfOpenChat)) {
+            updateNewChatMessagesByTradeMap();
+            long num = newChatMessagesByTradeMap.get(trade.getId());
+            if (num > 0) {
+                badge.setText(String.valueOf(num));
+                badge.setEnabled(true);
+            } else {
+                badge.setText("");
+                badge.setEnabled(false);
+            }
+        } else {
+            badge.setText("");
+            badge.setEnabled(false);
+        }
+        badge.refreshBadge();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -724,17 +747,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     }
 
                                     button.setOnAction(e -> {
+                                        tableView.getSelectionModel().select(this.getIndex());
                                         openChat(trade);
-                                        update(trade, badge);
                                     });
 
                                     if (!listenerByTrade.containsKey(id)) {
-                                        ListChangeListener<ChatMessage> listener = c -> update(trade, badge);
+                                        ListChangeListener<ChatMessage> listener = c -> updateChatMessageCount(trade, badge);
                                         listenerByTrade.put(id, listener);
                                         trade.getChatMessages().addListener(listener);
                                     }
 
-                                    update(trade, badge);
+                                    updateChatMessageCount(trade, badge);
 
                                     setGraphic(badge);
                                 } else {
@@ -742,27 +765,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 }
                             }
 
-                            private void update(Trade trade, JFXBadge badge) {
-                                if (!trade.getId().equals(tradeIdOfOpenChat)) {
-                                    updateNewChatMessagesByTradeMap();
-                                    long num = newChatMessagesByTradeMap.get(trade.getId());
-                                    if (num > 0) {
-                                        badge.setText(String.valueOf(num));
-                                        badge.setEnabled(true);
-                                    } else {
-                                        badge.setText("");
-                                        badge.setEnabled(false);
-                                    }
-                                } else {
-                                    badge.setText("");
-                                    badge.setEnabled(false);
-                                }
-                                badge.refreshBadge();
-                            }
                         };
                     }
                 });
         return chatColumn;
     }
-}
 
+    public interface ChatCallback {
+        void onOpenChat(Trade trade);
+    }
+
+}

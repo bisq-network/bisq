@@ -38,10 +38,9 @@ import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -75,7 +74,6 @@ import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-
 
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -215,7 +213,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys =this.appendOnlyDataStoreService.getMap().keySet().stream()
+        Set<byte[]> excludedKeys = this.appendOnlyDataStoreService.getMap().keySet().stream()
                 .map(e -> e.bytes)
                 .collect(Collectors.toSet());
 
@@ -248,7 +246,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .filter(e -> limit.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
                 .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
-                                                                      objToPayload.apply(networkPayload)))
+                        objToPayload.apply(networkPayload)))
                 .collect(Collectors.toSet());
 
         if (limit.get() < 0)
@@ -351,7 +349,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 }
             } else {
                 // We don't broadcast here as we are only connected to the seed node and would be pointless
-                addPersistableNetworkPayload(e, sender,false, false, false);
+                addPersistableNetworkPayload(e, sender, false, false, false);
             }
         });
         log.info("Processing {} persistableNetworkPayloads took {} ms.",
@@ -374,7 +372,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @VisibleForTesting
     void removeExpiredEntries() {
-        log.trace("removeExpiredEntries");
         // The moment when an object becomes expired will not be synchronous in the network and we could
         // get add network_messages after the object has expired. To avoid repeated additions of already expired
         // object when we get it sent from new peers, we don’t remove the sequence number from the map.
@@ -382,8 +379,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // is equal and not larger as expected.
         ArrayList<Map.Entry<ByteArray, ProtectedStorageEntry>> toRemoveList =
                 map.entrySet().stream()
-                .filter(entry -> entry.getValue().isExpired(this.clock))
-                .collect(Collectors.toCollection(ArrayList::new));
+                        .filter(entry -> entry.getValue().isExpired(this.clock))
+                        .collect(Collectors.toCollection(ArrayList::new));
 
         // Batch processing can cause performance issues, so do all of the removes first, then update the listeners
         // to let them know about the removes.
@@ -452,7 +449,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         map.values().stream()
                 .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof RequiresOwnerIsOnlinePayload)
                 .filter(protectedStorageEntry -> ((RequiresOwnerIsOnlinePayload) protectedStorageEntry.getProtectedStoragePayload()).getOwnerNodeAddress().equals(peersNodeAddress))
-                .forEach(protectedStorageEntry ->  {
+                .forEach(protectedStorageEntry -> {
                     // We only set the data back by half of the TTL and remove the data only if is has
                     // expired after that back dating.
                     // We might get connection drops which are not caused by the node going offline, so
@@ -567,9 +564,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     private boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
-                                            @Nullable NodeAddress sender,
-                                            @Nullable BroadcastHandler.Listener listener,
-                                            boolean allowBroadcast) {
+                                             @Nullable NodeAddress sender,
+                                             @Nullable BroadcastHandler.Listener listener,
+                                             boolean allowBroadcast) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
@@ -577,6 +574,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 removedAddOncePayloads.contains(hashOfPayload)) {
             log.warn("We have already removed that AddOncePayload by a previous removeDataMessage. " +
                     "We ignore that message. ProtectedStoragePayload: {}", protectedStoragePayload.toString());
+            return false;
+        }
+
+        // To avoid that expired data get stored and broadcast we check early for expire date.
+        if (protectedStorageEntry.isExpired(clock)) {
+            log.warn("We received an expired protectedStorageEntry from peer {}",
+                    sender != null ? sender.getFullAddress() : "sender is null");
+            log.debug("Expired protectedStorageEntry from peer {}. getCreationTimeStamp={}, protectedStorageEntry={}",
+                    sender != null ? sender.getFullAddress() : "sender is null",
+                    new Date(protectedStorageEntry.getCreationTimeStamp()),
+                    protectedStorageEntry);
             return false;
         }
 
@@ -652,7 +660,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
 
         // If we have seen a more recent operation for this payload, we ignore the current one
-        if(!hasSequenceNrIncreased(updatedEntry.getSequenceNumber(), hashOfPayload))
+        if (!hasSequenceNrIncreased(updatedEntry.getSequenceNumber(), hashOfPayload))
             return false;
 
         // Verify the updated ProtectedStorageEntry is well formed and valid for update
@@ -723,7 +731,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         return true;
-}
+    }
 
 
     /**
@@ -1049,4 +1057,3 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 }
-

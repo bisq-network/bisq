@@ -32,6 +32,7 @@ import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -63,6 +64,7 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                                 FeeService feeService,
                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                 MakerFeeProvider makerFeeProvider,
+                                TradeStatisticsManager tradeStatisticsManager,
                                 Navigation navigation) {
         super(createOfferService,
                 openOfferManager,
@@ -76,6 +78,7 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                 feeService,
                 btcFormatter,
                 makerFeeProvider,
+                tradeStatisticsManager,
                 navigation);
     }
 }

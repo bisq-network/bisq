@@ -40,19 +40,85 @@ message GetVersionReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Balance
+// Offers
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service GetBalance {
-    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
+service Offers {
+    rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
+    }
+    rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
 }
 
-message GetBalanceRequest {
+message GetOffersRequest {
+    string direction = 1;
+    string fiatCurrencyCode = 2;
 }
 
-message GetBalanceReply {
-    uint64 balance = 1;
+message GetOffersReply {
+    repeated OfferInfo offers = 1;
+}
+
+message CreateOfferRequest {
+    string currencyCode = 1; // TODO switch order w/ direction field in next PR
+    string direction = 2;
+    uint64 price = 3;
+    bool useMarketBasedPrice = 4;
+    double marketPriceMargin = 5;
+    uint64 amount = 6;
+    uint64 minAmount = 7;
+    double buyerSecurityDeposit = 8;
+    string paymentAccountId = 9;
+}
+
+message CreateOfferReply {
+    bool result = 1;
+}
+
+message OfferInfo {
+    string id = 1;
+    string direction = 2;
+    uint64 price = 3;
+    bool useMarketBasedPrice = 4;
+    double marketPriceMargin = 5;
+    uint64 amount = 6;
+    uint64 minAmount = 7;
+    uint64 volume = 8;
+    uint64 minVolume = 9;
+    uint64 buyerSecurityDeposit = 10;
+    string paymentAccountId = 11; // only used when creating offer
+    string paymentMethodId = 12;
+    string paymentMethodShortName = 13;
+    string baseCurrencyCode = 14;
+    string counterCurrencyCode = 15;
+    uint64 date = 16;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// PaymentAccounts
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service PaymentAccounts {
+    rpc CreatePaymentAccount (CreatePaymentAccountRequest) returns (CreatePaymentAccountReply) {
+    }
+    rpc GetPaymentAccounts (GetPaymentAccountsRequest) returns (GetPaymentAccountsReply) {
+    }
+}
+
+message CreatePaymentAccountRequest {
+    string accountName = 1;
+    string accountNumber = 2;
+    string fiatCurrencyCode = 3;
+}
+
+message CreatePaymentAccountReply {
+}
+
+message GetPaymentAccountsRequest {
+}
+
+message GetPaymentAccountsReply {
+    repeated PaymentAccount paymentAccounts = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,73 +138,79 @@ message GetTradeStatisticsReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Offer
+// Wallets
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service GetOffers {
-    rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
+service Wallets {
+    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
+    }
+    rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
+    }
+    rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
+    }
+    rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
+    }
+    rpc RemoveWalletPassword (RemoveWalletPasswordRequest) returns (RemoveWalletPasswordReply) {
+    }
+    rpc LockWallet (LockWalletRequest) returns (LockWalletReply) {
+    }
+    rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
     }
 }
 
-message GetOffersRequest {
+message GetBalanceRequest {
 }
 
-message GetOffersReply {
-    repeated Offer offers = 1;
+message GetBalanceReply {
+    uint64 balance = 1;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// PaymentAccount
-///////////////////////////////////////////////////////////////////////////////////////////
-
-service GetPaymentAccounts {
-    rpc GetPaymentAccounts (GetPaymentAccountsRequest) returns (GetPaymentAccountsReply) {
-    }
+message GetAddressBalanceRequest {
+    string address = 1;
 }
 
-message GetPaymentAccountsRequest {
+message GetAddressBalanceReply {
+    AddressBalanceInfo addressBalanceInfo = 1;
 }
 
-message GetPaymentAccountsReply {
-    repeated PaymentAccount paymentAccounts = 1;
+message GetFundingAddressesRequest {
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// PlaceOffer
-///////////////////////////////////////////////////////////////////////////////////////////
-
-service PlaceOffer {
-    rpc PlaceOffer (PlaceOfferRequest) returns (PlaceOfferReply) {
-    }
+message GetFundingAddressesReply {
+    repeated AddressBalanceInfo addressBalanceInfo = 1;
 }
 
-message PlaceOfferRequest {
-    string currencyCode = 1;
-    string direction = 2;
-    uint64 price = 3;
-    bool useMarketBasedPrice = 4;
-    double marketPriceMargin = 5;
-    uint64 amount = 6;
-    uint64 minAmount = 7;
-    double buyerSecurityDeposit = 8;
-    string paymentAccountId = 9;
+message SetWalletPasswordRequest {
+    string password = 1;
+    string newPassword = 2;
 }
 
-message PlaceOfferReply {
-    bool result = 1;
+message SetWalletPasswordReply {
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// StopServer
-///////////////////////////////////////////////////////////////////////////////////////////
-
-service StopServer {
-    rpc StopServer (StopServerRequest) returns (StopServerReply) {
-    }
+message RemoveWalletPasswordRequest {
+    string password = 1;
 }
 
-message StopServerRequest {
+message RemoveWalletPasswordReply {
 }
 
-message StopServerReply {
+message LockWalletRequest {
+}
+
+message LockWalletReply {
+}
+
+message UnlockWalletRequest {
+    string password = 1;
+    uint64 timeout = 2;
+}
+
+message UnlockWalletReply {
+}
+
+message AddressBalanceInfo {
+    string address = 1;
+    int64 balance = 2;
+    int64 numConfirmations = 3;
 }

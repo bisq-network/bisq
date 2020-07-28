@@ -98,10 +98,9 @@ import javafx.util.Callback;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.text.MessageFormat;
-
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -125,7 +124,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton;
     private Label amountLabel;
-    private TextField amountTextField, withdrawFromTextField, withdrawToTextField;
+    private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField;
 
     private final BtcWalletService walletService;
     private final TradeManager tradeManager;
@@ -219,6 +218,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
         withdrawToTextField.setMaxWidth(380);
+
+        withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
+        withdrawMemoTextField.setMaxWidth(380);
 
         final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
 
@@ -384,6 +387,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
+                                            transaction.setMemo(withdrawMemoTextField.getText());
                                             log.debug("onWithdraw onSuccess tx ID:{}", transaction.getHashAsString());
                                         } else {
                                             log.error("onWithdraw transaction is null");
@@ -527,6 +531,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
+
+        withdrawMemoTextField.setText("");
+        withdrawMemoTextField.setPromptText(Res.get("funds.withdrawal.memo"));
 
         selectedItems.clear();
         tableView.getSelectionModel().clearSelection();

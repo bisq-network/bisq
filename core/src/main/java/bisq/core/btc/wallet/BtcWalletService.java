@@ -598,6 +598,13 @@ public class BtcWalletService extends WalletService {
         return entry;
     }
 
+    public AddressEntry recoverAddressEntry(String offerId, String address, AddressEntry.Context context) {
+        var available = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
+        if (!available.isPresent())
+            return null;
+        return addressEntryList.swapAvailableToAddressEntryWithOfferId(available.get(), context, offerId);
+    }
+
     private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
         if (addressEntry.isPresent()) {
             return addressEntry.get();

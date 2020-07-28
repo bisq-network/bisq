@@ -31,7 +31,6 @@ import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.state.DaoStateStore;
 import bisq.core.dao.state.model.governance.BallotList;
-import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
@@ -44,7 +43,6 @@ import bisq.core.user.PreferencesPayload;
 import bisq.core.user.UserPayload;
 
 import bisq.network.p2p.peers.peerexchange.PeerList;
-import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadList;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.config.Config;
@@ -102,8 +100,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                             this,
                             new Storage<>(storageDir, this, corruptedDatabaseFilesHandler),
                             btcWalletService.get());
-                case TRADE_STATISTICS_LIST:
-                    throw new ProtobufferRuntimeException("TRADE_STATISTICS_LIST is not used anymore");
                 case ARBITRATION_DISPUTE_LIST:
                     return ArbitrationDisputeList.fromProto(proto.getArbitrationDisputeList(),
                             this,
@@ -124,8 +120,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return NavigationPath.fromProto(proto.getNavigationPath());
                 case PAYMENT_ACCOUNT_LIST:
                     return PaymentAccountList.fromProto(proto.getPaymentAccountList(), this);
-                case PERSISTABLE_NETWORK_PAYLOAD_LIST:
-                    return PersistableNetworkPayloadList.fromProto(proto.getPersistableNetworkPayloadList(), this);
                 case ACCOUNT_AGE_WITNESS_STORE:
                     return AccountAgeWitnessStore.fromProto(proto.getAccountAgeWitnessStore());
                 case TRADE_STATISTICS2_STORE:
@@ -144,8 +138,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyVoteList.fromProto(proto.getMyVoteList());
                 case MY_BLIND_VOTE_LIST:
                     return MyBlindVoteList.fromProto(proto.getMyBlindVoteList());
-                case MERIT_LIST:
-                    return MeritList.fromProto(proto.getMeritList());
                 case DAO_STATE_STORE:
                     return DaoStateStore.fromProto(proto.getDaoStateStore());
                 case MY_REPUTATION_LIST:

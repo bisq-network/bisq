@@ -89,7 +89,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
-    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn, revertTxColumn;
+    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, memoColumn, confidenceColumn, revertTxColumn;
     @FXML
     AutoTooltipButton exportButton;
 
@@ -136,6 +136,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         transactionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.txId", Res.getBaseCurrencyCode())));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        memoColumn.setGraphic(new AutoTooltipLabel(Res.get("funds.tx.memo")));
         confidenceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.confirmations", Res.getBaseCurrencyCode())));
         revertTxColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.revert", Res.getBaseCurrencyCode())));
 
@@ -147,6 +148,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         setAddressColumnCellFactory();
         setTransactionColumnCellFactory();
         setAmountColumnCellFactory();
+        setMemoColumnCellFactory();
         setConfidenceColumnCellFactory();
         setRevertTxColumnCellFactory();
 
@@ -230,20 +232,22 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
+            final int reportColumns = tableColumns.size()-1;    // CSV report excludes the last column (an icon)
             CSVEntryConverter<TransactionsListItem> headerConverter = transactionsListItem -> {
-                String[] columns = new String[6];
+                String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++)
                     columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
                 return columns;
             };
             CSVEntryConverter<TransactionsListItem> contentConverter = item -> {
-                String[] columns = new String[6];
+                String[] columns = new String[reportColumns];
                 columns[0] = item.getDateString();
                 columns[1] = item.getDetails();
                 columns[2] = item.getDirection() + " " + item.getAddressString();
                 columns[3] = item.getTxId();
                 columns[4] = item.getAmount();
-                columns[5] = item.getNumConfirmations();
+                columns[5] = item.getMemo() == null ? "" : item.getMemo();
+                columns[6] = item.getNumConfirmations();
                 return columns;
             };
 
@@ -444,6 +448,33 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     setGraphic(new AutoTooltipLabel(item.getAmount()));
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setMemoColumnCellFactory() {
+        memoColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+
+        memoColumn.setCellFactory(
+                new Callback<>() {
+
+                    @Override
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
+                            TransactionsListItem> column) {
+                        return new TableCell<>() {
+
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setGraphic(new AutoTooltipLabel(item.getMemo()));
                                 } else {
                                     setGraphic(null);
                                 }

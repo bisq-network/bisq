@@ -17,12 +17,8 @@
 
 package bisq.common.proto.persistable;
 
-import com.google.protobuf.Message;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
@@ -31,13 +27,11 @@ import lombok.Setter;
 import lombok.experimental.Delegate;
 
 @EqualsAndHashCode
-public class PersistableList<T extends PersistablePayload> implements PersistableEnvelope, Iterable<T> {
+public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope, Iterable<T> {
     @Delegate(excludes = ExcludesDelegateMethods.class)
     @Getter
     @Setter
     private List<T> list;
-    @Setter
-    private Function<List<T>, Message> toProto;
 
     public PersistableList() {
         list = new ArrayList<>();
@@ -47,28 +41,9 @@ public class PersistableList<T extends PersistablePayload> implements Persistabl
         this.list = list;
     }
 
-    public PersistableList(List<T> list, Function<List<T>, Message> toProto) {
-        this(list);
-        this.toProto = toProto;
-    }
-
-    public PersistableList(HashSet<T> set) {
-        this(new ArrayList<>(set));
-    }
-
-    public PersistableList(HashSet<T> set, Function<List<T>, Message> toProto) {
-        this(set);
-        this.toProto = toProto;
-    }
-
     // this.stream() does not compile for unknown reasons, so add that manual delegate method
     public Stream<T> stream() {
         return list.stream();
-    }
-
-    @Override
-    public Message toProtoMessage() {
-        return toProto.apply(list);
     }
 
     private interface ExcludesDelegateMethods<T> {

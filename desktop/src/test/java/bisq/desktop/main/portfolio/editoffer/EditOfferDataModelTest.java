@@ -19,6 +19,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.coin.BsqFormatter;
@@ -95,7 +96,7 @@ public class EditOfferDataModelTest {
                 btcWalletService, bsqWalletService, empty, user,
                 null, priceFeedService,
                 accountAgeWitnessService, feeService, null, null,
-                mock(MakerFeeProvider.class), null);
+                mock(MakerFeeProvider.class), mock(TradeStatisticsManager.class), null);
     }
 
     @Test

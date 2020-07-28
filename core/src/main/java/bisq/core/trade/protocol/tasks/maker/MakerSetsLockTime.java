@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.maker;
 
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -38,7 +39,7 @@ public class MakerSetsLockTime extends TradeTask {
             runInterceptHook();
 
             // 10 days for altcoins, 20 days for other payment methods
-            int delay = processModel.getOffer().getPaymentMethod().isAsset() ? 144 * 10 : 144 * 20;
+            int delay = Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
             if (Config.baseCurrencyNetwork().isRegtest()) {
                 delay = 5;
             }

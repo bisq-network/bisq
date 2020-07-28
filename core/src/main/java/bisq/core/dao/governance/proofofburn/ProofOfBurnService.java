@@ -199,7 +199,9 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
             return Optional.empty();
 
         try {
-            String signatureBase64 = key.signMessage(message);
+            String signatureBase64 = bsqWalletService.isEncrypted()
+                    ? key.signMessage(message, bsqWalletService.getAesKey())
+                    : key.signMessage(message);
             return Optional.of(signatureBase64);
         } catch (Throwable t) {
             log.error(t.toString());
