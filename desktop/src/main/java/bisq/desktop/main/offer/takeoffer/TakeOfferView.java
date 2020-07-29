@@ -927,9 +927,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             String missingBsq = null;
             if (takerFee != null) {
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                        bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getBsqBalance())));
+                        bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
 
-            } else if (model.dataModel.getBsqBalance().isZero()) {
+            } else if (model.dataModel.getUsableBsqBalance().isZero()) {
                 missingBsq = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
             }
 
@@ -1225,9 +1225,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         String message = null;
         if (takerFee != null)
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                    bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getBsqBalance())));
+                    bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
 
-        else if (model.dataModel.getBsqBalance().isZero())
+        else if (model.dataModel.getUsableBsqBalance().isZero())
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
