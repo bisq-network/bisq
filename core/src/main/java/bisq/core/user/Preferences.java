@@ -39,6 +39,8 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -119,6 +121,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("bsq.emzy.de (@emzy)", "https://bsq.emzy.de/tx.html?tx=", "https://bsq.emzy.de/Address.html?addr="),
             new BlockChainExplorer("bsq.bisq.cc (@m52go)", "https://bsq.bisq.cc/tx.html?tx=", "https://bsq.bisq.cc/Address.html?addr=")
     ));
+
+    // list of XMR proof providers : this list will be used if no preference has been set
+    public static final List<String> DEFAULT_XMR_PROOF_PROVIDERS = new ArrayList<> (Arrays.asList(
+            "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
 
@@ -394,9 +400,33 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    public void setAutoConfirmXmr(boolean autoConfirmXmr) {
-        prefPayload.setAutoConfirmXmr(autoConfirmXmr);
+    // AutoConfirmSettings is currently only used for one coin: XMR.  Although it could
+    // potentially in the future be used for others too.  In the interest of flexibility
+    // we store it as a list in the proto definition, but in practical terms the
+    // application is not coded to handle more than one entry.  For now this API
+    // to get/set AutoConfirmSettings is the gatekeeper.  If in the future we adapt
+    // the application to manage more than one altcoin AutoConfirmSettings then
+    // this API will need to incorporate lookup by coin.
+    public AutoConfirmSettings getAutoConfirmSettings() {
+        if (prefPayload.getAutoConfirmSettingsList().size() == 0) {
+            // default values for AutoConfirmSettings when persisted payload is empty:
+            prefPayload.getAutoConfirmSettingsList().add(new AutoConfirmSettings(
+                    false, 5, Coin.valueOf(10000000).value, DEFAULT_XMR_PROOF_PROVIDERS, "XMR"));
+        }
+        return prefPayload.getAutoConfirmSettingsList().get(0);
+    }
+
+    public void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings) {
+        // see above comment regarding only one entry in this list currently
+        prefPayload.getAutoConfirmSettingsList().clear();
+        prefPayload.getAutoConfirmSettingsList().add(autoConfirmSettings);
         persist();
+    }
+
+    public void setAutoConfServiceAddresses(List<String> serviceAddresses) {
+        AutoConfirmSettings x = this.getAutoConfirmSettings();
+        this.setAutoConfirmSettings(new AutoConfirmSettings(
+                x.enabled, x.requiredConfirmations, x.tradeLimit, serviceAddresses, x.currencyCode));
     }
 
     private void persist() {
@@ -971,6 +1001,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setTacAcceptedV120(boolean tacAccepted);
 
-        void setAutoConfirmXmr(boolean autoConfirmXmr);
+        void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
     }
 }

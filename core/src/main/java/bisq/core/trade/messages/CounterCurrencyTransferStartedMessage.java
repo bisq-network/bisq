@@ -42,7 +42,7 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
     @Nullable
     private final String counterCurrencyTxId;
 
-    // Added in v1.3.7
+    // Added after v1.3.7
     // We use that for the XMR txKey but want to keep it generic to be flexible for data of other payment methods or assets.
     @Nullable
     private String counterCurrencyExtraData;

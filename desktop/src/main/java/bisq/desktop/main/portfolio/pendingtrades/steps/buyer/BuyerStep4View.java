@@ -51,6 +51,8 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import com.jfoenix.controls.JFXBadge;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -58,6 +60,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
@@ -103,9 +106,22 @@ public class BuyerStep4View extends TradeStepView {
     protected void addContent() {
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.SOMETIMES);
 
-        addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
-        addCompactTopLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.TWICE_FIRST_ROW_DISTANCE);
+        TitledGroupBg completedTradeLabel = new TitledGroupBg();
+        completedTradeLabel.setText(Res.get("portfolio.pending.step5_buyer.groupTitle"));
 
+        JFXBadge autoConfBadge = new JFXBadge(new Label(""), Pos.BASELINE_RIGHT);
+        autoConfBadge.setText(Res.get("portfolio.pending.autoConfirmSuccess"));
+        autoConfBadge.getStyleClass().add("autoconf");
+
+        HBox hBox2 = new HBox(1, completedTradeLabel, autoConfBadge);
+        GridPane.setMargin(hBox2, new Insets(18, -10, -12, -10));
+        gridPane.getChildren().add(hBox2);
+        GridPane.setRowSpan(hBox2, 5);
+        if (trade.getXmrProofResult() == null || !trade.getXmrProofResult().isSuccessState()) {
+            autoConfBadge.setVisible(false);
+        }
+
+        addCompactTopLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.TWICE_FIRST_ROW_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());

@@ -33,6 +33,7 @@ import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.AutoConfirmationManager;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -89,6 +90,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private User user;
     transient private FilterManager filterManager;
     transient private AccountAgeWitnessService accountAgeWitnessService;
+    transient private AutoConfirmationManager autoConfirmationManager;
     transient private TradeStatisticsManager tradeStatisticsManager;
     transient private ArbitratorManager arbitratorManager;
     transient private MediatorManager mediatorManager;
@@ -245,6 +247,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          User user,
                                          FilterManager filterManager,
                                          AccountAgeWitnessService accountAgeWitnessService,
+                                         AutoConfirmationManager autoConfirmationManager,
                                          TradeStatisticsManager tradeStatisticsManager,
                                          ArbitratorManager arbitratorManager,
                                          MediatorManager mediatorManager,
@@ -263,6 +266,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.user = user;
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.autoConfirmationManager = autoConfirmationManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;

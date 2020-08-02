@@ -17,15 +17,79 @@
 
 package bisq.core.trade.asset.xmr;
 
-public enum XmrProofResult {
-    TX_NOT_CONFIRMED,
-    PROOF_OK,
-    UNKNOWN_ERROR,
-    TX_KEY_REUSED,
-    TX_NEVER_FOUND,
-    TX_HASH_INVALID,
-    TX_KEY_INVALID,
-    ADDRESS_INVALID,
-    AMOUNT_NOT_MATCHING,
-    PROOF_FAILED
+import bisq.core.locale.Res;
+
+import javax.annotation.Nullable;
+
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Value
+public class XmrProofResult {
+    public enum State {
+        FEATURE_DISABLED,
+        TX_NOT_FOUND,
+        TX_NOT_CONFIRMED,
+        PROOF_OK,
+        CONNECTION_FAIL,
+        API_FAILURE,
+        API_INVALID,
+        TX_KEY_REUSED,
+        TX_HASH_INVALID,
+        TX_KEY_INVALID,
+        ADDRESS_INVALID,
+        AMOUNT_NOT_MATCHING,
+        TRADE_DATE_NOT_MATCHING;
+    }
+
+    private final int confirmCount;
+    private final int confirmsRequired;
+    private final State state;
+
+    public XmrProofResult(int confirmCount, int confirmsRequired, State state) {
+        this.confirmCount = confirmCount;
+        this.confirmsRequired = confirmsRequired;
+        this.state = state;
+    }
+
+    // alternate constructor for error scenarios
+    public XmrProofResult(State state, @Nullable String errorMsg) {
+        this.confirmCount = 0;
+        this.confirmsRequired = 0;
+        this.state = state;
+        if (isErrorState())
+            log.error(errorMsg != null ? errorMsg : state.toString());
+    }
+
+    public String getTextStatus() {
+        switch (state) {
+            case TX_NOT_CONFIRMED:
+                return Res.get("portfolio.pending.autoConfirmPending")
+                        + " " + confirmCount
+                        + "/" + confirmsRequired;
+            case TX_NOT_FOUND:
+                return Res.get("portfolio.pending.autoConfirmTxNotFound");
+            case FEATURE_DISABLED:
+                return Res.get("portfolio.pending.autoConfirmDisabled");
+            case PROOF_OK:
+                return Res.get("portfolio.pending.autoConfirmSuccess");
+            default:
+                // any other statuses we display the enum name
+                return this.state.toString();
+        }
+    }
+
+    public boolean isPendingState() {
+        return (state == State.TX_NOT_FOUND || state == State.TX_NOT_CONFIRMED);
+    }
+
+    public boolean isSuccessState() {
+        return (state == State.PROOF_OK);
+    }
+
+    public boolean isErrorState() {
+        return (!isPendingState() && !isSuccessState());
+    }
+
 }

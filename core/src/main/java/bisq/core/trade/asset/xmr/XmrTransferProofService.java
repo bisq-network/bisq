@@ -17,65 +17,69 @@
 
 package bisq.core.trade.asset.xmr;
 
+import bisq.network.Socks5ProxyProvider;
+
 import bisq.common.handlers.FaultHandler;
 
 import javax.inject.Inject;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 /**
  * Manages the XMR transfers proof requests for multiple trades.
  */
 @Slf4j
 public class XmrTransferProofService {
-    private final XmrTxProofHttpClient httpClient;
     private Map<String, XmrTransferProofRequester> map = new HashMap<>();
+    private Socks5ProxyProvider socks5ProxyProvider;
 
     @Inject
-    public XmrTransferProofService(XmrTxProofHttpClient httpClient) {
-        this.httpClient = httpClient;
-        //this.httpClient.setBaseUrl("http://139.59.140.37:8081");
-        this.httpClient.setBaseUrl("http://127.0.0.1:8081");
-        this.httpClient.setIgnoreSocks5Proxy(false);
+    public XmrTransferProofService(@Nullable Socks5ProxyProvider provider) {
+        socks5ProxyProvider = provider;
     }
 
-    public void requestProof(String tradeId,
-                             Date tradeDate,
-                             String txHash,
-                             String txKey,
-                             String recipientAddress,
-                             long amount,
+    public void requestProof(XmrProofInfo xmrProofInfo,
                              Consumer<XmrProofResult> resultHandler,
                              FaultHandler faultHandler) {
-        if (map.containsKey(tradeId)) {
-            log.warn("We started a proof request for trade with ID {} already", tradeId);
+        String key = xmrProofInfo.getKey();
+        if (map.containsKey(key)) {
+            log.warn("We started a proof request for trade with ID {} already", key);
             return;
         }
+        log.info("requesting tx proof for " + key);
 
-        XmrTransferProofRequester requester = new XmrTransferProofRequester(httpClient,
-                tradeDate,
-                txHash,
-                txKey,
-                recipientAddress,
-                amount,
+        XmrTransferProofRequester requester = new XmrTransferProofRequester(
+                socks5ProxyProvider,
+                xmrProofInfo,
                 result -> {
-                    cleanup(tradeId);
+                    if (result.isSuccessState())
+                        cleanup(key);
                     resultHandler.accept(result);
                 },
                 (errorMsg, throwable) -> {
-                    cleanup(tradeId);
+                    cleanup(key);
                     faultHandler.handleFault(errorMsg, throwable);
                 });
-        map.put(tradeId, requester);
+        map.put(key, requester);
         requester.request();
     }
 
-    private void cleanup(String tradeId) {
-        map.remove(tradeId);
+    public void terminateRequest(XmrProofInfo xmrProofInfo) {
+        String key = xmrProofInfo.getKey();
+        XmrTransferProofRequester requester = map.getOrDefault(key, null);
+        if (requester != null) {
+            log.info("Terminating API request for {}", key);
+            requester.stop();
+            cleanup(key);
+        }
+    }
+    private void cleanup(String identifier) {
+        map.remove(identifier);
     }
 }

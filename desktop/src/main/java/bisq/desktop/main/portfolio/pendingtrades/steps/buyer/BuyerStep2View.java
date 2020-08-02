@@ -53,6 +53,7 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -89,6 +90,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
@@ -458,13 +460,19 @@ public class BuyerStep2View extends TradeStepView {
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             if (offer.getCurrencyCode().equals("XMR")) {
                 SetXmrTxKeyWindow setXmrTxKeyWindow = new SetXmrTxKeyWindow();
-                setXmrTxKeyWindow.actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
+                setXmrTxKeyWindow
+                        .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
                         .onAction(() -> {
                             String txKey = setXmrTxKeyWindow.getTxKey();
                             String txHash = setXmrTxKeyWindow.getTxHash();
-                            trade.setCounterCurrencyExtraData(txKey);
-                            trade.setCounterCurrencyTxId(txHash);
-                            showConfirmPaymentStartedPopup();
+                            if (txKey.length() == 64 && txHash.length() == 64) {
+                                trade.setCounterCurrencyExtraData(txKey);
+                                trade.setCounterCurrencyTxId(txHash);
+                                showConfirmPaymentStartedPopup();
+                            } else {
+                                UserThread.runAfter(() ->
+                                    showProofWarningPopup(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                            }
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(setXmrTxKeyWindow::hide)
@@ -473,6 +481,18 @@ public class BuyerStep2View extends TradeStepView {
         } else {
             showConfirmPaymentStartedPopup();
         }
+    }
+
+    private void showProofWarningPopup() {
+        Popup popup = new Popup();
+        popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.warningTitle"))
+                .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.warning"))
+                .width(700)
+                .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.warningButton"))
+                .onAction(this::showConfirmPaymentStartedPopup)
+                .closeButtonText(Res.get("shared.cancel"))
+                .onClose(popup::hide)
+                .show();
     }
 
     private void showConfirmPaymentStartedPopup() {

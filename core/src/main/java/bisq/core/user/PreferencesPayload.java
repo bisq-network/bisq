@@ -127,8 +127,8 @@ public final class PreferencesPayload implements UserThreadMappedPersistableEnve
     private int blockNotifyPort;
     private boolean tacAcceptedV120;
 
-    // Added with 1.3.7 false be default
-    private boolean autoConfirmXmr;
+    // Added after 1.3.7
+    private List<AutoConfirmSettings> autoConfirmSettingsList = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +190,10 @@ public final class PreferencesPayload implements UserThreadMappedPersistableEnve
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
                 .setBlockNotifyPort(blockNotifyPort)
                 .setTacAcceptedV120(tacAcceptedV120)
-                .setAutoConfirmXmr(autoConfirmXmr);
+                .addAllAutoConfirmSettings(autoConfirmSettingsList.stream()
+                    .map(autoConfirmSettings -> ((protobuf.AutoConfirmSettings) autoConfirmSettings.toProtoMessage()))
+                    .collect(Collectors.toList()));
+
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -279,6 +282,10 @@ public final class PreferencesPayload implements UserThreadMappedPersistableEnve
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
                 proto.getTacAcceptedV120(),
-                proto.getAutoConfirmXmr());
+                proto.getAutoConfirmSettingsList().isEmpty() ? new ArrayList<>() :
+                        new ArrayList<>(proto.getAutoConfirmSettingsList().stream()
+                                .map(AutoConfirmSettings::fromProto)
+                                .collect(Collectors.toList()))
+        );
     }
 }

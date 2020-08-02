@@ -639,6 +639,7 @@ message Filter {
     repeated string refundAgents = 18;
     repeated string bannedSignerPubKeys = 19;
     repeated string btc_fee_receiver_addresses = 20;
+    bool disable_auto_conf = 21;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
@@ -1547,7 +1548,7 @@ message PreferencesPayload {
     int32 block_notify_port = 53;
     int32 css_theme = 54;
     bool tac_accepted_v120 = 55;
-    bool auto_confirm_xmr = 56;
+    repeated AutoConfirmSettings auto_confirm_settings = 56;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -2029,6 +2030,14 @@ message TradeCurrency {
         CryptoCurrency crypto_currency = 3;
         FiatCurrency fiat_currency = 4;
     }
+}
+
+message AutoConfirmSettings {
+    bool enabled = 1;
+    int32 required_confirmations = 2;
+    int64 trade_limit = 3;
+    repeated string service_addresses = 4;
+    string currency_code = 5;
 }
 
 message CryptoCurrency {

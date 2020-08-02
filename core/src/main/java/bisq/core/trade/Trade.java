@@ -38,6 +38,7 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.trade.asset.xmr.XmrProofResult;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -158,6 +159,7 @@ public abstract class Trade implements Tradable, Model {
         SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
 
         // #################### Phase FIAT_RECEIVED
+        // note that this state can also be triggered by auto confirmation feature
         SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
 
         // #################### Phase PAYOUT_PAID
@@ -428,12 +430,24 @@ public abstract class Trade implements Tradable, Model {
     private long refreshInterval;
     private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
 
-    // Added in v1.3.7
+    // Added after v1.3.7
     // We use that for the XMR txKey but want to keep it generic to be flexible for other payment methods or assets.
     @Getter
     @Setter
     private String counterCurrencyExtraData;
 
+    // xmrProofResult is not persisted yet
+    @Getter
+    @Nullable
+    private transient XmrProofResult xmrProofResult;
+
+    public void setXmrProofResult(XmrProofResult xmrProofResult) {
+        this.xmrProofResult = xmrProofResult;
+        xmrProofResultProperty.setValue(xmrProofResult);
+    }
+    @Getter
+    // This observable property can be used for UI to show a notification to user of the XMR proof status
+    transient final private ObjectProperty<XmrProofResult> xmrProofResultProperty = new SimpleObjectProperty<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -609,6 +623,7 @@ public abstract class Trade implements Tradable, Model {
                      User user,
                      FilterManager filterManager,
                      AccountAgeWitnessService accountAgeWitnessService,
+                     AutoConfirmationManager autoConfirmationManager,
                      TradeStatisticsManager tradeStatisticsManager,
                      ArbitratorManager arbitratorManager,
                      MediatorManager mediatorManager,
@@ -628,6 +643,7 @@ public abstract class Trade implements Tradable, Model {
                 user,
                 filterManager,
                 accountAgeWitnessService,
+                autoConfirmationManager,
                 tradeStatisticsManager,
                 arbitratorManager,
                 mediatorManager,
@@ -1170,6 +1186,8 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     counterCurrencyTxId='" + counterCurrencyTxId + '\'' +
+                ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
+                ",\n     xmrProofResult='" + xmrProofResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     txFee=" + txFee +
                 ",\n     takerFee=" + takerFee +

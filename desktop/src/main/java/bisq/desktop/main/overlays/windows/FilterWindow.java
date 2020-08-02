@@ -136,6 +136,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
         CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork"));
         CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.disableDao"));
+        CheckBox disableAutoConfCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.disableAutoConf"));
         InputTextField disableDaoBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableDaoBelowVersion"));
         InputTextField disableTradeBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableTradeBelowVersion"));
 
@@ -157,6 +158,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
+            disableAutoConfCheckBox.setSelected(filter.isDisableAutoConf());
             disableDaoBelowVersionInputTextField.setText(filter.getDisableDaoBelowVersion());
             disableTradeBelowVersionInputTextField.setText(filter.getDisableTradeBelowVersion());
         }
@@ -180,7 +182,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             readAsList(mediatorsInputTextField),
                             readAsList(refundAgentsInputTextField),
                             readAsList(bannedSignerPubKeysInputTextField),
-                            readAsList(btcFeeReceiverAddressesInputTextField)
+                            readAsList(btcFeeReceiverAddressesInputTextField),
+                            disableAutoConfCheckBox.isSelected()
                     ),
                     keyInputTextField.getText())
             )

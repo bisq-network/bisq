@@ -31,6 +31,7 @@ import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.presentation.AccountPresentation;
+import bisq.desktop.main.presentation.SettingsPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
@@ -108,6 +109,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final MarketPricePresentation marketPricePresentation;
     private final DaoPresentation daoPresentation;
     private final AccountPresentation accountPresentation;
+    private final SettingsPresentation settingsPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     @Getter
@@ -150,7 +152,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          SupportTicketsPresentation supportTicketsPresentation,
                          MarketPricePresentation marketPricePresentation,
                          DaoPresentation daoPresentation,
-                         AccountPresentation accountPresentation, P2PService p2PService,
+                         AccountPresentation accountPresentation,
+                         SettingsPresentation settingsPresentation,
+                         P2PService p2PService,
                          TradeManager tradeManager,
                          Preferences preferences,
                          PrivateNotificationManager privateNotificationManager,
@@ -173,6 +177,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.marketPricePresentation = marketPricePresentation;
         this.daoPresentation = daoPresentation;
         this.accountPresentation = accountPresentation;
+        this.settingsPresentation = settingsPresentation;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.preferences = preferences;
@@ -249,6 +254,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         marketPricePresentation.setup();
         daoPresentation.setup();
         accountPresentation.setup();
+        settingsPresentation.setup();
 
         if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
@@ -656,6 +662,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     public BooleanProperty getShowAccountUpdatesNotification() {
         return accountPresentation.getShowAccountUpdatesNotification();
+    }
+
+    public BooleanProperty getShowSettingsUpdatesNotification() {
+        return settingsPresentation.getShowSettingsUpdatesNotification();
     }
 
     private void maybeAddNewTradeProtocolLaunchWindowToQueue() {

@@ -102,6 +102,6 @@ public class FeeReceiverSelectorTest {
                 null, null, null, null,
                 false, null, false, null,
                 null, null, null, null,
-                btcFeeReceiverAddresses);
+                btcFeeReceiverAddresses, false);
     }
 }

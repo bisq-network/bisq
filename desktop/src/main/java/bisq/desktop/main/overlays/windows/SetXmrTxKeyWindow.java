@@ -19,10 +19,9 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.locale.Res;
-
-import bisq.common.UserThread;
 
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -31,12 +30,10 @@ import javafx.scene.layout.Priority;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
 
+import static bisq.common.app.DevEnv.isDevMode;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
 
@@ -56,9 +53,16 @@ public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
         addContent();
         addButtons();
 
-        actionButton.disableProperty().bind(createBooleanBinding(() ->
-                        txHashInputTextField.getText().isEmpty() || txKeyInputTextField.getText().isEmpty(),
-                txHashInputTextField.textProperty(), txKeyInputTextField.textProperty()));
+        RegexValidator regexValidator = new RegexValidator();
+        regexValidator.setPattern("[a-fA-F0-9]{64}");
+        regexValidator.setErrorMessage("Input must be a 32 byte hexadeximal number");
+        txHashInputTextField.setValidator(regexValidator);
+        txKeyInputTextField.setValidator(regexValidator);
+        if (isDevMode()) {
+            // pre-populate the fields with test data when in dev mode
+            txHashInputTextField.setText("e8dcd8160aee016d8a0d9c480355d65773dc577313a0af8237c35f9d997b01c0");
+            txKeyInputTextField.setText("300fa18ff99b32ff097d75c64d62732bdb486af8c225f558ee48c5f777f9b509");
+        }
 
         applyStyles();
         display();
@@ -91,11 +95,5 @@ public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
     private void addContent() {
         txHashInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("setXMRTxKeyWindow.txHash"), 10);
         txKeyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("setXMRTxKeyWindow.txKey"));
-
-        UserThread.runAfter(() -> {
-            //todo: remove dev test data
-            txHashInputTextField.setText("5e665addf6d7c6300670e8a89564ed12b5c1a21c336408e2835668f9a6a0d802");
-            txKeyInputTextField.setText("f3ce66c9d395e5e460c8802b2c3c1fff04e508434f9738ee35558aac4678c906");
-        }, 200, TimeUnit.MILLISECONDS);
     }
 }

@@ -21,7 +21,6 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -35,15 +34,10 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
-import bisq.core.payment.payload.AssetsAccountPayload;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.asset.xmr.XmrProofResult;
-import bisq.core.trade.asset.xmr.XmrProofResultWithTradeId;
-import bisq.core.trade.asset.xmr.XmrTransferProofService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -52,7 +46,6 @@ import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
 
@@ -86,10 +79,8 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -117,8 +108,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
@@ -137,6 +126,7 @@ public class TradeManager implements PersistedDataHost {
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AutoConfirmationManager autoConfirmationManager;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
@@ -155,14 +145,8 @@ public class TradeManager implements PersistedDataHost {
     @Getter
     private final ObservableList<Trade> tradesWithoutDepositTx = FXCollections.observableArrayList();
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
-    private final XmrTransferProofService xmrTransferProofService;
-    private final WalletsSetup walletsSetup;
-    private final Preferences preferences;
     @Getter
     private final boolean allowFaultyDelayedTxs;
-    // This observable property can be used for UI to show a notification to user in case a XMR txKey was reused.
-    @Getter
-    private final ObjectProperty<XmrProofResultWithTradeId> proofResultWithTradeIdProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +168,7 @@ public class TradeManager implements PersistedDataHost {
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
                         AccountAgeWitnessService accountAgeWitnessService,
+                        AutoConfirmationManager autoConfirmationManager,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         RefundAgentManager refundAgentManager,
@@ -191,9 +176,6 @@ public class TradeManager implements PersistedDataHost {
                         ClockWatcher clockWatcher,
                         Storage<TradableList<Trade>> storage,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
-                        XmrTransferProofService xmrTransferProofService,
-                        WalletsSetup walletsSetup,
-                        Preferences preferences,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         this.user = user;
         this.keyRing = keyRing;
@@ -209,15 +191,13 @@ public class TradeManager implements PersistedDataHost {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.autoConfirmationManager = autoConfirmationManager;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.clockWatcher = clockWatcher;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
-        this.xmrTransferProofService = xmrTransferProofService;
-        this.walletsSetup = walletsSetup;
-        this.preferences = preferences;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
 
         tradableListStorage = storage;
@@ -456,6 +436,7 @@ public class TradeManager implements PersistedDataHost {
                 user,
                 filterManager,
                 accountAgeWitnessService,
+                autoConfirmationManager,
                 tradeStatisticsManager,
                 arbitratorManager,
                 mediatorManager,
@@ -874,123 +855,5 @@ public class TradeManager implements PersistedDataHost {
 
     public void persistTrades() {
         tradableList.persist();
-    }
-
-    public void processCounterCurrencyExtraData(Trade trade) {
-        String counterCurrencyExtraData = trade.getCounterCurrencyExtraData();
-        if (counterCurrencyExtraData == null || counterCurrencyExtraData.isEmpty()) {
-            return;
-        }
-
-        String txHash = trade.getCounterCurrencyTxId();
-        if (txHash == null || txHash.isEmpty()) {
-            return;
-        }
-
-        Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
-        PaymentAccountPayload sellersPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
-        if (!(sellersPaymentAccountPayload instanceof AssetsAccountPayload)) {
-            return;
-        }
-        AssetsAccountPayload sellersAssetsAccountPayload = (AssetsAccountPayload) sellersPaymentAccountPayload;
-
-        if (!(trade instanceof SellerTrade)) {
-            return;
-        }
-
-        Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
-        if (offer.getCurrencyCode().equals("XMR")) {
-            String txKey = counterCurrencyExtraData;
-
-            // We need to prevent that a user tries to scam by reusing a txKey and txHash of a previous XMR trade with
-            // the same user (same address) and same amount. We check only for the txKey as a same txHash but different
-            // txKey is not possible to get a valid result at proof.
-            Stream<Trade> failedAndOpenTrades = Stream.concat(tradableList.stream(), failedTradesManager.getFailedTrades().stream());
-            Stream<Trade> closedTrades = closedTradableManager.getClosedTradables().stream()
-                    .filter(tradable -> tradable instanceof Trade)
-                    .map(tradable -> (Trade) tradable);
-            Stream<Trade> allTrades = Stream.concat(failedAndOpenTrades, closedTrades);
-            boolean txKeyUsedAtAnyOpenTrade = allTrades
-                    .filter(t -> !t.getId().equals(trade.getId())) // ignore same trade
-                    .anyMatch(t -> {
-                        String extra = t.getCounterCurrencyExtraData();
-                        if (extra == null) {
-                            return false;
-                        }
-
-                        boolean alreadyUsed = extra.equals(txKey);
-                        if (alreadyUsed) {
-                            String message = "Peer used the XMR tx key already at another trade with trade ID " +
-                                    t.getId() + ". This might be a scam attempt.";
-                            log.warn(message);
-                            proofResultWithTradeIdProperty.set(new XmrProofResultWithTradeId(XmrProofResult.TX_KEY_REUSED, trade.getId()));
-                        }
-                        return alreadyUsed;
-                    });
-
-            if (txKeyUsedAtAnyOpenTrade) {
-                return;
-            }
-
-            if (preferences.isAutoConfirmXmr()) {
-                String address = sellersAssetsAccountPayload.getAddress();
-                //TODO for dev testing
-                address = "85q13WDADXE26W6h7cStpPMkn8tWpvWgHbpGWWttFEafGXyjsBTXxxyQms4UErouTY5sdKpYHVjQm6SagiCqytseDkzfgub";
-                // 8.90259736 is dev test value
-                long amount = (long) Float.parseFloat("8.90259736") * 100000000; // todo check XMR denomination
-                xmrTransferProofService.requestProof(trade.getId(),
-                        trade.getDate(),
-                        txHash,
-                        txKey,
-                        address,
-                        amount,
-                        result -> {
-                            switch (result) {
-                                case TX_NOT_CONFIRMED:
-                                    // Repeating the requests is handled in XmrTransferProofRequester
-                                    break;
-                                case PROOF_OK:
-                                    if (!p2PService.isBootstrapped()) {
-                                        return;
-                                    }
-
-                                    if (!walletsSetup.hasSufficientPeersForBroadcast()) {
-                                        return;
-                                    }
-
-                                    if (!walletsSetup.isDownloadComplete()) {
-                                        return;
-                                    }
-
-                                    if (!trade.isPayoutPublished()) {
-                                        trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
-                                    }
-
-                                    accountAgeWitnessService.maybeSignWitness(trade);
-
-                                    ((SellerTrade) trade).onFiatPaymentReceived(() -> {
-                                    }, errorMessage -> {
-                                    });
-                                    break;
-                                case UNKNOWN_ERROR:
-                                case TX_KEY_REUSED:
-                                case TX_NEVER_FOUND:
-                                case TX_HASH_INVALID:
-                                case TX_KEY_INVALID:
-                                case ADDRESS_INVALID:
-                                case AMOUNT_NOT_MATCHING:
-                                case PROOF_FAILED:
-                                default:
-                                    log.error("Case not handled. " + result);
-                                    break;
-                            }
-
-                            proofResultWithTradeIdProperty.set(new XmrProofResultWithTradeId(result, trade.getId()));
-                        },
-                        (errorMsg, throwable) -> {
-                            log.warn(errorMsg);
-                        });
-            }
-        }
     }
 }

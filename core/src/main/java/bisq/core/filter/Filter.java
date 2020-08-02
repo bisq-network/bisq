@@ -109,6 +109,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     @Nullable
     private final List<String> btcFeeReceiverAddresses;
 
+    // added after v1.3.7
+    private final boolean disableAutoConf;
+
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
@@ -125,7 +128,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   @Nullable List<String> mediators,
                   @Nullable List<String> refundAgents,
                   @Nullable List<String> bannedSignerPubKeys,
-                  @Nullable List<String> btcFeeReceiverAddresses) {
+                  @Nullable List<String> btcFeeReceiverAddresses,
+                  boolean disableAutoConf) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -143,6 +147,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.refundAgents = refundAgents;
         this.bannedSignerPubKeys = bannedSignerPubKeys;
         this.btcFeeReceiverAddresses = btcFeeReceiverAddresses;
+        this.disableAutoConf = disableAutoConf;
     }
 
 
@@ -170,7 +175,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   @Nullable List<String> mediators,
                   @Nullable List<String> refundAgents,
                   @Nullable List<String> bannedSignerPubKeys,
-                  @Nullable List<String> btcFeeReceiverAddresses) {
+                  @Nullable List<String> btcFeeReceiverAddresses,
+                  boolean disableAutoConf) {
         this(bannedOfferIds,
                 bannedNodeAddress,
                 bannedPaymentAccounts,
@@ -187,7 +193,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 mediators,
                 refundAgents,
                 bannedSignerPubKeys,
-                btcFeeReceiverAddresses);
+                btcFeeReceiverAddresses,
+                disableAutoConf);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
@@ -209,7 +216,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .setSignatureAsBase64(signatureAsBase64)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setPreventPublicBtcNetwork(preventPublicBtcNetwork)
-                .setDisableDao(disableDao);
+                .setDisableDao(disableDao)
+                .setDisableAutoConf(disableAutoConf);
 
         Optional.ofNullable(bannedCurrencies).ifPresent(builder::addAllBannedCurrencies);
         Optional.ofNullable(bannedPaymentMethods).ifPresent(builder::addAllBannedPaymentMethods);
@@ -252,7 +260,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 CollectionUtils.isEmpty(proto.getBannedSignerPubKeysList()) ?
                         null : new ArrayList<>(proto.getBannedSignerPubKeysList()),
                 CollectionUtils.isEmpty(proto.getBtcFeeReceiverAddressesList()) ? null :
-                        new ArrayList<>(proto.getBtcFeeReceiverAddressesList()));
+                        new ArrayList<>(proto.getBtcFeeReceiverAddressesList()),
+                proto.getDisableAutoConf());
     }
 
 
@@ -293,6 +302,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     refundAgents=" + refundAgents +
                 ",\n     bannedSignerPubKeys=" + bannedSignerPubKeys +
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
+                ",\n     disableAutoConf=" + disableAutoConf +
                 "\n}";
     }
 }

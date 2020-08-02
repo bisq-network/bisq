@@ -17,11 +17,14 @@
 
 package bisq.asset;
 
+import org.bitcoinj.core.Utils;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import java.math.BigInteger;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -56,6 +59,18 @@ public class CryptoNoteAddressValidator implements AddressValidator {
         } catch (Exception e) {
             return AddressValidationResult.invalidStructure();
         }
+    }
+
+    public static String convertToRawHex(String address) {
+        try {
+            byte[] decoded = MoneroBase58.decode(address);
+            // omit the type (1st byte) and checksum (last 4 byte)
+            byte[] slice = Arrays.copyOfRange(decoded, 1, decoded.length - 4);
+            return Utils.HEX.encode(slice);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
 
@@ -202,7 +217,7 @@ class MoneroBase58 {
         }
     }
 
-    private static byte[] decode(String input) throws Exception {
+    public static byte[] decode(String input) throws Exception {
         if (input.length() == 0) {
             return new byte[0];
         }
