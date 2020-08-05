@@ -46,7 +46,7 @@ echo "[*] Adding Tor configuration"
 if ! grep "${BISQ_TORHS}" /etc/tor/torrc >/dev/null 2>&1;then
   sudo -H -i -u "${ROOT_USER}" sh -c "echo HiddenServiceDir ${TOR_RESOURCES}/${BISQ_TORHS}/ >> ${TOR_CONF}"
   sudo -H -i -u "${ROOT_USER}" sh -c "echo HiddenServicePort 80 127.0.0.1:8080 >> ${TOR_CONF}"
-  sudo -H -i -u "${ROOT_USER}" sh -c "echo HiddenServiceVersion 2 >> ${TOR_CONF}"
+  sudo -H -i -u "${ROOT_USER}" sh -c "echo HiddenServiceVersion 3 >> ${TOR_CONF}"
 fi
 
 echo "[*] Creating Bisq user with Tor access"
