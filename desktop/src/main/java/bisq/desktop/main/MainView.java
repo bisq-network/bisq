@@ -316,15 +316,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             }
         });
 
-        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
-                sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
+        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton,
+                getNavigationSeparator(), sellButton, getNavigationSeparator(),
+                portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
 
         primaryNav.setAlignment(Pos.CENTER);
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSeparator(), settingsButton,
-                getNavigationSeparator(), accountButtonWithBadge, getNavigationSeparator(), daoButtonWithBadge);
+        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSeparator(),
+                settingsButton, getNavigationSeparator(), accountButtonWithBadge,
+                getNavigationSeparator(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
