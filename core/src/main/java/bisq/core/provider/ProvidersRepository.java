@@ -36,10 +36,11 @@ import javax.annotation.Nullable;
 @Slf4j
 public class ProvidersRepository {
     private static final List<String> DEFAULT_NODES = Arrays.asList(
-            "http://xc3nh4juf2hshy7e.onion/",   // @emzy
-            "http://ceaanhbvluug4we6.onion/",   // @mrosseel
-            "http://44mgyoe2b6oqiytt.onion/",   // @devinbileck
-            "http://62nvujg5iou3vu3i.onion/"   // @alexej996
+            "http://wizpriceje6q5tdrxkyiazsgu7irquiqjy2dptezqhrtu7l2qelqktid.onion/", // @wiz
+            "http://emzypricpidesmyqg2hc6dkwitqzaxrqnpkdg3ae2wef5znncu2ambqd.onion/", // @emzy
+            "http://aprcndeiwdrkbf4fq7iozxbd27dl72oeo76n7zmjwdi4z34agdrnheyd.onion/", // @mrosseel
+            "http://devinpndvdwll4wiqcyq5e7itezmarg7rzicrvf6brzkwxdm374kmmyd.onion/", // @devinbileck
+            "http://ro7nv73awqs3ga2qtqeqawrjpbxwarsazznszvr6whv7tes5ehffopid.onion/" // @alexej996
     );
 
     private final Config config;
