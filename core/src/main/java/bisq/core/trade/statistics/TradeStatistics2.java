@@ -27,6 +27,7 @@ import bisq.core.offer.OfferUtil;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.PrunablePersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
@@ -48,6 +49,7 @@ import com.google.common.base.Charsets;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -65,10 +67,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Value
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
-        CapabilityRequiringPayload, Comparable<TradeStatistics2> {
+        CapabilityRequiringPayload, Comparable<TradeStatistics2>, PrunablePersistableNetworkPayload {
 
     public static final String MEDIATOR_ADDRESS = "medAddr";
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
+
+    // We keep only recent trade statistics data (max. 60 days old). Older data gets removed and will be
+    // handled by the historical trade statistics data framework.
+    private static final long INCLUSION_PERIOD = TimeUnit.DAYS.toMillis(60);
 
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
@@ -244,6 +250,11 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.TRADE_STATISTICS_HASH_UPDATE);
+    }
+
+    @Override
+    public boolean doExclude() {
+        return System.currentTimeMillis() - tradeDate > INCLUSION_PERIOD;
     }
 
 

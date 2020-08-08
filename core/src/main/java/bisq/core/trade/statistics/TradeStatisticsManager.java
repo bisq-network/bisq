@@ -91,7 +91,7 @@ public class TradeStatisticsManager {
 
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
 
-        dump();
+        maybeDump();
     }
 
     public ObservableSet<TradeStatistics2> getObservableTradeStatisticsSet() {
@@ -99,35 +99,37 @@ public class TradeStatisticsManager {
     }
 
     private void addToSet(TradeStatistics2 tradeStatistics) {
+        if (observableTradeStatisticsSet.contains(tradeStatistics)) {
+            return;
+        }
 
-        if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
-            Optional<TradeStatistics2> duplicate = observableTradeStatisticsSet.stream().filter(
-                    e -> e.getOfferId().equals(tradeStatistics.getOfferId())).findAny();
+        if (!tradeStatistics.isValid()) {
+            return;
+        }
 
-            if (duplicate.isPresent()) {
-                // TODO: Can be removed as soon as everyone uses v1.2.6+
-                // Removes an existing object with a trade id if the new one matches the existing except
-                // for the deposit tx id
-                if (tradeStatistics.getDepositTxId() == null &&
-                        tradeStatistics.isValid() &&
-                        duplicate.get().compareTo(tradeStatistics) == 0) {
-                    observableTradeStatisticsSet.remove(duplicate.get());
-                } else {
-                    return;
-                }
-            }
 
-            if (!tradeStatistics.isValid()) {
+        // TODO remove that part
+        Optional<TradeStatistics2> duplicate = observableTradeStatisticsSet.stream().filter(
+                e -> e.getOfferId().equals(tradeStatistics.getOfferId())).findAny();
+        if (duplicate.isPresent()) {
+            // TODO: Can be removed as soon as everyone uses v1.2.6+
+            // Removes an existing object with a trade id if the new one matches the existing except
+            // for the deposit tx id
+            if (tradeStatistics.getDepositTxId() == null &&
+                    tradeStatistics.isValid() &&
+                    duplicate.get().compareTo(tradeStatistics) == 0) {
+                observableTradeStatisticsSet.remove(duplicate.get());
+            } else {
                 return;
             }
-
-            observableTradeStatisticsSet.add(tradeStatistics);
-            priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-            dump();
         }
+
+        observableTradeStatisticsSet.add(tradeStatistics);
+        priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+        maybeDump();
     }
 
-    private void dump() {
+    private void maybeDump() {
         if (dumpStatistics) {
             ArrayList<CurrencyTuple> fiatCurrencyList = CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))

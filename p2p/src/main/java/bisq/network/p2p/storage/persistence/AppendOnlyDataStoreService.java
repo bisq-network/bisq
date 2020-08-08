@@ -66,4 +66,11 @@ public class AppendOnlyDataStoreService {
                 .filter(service -> service.canHandle(payload))
                 .forEach(service -> service.putIfAbsent(hashAsByteArray, payload));
     }
+
+    public void prune() {
+        services.stream()
+                .filter(e -> e instanceof PrunableStoreService)
+                .map((e -> (PrunableStoreService) e))
+                .forEach(PrunableStoreService::prune);
+    }
 }

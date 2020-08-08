@@ -19,23 +19,27 @@ package bisq.core.trade.statistics;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.PrunablePersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
+import bisq.network.p2p.storage.persistence.PrunableStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload> {
+public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload>
+        implements PrunableStoreService {
     private static final String FILE_NAME = "TradeStatistics2Store";
 
 
@@ -79,8 +83,27 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
         return new TradeStatistics2Store();
     }
 
+    // At startup we check our persisted data if it contains too old entries and remove those.
+    // This method is called from a non user thread.
     @Override
-    protected void readStore() {
-        super.readStore();
+    public synchronized void prune() {
+        AtomicBoolean hasExcludedElements = new AtomicBoolean(false);
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = getMap();
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> newMap = map.entrySet().stream()
+                .filter(e -> {
+                    if (((PrunablePersistableNetworkPayload) e.getValue()).doExclude()) {
+                        hasExcludedElements.set(true);
+                        return false;
+                    } else {
+                        return true;
+                    }
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        if (hasExcludedElements.get()) {
+            map.clear();
+            map.putAll(newMap);
+            persist();
+        }
     }
 }

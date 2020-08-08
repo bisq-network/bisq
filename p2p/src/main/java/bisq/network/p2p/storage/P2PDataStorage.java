@@ -44,6 +44,7 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import bisq.network.p2p.storage.payload.PrunablePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
@@ -185,7 +186,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         resourceDataStoreService.readFromResources(postFix);
 
         map.putAll(protectedDataStoreService.getMap());
+
+        // Prune in case we have a PrunableStoreService
+        appendOnlyDataStoreService.prune();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // RequestData API
@@ -521,6 +526,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
         }
 
+        // If we receive data which are considered pruned from the seed node we ignore it
+        if (payload instanceof PrunablePersistableNetworkPayload &&
+                ((PrunablePersistableNetworkPayload) payload).doExclude()) {
+            return false;
+        }
+
         // Add the payload and publish the state update to the appendOnlyDataStoreListeners
         if (!payloadHashAlreadyInStore) {
             appendOnlyDataStoreService.put(hashAsByteArray, payload);
@@ -540,13 +551,20 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // is ready so no listeners are set anyway. We might get called twice from a redundant call later, so listeners
     // might be added then but as we have the data already added calling them would be irrelevant as well.
     private void addPersistableNetworkPayloadFromInitialRequest(PersistableNetworkPayload payload) {
-        byte[] hash = payload.getHash();
-        if (payload.verifyHashSize()) {
-            ByteArray hashAsByteArray = new ByteArray(hash);
-            appendOnlyDataStoreService.put(hashAsByteArray, payload);
-        } else {
-            log.warn("We got a hash exceeding our permitted size");
+        if (!payload.verifyHashSize()) {
+            log.warn("We got a hash not matching our defined size");
+            return;
         }
+
+        // If we receive data which are considered pruned from the seed node we ignore it
+        if (payload instanceof PrunablePersistableNetworkPayload &&
+                ((PrunablePersistableNetworkPayload) payload).doExclude()) {
+            return;
+        }
+
+        byte[] hash = payload.getHash();
+        ByteArray hashAsByteArray = new ByteArray(hash);
+        appendOnlyDataStoreService.put(hashAsByteArray, payload);
     }
 
     /**
