@@ -400,7 +400,12 @@ public class PriceFeedService {
                 UserThread.execute(() -> {
                     checkNotNull(result, "Result must not be null at requestAllPrices");
                     timeStampMap = result.first;
-                    epochInSecondAtLastRequest = timeStampMap.get("btcAverageTs");
+
+                    // Each currency rate has a different timestamp, depending on when
+                    // the pricenode aggregate rate was calculated
+                    // However, the request timestamp is when the pricenode was queried
+                    epochInSecondAtLastRequest = System.currentTimeMillis() / 1000L;
+
                     final Map<String, MarketPrice> priceMap = result.second;
 
                     cache.putAll(priceMap);
