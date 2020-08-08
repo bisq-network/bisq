@@ -27,6 +27,7 @@ import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.Ticker;
+import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.service.marketdata.params.CurrencyPairsParam;
@@ -210,8 +211,13 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                             log.error("Could not query tickers for " + getName(), e);
                         }
                     });
-        }
-        catch (Exception e) {
+        } catch (ExchangeException | // Errors reported by the exchange (rate limit, etc)
+                IOException | // Errors while trying to connect to the API (timeouts, etc)
+                // Potential error when integrating new exchange (hints that exchange
+                // provider implementation needs to overwrite
+                // requiresFilterDuringBulkTickerRetrieval() and have it return true )
+                IllegalArgumentException e) {
+            // Catch and handle all other possible exceptions
             // If there was a problem with polling this exchange, return right away,
             // since there are no results to parse and process
             log.error("Could not query tickers for provider " + getName(), e);
@@ -236,8 +242,7 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                     String otherExchangeRateCurrency;
                     if (t.getCurrencyPair().base.equals(Currency.BTC)) {
                         otherExchangeRateCurrency = t.getCurrencyPair().counter.getCurrencyCode();
-                    }
-                    else {
+                    } else {
                         otherExchangeRateCurrency = t.getCurrencyPair().base.getCurrencyCode();
                     }
 

@@ -70,14 +70,15 @@ class ExchangeRateService {
             metadata.putAll(getMetadata(p, exchangeRates));
         });
 
-        return new LinkedHashMap<String, Object>() {{
-            putAll(metadata);
-            // Use a sorted list by currency code to make comparision of json data between
-            // different price nodes easier
-            List<ExchangeRate> values = new ArrayList<>(aggregateExchangeRates.values());
-            values.sort(Comparator.comparing(ExchangeRate::getCurrency));
-            put("data", values);
-        }};
+        LinkedHashMap<String, Object> result = new LinkedHashMap<>();
+        result.putAll(metadata);
+        // Use a sorted list by currency code to make comparision of json data between
+        // different price nodes easier
+        List<ExchangeRate> values = new ArrayList<>(aggregateExchangeRates.values());
+        values.sort(Comparator.comparing(ExchangeRate::getCurrency));
+        result.put("data", values);
+
+        return result;
     }
 
     /**
