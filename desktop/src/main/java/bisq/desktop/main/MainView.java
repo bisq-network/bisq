@@ -530,7 +530,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         return Res.get("mainView.marketPrice.tooltip",
                 "Bisq pricenodes",
                 "",
-                DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
+                DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStamp()),
                 model.getPriceFeedService().getProviderNodeAddress());
     }
 

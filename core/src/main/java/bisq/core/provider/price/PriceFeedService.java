@@ -280,7 +280,7 @@ public class PriceFeedService {
         return updateCounter;
     }
 
-    public Date getLastRequestTimeStampBtcAverage() {
+    public Date getLastRequestTimeStamp() {
         return new Date(epochInSecondAtLastRequest);
     }
 
