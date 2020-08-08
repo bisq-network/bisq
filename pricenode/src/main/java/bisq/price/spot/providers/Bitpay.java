@@ -22,8 +22,6 @@ import bisq.price.spot.ExchangeRateProvider;
 import bisq.price.util.bitpay.BitpayMarketData;
 import bisq.price.util.bitpay.BitpayTicker;
 
-import org.knowm.xchange.utils.BigDecimalUtils;
-
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;

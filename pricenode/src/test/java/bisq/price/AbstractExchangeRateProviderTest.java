@@ -3,9 +3,6 @@ package bisq.price;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.TradeCurrency;
-
 import com.google.common.collect.Sets;
 
 import java.util.Set;
