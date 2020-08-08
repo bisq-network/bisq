@@ -83,7 +83,7 @@ public class PriceFeedService {
     private String currencyCode;
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
     private final IntegerProperty updateCounter = new SimpleIntegerProperty(0);
-    private long epochInSecondAtLastRequest;
+    private long epochInMillisAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
     private long retryDelay = 1;
     private long requestTs;
@@ -281,7 +281,7 @@ public class PriceFeedService {
     }
 
     public Date getLastRequestTimeStamp() {
-        return new Date(epochInSecondAtLastRequest);
+        return new Date(epochInMillisAtLastRequest);
     }
 
     public void applyLatestBisqMarketPrice(Set<TradeStatistics2> tradeStatisticsSet) {
@@ -388,7 +388,7 @@ public class PriceFeedService {
                     // Each currency rate has a different timestamp, depending on when
                     // the pricenode aggregate rate was calculated
                     // However, the request timestamp is when the pricenode was queried
-                    epochInSecondAtLastRequest = System.currentTimeMillis() / 1000L;
+                    epochInMillisAtLastRequest = System.currentTimeMillis();
 
                     final Map<String, MarketPrice> priceMap = result.second;
 
