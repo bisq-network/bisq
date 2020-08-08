@@ -284,22 +284,6 @@ public class PriceFeedService {
         return new Date(epochInSecondAtLastRequest);
     }
 
-    public Date getLastRequestTimeStampPoloniex() {
-        Long ts = timeStampMap.get("btcAverageTs");
-        if (ts != null) {
-            return new Date(ts);
-        } else
-            return new Date();
-    }
-
-    public Date getLastRequestTimeStampCoinmarketcap() {
-        Long ts = timeStampMap.get("coinmarketcapTs");
-        if (ts != null) {
-            return new Date(ts);
-        } else
-            return new Date();
-    }
-
     public void applyLatestBisqMarketPrice(Set<TradeStatistics2> tradeStatisticsSet) {
         // takes about 10 ms for 5000 items
         Map<String, List<TradeStatistics2>> mapByCurrencyCode = new HashMap<>();
