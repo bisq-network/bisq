@@ -99,18 +99,18 @@ class ExchangeRateService {
 
         // For each currency code, calculate aggregate rate
         currencyCodeToExchangeRates.forEach((currencyCode, exchangeRateList) -> {
-            if (exchangeRateList.isEmpty())
+            if (exchangeRateList.isEmpty()) {
                 // If the map was built incorrectly and this currency points to an empty
                 // list of rates, skip it
                 return;
+            }
 
             ExchangeRate aggregateExchangeRate;
             if (exchangeRateList.size() == 1) {
                 // If a single provider has rates for this currency, then aggregate = rate
                 // from that provider
                 aggregateExchangeRate = exchangeRateList.get(0);
-            }
-            else {
+            } else {
                 // If multiple providers have rates for this currency, then
                 // aggregate = average of the rates
                 OptionalDouble opt = exchangeRateList.stream().mapToDouble(ExchangeRate::getPrice).average();

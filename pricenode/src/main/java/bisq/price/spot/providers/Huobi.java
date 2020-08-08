@@ -31,7 +31,9 @@ import java.util.Set;
 @Component
 class Huobi extends ExchangeRateProvider {
 
-    public Huobi() { super("HUOBI", "huobi", Duration.ofMinutes(1)); }
+    public Huobi() {
+        super("HUOBI", "huobi", Duration.ofMinutes(1));
+    }
 
     @Override
     public Set<ExchangeRate> doGet() {

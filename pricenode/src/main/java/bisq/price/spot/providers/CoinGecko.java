@@ -85,7 +85,7 @@ class CoinGecko extends ExchangeRateProvider {
                             new Date(),
                             this.getName()
                     ));
-        });
+                });
 
         return result;
     }

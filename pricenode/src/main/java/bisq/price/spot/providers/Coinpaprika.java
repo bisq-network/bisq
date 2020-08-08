@@ -53,7 +53,7 @@ class Coinpaprika extends ExchangeRateProvider {
             ("USD, EUR, PLN, KRW, GBP, CAD, JPY, RUB, TRY, NZD, AUD, CHF, UAH, HKD, " +
             "SGD, NGN, PHP, MXN, BRL, THB, CLP, CNY, CZK, DKK, HUF, IDR, ILS," +
             "INR, MYR, NOK, PKR, SEK, TWD, ZAR, VND, BOB, COP, PEN, ARS, ISK")
-            .replace(" " , ""); // Strip any spaces
+            .replace(" ", ""); // Strip any spaces
 
     public Coinpaprika() {
         super("COINPAPRIKA", "coinpaprika", Duration.ofMinutes(1));
@@ -80,8 +80,7 @@ class Coinpaprika extends ExchangeRateProvider {
                             new Date(),
                             this.getName()
                     ));
-
-        });
+                });
 
         return result;
     }

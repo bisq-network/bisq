@@ -31,7 +31,9 @@ import java.util.Set;
 @Component
 class Hitbtc extends ExchangeRateProvider {
 
-    public Hitbtc() { super("HITBTC", "hitbtc", Duration.ofMinutes(1)); }
+    public Hitbtc() {
+        super("HITBTC", "hitbtc", Duration.ofMinutes(1));
+    }
 
     @Override
     public Set<ExchangeRate> doGet() {

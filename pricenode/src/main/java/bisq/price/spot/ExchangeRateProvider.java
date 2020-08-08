@@ -159,10 +159,11 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                 public Collection<CurrencyPair> getCurrencyPairs() {
                     // If required by the exchange implementation, specify a filter
                     // (list of pairs which should be retrieved)
-                    if (requiresFilterDuringBulkTickerRetrieval())
+                    if (requiresFilterDuringBulkTickerRetrieval()) {
                         return Stream.of(desiredFiatPairs, desiredCryptoPairs)
                                 .flatMap(Collection::stream)
                                 .collect(Collectors.toList());
+                    }
 
                     // Otherwise, specify an empty list, indicating that the API should
                     // simply return all available tickers
@@ -178,8 +179,7 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
                 throw new IllegalArgumentException("No tickers retrieved, " +
                         "exchange requires explicit filter argument during bulk retrieval?");
             }
-        }
-        catch (NotYetImplementedForExchangeException e) {
+        } catch (NotYetImplementedForExchangeException e) {
             // Thrown when a provider has no marketDataService.getTickers() implementation
             // either because the exchange API does not provide it, or because it has not
             // been implemented yet in the knowm xchange library
