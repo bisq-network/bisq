@@ -47,6 +47,7 @@ import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
+import bisq.core.provider.price.MarketPrice;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -95,6 +96,7 @@ import javafx.beans.value.ChangeListener;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import java.util.Date;
 import java.util.Locale;
 
 import lombok.Setter;
@@ -527,10 +529,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     @NotNull
     private String getPriceProviderTooltipString() {
+
+        String selectedCurrencyCode = model.getPriceFeedService().getCurrencyCode();
+        MarketPrice selectedMarketPrice = model.getPriceFeedService().getMarketPrice(selectedCurrencyCode);
+
         return Res.get("mainView.marketPrice.tooltip",
-                "Bisq Price Index",
+                "Bisq Price Index for " + selectedCurrencyCode,
                 "",
-                DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStamp()),
+                DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())),
                 model.getPriceFeedService().getProviderNodeAddress());
     }
 
