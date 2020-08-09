@@ -17,11 +17,9 @@
 
 package bisq.network.p2p.storage.payload;
 
-import bisq.common.Payload;
-
 /**
  * Interface for PersistableNetworkPayloads which can be pruned (e.g. old objects will be removed from data store).
  */
-public interface PrunablePersistableNetworkPayload extends Payload {
+public interface PrunablePersistableNetworkPayload extends PersistableNetworkPayload {
     boolean doExclude();
 }
