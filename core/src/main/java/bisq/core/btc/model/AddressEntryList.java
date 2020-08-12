@@ -17,11 +17,9 @@
 
 package bisq.core.btc.model;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
 import bisq.common.storage.Storage;
-
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
@@ -46,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @ToString
 @Slf4j
-public final class AddressEntryList implements PersistableEnvelope, PersistedDataHost {
+public final class AddressEntryList implements UserThreadMappedPersistableEnvelope, PersistedDataHost {
     transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter
@@ -73,7 +71,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         this.list = list;
     }
 
-    public static AddressEntryList fromProto(PB.AddressEntryList proto) {
+    public static AddressEntryList fromProto(protobuf.AddressEntryList proto) {
         return new AddressEntryList(new ArrayList<>(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList())));
     }
 
@@ -81,12 +79,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public Message toProtoMessage() {
         // We clone list as we got ConcurrentModificationExceptions
         List<AddressEntry> clone = new ArrayList<>(list);
-        List<PB.AddressEntry> addressEntries = clone.stream()
+        List<protobuf.AddressEntry> addressEntries = clone.stream()
                 .map(AddressEntry::toProtoMessage)
                 .collect(Collectors.toList());
 
-        return PB.PersistableEnvelope.newBuilder()
-                .setAddressEntryList(PB.AddressEntryList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setAddressEntryList(protobuf.AddressEntryList.newBuilder()
                         .addAllAddressEntry(addressEntries))
                 .build();
     }
@@ -113,7 +111,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
 
             // In case we restore from seed words and have balance we need to add the relevant addresses to our list.
-            // IssuedReceiveAddresses does not contain all addressed where we expect balance so we need to listen to
+            // IssuedReceiveAddresses does not contain all addresses where we expect balance so we need to listen to
             // incoming txs at blockchain sync to add the rest.
             if (wallet.getBalance().isPositive()) {
                 wallet.getIssuedReceiveAddresses().forEach(address -> {

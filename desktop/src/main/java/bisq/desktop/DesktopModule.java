@@ -18,72 +18,35 @@
 package bisq.desktop;
 
 import bisq.desktop.common.fxml.FxmlViewLoader;
-import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.ViewFactory;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
-import bisq.desktop.main.dao.bonding.BondingViewUtils;
-import bisq.desktop.main.funds.transactions.DisplayedTransactionsFactory;
-import bisq.desktop.main.funds.transactions.TradableRepository;
-import bisq.desktop.main.funds.transactions.TransactionAwareTradableFactory;
-import bisq.desktop.main.funds.transactions.TransactionListItemFactory;
-import bisq.desktop.main.offer.offerbook.OfferBook;
-import bisq.desktop.main.overlays.notifications.NotificationCenter;
-import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
-import bisq.desktop.main.presentation.DaoPresentation;
-import bisq.desktop.main.presentation.MarketPricePresentation;
-import bisq.desktop.util.Transitions;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 import java.util.ResourceBundle;
 
+import static bisq.common.config.Config.APP_NAME;
+
 public class DesktopModule extends AppModule {
 
-
-    public DesktopModule(Environment environment) {
-        super(environment);
+    public DesktopModule(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
-        bind(InjectorViewFactory.class).in(Singleton.class);
         bind(ViewFactory.class).to(InjectorViewFactory.class);
-        bind(CachingViewLoader.class).in(Singleton.class);
 
         bind(ResourceBundle.class).toInstance(Res.getResourceBundle());
         bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
-        bind(CachingViewLoader.class).in(Singleton.class);
 
-        bind(Navigation.class).in(Singleton.class);
-        bind(NotificationCenter.class).in(Singleton.class);
-
-        bind(OfferBook.class).in(Singleton.class);
-        bind(BSFormatter.class).in(Singleton.class);
-        bind(BsqFormatter.class).in(Singleton.class);
-        bind(TorNetworkSettingsWindow.class).in(Singleton.class);
-        bind(MarketPricePresentation.class).in(Singleton.class);
-        bind(DaoPresentation.class).in(Singleton.class);
-
-        bind(Transitions.class).in(Singleton.class);
-
-        bind(TradableRepository.class).in(Singleton.class);
-        bind(TransactionListItemFactory.class).in(Singleton.class);
-        bind(TransactionAwareTradableFactory.class).in(Singleton.class);
-        bind(DisplayedTransactionsFactory.class).in(Singleton.class);
-
-        bind(BondingViewUtils.class).in(Singleton.class);
-
-        bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(environment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        bindConstant().annotatedWith(Names.named(APP_NAME)).to(config.appName);
     }
 }

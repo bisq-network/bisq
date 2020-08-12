@@ -17,20 +17,18 @@
 
 package bisq.core.network.p2p.seed;
 
-import bisq.core.app.BisqEnvironment;
-
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
+import bisq.common.config.Config;
+
 import javax.inject.Inject;
-import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.regex.Matcher;
@@ -39,38 +37,33 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 // If a new BaseCurrencyNetwork type gets added we need to add the resource file for it as well!
 @Slf4j
+@Singleton
 public class DefaultSeedNodeRepository implements SeedNodeRepository {
     //TODO add support for localhost addresses
     private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");
     private static final String ENDING = ".seednodes";
-    private static final Collection<NodeAddress> cache = new HashSet<>();
-    private final BisqEnvironment bisqEnvironment;
-    @Nullable
-    private final String seedNodes;
+    private final Collection<NodeAddress> cache = new HashSet<>();
+    private final Config config;
 
     @Inject
-    public DefaultSeedNodeRepository(BisqEnvironment environment,
-                                     @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
-        bisqEnvironment = environment;
-        this.seedNodes = seedNodes;
+    public DefaultSeedNodeRepository(Config config) {
+        this.config = config;
     }
 
     private void reload() {
         try {
             // see if there are any seed nodes configured manually
-            if (seedNodes != null && !seedNodes.isEmpty()) {
+            if (!config.seedNodes.isEmpty()) {
                 cache.clear();
-                Arrays.stream(seedNodes.split(",")).forEach(s -> cache.add(new NodeAddress(s)));
+                config.seedNodes.forEach(s -> cache.add(new NodeAddress(s)));
 
                 return;
             }
 
             // else, we fetch the seed nodes from our resources
-            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
+            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(config.baseCurrencyNetwork.name().toLowerCase() + ENDING);
             BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
 
             // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
@@ -88,11 +81,15 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             });
 
             // filter
-            cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
+            cache.removeAll(
+                    config.bannedSeedNodes.stream()
+                            .filter(n -> !n.isEmpty())
+                            .map(NodeAddress::new)
+                            .collect(Collectors.toSet()));
 
             log.info("Seed nodes: {}", cache);
         } catch (Throwable t) {
-            log.error(t.toString());
+            log.error("exception in DefaultSeedNodeRepository", t);
             t.printStackTrace();
             throw t;
         }

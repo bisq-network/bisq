@@ -18,8 +18,7 @@
 package bisq.desktop.main.dao;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -53,7 +52,7 @@ import javafx.scene.control.TabPane;
 import javafx.beans.value.ChangeListener;
 
 @FxmlView
-public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class DaoView extends ActivatableView<TabPane, Void> {
 
     @FXML
     private Tab bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, daoNewsTab, monitorTab, factsAndFiguresTab;
@@ -75,7 +74,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         this.preferences = preferences;
 
         voteRevealService.addVoteRevealTxPublishedListener(txId -> {
-            new Popup<>().headLine(Res.get("dao.voteReveal.txPublished.headLine"))
+            new Popup().headLine(Res.get("dao.voteReveal.txPublished.headLine"))
                     .feedback(Res.get("dao.voteReveal.txPublished", txId))
                     .show();
         });

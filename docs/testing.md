@@ -75,6 +75,6 @@ When creating issues, it is important to provide sufficient information describi
 
 ### Testing Tips
 
-- **Test from a new users perspective.** In addition to looking for obvious errors, be on the look out for any usability or workflow concerns.
+- **Test from a new users perspective.** In addition to looking for obvious errors, be on the lookout for any usability or workflow concerns.
 
-- **Reset the "dont show again" flags.** This will allow you to verify the popup messages are valid and appropriate.
+- **Reset the "don't show again" flags.** This will allow you to verify the popup messages are valid and appropriate.

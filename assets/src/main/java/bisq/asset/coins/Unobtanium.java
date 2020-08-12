@@ -18,11 +18,19 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 public class Unobtanium extends Coin {
 
-    public Unobtanium() {
-        super("Unobtanium", "UNO", new DefaultAddressValidator());
+	public Unobtanium() {
+		super("Unobtanium", "UNO", new UnoAddressValidator());
+    }
+    
+    public static class UnoAddressValidator extends RegexAddressValidator {
+
+        public UnoAddressValidator() {
+            super("^[u]?[a-zA-Z0-9]{33}", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.UNO"));
+        }
     }
 }

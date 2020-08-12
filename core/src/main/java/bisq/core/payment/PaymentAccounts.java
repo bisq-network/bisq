@@ -17,6 +17,8 @@
 
 package bisq.core.payment;
 
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
 
 import java.util.Comparator;
@@ -35,17 +37,17 @@ class PaymentAccounts {
     private static final Logger log = LoggerFactory.getLogger(PaymentAccounts.class);
 
     private final Set<PaymentAccount> accounts;
-    private final AccountAgeWitnessService service;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BiFunction<Offer, PaymentAccount, Boolean> validator;
 
-    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service) {
-        this(accounts, service, PaymentAccountUtil::isTakerPaymentAccountValidForOffer);
+    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService accountAgeWitnessService) {
+        this(accounts, accountAgeWitnessService, PaymentAccountUtil::isTakerPaymentAccountValidForOffer);
     }
 
-    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service,
+    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService accountAgeWitnessService,
                     BiFunction<Offer, PaymentAccount, Boolean> validator) {
         this.accounts = accounts;
-        this.service = service;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.validator = validator;
     }
 
@@ -59,7 +61,7 @@ class PaymentAccounts {
     }
 
     private List<PaymentAccount> sortValidAccounts(Offer offer) {
-        Comparator<PaymentAccount> comparator = this::compareByAge;
+        Comparator<PaymentAccount> comparator = this::compareByTradeLimit;
         return accounts.stream()
                 .filter(account -> validator.apply(offer, account))
                 .sorted(comparator.reversed())
@@ -76,7 +78,7 @@ class PaymentAccounts {
             StringBuilder message = new StringBuilder("Valid accounts: \n");
             for (PaymentAccount account : accounts) {
                 String accountName = account.getAccountName();
-                String witnessHex = service.getMyWitnessHashAsHex(account.getPaymentAccountPayload());
+                String witnessHex = accountAgeWitnessService.getMyWitnessHashAsHex(account.getPaymentAccountPayload());
 
                 message.append("name = ")
                         .append(accountName)
@@ -89,15 +91,24 @@ class PaymentAccounts {
         }
     }
 
-    private int compareByAge(PaymentAccount left, PaymentAccount right) {
-        AccountAgeWitness leftWitness = service.getMyWitness(left.getPaymentAccountPayload());
-        AccountAgeWitness rightWitness = service.getMyWitness(right.getPaymentAccountPayload());
+    // Accounts ranked by trade limit
+    private int compareByTradeLimit(PaymentAccount left, PaymentAccount right) {
+        // Mature accounts count as infinite sign age
+        if (accountAgeWitnessService.myHasTradeLimitException(left)) {
+            return !accountAgeWitnessService.myHasTradeLimitException(right) ? 1 : 0;
+        }
+        if (accountAgeWitnessService.myHasTradeLimitException(right)) {
+            return -1;
+        }
+
+        AccountAgeWitness leftWitness = accountAgeWitnessService.getMyWitness(left.getPaymentAccountPayload());
+        AccountAgeWitness rightWitness = accountAgeWitnessService.getMyWitness(right.getPaymentAccountPayload());
 
         Date now = new Date();
 
-        long leftAge = service.getAccountAge(leftWitness, now);
-        long rightAge = service.getAccountAge(rightWitness, now);
+        long leftSignAge = accountAgeWitnessService.getWitnessSignAge(leftWitness, now);
+        long rightSignAge = accountAgeWitnessService.getWitnessSignAge(rightWitness, now);
 
-        return Long.compare(leftAge, rightAge);
+        return Long.compare(leftSignAge, rightSignAge);
     }
 }

@@ -23,10 +23,7 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-
-import io.bisq.generated.protobuffer.PB;
-
-import org.springframework.util.CollectionUtils;
+import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.Map;
@@ -84,15 +81,15 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.ChangeParamProposal.Builder builder = PB.ChangeParamProposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.ChangeParamProposal.Builder builder = protobuf.ChangeParamProposal.newBuilder()
                 .setParam(param.name())
                 .setParamValue(paramValue);
         return super.getProposalBuilder().setChangeParamProposal(builder);
     }
 
-    public static ChangeParamProposal fromProto(PB.Proposal proto) {
-        final PB.ChangeParamProposal proposalProto = proto.getChangeParamProposal();
+    public static ChangeParamProposal fromProto(protobuf.Proposal proto) {
+        final protobuf.ChangeParamProposal proposalProto = proto.getChangeParamProposal();
         return new ChangeParamProposal(proto.getName(),
                 proto.getLink(),
                 Param.fromProto(proposalProto),

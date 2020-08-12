@@ -17,10 +17,11 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +33,7 @@ public class LengthValidatorTest {
 
     @Before
     public void setup() {
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        final BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
         Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());

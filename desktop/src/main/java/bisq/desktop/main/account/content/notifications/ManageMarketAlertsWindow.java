@@ -26,7 +26,7 @@ import bisq.desktop.util.ImageUtil;
 import bisq.core.locale.Res;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.market.MarketAlerts;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.UserThread;
 
@@ -53,11 +53,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> {
 
     private final MarketAlerts marketAlerts;
-    private final BSFormatter formatter;
 
-    ManageMarketAlertsWindow(MarketAlerts marketAlerts, BSFormatter formatter) {
+    ManageMarketAlertsWindow(MarketAlerts marketAlerts) {
         this.marketAlerts = marketAlerts;
-        this.formatter = formatter;
         type = Type.Attention;
     }
 
@@ -108,11 +106,10 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
         column = new AutoTooltipTableColumn<>(Res.get("account.notifications.marketAlert.manageAlerts.header.paymentAccount"));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<MarketAlertFilter, MarketAlertFilter>, TableCell<MarketAlertFilter, MarketAlertFilter>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<MarketAlertFilter, MarketAlertFilter> call(TableColumn<MarketAlertFilter, MarketAlertFilter> column) {
-                        return new TableCell<MarketAlertFilter, MarketAlertFilter>() {
-
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final MarketAlertFilter item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -131,16 +128,15 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
         column = new AutoTooltipTableColumn<>(Res.get("account.notifications.marketAlert.manageAlerts.header.trigger"));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<MarketAlertFilter, MarketAlertFilter>, TableCell<MarketAlertFilter, MarketAlertFilter>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<MarketAlertFilter, MarketAlertFilter> call(TableColumn<MarketAlertFilter, MarketAlertFilter> column) {
-                        return new TableCell<MarketAlertFilter, MarketAlertFilter>() {
-
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final MarketAlertFilter item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setText(formatter.formatPercentagePrice(item.getTriggerValue() / 10000d));
+                                    setText(FormattingUtils.formatPercentagePrice(item.getTriggerValue() / 10000d));
                                 } else {
                                     setText("");
                                 }
@@ -154,11 +150,10 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
         column = new AutoTooltipTableColumn<>(Res.get("account.notifications.marketAlert.manageAlerts.header.offerType"));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<MarketAlertFilter, MarketAlertFilter>, TableCell<MarketAlertFilter, MarketAlertFilter>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<MarketAlertFilter, MarketAlertFilter> call(TableColumn<MarketAlertFilter, MarketAlertFilter> column) {
-                        return new TableCell<MarketAlertFilter, MarketAlertFilter>() {
-
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final MarketAlertFilter item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -178,10 +173,10 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<MarketAlertFilter, MarketAlertFilter>, TableCell<MarketAlertFilter, MarketAlertFilter>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<MarketAlertFilter, MarketAlertFilter> call(TableColumn<MarketAlertFilter, MarketAlertFilter> column) {
-                        return new TableCell<MarketAlertFilter, MarketAlertFilter>() {
+                        return new TableCell<>() {
                             final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                             final Button removeButton = new AutoTooltipButton("", icon);
 

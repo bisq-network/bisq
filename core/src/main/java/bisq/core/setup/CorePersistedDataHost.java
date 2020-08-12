@@ -17,9 +17,7 @@
 
 package bisq.core.setup;
 
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.model.AddressEntryList;
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
@@ -28,6 +26,9 @@ import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.support.dispute.arbitration.ArbitrationDisputeListService;
+import bisq.core.support.dispute.mediation.MediationDisputeListService;
+import bisq.core.support.dispute.refund.RefundDisputeListService;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
@@ -36,11 +37,10 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,10 +60,12 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(TradeManager.class));
         persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
         persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
-        persistedDataHosts.add(injector.getInstance(DisputeManager.class));
+        persistedDataHosts.add(injector.getInstance(ArbitrationDisputeListService.class));
+        persistedDataHosts.add(injector.getInstance(MediationDisputeListService.class));
+        persistedDataHosts.add(injector.getInstance(RefundDisputeListService.class));
         persistedDataHosts.add(injector.getInstance(P2PService.class));
 
-        if (injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED)))) {
+        if (injector.getInstance(Config.class).daoActivated) {
             persistedDataHosts.add(injector.getInstance(BallotListService.class));
             persistedDataHosts.add(injector.getInstance(MyBlindVoteListService.class));
             persistedDataHosts.add(injector.getInstance(MyVoteListService.class));

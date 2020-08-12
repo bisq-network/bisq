@@ -22,14 +22,14 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PopmoneyValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PopmoneyAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PopmoneyAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.control.TextField;
@@ -51,7 +51,7 @@ public class PopmoneyForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public PopmoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PopmoneyValidator popmoneyValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public PopmoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PopmoneyValidator popmoneyValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.account = (PopmoneyAccount) paymentAccount;
         this.validator = popmoneyValidator;
@@ -65,14 +65,14 @@ public class PopmoneyForm extends PaymentMethodForm {
                 Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setHolderName(newValue);
+            account.setHolderName(newValue.trim());
             updateFromInputs();
         });
 
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue);
+            account.setAccountId(newValue.trim());
             updateFromInputs();
         });
 

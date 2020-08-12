@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Trade;
 
 import org.bitcoinj.core.Transaction;
@@ -27,39 +29,34 @@ import javafx.collections.FXCollections;
 
 import java.util.Collections;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(Dispute.class)
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
-@SuppressWarnings("ConstantConditions")
 public class TransactionAwareTradeTest {
     private static final String XID = "123";
 
     private Transaction transaction;
-    private DisputeManager manager;
+    private ArbitrationManager arbitrationManager;
     private Trade delegate;
     private TransactionAwareTradable trade;
+    private RefundManager refundManager;
+    private BtcWalletService btcWalletService;
 
     @Before
     public void setUp() {
         this.transaction = mock(Transaction.class);
         when(transaction.getHashAsString()).thenReturn(XID);
 
-        this.delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
-        this.manager = mock(DisputeManager.class, RETURNS_DEEP_STUBS);
-        this.trade = new TransactionAwareTrade(this.delegate, this.manager);
+        delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
+        arbitrationManager = mock(ArbitrationManager.class, RETURNS_DEEP_STUBS);
+        refundManager = mock(RefundManager.class, RETURNS_DEEP_STUBS);
+        btcWalletService = mock(BtcWalletService.class, RETURNS_DEEP_STUBS);
+        trade = new TransactionAwareTrade(delegate, arbitrationManager, refundManager, btcWalletService, null);
     }
 
     @Test
@@ -94,7 +91,7 @@ public class TransactionAwareTradeTest {
         when(dispute.getDisputePayoutTxId()).thenReturn(XID);
         when(dispute.getTradeId()).thenReturn(tradeId);
 
-        when(manager.getDisputesAsObservableList())
+        when(arbitrationManager.getDisputesAsObservableList())
                 .thenReturn(FXCollections.observableArrayList(Collections.singleton(dispute)));
 
         when(delegate.getId()).thenReturn(tradeId);

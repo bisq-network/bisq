@@ -62,7 +62,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Monitors the Proposal P2P network payloads with using a hash of a sorted list of Proposals from one cycle and
- * make it accessible to the network so we can detect quickly if any consensus issue arise.
+ * make it accessible to the network so we can detect quickly if any consensus issue arises.
  * We create that hash at the first block of the BlindVote phase. There is one hash created per cycle.
  * The hash contains the hash of the previous block so we can ensure the validity of the whole history by
  * comparing the last block.
@@ -160,7 +160,13 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                         System.currentTimeMillis() - ts);
             }
         }
-        maybeUpdateHashChain(blockHeight);
+        long ts = System.currentTimeMillis();
+        boolean updated = maybeUpdateHashChain(blockHeight);
+        if (updated) {
+            log.info("updateHashChain for block {} took {} ms",
+                    blockHeight,
+                    System.currentTimeMillis() - ts);
+        }
     }
 
     @SuppressWarnings("Duplicates")

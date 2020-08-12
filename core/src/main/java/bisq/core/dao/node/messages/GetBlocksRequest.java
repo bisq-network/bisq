@@ -21,14 +21,10 @@ import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
-
-import io.bisq.generated.protobuffer.PB;
 
 import java.util.Optional;
 
@@ -38,11 +34,17 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+// TODO We remove CapabilityRequiringPayload as it would cause problems if the lite node connects to a new seed node and
+// they have not exchanged capabilities already. We need to improve capability handling the we can re-enable it again.
+// As this message is sent any only to seed nodes it does not has any effect. Even if a lite node receives it it will be
+// simply ignored.
+
+// This message is sent only to full DAO nodes
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
 public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, SendersNodeAddressMessage,
-        CapabilityRequiringPayload, SupportedCapabilitiesMessage {
+        /*CapabilityRequiringPayload, */SupportedCapabilitiesMessage {
     private final int fromBlockHeight;
     private final int nonce;
 
@@ -82,8 +84,8 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.GetBlocksRequest.Builder builder = PB.GetBlocksRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.GetBlocksRequest.Builder builder = protobuf.GetBlocksRequest.newBuilder()
                 .setFromBlockHeight(fromBlockHeight)
                 .setNonce(nonce);
         Optional.ofNullable(senderNodeAddress).ifPresent(e -> builder.setSenderNodeAddress(e.toProtoMessage()));
@@ -91,8 +93,8 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
         return getNetworkEnvelopeBuilder().setGetBlocksRequest(builder).build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetBlocksRequest proto, int messageVersion) {
-        PB.NodeAddress protoNodeAddress = proto.getSenderNodeAddress();
+    public static NetworkEnvelope fromProto(protobuf.GetBlocksRequest proto, int messageVersion) {
+        protobuf.NodeAddress protoNodeAddress = proto.getSenderNodeAddress();
         NodeAddress senderNodeAddress = protoNodeAddress.getHostName().isEmpty() ?
                 null :
                 NodeAddress.fromProto(protoNodeAddress);
@@ -106,10 +108,10 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
                 messageVersion);
     }
 
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.DAO_FULL_NODE);
-    }
+//    @Override
+//    public Capabilities getRequiredCapabilities() {
+//        return new Capabilities(Capability.DAO_FULL_NODE);
+//    }
 
     @Override
     public String toString() {

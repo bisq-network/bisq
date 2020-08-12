@@ -19,13 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
-import org.springframework.util.CollectionUtils;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,17 +68,17 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setCashAppAccountPayload(PB.CashAppAccountPayload.newBuilder()
+                .setCashAppAccountPayload(protobuf.CashAppAccountPayload.newBuilder()
                         .setCashTag(cashTag))
                 .build();
     }
 
-    public static CashAppAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static CashAppAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new CashAppAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getCashAppAccountPayload().getCashTag(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -102,6 +98,6 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(cashTag.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(cashTag.getBytes(StandardCharsets.UTF_8));
     }
 }

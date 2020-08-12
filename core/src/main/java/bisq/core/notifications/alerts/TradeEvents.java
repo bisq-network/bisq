@@ -28,6 +28,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.collections.ListChangeListener;
 
@@ -38,6 +39,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class TradeEvents {
     private final PubKeyRing pubKeyRing;
     private final TradeManager tradeManager;

@@ -19,13 +19,13 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.util.validation.WeChatPayValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.WeChatPayAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.WeChatPayAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.layout.GridPane;
@@ -41,7 +41,7 @@ public class WeChatPayForm extends GeneralAccountNumberForm {
         return gridRow;
     }
 
-    public WeChatPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, WeChatPayValidator weChatPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public WeChatPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, WeChatPayValidator weChatPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.weChatPayAccount = (WeChatPayAccount) paymentAccount;
     }

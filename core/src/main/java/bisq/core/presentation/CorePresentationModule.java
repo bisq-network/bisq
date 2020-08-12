@@ -18,21 +18,21 @@
 package bisq.core.presentation;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 
 public class CorePresentationModule extends AppModule {
-    public CorePresentationModule(Environment environment) {
-        super(environment);
+
+    public CorePresentationModule(Config config) {
+        super(config);
     }
 
     @Override
     protected void configure() {
         bind(BalancePresentation.class).in(Singleton.class);
         bind(TradePresentation.class).in(Singleton.class);
-        bind(DisputePresentation.class).in(Singleton.class);
+        bind(SupportTicketsPresentation.class).in(Singleton.class);
     }
 }
 

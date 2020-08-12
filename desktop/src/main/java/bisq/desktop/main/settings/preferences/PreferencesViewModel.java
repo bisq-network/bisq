@@ -20,8 +20,9 @@ package bisq.desktop.main.settings.preferences;
 
 import bisq.desktop.common.model.ActivatableViewModel;
 
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.locale.LanguageUtil;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.user.Preferences;
 
 import com.google.inject.Inject;
@@ -30,24 +31,37 @@ import java.util.stream.Collectors;
 
 public class PreferencesViewModel extends ActivatableViewModel {
 
-    private final ArbitratorManager arbitratorManager;
+    private final RefundAgentManager refundAgentManager;
+    private final MediatorManager mediationManager;
     private final Preferences preferences;
 
     @Inject
-    public PreferencesViewModel(Preferences preferences, ArbitratorManager arbitratorManager) {
+    public PreferencesViewModel(Preferences preferences,
+                                RefundAgentManager refundAgentManager,
+                                MediatorManager mediationManager) {
         this.preferences = preferences;
-        this.arbitratorManager = arbitratorManager;
+        this.refundAgentManager = refundAgentManager;
+        this.mediationManager = mediationManager;
     }
 
-    boolean needsArbitrationLanguageWarning() {
-        return !arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage());
+    boolean needsSupportLanguageWarning() {
+        return !refundAgentManager.isAgentAvailableForLanguage(preferences.getUserLanguage()) ||
+                !mediationManager.isAgentAvailableForLanguage(preferences.getUserLanguage());
     }
 
     String getArbitrationLanguages() {
-        return arbitratorManager.getArbitratorsObservableMap().values().stream()
+        return refundAgentManager.getObservableMap().values().stream()
                 .flatMap(arbitrator -> arbitrator.getLanguageCodes().stream())
                 .distinct()
-                .map(languageCode -> LanguageUtil.getDisplayName(languageCode))
+                .map(LanguageUtil::getDisplayName)
+                .collect(Collectors.joining(", "));
+    }
+
+    public String getMediationLanguages() {
+        return mediationManager.getObservableMap().values().stream()
+                .flatMap(mediator -> mediator.getLanguageCodes().stream())
+                .distinct()
+                .map(LanguageUtil::getDisplayName)
                 .collect(Collectors.joining(", "));
     }
 }

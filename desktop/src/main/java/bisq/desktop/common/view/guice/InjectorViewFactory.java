@@ -21,8 +21,11 @@ import bisq.desktop.common.view.ViewFactory;
 
 import com.google.inject.Injector;
 
+import javax.inject.Singleton;
+
 import com.google.common.base.Preconditions;
 
+@Singleton
 public class InjectorViewFactory implements ViewFactory {
 
     private Injector injector;

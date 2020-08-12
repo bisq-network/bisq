@@ -27,20 +27,44 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-
-import bisq.network.p2p.P2PService;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 class CreateOfferViewModel extends MutableOfferViewModel<CreateOfferDataModel> implements ViewModel {
 
     @Inject
-    public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
-        super(dataModel, fiatVolumeValidator, fiatPriceValidator, altcoinValidator, btcValidator, bsqValidator, securityDepositValidator, p2PService, walletsSetup, priceFeedService, navigation, preferences, btcFormatter, bsqFormatter);
+    public CreateOfferViewModel(CreateOfferDataModel dataModel,
+                                FiatVolumeValidator fiatVolumeValidator,
+                                FiatPriceValidator fiatPriceValidator,
+                                AltcoinValidator altcoinValidator,
+                                BtcValidator btcValidator,
+                                BsqValidator bsqValidator,
+                                SecurityDepositValidator securityDepositValidator,
+                                PriceFeedService priceFeedService,
+                                AccountAgeWitnessService accountAgeWitnessService,
+                                Navigation navigation,
+                                Preferences preferences,
+                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                                BsqFormatter bsqFormatter) {
+        super(dataModel,
+                fiatVolumeValidator,
+                fiatPriceValidator,
+                altcoinValidator,
+                btcValidator,
+                bsqValidator,
+                securityDepositValidator,
+                priceFeedService,
+                accountAgeWitnessService,
+                navigation,
+                preferences,
+                btcFormatter, bsqFormatter);
     }
 }

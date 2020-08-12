@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
@@ -37,7 +38,8 @@ import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.HexStringValidator;
 import bisq.core.util.validation.IntegerValidator;
 
@@ -50,14 +52,13 @@ import javax.inject.Inject;
 
 import com.google.common.base.Charsets;
 
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -147,6 +148,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.reputation.table.header"), 20, "last");
         createColumns();
         tableView.setItems(sortedList);
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
 
         createListeners();
     }
@@ -168,7 +170,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         bsqWalletService.addBsqBalanceListener(this);
 
         lockupButton.setOnAction((event) -> {
-            Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
+            Coin lockupAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
             int lockupTime = Integer.parseInt(timeInputTextField.getText());
             byte[] salt = Utilities.decodeFromHex(saltInputTextField.getText());
             bondingViewUtils.lockupBondForReputation(lockupAmount,
@@ -394,7 +396,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(item.getTxId(), preferences));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);

@@ -28,21 +28,28 @@ import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
+
+import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,32 +58,21 @@ import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
 import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
-    private SendFilterMessageHandler sendFilterMessageHandler;
-    private RemoveFilterMessageHandler removeFilterMessageHandler;
     private final FilterManager filterManager;
     private final boolean useDevPrivilegeKeys;
+    private ScrollPane scrollPane;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    public interface SendFilterMessageHandler {
-        boolean handle(Filter filter, String privKey);
-    }
-
-    public interface RemoveFilterMessageHandler {
-        boolean handle(String privKey);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public FilterWindow(FilterManager filterManager, boolean useDevPrivilegeKeys) {
+    @Inject
+    public FilterWindow(FilterManager filterManager,
+                        @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.filterManager = filterManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
+    }
+
+    @Override
+    protected Region getRootContainer() {
+        return scrollPane;
     }
 
     public void show() {
@@ -84,27 +80,21 @@ public class FilterWindow extends Overlay<FilterWindow> {
             headLine = Res.get("filterWindow.headline");
 
         width = 968;
+
         createGridPane();
+
+        scrollPane = new ScrollPane();
+        scrollPane.setContent(gridPane);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setMaxHeight(1000);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
         addHeadLine();
         addContent();
         applyStyles();
         display();
     }
-
-    public FilterWindow onAddFilter(SendFilterMessageHandler sendFilterMessageHandler) {
-        this.sendFilterMessageHandler = sendFilterMessageHandler;
-        return this;
-    }
-
-    public FilterWindow onRemoveFilter(RemoveFilterMessageHandler removeFilterMessageHandler) {
-        this.removeFilterMessageHandler = removeFilterMessageHandler;
-        return this;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void setupKeyHandler(Scene scene) {
@@ -135,7 +125,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField bannedCurrenciesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies"));
         InputTextField bannedPaymentMethodsInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
         bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
+        InputTextField bannedSignerPubKeysInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedSignerPubKeys")).second;
+        bannedSignerPubKeysInputTextField.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257"); // Do not translate
         InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
+        InputTextField mediatorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.mediators"));
+        InputTextField refundAgentsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.refundAgents"));
+        InputTextField btcFeeReceiverAddressesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcFeeReceiverAddresses"));
         InputTextField seedNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode"));
         InputTextField priceRelayNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
         InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
@@ -146,135 +141,61 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
         final Filter filter = filterManager.getDevelopersFilter();
         if (filter != null) {
-            offerIdsInputTextField.setText(filter.getBannedOfferIds().stream().collect(Collectors.joining(", ")));
-            nodesInputTextField.setText(filter.getBannedNodeAddress().stream().collect(Collectors.joining(", ")));
-            if (filter.getBannedPaymentAccounts() != null) {
-                StringBuilder sb = new StringBuilder();
-                filter.getBannedPaymentAccounts().stream().forEach(e -> {
-                    if (e != null && e.getPaymentMethodId() != null) {
-                        sb.append(e.getPaymentMethodId())
-                                .append("|")
-                                .append(e.getGetMethodName())
-                                .append("|")
-                                .append(e.getValue())
-                                .append(", ");
-                    }
-                });
-                paymentAccountFilterInputTextField.setText(sb.toString());
-            }
-
-            if (filter.getBannedCurrencies() != null)
-                bannedCurrenciesInputTextField.setText(filter.getBannedCurrencies().stream().collect(Collectors.joining(", ")));
-
-            if (filter.getBannedPaymentMethods() != null)
-                bannedPaymentMethodsInputTextField.setText(filter.getBannedPaymentMethods().stream().collect(Collectors.joining(", ")));
-
-            if (filter.getArbitrators() != null)
-                arbitratorsInputTextField.setText(filter.getArbitrators().stream().collect(Collectors.joining(", ")));
-
-            if (filter.getSeedNodes() != null)
-                seedNodesInputTextField.setText(filter.getSeedNodes().stream().collect(Collectors.joining(", ")));
-
-            if (filter.getPriceRelayNodes() != null)
-                priceRelayNodesInputTextField.setText(filter.getPriceRelayNodes().stream().collect(Collectors.joining(", ")));
-
-            if (filter.getBtcNodes() != null)
-                btcNodesInputTextField.setText(filter.getBtcNodes().stream().collect(Collectors.joining(", ")));
+            setupFieldFromList(offerIdsInputTextField, filter.getBannedOfferIds());
+            setupFieldFromList(nodesInputTextField, filter.getBannedNodeAddress());
+            setupFieldFromPaymentAccountFiltersList(paymentAccountFilterInputTextField, filter.getBannedPaymentAccounts());
+            setupFieldFromList(bannedCurrenciesInputTextField, filter.getBannedCurrencies());
+            setupFieldFromList(bannedPaymentMethodsInputTextField, filter.getBannedPaymentMethods());
+            setupFieldFromList(bannedSignerPubKeysInputTextField, filter.getBannedSignerPubKeys());
+            setupFieldFromList(arbitratorsInputTextField, filter.getArbitrators());
+            setupFieldFromList(mediatorsInputTextField, filter.getMediators());
+            setupFieldFromList(refundAgentsInputTextField, filter.getRefundAgents());
+            setupFieldFromList(btcFeeReceiverAddressesInputTextField, filter.getBtcFeeReceiverAddresses());
+            setupFieldFromList(seedNodesInputTextField, filter.getSeedNodes());
+            setupFieldFromList(priceRelayNodesInputTextField, filter.getPriceRelayNodes());
+            setupFieldFromList(btcNodesInputTextField, filter.getBtcNodes());
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
-
             disableDaoCheckBox.setSelected(filter.isDisableDao());
             disableDaoBelowVersionInputTextField.setText(filter.getDisableDaoBelowVersion());
             disableTradeBelowVersionInputTextField.setText(filter.getDisableTradeBelowVersion());
         }
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
-            List<String> offerIds = new ArrayList<>();
-            List<String> nodes = new ArrayList<>();
-            List<PaymentAccountFilter> paymentAccountFilters = new ArrayList<>();
-            List<String> bannedCurrencies = new ArrayList<>();
-            List<String> bannedPaymentMethods = new ArrayList<>();
-            List<String> arbitrators = new ArrayList<>();
-            List<String> seedNodes = new ArrayList<>();
-            List<String> priceRelayNodes = new ArrayList<>();
-            List<String> btcNodes = new ArrayList<>();
-
-            if (!offerIdsInputTextField.getText().isEmpty()) {
-                offerIds = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(offerIdsInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!nodesInputTextField.getText().isEmpty()) {
-                nodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(nodesInputTextField.getText()).split(",")));
-            }
-
-            if (!paymentAccountFilterInputTextField.getText().isEmpty()) {
-                paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText()
-                        .replace(", ", ",")
-                        .split(","))
-                        .stream().map(item -> {
-                            String[] list = item.split("\\|");
-                            if (list.length == 3)
-                                return new PaymentAccountFilter(list[0], list[1], list[2]);
-                            else
-                                return new PaymentAccountFilter("", "", "");
-                        })
-                        .collect(Collectors.toList()));
-            }
-
-            if (!bannedCurrenciesInputTextField.getText().isEmpty()) {
-                bannedCurrencies = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedCurrenciesInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!bannedPaymentMethodsInputTextField.getText().isEmpty()) {
-                bannedPaymentMethods = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedPaymentMethodsInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!arbitratorsInputTextField.getText().isEmpty()) {
-                arbitrators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(arbitratorsInputTextField.getText()).split(",")));
-            }
-
-            if (!seedNodesInputTextField.getText().isEmpty()) {
-                seedNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(seedNodesInputTextField.getText()).split(",")));
-            }
-
-            if (!priceRelayNodesInputTextField.getText().isEmpty()) {
-                priceRelayNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(priceRelayNodesInputTextField.getText()).split(",")));
-            }
-
-            if (!btcNodesInputTextField.getText().isEmpty()) {
-                btcNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(btcNodesInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (sendFilterMessageHandler.handle(new Filter(offerIds,
-                            nodes,
-                            paymentAccountFilters,
-                            bannedCurrencies,
-                            bannedPaymentMethods,
-                            arbitrators,
-                            seedNodes,
-                            priceRelayNodes,
+            if (filterManager.addFilterMessageIfKeyIsValid(
+                    new Filter(
+                            readAsList(offerIdsInputTextField),
+                            readAsList(nodesInputTextField),
+                            readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
+                            readAsList(bannedCurrenciesInputTextField),
+                            readAsList(bannedPaymentMethodsInputTextField),
+                            readAsList(arbitratorsInputTextField),
+                            readAsList(seedNodesInputTextField),
+                            readAsList(priceRelayNodesInputTextField),
                             preventPublicBtcNetworkCheckBox.isSelected(),
-                            btcNodes,
+                            readAsList(btcNodesInputTextField),
                             disableDaoCheckBox.isSelected(),
                             disableDaoBelowVersionInputTextField.getText(),
-                            disableTradeBelowVersionInputTextField.getText()),
-                    keyInputTextField.getText()))
+                            disableTradeBelowVersionInputTextField.getText(),
+                            readAsList(mediatorsInputTextField),
+                            readAsList(refundAgentsInputTextField),
+                            readAsList(bannedSignerPubKeysInputTextField),
+                            readAsList(btcFeeReceiverAddressesInputTextField)
+                    ),
+                    keyInputTextField.getText())
+            )
                 hide();
             else
-                new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
         removeFilterMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
-                if (removeFilterMessageHandler.handle(keyInputTextField.getText()))
+                if (filterManager.removeFilterMessageIfKeyIsValid(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
@@ -290,5 +211,48 @@ public class FilterWindow extends Overlay<FilterWindow> {
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+    }
+
+    private void setupFieldFromList(InputTextField field, List<String> values) {
+        if (values != null)
+            field.setText(values.stream().collect(Collectors.joining(", ")));
+    }
+
+    private void setupFieldFromPaymentAccountFiltersList(InputTextField field, List<PaymentAccountFilter> values) {
+        if (values != null) {
+            StringBuilder sb = new StringBuilder();
+            values.stream().forEach(e -> {
+                if (e != null && e.getPaymentMethodId() != null) {
+                    sb
+                            .append(e.getPaymentMethodId())
+                            .append("|")
+                            .append(e.getGetMethodName())
+                            .append("|")
+                            .append(e.getValue())
+                            .append(", ");
+                }
+            });
+            field.setText(sb.toString());
+        }
+    }
+
+    private List<String> readAsList(InputTextField field) {
+        if (field.getText().isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return Arrays.asList(StringUtils.deleteWhitespace(field.getText()).split(","));
+        }
+    }
+
+    private List<PaymentAccountFilter> readAsPaymentAccountFiltersList(InputTextField field) {
+        return readAsList(field)
+                .stream().map(item -> {
+                    String[] list = item.split("\\|");
+                    if (list.length == 3)
+                        return new PaymentAccountFilter(list[0], list[1], list[2]);
+                    else
+                        return new PaymentAccountFilter("", "", "");
+                })
+                .collect(Collectors.toList());
     }
 }

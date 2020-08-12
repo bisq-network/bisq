@@ -17,10 +17,7 @@
 
 package bisq.core.dao.state.unconfirmed;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistableList;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import com.google.protobuf.Message;
 
@@ -31,7 +28,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public class UnconfirmedBsqChangeOutputList extends PersistableList<UnconfirmedTxOutput> {
+public class UnconfirmedBsqChangeOutputList extends UserThreadMappedPersistableList<UnconfirmedTxOutput> {
 
     UnconfirmedBsqChangeOutputList() {
         super();
@@ -48,13 +45,13 @@ public class UnconfirmedBsqChangeOutputList extends PersistableList<UnconfirmedT
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
-                .setUnconfirmedBsqChangeOutputList(PB.UnconfirmedBsqChangeOutputList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setUnconfirmedBsqChangeOutputList(protobuf.UnconfirmedBsqChangeOutputList.newBuilder()
                         .addAllUnconfirmedTxOutput(getList().stream().map(UnconfirmedTxOutput::toProtoMessage).collect(Collectors.toList())))
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.UnconfirmedBsqChangeOutputList proto) {
+    public static UnconfirmedBsqChangeOutputList fromProto(protobuf.UnconfirmedBsqChangeOutputList proto) {
         return new UnconfirmedBsqChangeOutputList(new ArrayList<>(proto.getUnconfirmedTxOutputList().stream()
                 .map(UnconfirmedTxOutput::fromProto)
                 .collect(Collectors.toList())));

@@ -20,8 +20,6 @@ package bisq.network.p2p.peers.keepalive.messages;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -45,14 +43,14 @@ public final class Pong extends NetworkEnvelope implements KeepAliveMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPong(PB.Pong.newBuilder()
+                .setPong(protobuf.Pong.newBuilder()
                         .setRequestNonce(requestNonce))
                 .build();
     }
 
-    public static Pong fromProto(PB.Pong proto, int messageVersion) {
+    public static Pong fromProto(protobuf.Pong proto, int messageVersion) {
         return new Pong(proto.getRequestNonce(), messageVersion);
     }
 }

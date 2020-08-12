@@ -19,13 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
-import org.springframework.util.CollectionUtils;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,8 +31,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -60,7 +54,7 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
                                 String mobileNr,
                                 String holderName,
                                 long maxTradePeriod,
-                                @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -72,19 +66,19 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setSwishAccountPayload(PB.SwishAccountPayload.newBuilder()
+                .setSwishAccountPayload(protobuf.SwishAccountPayload.newBuilder()
                         .setMobileNr(mobileNr)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static SwishAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static SwishAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new SwishAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getSwishAccountPayload().getMobileNr(),
                 proto.getSwishAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -108,6 +102,11 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     public byte[] getAgeWitnessInputData() {
         // We don't add holderName because we don't want to break age validation if the user recreates an account with
         // slight changes in holder name (e.g. add or remove middle name)
-        return super.getAgeWitnessInputData(mobileNr.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(mobileNr.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

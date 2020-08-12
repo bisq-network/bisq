@@ -17,14 +17,16 @@
 
 package bisq.desktop.main.settings.network;
 
+import bisq.desktop.util.DisplayUtils;
+
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.network.Statistic;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -43,8 +45,7 @@ public class P2pNetworkListItem {
     private final Statistic statistic;
     private final Connection connection;
     private final Subscription sentBytesSubscription, receivedBytesSubscription, onionAddressSubscription, roundTripTimeSubscription;
-    private final Clock clock;
-    private final BSFormatter formatter;
+    private final ClockWatcher clockWatcher;
 
     private final StringProperty lastActivity = new SimpleStringProperty();
     private final StringProperty sentBytes = new SimpleStringProperty();
@@ -53,24 +54,23 @@ public class P2pNetworkListItem {
     private final StringProperty connectionType = new SimpleStringProperty();
     private final StringProperty roundTripTime = new SimpleStringProperty();
     private final StringProperty onionAddress = new SimpleStringProperty();
-    private final Clock.Listener listener;
+    private final ClockWatcher.Listener listener;
 
-    public P2pNetworkListItem(Connection connection, Clock clock, BSFormatter formatter) {
+    P2pNetworkListItem(Connection connection, ClockWatcher clockWatcher) {
         this.connection = connection;
-        this.clock = clock;
-        this.formatter = formatter;
+        this.clockWatcher = clockWatcher;
         this.statistic = connection.getStatistic();
 
         sentBytesSubscription = EasyBind.subscribe(statistic.sentBytesProperty(),
-                e -> sentBytes.set(formatter.formatBytes((long) e)));
+                e -> sentBytes.set(FormattingUtils.formatBytes((long) e)));
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
-                e -> receivedBytes.set(formatter.formatBytes((long) e)));
+                e -> receivedBytes.set(FormattingUtils.formatBytes((long) e)));
         onionAddressSubscription = EasyBind.subscribe(connection.getPeersNodeAddressProperty(),
                 nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : Res.get("settings.net.notKnownYet")));
         roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),
                 roundTripTime -> this.roundTripTime.set((int) roundTripTime == 0 ? "-" : roundTripTime + " ms"));
 
-        listener = new Clock.Listener() {
+        listener = new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
                 onLastActivityChanged(statistic.getLastActivityTimestamp());
@@ -82,7 +82,7 @@ public class P2pNetworkListItem {
             public void onMinuteTick() {
             }
         };
-        clock.addListener(listener);
+        clockWatcher.addListener(listener);
         onLastActivityChanged(statistic.getLastActivityTimestamp());
         updatePeerType();
         updateConnectionType();
@@ -100,7 +100,7 @@ public class P2pNetworkListItem {
         receivedBytesSubscription.unsubscribe();
         onionAddressSubscription.unsubscribe();
         roundTripTimeSubscription.unsubscribe();
-        clock.removeListener(listener);
+        clockWatcher.removeListener(listener);
     }
 
     public void updateConnectionType() {
@@ -118,7 +118,7 @@ public class P2pNetworkListItem {
     }
 
     public String getCreationDate() {
-        return formatter.formatDateTime(statistic.getCreationDate());
+        return DisplayUtils.formatDateTime(statistic.getCreationDate());
     }
 
     public String getOnionAddress() {

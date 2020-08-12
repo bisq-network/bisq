@@ -26,18 +26,18 @@ import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 
 import com.google.inject.Inject;
 
@@ -73,15 +73,14 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final Navigation navigation;
 
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
-    private final List<XYChart.Data> buyData = new ArrayList<>();
-    private final List<XYChart.Data> sellData = new ArrayList<>();
+    private final List<XYChart.Data<Number, Number>> buyData = new ArrayList<>();
+    private final List<XYChart.Data<Number, Number>> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
     final CurrencyList currencyListItems;
     private final ObservableList<OfferListItem> topBuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<OfferListItem> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
-    private final BSFormatter formatter;
     private int selectedTabIndex;
     public final IntegerProperty maxPlacesForBuyPrice = new SimpleIntegerProperty();
     public final IntegerProperty maxPlacesForBuyVolume = new SimpleIntegerProperty();
@@ -92,15 +91,13 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
-    public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
-                                   AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, BSFormatter formatter) {
+    OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
+                            AccountAgeWitnessService accountAgeWitnessService, Navigation navigation) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
-        this.formatter = formatter;
         this.accountAgeWitnessService = accountAgeWitnessService;
 
         String code = preferences.getOfferBookChartScreenCurrencyCode();
@@ -130,7 +127,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             fillTradeCurrencies();
         };
 
-        currenciesUpdatedListener = new ChangeListener<Number>() {
+        currenciesUpdatedListener = new ChangeListener<>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (!isAnyPricePresent()) {
@@ -209,11 +206,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<XYChart.Data> getBuyData() {
+    public List<XYChart.Data<Number, Number>> getBuyData() {
         return buyData;
     }
 
-    public List<XYChart.Data> getSellData() {
+    public List<XYChart.Data<Number, Number>> getSellData() {
         return sellData;
     }
 
@@ -254,7 +251,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatPrice(Offer offer, boolean decimalAligned) {
-        return formatter.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyPrice.get() : maxPlacesForSellPrice.get());
+        return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyPrice.get() : maxPlacesForSellPrice.get());
     }
 
     public String getVolume(Offer offer) {
@@ -262,7 +259,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatVolume(Offer offer, boolean decimalAligned) {
-        return formatter.formatVolume(offer, decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(), false);
+        return DisplayUtils.formatVolume(offer, decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -279,22 +276,32 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private void updateChartData() {
+
+        // Offer price can be null (if price feed unavailable), thus a null-tolerant comparator is used.
+        Comparator<Offer> offerPriceComparator = Comparator.comparing(Offer::getPrice, Comparator.nullsLast(Comparator.naturalOrder()));
+
+        // Trading btc-fiat is considered as buying/selling BTC, but trading btc-altcoin is
+        // considered as buying/selling Altcoin. Because of this, when viewing a btc-altcoin pair,
+        // the buy column is actually the sell column and vice versa. To maintain the expected
+        // ordering, we have to reverse the price comparator.
+        boolean isCrypto = CurrencyUtil.isCryptoCurrency(getCurrencyCode());
+        if (isCrypto) offerPriceComparator = offerPriceComparator.reversed();
+
+        // Offer amounts are used for the secondary sort. They are sorted from high to low.
+        Comparator<Offer> offerAmountComparator = Comparator.comparing(Offer::getAmount).reversed();
+
+        var buyOfferSortComparator =
+            offerPriceComparator.reversed() // Buy offers, as opposed to sell offers, are primarily sorted from high price to low.
+            .thenComparing(offerAmountComparator);
+        var sellOfferSortComparator =
+            offerPriceComparator
+            .thenComparing(offerAmountComparator);
+
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.BUY))
-                .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b) {
-                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
-                            return a > b ? 1 : -1;
-                        else
-                            return a < b ? 1 : -1;
-                    } else {
-                        return 0;
-                    }
-                })
+                .sorted(buyOfferSortComparator)
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
@@ -323,18 +330,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(OfferPayload.Direction.SELL))
-                .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b) {
-                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
-                            return a < b ? 1 : -1;
-                        else
-                            return a > b ? 1 : -1;
-                    } else {
-                        return 0;
-                    }
-                })
+                .sorted(sellOfferSortComparator)
                 .collect(Collectors.toList());
 
         final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
@@ -358,7 +354,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 
-    private void buildChartAndTableEntries(List<Offer> sortedList, OfferPayload.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
+    private void buildChartAndTableEntries(List<Offer> sortedList,
+                                           OfferPayload.Direction direction,
+                                           List<XYChart.Data<Number, Number>> data,
+                                           ObservableList<OfferListItem> offerTableList) {
         data.clear();
         double accumulatedAmount = 0;
         List<OfferListItem> offerTableListTemp = new ArrayList<>();

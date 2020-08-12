@@ -23,17 +23,15 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
 
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+
+import bisq.common.config.Config;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcBuyItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;
@@ -44,10 +42,9 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({OfferBook.class, PriceFeedService.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class SpreadViewModelTest {
+
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
     @Test
     public void testMaxCharactersForAmountWithNoOffers() {
@@ -56,7 +53,7 @@ public class SpreadViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, null, coinFormatter);
         assertEquals(0, model.maxPlacesForAmount.intValue());
     }
 
@@ -68,7 +65,7 @@ public class SpreadViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, null, coinFormatter);
         model.activate();
         assertEquals(6, model.maxPlacesForAmount.intValue()); // 0.001
         offerBookListItems.addAll(make(btcBuyItem.but(with(OfferBookListItemMaker.amount, 1403000000L))));
@@ -84,7 +81,7 @@ public class SpreadViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        SpreadViewModel model = new SpreadViewModel(offerBook, priceFeedService, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, priceFeedService, coinFormatter);
         model.activate();
 
         assertEquals(1, model.spreadItems.get(0).numberOfOffers);

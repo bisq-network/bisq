@@ -25,8 +25,6 @@ import bisq.common.app.HasCapabilities;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Date;
 
 import lombok.EqualsAndHashCode;
@@ -66,15 +64,15 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
     }
 
     @Override
-    public PB.Peer toProtoMessage() {
-        return PB.Peer.newBuilder()
+    public protobuf.Peer toProtoMessage() {
+        return protobuf.Peer.newBuilder()
                 .setNodeAddress(nodeAddress.toProtoMessage())
                 .setDate(date)
                 .addAllSupportedCapabilities(Capabilities.toIntList(getCapabilities()))
                 .build();
     }
 
-    public static Peer fromProto(PB.Peer proto) {
+    public static Peer fromProto(protobuf.Peer proto) {
         return new Peer(NodeAddress.fromProto(proto.getNodeAddress()),
                 proto.getDate(),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()));
@@ -99,8 +97,9 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
 
     @Override
     public void onChanged(Capabilities supportedCapabilities) {
-        if (!supportedCapabilities.isEmpty())
+        if (!supportedCapabilities.isEmpty()) {
             capabilities.set(supportedCapabilities);
+        }
     }
 
 

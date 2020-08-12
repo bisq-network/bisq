@@ -24,8 +24,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
@@ -69,14 +67,14 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
     }
 
     @Override
-    public PB.MyReputation toProtoMessage() {
-        return PB.MyReputation.newBuilder()
+    public protobuf.MyReputation toProtoMessage() {
+        return protobuf.MyReputation.newBuilder()
                 .setUid(uid)
                 .setSalt(ByteString.copyFrom(salt))
                 .build();
     }
 
-    public static MyReputation fromProto(PB.MyReputation proto) {
+    public static MyReputation fromProto(protobuf.MyReputation proto) {
         return new MyReputation(proto.getUid(), proto.getSalt().toByteArray());
     }
 

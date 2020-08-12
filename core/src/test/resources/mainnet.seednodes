@@ -1,9 +1,9 @@
-# nodeaddress.onion:port [(@owner)]
+# nodeaddress.onion:port [(@owner,@backup)]
 5quyxpxheyvzmb2d.onion:8000 (@miker)
 s67qglwhkgkyvr74.onion:8000 (@emzy)
 ef5qnzx6znifo3df.onion:8000 (@alexej996)
-jhgcy2won7xnslrb.onion:8000 (@alexej996)
-3f3cu2yw7u457ztq.onion:8000 (@devinbileck)
+jhgcy2won7xnslrb.onion:8000 (@wiz,@nicolasdorier)
+3f3cu2yw7u457ztq.onion:8000 (@devinbileck,@ripcurlx)
 723ljisnynbtdohi.onion:8000 (@emzy)
 rm7b56wbrcczpjvl.onion:8000 (@miker)
-fl3mmribyxgrv63c.onion:8000 (@devinbileck)
+fl3mmribyxgrv63c.onion:8000 (@devinbileck,@ripcurlx)

@@ -19,59 +19,37 @@ package bisq.price.spot.providers;
 
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
-import bisq.price.util.Altcoins;
 
-import org.knowm.xchange.coinmarketcap.dto.marketdata.CoinMarketCapTicker;
-
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+/**
+ * Stub implementation of CoinMarketCap price provider to prevent NullPointerExceptions within legacy clients
+ */
 @Component
 @Order(3)
 class CoinMarketCap extends ExchangeRateProvider {
-
-    private final RestTemplate restTemplate = new RestTemplate();
 
     public CoinMarketCap() {
         super("CMC", "coinmarketcap", Duration.ofMinutes(5)); // large data structure, so don't request it too often
     }
 
+    /**
+     * Returns a Set with a non existing symbol for the CoinMarketCap price provider.
+     * Price data of CMC provider is not used in the client anymore, except for the last update timestamp.
+     * To prevent a unnecessary warning log in that case we have to pass at least one element.
+     *
+     * @return Empty Set
+     */
     @Override
     public Set<ExchangeRate> doGet() {
-
-        return getTickers()
-            .filter(t -> Altcoins.ALL_SUPPORTED.contains(t.getIsoCode()))
-            .map(t ->
-                new ExchangeRate(
-                    t.getIsoCode(),
-                    t.getPriceBTC(),
-                    t.getLastUpdated(),
-                    this.getName()
-                )
-            )
-            .collect(Collectors.toSet());
-    }
-
-    private Stream<CoinMarketCapTicker> getTickers() {
-        return restTemplate.exchange(
-            RequestEntity
-                .get(UriComponentsBuilder
-                    .fromUriString("https://api.coinmarketcap.com/v1/ticker/?limit=200").build()
-                    .toUri())
-                .build(),
-            new ParameterizedTypeReference<List<CoinMarketCapTicker>>() {
-            }
-        ).getBody().stream();
+        HashSet<ExchangeRate> exchangeRates = new HashSet<>();
+        exchangeRates.add(new ExchangeRate("NON_EXISTING_SYMBOL", 0, 0L, "CMC"));
+        return exchangeRates;
     }
 }

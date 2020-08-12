@@ -17,18 +17,17 @@
 
 package bisq.core.app.misc;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
@@ -41,18 +40,20 @@ import java.io.IOException;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
-    private static final long MAX_MEMORY_MB_DEFAULT = 500;
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
+    private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
+    private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
     private volatile boolean stopped;
-    private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
+    private final long startTime = System.currentTimeMillis();
 
-    public ExecutableForAppWithP2p(String fullName, String scriptName, String version) {
-        super(fullName, scriptName, version);
+    public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
+        super(fullName, scriptName, appName, version);
     }
 
     @Override
@@ -79,17 +80,24 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
                     injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
                         module.close(injector);
-                        log.debug("Graceful shutdown completed");
                         resultHandler.handleResult();
+                        log.info("Graceful shutdown completed");
+                        System.exit(0);
                     });
                     injector.getInstance(WalletsSetup.class).shutDown();
                     injector.getInstance(BtcWalletService.class).shutDown();
                     injector.getInstance(BsqWalletService.class).shutDown();
                 }));
                 // we wait max 5 sec.
-                UserThread.runAfter(resultHandler::handleResult, 5);
+                UserThread.runAfter(() -> {
+                    resultHandler.handleResult();
+                    System.exit(0);
+                }, 5);
             } else {
-                UserThread.runAfter(resultHandler::handleResult, 1);
+                UserThread.runAfter(() -> {
+                    resultHandler.handleResult();
+                    System.exit(0);
+                }, 1);
             }
         } catch (Throwable t) {
             log.debug("App shutdown failed with exception");
@@ -120,16 +128,22 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         }
     }
 
-    protected void checkMemory(BisqEnvironment environment, GracefulShutDownHandler gracefulShutDownHandler) {
-        String maxMemoryOption = environment.getProperty(AppOptionKeys.MAX_MEMORY);
-        if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
-            try {
-                maxMemory = Integer.parseInt(maxMemoryOption);
-            } catch (Throwable t) {
-                log.error(t.getMessage());
-            }
-        }
+    protected void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
+        UserThread.runPeriodically(() -> {
+            if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
+                log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                "Shut down as node was running longer as {} hours" +
+                                "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                        SHUTDOWN_INTERVAL / 3600000);
 
+                shutDown(gracefulShutDownHandler);
+            }
+
+        }, CHECK_SHUTDOWN_SEC);
+    }
+
+    protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
+        int maxMemory = config.maxMemory;
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
             if (!stopped) {
@@ -153,22 +167,30 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                     long usedMemory = Profiler.getUsedMemoryInMB();
                     if (usedMemory > maxMemory) {
                         log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                        "We are over our memory limit ({}) and trigger a restart. usedMemory: {} MB. freeMemory: {} MB" +
+                                        "We are over our memory limit ({}) and trigger a shutdown. usedMemory: {} MB. freeMemory: {} MB" +
                                         "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                                 (int) maxMemory, usedMemory, Profiler.getFreeMemoryInMB());
-                        restart(environment, gracefulShutDownHandler);
+                        shutDown(gracefulShutDownHandler);
                     }
                 }, 5);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
     }
 
-    protected void restart(BisqEnvironment bisqEnvironment, GracefulShutDownHandler gracefulShutDownHandler) {
+    protected void shutDown(GracefulShutDownHandler gracefulShutDownHandler) {
+        stopped = true;
+        gracefulShutDownHandler.gracefulShutDown(() -> {
+            log.info("Shutdown complete");
+            System.exit(1);
+        });
+    }
+
+    protected void restart(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         stopped = true;
         gracefulShutDownHandler.gracefulShutDown(() -> {
             //noinspection finally
             try {
-                final String[] tokens = bisqEnvironment.getAppDataDir().split("_");
+                final String[] tokens = config.appDataDir.getPath().split("_");
                 String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
                 RestartUtil.restartApplication(logPath);
             } catch (IOException e) {
@@ -180,5 +202,4 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
             }
         });
     }
-
 }

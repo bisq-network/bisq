@@ -20,9 +20,7 @@ package bisq.core.dao.state.model.governance;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
-import bisq.common.proto.persistable.PersistableList;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +35,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @EqualsAndHashCode(callSuper = true)
-public class BallotList extends PersistableList<Ballot> implements ConsensusCritical, ImmutableDaoStateModel {
+public class BallotList extends UserThreadMappedPersistableList<Ballot> implements ConsensusCritical, ImmutableDaoStateModel {
 
     public BallotList(List<Ballot> list) {
         super(list);
@@ -53,18 +51,18 @@ public class BallotList extends PersistableList<Ballot> implements ConsensusCrit
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setBallotList(getBuilder()).build();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        return protobuf.PersistableEnvelope.newBuilder().setBallotList(getBuilder()).build();
     }
 
-    public PB.BallotList.Builder getBuilder() {
-        return PB.BallotList.newBuilder()
+    public protobuf.BallotList.Builder getBuilder() {
+        return protobuf.BallotList.newBuilder()
                 .addAllBallot(getList().stream()
                         .map(Ballot::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static BallotList fromProto(PB.BallotList proto) {
+    public static BallotList fromProto(protobuf.BallotList proto) {
         return new BallotList(new ArrayList<>(proto.getBallotList().stream()
                 .map(Ballot::fromProto)
                 .collect(Collectors.toList())));
@@ -77,4 +75,3 @@ public class BallotList extends PersistableList<Ballot> implements ConsensusCrit
                 .collect(Collectors.toList());
     }
 }
-

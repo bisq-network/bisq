@@ -23,6 +23,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
@@ -38,7 +39,7 @@ public class Log {
     public static void setup(String fileName) {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        RollingFileAppender appender = new RollingFileAppender();
+        RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
         appender.setContext(loggerContext);
         appender.setFile(fileName + ".log");
 
@@ -50,7 +51,7 @@ public class Log {
         rollingPolicy.setMaxIndex(10);
         rollingPolicy.start();
 
-        SizeBasedTriggeringPolicy triggeringPolicy = new SizeBasedTriggeringPolicy();
+        SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new SizeBasedTriggeringPolicy<>();
         triggeringPolicy.setMaxFileSize(FileSize.valueOf("10MB"));
         triggeringPolicy.start();
 
@@ -59,15 +60,12 @@ public class Log {
         encoder.setPattern("%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15}: %msg %xEx%n");
         encoder.start();
 
-        //noinspection unchecked
         appender.setEncoder(encoder);
         appender.setRollingPolicy(rollingPolicy);
-        //noinspection unchecked
         appender.setTriggeringPolicy(triggeringPolicy);
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        //noinspection unchecked
         logbackLogger.addAppender(appender);
         logbackLogger.setLevel(Level.INFO);
 

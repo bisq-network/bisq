@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressWithIconAndDirection;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -35,12 +36,9 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -56,7 +54,6 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -81,16 +78,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.text.DateFormat;
-
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -100,7 +89,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
-    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn, revertTxColumn;
+    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, memoColumn, confidenceColumn, revertTxColumn;
     @FXML
     AutoTooltipButton exportButton;
 
@@ -110,7 +99,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final BtcWalletService btcWalletService;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final BSFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -127,7 +115,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private TransactionsView(BtcWalletService btcWalletService,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             BSFormatter formatter,
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
                              OfferDetailsWindow offerDetailsWindow,
@@ -135,7 +122,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.btcWalletService = btcWalletService;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
-        this.formatter = formatter;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.offerDetailsWindow = offerDetailsWindow;
@@ -150,6 +136,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         transactionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.txId", Res.getBaseCurrencyCode())));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        memoColumn.setGraphic(new AutoTooltipLabel(Res.get("funds.tx.memo")));
         confidenceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.confirmations", Res.getBaseCurrencyCode())));
         revertTxColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.revert", Res.getBaseCurrencyCode())));
 
@@ -161,6 +148,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         setAddressColumnCellFactory();
         setTransactionColumnCellFactory();
         setAmountColumnCellFactory();
+        setMemoColumnCellFactory();
         setConfidenceColumnCellFactory();
         setRevertTxColumnCellFactory();
 
@@ -216,6 +204,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         };
 
         keyEventEventHandler = event -> {
+            // Not intended to be public to users as the feature is not well tested
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
                 if (revertTxColumn.isVisible()) {
                     confidenceColumn.getStyleClass().remove("last-column");
@@ -223,8 +212,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     confidenceColumn.getStyleClass().add("last-column");
                 }
                 revertTxColumn.setVisible(!revertTxColumn.isVisible());
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.A, event))
-                showStatisticsPopup();
+            }
         };
 
         exportButton.updateText(Res.get("shared.exportCSV"));
@@ -244,21 +232,22 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
+            final int reportColumns = tableColumns.size()-1;    // CSV report excludes the last column (an icon)
             CSVEntryConverter<TransactionsListItem> headerConverter = transactionsListItem -> {
-                String[] columns = new String[6];
+                String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++)
-                    columns[i] = tableColumns.get(i).getText();
-
+                    columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
                 return columns;
             };
             CSVEntryConverter<TransactionsListItem> contentConverter = item -> {
-                String[] columns = new String[6];
+                String[] columns = new String[reportColumns];
                 columns[0] = item.getDateString();
                 columns[1] = item.getDetails();
                 columns[2] = item.getDirection() + " " + item.getAddressString();
                 columns[3] = item.getTxId();
                 columns[4] = item.getAmount();
-                columns[5] = item.getNumConfirmations();
+                columns[5] = item.getMemo() == null ? "" : item.getMemo();
+                columns[6] = item.getNumConfirmations();
                 return columns;
             };
 
@@ -357,7 +346,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     } else {
                                         if (item.isDustAttackTx()) {
                                             hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
-                                            hyperlinkWithIcon.setOnAction(event -> new Popup<>().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
+                                            hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
                                             setGraphic(hyperlinkWithIcon);
                                         } else {
                                             setGraphic(new AutoTooltipLabel(item.getDetails()));
@@ -394,7 +383,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String addressString = item.getAddressString();
                                     field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                            MaterialDesignIcon.LINK, item.getReceived());
+                                            item.getReceived());
                                     field.setOnAction(event -> openAddressInBlockExplorer(item));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                     setGraphic(field);
@@ -427,7 +416,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
@@ -459,6 +448,33 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     setGraphic(new AutoTooltipLabel(item.getAmount()));
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setMemoColumnCellFactory() {
+        memoColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+
+        memoColumn.setCellFactory(
+                new Callback<>() {
+
+                    @Override
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
+                            TransactionsListItem> column) {
+                        return new TableCell<>() {
+
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setGraphic(new AutoTooltipLabel(item.getMemo()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -542,116 +558,18 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
                 btcWalletService.doubleSpendTransaction(txId, () -> {
                     if (tradable != null)
                         btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                    new Popup<>().information(Res.get("funds.tx.txSent")).show();
-                }, errorMessage -> new Popup<>().warning(errorMessage).show());
+                    new Popup().information(Res.get("funds.tx.txSent")).show();
+                }, errorMessage -> new Popup().warning(errorMessage).show());
             } catch (Throwable e) {
-                new Popup<>().warning(e.getMessage()).show();
+                new Popup().warning(e.getMessage()).show();
             }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
-
-    // This method is not intended for the public so we don't translate here
-    private void showStatisticsPopup() {
-        Map<Long, List<Coin>> map = new HashMap<>();
-        Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
-        displayedTransactions.forEach(item -> {
-            Coin amountAsCoin = item.getAmountAsCoin();
-            List<Coin> amounts;
-            long key = amountAsCoin.getValue();
-            if (!map.containsKey(key)) {
-                amounts = new ArrayList<>();
-                map.put(key, amounts);
-            } else {
-                amounts = map.get(key);
-            }
-            amounts.add(amountAsCoin);
-
-            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
-            String day = dateFormatter.format(item.getDate());
-
-            // TODO fee is dynamic now
-            Coin txFee = Coin.valueOf(20_000);
-            Coin createOfferFee = Coin.valueOf(50_000);
-            Coin takeOfferFee = Coin.valueOf(100_000);
-
-            if (!dataByDayMap.containsKey(day)) {
-                int numOffers = 0;
-                int numTrades = 0;
-                if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
-                    numOffers++;
-                else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
-                    numTrades++;
-
-                dataByDayMap.put(day, new Tuple4<>(item.getDate(), 1, numOffers, numTrades));
-            } else {
-                Tuple4<Date, Integer, Integer, Integer> tuple = dataByDayMap.get(day);
-                int prev = tuple.second;
-                int numOffers = tuple.third;
-                int numTrades = tuple.forth;
-                if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
-                    numOffers++;
-                else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
-                    numTrades++;
-
-                dataByDayMap.put(day, new Tuple4<>(tuple.first, ++prev, numOffers, numTrades));
-            }
-        });
-
-        StringBuilder stringBuilder = new StringBuilder();
-        map.forEach((key, value) -> {
-            // This is not intended for the public so we don't translate here
-            stringBuilder.append("No. of transactions for amount ").
-                    append(formatter.formatCoinWithCode(Coin.valueOf(key))).
-                    append(": ").
-                    append(value.size()).
-                    append("\n");
-        });
-
-        List<Tuple4<String, Date, Integer, Tuple2<Integer, Integer>>> sortedDataByDayList = dataByDayMap.entrySet().stream().
-                map(e -> {
-                    Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
-                    return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
-                }).sorted((o1, o2) -> o2.second.compareTo(o1.second))
-                .collect(Collectors.toList());
-        StringBuilder transactionsByDayStringBuilder = new StringBuilder();
-        StringBuilder offersStringBuilder = new StringBuilder();
-        StringBuilder tradesStringBuilder = new StringBuilder();
-        StringBuilder allStringBuilder = new StringBuilder();
-        // This is not intended for the public so we don't translate here
-        allStringBuilder.append(Res.get("shared.date")).append(";").append("Offers").append(";").append("Trades").append("\n");
-        sortedDataByDayList.forEach(tuple4 -> {
-            offersStringBuilder.append(tuple4.forth.first).append(",");
-            tradesStringBuilder.append(tuple4.forth.second).append(",");
-            allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
-            transactionsByDayStringBuilder.append("\n").
-                    append(tuple4.first).
-                    append(": ").
-                    append(tuple4.third).
-                    append(" (Offers: ").
-                    append(tuple4.forth.first).
-                    append(" / Trades: ").
-                    append(tuple4.forth.second).
-                    append(")");
-        });
-        // This is not intended for the public so we don't translate here
-        String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
-        new Popup<>().headLine("Statistical info")
-                .information(message)
-                .actionButtonText("Copy")
-                .onAction(() -> Utilities.copyToClipboard(message +
-                        "\n\nCSV (Offers):\n" + offersStringBuilder.toString() +
-                        "\n\nCSV (Trades):\n" + tradesStringBuilder.toString() +
-                        "\n\nCSV (all):\n" + allStringBuilder.toString()))
-                .show();
-    }
-
 }
 

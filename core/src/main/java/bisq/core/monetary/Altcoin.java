@@ -17,7 +17,7 @@
 
 package bisq.core.monetary;
 
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.MonetaryFormat;
@@ -89,7 +89,7 @@ public final class Altcoin implements Monetary, Comparable<Altcoin> {
      * @throws IllegalArgumentException if you try to specify fractional satoshis, or a value out of range.
      */
     public static Altcoin parseAltcoin(final String currencyCode, String input) {
-        String cleaned = BSFormatter.convertCharsForNumber(input);
+        String cleaned = ParsingUtils.convertCharsForNumber(input);
         try {
             long val = new BigDecimal(cleaned).movePointRight(SMALLEST_UNIT_EXPONENT)
                     .toBigIntegerExact().longValue();

@@ -35,6 +35,8 @@ import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.BlockChain;
@@ -57,15 +59,14 @@ import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 
 import javax.inject.Inject;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -80,12 +81,22 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
 public class BsqWalletService extends WalletService implements DaoStateListener {
+
+
+    public interface WalletTransactionsChangeListener {
+
+        void onWalletTransactionsChange();
+    }
+
+    private final DaoKillSwitch daoKillSwitch;
     private final BsqCoinSelector bsqCoinSelector;
     private final NonBsqCoinSelector nonBsqCoinSelector;
     private final DaoStateService daoStateService;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
-    private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
+    private final List<Transaction> walletTransactions = new ArrayList<>();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
+    private final List<WalletTransactionsChangeListener> walletTransactionsChangeListeners = new ArrayList<>();
+    private boolean updateBsqWalletTransactionsPending;
 
     // balance of non BSQ satoshis
     @Getter
@@ -115,7 +126,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                             DaoStateService daoStateService,
                             UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
                             Preferences preferences,
-                            FeeService feeService) {
+                            FeeService feeService,
+                            DaoKillSwitch daoKillSwitch) {
         super(walletsSetup,
                 preferences,
                 feeService);
@@ -124,6 +136,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.nonBsqCoinSelector = nonBsqCoinSelector;
         this.daoStateService = daoStateService;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
+        this.daoKillSwitch = daoKillSwitch;
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBsqWallet();
@@ -152,7 +165,13 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
                     @Override
                     public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                        updateBsqWalletTransactions();
+                        // We are only interested in updates from unconfirmed txs and confirmed txs at the
+                        // time when it gets into a block. Otherwise we would get called
+                        // updateBsqWalletTransactions for each tx as the block depth changes for all.
+                        if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
+                                daoStateService.isParseBlockChainComplete()) {
+                            updateBsqWalletTransactions();
+                        }
                         unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
                     }
 
@@ -215,6 +234,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateBsqBalance() {
+        long ts = System.currentTimeMillis();
         unverifiedBalance = Coin.valueOf(
                 getTransactions(false).stream()
                         .filter(tx -> tx.getConfidence().getConfidenceType() == PENDING)
@@ -246,7 +266,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                                         }
                                         return false;
                                     })
-                                    .mapToLong(in -> in != null ? in.getValue().value : 0)
+                                    .mapToLong(in -> in.getValue() != null ? in.getValue().value : 0)
                                     .sum();
                             return outputs - lockedInputs;
                         })
@@ -289,6 +309,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
         bsqBalanceListeners.forEach(e -> e.onUpdateBalances(availableConfirmedBalance, availableNonBsqBalance, unverifiedBalance,
                 unconfirmedChangeBalance, lockedForVotingBalance, lockupBondsBalance, unlockingBondsBalance));
+        log.info("updateBsqBalance took {} ms", System.currentTimeMillis() - ts);
     }
 
     public void addBsqBalanceListener(BsqBalanceListener listener) {
@@ -299,13 +320,21 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         bsqBalanceListeners.remove(listener);
     }
 
+    public void addWalletTransactionsChangeListener(WalletTransactionsChangeListener listener) {
+        walletTransactionsChangeListeners.add(listener);
+    }
+
+    public void removeWalletTransactionsChangeListener(WalletTransactionsChangeListener listener) {
+        walletTransactionsChangeListeners.remove(listener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BSQ TransactionOutputs and Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Transaction> getWalletTransactions() {
-        return walletTransactions;
+    public List<Transaction> getClonedWalletTransactions() {
+        return new ArrayList<>(walletTransactions);
     }
 
     public Stream<Transaction> getPendingWalletTransactionsStream() {
@@ -314,9 +343,21 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     private void updateBsqWalletTransactions() {
-        walletTransactions.setAll(getTransactions(false));
         if (daoStateService.isParseBlockChainComplete()) {
-            updateBsqBalance();
+            // We get called updateBsqWalletTransactions multiple times from onWalletChanged, onTransactionConfidenceChanged
+            // and from onParseBlockCompleteAfterBatchProcessing. But as updateBsqBalance is an expensive operation we do
+            // not want to call it in a short interval series so we use a flag and a delay to not call it multiple times
+            // in a 100 ms period.
+            if (!updateBsqWalletTransactionsPending) {
+                updateBsqWalletTransactionsPending = true;
+                UserThread.runAfter(() -> {
+                    walletTransactions.clear();
+                    walletTransactions.addAll(getTransactions(false));
+                    walletTransactionsChangeListeners.forEach(WalletTransactionsChangeListener::onWalletTransactionsChange);
+                    updateBsqBalance();
+                    updateBsqWalletTransactionsPending = false;
+                }, 100, TimeUnit.MILLISECONDS);
+            }
         }
     }
 
@@ -434,7 +475,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public Optional<Transaction> isWalletTransaction(String txId) {
-        return getWalletTransactions().stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
+        return walletTransactions.stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
     }
 
 
@@ -449,6 +490,15 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             if (connectedOutput != null && connectedOutput.isMine(wallet)) {
                 signTransactionInput(wallet, aesKey, tx, txIn, i);
                 checkScriptSig(tx, txIn, i);
+            }
+        }
+
+        for (TransactionOutput txo : tx.getOutputs()) {
+            Coin value = txo.getValue();
+            // OpReturn outputs have value 0
+            if (value.isPositive()) {
+                checkArgument(Restrictions.isAboveDust(txo.getValue()),
+                        "An output value is below dust limit. Transaction=" + tx);
             }
         }
 
@@ -491,7 +541,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     private Transaction getPreparedSendTx(String receiverAddress, Coin receiverAmount, CoinSelector coinSelector)
             throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
-        DaoKillSwitch.assertDaoIsNotDisabled();
+        daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
@@ -515,11 +565,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             // Tx has as first output BSQ and an optional second BSQ change output.
             // At that stage we do not have added the BTC inputs so there is no BTC change output here.
             if (tx.getOutputs().size() == 2) {
-                TransactionOutput bsqChangeOutput = tx.getOutputs().get(1);
-                if (!Restrictions.isAboveDust(bsqChangeOutput.getValue())) {
-                    String msg = "BSQ change output is below dust limit. outputValue=" + bsqChangeOutput.getValue().toFriendlyString();
+                Coin bsqChangeOutputValue = tx.getOutputs().get(1).getValue();
+                if (!Restrictions.isAboveDust(bsqChangeOutputValue)) {
+                    String msg = "BSQ change output is below dust limit. outputValue=" + bsqChangeOutputValue.value / 100 + " BSQ";
                     log.warn(msg);
-                    throw new BsqChangeBelowDustException(msg, bsqChangeOutput.getValue());
+                    throw new BsqChangeBelowDustException(msg, bsqChangeOutputValue);
                 }
             }
 
@@ -532,57 +582,129 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Burn fee tx
+    // Burn fee txs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We create a tx with Bsq inputs for the fee and optional BSQ change output.
-    // As the fee amount will be missing in the output those BSQ fees are burned.
-    public Transaction getPreparedProposalTx(Coin fee, boolean requireChangeOutput) throws InsufficientBsqException {
-        return getPreparedBurnFeeTx(fee, requireChangeOutput);
-    }
+    public Transaction getPreparedTradeFeeTx(Coin fee) throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
 
-    public Transaction getPreparedBurnFeeTx(Coin fee) throws InsufficientBsqException {
-        return getPreparedBurnFeeTx(fee, false);
-    }
-
-    private Transaction getPreparedBurnFeeTx(Coin fee, boolean requireChangeOutput) throws InsufficientBsqException {
-        DaoKillSwitch.assertDaoIsNotDisabled();
-        final Transaction tx = new Transaction(params);
-        addInputsAndChangeOutputForTx(tx, fee, bsqCoinSelector, requireChangeOutput);
-        // printTx("getPreparedFeeTx", tx);
+        Transaction tx = new Transaction(params);
+        addInputsAndChangeOutputForTx(tx, fee, bsqCoinSelector);
         return tx;
     }
 
-    private void addInputsAndChangeOutputForTx(Transaction tx, Coin fee, BsqCoinSelector bsqCoinSelector, boolean requireChangeOutput)
+    // We create a tx with Bsq inputs for the fee and optional BSQ change output.
+    // As the fee amount will be missing in the output those BSQ fees are burned.
+    public Transaction getPreparedProposalTx(Coin fee) throws InsufficientBsqException {
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
+    }
+
+    public Transaction getPreparedIssuanceTx(Coin fee) throws InsufficientBsqException {
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
+    }
+
+    public Transaction getPreparedProofOfBurnTx(Coin fee) throws InsufficientBsqException {
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
+    }
+
+    public Transaction getPreparedBurnFeeTxForAssetListing(Coin fee) throws InsufficientBsqException {
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
+    }
+
+    // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
+    // structurally same transactions where only the BSQ fee is different. In case of asset listing fee and proof of
+    // burn it is a user input, so it is not known to the parser, instead we derive the burned fee from the parser.
+
+    // In case of proposal fee we could derive it from the params.
+
+    // For issuance txs we also require a BSQ change output before the issuance output gets added. There was a
+    // minor bug with the old version that multiple inputs would have caused an exception in case there was no
+    // change output (e.g. inputs of 21 and 6 BSQ for BSQ fee of 21 BSQ would have caused that only 1 input was used
+    // and then caused an error as we enforced a change output. This new version handles such cases correctly.
+
+    // Examples for the structurally indistinguishable transactions:
+    // Case 1: 10 BSQ fee to burn
+    // In: 17 BSQ
+    // Out: BSQ change 7 BSQ -> valid BSQ
+    // Out: OpReturn
+    // Miner fee: 1000 sat  (10 BSQ burned)
+
+    // Case 2: 17 BSQ fee to burn
+    // In: 17 BSQ
+    // Out: burned BSQ change 7 BSQ -> BTC (7 BSQ burned)
+    // Out: OpReturn
+    // Miner fee: 1000 sat  (10 BSQ burned)
+
+    private Transaction getPreparedTxWithMandatoryBsqChangeOutput(Coin fee) throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
+
+        Transaction tx = new Transaction(params);
+        // We look for inputs covering out BSQ fee we want to pay.
+        CoinSelection coinSelection = bsqCoinSelector.select(fee, wallet.calculateAllSpendCandidates());
+        try {
+            Coin change = bsqCoinSelector.getChange(fee, coinSelection);
+            if (change.isZero() || Restrictions.isDust(change)) {
+                // If change is zero or below dust we increase required input amount to enforce a BSQ change output.
+                // All outputs after that are considered BTC and therefore would be burned BSQ if BSQ is left from what
+                // we use for miner fee.
+
+                Coin minDustThreshold = Coin.valueOf(preferences.getIgnoreDustThreshold());
+                Coin increasedRequiredInput = fee.add(minDustThreshold);
+                coinSelection = bsqCoinSelector.select(increasedRequiredInput, wallet.calculateAllSpendCandidates());
+                change = bsqCoinSelector.getChange(fee, coinSelection);
+
+                log.warn("We increased required input as change output was zero or dust: New change value={}", change);
+                String info = "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
+                        "Intended fee to burn=" + fee.value / 100 + " BSQ. " +
+                        "Please increase your balance to at least " + (coinSelection.valueGathered.value + minDustThreshold.value) / 100 + " BSQ.";
+                checkArgument(coinSelection.valueGathered.compareTo(fee) > 0,
+                        "This transaction require a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
+                                info);
+
+                checkArgument(!Restrictions.isDust(change),
+                        "This transaction would create a dust output of " + change.value / 100 + " BSQ. " +
+                                "It requires a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
+                                info);
+            }
+
+            coinSelection.gathered.forEach(tx::addInput);
+            tx.addOutput(change, getChangeAddress());
+
+            return tx;
+
+        } catch (InsufficientMoneyException e) {
+            log.error("coinSelection.gathered={}", coinSelection.gathered);
+            throw new InsufficientBsqException(e.missing);
+        }
+    }
+
+    private void addInputsAndChangeOutputForTx(Transaction tx,
+                                               Coin fee,
+                                               BsqCoinSelector bsqCoinSelector)
             throws InsufficientBsqException {
         Coin requiredInput;
         // If our fee is less then dust limit we increase it so we are sure to not get any dust output.
-        if (Restrictions.isDust(fee))
-            requiredInput = Restrictions.getMinNonDustOutput().add(fee);
-        else
+        if (Restrictions.isDust(fee)) {
+            requiredInput = fee.add(Restrictions.getMinNonDustOutput());
+        } else {
             requiredInput = fee;
+        }
 
         CoinSelection coinSelection = bsqCoinSelector.select(requiredInput, wallet.calculateAllSpendCandidates());
         coinSelection.gathered.forEach(tx::addInput);
         try {
-            // TODO why is fee passed to getChange ???
             Coin change = bsqCoinSelector.getChange(fee, coinSelection);
-            if (requireChangeOutput) {
-                checkArgument(change.isPositive(),
-                        "This transaction requires a mandatory BSQ change output. " +
-                                "At least " + Restrictions.getMinNonDustOutput().add(fee).value / 100d + " " +
-                                "BSQ is needed for this transaction");
-            }
-
+            // Change can be ZERO, then no change output is created so don't rely on a BSQ change output
             if (change.isPositive()) {
                 checkArgument(Restrictions.isAboveDust(change),
                         "The change output of " + change.value / 100d + " BSQ is below the min. dust value of "
                                 + Restrictions.getMinNonDustOutput().value / 100d +
-                                ". At least " + Restrictions.getMinNonDustOutput().add(fee).value / 100d + " " +
-                                "BSQ is needed for this transaction");
+                                ". At least " + Restrictions.getMinNonDustOutput().add(fee).value / 100d +
+                                " BSQ is needed for this transaction");
                 tx.addOutput(change, getChangeAddress());
             }
         } catch (InsufficientMoneyException e) {
+            log.error(tx.toString());
             throw new InsufficientBsqException(e.missing);
         }
     }
@@ -595,10 +717,10 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // We create a tx with Bsq inputs for the fee, one output for the stake and optional one BSQ change output.
     // As the fee amount will be missing in the output those BSQ fees are burned.
     public Transaction getPreparedBlindVoteTx(Coin fee, Coin stake) throws InsufficientBsqException {
-        DaoKillSwitch.assertDaoIsNotDisabled();
+        daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         tx.addOutput(new TransactionOutput(params, tx, stake, getUnusedAddress()));
-        addInputsAndChangeOutputForTx(tx, fee.add(stake), bsqCoinSelector, false);
+        addInputsAndChangeOutputForTx(tx, fee.add(stake), bsqCoinSelector);
         //printTx("getPreparedBlindVoteTx", tx);
         return tx;
     }
@@ -609,7 +731,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedVoteRevealTx(TxOutput stakeTxOutput) {
-        DaoKillSwitch.assertDaoIsNotDisabled();
+        daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         final Coin stake = Coin.valueOf(stakeTxOutput.getValue());
         Transaction blindVoteTx = getTransaction(stakeTxOutput.getTxId());
@@ -628,11 +750,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedLockupTx(Coin lockupAmount) throws AddressFormatException, InsufficientBsqException {
-        DaoKillSwitch.assertDaoIsNotDisabled();
+        daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(lockupAmount), "The amount is too low (dust limit).");
         tx.addOutput(new TransactionOutput(params, tx, lockupAmount, getUnusedAddress()));
-        addInputsAndChangeOutputForTx(tx, lockupAmount, bsqCoinSelector, false);
+        addInputsAndChangeOutputForTx(tx, lockupAmount, bsqCoinSelector);
         printTx("prepareLockupTx", tx);
         return tx;
     }
@@ -642,7 +764,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedUnlockTx(TxOutput lockupTxOutput) throws AddressFormatException {
-        DaoKillSwitch.assertDaoIsNotDisabled();
+        daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         // Unlocking means spending the full value of the locked txOutput to another txOutput with the same value
         Coin amountToUnlock = Coin.valueOf(lockupTxOutput.getValue());

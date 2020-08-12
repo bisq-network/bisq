@@ -45,10 +45,22 @@ public abstract class SellerTrade extends Trade {
                 long tradePrice,
                 NodeAddress tradingPeerNodeAddress,
                 @Nullable NodeAddress arbitratorNodeAddress,
+                @Nullable NodeAddress mediatorNodeAddress,
+                @Nullable NodeAddress refundAgentNodeAddress,
                 Storage<? extends TradableList> storage,
                 BtcWalletService btcWalletService) {
-        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
-                tradingPeerNodeAddress, arbitratorNodeAddress, storage, btcWalletService);
+        super(offer,
+                tradeAmount,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                tradePrice,
+                tradingPeerNodeAddress,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                refundAgentNodeAddress,
+                storage,
+                btcWalletService);
     }
 
     SellerTrade(Offer offer,
@@ -56,9 +68,19 @@ public abstract class SellerTrade extends Trade {
                 Coin takeOfferFee,
                 boolean isCurrencyForTakerFeeBtc,
                 @Nullable NodeAddress arbitratorNodeAddress,
+                @Nullable NodeAddress mediatorNodeAddress,
+                @Nullable NodeAddress refundAgentNodeAddress,
                 Storage<? extends TradableList> storage,
                 BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+        super(offer,
+                txFee,
+                takeOfferFee,
+                isCurrencyForTakerFeeBtc,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                refundAgentNodeAddress,
+                storage,
+                btcWalletService);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

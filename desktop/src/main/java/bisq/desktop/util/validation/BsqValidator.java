@@ -19,8 +19,9 @@ package bisq.desktop.util.validation;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import org.bitcoinj.core.Coin;
 
@@ -52,8 +53,8 @@ public class BsqValidator extends AltcoinValidator {
     @Inject
     public BsqValidator(BsqFormatter bsqFormatter) {
         this.bsqFormatter = bsqFormatter;
-        // TODO do we want a limit here?
-        //setMaxValue(bsqFormatter.parseToCoin("2500000"));
+        // Limit to avoid overflows
+        setMaxValue(ParsingUtils.parseToCoin("10000000", bsqFormatter));
     }
 
     public void setMinValue(@NotNull Coin minValue) {
@@ -77,20 +78,26 @@ public class BsqValidator extends AltcoinValidator {
         }
 
         if (result.isValid) {
-            result = validateIfNotZero(input)
-                    .and(validateIfNotNegative(input))
-                    .and(validateIfNotFractionalBtcValue(input))
-                    .and(validateIfNotExceedsMaxBtcValue(input))
-                    .and(validateIfSufficientAvailableBalance(input))
-                    .and(validateIfAboveDust(input))
-                    .and(validateIfNotBelowMinValue(input));
+            result = result.andValidation(input,
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotExceedsMaxValue);
+        }
+
+        if (result.isValid) {
+            result = result.andValidation(input,
+                    this::validateIfNotFractionalBtcValue,
+                    this::validateIfNotExceedsMaxBtcValue,
+                    this::validateIfSufficientAvailableBalance,
+                    this::validateIfAboveDust,
+                    this::validateIfNotBelowMinValue);
         }
 
         return result;
     }
 
     private ValidationResult validateIfAboveDust(String input) {
-        final Coin coin = bsqFormatter.parseToCoin(input);
+        final Coin coin = ParsingUtils.parseToCoin(input, bsqFormatter);
         if (Restrictions.isAboveDust(coin))
             return new ValidationResult(true);
         else
@@ -109,7 +116,7 @@ public class BsqValidator extends AltcoinValidator {
 
     private ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         try {
-            final Coin coin = bsqFormatter.parseToCoin(input);
+            final Coin coin = ParsingUtils.parseToCoin(input, bsqFormatter);
             if (maxValue != null && coin.compareTo(maxValue) > 0)
                 return new ValidationResult(false, Res.get("validation.btc.toLarge", bsqFormatter.formatCoinWithCode(maxValue)));
             else
@@ -121,7 +128,7 @@ public class BsqValidator extends AltcoinValidator {
 
     private ValidationResult validateIfSufficientAvailableBalance(String input) {
         try {
-            final Coin coin = bsqFormatter.parseToCoin(input);
+            final Coin coin = ParsingUtils.parseToCoin(input, bsqFormatter);
             if (availableBalance != null && availableBalance.compareTo(coin) < 0)
                 return new ValidationResult(false, Res.get("validation.bsq.insufficientBalance",
                         bsqFormatter.formatCoinWithCode(availableBalance)));
@@ -134,7 +141,7 @@ public class BsqValidator extends AltcoinValidator {
 
     private ValidationResult validateIfNotBelowMinValue(String input) {
         try {
-            final Coin coin = bsqFormatter.parseToCoin(input);
+            final Coin coin = ParsingUtils.parseToCoin(input, bsqFormatter);
             if (minValue != null && coin.compareTo(minValue) < 0)
                 return new ValidationResult(false, Res.get("validation.bsq.amountBelowMinAmount",
                         bsqFormatter.formatCoinWithCode(minValue)));

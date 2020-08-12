@@ -31,8 +31,6 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 
 import bisq.core.locale.Res;
-import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -71,7 +69,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
-            removeItemColumn, editItemColumn;
+            removeItemColumn, editItemColumn, paymentMethodColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private SortedList<OpenOfferListItem> sortedList;
@@ -86,6 +84,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
+        paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.BTCMinMax")));
         volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
@@ -103,6 +102,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setPriceColumnCellFactory();
         setAmountColumnCellFactory();
         setVolumeColumnCellFactory();
+        setPaymentMethodColumnCellFactory();
         setDateColumnCellFactory();
         setDeactivateColumnCellFactory();
         setEditColumnCellFactory();
@@ -115,17 +115,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         directionColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
-        priceColumn.setComparator((o1, o2) -> {
-            Price price1 = o1.getOffer().getPrice();
-            Price price2 = o2.getOffer().getPrice();
-            return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
-        });
-        volumeColumn.setComparator((o1, o2) -> {
-            Volume offerVolume1 = o1.getOffer().getVolume();
-            Volume offerVolume2 = o2.getOffer().getVolume();
-            return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
-        });
+        priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
+        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod().getId()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -144,45 +137,40 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onDeactivateOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onDeactivateOpenOffer(openOffer,
                     () -> log.debug("Deactivate offer was successful"),
                     (message) -> {
                         log.error(message);
-                        new Popup<>().warning(Res.get("offerbook.deactivateOffer.failed", message)).show();
+                        new Popup().warning(Res.get("offerbook.deactivateOffer.failed", message)).show();
                     });
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onActivateOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onActivateOpenOffer(openOffer,
                     () -> log.debug("Activate offer was successful"),
                     (message) -> {
                         log.error(message);
-                        new Popup<>().warning(Res.get("offerbook.activateOffer.failed", message)).show();
+                        new Popup().warning(Res.get("offerbook.activateOffer.failed", message)).show();
                     });
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onRemoveOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
-            if (DontShowAgainLookup.showAgain(key))
-                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(openOffer.getOffer().getMakerFee())))
+            if (DontShowAgainLookup.showAgain(key)) {
+                new Popup().warning(Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(openOffer)))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOpenOffer(openOffer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
                         .dontShowAgainId(key)
                         .show();
-            else
+            } else {
                 doRemoveOpenOffer(openOffer);
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            }
         }
     }
 
@@ -194,24 +182,23 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     tableView.refresh();
 
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
-                    if (DontShowAgainLookup.showAgain(key))
-                        new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
+                    if (DontShowAgainLookup.showAgain(key)) {
+                        new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key)
                                 .show();
+                    }
                 },
                 (message) -> {
                     log.error(message);
-                    new Popup<>().warning(Res.get("offerbook.removeOffer.failed", message)).show();
+                    new Popup().warning(Res.get("offerbook.removeOffer.failed", message)).show();
                 });
     }
 
     private void onEditOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             openOfferActionHandler.onEditOpenOffer(openOffer);
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -346,6 +333,31 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 });
     }
 
+    private void setPaymentMethodColumnCellFactory() {
+        paymentMethodColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        paymentMethodColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
+                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                getStyleClass().removeAll("offer-disabled");
+
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         directionColumn.setCellFactory(
@@ -422,8 +434,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                     if (checkBox == null) {
                                         checkBox = new AutoTooltipCheckBox();
                                         checkBox.setGraphic(iconView);
-                                        updateState(item.getOpenOffer());
-                                        setGraphic(checkBox);
                                     }
                                     checkBox.setOnAction(event -> {
                                         if (item.getOpenOffer().isDeactivated()) {
@@ -434,6 +444,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         updateState(item.getOpenOffer());
                                         tableView.refresh();
                                     });
+                                    updateState(item.getOpenOffer());
+                                    setGraphic(checkBox);
                                 } else {
                                     setGraphic(null);
                                     if (checkBox != null) {

@@ -70,11 +70,11 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
                 "sellerSecurityDeposit must be equal to ProposalConsensus.SELLER_SECURITY_DEPOSIT. " +
                     "sellerSecurityDeposit=" + offer.getSellerSecurityDeposit().toFriendlyString());*/
             /*checkArgument(offer.getMinAmount().compareTo(ProposalConsensus.getMinTradeAmount()) >= 0,
-                "MinAmount is less then " + ProposalConsensus.getMinTradeAmount().toFriendlyString());*/
+                "MinAmount is less than " + ProposalConsensus.getMinTradeAmount().toFriendlyString());*/
 
             checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode())) <= 0,
-                    "Amount is larger then " + offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode()).toFriendlyString());
-            checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger then Amount");
+                    "Amount is larger than " + offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode()).toFriendlyString());
+            checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger than Amount");
 
             checkNotNull(offer.getPrice(), "Price is null");
             checkArgument(offer.getPrice().isPositive(),
@@ -83,8 +83,6 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkArgument(offer.getDate().getTime() > 0,
                     "Date must not be 0. date=" + offer.getDate().toString());
 
-            checkNotNull(offer.getArbitratorNodeAddresses(), "Arbitrator is null");
-            checkNotNull(offer.getMediatorNodeAddresses(), "Mediator is null");
             checkNotNull(offer.getCurrencyCode(), "Currency is null");
             checkNotNull(offer.getDirection(), "Direction is null");
             checkNotNull(offer.getId(), "Id is null");

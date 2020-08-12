@@ -24,11 +24,10 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
+import protobuf.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,17 +35,16 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class PreliminaryGetDataRequest extends GetDataRequest implements AnonymousMessage, SupportedCapabilitiesMessage {
-    @Nullable
     private final Capabilities supportedCapabilities;
 
     public PreliminaryGetDataRequest(int nonce,
-                                     Set<byte[]> excludedKeys) {
+                                     @NotNull Set<byte[]> excludedKeys) {
         this(nonce, excludedKeys, Capabilities.app, Version.getP2PMessageVersion());
     }
 
@@ -56,8 +54,8 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PreliminaryGetDataRequest(int nonce,
-                                      Set<byte[]> excludedKeys,
-                                      @Nullable Capabilities supportedCapabilities,
+                                      @NotNull Set<byte[]> excludedKeys,
+                                      @NotNull Capabilities supportedCapabilities,
                                       int messageVersion) {
         super(messageVersion, nonce, excludedKeys);
 
@@ -65,28 +63,26 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.PreliminaryGetDataRequest.Builder builder = PB.PreliminaryGetDataRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.PreliminaryGetDataRequest.Builder builder = protobuf.PreliminaryGetDataRequest.newBuilder()
+                .addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities))
                 .setNonce(nonce)
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
 
-        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
-
-        return getNetworkEnvelopeBuilder()
+        NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setPreliminaryGetDataRequest(builder)
                 .build();
+        log.info("Sending a PreliminaryGetDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        return proto;
     }
 
-    public static PreliminaryGetDataRequest fromProto(PB.PreliminaryGetDataRequest proto, int messageVersion) {
-        Capabilities supportedCapabilities = proto.getSupportedCapabilitiesList().isEmpty() ?
-                null :
-                Capabilities.fromIntList(proto.getSupportedCapabilitiesList());
-
+    public static PreliminaryGetDataRequest fromProto(protobuf.PreliminaryGetDataRequest proto, int messageVersion) {
+        log.info("Received a PreliminaryGetDataRequest with {} kB", proto.getSerializedSize() / 1000d);
         return new PreliminaryGetDataRequest(proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
-                supportedCapabilities,
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
     }
 }

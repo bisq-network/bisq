@@ -22,26 +22,17 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
-import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 public class GetDataRequestHandler {
     private static final long TIMEOUT = 90;
 
+    private static final int MAX_ENTRIES = 10000;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -90,10 +82,36 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
-        GetDataResponse getDataResponse = new GetDataResponse(getFilteredProtectedStorageEntries(getDataRequest, connection),
-                getFilteredPersistableNetworkPayload(getDataRequest, connection),
-                getDataRequest.getNonce(),
-                getDataRequest instanceof GetUpdatedDataRequest);
+        long ts = System.currentTimeMillis();
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
+
+        AtomicBoolean outPersistableNetworkPayloadOutputTruncated = new AtomicBoolean(false);
+        AtomicBoolean outProtectedStoragePayloadOutputTruncated = new AtomicBoolean(false);
+        GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(
+                getDataRequest,
+                MAX_ENTRIES,
+                outPersistableNetworkPayloadOutputTruncated,
+                outProtectedStoragePayloadOutputTruncated,
+                connection.getCapabilities());
+
+        if (outPersistableNetworkPayloadOutputTruncated.get()) {
+            log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
+
+        if (outProtectedStoragePayloadOutputTruncated.get()) {
+            log.warn("The getData request from peer with {} caused too much ProtectedStorageEntry " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
+
+        log.info("The getDataResponse to peer with {} contains {} ProtectedStorageEntries and {} PersistableNetworkPayloads",
+                connectionInfo,
+                getDataResponse.getDataSet().size(),
+                getDataResponse.getPersistableNetworkPayloadSet().size());
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -105,7 +123,7 @@ public class GetDataRequestHandler {
         }
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);
-        Futures.addCallback(future, new FutureCallback<Connection>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {
@@ -130,49 +148,7 @@ public class GetDataRequestHandler {
                 }
             }
         });
-    }
-
-    private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest, Connection connection) {
-        final Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
-        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
-
-        return dataStorage.getAppendOnlyDataStoreMap().entrySet().stream()
-                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
-                .map(Map.Entry::getValue)
-                .filter(payload -> (connection.noCapabilityRequiredOrCapabilityIsSupported(payload)))
-                .filter(payload -> tempLookupSet.add(new P2PDataStorage.ByteArray(payload.getHash())))
-                .collect(Collectors.toSet());
-    }
-
-    private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest, Connection connection) {
-        final Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
-        final Set<Integer> lookupSet = new HashSet<>();
-
-        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
-        Set<ProtectedStorageEntry> filteredSet = dataStorage.getMap().entrySet().stream()
-                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toSet());
-
-        for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
-            final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
-            boolean doAdd = false;
-            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
-                if (connection.getCapabilities().containsAll(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities()))
-                    doAdd = true;
-                else
-                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
-            } else {
-                doAdd = true;
-            }
-            if (doAdd) {
-                if (lookupSet.add(protectedStoragePayload.hashCode()))
-                    filteredDataSet.add(protectedStorageEntry);
-            }
-        }
-
-        return filteredDataSet;
+        log.info("handle GetDataRequest took {} ms", System.currentTimeMillis() - ts);
     }
 
     public void stop() {

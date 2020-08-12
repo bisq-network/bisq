@@ -21,21 +21,15 @@ import bisq.common.consensus.UsedForTradeContractJson;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import org.bouncycastle.openpgp.PGPPublicKey;
 
 import java.security.PublicKey;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 /**
  * Same as KeyRing but with public keys only.
@@ -47,22 +41,15 @@ import javax.annotation.Nullable;
 public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJson {
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
-    @Nullable
-    private final String pgpPubKeyAsPem;
 
     private transient PublicKey signaturePubKey;
     private transient PublicKey encryptionPubKey;
-    @Nullable
-    private transient PGPPublicKey pgpPubKey;
 
-    public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
+    public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey) {
         this.signaturePubKeyBytes = Sig.getPublicKeyBytes(signaturePubKey);
         this.encryptionPubKeyBytes = Encryption.getPublicKeyBytes(encryptionPubKey);
-        this.pgpPubKeyAsPem = PGP.getPEMFromPubKey(pgpPubKey);
-
         this.signaturePubKey = signaturePubKey;
         this.encryptionPubKey = encryptionPubKey;
-        this.pgpPubKey = pgpPubKey;
     }
 
 
@@ -71,30 +58,25 @@ public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJso
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @VisibleForTesting
-    public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes, @Nullable String pgpPubKeyAsPem) {
+    public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes) {
         this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;
-        this.pgpPubKeyAsPem = pgpPubKeyAsPem;
-
         signaturePubKey = Sig.getPublicKeyFromBytes(signaturePubKeyBytes);
         encryptionPubKey = Encryption.getPublicKeyFromBytes(encryptionPubKeyBytes);
-        if (pgpPubKeyAsPem != null)
-            pgpPubKey = PGP.getPubKeyFromPem(pgpPubKeyAsPem);
     }
 
     @Override
-    public PB.PubKeyRing toProtoMessage() {
-        return PB.PubKeyRing.newBuilder()
+    public protobuf.PubKeyRing toProtoMessage() {
+        return protobuf.PubKeyRing.newBuilder()
                 .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
                 .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes))
-                .setPgpPubKeyAsPem(pgpPubKeyAsPem)
                 .build();
     }
 
-    public static PubKeyRing fromProto(PB.PubKeyRing proto) {
-        return new PubKeyRing(proto.getSignaturePubKeyBytes().toByteArray(),
-                proto.getEncryptionPubKeyBytes().toByteArray(),
-                proto.getPgpPubKeyAsPem());
+    public static PubKeyRing fromProto(protobuf.PubKeyRing proto) {
+        return new PubKeyRing(
+                proto.getSignaturePubKeyBytes().toByteArray(),
+                proto.getEncryptionPubKeyBytes().toByteArray());
     }
 
     @Override
@@ -102,7 +84,6 @@ public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJso
         return "PubKeyRing{" +
                 "signaturePubKeyHex=" + Utilities.bytesAsHexString(signaturePubKeyBytes) +
                 ", encryptionPubKeyHex=" + Utilities.bytesAsHexString(encryptionPubKeyBytes) +
-                ", pgpPubKeyAsString=" + pgpPubKeyAsPem +
-                '}';
+                "}";
     }
 }

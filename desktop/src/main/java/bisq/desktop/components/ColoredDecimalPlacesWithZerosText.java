@@ -17,13 +17,12 @@
 
 package bisq.desktop.components;
 
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.util.Tuple2;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
 
 import javafx.geometry.Pos;
 
@@ -33,13 +32,13 @@ public class ColoredDecimalPlacesWithZerosText extends HBox {
         super();
 
         if (numberOfZerosToColorize <= 0) {
-            getChildren().addAll(new Text(number));
-        } else if (number.contains(BSFormatter.RANGE_SEPARATOR)) {
-            String[] splitNumber = number.split(BSFormatter.RANGE_SEPARATOR);
+            getChildren().addAll(new Label(number));
+        } else if (number.contains(FormattingUtils.RANGE_SEPARATOR)) {
+            String[] splitNumber = number.split(FormattingUtils.RANGE_SEPARATOR);
             Tuple2<Label, Label> numbers = getSplittedNumberNodes(splitNumber[0], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
 
-            getChildren().add(new Text(BSFormatter.RANGE_SEPARATOR));
+            getChildren().add(new Label(FormattingUtils.RANGE_SEPARATOR));
 
             numbers = getSplittedNumberNodes(splitNumber[1], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);

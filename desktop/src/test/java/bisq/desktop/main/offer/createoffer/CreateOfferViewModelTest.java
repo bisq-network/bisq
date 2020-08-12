@@ -17,12 +17,13 @@
 
 package bisq.desktop.main.offer.createoffer;
 
+import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.TxFeeEstimationService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -30,17 +31,22 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
+import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OfferPayload;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.validation.InputValidator;
+
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
@@ -50,13 +56,10 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static bisq.desktop.maker.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
@@ -67,15 +70,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({BtcWalletService.class, AddressEntry.class, PriceFeedService.class, User.class,
-        FeeService.class, CreateOfferDataModel.class, PaymentAccount.class, BsqWalletService.class,
-        SecurityDepositValidator.class, AccountAgeWitnessService.class, BsqFormatter.class, Preferences.class,
-        BsqWalletService.class, TxFeeEstimationService.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class CreateOfferViewModelTest {
 
     private CreateOfferViewModel model;
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
     @Before
     public void setUp() {
@@ -83,8 +81,7 @@ public class CreateOfferViewModelTest {
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();
 
-        final BSFormatter bsFormatter = new BSFormatter();
-        final BtcValidator btcValidator = new BtcValidator(bsFormatter);
+        final BtcValidator btcValidator = new BtcValidator(coinFormatter);
         final AltcoinValidator altcoinValidator = new AltcoinValidator();
         final FiatPriceValidator fiatPriceValidator = new FiatPriceValidator();
 
@@ -99,7 +96,8 @@ public class CreateOfferViewModelTest {
         BsqWalletService bsqWalletService = mock(BsqWalletService.class);
         SecurityDepositValidator securityDepositValidator = mock(SecurityDepositValidator.class);
         AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
-        TxFeeEstimationService txFeeEstimationService = mock(TxFeeEstimationService.class);
+        CreateOfferService createOfferService = mock(CreateOfferService.class);
+        var tradeStats = mock(TradeStatisticsManager.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(btcWalletService.getBalanceForAddress(any())).thenReturn(Coin.valueOf(1000L));
@@ -107,18 +105,26 @@ public class CreateOfferViewModelTest {
         when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
         when(feeService.getTxFee(anyInt())).thenReturn(Coin.valueOf(1000L));
         when(user.findFirstPaymentAccountWithCurrency(any())).thenReturn(paymentAccount);
+        when(paymentAccount.getPaymentMethod()).thenReturn(mock(PaymentMethod.class));
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
         when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
-        when(accountAgeWitnessService.getMyTradeLimit(any(), any())).thenReturn(100000000L);
+        when(accountAgeWitnessService.getMyTradeLimit(any(), any(), any())).thenReturn(100000000L);
         when(preferences.getUserCountry()).thenReturn(new Country("ES", "Spain", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
+        when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
+        when(tradeStats.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, accountAgeWitnessService, feeService, txFeeEstimationService, null, bsFormatter);
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(createOfferService, null, btcWalletService,
+                bsqWalletService, empty, user, null, priceFeedService,
+                accountAgeWitnessService, feeService,
+                coinFormatter, mock(MakerFeeProvider.class), tradeStats, null);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
-        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, securityDepositValidator, null, null, priceFeedService, null, preferences, bsFormatter, bsqFormatter);
+        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator,
+                btcValidator, null, securityDepositValidator, priceFeedService, null, null,
+                preferences, coinFormatter, bsqFormatter);
         model.activate();
     }
 

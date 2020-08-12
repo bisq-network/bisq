@@ -20,6 +20,7 @@ package bisq.core.provider.price;
 import bisq.core.provider.HttpClientProvider;
 
 import bisq.network.http.HttpClient;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.util.MathUtils;
@@ -47,23 +48,28 @@ public class PriceProvider extends HttpClientProvider {
 
     public Tuple2<Map<String, Long>, Map<String, MarketPrice>> getAll() throws IOException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
-        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "bisq/"
-                + Version.VERSION + ", uid:" + httpClient.getUid());
+        String hsVersion = "";
+        if (P2PService.getMyNodeAddress() != null)
+            hsVersion = P2PService.getMyNodeAddress().getHostName().length() > 22 ? ", HSv3" : ", HSv2";
 
-        LinkedTreeMap<String, Object> map = new Gson().<LinkedTreeMap<String, Object>>fromJson(json, LinkedTreeMap.class);
+        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "bisq/"
+                + Version.VERSION + hsVersion);
+
+
+        LinkedTreeMap<?, ?> map = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("btcAverageTs", ((Double) map.get("btcAverageTs")).longValue());
         tsMap.put("poloniexTs", ((Double) map.get("poloniexTs")).longValue());
         tsMap.put("coinmarketcapTs", ((Double) map.get("coinmarketcapTs")).longValue());
 
-        //noinspection unchecked
-        List<LinkedTreeMap<String, Object>> list = (ArrayList<LinkedTreeMap<String, Object>>) map.get("data");
-        list.forEach(treeMap -> {
+        List<?> list = (ArrayList<?>) map.get("data");
+        list.forEach(obj -> {
             try {
+                LinkedTreeMap<?, ?> treeMap = (LinkedTreeMap<?, ?>) obj;
                 final String currencyCode = (String) treeMap.get("currencyCode");
-                final double price = (double) treeMap.get("price");
+                final double price = (Double) treeMap.get("price");
                 // json uses double for our timestampSec long value...
-                final long timestampSec = MathUtils.doubleToLong((double) treeMap.get("timestampSec"));
+                final long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
                 marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
             } catch (Throwable t) {
                 log.error(t.toString());

@@ -17,11 +17,12 @@
 
 package bisq.core.btc.setup;
 
-import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.CheckpointManager;
@@ -55,6 +56,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -80,6 +82,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static bisq.common.util.Preconditions.checkDir;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -112,9 +115,10 @@ public class WalletConfig extends AbstractIdleService {
     private final String spvChainFileName;
     private final Socks5Proxy socks5Proxy;
     private final BisqWalletFactory walletFactory;
-    private final BisqEnvironment bisqEnvironment;
+    private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
     private final String userAgent;
-    private int numConnectionForBtc;
+    private int numConnectionsForBtc;
 
     private volatile Wallet vBtcWallet;
     @Nullable
@@ -149,18 +153,20 @@ public class WalletConfig extends AbstractIdleService {
     public WalletConfig(NetworkParameters params,
                         Socks5Proxy socks5Proxy,
                         File directory,
-                        BisqEnvironment bisqEnvironment,
+                        Config config,
+                        LocalBitcoinNode localBitcoinNode,
                         String userAgent,
-                        int numConnectionForBtc,
+                        int numConnectionsForBtc,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
-        this.bisqEnvironment = bisqEnvironment;
+        this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.userAgent = userAgent;
-        this.numConnectionForBtc = numConnectionForBtc;
+        this.numConnectionsForBtc = numConnectionsForBtc;
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
-        this.directory = checkNotNull(directory);
+        this.directory = checkDir(directory);
         this.btcWalletFileName = checkNotNull(btcWalletFileName);
         this.bsqWalletFileName = bsqWalletFileName;
         this.spvChainFileName = spvChainFileName;
@@ -215,8 +221,6 @@ public class WalletConfig extends AbstractIdleService {
         // no proxy case.
         if (socks5Proxy == null) {
             peerGroup = new PeerGroup(params, vChain);
-            // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
-            // if local btc node is not synced with our dao testnet master node.
         } else {
             // proxy case (tor).
             Proxy proxy = new Proxy(Proxy.Type.SOCKS,
@@ -225,7 +229,7 @@ public class WalletConfig extends AbstractIdleService {
 
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
             // We don't use tor mode if we have a local node running
-            BlockingClientManager blockingClientManager = bisqEnvironment.isBitcoinLocalhostNodeRunning() ?
+            BlockingClientManager blockingClientManager = config.ignoreLocalBtcNode ?
                     new BlockingClientManager() :
                     new BlockingClientManager(proxySocketFactory);
 
@@ -235,9 +239,7 @@ public class WalletConfig extends AbstractIdleService {
             peerGroup.setConnectTimeoutMillis(TOR_VERSION_EXCHANGE_TIMEOUT);
         }
 
-        // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
-        // if local btc node is not synced with our dao testnet master node.
-        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() || BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet())
+        if (!localBitcoinNode.shouldBeUsed())
             peerGroup.setUseLocalhostPeerWhenPossible(false);
 
         return peerGroup;
@@ -363,11 +365,6 @@ public class WalletConfig extends AbstractIdleService {
     protected void startUp() throws Exception {
         // Runs in a separate thread.
         Context.propagate(context);
-        if (!directory.exists()) {
-            if (!directory.mkdirs()) {
-                throw new IOException("Could not create directory " + directory.getAbsolutePath());
-            }
-        }
         log.info("Wallet directory: {}", directory);
         try {
             File chainFile = new File(directory, spvChainFileName);
@@ -436,7 +433,7 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                int maxConnections = Math.min(numConnectionForBtc, peerAddresses.length);
+                int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
                 log.info("We try to connect to {} btc nodes", maxConnections);
                 vPeerGroup.setMaxConnections(maxConnections);
                 vPeerGroup.setAddPeersFromAddressMessage(false);
@@ -465,7 +462,7 @@ public class WalletConfig extends AbstractIdleService {
                 vPeerGroup.startBlockChainDownload(listener);
                 listener.await();
             } else {
-                Futures.addCallback(vPeerGroup.startAsync(), new FutureCallback() {
+                Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
                     @Override
                     public void onSuccess(@Nullable Object result) {
                         final PeerDataEventListener listener = downloadListener == null ?
@@ -476,7 +473,6 @@ public class WalletConfig extends AbstractIdleService {
                     @Override
                     public void onFailure(@NotNull Throwable t) {
                         throw new RuntimeException(t);
-
                     }
                 });
             }
@@ -561,13 +557,12 @@ public class WalletConfig extends AbstractIdleService {
 
     private void installShutdownHook() {
         if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("ShutdownHook");
             try {
                 WalletConfig.this.stopAsync();
                 WalletConfig.this.awaitTerminated();
             } catch (Throwable ignore) {
             }
-        }));
+        }, "WalletConfig ShutdownHook"));
     }
 
     @Override

@@ -17,9 +17,7 @@
 
 package bisq.core.dao.governance.bond.reputation;
 
-import bisq.common.proto.persistable.PersistableList;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +29,7 @@ import lombok.EqualsAndHashCode;
  * PersistableEnvelope wrapper for list of MyReputations.
  */
 @EqualsAndHashCode(callSuper = true)
-public class MyReputationList extends PersistableList<MyReputation> {
+public class MyReputationList extends UserThreadMappedPersistableList<MyReputation> {
 
     private MyReputationList(List<MyReputation> list) {
         super(list);
@@ -47,18 +45,18 @@ public class MyReputationList extends PersistableList<MyReputation> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setMyReputationList(getBuilder()).build();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        return protobuf.PersistableEnvelope.newBuilder().setMyReputationList(getBuilder()).build();
     }
 
-    private PB.MyReputationList.Builder getBuilder() {
-        return PB.MyReputationList.newBuilder()
+    private protobuf.MyReputationList.Builder getBuilder() {
+        return protobuf.MyReputationList.newBuilder()
                 .addAllMyReputation(getList().stream()
                         .map(MyReputation::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static MyReputationList fromProto(PB.MyReputationList proto) {
+    public static MyReputationList fromProto(protobuf.MyReputationList proto) {
         return new MyReputationList(new ArrayList<>(proto.getMyReputationList().stream()
                 .map(MyReputation::fromProto)
                 .collect(Collectors.toList())));
@@ -71,4 +69,3 @@ public class MyReputationList extends PersistableList<MyReputation> {
                 .collect(Collectors.toList());
     }
 }
-

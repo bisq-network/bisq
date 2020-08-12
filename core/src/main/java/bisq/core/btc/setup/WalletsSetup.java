@@ -17,8 +17,9 @@
 
 package bisq.core.btc.setup;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BtcOptionKeys;
+import bisq.core.btc.exceptions.InvalidHostException;
+import bisq.core.btc.nodes.LocalBitcoinNode;
+import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.nodes.BtcNetworkConfig;
@@ -33,6 +34,7 @@ import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.FileUtil;
@@ -44,6 +46,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.RejectMessage;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.utils.Threading;
@@ -89,6 +92,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -102,8 +106,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // merge WalletsSetup with WalletConfig to one class.
 @Slf4j
 public class WalletsSetup {
-    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 9 nodes
-    public static final int DEFAULT_CONNECTIONS = 9;
+
+    @Getter
+    public final BooleanProperty walletsSetupFailed = new SimpleBooleanProperty();
 
     private static final long STARTUP_TIMEOUT = 180;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
@@ -113,15 +118,18 @@ public class WalletsSetup {
     private final AddressEntryList addressEntryList;
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
-    private final BisqEnvironment bisqEnvironment;
+    private final Config config;
+    private final LocalBitcoinNode localBitcoinNode;
     private final BtcNodes btcNodes;
     private final String btcWalletFileName;
-    private final int numConnectionForBtc;
+    private final int numConnectionsForBtc;
     private final String userAgent;
     private final NetworkParameters params;
     private final File walletDir;
     private final int socks5DiscoverMode;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
+    private final IntegerProperty chainHeight = new SimpleIntegerProperty(0);
+    private final ObjectProperty<Peer> blocksDownloadedFromPeer = new SimpleObjectProperty<>();
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     private final DownloadListener downloadListener = new DownloadListener();
     private final List<Runnable> setupCompletedHandlers = new ArrayList<>();
@@ -138,28 +146,29 @@ public class WalletsSetup {
                         AddressEntryList addressEntryList,
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
-                        BisqEnvironment bisqEnvironment,
+                        Config config,
+                        LocalBitcoinNode localBitcoinNode,
                         BtcNodes btcNodes,
-                        @Named(BtcOptionKeys.USER_AGENT) String userAgent,
-                        @Named(BtcOptionKeys.WALLET_DIR) File appDir,
-                        @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
-                        @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
-                        @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
+                        @Named(Config.USER_AGENT) String userAgent,
+                        @Named(Config.WALLET_DIR) File walletDir,
+                        @Named(Config.USE_ALL_PROVIDED_NODES) boolean useAllProvidedNodes,
+                        @Named(Config.NUM_CONNECTIONS_FOR_BTC) int numConnectionsForBtc,
+                        @Named(Config.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.addressEntryList = addressEntryList;
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
-        this.bisqEnvironment = bisqEnvironment;
+        this.config = config;
+        this.localBitcoinNode = localBitcoinNode;
         this.btcNodes = btcNodes;
-        this.numConnectionForBtc = numConnectionForBtc != null ? Integer.parseInt(numConnectionForBtc) : DEFAULT_CONNECTIONS;
-        this.useAllProvidedNodes = "true".equals(useAllProvidedNodes);
+        this.numConnectionsForBtc = numConnectionsForBtc;
+        this.useAllProvidedNodes = useAllProvidedNodes;
         this.userAgent = userAgent;
-
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
+        this.walletDir = walletDir;
 
-        btcWalletFileName = "bisq_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
-        params = BisqEnvironment.getParameters();
-        walletDir = new File(appDir, "wallet");
+        btcWalletFileName = "bisq_" + config.baseCurrencyNetwork.getCurrencyCode() + ".wallet";
+        params = Config.baseCurrencyNetworkParameters();
         PeerGroup.setIgnoreHttpSeeds(true);
     }
 
@@ -168,7 +177,9 @@ public class WalletsSetup {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed,
+                           ResultHandler resultHandler,
+                           ExceptionHandler exceptionHandler) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -188,9 +199,10 @@ public class WalletsSetup {
         walletConfig = new WalletConfig(params,
                 socks5Proxy,
                 walletDir,
-                bisqEnvironment,
+                config,
+                localBitcoinNode,
                 userAgent,
-                numConnectionForBtc,
+                numConnectionsForBtc,
                 btcWalletFileName,
                 BSQ_WALLET_FILE_NAME,
                 SPV_CHAIN_FILE_NAME) {
@@ -200,6 +212,7 @@ public class WalletsSetup {
                 super.onSetupCompleted();
 
                 final PeerGroup peerGroup = walletConfig.peerGroup();
+                final BlockChain chain = walletConfig.chain();
 
                 // We don't want to get our node white list polluted with nodes from AddressMessage calls.
                 if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty())
@@ -214,6 +227,27 @@ public class WalletsSetup {
                     // We get called here on our user thread
                     numPeers.set(peerCount);
                     connectedPeers.set(peerGroup.getConnectedPeers());
+                });
+                peerGroup.addBlocksDownloadedEventListener((peer, block, filteredBlock, blocksLeft) -> {
+                    blocksDownloadedFromPeer.set(peer);
+                });
+
+                // Need to be Threading.SAME_THREAD executor otherwise BitcoinJ will skip that listener
+                peerGroup.addPreMessageReceivedEventListener(Threading.SAME_THREAD, (peer, message) -> {
+                    if (message instanceof RejectMessage) {
+                        UserThread.execute(() -> {
+                            RejectMessage rejectMessage = (RejectMessage) message;
+                            String msg = rejectMessage.toString();
+                            log.warn(msg);
+                            exceptionHandler.handleException(new RejectedTxException(msg, rejectMessage));
+                        });
+                    }
+                    return message;
+                });
+
+                chain.addNewBestBlockListener(block -> {
+                    connectedPeers.set(peerGroup.getConnectedPeers());
+                    chainHeight.set(block.getHeight());
                 });
 
                 // Map to user thread
@@ -235,13 +269,27 @@ public class WalletsSetup {
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
                 configPeerNodesForRegTestServer();
             } else {
-                configPeerNodes(socks5Proxy);
+                try {
+                    configPeerNodes(socks5Proxy);
+                } catch (IllegalArgumentException e) {
+                    timeoutTimer.stop();
+                    walletsSetupFailed.set(true);
+                    exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
+                    return;
+                }
             }
-        } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
+        } else if (localBitcoinNode.shouldBeUsed()) {
             walletConfig.setMinBroadcastConnections(1);
             walletConfig.setPeerNodesForLocalHost();
         } else {
-            configPeerNodes(socks5Proxy);
+            try {
+                configPeerNodes(socks5Proxy);
+            } catch (IllegalArgumentException e) {
+                timeoutTimer.stop();
+                walletsSetupFailed.set(true);
+                exceptionHandler.handleException(new InvalidHostException(e.getMessage()));
+                return;
+            }
         }
 
         walletConfig.setDownloadListener(downloadListener)
@@ -362,7 +410,9 @@ public class WalletsSetup {
     // Restore
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void restoreSeedWords(@Nullable DeterministicSeed seed,
+                                 ResultHandler resultHandler,
+                                 ExceptionHandler exceptionHandler) {
         checkNotNull(seed, "Seed must be not be null.");
 
         backupWallets();
@@ -429,16 +479,20 @@ public class WalletsSetup {
         return connectedPeers;
     }
 
+    public ReadOnlyIntegerProperty chainHeightProperty() {
+        return chainHeight;
+    }
+
+    public ReadOnlyObjectProperty<Peer> blocksDownloadedFromPeerProperty() {
+        return blocksDownloadedFromPeer;
+    }
+
     public ReadOnlyDoubleProperty downloadPercentageProperty() {
         return downloadListener.percentageProperty();
     }
 
     public boolean isDownloadComplete() {
         return downloadPercentageProperty().get() == 1d;
-    }
-
-    public boolean isBitcoinLocalhostNodeRunning() {
-        return bisqEnvironment.isBitcoinLocalhostNodeRunning();
     }
 
     public Set<Address> getAddressesByContext(@SuppressWarnings("SameParameterValue") AddressEntry.Context context) {

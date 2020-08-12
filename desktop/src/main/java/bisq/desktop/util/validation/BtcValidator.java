@@ -19,11 +19,13 @@ package bisq.desktop.util.validation;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.math.BigDecimal;
 
@@ -34,7 +36,7 @@ import javax.annotation.Nullable;
 
 public class BtcValidator extends NumberValidator {
 
-    protected final BSFormatter formatter;
+    protected final CoinFormatter formatter;
 
     @Nullable
     @Setter
@@ -50,7 +52,7 @@ public class BtcValidator extends NumberValidator {
     protected Coin maxTradeLimit;
 
     @Inject
-    public BtcValidator(BSFormatter formatter) {
+    public BtcValidator(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.formatter = formatter;
     }
 
@@ -64,13 +66,14 @@ public class BtcValidator extends NumberValidator {
         }
 
         if (result.isValid) {
-            result = validateIfNotZero(input)
-                    .and(validateIfNotNegative(input))
-                    .and(validateIfNotFractionalBtcValue(input))
-                    .and(validateIfNotExceedsMaxBtcValue(input))
-                    .and(validateIfNotExceedsMaxTradeLimit(input))
-                    .and(validateIfNotUnderMinValue(input))
-                    .and(validateIfAboveDust(input));
+            result = result.andValidation(input,
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotFractionalBtcValue,
+                    this::validateIfNotExceedsMaxTradeLimit,
+                    this::validateIfNotExceedsMaxBtcValue,
+                    this::validateIfNotUnderMinValue,
+                    this::validateIfAboveDust);
         }
 
         return result;

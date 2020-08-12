@@ -17,6 +17,7 @@
 
 package bisq.core.offer;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterManager;
@@ -24,7 +25,6 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -32,12 +32,12 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.Capabilities;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
@@ -60,7 +60,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This class holds utility methods for the creation of an Offer.
  * Most of these are extracted here because they are used both in the GUI and in the API.
  * <p>
- * Long-term there could be a GUI-agnostic OfferService which provides these and other functionalities to both the
+ * Long-term there could be a GUI-agnostic OfferService which provides these and other functionality to both the
  * GUI and the API.
  */
 @Slf4j
@@ -69,8 +69,8 @@ public class OfferUtil {
     /**
      * Given the direction, is this a BUY?
      *
-     * @param direction
-     * @return
+     * @param direction the offer direction
+     * @return {@code true} for an offer to buy BTC from the taker, {@code false} for an offer to sell BTC to the taker
      */
     public static boolean isBuyOffer(OfferPayload.Direction direction) {
         return direction == OfferPayload.Direction.BUY;
@@ -79,13 +79,13 @@ public class OfferUtil {
     /**
      * Returns the makerFee as Coin, this can be priced in BTC or BSQ.
      *
-     * @param bsqWalletService
-     * @param preferences          preferences are used to see if the user indicated a preference for paying fees in BTC
-     * @param amount
-     * @return
+     * @param bsqWalletService wallet service used to check if there is enough BSQ to pay the fee
+     * @param preferences      preferences are used to see if the user indicated a preference for paying fees in BTC
+     * @param amount           the amount of BTC to trade
+     * @return the maker fee for the given trade amount, or {@code null} if the amount is {@code null}
      */
     @Nullable
-    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, Coin amount) {
+    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, @Nullable Coin amount) {
         boolean isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
         return getMakerFee(isCurrencyForMakerFeeBtc, amount);
     }
@@ -93,9 +93,9 @@ public class OfferUtil {
     /**
      * Calculates the maker fee for the given amount, marketPrice and marketPriceMargin.
      *
-     * @param isCurrencyForMakerFeeBtc
-     * @param amount
-     * @return
+     * @param isCurrencyForMakerFeeBtc {@code true} to pay fee in BTC, {@code false} to pay fee in BSQ
+     * @param amount                   the amount of BTC to trade
+     * @return the maker fee for the given trade amount, or {@code null} if the amount is {@code null}
      */
     @Nullable
     public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount) {
@@ -111,12 +111,14 @@ public class OfferUtil {
      * Checks if the maker fee should be paid in BTC, this can be the case due to user preference or because the user
      * doesn't have enough BSQ.
      *
-     * @param preferences
-     * @param bsqWalletService
-     * @param amount
-     * @return
+     * @param preferences      preferences are used to see if the user indicated a preference for paying fees in BTC
+     * @param bsqWalletService wallet service used to check if there is enough BSQ to pay the fee
+     * @param amount           the amount of BTC to trade
+     * @return {@code true} if BTC is preferred or the trade amount is nonnull and there isn't enough BSQ for it
      */
-    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
+    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences,
+                                                   BsqWalletService bsqWalletService,
+                                                   @Nullable Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -125,9 +127,9 @@ public class OfferUtil {
     /**
      * Checks if the available BSQ balance is sufficient to pay for the offer's maker fee.
      *
-     * @param bsqWalletService
-     * @param amount
-     * @return
+     * @param bsqWalletService wallet service used to check if there is enough BSQ to pay the fee
+     * @param amount           the amount of BTC to trade
+     * @return {@code true} if the balance is sufficient, {@code false} otherwise
      */
     public static boolean isBsqForMakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount) {
         Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
@@ -138,6 +140,10 @@ public class OfferUtil {
         if (makerFee == null)
             return true;
 
+        Coin surplusFunds = availableBalance.subtract(makerFee);
+        if (Restrictions.isDust(surplusFunds)) {
+            return false; // we can't be left with dust
+        }
         return !availableBalance.subtract(makerFee).isNegative();
     }
 
@@ -152,7 +158,9 @@ public class OfferUtil {
         }
     }
 
-    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
+    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences,
+                                                   BsqWalletService bsqWalletService,
+                                                   Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForTakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -167,6 +175,10 @@ public class OfferUtil {
         if (takerFee == null)
             return true;
 
+        Coin surplusFunds = availableBalance.subtract(takerFee);
+        if (Restrictions.isDust(surplusFunds)) {
+            return false; // we can't be left with dust
+        }
         return !availableBalance.subtract(takerFee).isNegative();
     }
 
@@ -202,7 +214,7 @@ public class OfferUtil {
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
      * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
+     * @param price             Price used in relation to that amount.
      * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
      * @return The adjusted amount
      */
@@ -219,7 +231,7 @@ public class OfferUtil {
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
      * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
+     * @param price             Price used in relation to that amount.
      * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
      * @param factor            The factor used for rounding. E.g. 1 means rounded to units of
      *                          1 EUR, 10 means rounded to 10 EUR, etc.
@@ -229,7 +241,7 @@ public class OfferUtil {
     static Coin getAdjustedAmount(Coin amount, Price price, long maxTradeLimit, int factor) {
         checkArgument(
                 amount.getValue() >= 10_000,
-                "amount needs to be above minimum of 10k satoshi"
+                "amount needs to be above minimum of 10k satoshis"
         );
         checkArgument(
                 factor > 0,
@@ -247,7 +259,7 @@ public class OfferUtil {
         // We use 10 000 satoshi as min allowed amount
         checkArgument(
                 minTradeAmount >= 10_000,
-                "MinTradeAmount must be at least 10k satoshi"
+                "MinTradeAmount must be at least 10k satoshis"
         );
         smallestUnitForAmount = Coin.valueOf(Math.max(minTradeAmount, smallestUnitForAmount.value));
         // We don't allow smaller amount values than smallestUnitForAmount
@@ -277,11 +289,22 @@ public class OfferUtil {
 
     public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
                                                             Preferences preferences, PriceFeedService priceFeedService,
-                                                            BsqFormatter bsqFormatter) {
-        // We use the users currency derived from his selected country.
-        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
+                                                            CoinFormatter bsqFormatter) {
         String countryCode = preferences.getUserCountry().code;
         String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        return getFeeInUserFiatCurrency(makerFee,
+                isCurrencyForMakerFeeBtc,
+                userCurrencyCode,
+                priceFeedService,
+                bsqFormatter);
+    }
+
+    private static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
+                                                             String userCurrencyCode, PriceFeedService priceFeedService,
+                                                             CoinFormatter bsqFormatter) {
+        // We use the users currency derived from his selected country.
+        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
+
         MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
         if (marketPrice != null && makerFee != null) {
             long marketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));
@@ -306,43 +329,29 @@ public class OfferUtil {
         }
     }
 
-    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Optional<Volume> optionalFeeInFiat, BSFormatter formatter) {
-        String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
-        String feeInFiatAsString;
-        if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
-            feeInFiatAsString = formatter.formatVolumeWithCode(optionalFeeInFiat.get());
-        } else {
-            feeInFiatAsString = Res.get("shared.na");
-        }
-        return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
-    }
-
 
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
                                                       String currencyCode) {
-        Map<String, String> extraDataMap = null;
+        Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            extraDataMap = new HashMap<>();
-            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
             extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
         }
 
         if (referralIdService.getOptionalReferralId().isPresent()) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
             extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
         }
 
         if (paymentAccount instanceof F2FAccount) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
             extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
             extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
         }
 
-        return extraDataMap;
+        extraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+        return extraDataMap.isEmpty() ? null : extraDataMap;
     }
 
     public static void validateOfferData(FilterManager filterManager,
@@ -353,12 +362,12 @@ public class OfferUtil {
                                          Coin makerFeeAsCoin) {
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        checkArgument(buyerSecurityDeposit <= Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount),
+        checkArgument(buyerSecurityDeposit <= Restrictions.getMaxBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not exceed " +
-                        Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount));
-        checkArgument(buyerSecurityDeposit >= Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount),
+                        Restrictions.getMaxBuyerSecurityDepositAsPercent());
+        checkArgument(buyerSecurityDeposit >= Restrictions.getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
-                        Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount));
+                        Restrictions.getMinBuyerSecurityDepositAsPercent());
         checkArgument(!filterManager.isCurrencyBanned(currencyCode),
                 Res.get("offerbook.warning.currencyBanned"));
         checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),

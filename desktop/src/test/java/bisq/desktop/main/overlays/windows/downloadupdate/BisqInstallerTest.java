@@ -42,20 +42,20 @@ public class BisqInstallerTest {
     @Test
     public void verifySignature() throws Exception {
         URL url = this.getClass().getResource("/downloadUpdate/test.txt");
-        File dataFile = new File(url.getFile());
+        File dataFile = new File(url.toURI().getPath());
         url = this.getClass().getResource("/downloadUpdate/test.txt.asc");
-        File sigFile = new File(url.getFile());
+        File sigFile = new File(url.toURI().getPath());
         url = this.getClass().getResource("/downloadUpdate/F379A1C6.asc");
-        File pubKeyFile = new File(url.getFile());
+        File pubKeyFile = new File(url.toURI().getPath());
 
         assertEquals(BisqInstaller.VerifyStatusEnum.OK, BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile));
 
         url = this.getClass().getResource("/downloadUpdate/test_bad.txt");
-        dataFile = new File(url.getFile());
+        dataFile = new File(url.toURI().getPath());
         url = this.getClass().getResource("/downloadUpdate/test_bad.txt.asc");
-        sigFile = new File(url.getFile());
+        sigFile = new File(url.toURI().getPath());
         url = this.getClass().getResource("/downloadUpdate/F379A1C6.asc");
-        pubKeyFile = new File(url.getFile());
+        pubKeyFile = new File(url.toURI().getPath());
 
         BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile);
         assertEquals(BisqInstaller.VerifyStatusEnum.FAIL, BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile));

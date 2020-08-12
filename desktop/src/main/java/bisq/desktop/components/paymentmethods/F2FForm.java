@@ -23,6 +23,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.F2FValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
@@ -30,13 +31,12 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
@@ -74,7 +74,7 @@ public class F2FForm extends PaymentMethodForm {
 
     public F2FForm(PaymentAccount paymentAccount,
                    AccountAgeWitnessService accountAgeWitnessService, F2FValidator f2fValidator,
-                   InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+                   InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
 
         this.f2fAccount = (F2FAccount) paymentAccount;

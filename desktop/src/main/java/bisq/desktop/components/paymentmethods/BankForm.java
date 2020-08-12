@@ -21,6 +21,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -28,12 +29,11 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
@@ -167,7 +167,7 @@ abstract class BankForm extends GeneralBankForm {
     private Country selectedCountry;
 
     BankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
-             GridPane gridPane, int gridRow, BSFormatter formatter) {
+             GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.bankAccountPayload = (BankAccountPayload) paymentAccount.paymentAccountPayload;
     }
@@ -240,28 +240,28 @@ abstract class BankForm extends GeneralBankForm {
         bankNameInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.bank.name"));
 
         bankNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setBankName(newValue);
+            bankAccountPayload.setBankName(newValue.trim());
             updateFromInputs();
 
         });
 
         bankIdInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(""));
         bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setBankId(newValue);
+            bankAccountPayload.setBankId(newValue.trim());
             updateFromInputs();
 
         });
 
         branchIdInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(""));
         branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setBranchId(newValue);
+            bankAccountPayload.setBranchId(newValue.trim());
             updateFromInputs();
 
         });
 
         accountNrInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(""));
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setAccountNr(newValue);
+            bankAccountPayload.setAccountNr(newValue.trim());
             updateFromInputs();
 
         });
@@ -381,7 +381,7 @@ abstract class BankForm extends GeneralBankForm {
         holderNameInputTextField = tuple.first;
         holderNameInputTextField.setMinWidth(250);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setHolderName(newValue);
+            bankAccountPayload.setHolderName(newValue.trim());
             updateFromInputs();
         });
         holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
@@ -430,7 +430,7 @@ abstract class BankForm extends GeneralBankForm {
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(250);
-            tuple.forth.setText(bankAccountPayload.getHolderTaxId());
+            tuple.fourth.setText(bankAccountPayload.getHolderTaxId());
         } else {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), bankAccountPayload.getHolderName());
         }

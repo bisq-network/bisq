@@ -20,18 +20,17 @@ package bisq.desktop.util.validation;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 
 import javax.inject.Inject;
 
 public class SecurityDepositValidator extends NumberValidator {
 
-    private final BSFormatter formatter;
     private PaymentAccount paymentAccount;
 
     @Inject
-    public SecurityDepositValidator(BSFormatter formatter) {
-        this.formatter = formatter;
+    public SecurityDepositValidator() {
     }
 
     public void setPaymentAccount(PaymentAccount paymentAccount) {
@@ -47,10 +46,11 @@ public class SecurityDepositValidator extends NumberValidator {
         }
 
         if (result.isValid) {
-            result = validateIfNotZero(input)
-                    .and(validateIfNotNegative(input))
-                    .and(validateIfNotTooLowPercentageValue(input))
-                    .and(validateIfNotTooHighPercentageValue(input));
+            result = result.andValidation(input,
+                    this::validateIfNotZero,
+                    this::validateIfNotNegative,
+                    this::validateIfNotTooLowPercentageValue,
+                    this::validateIfNotTooHighPercentageValue);
         }
         return result;
     }
@@ -58,11 +58,11 @@ public class SecurityDepositValidator extends NumberValidator {
 
     private ValidationResult validateIfNotTooLowPercentageValue(String input) {
         try {
-            double percentage = formatter.parsePercentStringToDouble(input);
-            double minPercentage = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+            double percentage = ParsingUtils.parsePercentStringToDouble(input);
+            double minPercentage = Restrictions.getMinBuyerSecurityDepositAsPercent();
             if (percentage < minPercentage)
                 return new ValidationResult(false,
-                        Res.get("validation.inputTooSmall", formatter.formatToPercentWithSymbol(minPercentage)));
+                        Res.get("validation.inputTooSmall", FormattingUtils.formatToPercentWithSymbol(minPercentage)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {
@@ -72,11 +72,11 @@ public class SecurityDepositValidator extends NumberValidator {
 
     private ValidationResult validateIfNotTooHighPercentageValue(String input) {
         try {
-            double percentage = formatter.parsePercentStringToDouble(input);
-            double maxPercentage = Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount);
+            double percentage = ParsingUtils.parsePercentStringToDouble(input);
+            double maxPercentage = Restrictions.getMaxBuyerSecurityDepositAsPercent();
             if (percentage > maxPercentage)
                 return new ValidationResult(false,
-                        Res.get("validation.inputTooLarge", formatter.formatToPercentWithSymbol(maxPercentage)));
+                        Res.get("validation.inputTooLarge", FormattingUtils.formatToPercentWithSymbol(maxPercentage)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

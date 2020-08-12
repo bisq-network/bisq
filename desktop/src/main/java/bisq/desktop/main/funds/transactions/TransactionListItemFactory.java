@@ -20,28 +20,33 @@ package bisq.desktop.main.funds.transactions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.trade.Tradable;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
-
-import java.util.Optional;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import javax.annotation.Nullable;
 
+
+@Singleton
 public class TransactionListItemFactory {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final DaoFacade daoFacade;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final Preferences preferences;
 
     @Inject
-    TransactionListItemFactory(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                               DaoFacade daoFacade, BSFormatter formatter, Preferences preferences) {
+    TransactionListItemFactory(BtcWalletService btcWalletService,
+                               BsqWalletService bsqWalletService,
+                               DaoFacade daoFacade,
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                               Preferences preferences) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
@@ -50,10 +55,12 @@ public class TransactionListItemFactory {
     }
 
     TransactionsListItem create(Transaction transaction, @Nullable TransactionAwareTradable tradable) {
-        Optional<Tradable> maybeTradable = Optional.ofNullable(tradable)
-                .map(TransactionAwareTradable::asTradable);
-
-        return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, maybeTradable,
-                daoFacade, formatter, preferences.getIgnoreDustThreshold());
+        return new TransactionsListItem(transaction,
+                btcWalletService,
+                bsqWalletService,
+                tradable,
+                daoFacade,
+                formatter,
+                preferences.getIgnoreDustThreshold());
     }
 }

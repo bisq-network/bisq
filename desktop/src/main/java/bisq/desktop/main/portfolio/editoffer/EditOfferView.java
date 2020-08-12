@@ -24,18 +24,20 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.offer.MutableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.util.Tuple4;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -61,8 +63,13 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private EditOfferView(EditOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
-        super(model, navigation, preferences, transitions, offerDetailsWindow, btcFormatter, bsqFormatter);
+    private EditOfferView(EditOfferViewModel model,
+                          Navigation navigation,
+                          Preferences preferences,
+                          OfferDetailsWindow offerDetailsWindow,
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                          BsqFormatter bsqFormatter) {
+        super(model, navigation, preferences, offerDetailsWindow, btcFormatter, bsqFormatter);
     }
 
     @Override
@@ -119,7 +126,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
     public void onClose() {
         model.onCancelEditOffer(errorMessage -> {
             log.error(errorMessage);
-            new Popup<>().warning(Res.get("editOffer.failed", errorMessage)).show();
+            new Popup().warning(Res.get("editOffer.failed", errorMessage)).show();
         });
     }
 
@@ -128,11 +135,6 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         super.deactivate();
 
         removeBindings();
-    }
-
-    @Override
-    protected void showFiatRoundingInfoPopup() {
-        // don't show it again as it was already shown when creating the offer in the first place
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,13 +149,13 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
         model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
-            new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
+            new Popup().warning(Res.get("editOffer.failed", errorMessage))
                     .onClose(this::close)
                     .show();
         });
 
         if (!model.isSecurityDepositValid()) {
-            new Popup<>().warning(Res.get("editOffer.invalidDeposit"))
+            new Popup().warning(Res.get("editOffer.invalidDeposit"))
                     .onClose(this::close)
                     .show();
         }
@@ -180,7 +182,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         int tmpGridRow = 4;
         final Tuple4<Button, BusyAnimation, Label, HBox> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, Res.get("editOffer.confirmEdit"));
 
-        final HBox editOfferConfirmationBox = editOfferTuple.forth;
+        final HBox editOfferConfirmationBox = editOfferTuple.fourth;
         editOfferConfirmationBox.setAlignment(Pos.CENTER_LEFT);
         GridPane.setHalignment(editOfferConfirmationBox, HPos.LEFT);
 
@@ -194,7 +196,6 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
         cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
-        cancelButton.setId("cancel-button");
         cancelButton.setOnAction(event -> close());
         editOfferConfirmationBox.getChildren().add(cancelButton);
 
@@ -207,7 +208,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
                 //edit offer
                 model.onPublishOffer(() -> {
                     log.debug("Edit offer was successful");
-                    new Popup<>().feedback(Res.get("editOffer.success")).show();
+                    new Popup().feedback(Res.get("editOffer.success")).show();
                     spinnerInfoLabel.setText("");
                     busyAnimation.stop();
                     close();
@@ -217,7 +218,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
                     busyAnimation.stop();
                     model.isNextButtonDisabled.setValue(false);
                     cancelButton.setDisable(false);
-                    new Popup<>().warning(Res.get("editOffer.failed", message)).show();
+                    new Popup().warning(Res.get("editOffer.failed", message)).show();
                 });
             }
         });

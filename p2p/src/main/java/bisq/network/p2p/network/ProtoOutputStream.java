@@ -21,8 +21,6 @@ import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -61,7 +59,7 @@ class ProtoOutputStream {
     }
 
     private void writeEnvelopeOrThrow(NetworkEnvelope envelope) throws IOException {
-        PB.NetworkEnvelope proto = envelope.toProtoNetworkEnvelope();
+        protobuf.NetworkEnvelope proto = envelope.toProtoNetworkEnvelope();
         proto.writeDelimitedTo(delegate);
         delegate.flush();
 

@@ -21,14 +21,11 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.PersistableEnvelope;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -52,7 +49,7 @@ import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAs
 @Slf4j
 @Data
 @AllArgsConstructor
-public final class PreferencesPayload implements PersistableEnvelope {
+public final class PreferencesPayload implements UserThreadMappedPersistableEnvelope {
     private String userLanguage;
     private Country userCountry;
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
@@ -61,7 +58,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private List<CryptoCurrency> cryptoCurrencies = new ArrayList<>();
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
-    private BlockChainExplorer bsqBlockChainExplorer = Preferences.BSQ_MAIN_NET_EXPLORER;
+    @Nullable
+    private BlockChainExplorer bsqBlockChainExplorer;
     @Nullable
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
@@ -96,6 +94,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private long buyerSecurityDepositAsLong;
 
     private boolean useAnimations;
+    private int cssTheme;
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
     private boolean payFeeInBtc = true;
@@ -122,17 +121,18 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String rpcPw;
     @Nullable
     private String takeOfferSelectedPaymentAccountId;
-    private double buyerSecurityDepositAsPercent = getDefaultBuyerSecurityDepositAsPercent(null);
+    private double buyerSecurityDepositAsPercent = getDefaultBuyerSecurityDepositAsPercent();
     private int ignoreDustThreshold = 600;
-    private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
+    private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent();
     private int blockNotifyPort;
+    private boolean tacAcceptedV120;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PreferencesPayload() {
+    PreferencesPayload() {
     }
 
 
@@ -142,18 +142,17 @@ public final class PreferencesPayload implements PersistableEnvelope {
 
     @Override
     public Message toProtoMessage() {
-        PB.PreferencesPayload.Builder builder = PB.PreferencesPayload.newBuilder()
+        protobuf.PreferencesPayload.Builder builder = protobuf.PreferencesPayload.newBuilder()
                 .setUserLanguage(userLanguage)
-                .setUserCountry((PB.Country) userCountry.toProtoMessage())
+                .setUserCountry((protobuf.Country) userCountry.toProtoMessage())
                 .addAllFiatCurrencies(fiatCurrencies.stream()
-                        .map(fiatCurrency -> ((PB.TradeCurrency) fiatCurrency.toProtoMessage()))
+                        .map(fiatCurrency -> ((protobuf.TradeCurrency) fiatCurrency.toProtoMessage()))
                         .collect(Collectors.toList()))
                 .addAllCryptoCurrencies(cryptoCurrencies.stream()
-                        .map(cryptoCurrency -> ((PB.TradeCurrency) cryptoCurrency.toProtoMessage()))
+                        .map(cryptoCurrency -> ((protobuf.TradeCurrency) cryptoCurrency.toProtoMessage()))
                         .collect(Collectors.toList()))
-                .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
-                .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
-                .setBsqBlockChainExplorer((PB.BlockChainExplorer) bsqBlockChainExplorer.toProtoMessage())
+                .setBlockChainExplorerMainNet((protobuf.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
+                .setBlockChainExplorerTestNet((protobuf.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
                 .setAutoSelectArbitrators(autoSelectArbitrators)
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setTacAccepted(tacAccepted)
@@ -172,6 +171,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setDirectoryChooserPath(directoryChooserPath)
                 .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
                 .setUseAnimations(useAnimations)
+                .setCssTheme(cssTheme)
                 .setPayFeeInBtc(payFeeInBtc)
                 .setBridgeOptionOrdinal(bridgeOptionOrdinal)
                 .setTorTransportOrdinal(torTransportOrdinal)
@@ -185,9 +185,10 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent)
                 .setIgnoreDustThreshold(ignoreDustThreshold)
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
-                .setBlockNotifyPort(blockNotifyPort);
+                .setBlockNotifyPort(blockNotifyPort)
+                .setTacAcceptedV120(tacAcceptedV120);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
-        Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
+        Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
         Optional.ofNullable(tradeChartsScreenCurrencyCode).ifPresent(builder::setTradeChartsScreenCurrencyCode);
         Optional.ofNullable(buyScreenCurrencyCode).ifPresent(builder::setBuyScreenCurrencyCode);
@@ -201,12 +202,13 @@ public final class PreferencesPayload implements PersistableEnvelope {
         Optional.ofNullable(rpcUser).ifPresent(builder::setRpcUser);
         Optional.ofNullable(rpcPw).ifPresent(builder::setRpcPw);
         Optional.ofNullable(takeOfferSelectedPaymentAccountId).ifPresent(builder::setTakeOfferSelectedPaymentAccountId);
+        Optional.ofNullable(bsqBlockChainExplorer).ifPresent(e -> builder.setBsqBlockChainExplorer((protobuf.BlockChainExplorer) e.toProtoMessage()));
 
-        return PB.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
+        return protobuf.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(PB.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
-        final PB.Country userCountry = proto.getUserCountry();
+    public static PreferencesPayload fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
+        final protobuf.Country userCountry = proto.getUserCountry();
         PaymentAccount paymentAccount = null;
         if (proto.hasSelectedPaymentAccountForCreateOffer() && proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod())
             paymentAccount = PaymentAccount.fromProto(proto.getSelectedPaymentAccountForCreateOffer(), coreProtoResolver);
@@ -224,7 +226,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                                 .collect(Collectors.toList())),
                 BlockChainExplorer.fromProto(proto.getBlockChainExplorerMainNet()),
                 BlockChainExplorer.fromProto(proto.getBlockChainExplorerTestNet()),
-                BlockChainExplorer.fromProto(proto.getBsqBlockChainExplorer()),
+                proto.hasBsqBlockChainExplorer() ? BlockChainExplorer.fromProto(proto.getBsqBlockChainExplorer()) : null,
                 ProtoUtil.stringOrNullFromProto(proto.getBackupDirectory()),
                 proto.getAutoSelectArbitrators(),
                 Maps.newHashMap(proto.getDontShowAgainMapMap()),
@@ -249,6 +251,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getDirectoryChooserPath(),
                 proto.getBuyerSecurityDepositAsLong(),
                 proto.getUseAnimations(),
+                proto.getCssTheme(),
                 paymentAccount,
                 proto.getPayFeeInBtc(),
                 proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()),
@@ -270,7 +273,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBuyerSecurityDepositAsPercent(),
                 proto.getIgnoreDustThreshold(),
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
-                proto.getBlockNotifyPort());
-
+                proto.getBlockNotifyPort(),
+                proto.getTacAcceptedV120());
     }
 }

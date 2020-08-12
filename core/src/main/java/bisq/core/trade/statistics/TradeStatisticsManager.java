@@ -17,25 +17,21 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.Trade;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
-import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.storage.JsonFileManager;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
+
+import javax.inject.Named;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -43,16 +39,13 @@ import javafx.collections.ObservableSet;
 import java.io.File;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeStatisticsManager {
@@ -60,7 +53,7 @@ public class TradeStatisticsManager {
     private final JsonFileManager jsonFileManager;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
-    private final ReferralIdService referralIdService;
+    private final TradeStatistics2StorageService tradeStatistics2StorageService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics2> observableTradeStatisticsSet = FXCollections.observableSet();
 
@@ -69,12 +62,11 @@ public class TradeStatisticsManager {
                                   PriceFeedService priceFeedService,
                                   TradeStatistics2StorageService tradeStatistics2StorageService,
                                   AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                  ReferralIdService referralIdService,
-                                  @Named(Storage.STORAGE_DIR) File storageDir,
-                                  @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+                                  @Named(Config.STORAGE_DIR) File storageDir,
+                                  @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
-        this.referralIdService = referralIdService;
+        this.tradeStatistics2StorageService = tradeStatistics2StorageService;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
 
@@ -82,6 +74,60 @@ public class TradeStatisticsManager {
     }
 
     public void onAllServicesInitialized() {
+        p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
+            if (payload instanceof TradeStatistics2)
+                addToSet((TradeStatistics2) payload);
+        });
+
+        Set<TradeStatistics2> collect = tradeStatistics2StorageService.getMap().values().stream()
+                .filter(e -> e instanceof TradeStatistics2)
+                .map(e -> (TradeStatistics2) e)
+                .map(WrapperTradeStatistics2::new)
+                .distinct()
+                .map(WrapperTradeStatistics2::unwrap)
+                .filter(TradeStatistics2::isValid)
+                .collect(Collectors.toSet());
+        observableTradeStatisticsSet.addAll(collect);
+
+        priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+
+        dump();
+    }
+
+    public ObservableSet<TradeStatistics2> getObservableTradeStatisticsSet() {
+        return observableTradeStatisticsSet;
+    }
+
+    private void addToSet(TradeStatistics2 tradeStatistics) {
+
+        if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
+            Optional<TradeStatistics2> duplicate = observableTradeStatisticsSet.stream().filter(
+                    e -> e.getOfferId().equals(tradeStatistics.getOfferId())).findAny();
+
+            if (duplicate.isPresent()) {
+                // TODO: Can be removed as soon as everyone uses v1.2.6+
+                // Removes an existing object with a trade id if the new one matches the existing except
+                // for the deposit tx id
+                if (tradeStatistics.getDepositTxId() == null &&
+                        tradeStatistics.isValid() &&
+                        duplicate.get().compareTo(tradeStatistics) == 0) {
+                    observableTradeStatisticsSet.remove(duplicate.get());
+                } else {
+                    return;
+                }
+            }
+
+            if (!tradeStatistics.isValid()) {
+                return;
+            }
+
+            observableTradeStatisticsSet.add(tradeStatistics);
+            priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+            dump();
+        }
+    }
+
+    private void dump() {
         if (dumpStatistics) {
             ArrayList<CurrencyTuple> fiatCurrencyList = CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
@@ -93,88 +139,7 @@ public class TradeStatisticsManager {
                     .collect(Collectors.toCollection(ArrayList::new));
             cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
             jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
-        }
 
-        p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
-            if (payload instanceof TradeStatistics2)
-                addToMap((TradeStatistics2) payload, true);
-        });
-
-        Map<String, TradeStatistics2> map = new HashMap<>();
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
-                .filter(e -> e instanceof TradeStatistics2)
-                .map(e -> (TradeStatistics2) e)
-                .filter(TradeStatistics2::isValid)
-                .forEach(e -> addToMap(e, map));
-        observableTradeStatisticsSet.addAll(map.values());
-
-        priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-
-        dump();
-    }
-
-    public void publishTradeStatistics(List<Trade> trades) {
-        for (int i = 0; i < trades.size(); i++) {
-            Trade trade = trades.get(i);
-
-            Map<String, String> extraDataMap = null;
-            if (referralIdService.getOptionalReferralId().isPresent()) {
-                extraDataMap = new HashMap<>();
-                extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
-            }
-            Offer offer = trade.getOffer();
-            checkNotNull(offer, "offer must not ne null");
-            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
-            TradeStatistics2 tradeStatistics = new TradeStatistics2(offer.getOfferPayload(),
-                    trade.getTradePrice(),
-                    trade.getTradeAmount(),
-                    trade.getDate(),
-                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    extraDataMap);
-            addToMap(tradeStatistics, true);
-
-            // We only republish trades from last 10 days
-            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
-                long delay = 5000;
-                long minDelay = (i + 1) * delay;
-                long maxDelay = (i + 2) * delay;
-                UserThread.runAfterRandomDelay(() -> {
-                    p2PService.addPersistableNetworkPayload(tradeStatistics, true);
-                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
-            }
-        }
-    }
-
-    public ObservableSet<TradeStatistics2> getObservableTradeStatisticsSet() {
-        return observableTradeStatisticsSet;
-    }
-
-    private void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
-        if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
-
-            if (observableTradeStatisticsSet.stream()
-                    .anyMatch(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))))
-                return;
-
-            if (!tradeStatistics.isValid())
-                return;
-
-            observableTradeStatisticsSet.add(tradeStatistics);
-            if (storeLocally) {
-                priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-                dump();
-            }
-        }
-    }
-
-    private void addToMap(TradeStatistics2 tradeStatistics, Map<String, TradeStatistics2> map) {
-        TradeStatistics2 prevValue = map.putIfAbsent(tradeStatistics.getOfferId(), tradeStatistics);
-        if (prevValue != null)
-            log.debug("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
-    }
-
-    private void dump() {
-        if (dumpStatistics) {
             // We store the statistics as json so it is easy for further processing (e.g. for web based services)
             // TODO This is just a quick solution for storing to one file.
             // 1 statistic entry has 500 bytes as json.
@@ -187,6 +152,31 @@ public class TradeStatisticsManager {
             TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
             list.toArray(array);
             jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
+        }
+    }
+
+    static class WrapperTradeStatistics2 {
+        private TradeStatistics2 tradeStatistics;
+
+        public WrapperTradeStatistics2(TradeStatistics2 tradeStatistics) {
+            this.tradeStatistics = tradeStatistics;
+        }
+
+        public TradeStatistics2 unwrap() {
+            return this.tradeStatistics;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            var wrapper = (WrapperTradeStatistics2) obj;
+            return Objects.equals(tradeStatistics.getOfferId(), wrapper.tradeStatistics.getOfferId());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tradeStatistics.getOfferId());
         }
     }
 }

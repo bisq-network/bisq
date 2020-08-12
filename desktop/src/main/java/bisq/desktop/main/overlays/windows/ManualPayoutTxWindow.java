@@ -49,7 +49,7 @@ import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 
-// We dont translate here as it is for dev only purpose
+// We don't translate here as it is for dev only purpose
 public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     private static final Logger log = LoggerFactory.getLogger(ManualPayoutTxWindow.class);
     private final TradeWalletService tradeWalletService;
@@ -105,39 +105,28 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
 
         InputTextField buyerPayoutAmount = addInputTextField(gridPane, ++rowIndex, "buyerPayoutAmount");
         InputTextField sellerPayoutAmount = addInputTextField(gridPane, ++rowIndex, "sellerPayoutAmount");
-        InputTextField arbitratorPayoutAmount = addInputTextField(gridPane, ++rowIndex, "arbitratorPayoutAmount");
         InputTextField txFee = addInputTextField(gridPane, ++rowIndex, "Tx fee");
 
         InputTextField buyerAddressString = addInputTextField(gridPane, ++rowIndex, "buyerAddressString");
         InputTextField sellerAddressString = addInputTextField(gridPane, ++rowIndex, "sellerAddressString");
-        InputTextField arbitratorAddressString = addInputTextField(gridPane, ++rowIndex, "arbitratorAddressString");
 
         InputTextField buyerPrivateKeyAsHex = addInputTextField(gridPane, ++rowIndex, "buyerPrivateKeyAsHex");
         InputTextField sellerPrivateKeyAsHex = addInputTextField(gridPane, ++rowIndex, "sellerPrivateKeyAsHex");
-        InputTextField arbitratorPrivateKeyAsHex = addInputTextField(gridPane, ++rowIndex, "arbitratorPrivateKeyAsHex");
 
         InputTextField buyerPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "buyerPubKeyAsHex");
         InputTextField sellerPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "sellerPubKeyAsHex");
-        InputTextField arbitratorPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "arbitratorPubKeyAsHex");
-
-        InputTextField P2SHMultiSigOutputScript = addInputTextField(gridPane, ++rowIndex, "P2SHMultiSigOutputScript");
-
 
         // Notes:
-        // Open with alt+g and enable DEV mode
+        // Open with alt+g
         // Priv key is only visible if pw protection is removed (wallet details data (alt+j))
-        // Take P2SHMultiSigOutputScript from depositTx in blockexplorer
         // Take missing buyerPubKeyAsHex and sellerPubKeyAsHex from contract data!
         // Lookup sellerPrivateKeyAsHex associated with sellerPubKeyAsHex (or buyers) in wallet details data
         // sellerPubKeys/buyerPubKeys are auto generated if used the fields below
-        // Never set the priv arbitr. key here!
 
         depositTxHex.setText("");
-        P2SHMultiSigOutputScript.setText("");
 
         buyerPayoutAmount.setText("");
         sellerPayoutAmount.setText("");
-        arbitratorPayoutAmount.setText("0");
 
         buyerAddressString.setText("");
         buyerPubKeyAsHex.setText("");
@@ -147,9 +136,6 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         sellerPubKeyAsHex.setText("");
         sellerPrivateKeyAsHex.setText("");
 
-        arbitratorAddressString.setText("");
-        arbitratorPubKeyAsHex.setText("");
-
         actionButtonText("Sign and publish transaction");
 
         TxBroadcaster.Callback callback = new TxBroadcaster.Callback() {
@@ -158,44 +144,35 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                 log.error("onSuccess");
                 UserThread.execute(() -> {
                     String txId = result != null ? result.getHashAsString() : "null";
-                    new Popup<>()
-                            .information("Transaction successful published. Transaction ID: " + txId)
-                            .show();
+                    new Popup().information("Transaction successful published. Transaction ID: " + txId).show();
                 });
             }
 
             @Override
             public void onFailure(TxBroadcastException exception) {
                 log.error(exception.toString());
-                UserThread.execute(() -> new Popup<>().warning(exception.toString()).show());
+                UserThread.execute(() -> new Popup().warning(exception.toString()).show());
             }
         };
         onAction(() -> {
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 try {
-                    tradeWalletService.emergencySignAndPublishPayoutTx(depositTxHex.getText(),
+                    tradeWalletService.emergencySignAndPublishPayoutTxFrom2of2MultiSig(depositTxHex.getText(),
                             Coin.parseCoin(buyerPayoutAmount.getText()),
                             Coin.parseCoin(sellerPayoutAmount.getText()),
-                            Coin.parseCoin(arbitratorPayoutAmount.getText()),
                             Coin.parseCoin(txFee.getText()),
                             buyerAddressString.getText(),
                             sellerAddressString.getText(),
-                            arbitratorAddressString.getText(),
                             buyerPrivateKeyAsHex.getText(),
                             sellerPrivateKeyAsHex.getText(),
-                            arbitratorPrivateKeyAsHex.getText(),
                             buyerPubKeyAsHex.getText(),
                             sellerPubKeyAsHex.getText(),
-                            arbitratorPubKeyAsHex.getText(),
-                            P2SHMultiSigOutputScript.getText(),
                             callback);
                 } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                    UserThread.execute(() -> new Popup<>().warning(e.toString()).show());
+                    UserThread.execute(() -> new Popup().warning(e.toString()).show());
                 }
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

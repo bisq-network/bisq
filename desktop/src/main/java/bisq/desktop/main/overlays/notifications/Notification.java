@@ -24,6 +24,7 @@ import bisq.core.locale.Res;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -91,6 +92,9 @@ public class Notification extends Overlay<Notification> {
 
     @Override
     public void show() {
+        if (DevEnv.isDevMode()) {
+            return;
+        }
         super.show();
         hasBeenDisplayed = true;
     }

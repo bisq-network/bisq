@@ -20,7 +20,7 @@ package bisq.core.dao.presentation;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import java.text.SimpleDateFormat;
 
@@ -32,7 +32,7 @@ import java.util.Locale;
  */
 public class DaoUtil {
 
-    public static String getNextPhaseDuration(int height, DaoPhase.Phase phase, DaoFacade daoFacade, BSFormatter formatter) {
+    public static String getNextPhaseDuration(int height, DaoPhase.Phase phase, DaoFacade daoFacade) {
         final int currentCycleDuration = daoFacade.getCurrentCycleDuration();
         long start = daoFacade.getFirstBlockOfPhaseForDisplay(height, phase) + currentCycleDuration;
         long end = daoFacade.getLastBlockOfPhaseForDisplay(height, phase) + currentCycleDuration;
@@ -40,22 +40,22 @@ public class DaoUtil {
         long now = new Date().getTime();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
         SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String startDateTime = FormattingUtils.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String endDateTime = FormattingUtils.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
 
         return Res.get("dao.cycle.phaseDurationWithoutBlocks", start, end, startDateTime, endDateTime);
     }
 
-    public static String getPhaseDuration(int height, DaoPhase.Phase phase, DaoFacade daoFacade, BSFormatter formatter) {
+    public static String getPhaseDuration(int height, DaoPhase.Phase phase, DaoFacade daoFacade) {
         long start = daoFacade.getFirstBlockOfPhaseForDisplay(height, phase);
         long end = daoFacade.getLastBlockOfPhaseForDisplay(height, phase);
         long duration = daoFacade.getDurationForPhaseForDisplay(phase);
         long now = new Date().getTime();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
         SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String durationTime = formatter.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);
+        String startDateTime = FormattingUtils.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String endDateTime = FormattingUtils.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String durationTime = FormattingUtils.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);
         return Res.get("dao.cycle.phaseDuration", duration, durationTime, start, end, startDateTime, endDateTime);
     }
 }

@@ -40,8 +40,6 @@ import bisq.common.util.JsonExclude;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
@@ -74,7 +72,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // Market price might be different at maker's and takers side so we need a bit of tolerance.
     // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
     // from one provider.
-    final static double PRICE_TOLERANCE = 0.01;
+    private final static double PRICE_TOLERANCE = 0.01;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -124,11 +123,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.Offer toProtoMessage() {
-        return PB.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
+    public protobuf.Offer toProtoMessage() {
+        return protobuf.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
     }
 
-    public static Offer fromProto(PB.Offer proto) {
+    public static Offer fromProto(protobuf.Offer proto) {
         return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
     }
 
@@ -189,7 +188,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
                     return null;
                 }
             } else {
-                log.debug("We don't have a market price.\n" +
+                log.trace("We don't have a market price. " +
                         "That case could only happen if you don't have a price feed.");
                 return null;
             }
@@ -366,6 +365,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
+    public String getPaymentMethodNameWithCountryCode() {
+        String method = this.getPaymentMethod().getShortName();
+        String methodCountryCode = this.getCountryCode();
+        if (methodCountryCode != null)
+            method = method + " (" + methodCountryCode + ")";
+        return method;
+    }
+
     // domain properties
     public Offer.State getState() {
         return stateProperty.get();
@@ -390,14 +397,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     public String getId() {
         return offerPayload.getId();
-    }
-
-    public List<NodeAddress> getArbitratorNodeAddresses() {
-        return offerPayload.getArbitratorNodeAddresses();
-    }
-
-    public List<NodeAddress> getMediatorNodeAddresses() {
-        return offerPayload.getMediatorNodeAddresses();
     }
 
     @Nullable

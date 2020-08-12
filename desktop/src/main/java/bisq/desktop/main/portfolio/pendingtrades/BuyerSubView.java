@@ -27,6 +27,9 @@ import bisq.core.locale.Res;
 
 import org.fxmisc.easybind.EasyBind;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BuyerSubView extends TradeSubView {
     private TradeWizardItem step1;
     private TradeWizardItem step2;
@@ -39,7 +42,6 @@ public class BuyerSubView extends TradeSubView {
 
     public BuyerSubView(PendingTradesViewModel model) {
         super(model);
-
     }
 
     @Override
@@ -70,6 +72,8 @@ public class BuyerSubView extends TradeSubView {
 
     @Override
     protected void onViewStateChanged(PendingTradesViewModel.State viewState) {
+        super.onViewStateChanged(viewState);
+
         if (viewState != null) {
             PendingTradesViewModel.BuyerState buyerState = (PendingTradesViewModel.BuyerState) viewState;
 

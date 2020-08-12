@@ -55,7 +55,7 @@ public class AltcoinExchangeRate {
     }
 
     /**
-     * Convert a coin amount to a altcoin amount using this exchange rate.
+     * Convert a coin amount to an altcoin amount using this exchange rate.
      *
      * @throws ArithmeticException if the converted altcoin amount is too high or too low.
      */

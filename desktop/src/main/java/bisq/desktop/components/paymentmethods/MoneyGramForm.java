@@ -22,17 +22,17 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.EmailValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
@@ -74,7 +74,7 @@ public class MoneyGramForm extends PaymentMethodForm {
     private final EmailValidator emailValidator;
 
     public MoneyGramForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
-                         GridPane gridPane, int gridRow, BSFormatter formatter) {
+                         GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.moneyGramAccountPayload = (MoneyGramAccountPayload) paymentAccount.paymentAccountPayload;
 
@@ -146,7 +146,8 @@ public class MoneyGramForm extends PaymentMethodForm {
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        final Tuple2<Label, FlowPane> labelFlowPaneTuple2 = addTopLabelFlowPane(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
+        final Tuple2<Label, FlowPane> labelFlowPaneTuple2 = addTopLabelFlowPane(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"),
+                Layout.FLOATING_LABEL_DISTANCE * 3, Layout.FLOATING_LABEL_DISTANCE * 3);
 
         FlowPane flowPane = labelFlowPaneTuple2.second;
 

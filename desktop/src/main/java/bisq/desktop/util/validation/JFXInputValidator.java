@@ -20,7 +20,11 @@ public class JFXInputValidator extends ValidatorBase {
     }
 
     public void applyErrorMessage(InputValidator.ValidationResult newValue) {
-        message.set(newValue.errorMessage);
+        applyErrorMessage(newValue.errorMessage);
+    }
+
+    public void applyErrorMessage(String errorMessage) {
+        message.set(errorMessage);
         hasErrors.set(true);
     }
 }

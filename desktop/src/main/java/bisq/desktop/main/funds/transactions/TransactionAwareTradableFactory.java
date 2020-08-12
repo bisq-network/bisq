@@ -17,26 +17,46 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 
-import javax.inject.Inject;
+import bisq.common.crypto.PubKeyRing;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+
+@Singleton
 public class TransactionAwareTradableFactory {
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final RefundManager refundManager;
+    private final BtcWalletService btcWalletService;
+    private final PubKeyRing pubKeyRing;
 
     @Inject
-    TransactionAwareTradableFactory(DisputeManager disputeManager) {
-        this.disputeManager = disputeManager;
+    TransactionAwareTradableFactory(ArbitrationManager arbitrationManager,
+                                    RefundManager refundManager,
+                                    BtcWalletService btcWalletService,
+                                    PubKeyRing pubKeyRing) {
+        this.arbitrationManager = arbitrationManager;
+        this.refundManager = refundManager;
+        this.btcWalletService = btcWalletService;
+        this.pubKeyRing = pubKeyRing;
     }
 
     TransactionAwareTradable create(Tradable delegate) {
         if (delegate instanceof OpenOffer) {
             return new TransactionAwareOpenOffer((OpenOffer) delegate);
         } else if (delegate instanceof Trade) {
-            return new TransactionAwareTrade((Trade) delegate, disputeManager);
+            return new TransactionAwareTrade((Trade) delegate,
+                    arbitrationManager,
+                    refundManager,
+                    btcWalletService,
+                    pubKeyRing);
         } else {
             return new DummyTransactionAwareTradable(delegate);
         }

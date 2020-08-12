@@ -38,25 +38,23 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
+
+    public static final String DEFAULT_APP_NAME = "Bisq";
+
     private BisqApp application;
 
     public BisqAppMain() {
-        super("Bisq Desktop", "bisq-desktop", Version.VERSION);
+        super("Bisq Desktop", "bisq-desktop", DEFAULT_APP_NAME, Version.VERSION);
     }
 
-    /* @Nullable
-     private BisqHttpApiServer bisqHttpApiServer;*/
-    /* @Nullable
-    private BisqGrpcServer bisqGrpcServer;
-    */
     public static void main(String[] args) throws Exception {
-        if (BisqExecutable.setupInitialOptionParser(args)) {
-            // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
-            // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-            Thread.currentThread().setContextClassLoader(BisqAppMain.class.getClassLoader());
+        // For some reason the JavaFX launch process results in us losing the thread
+        // context class loader: reset it. In order to work around a bug in JavaFX 8u25
+        // and below, you must include the following code as the first line of your
+        // realMain method:
+        Thread.currentThread().setContextClassLoader(BisqAppMain.class.getClassLoader());
 
-            new BisqAppMain().execute(args);
-        }
+        new BisqAppMain().execute(args);
     }
 
     @Override
@@ -106,7 +104,7 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected AppModule getModule() {
-        return new BisqAppModule(bisqEnvironment);
+        return new BisqAppModule(config);
     }
 
     @Override
@@ -135,20 +133,11 @@ public class BisqAppMain extends BisqExecutable {
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-       /* if (runWithHttpApi()) {
-            bisqHttpApiServer = new BisqHttpApiServer();
-        }*/
         /*
         if (runWithGrpcApi()) {
-            bisqGrpcServer = new BisqGrpcServer();
-        }*/
-    }
-
-    private boolean runWithHttpApi() {
-        return bisqEnvironment.getDesktopWithHttpApi().toLowerCase().equals("true");
-    }
-
-    private boolean runWithGrpcApi() {
-        return bisqEnvironment.getDesktopWithGrpcApi().toLowerCase().equals("true");
+            CoreApi coreApi = injector.getInstance(CoreApi.class);
+            bisqGrpcServer = new BisqGrpcServer(coreApi);
+        }
+        */
     }
 }

@@ -18,10 +18,9 @@
 package bisq.common.crypto;
 
 import bisq.common.util.Utilities;
+import bisq.common.util.Base64;
 
 import com.google.common.base.Charsets;
-
-import org.bouncycastle.util.encoders.Base64;
 
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -65,8 +64,7 @@ public class Sig {
             log.trace("Generate msgSignatureKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            log.error(e.toString());
+            log.error("Could not create key.", e);
             throw new RuntimeException("Could not create key.");
         }
     }
@@ -95,7 +93,7 @@ public class Sig {
      */
     public static String sign(PrivateKey privateKey, String message) throws CryptoException {
         byte[] sigAsBytes = sign(privateKey, message.getBytes(Charsets.UTF_8));
-        return Base64.toBase64String(sigAsBytes);
+        return Base64.encode(sigAsBytes);
     }
 
     /**
@@ -111,7 +109,7 @@ public class Sig {
             sig.update(data);
             return sig.verify(signature);
         } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
-            throw new CryptoException("Signature verification failed. " + e.getMessage());
+            throw new CryptoException("Signature verification failed", e);
         }
     }
 
@@ -143,4 +141,3 @@ public class Sig {
         return new X509EncodedKeySpec(sigPublicKey.getEncoded()).getEncoded();
     }
 }
-

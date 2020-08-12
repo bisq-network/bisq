@@ -88,9 +88,6 @@ public class LiteNode extends BsqNode {
         liteNodeNetworkService.start();
 
         bsqWalletService.addNewBestBlockListener(block -> {
-            int height = block.getHeight();
-            log.info("New block at height {} from bsqWalletService", height);
-
             // Check if we are done with parsing
             if (!daoStateService.isParseBlockChainComplete())
                 return;
@@ -99,6 +96,9 @@ public class LiteNode extends BsqNode {
                 // In case we received a new block before out timer gets called we stop the old timer
                 checkForBlockReceivedTimer.stop();
             }
+
+            int height = block.getHeight();
+            log.info("New block at height {} from bsqWalletService", height);
 
             // We expect to receive the new BSQ block from the network shortly after BitcoinJ has been aware of it.
             // If we don't receive it we request it manually from seed nodes
@@ -131,8 +131,9 @@ public class LiteNode extends BsqNode {
 
         liteNodeNetworkService.addListener(new LiteNodeNetworkService.Listener() {
             @Override
-            public void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse) {
-                LiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBlocksResponse.getBlocks()));
+            public void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse, Runnable onParsingComplete) {
+                LiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBlocksResponse.getBlocks()),
+                        onParsingComplete);
             }
 
             @Override
@@ -175,7 +176,7 @@ public class LiteNode extends BsqNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We received the missing blocks
-    private void onRequestedBlocksReceived(List<RawBlock> blockList) {
+    private void onRequestedBlocksReceived(List<RawBlock> blockList, Runnable onParsingComplete) {
         if (!blockList.isEmpty()) {
             chainTipHeight = blockList.get(blockList.size() - 1).getHeight();
             log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(), chainTipHeight);
@@ -198,8 +199,13 @@ public class LiteNode extends BsqNode {
 
         runDelayedBatchProcessing(new ArrayList<>(blockList),
                 () -> {
-                    log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
-                    onParseBlockChainComplete();
+                    log.debug("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
+                    if (daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight()) {
+                        liteNodeNetworkService.requestBlocks(getStartBlockHeight());
+                    } else {
+                        onParsingComplete.run();
+                        onParseBlockChainComplete();
+                    }
                 });
     }
 
@@ -223,7 +229,7 @@ public class LiteNode extends BsqNode {
     // We received a new block
     private void onNewBlockReceived(RawBlock block) {
         int blockHeight = block.getHeight();
-        log.info("onNewBlockReceived: block at height {}, hash={}", blockHeight, block.getHash());
+        log.debug("onNewBlockReceived: block at height {}, hash={}", blockHeight, block.getHash());
 
         // We only update chainTipHeight if we get a newer block
         if (blockHeight > chainTipHeight)

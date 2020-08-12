@@ -26,8 +26,6 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -72,8 +70,8 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.GetPeersRequest.Builder builder = PB.GetPeersRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.GetPeersRequest.Builder builder = protobuf.GetPeersRequest.newBuilder()
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setNonce(nonce)
                 .addAllReportedPeers(reportedPeers.stream()
@@ -87,7 +85,7 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
                 .build();
     }
 
-    public static GetPeersRequest fromProto(PB.GetPeersRequest proto, int messageVersion) {
+    public static GetPeersRequest fromProto(protobuf.GetPeersRequest proto, int messageVersion) {
         return new GetPeersRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 new HashSet<>(proto.getReportedPeersList().stream()

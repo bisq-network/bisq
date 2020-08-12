@@ -17,10 +17,12 @@
 
 package bisq.network.p2p.storage.payload;
 
+import java.time.Clock;
+
 /**
  * Interface for PersistableNetworkPayload which only get added if the date is inside a tolerance range.
  * Used for AccountAgeWitness.
  */
 public interface DateTolerantPayload extends PersistableNetworkPayload {
-    boolean isDateInTolerance();
+    boolean isDateInTolerance(Clock clock);
 }

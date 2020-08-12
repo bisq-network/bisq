@@ -19,16 +19,17 @@ package bisq.core.notifications;
 
 import bisq.core.user.Preferences;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.http.HttpClient;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import com.google.gson.Gson;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import javax.inject.Named;
 
@@ -54,6 +55,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
+@Singleton
 public class MobileNotificationService {
     // Used in Relay app to response of a success state. We won't want a code dependency just for that string so we keep it
     // duplicated in relay and here. Must not be changed.
@@ -91,7 +93,7 @@ public class MobileNotificationService {
                                      MobileNotificationValidator mobileNotificationValidator,
                                      MobileModel mobileModel,
                                      HttpClient httpClient,
-                                     @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) Boolean useLocalHost) {
+                                     @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalHost) {
         this.preferences = preferences;
         this.mobileMessageEncryption = mobileMessageEncryption;
         this.mobileNotificationValidator = mobileNotificationValidator;

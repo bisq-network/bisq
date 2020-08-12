@@ -21,11 +21,11 @@ import bisq.common.crypto.Sig;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
+
+import java.time.Clock;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -42,15 +42,138 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                                         PublicKey ownerPubKey,
                                         int sequenceNumber,
                                         byte[] signature,
-                                        PublicKey receiversPubKey) {
-        super(mailboxStoragePayload, ownerPubKey, sequenceNumber, signature);
+                                        PublicKey receiversPubKey,
+                                        Clock clock) {
+        this(mailboxStoragePayload,
+                Sig.getPublicKeyBytes(ownerPubKey),
+                ownerPubKey,
+                sequenceNumber,
+                signature,
+                Sig.getPublicKeyBytes(receiversPubKey),
+                receiversPubKey,
+                clock.millis(),
+                clock);
+    }
+
+    private ProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload,
+                                        byte[] ownerPubKeyBytes,
+                                        PublicKey ownerPubKey,
+                                        int sequenceNumber,
+                                        byte[] signature,
+                                        byte[] receiversPubKeyBytes,
+                                        PublicKey receiversPubKey,
+                                        long creationTimeStamp,
+                                        Clock clock) {
+        super(mailboxStoragePayload,
+                ownerPubKeyBytes,
+                ownerPubKey,
+                sequenceNumber,
+                signature,
+                creationTimeStamp,
+                clock);
 
         this.receiversPubKey = receiversPubKey;
-        receiversPubKeyBytes = Sig.getPublicKeyBytes(receiversPubKey);
+        this.receiversPubKeyBytes = receiversPubKeyBytes;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public MailboxStoragePayload getMailboxStoragePayload() {
         return (MailboxStoragePayload) getProtectedStoragePayload();
+    }
+
+    /*
+     * Returns true if this Entry is valid for an add operation. For mailbox Entrys, the entry owner must
+     * match the valid sender Public Key specified in the payload. (Only sender can add)
+     */
+    @Override
+    public boolean isValidForAddOperation() {
+        if (!this.isSignatureValid())
+            return false;
+
+        MailboxStoragePayload mailboxStoragePayload = this.getMailboxStoragePayload();
+
+        // Verify the Entry.receiversPubKey matches the Payload.ownerPubKey. This is a requirement for removal
+        if (!mailboxStoragePayload.getOwnerPubKey().equals(this.receiversPubKey)) {
+            log.debug("Entry receiversPubKey does not match payload owner which is a requirement for adding MailboxStoragePayloads");
+            return false;
+        }
+
+        boolean result = mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+
+        if (!result) {
+            String res1 = this.toString();
+            String res2 = "null";
+            if (mailboxStoragePayload.getOwnerPubKey() != null)
+                res2 = Utilities.encodeToHex(mailboxStoragePayload.getSenderPubKeyForAddOperation().getEncoded(),true);
+
+            log.warn("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. " +
+                    "Entry owner does not match sender key in payload:\nProtectedStorageEntry=%{}\n" +
+                    "SenderPubKeyForAddOperation=%{}", res1, res2);
+        }
+
+        return result;
+    }
+
+    /*
+     * Returns true if the Entry is valid for a remove operation. For mailbox Entrys, the entry owner must
+     * match the payload owner. (Only receiver can remove)
+     */
+    @Override
+    public boolean isValidForRemoveOperation() {
+        if (!this.isSignatureValid())
+            return false;
+
+        MailboxStoragePayload mailboxStoragePayload = this.getMailboxStoragePayload();
+
+        // Verify the Entry has the correct receiversPubKey for removal
+        if (!mailboxStoragePayload.getOwnerPubKey().equals(this.receiversPubKey)) {
+            log.debug("Entry receiversPubKey does not match payload owner which is a requirement for removing MailboxStoragePayloads");
+            return false;
+        }
+
+        boolean result = mailboxStoragePayload.getOwnerPubKey() != null &&
+                mailboxStoragePayload.getOwnerPubKey().equals(this.getOwnerPubKey());
+
+        if (!result) {
+            String res1 = this.toString();
+            String res2 = "null";
+            if (mailboxStoragePayload.getOwnerPubKey() != null)
+                res2 = Utilities.encodeToHex(mailboxStoragePayload.getOwnerPubKey().getEncoded(), true);
+
+            log.warn("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. " +
+                    "Entry owner does not match Payload owner:\nProtectedStorageEntry={}\n" +
+                    "PayloadOwner={}", res1, res2);
+        }
+
+        return result;
+    }
+
+    @Override
+    /*
+     * Returns true if the Entry metadata that is expected to stay constant between different versions of the same object
+     * matches. For ProtectedMailboxStorageEntry, the receiversPubKey must stay the same.
+     */
+    public boolean matchesRelevantPubKey(ProtectedStorageEntry protectedStorageEntry) {
+        if (!(protectedStorageEntry instanceof ProtectedMailboxStorageEntry)) {
+            log.error("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to object type mismatch. " +
+                    "ProtectedMailboxStorageEntry required, but got\n" + protectedStorageEntry);
+
+            return false;
+        }
+
+        ProtectedMailboxStorageEntry protectedMailboxStorageEntry = (ProtectedMailboxStorageEntry) protectedStorageEntry;
+
+        boolean result = protectedMailboxStorageEntry.getReceiversPubKey().equals(this.receiversPubKey);
+        if (!result) {
+            log.warn("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to metadata mismatch. " +
+                    "new.receiversPubKey=" + Utilities.bytesAsHexString(protectedMailboxStorageEntry.getReceiversPubKeyBytes()) +
+                    "stored.receiversPubKey=" + Utilities.bytesAsHexString(this.getReceiversPubKeyBytes()));
+        }
+
+        return result;
     }
 
 
@@ -58,49 +181,49 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ProtectedMailboxStorageEntry(long creationTimeStamp,
-                                         MailboxStoragePayload mailboxStoragePayload,
-                                         byte[] ownerPubKey,
+    private ProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload,
+                                         byte[] ownerPubKeyBytes,
                                          int sequenceNumber,
                                          byte[] signature,
-                                         byte[] receiversPubKeyBytes) {
-        super(creationTimeStamp,
-                mailboxStoragePayload,
-                ownerPubKey,
+                                         byte[] receiversPubKeyBytes,
+                                         long creationTimeStamp,
+                                         Clock clock) {
+        this(mailboxStoragePayload,
+                ownerPubKeyBytes,
+                Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
                 sequenceNumber,
-                signature);
-
-        this.receiversPubKeyBytes = receiversPubKeyBytes;
-        receiversPubKey = Sig.getPublicKeyFromBytes(receiversPubKeyBytes);
-
-        maybeAdjustCreationTimeStamp();
+                signature,
+                receiversPubKeyBytes,
+                Sig.getPublicKeyFromBytes(receiversPubKeyBytes),
+                creationTimeStamp,
+                clock);
     }
 
-    public PB.ProtectedMailboxStorageEntry toProtoMessage() {
-        return PB.ProtectedMailboxStorageEntry.newBuilder()
-                .setEntry((PB.ProtectedStorageEntry) super.toProtoMessage())
+    public protobuf.ProtectedMailboxStorageEntry toProtoMessage() {
+        return protobuf.ProtectedMailboxStorageEntry.newBuilder()
+                .setEntry((protobuf.ProtectedStorageEntry) super.toProtoMessage())
                 .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes))
                 .build();
     }
 
-    public static ProtectedMailboxStorageEntry fromProto(PB.ProtectedMailboxStorageEntry proto,
+    public static ProtectedMailboxStorageEntry fromProto(protobuf.ProtectedMailboxStorageEntry proto,
                                                          NetworkProtoResolver resolver) {
         ProtectedStorageEntry entry = ProtectedStorageEntry.fromProto(proto.getEntry(), resolver);
         return new ProtectedMailboxStorageEntry(
-                entry.getCreationTimeStamp(),
                 (MailboxStoragePayload) entry.getProtectedStoragePayload(),
                 entry.getOwnerPubKey().getEncoded(),
                 entry.getSequenceNumber(),
                 entry.getSignature(),
-                proto.getReceiversPubKeyBytes().toByteArray());
+                proto.getReceiversPubKeyBytes().toByteArray(),
+                entry.getCreationTimeStamp(),
+                resolver.getClock());
     }
 
 
     @Override
     public String toString() {
         return "ProtectedMailboxStorageEntry{" +
-                "\n     receiversPubKeyBytes=" + Utilities.bytesAsHexString(receiversPubKeyBytes) +
-                ",\n     receiversPubKey=" + receiversPubKey +
-                "\n} " + super.toString();
+                "\n\tReceivers Public Key:    " + Utilities.bytesAsHexString(receiversPubKeyBytes) +
+                "\n" + super.toString();
     }
 }

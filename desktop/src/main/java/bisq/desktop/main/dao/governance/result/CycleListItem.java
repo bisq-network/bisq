@@ -18,30 +18,25 @@
 package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.governance.proposal.IssuanceProposal;
-import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.FormattingUtils;
 
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.Getter;
 
 public class CycleListItem {
-    private final DaoStateService daoStateService;
     private final BsqFormatter bsqFormatter;
     @Getter
     private ResultsOfCycle resultsOfCycle;
 
     CycleListItem(ResultsOfCycle resultsOfCycle,
-                  DaoStateService daoStateService,
                   BsqFormatter bsqFormatter) {
         this.resultsOfCycle = resultsOfCycle;
-        this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -51,7 +46,7 @@ public class CycleListItem {
 
     public String getCycleDateTime(boolean useLocaleAndLocalTimezone) {
         long cycleStartTime = resultsOfCycle.getCycleStartTime();
-        return cycleStartTime > 0 ? bsqFormatter.formatDateTime(new Date(cycleStartTime), useLocaleAndLocalTimezone) : Res.get("shared.na");
+        return cycleStartTime > 0 ? FormattingUtils.formatDateTime(new Date(cycleStartTime), useLocaleAndLocalTimezone) : Res.get("shared.na");
     }
 
     public int getCycleIndex() {
@@ -67,15 +62,7 @@ public class CycleListItem {
     }
 
     public String getMeritAndStake() {
-        //TODO move to domain
-        Map<String, Long> map = new HashMap<>();
-        resultsOfCycle.getDecryptedVotesForCycle()
-                .forEach(decryptedVote -> {
-                    decryptedVote.getBallotList().stream().forEach(ballot -> {
-                        map.putIfAbsent(decryptedVote.getBlindVoteTxId(), decryptedVote.getStake() + decryptedVote.getMerit(daoStateService));
-                    });
-                });
-        return bsqFormatter.formatCoinWithCode(Coin.valueOf(map.values().stream().mapToLong(e -> e).sum()));
+        return bsqFormatter.formatCoinWithCode(Coin.valueOf(resultsOfCycle.getMeritAndStake()));
     }
 
     public String getIssuance() {

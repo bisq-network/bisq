@@ -17,28 +17,20 @@
 
 package bisq.desktop.components;
 
-import bisq.common.UserThread;
+import bisq.desktop.components.controlsfx.control.PopOver;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-
-import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 
-import javafx.geometry.Insets;
-
-import java.util.concurrent.TimeUnit;
-
 public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
 
     private Label helpIcon;
-    private Boolean hidePopover;
-    private PopOver infoPopover;
-
+    private PopOverWrapper popoverWrapper = new PopOverWrapper();
 
     public AutoTooltipTableColumn(String text) {
         super();
@@ -56,47 +48,36 @@ public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
     }
 
     public void setTitleWithHelpText(String title, String help) {
-
-        final AutoTooltipLabel label = new AutoTooltipLabel(title);
-
         helpIcon = new Label();
         AwesomeDude.setIcon(helpIcon, AwesomeIcon.QUESTION_SIGN, "1em");
         helpIcon.setOpacity(0.4);
-        helpIcon.setOnMouseEntered(e -> {
-            hidePopover = false;
-            final Label helpLabel = new Label(help);
-            helpLabel.setMaxWidth(300);
-            helpLabel.setWrapText(true);
-            helpLabel.setPadding(new Insets(10));
-            showInfoPopOver(helpLabel);
-        });
-        helpIcon.setOnMouseExited(e -> {
-            if (infoPopover != null)
-                infoPopover.hide();
-            hidePopover = true;
-            UserThread.runAfter(() -> {
-                if (hidePopover) {
-                    infoPopover.hide();
-                    hidePopover = false;
-                }
-            }, 250, TimeUnit.MILLISECONDS);
-        });
+        helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
+        helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
 
+        final AutoTooltipLabel label = new AutoTooltipLabel(title);
         final HBox hBox = new HBox(label, helpIcon);
         hBox.setStyle("-fx-alignment: center-left");
         hBox.setSpacing(4);
         setGraphic(hBox);
     }
 
-    private void showInfoPopOver(Node node) {
+    private PopOver createInfoPopOver(String help) {
+        Label helpLabel = new Label(help);
+        helpLabel.setMaxWidth(300);
+        helpLabel.setWrapText(true);
+        return createInfoPopOver(helpLabel);
+    }
+
+    private PopOver createInfoPopOver(Node node) {
         node.getStyleClass().add("default-text");
 
-        infoPopover = new PopOver(node);
+        PopOver infoPopover = new PopOver(node);
         if (helpIcon.getScene() != null) {
             infoPopover.setDetachable(false);
             infoPopover.setArrowLocation(PopOver.ArrowLocation.LEFT_CENTER);
 
             infoPopover.show(helpIcon, -10);
         }
+        return infoPopover;
     }
 }

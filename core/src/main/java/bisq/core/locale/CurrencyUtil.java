@@ -17,8 +17,6 @@
 
 package bisq.core.locale;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
 
@@ -29,15 +27,23 @@ import bisq.asset.Token;
 import bisq.asset.coins.BSQ;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
+
+import com.google.common.base.Suppliers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Currency;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,32 +55,32 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class CurrencyUtil {
 
     public static void setup() {
-        setBaseCurrencyCode(BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
+        setBaseCurrencyCode(Config.baseCurrencyNetwork().getCurrencyCode());
     }
 
     private static final AssetRegistry assetRegistry = new AssetRegistry();
 
     private static String baseCurrencyCode = "BTC";
-    private static List<FiatCurrency> allSortedFiatCurrencies;
-    private static List<CryptoCurrency> allSortedCryptoCurrencies;
+
+    private static Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
+            CurrencyUtil::createFiatCurrencyMap)::get;
+    private static Supplier<Map<String, CryptoCurrency>> cryptoCurrencyMapSupplier = Suppliers.memoize(
+            CurrencyUtil::createCryptoCurrencyMap)::get;
 
     public static void setBaseCurrencyCode(String baseCurrencyCode) {
         CurrencyUtil.baseCurrencyCode = baseCurrencyCode;
     }
 
-    public static List<FiatCurrency> getAllSortedFiatCurrencies() {
-        if (Objects.isNull(allSortedFiatCurrencies))
-            allSortedFiatCurrencies = createAllSortedFiatCurrenciesList();
-
-        return allSortedFiatCurrencies;
+    public static Collection<FiatCurrency> getAllSortedFiatCurrencies() {
+        return fiatCurrencyMapSupplier.get().values();
     }
 
-    private static List<FiatCurrency> createAllSortedFiatCurrenciesList() {
+    private static Map<String, FiatCurrency> createFiatCurrencyMap() {
         return CountryUtil.getAllCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.code))
-                .distinct()
                 .sorted(TradeCurrency::compareTo)
-                .collect(Collectors.toList());
+                .distinct()
+                .collect(Collectors.toMap(TradeCurrency::getCode, Function.identity(), (x, y) -> x, LinkedHashMap::new));
     }
 
     public static List<FiatCurrency> getMainFiatCurrencies() {
@@ -94,30 +100,27 @@ public class CurrencyUtil {
         FiatCurrency defaultFiatCurrency =
                 defaultTradeCurrency instanceof FiatCurrency ? (FiatCurrency) defaultTradeCurrency : null;
         if (defaultFiatCurrency != null && list.contains(defaultFiatCurrency)) {
-            //noinspection SuspiciousMethodCalls
             list.remove(defaultTradeCurrency);
             list.add(0, defaultFiatCurrency);
         }
         return list;
     }
 
-    public static List<CryptoCurrency> getAllSortedCryptoCurrencies() {
-        if (allSortedCryptoCurrencies == null)
-            allSortedCryptoCurrencies = createAllSortedCryptoCurrenciesList();
-        return allSortedCryptoCurrencies;
+    public static Collection<CryptoCurrency> getAllSortedCryptoCurrencies() {
+        return cryptoCurrencyMapSupplier.get().values();
     }
 
-    private static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
+    private static Map<String, CryptoCurrency> createCryptoCurrencyMap() {
         return getSortedAssetStream()
                 .map(CurrencyUtil::assetToCryptoCurrency)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(TradeCurrency::getCode, Function.identity(), (x, y) -> x, LinkedHashMap::new));
     }
 
     public static Stream<Asset> getSortedAssetStream() {
         return assetRegistry.stream()
                 .filter(CurrencyUtil::assetIsNotBaseCurrency)
-                .filter(asset -> isNotBsqOrBsqTradingActivated(asset, BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
-                .filter(asset -> assetMatchesNetworkIfMainnet(asset, BisqEnvironment.getBaseCurrencyNetwork()))
+                .filter(asset -> isNotBsqOrBsqTradingActivated(asset, Config.baseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
+                .filter(asset -> assetMatchesNetworkIfMainnet(asset, Config.baseCurrencyNetwork()))
                 .sorted(Comparator.comparing(Asset::getName));
     }
 
@@ -133,6 +136,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("GRIN", "Grin"));
+        result.add(new CryptoCurrency("L-BTC", "Liquid Bitcoin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
@@ -156,6 +160,8 @@ public class CurrencyUtil {
         currencies.add(new CryptoCurrency("ZOC", "01coin"));
         currencies.add(new CryptoCurrency("BURST", "Burstcoin"));
         currencies.add(new CryptoCurrency("STEEM", "Steem"));
+        currencies.add(new CryptoCurrency("DAC", "DACash"));
+        currencies.add(new CryptoCurrency("RDD", "ReddCoin"));
         return currencies;
     }
 
@@ -176,6 +182,7 @@ public class CurrencyUtil {
     public static List<TradeCurrency> getAllMoneyGramCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("AED"),
+                new FiatCurrency("ARS"),
                 new FiatCurrency("AUD"),
                 new FiatCurrency("BND"),
                 new FiatCurrency("CAD"),
@@ -260,35 +267,55 @@ public class CurrencyUtil {
         return currencies;
     }
 
-    //https://www.revolut.com/pa/faq#can-i-hold-multiple-currencies
+    // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
     public static List<TradeCurrency> getAllRevolutCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("USD"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("ILS"),
                 new FiatCurrency("AED"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("BGN"),
                 new FiatCurrency("CAD"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("CZK"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("HRK"),
                 new FiatCurrency("HUF"),
-                new FiatCurrency("INR"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("ISK"),
                 new FiatCurrency("JPY"),
                 new FiatCurrency("MAD"),
+                new FiatCurrency("MXN"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("PLN"),
                 new FiatCurrency("QAR"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("RSD"),
+                new FiatCurrency("RUB"),
+                new FiatCurrency("SAR"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("SGD"),
                 new FiatCurrency("THB"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("USD"),
                 new FiatCurrency("ZAR")
         ));
 
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
+    public static List<TradeCurrency> getMatureMarketCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("EUR"),
+                new FiatCurrency("USD"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("BRL")
+        ));
         currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
     }
@@ -305,10 +332,9 @@ public class CurrencyUtil {
     }
 
     public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
-        return getAllSortedFiatCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+        return Optional.ofNullable(fiatCurrencyMapSupplier.get().get(currencyCode));
     }
 
-    @SuppressWarnings("WeakerAccess")
     /**
      * We return true if it is BTC or any of our currencies available in the assetRegistry.
      * For removed assets it would fail as they are not found but we don't want to conclude that they are fiat then.
@@ -317,7 +343,7 @@ public class CurrencyUtil {
      *
      * As we use a boolean result for isCryptoCurrency and isFiatCurrency we do not treat missing currencies correctly.
      * To throw an exception might be an option but that will require quite a lot of code change, so we don't do that
-     * for the moment, but could be considered for the future. Another maybe better option is to introduce a enum which
+     * for the moment, but could be considered for the future. Another maybe better option is to introduce an enum which
      * contains 3 entries (CryptoCurrency, Fiat, Undefined).
      */
     public static boolean isCryptoCurrency(String currencyCode) {
@@ -346,16 +372,16 @@ public class CurrencyUtil {
     }
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
-        return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+        return Optional.ofNullable(cryptoCurrencyMapSupplier.get().get(currencyCode));
     }
 
     public static Optional<TradeCurrency> getTradeCurrency(String currencyCode) {
         Optional<FiatCurrency> fiatCurrencyOptional = getFiatCurrency(currencyCode);
-        if (isFiatCurrency(currencyCode) && fiatCurrencyOptional.isPresent())
+        if (fiatCurrencyOptional.isPresent() && isFiatCurrency(currencyCode))
             return Optional.of(fiatCurrencyOptional.get());
 
         Optional<CryptoCurrency> cryptoCurrencyOptional = getCryptoCurrency(currencyCode);
-        if (isCryptoCurrency(currencyCode) && cryptoCurrencyOptional.isPresent())
+        if (cryptoCurrencyOptional.isPresent() && isCryptoCurrency(currencyCode))
             return Optional.of(cryptoCurrencyOptional.get());
 
         return Optional.empty();
@@ -468,7 +494,7 @@ public class CurrencyUtil {
             return optionalAsset;
         }
 
-        // If we are in mainnet we need have a mainet asset defined.
+        // If we are in mainnet we need have a mainnet asset defined.
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
     }
 
@@ -491,5 +517,30 @@ public class CurrencyUtil {
                 .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
                 .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))
                 .collect(Collectors.toList());
+    }
+
+    public static String getCurrencyPair(String currencyCode) {
+        if (isFiatCurrency(currencyCode))
+            return Res.getBaseCurrencyCode() + "/" + currencyCode;
+        else
+            return currencyCode + "/" + Res.getBaseCurrencyCode();
+    }
+
+    public static String getCounterCurrency(String currencyCode) {
+        if (isFiatCurrency(currencyCode))
+            return currencyCode;
+        else
+            return Res.getBaseCurrencyCode();
+    }
+
+    public static String getPriceWithCurrencyCode(String currencyCode) {
+        return getPriceWithCurrencyCode(currencyCode, "shared.priceInCurForCur");
+    }
+
+    public static String getPriceWithCurrencyCode(String currencyCode, String translationKey) {
+        if (isCryptoCurrency(currencyCode))
+            return Res.get(translationKey, Res.getBaseCurrencyCode(), currencyCode);
+        else
+            return Res.get(translationKey, currencyCode, Res.getBaseCurrencyCode());
     }
 }

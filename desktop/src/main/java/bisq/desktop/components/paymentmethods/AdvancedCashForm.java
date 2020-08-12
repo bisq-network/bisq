@@ -22,14 +22,14 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AdvancedCashValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AdvancedCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
@@ -37,17 +37,15 @@ import bisq.common.util.Tuple2;
 import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
 
 @Deprecated
 public class AdvancedCashForm extends PaymentMethodForm {
@@ -65,7 +63,7 @@ public class AdvancedCashForm extends PaymentMethodForm {
     }
 
     public AdvancedCashForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AdvancedCashValidator advancedCashValidator,
-                     InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+                     InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.advancedCashAccount = (AdvancedCashAccount) paymentAccount;
         this.advancedCashValidator = advancedCashValidator;

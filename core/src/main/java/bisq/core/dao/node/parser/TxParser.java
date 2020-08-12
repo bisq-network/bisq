@@ -217,19 +217,33 @@ public class TxParser {
         // We need to check if any tempTxOutput is available and if so and the OpReturn data is invalid we
         // set the output to a BTC output. We must not use `if else` cases here!
         if (opReturnType != OpReturnType.COMPENSATION_REQUEST && opReturnType != OpReturnType.REIMBURSEMENT_REQUEST) {
+            // We applied already the check to not permit further BSQ outputs after the issuanceCandidate in the
+            // txOutputParser so we don't need to do any additional check here when we change to BTC_OUTPUT.
             txOutputParser.getOptionalIssuanceCandidate().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
         }
 
         if (opReturnType != OpReturnType.BLIND_VOTE) {
-            txOutputParser.getOptionalBlindVoteLockStakeOutput().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
+            txOutputParser.getOptionalBlindVoteLockStakeOutput().ifPresent(tempTxOutput -> {
+                // We cannot apply the rule to not allow BSQ outputs after a BTC output as the 2nd output is an
+                // optional BSQ change output and we don't want to burn that in case the opReturn is invalid.
+                tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+            });
         }
 
         if (opReturnType != OpReturnType.VOTE_REVEAL) {
-            txOutputParser.getOptionalVoteRevealUnlockStakeOutput().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
+            txOutputParser.getOptionalVoteRevealUnlockStakeOutput().ifPresent(tempTxOutput -> {
+                // We do not apply the rule to not allow BSQ outputs after a BTC output here because we expect only
+                // one BSQ output anyway.
+                tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+            });
         }
 
         if (opReturnType != OpReturnType.LOCKUP) {
-            txOutputParser.getOptionalLockupOutput().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
+            txOutputParser.getOptionalLockupOutput().ifPresent(tempTxOutput -> {
+                // We cannot apply the rule to not allow BSQ outputs after a BTC output as the 2nd output is an
+                // optional BSQ change output and we don't want to burn that in case the opReturn is invalid.
+                tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+            });
         }
     }
 
@@ -251,7 +265,7 @@ public class TxParser {
             } else {
                 log.warn("It can be that we have a opReturn which is correct from its structure but the whole tx " +
                         "in not valid as the issuanceCandidate in not there. " +
-                        "As the BSQ fee is set it must be either a buggy tx or an manually crafted invalid tx.");
+                        "As the BSQ fee is set it must be either a buggy tx or a manually crafted invalid tx.");
                 // Even though the request part if invalid the BSQ transfer and change output should still be valid
                 // as long as the BSQ change <= BSQ inputs.
                 // We tolerate such an incorrect tx and do not burn the BSQ
@@ -259,12 +273,14 @@ public class TxParser {
             }
         } else {
             // This could be a valid compensation request that failed to be included in a block during the
-            // correct phase due to no fault of the user. Better not burn the change as long as the BSQ inputs
+            // correct phase due to no fault of the user. We must not burn the change as long as the BSQ inputs
             // cover the value of the outputs.
             // We tolerate such an incorrect tx and do not burn the BSQ
             tempTx.setTxType(TxType.IRREGULAR);
 
             // Make sure the optionalIssuanceCandidate is set to BTC
+            // We applied already the check to not permit further BSQ outputs after the issuanceCandidate in the
+            // txOutputParser so we don't need to do any additional check here when we change to BTC_OUTPUT.
             optionalIssuanceCandidate.ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
             // valid BSQ tx.
@@ -357,7 +373,7 @@ public class TxParser {
      *
      * @param tempTx               The temporary transaction.
      * @param optionalOpReturnType The optional OP_RETURN type of the transaction.
-     * @param hasBurntBSQ          If the have been remaining value from the inputs which got not spent in outputs.
+     * @param hasBurntBSQ          If there have been remaining value from the inputs which got not spent in outputs.
      *                             Might be valid BSQ fees or burned BSQ from an invalid tx.
      * @return The type of the transaction, if it is relevant to bisq.
      */
@@ -385,7 +401,7 @@ public class TxParser {
         }
 
         // TRANSFER_BSQ has no fee, no opReturn and no UNLOCK_OUTPUT at first output
-        log.debug("No burned fee and no OP_RETURN, so this is a TRANSFER_BSQ tx.");
+        log.trace("No burned fee and no OP_RETURN, so this is a TRANSFER_BSQ tx.");
         return TxType.TRANSFER_BSQ;
     }
 

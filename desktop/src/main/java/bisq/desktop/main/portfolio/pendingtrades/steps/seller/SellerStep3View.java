@@ -23,6 +23,7 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -219,7 +220,7 @@ public class SellerStep3View extends TradeStepView {
         Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
                 Res.get("portfolio.pending.step3_seller.confirmReceipt"));
 
-        GridPane.setColumnSpan(tuple.forth, 2);
+        GridPane.setColumnSpan(tuple.fourth, 2);
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;
@@ -246,12 +247,11 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getWarningText() {
-        setWarningHeadline();
+    protected String getFirstHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_seller.warn.part1b");
-        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenDispute());
+        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute);
 
 
     }
@@ -261,27 +261,23 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step3_seller.openForDispute");
     }
 
     @Override
     protected void applyOnDisputeOpened() {
-        // confirmButton.setDisable(true);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentReceived() {
         // The confirmPaymentReceived call will trigger the trade protocol to do the payout tx. We want to be sure that we
         // are well connected to the Bitcoin network before triggering the broadcast.
         if (model.dataModel.isReadyForTxBroadcast()) {
-            //noinspection UnusedAssignment
             String key = "confirmPaymentReceived";
-            //noinspection ConstantConditions
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
@@ -298,7 +294,10 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                new Popup<>()
+                if (model.isSignWitnessTrade()) {
+                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
+                }
+                new Popup()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
@@ -309,18 +308,14 @@ public class SellerStep3View extends TradeStepView {
             } else {
                 confirmPaymentReceived();
             }
-        } else {
-            model.dataModel.showNotReadyForTxBroadcastPopups();
         }
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-        //noinspection UnusedAssignment
         String key = "confirmPayment" + trade.getId();
         String message = "";
-        String tradeVolumeWithCode = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
+        String tradeVolumeWithCode = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
         String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         String id = trade.getShortId();
@@ -329,7 +324,6 @@ public class SellerStep3View extends TradeStepView {
             String explorerOrWalletString = trade.getOffer().getCurrencyCode().equals("XMR") ?
                     Res.get("portfolio.pending.step3_seller.altcoin.wallet", currencyName) :
                     Res.get("portfolio.pending.step3_seller.altcoin.explorer", currencyName);
-            //noinspection UnusedAssignment
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
@@ -354,14 +348,16 @@ public class SellerStep3View extends TradeStepView {
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
-                //noinspection UnusedAssignment
-                message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
+                message += Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
+            }
+
+            if (model.isSignWitnessTrade()) {
+                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
             }
         }
-        //noinspection ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();
         }
@@ -374,6 +370,8 @@ public class SellerStep3View extends TradeStepView {
         if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
+        model.maybeSignWitness();
+
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed.
             // If it succeeds at a second try we remove the support button again.
@@ -383,7 +381,7 @@ public class SellerStep3View extends TradeStepView {
         }, errorMessage -> {
             // confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
@@ -402,6 +400,11 @@ public class SellerStep3View extends TradeStepView {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    protected void deactivatePaymentButtons(boolean isDisabled) {
+        confirmButton.setDisable(isDisabled);
     }
 }
 

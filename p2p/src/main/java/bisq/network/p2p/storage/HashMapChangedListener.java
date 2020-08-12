@@ -19,9 +19,11 @@ package bisq.network.p2p.storage;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
+import java.util.Collection;
+
 public interface HashMapChangedListener {
-    void onAdded(ProtectedStorageEntry data);
+    void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries);
 
     @SuppressWarnings("UnusedParameters")
-    void onRemoved(ProtectedStorageEntry data);
+    void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries);
 }

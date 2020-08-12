@@ -49,7 +49,7 @@ public class PriceRequest {
 
         Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, MarketPrice>>>() {
             public void onSuccess(Tuple2<Map<String, Long>, Map<String, MarketPrice>> marketPriceTuple) {
-                log.debug("Received marketPriceTuple of {}\nfrom provider {}", marketPriceTuple, provider);
+                log.trace("Received marketPriceTuple of {}\nfrom provider {}", marketPriceTuple, provider);
                 resultFuture.set(marketPriceTuple);
             }
 

@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.monitor;
 
 import bisq.desktop.common.view.ActivatableView;
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
@@ -39,8 +38,6 @@ import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
-
-import bisq.common.storage.FileManager;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -76,7 +73,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@FxmlView
 public abstract class StateMonitorView<StH extends StateHash,
         StB extends StateBlock<StH>,
         BLI extends StateBlockListItem<StH, StB>,
@@ -141,33 +137,7 @@ public abstract class StateMonitorView<StH extends StateHash,
         resyncButton.visibleProperty().bind(isInConflictWithSeedNode);
         resyncButton.managedProperty().bind(isInConflictWithSeedNode);
 
-        resyncButton.setOnAction(ev -> {
-            try {
-                // We delete all consensus payload data and reset the daoState so it will rebuild from genesis.
-                // Deleting the daoState would cause to read the file from the resources and we would not rebuild from
-                // genesis if a snapshot exist!
-                long currentTime = System.currentTimeMillis();
-                String backupDirName = "out_of_sync_dao_data";
-                String newFileName = "BlindVoteStore_" + currentTime;
-                FileManager.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
-
-                newFileName = "ProposalStore_" + currentTime;
-                FileManager.removeAndBackupFile(storageDir, new File(storageDir, "ProposalStore"), newFileName, backupDirName);
-
-                // We also need to remove ballot list as it contains the proposals as well. It will be recreated at resync
-                newFileName = "BallotList_" + currentTime;
-                FileManager.removeAndBackupFile(storageDir, new File(storageDir, "BallotList"), newFileName, backupDirName);
-
-                daoFacade.resyncDao(() -> new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
-                        .useShutDownButton()
-                        .hideCloseButton()
-                        .show());
-            } catch (Throwable t) {
-                t.printStackTrace();
-                log.error(t.toString());
-                new Popup<>().error(t.toString()).show();
-            }
-        });
+        resyncButton.setOnAction(ev -> resyncDaoState());
 
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
@@ -247,6 +217,7 @@ public abstract class StateMonitorView<StH extends StateHash,
         createColumns();
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
+        GridPane.setVgrow(tableView, Priority.SOMETIMES);
         GridPane.setMargin(tableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, -25, -10));
         root.getChildren().add(tableView);
 
@@ -267,7 +238,8 @@ public abstract class StateMonitorView<StH extends StateHash,
         createConflictColumns();
         GridPane.setRowIndex(conflictTableView, gridRow);
         GridPane.setHgrow(conflictTableView, Priority.ALWAYS);
-        GridPane.setMargin(conflictTableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, -25, -10));
+        GridPane.setVgrow(conflictTableView, Priority.SOMETIMES);
+        GridPane.setMargin(conflictTableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, 5, -10));
         root.getChildren().add(conflictTableView);
 
         conflictTableView.setItems(sortedConflictList);
@@ -293,7 +265,9 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     protected void onDataUpdate() {
         if (isInConflictWithSeedNode.get()) {
-            statusTextField.setText(Res.get("dao.monitor.isInConflictWithSeedNode"));
+            String msg = Res.get("dao.monitor.isInConflictWithSeedNode");
+            log.warn(msg);
+            statusTextField.setText(msg);
             statusTextField.getStyleClass().add("dao-inConflict");
         } else if (isInConflictWithNonSeedNode.get()) {
             statusTextField.setText(Res.get("dao.monitor.isInConflictWithNonSeedNode"));
@@ -304,6 +278,20 @@ public abstract class StateMonitorView<StH extends StateHash,
         }
 
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
+    }
+
+    private void resyncDaoState() {
+        try {
+            daoFacade.resyncDaoStateFromResources(storageDir);
+            new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
+                    .useShutDownButton()
+                    .hideCloseButton()
+                    .show();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.toString());
+            new Popup().error(t.toString()).show();
+        }
     }
 
 

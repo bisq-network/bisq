@@ -19,15 +19,11 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
-
-import org.springframework.util.CollectionUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +33,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -66,7 +60,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
                               String city,
                               String extraInfo,
                               long maxTradePeriod,
-                              @Nullable Map<String, String> excludeFromJsonDataMap) {
+                              Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -79,11 +73,11 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        PB.F2FAccountPayload.Builder builder = PB.F2FAccountPayload.newBuilder()
+        protobuf.F2FAccountPayload.Builder builder = protobuf.F2FAccountPayload.newBuilder()
                 .setContact(contact)
                 .setCity(city)
                 .setExtraInfo(extraInfo);
-        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
+        final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setF2FAccountPayload(builder);
         return getPaymentAccountPayloadBuilder()
@@ -91,9 +85,9 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
                 .build();
     }
 
-    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.F2FAccountPayload f2fAccountPayloadPB = countryBasedPaymentAccountPayload.getF2FAccountPayload();
+    public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        protobuf.F2FAccountPayload f2fAccountPayloadPB = countryBasedPaymentAccountPayload.getF2FAccountPayload();
         return new F2FAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
@@ -101,7 +95,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
                 f2fAccountPayloadPB.getCity(),
                 f2fAccountPayloadPB.getExtraInfo(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -127,7 +121,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
     @Override
     public byte[] getAgeWitnessInputData() {
         // We use here the city because the address alone seems to be too weak
-        return super.getAgeWitnessInputData(ArrayUtils.addAll(contact.getBytes(Charset.forName("UTF-8")),
-                city.getBytes(Charset.forName("UTF-8"))));
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(contact.getBytes(StandardCharsets.UTF_8),
+                city.getBytes(StandardCharsets.UTF_8)));
     }
 }

@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.blockchain.TxOutputKey;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -34,8 +32,8 @@ import javax.annotation.concurrent.Immutable;
 
 /**
  * Used for tracking unconfirmed change outputs to allow them to be spent in follow up
- * transactions in txType permits it. We can assume the the user is not intending to
- * double spend own transactions as well that he does not try to spend a invalid BSQ
+ * transactions in txType permits it. We can assume that the user is not intending to
+ * double spend own transactions as well that he does not try to spend an invalid BSQ
  * output to a BSQ address.
  * We do not allow spending unconfirmed BSQ outputs received from elsewhere.
  */
@@ -80,14 +78,14 @@ public final class UnconfirmedTxOutput implements PersistablePayload, ImmutableD
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.UnconfirmedTxOutput toProtoMessage() {
-        return PB.UnconfirmedTxOutput.newBuilder()
+    public protobuf.UnconfirmedTxOutput toProtoMessage() {
+        return protobuf.UnconfirmedTxOutput.newBuilder()
                 .setIndex(index)
                 .setValue(value)
                 .setTxId(txId).build();
     }
 
-    public static UnconfirmedTxOutput fromProto(PB.UnconfirmedTxOutput proto) {
+    public static UnconfirmedTxOutput fromProto(protobuf.UnconfirmedTxOutput proto) {
         return new UnconfirmedTxOutput(proto.getIndex(),
                 proto.getValue(),
                 proto.getTxId());

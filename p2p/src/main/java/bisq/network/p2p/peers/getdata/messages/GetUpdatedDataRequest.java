@@ -23,7 +23,7 @@ import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
+import protobuf.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
 
@@ -32,9 +32,11 @@ import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class GetUpdatedDataRequest extends GetDataRequest implements SendersNodeAddressMessage {
@@ -66,20 +68,23 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.GetUpdatedDataRequest.Builder builder = PB.GetUpdatedDataRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.GetUpdatedDataRequest.Builder builder = protobuf.GetUpdatedDataRequest.newBuilder()
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setNonce(nonce)
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
 
-        return getNetworkEnvelopeBuilder()
+        NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
                 .build();
+        log.info("Sending a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        return proto;
     }
 
-    public static GetUpdatedDataRequest fromProto(PB.GetUpdatedDataRequest proto, int messageVersion) {
+    public static GetUpdatedDataRequest fromProto(protobuf.GetUpdatedDataRequest proto, int messageVersion) {
+        log.info("Received a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),

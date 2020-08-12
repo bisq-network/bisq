@@ -17,10 +17,12 @@
 
 package bisq.desktop.main.offer.takeoffer;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 
-import bisq.core.arbitration.Arbitrator;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -35,8 +37,6 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
-import bisq.core.payment.AccountAgeRestrictions;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -47,7 +47,9 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
+
+import bisq.network.p2p.P2PService;
 
 import bisq.common.util.Tuple2;
 
@@ -63,7 +65,6 @@ import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.ObservableList;
 
-import java.util.List;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
@@ -88,6 +89,8 @@ class TakeOfferDataModel extends OfferDataModel {
     private final TxFeeEstimationService txFeeEstimationService;
     private final PriceFeedService priceFeedService;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final Navigation navigation;
+    private final P2PService p2PService;
 
     private Coin txFeeFromFeeService;
     private Coin securityDeposit;
@@ -124,7 +127,10 @@ class TakeOfferDataModel extends OfferDataModel {
                        Preferences preferences,
                        TxFeeEstimationService txFeeEstimationService,
                        PriceFeedService priceFeedService,
-                       AccountAgeWitnessService accountAgeWitnessService) {
+                       AccountAgeWitnessService accountAgeWitnessService,
+                       Navigation navigation,
+                       P2PService p2PService
+    ) {
         super(btcWalletService);
 
         this.tradeManager = tradeManager;
@@ -136,8 +142,8 @@ class TakeOfferDataModel extends OfferDataModel {
         this.txFeeEstimationService = txFeeEstimationService;
         this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-
-        // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
+        this.navigation = navigation;
+        this.p2PService = p2PService;
     }
 
     @Override
@@ -158,10 +164,12 @@ class TakeOfferDataModel extends OfferDataModel {
         if (isTabSelected)
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
-        tradeManager.checkOfferAvailability(offer,
-                () -> {
-                },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
+        if (canTakeOffer()) {
+            tradeManager.checkOfferAvailability(offer,
+                    () -> {
+                    },
+                    errorMessage -> new Popup().warning(errorMessage).show());
+        }
     }
 
     @Override
@@ -170,6 +178,7 @@ class TakeOfferDataModel extends OfferDataModel {
         if (offer != null)
             tradeManager.onCancelAvailabilityRequest(offer);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -297,15 +306,15 @@ class TakeOfferDataModel extends OfferDataModel {
             fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
 
         if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
-            new Popup<>().warning(Res.get("offerbook.warning.currencyBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
         } else if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
-            new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
         } else if (filterManager.isOfferIdBanned(offer.getId())) {
-            new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
-            new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else if (filterManager.requireUpdateToNewVersionForTrading()) {
-            new Popup<>().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,
@@ -319,7 +328,7 @@ class TakeOfferDataModel extends OfferDataModel {
                     tradeResultHandler,
                     errorMessage -> {
                         log.warn(errorMessage);
-                        new Popup<>().warning(errorMessage).show();
+                        new Popup().warning(errorMessage).show();
                     }
             );
         }
@@ -362,7 +371,7 @@ class TakeOfferDataModel extends OfferDataModel {
             feeTxSize = 380;
             txFeeFromFeeService = txFeePerByteFromFeeService.multiply(feeTxSize);
             log.info("We cannot do the fee estimation because there are no funds in the wallet.\nThis is expected " +
-                            "if the user has not funded his wallet yet.\n" +
+                            "if the user has not funded their wallet yet.\n" +
                             "In that case we use an estimated tx size of 380 bytes.\n" +
                             "txFee based on estimated size of {} bytes. feeTxSize = {} bytes. Actual tx size = {} bytes. TxFee is {} ({} sat/byte)",
                     feeTxSize, feeTxSize, txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
@@ -423,16 +432,18 @@ class TakeOfferDataModel extends OfferDataModel {
                 .orElse(firstItem);
     }
 
-    boolean hasAcceptedArbitrators() {
-        final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
-        return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
+    long getMaxTradeLimit() {
+        if (paymentAccount != null) {
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode(),
+                    offer.getMirroredDirection());
+        } else {
+            return 0;
+        }
     }
 
-    long getMaxTradeLimit() {
-        if (paymentAccount != null)
-            return AccountAgeRestrictions.getMyTradeLimitAtTakeOffer(accountAgeWitnessService, paymentAccount, offer, getCurrencyCode(), getDirection());
-        else
-            return 0;
+    boolean canTakeOffer() {
+        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
+                GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
 
@@ -628,8 +639,14 @@ class TakeOfferDataModel extends OfferDataModel {
         return offer.getSellerSecurityDeposit();
     }
 
-    public Coin getBsqBalance() {
-        return bsqWalletService.getAvailableConfirmedBalance();
+    public Coin getUsableBsqBalance() {
+        // we have to keep a minimum amount of BSQ == bitcoin dust limit
+        // otherwise there would be dust violations for change UTXOs
+        // essentially means the minimum usable balance of BSQ is 5.46
+        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(Restrictions.getMinNonDustOutput());
+        if (usableBsqBalance.isNegative())
+            usableBsqBalance = Coin.ZERO;
+        return usableBsqBalance;
     }
 
     public boolean isHalCashAccount() {

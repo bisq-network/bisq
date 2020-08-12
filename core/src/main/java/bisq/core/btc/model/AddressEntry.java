@@ -17,13 +17,10 @@
 
 package bisq.core.btc.model;
 
-import bisq.core.app.BisqEnvironment;
-
+import bisq.common.config.Config;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
-
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 
@@ -44,7 +41,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Every trade use a addressEntry with a dedicated address for all transactions related to the trade.
+ * Every trade uses a addressEntry with a dedicated address for all transactions related to the trade.
  * That way we have a kind of separated trade wallet, isolated from other transactions and avoiding coin merge.
  * If we would not avoid coin merge the user would lose privacy between trades.
  */
@@ -62,7 +59,7 @@ public final class AddressEntry implements PersistablePayload {
 
     // keyPair can be null in case the object is created from deserialization as it is transient.
     // It will be restored when the wallet is ready at setDeterministicKey
-    // So after startup it never must be null
+    // So after startup it must never be null
 
     @Nullable
     @Getter
@@ -119,7 +116,7 @@ public final class AddressEntry implements PersistablePayload {
         this.coinLockedInMultiSig = coinLockedInMultiSig.value;
     }
 
-    public static AddressEntry fromProto(PB.AddressEntry proto) {
+    public static AddressEntry fromProto(protobuf.AddressEntry proto) {
         return new AddressEntry(proto.getPubKey().toByteArray(),
                 proto.getPubKeyHash().toByteArray(),
                 ProtoUtil.enumFromProto(AddressEntry.Context.class, proto.getContext().name()),
@@ -128,11 +125,11 @@ public final class AddressEntry implements PersistablePayload {
     }
 
     @Override
-    public PB.AddressEntry toProtoMessage() {
-        PB.AddressEntry.Builder builder = PB.AddressEntry.newBuilder()
+    public protobuf.AddressEntry toProtoMessage() {
+        protobuf.AddressEntry.Builder builder = protobuf.AddressEntry.newBuilder()
                 .setPubKey(ByteString.copyFrom(pubKey))
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
-                .setContext(PB.AddressEntry.Context.valueOf(context.name()))
+                .setContext(protobuf.AddressEntry.Context.valueOf(context.name()))
                 .setCoinLockedInMultiSig(coinLockedInMultiSig);
         Optional.ofNullable(offerId).ifPresent(builder::setOfferId);
         return builder.build();
@@ -177,7 +174,7 @@ public final class AddressEntry implements PersistablePayload {
     @Nullable
     public Address getAddress() {
         if (address == null && keyPair != null)
-            address = keyPair.toAddress(BisqEnvironment.getParameters());
+            address = keyPair.toAddress(Config.baseCurrencyNetworkParameters());
         return address;
     }
 

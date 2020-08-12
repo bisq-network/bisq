@@ -23,10 +23,7 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-
-import io.bisq.generated.protobuffer.PB;
-
-import org.springframework.util.CollectionUtils;
+import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.Map;
@@ -74,12 +71,12 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.GenericProposal.Builder builder = PB.GenericProposal.newBuilder();
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.GenericProposal.Builder builder = protobuf.GenericProposal.newBuilder();
         return super.getProposalBuilder().setGenericProposal(builder);
     }
 
-    public static GenericProposal fromProto(PB.Proposal proto) {
+    public static GenericProposal fromProto(protobuf.Proposal proto) {
         return new GenericProposal(proto.getName(),
                 proto.getLink(),
                 (byte) proto.getVersion(),

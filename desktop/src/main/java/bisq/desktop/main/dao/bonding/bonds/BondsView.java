@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.bonding.bonds;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.util.FormBuilder;
@@ -32,12 +33,11 @@ import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.TableCell;
@@ -45,6 +45,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -98,6 +99,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.allBonds.header"), "last");
         tableView.setItems(sortedList);
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
         addColumns();
 
         bondedReputationListener = c -> updateList();
@@ -167,6 +169,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(80);
         column.getStyleClass().add("first-column");
+        column.setComparator(Comparator.comparingLong(v -> v.getBond().getAmount()));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -183,10 +186,12 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 };
             }
         });
-
+        column.setComparator(Comparator.comparing(e -> e.getBond().getAmount()));
         tableView.getColumns().add(column);
+
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockTime"));
         column.setMinWidth(40);
+        column.setComparator(Comparator.comparingInt(v -> v.getBond().getLockTime()));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -203,6 +208,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 };
             }
         });
+        column.setComparator(Comparator.comparing(e -> e.getBond().getLockTime()));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.bondState"));
@@ -226,6 +232,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                         };
                     }
                 });
+        column.setComparator(Comparator.comparing(BondListItem::getBondStateString));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.bondType"));
@@ -247,6 +254,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 };
             }
         });
+        column.setComparator(Comparator.comparing(BondListItem::getBondType));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.details"));
@@ -281,10 +289,12 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 };
             }
         });
+        column.setComparator(Comparator.comparing(BondListItem::getBondDetails));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupDate"));
         column.setMinWidth(140);
+        column.setComparator(Comparator.comparingLong(v -> v.getBond().getLockupDate()));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -301,6 +311,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 };
             }
         });
+        column.setComparator(Comparator.comparing(e -> e.getBond().getLockupDate()));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupTxId"));
@@ -321,7 +332,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
                                 if (item != null && !empty) {
                                     String lockupTxId = item.getLockupTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(lockupTxId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(lockupTxId);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId, preferences));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                     if (item.getLockupDateString().equals("-")) hyperlinkWithIcon.hideIcon();
@@ -335,6 +346,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                         };
                     }
                 });
+        column.setComparator(Comparator.comparing(BondListItem::getLockupTxId));
         tableView.getColumns().add(column);
     }
 }

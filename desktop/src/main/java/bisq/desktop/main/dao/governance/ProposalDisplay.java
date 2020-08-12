@@ -31,7 +31,7 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.RegexValidator;
 
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.role.BondedRole;
@@ -39,6 +39,7 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.param.ChangeParamInputValidator;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BondedRoleType;
@@ -57,7 +58,7 @@ import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.asset.Asset;
@@ -135,7 +136,7 @@ public class ProposalDisplay {
     @Getter
     private List<TextInputControl> inputControls = new ArrayList<>();
     @Getter
-    private List<ComboBox> comboBoxes = new ArrayList<>();
+    private List<ComboBox<?>> comboBoxes = new ArrayList<>();
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
     private ChangeListener<Param> paramChangeListener;
@@ -477,6 +478,10 @@ public class ProposalDisplay {
     }
 
     public void applyBallotAndVoteWeight(@Nullable Ballot ballot, long merit, long stake) {
+        applyBallotAndVoteWeight(ballot, merit, stake, true);
+    }
+
+    public void applyBallotAndVoteWeight(@Nullable Ballot ballot, long merit, long stake, boolean ballotIncluded) {
         boolean ballotIsNotNull = ballot != null;
         boolean hasVoted = stake > 0;
         if (hasVoted) {
@@ -487,11 +492,12 @@ public class ProposalDisplay {
                         Res.get("dao.proposal.display.myVote.rejected");
             }
 
+            String voteIncluded = ballotIncluded ? "" : " - " + Res.get("dao.proposal.display.myVote.unCounted");
             String meritString = bsqFormatter.formatCoinWithCode(Coin.valueOf(merit));
             String stakeString = bsqFormatter.formatCoinWithCode(Coin.valueOf(stake));
             String weight = bsqFormatter.formatCoinWithCode(Coin.valueOf(merit + stake));
             String myVoteSummary = Res.get("dao.proposal.myVote.summary", myVote,
-                    weight, meritString, stakeString);
+                    weight, meritString, stakeString, voteIncluded);
             myVoteTextField.setText(myVoteSummary);
 
             GridPane.setRowSpan(myVoteTitledGroup, votingBoxRowSpan - 1);
@@ -542,6 +548,14 @@ public class ProposalDisplay {
             comboBoxValueTextField.setText(paramComboBox.getConverter().toString(changeParamProposal.getParam()));
             checkNotNull(paramValueTextField, "paramValueTextField must not be null");
             paramValueTextField.setText(bsqFormatter.formatParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue()));
+            String currentValue = bsqFormatter.formatParamValue(changeParamProposal.getParam(),
+                    daoFacade.getParamValue(changeParamProposal.getParam()));
+            int height = daoFacade.getTx(changeParamProposal.getTxId())
+                    .map(BaseTx::getBlockHeight)
+                    .orElse(daoFacade.getGenesisBlockHeight());
+            String valueAtProposal = bsqFormatter.formatParamValue(changeParamProposal.getParam(),
+                    daoFacade.getParamValue(changeParamProposal.getParam(), height));
+            paramValueTextField.setPromptText(Res.get("dao.param.currentAndPastValue", currentValue, valueAtProposal));
         } else if (proposal instanceof RoleProposal) {
             RoleProposal roleProposal = (RoleProposal) proposal;
             checkNotNull(bondedRoleTypeComboBox, "bondedRoleComboBox must not be null");
@@ -588,10 +602,8 @@ public class ProposalDisplay {
             inputControl.focusedProperty().addListener(focusOutListener);
         });
         comboBoxes.stream()
-                .filter(Objects::nonNull).forEach(comboBox -> {
-            //noinspection unchecked
-            comboBox.getSelectionModel().selectedItemProperty().addListener(inputListener);
-        });
+                .filter(Objects::nonNull)
+                .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().addListener(inputListener));
     }
 
     public void removeListeners() {
@@ -601,10 +613,8 @@ public class ProposalDisplay {
             inputControl.focusedProperty().removeListener(focusOutListener);
         });
         comboBoxes.stream()
-                .filter(Objects::nonNull).forEach(comboBox -> {
-            //noinspection unchecked
-            comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener);
-        });
+                .filter(Objects::nonNull)
+                .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener));
 
         if (paramComboBox != null && paramChangeListener != null)
             paramComboBox.getSelectionModel().selectedItemProperty().removeListener(paramChangeListener);

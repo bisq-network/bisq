@@ -21,7 +21,7 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.Proposal;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Tuple2;
 

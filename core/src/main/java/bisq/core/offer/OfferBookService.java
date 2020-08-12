@@ -17,7 +17,6 @@
 
 package bisq.core.offer;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
@@ -28,20 +27,21 @@ import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.JsonFileManager;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import com.google.inject.name.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -77,8 +77,8 @@ public class OfferBookService {
     public OfferBookService(P2PService p2PService,
                             PriceFeedService priceFeedService,
                             FilterManager filterManager,
-                            @Named(Storage.STORAGE_DIR) File storageDir,
-                            @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+                            @Named(Config.STORAGE_DIR) File storageDir,
+                            @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
@@ -86,27 +86,27 @@ public class OfferBookService {
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getProtectedStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
+            public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
+                        OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onAdded(offer);
                     }
-                });
+                }));
             }
 
             @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getProtectedStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
+            public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
+                        OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onRemoved(offer);
                     }
-                });
+                }));
             }
         });
 
@@ -142,7 +142,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload(), true);
+        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload());
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -150,13 +150,15 @@ public class OfferBookService {
         }
     }
 
-    public void refreshTTL(OfferPayload offerPayload, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void refreshTTL(OfferPayload offerPayload,
+                           ResultHandler resultHandler,
+                           ErrorMessageHandler errorMessageHandler) {
         if (filterManager.requireUpdateToNewVersionForTrading()) {
             errorMessageHandler.handleErrorMessage(Res.get("popup.warning.mandatoryUpdate.trading"));
             return;
         }
 
-        boolean result = p2PService.refreshTTL(offerPayload, true);
+        boolean result = p2PService.refreshTTL(offerPayload);
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -164,16 +166,22 @@ public class OfferBookService {
         }
     }
 
-    public void activateOffer(Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void activateOffer(Offer offer,
+                              @Nullable ResultHandler resultHandler,
+                              @Nullable ErrorMessageHandler errorMessageHandler) {
         addOffer(offer, resultHandler, errorMessageHandler);
     }
 
-    public void deactivateOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void deactivateOffer(OfferPayload offerPayload,
+                                @Nullable ResultHandler resultHandler,
+                                @Nullable ErrorMessageHandler errorMessageHandler) {
         removeOffer(offerPayload, resultHandler, errorMessageHandler);
     }
 
-    public void removeOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(offerPayload, true)) {
+    public void removeOffer(OfferPayload offerPayload,
+                            @Nullable ResultHandler resultHandler,
+                            @Nullable ErrorMessageHandler errorMessageHandler) {
+        if (p2PService.removeData(offerPayload)) {
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
@@ -228,15 +236,14 @@ public class OfferBookService {
                                 offer.getId(),
                                 offer.isUseMarketBasedPrice(),
                                 offer.getMarketPriceMargin(),
-                                offer.getPaymentMethod(),
-                                offer.getOfferFeePaymentTxId()
+                                offer.getPaymentMethod()
                         );
                     } catch (Throwable t) {
-                        // In case a offer was corrupted with null values we ignore it
+                        // In case an offer was corrupted with null values we ignore it
                         return null;
                     }
                 })
-                .filter(e -> e != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         jsonFileManager.writeToDisc(Utilities.objectToJson(offerForJsonList), "offers_statistics");
     }

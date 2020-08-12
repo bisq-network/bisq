@@ -29,8 +29,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import javax.crypto.SecretKey;
@@ -101,8 +99,8 @@ public class MyVote implements PersistablePayload {
     }
 
     @Override
-    public PB.MyVote toProtoMessage() {
-        final PB.MyVote.Builder builder = PB.MyVote.newBuilder()
+    public protobuf.MyVote toProtoMessage() {
+        final protobuf.MyVote.Builder builder = protobuf.MyVote.newBuilder()
                 .setHeight(height)
                 .setBlindVote(blindVote.getBuilder())
                 .setBallotList(ballotList.getBuilder())
@@ -112,7 +110,7 @@ public class MyVote implements PersistablePayload {
         return builder.build();
     }
 
-    public static MyVote fromProto(PB.MyVote proto) {
+    public static MyVote fromProto(protobuf.MyVote proto) {
         return new MyVote(proto.getHeight(),
                 BallotList.fromProto(proto.getBallotList()),
                 proto.getSecretKeyEncoded().toByteArray(),

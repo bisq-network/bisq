@@ -17,7 +17,6 @@
 
 package bisq.core.offer.placeoffer.tasks;
 
-import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -28,8 +27,8 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.offer.Offer;
-import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
+import bisq.core.util.FeeReceiverSelector;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.Task;
@@ -45,9 +44,8 @@ import javax.annotation.Nullable;
 
 public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateMakerFeeTx.class);
-    private Transaction tradeFeeTx = null;
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public CreateMakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
@@ -62,17 +60,16 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
             String id = offer.getId();
             BtcWalletService walletService = model.getWalletService();
 
-            Arbitrator arbitrator = ArbitratorSelection.getLeastUsedArbitrator(model.getTradeStatisticsManager(),
-                    model.getArbitratorManager());
-
             Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();
             Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address changeAddress = walletService.getFreshAddressEntry().getAddress();
 
-            final TradeWalletService tradeWalletService = model.getTradeWalletService();
+            TradeWalletService tradeWalletService = model.getTradeWalletService();
+
+            String feeReceiver = FeeReceiverSelector.getAddress(model.getDaoFacade(), model.getFilterManager());
 
             if (offer.isCurrencyForMakerFeeBtc()) {
-                tradeFeeTx = tradeWalletService.createBtcTradingFeeTx(
+                tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
@@ -80,7 +77,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         model.isUseSavingsWallet(),
                         offer.getMakerFee(),
                         offer.getTxFee(),
-                        arbitrator.getBtcAddress(),
+                        feeReceiver,
                         true,
                         new TxBroadcaster.Callback() {
                             @Override
@@ -113,7 +110,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         });
             } else {
                 final BsqWalletService bsqWalletService = model.getBsqWalletService();
-                Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedBurnFeeTx(offer.getMakerFee());
+                Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedTradeFeeTx(offer.getMakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,

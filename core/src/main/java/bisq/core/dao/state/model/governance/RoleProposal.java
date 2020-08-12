@@ -23,10 +23,7 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-
-import io.bisq.generated.protobuffer.PB;
-
-import org.springframework.util.CollectionUtils;
+import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.Map;
@@ -85,16 +82,16 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.RoleProposal.Builder builder = PB.RoleProposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.RoleProposal.Builder builder = protobuf.RoleProposal.newBuilder()
                 .setRole(role.toProtoMessage())
                 .setRequiredBondUnit(requiredBondUnit)
                 .setUnlockTime(unlockTime);
         return super.getProposalBuilder().setRoleProposal(builder);
     }
 
-    public static RoleProposal fromProto(PB.Proposal proto) {
-        final PB.RoleProposal proposalProto = proto.getRoleProposal();
+    public static RoleProposal fromProto(protobuf.Proposal proto) {
+        final protobuf.RoleProposal proposalProto = proto.getRoleProposal();
         return new RoleProposal(proto.getName(),
                 proto.getLink(),
                 Role.fromProto(proposalProto.getRole()),

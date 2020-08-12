@@ -52,18 +52,16 @@ public class TacWindow extends Overlay<TacWindow> {
             this.width = primaryScreenBoundsWidth * 0.8;
             log.warn("Very small screen: primaryScreenBounds=" + primaryScreenBounds.toString());
         } else {
-            width = 968;
+            width = 1100;
         }
     }
 
     @Override
     public void show() {
-        //noinspection ConstantConditions
         headLine(Res.get("tacWindow.headline"));
 
         // We do not translate the tacs because of the legal nature. We would need translations checked by lawyers
         // in each language which is too expensive atm.
-
         String text = "1. In no event, unless for damages caused by acts of intent and gross negligence, damages resulting from personal injury, " +
                 "or damages ensuing from other instances where liability is required by applicable law or agreed to in writing, will any " +
                 "developer, copyright holder and/or any other party who modifies and/or conveys the software as permitted above or " +
@@ -72,7 +70,7 @@ public class TacWindow extends Overlay<TacWindow> {
                 "rendered inaccurate or losses sustained by you or third parties or a failure of the software to operate with any " +
                 "other software), even if such developer, copyright holder and/or other party has been advised of the possibility of such damages.\n\n" +
 
-                "2. The user is responsible to use the software in compliance with local laws. Don't use the software if the usage is not legal in your jurisdiction.\n\n" +
+                "2. The user is responsible for using the software in compliance with local laws. Don't use the software if using it is not legal in your jurisdiction.\n\n" +
 
                 "3. The " + Res.getBaseCurrencyName() + " market price is delivered by 3rd parties (BitcoinAverage, Poloniex, Coinmarketcap). " +
                 "It is your responsibility to verify the price with other sources for correctness.\n\n" +
@@ -84,19 +82,22 @@ public class TacWindow extends Overlay<TacWindow> {
                 "accordance with the Bisq arbitration rules as at present in force. The arbitration is conducted online. " +
                 "The language to be used in the arbitration proceedings shall be English if not otherwise stated.\n\n" +
 
-                "6. The user confirms that he has read and agreed to the rules regarding the dispute process:\n" +
+                "6. The user confirms that they have read and agreed to the rules regarding the dispute process:\n" +
                 "    - You must complete trades within the maximum duration specified for each payment method.\n" +
-                "    - You must enter the trade ID in the \"reason for payment\" text field when doing the fiat payment transfer.\n" +
+                "    - You must enter the trade ID in the \"reason for payment\" text field (if possible) when doing the fiat payment transfer.\n" +
                 "    - If the bank of the fiat sender charges fees, the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +
-                "    - You must cooperate with the arbitrator during the arbitration process.\n" +
-                "    - You must reply within 48 hours to each arbitrator inquiry.\n" +
-                "    - Failure to follow the above requirements may result in loss of your security deposit.\n\n" +
-                "For more details and a general overview please read the full documentation about the " +
-                "arbitration system and the dispute process.";
+                "    - You must cooperate with the mediator during the mediation process, and respond to each mediator message within 48 hours.\n" +
+                "    - If either (or both) traders do not accept the mediator's suggested payout, traders can open a refund request from an arbitrator after 10 days in case of altcoin trades and 20 days for fiat trades.\n" +
+                "    - You should only open a refund request from an arbitrator if you think the mediator's suggested payout is unfair, or if your trading peer is unresponsive.\n" +
+                "    - Opening a refund request from an arbitrator triggers the delayed payout transaction, sending all funds from the deposit transaction to the Bisq DAO receiver address ('collateral for refund to avoid scamming the refund process'). At this point, the arbitrator will re-investigate the case and personally refund (at their discretion) the trader who requested arbitration.\n" +
+                "The arbitrator may charge a small fee (max. the traders security deposit) as compensation for their work.\n" +
+                "    - The arbitrator will then make a reimbursement request to the Bisq DAO to get reimbursed for the refund they paid to the trader.\n\n" +
+                "For more details and a general overview please read the full documentation about " +
+                "dispute resolution.";
         message(text);
         actionButtonText(Res.get("tacWindow.agree"));
         closeButtonText(Res.get("tacWindow.disagree"));
-        onClose(BisqApp.getShutDownHandler()::run);
+        onClose(BisqApp.getShutDownHandler());
 
         super.show();
     }
@@ -107,7 +108,7 @@ public class TacWindow extends Overlay<TacWindow> {
         String fontStyleClass = smallScreen ? "small-text" : "normal-text";
         messageLabel.getStyleClass().add(fontStyleClass);
         HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
-                "https://bisq.network/docs/exchange/arbitration-system");
+                "https://docs.bisq.network/trading-rules.html#dispute-resolution");
         hyperlinkWithIcon.getStyleClass().add(fontStyleClass);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(-6, 0, -20, -4));
     }

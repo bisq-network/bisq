@@ -18,36 +18,40 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 
+import bisq.desktop.Navigation;
+import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
-import bisq.core.btc.TxFeeEstimationService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.filter.FilterManager;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.ReferralIdService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import java.util.Optional;
 
@@ -58,35 +62,35 @@ class EditOfferDataModel extends MutableOfferDataModel {
     private OpenOffer.State initialState;
 
     @Inject
-    EditOfferDataModel(OpenOfferManager openOfferManager,
+    EditOfferDataModel(CreateOfferService createOfferService,
+                       OpenOfferManager openOfferManager,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        Preferences preferences,
                        User user,
-                       KeyRing keyRing,
                        P2PService p2PService,
                        PriceFeedService priceFeedService,
-                       FilterManager filterManager,
                        AccountAgeWitnessService accountAgeWitnessService,
                        FeeService feeService,
-                       TxFeeEstimationService txFeeEstimationService,
-                       ReferralIdService referralIdService,
-                       BSFormatter btcFormatter,
-                       CorePersistenceProtoResolver corePersistenceProtoResolver) {
-        super(openOfferManager,
+                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                       CorePersistenceProtoResolver corePersistenceProtoResolver,
+                       MakerFeeProvider makerFeeProvider,
+                       TradeStatisticsManager tradeStatisticsManager,
+                       Navigation navigation) {
+        super(createOfferService,
+                openOfferManager,
                 btcWalletService,
                 bsqWalletService,
                 preferences,
                 user,
-                keyRing,
                 p2PService,
                 priceFeedService,
-                filterManager,
                 accountAgeWitnessService,
                 feeService,
-                txFeeEstimationService,
-                referralIdService,
-                btcFormatter);
+                btcFormatter,
+                makerFeeProvider,
+                tradeStatisticsManager,
+                navigation);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
 
@@ -114,7 +118,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
         CurrencyUtil.getTradeCurrency(offer.getCurrencyCode())
                 .ifPresent(c -> this.tradeCurrency = c);
         tradeCurrencyCode.set(offer.getCurrencyCode());
-        buyerSecurityDeposit.set(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount()));
 
         this.initialState = openOffer.getState();
         PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
@@ -127,6 +130,16 @@ class EditOfferDataModel extends MutableOfferDataModel {
             else
                 paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
         }
+
+        // If the security deposit got bounded because it was below the coin amount limit, it can be bigger
+        // by percentage than the restriction. We can't determine the percentage originally entered at offer
+        // creation, so just use the default value as it doesn't matter anyway.
+        double buyerSecurityDepositPercent = CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount());
+        if (buyerSecurityDepositPercent > Restrictions.getMaxBuyerSecurityDepositAsPercent()
+                && offer.getBuyerSecurityDeposit().value == Restrictions.getMinBuyerSecurityDepositAsCoin().value)
+            buyerSecurityDeposit.set(Restrictions.getDefaultBuyerSecurityDepositAsPercent());
+        else
+            buyerSecurityDeposit.set(buyerSecurityDepositPercent);
 
         allowAmountUpdate = false;
     }

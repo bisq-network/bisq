@@ -19,15 +19,11 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
-
-import org.springframework.util.CollectionUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +33,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -67,7 +61,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                                            String question,
                                            String answer,
                                            long maxTradePeriod,
-                                           @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                           Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -81,7 +75,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setInteracETransferAccountPayload(PB.InteracETransferAccountPayload.newBuilder()
+                .setInteracETransferAccountPayload(protobuf.InteracETransferAccountPayload.newBuilder()
                         .setEmail(email)
                         .setHolderName(holderName)
                         .setQuestion(question)
@@ -89,7 +83,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 .build();
     }
 
-    public static InteracETransferAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static InteracETransferAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new InteracETransferAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getInteracETransferAccountPayload().getEmail(),
@@ -97,7 +91,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 proto.getInteracETransferAccountPayload().getQuestion(),
                 proto.getInteracETransferAccountPayload().getAnswer(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -122,8 +116,13 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(ArrayUtils.addAll(email.getBytes(Charset.forName("UTF-8")),
-                ArrayUtils.addAll(question.getBytes(Charset.forName("UTF-8")),
-                        answer.getBytes(Charset.forName("UTF-8")))));
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(email.getBytes(StandardCharsets.UTF_8),
+                ArrayUtils.addAll(question.getBytes(StandardCharsets.UTF_8),
+                        answer.getBytes(StandardCharsets.UTF_8))));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

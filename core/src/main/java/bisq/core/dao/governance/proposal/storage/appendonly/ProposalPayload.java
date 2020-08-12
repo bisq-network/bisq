@@ -20,16 +20,10 @@ package bisq.core.dao.governance.proposal.storage.appendonly;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.governance.Proposal;
 
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
-
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 
@@ -45,8 +39,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public class ProposalPayload implements PersistableNetworkPayload, PersistableEnvelope,
-        CapabilityRequiringPayload, ConsensusCritical {
+public class ProposalPayload implements PersistableNetworkPayload, ConsensusCritical {
     private final Proposal proposal;
     protected final byte[] hash;        // 20 byte
 
@@ -64,25 +57,25 @@ public class ProposalPayload implements PersistableNetworkPayload, PersistableEn
         this.hash = hash;
     }
 
-    private PB.ProposalPayload.Builder getProposalBuilder() {
-        return PB.ProposalPayload.newBuilder()
+    private protobuf.ProposalPayload.Builder getProposalBuilder() {
+        return protobuf.ProposalPayload.newBuilder()
                 .setProposal(proposal.toProtoMessage())
                 .setHash(ByteString.copyFrom(hash));
     }
 
     @Override
-    public PB.PersistableNetworkPayload toProtoMessage() {
-        return PB.PersistableNetworkPayload.newBuilder()
+    public protobuf.PersistableNetworkPayload toProtoMessage() {
+        return protobuf.PersistableNetworkPayload.newBuilder()
                 .setProposalPayload(getProposalBuilder())
                 .build();
     }
 
-    public PB.ProposalPayload toProtoProposalPayload() {
+    public protobuf.ProposalPayload toProtoProposalPayload() {
         return getProposalBuilder().build();
     }
 
 
-    public static ProposalPayload fromProto(PB.ProposalPayload proto) {
+    public static ProposalPayload fromProto(protobuf.ProposalPayload proto) {
         return new ProposalPayload(Proposal.fromProto(proto.getProposal()),
                 proto.getHash().toByteArray());
     }
@@ -100,16 +93,6 @@ public class ProposalPayload implements PersistableNetworkPayload, PersistableEn
     @Override
     public byte[] getHash() {
         return hash;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // CapabilityRequiringPayload
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.PROPOSAL);
     }
 
     @Override

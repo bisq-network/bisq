@@ -1,0 +1,15 @@
+labelPRBasedOnFilePath:
+    in:altcoins:
+        - assets/**/*
+
+    is:no-priority:
+        - assets/**/*
+
+firstPRWelcomeComment: >
+    **Thanks for opening this pull request!**<br/><br/>Please check out our [contributor checklist](https://docs.bisq.network/contributor-checklist.html) and check if *Travis* or *Codacy* found any issues with your PR. Also make sure your commits are signed, and that you applied [Bisq's code style](https://github.com/bisq-network/style/issues) and [formatting](.editorconfig).<br/><br/>A maintainer will add an `is:priority` label to your PR if it is up for compensation. Please see our [Bisq Q1 2020 Update post](https://bisq.network/blog/q1-2020-update/) for more details.
+
+firstPRMergeComment: >
+    Awesome work, congrats on your first merged pull request!
+
+firstIssueWelcomeComment: >
+    **Thanks for opening your first issue here!**<br/><br/>Be sure to follow the issue template. Your issue will be reviewed by a maintainer and labeled for further action.

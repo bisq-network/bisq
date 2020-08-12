@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class DaoKillSwitch implements DaoSetupService {
-    private static DaoKillSwitch INSTANCE;
     private final FilterManager filterManager;
 
     @Getter
@@ -41,8 +40,6 @@ public class DaoKillSwitch implements DaoSetupService {
     @Inject
     public DaoKillSwitch(FilterManager filterManager) {
         this.filterManager = filterManager;
-
-        DaoKillSwitch.INSTANCE = this;
     }
 
     @Override
@@ -70,8 +67,8 @@ public class DaoKillSwitch implements DaoSetupService {
         daoDisabled = requireUpdateToNewVersion || filter.isDisableDao();
     }
 
-    public static void assertDaoIsNotDisabled() {
-        if (INSTANCE.isDaoDisabled()) {
+    public void assertDaoIsNotDisabled() {
+        if (isDaoDisabled()) {
             throw new DaoDisabledException("The DAO features have been disabled by the Bisq developers. " +
                     "Please check out the Bisq Forum for further information.");
         }

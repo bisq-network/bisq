@@ -17,13 +17,20 @@
 
 package bisq.desktop.util;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BisqTextArea;
+import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.account.AccountView;
+import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.validation.RegexValidator;
 
-import bisq.core.app.BisqEnvironment;
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Country;
@@ -31,25 +38,33 @@ import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -58,6 +73,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.wallet.DeterministicSeed;
 
 import com.googlecode.jcsv.CSVStrategy;
@@ -73,6 +89,8 @@ import com.google.common.base.Charsets;
 
 import org.apache.commons.lang3.StringUtils;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -82,6 +100,7 @@ import javafx.stage.StageStyle;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -92,12 +111,8 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 
 import javafx.geometry.Orientation;
-
-import javafx.beans.property.DoubleProperty;
 
 import javafx.collections.FXCollections;
 
@@ -106,7 +121,6 @@ import javafx.util.StringConverter;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 import java.nio.file.Paths;
 
@@ -137,6 +151,8 @@ public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "list.currency.showAll"; // Used for accessing the i18n resource
     public final static String EDIT_FLAG = "list.currency.editList"; // Used for accessing the i18n resource
 
+    public final static String OPEN_WEB_PAGE_KEY = "warnOpenURLWhenTorEnabled";
+
     public final static int FIAT_DECIMALS_WITH_ZEROS = 0;
     public final static int FIAT_PRICE_DECIMALS_WITH_ZEROS = 3;
     public final static int ALTCOINS_DECIMALS_WITH_ZEROS = 7;
@@ -152,6 +168,10 @@ public class GUIUtil {
 
     public static void setPreferences(Preferences preferences) {
         GUIUtil.preferences = preferences;
+    }
+
+    public static String getUserLanguage() {
+        return preferences.getUserLanguage();
     }
 
     public static double getScrollbarWidth(Node scrollablePane) {
@@ -172,13 +192,10 @@ public class GUIUtil {
         });
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
-        //noinspection UnusedAssignment
         String key = "miningFeeInfo";
-        //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-            new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
+            new Popup().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
                     .onClose(runnable)
                     .useIUnderstandButton()
                     .show();
@@ -188,23 +205,31 @@ public class GUIUtil {
         }
     }
 
-    public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName,
-                                      Preferences preferences, Stage stage, PersistenceProtoResolver persistenceProtoResolver) {
+    public static void exportAccounts(ArrayList<PaymentAccount> accounts,
+                                      String fileName,
+                                      Preferences preferences,
+                                      Stage stage,
+                                      PersistenceProtoResolver persistenceProtoResolver,
+                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
-            if (directory != null && !directory.isEmpty()) {
-                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+            if (!directory.isEmpty()) {
+                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
                 paymentAccountsStorage.queueUpForSave();
-                new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+                new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
             }
         } else {
-            new Popup<>().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
+            new Popup().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
         }
     }
 
-    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
-                                      PersistenceProtoResolver persistenceProtoResolver) {
+    public static void importAccounts(User user,
+                                      String fileName,
+                                      Preferences preferences,
+                                      Stage stage,
+                                      PersistenceProtoResolver persistenceProtoResolver,
+                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         FileChooser fileChooser = new FileChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -217,7 +242,7 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
@@ -232,10 +257,10 @@ public class GUIUtil {
                         }
                     });
                     user.addImportedPaymentAccounts(paymentAccounts);
-                    new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                    new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
-                    new Popup<>().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                    new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
                 }
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
@@ -267,7 +292,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
             }
         }
     }
@@ -283,12 +308,12 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
             }
         }
     }
 
-    public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
+    private static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -305,52 +330,8 @@ public class GUIUtil {
         }
     }
 
-    public static ListCell<CurrencyListItem> getCurrencyListItemButtonCell(String postFixSingle, String postFixMulti,
-                                                                           Preferences preferences) {
-        return new ListCell<>() {
-
-            @Override
-            protected void updateItem(CurrencyListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    String code = item.tradeCurrency.getCode();
-
-                    AnchorPane pane = new AnchorPane();
-                    Label currency = new AutoTooltipLabel(code + " - " + item.tradeCurrency.getName());
-                    currency.getStyleClass().add("currency-label-selected");
-                    AnchorPane.setLeftAnchor(currency, 0.0);
-                    pane.getChildren().add(currency);
-
-                    switch (code) {
-                        case GUIUtil.SHOW_ALL_FLAG:
-                            currency.setText(Res.get("list.currency.showAll"));
-                            break;
-                        case GUIUtil.EDIT_FLAG:
-                            currency.setText(Res.get("list.currency.editList"));
-                            break;
-                        default:
-                            if (preferences.isSortMarketCurrenciesNumerically()) {
-                                Label numberOfOffers = new AutoTooltipLabel(item.numTrades + " " +
-                                        (item.numTrades == 1 ? postFixSingle : postFixMulti));
-                                numberOfOffers.getStyleClass().add("offer-label-small");
-                                AnchorPane.setRightAnchor(numberOfOffers, 0.0);
-                                AnchorPane.setBottomAnchor(numberOfOffers, 2.0);
-                                pane.getChildren().add(numberOfOffers);
-                            }
-                    }
-
-                    setGraphic(pane);
-                    setText("");
-                } else {
-                    setGraphic(null);
-                    setText("");
-                }
-            }
-        };
-    }
-
-    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle, String postFixMulti,
+    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle,
+                                                                                                                  String postFixMulti,
                                                                                                                   Preferences preferences) {
         return p -> new ListCell<>() {
             @Override
@@ -582,7 +563,9 @@ public class GUIUtil {
         };
     }
 
-    public static void updateConfidence(TransactionConfidence confidence, Tooltip tooltip, TxConfidenceIndicator txConfidenceIndicator) {
+    public static void updateConfidence(TransactionConfidence confidence,
+                                        Tooltip tooltip,
+                                        TxConfidenceIndicator txConfidenceIndicator) {
         if (confidence != null) {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
@@ -607,30 +590,44 @@ public class GUIUtil {
         }
     }
 
+
     public static void openWebPage(String target) {
-        openWebPage(target, true);
+        openWebPage(target, true, null);
     }
 
     public static void openWebPage(String target, boolean useReferrer) {
+        openWebPage(target, useReferrer, null);
+    }
+
+    public static void openWebPage(String target, boolean useReferrer, Runnable closeHandler) {
+
         if (useReferrer && target.contains("bisq.network")) {
             // add utm parameters
             target = appendURI(target, "utm_source=desktop-client&utm_medium=in-app-link&utm_campaign=language_" +
                     preferences.getUserLanguage());
         }
 
-        String key = "warnOpenURLWhenTorEnabled";
-        if (DontShowAgainLookup.showAgain(key)) {
+        if (DontShowAgainLookup.showAgain(OPEN_WEB_PAGE_KEY)) {
             final String finalTarget = target;
-            new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
+            new Popup().information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
-                        DontShowAgainLookup.dontShowAgain(key, true);
+                        DontShowAgainLookup.dontShowAgain(OPEN_WEB_PAGE_KEY, true);
                         doOpenWebPage(finalTarget);
                     })
                     .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
-                    .onClose(() -> Utilities.copyToClipboard(finalTarget))
+                    .onClose(() -> {
+                        Utilities.copyToClipboard(finalTarget);
+                        if (closeHandler != null) {
+                            closeHandler.run();
+                        }
+                    })
                     .show();
         } else {
+            if (closeHandler != null) {
+                closeHandler.run();
+            }
+
             doOpenWebPage(target);
         }
     }
@@ -668,24 +665,19 @@ public class GUIUtil {
         }
     }
 
-    public static void openMail(String to, String subject, String body) {
-        try {
-            subject = URLEncoder.encode(subject, "UTF-8").replace("+", "%20");
-            body = URLEncoder.encode(body, "UTF-8").replace("+", "%20");
-            Utilities.openURI(new URI("mailto:" + to + "?subject=" + subject + "&body=" + body));
-        } catch (IOException | URISyntaxException e) {
-            log.error("openMail failed " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
-        return " (" + getPercentage(fee, tradeAmount, formatter) +
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, Coin minFee) {
+        String result = " (" + getPercentage(fee, tradeAmount) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
+
+        if (!fee.isGreaterThan(minFee)) {
+            result = " " + Res.get("guiUtil.requiredMinimum");
+        }
+
+        return result;
     }
 
-    public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
-        return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
+    public static String getPercentage(Coin part, Coin total) {
+        return FormattingUtils.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     public static <T> T getParentOfType(Node node, Class<T> t) {
@@ -697,62 +689,94 @@ public class GUIUtil {
                 parent = parent.getParent();
             }
         }
-        //noinspection unchecked
-        return parent != null ? (T) parent : null;
+        return t.cast(parent);
     }
 
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
-        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
-        new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+        final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
+        new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)
                 .show();
     }
 
-    public static void fillAvailableHeight(Pane container, Region component, DoubleProperty initialOccupiedHeight) {
-        UserThread.runAfter(() -> {
-
-            double available;
-            if (container.getParent() instanceof Pane)
-                available = ((Pane) container.getParent()).getHeight();
-            else
-                available = container.getHeight();
-
-            if (initialOccupiedHeight.get() == -1 && component.getHeight() > 0) {
-                initialOccupiedHeight.set(available - component.getHeight());
-            }
-            component.setPrefHeight(available - initialOccupiedHeight.get());
-        }, 100, TimeUnit.MILLISECONDS);
+    public static void showFasterPaymentsWarning(Navigation navigation) {
+        String key = "recreateFasterPaymentsAccount";
+        String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
+        new Popup().information(Res.get("payment.fasterPayments.newRequirements.info", currencyName))
+                .width(900)
+                .actionButtonTextWithGoTo("navigation.account")
+                .onAction(() -> {
+                    navigation.setReturnPath(navigation.getCurrentPath());
+                    navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                })
+                .dontShowAgainId(key)
+                .show();
     }
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(Config.baseCurrencyNetworkParameters(),
                         address), amount, label, null) :
                 "";
     }
 
-    public static boolean isReadyForTxBroadcast(P2PService p2PService, WalletsSetup walletsSetup) {
-        return p2PService.isBootstrapped() &&
-                walletsSetup.isDownloadComplete() &&
-                walletsSetup.hasSufficientPeersForBroadcast();
+    public static boolean isBootstrappedOrShowPopup(P2PService p2PService) {
+        if (!p2PService.isBootstrapped()) {
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            return false;
+        }
+
+        return true;
     }
 
-    public static void showNotReadyForTxBroadcastPopups(P2PService p2PService, WalletsSetup walletsSetup) {
-        if (!p2PService.isBootstrapped())
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
-        else if (!walletsSetup.hasSufficientPeersForBroadcast())
-            new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
-        else if (!walletsSetup.isDownloadComplete())
-            new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
-        else
-            log.warn("showNotReadyForTxBroadcastPopups called but no case matched. This should never happen if isReadyForTxBroadcast was called before.");
+    public static boolean isReadyForTxBroadcastOrShowPopup(P2PService p2PService, WalletsSetup walletsSetup) {
+        if (!GUIUtil.isBootstrappedOrShowPopup(p2PService)) {
+            return false;
+        }
+
+        if (!walletsSetup.hasSufficientPeersForBroadcast()) {
+            new Popup().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
+            return false;
+        }
+
+        if (!walletsSetup.isDownloadComplete()) {
+            new Popup().information(Res.get("popup.warning.downloadNotComplete")).show();
+            return false;
+        }
+
+        return true;
     }
 
-    public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, BSFormatter btcFormatter) {
-        new Popup<>().warning(Res.get("popup.warning.burnBTC", btcFormatter.formatCoinWithCode(miningFee),
+    public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
+        if (!user.hasAcceptedRefundAgents()) {
+            new Popup().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+            return false;
+        }
+
+        if (!user.hasAcceptedMediators()) {
+            new Popup().warning(Res.get("popup.warning.noMediatorsAvailable")).show();
+            return false;
+        }
+
+        if (user.currentPaymentAccountProperty().get() == null) {
+            new Popup().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
+                    .instruction(Res.get("popup.warning.noTradingAccountSetup.msg"))
+                    .actionButtonTextWithGoTo("navigation.account")
+                    .onAction(() -> {
+                        navigation.setReturnPath(navigation.getCurrentPath());
+                        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                    }).show();
+            return false;
+        }
+
+        return true;
+    }
+
+    public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, CoinFormatter btcFormatter) {
+        new Popup().warning(Res.get("popup.warning.burnBTC", btcFormatter.formatCoinWithCode(miningFee),
                 btcFormatter.formatCoinWithCode(amount))).show();
     }
 
@@ -760,9 +784,9 @@ public class GUIUtil {
         UserThread.execute(node::requestFocus);
     }
 
-    public static void reSyncSPVChain(WalletsSetup walletsSetup, Preferences preferences) {
+    public static void reSyncSPVChain(Preferences preferences) {
         try {
-            new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+            new Popup().feedback(Res.get("settings.net.reSyncSPVSuccess"))
                     .useShutDownButton()
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
@@ -772,7 +796,7 @@ public class GUIUtil {
                     .hideCloseButton()
                     .show();
         } catch (Throwable t) {
-            new Popup<>().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
+            new Popup().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
         }
     }
 
@@ -780,18 +804,18 @@ public class GUIUtil {
         try {
             FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
         } catch (Throwable t) {
-            new Popup<>().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
+            new Popup().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
         }
         walletsManager.restoreSeedWords(
                 seed,
                 () -> UserThread.execute(() -> {
                     log.info("Wallets restored with seed words");
-                    new Popup<>().feedback(Res.get("seed.restore.success")).hideCloseButton().show();
+                    new Popup().feedback(Res.get("seed.restore.success")).hideCloseButton().show();
                     BisqApp.getShutDownHandler().run();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.toString());
-                    new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
+                    new Popup().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
                             .show();
                 }));
     }
@@ -815,7 +839,7 @@ public class GUIUtil {
     }
 
     public static StringConverter<PaymentAccount> getPaymentAccountsComboBoxStringConverter() {
-        return new StringConverter<PaymentAccount>() {
+        return new StringConverter<>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
                 if (paymentAccount.hasMultipleCurrencies()) {
@@ -831,6 +855,50 @@ public class GUIUtil {
             @Override
             public PaymentAccount fromString(String s) {
                 return null;
+            }
+        };
+    }
+
+    public static Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>> getPaymentAccountListCellFactory(
+            ComboBox<PaymentAccount> paymentAccountsComboBox,
+            AccountAgeWitnessService accountAgeWitnessService) {
+        return p -> new ListCell<>() {
+            @Override
+            protected void updateItem(PaymentAccount item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+
+                    boolean needsSigning = PaymentMethod.hasChargebackRisk(item.getPaymentMethod(),
+                            item.getTradeCurrencies());
+
+                    InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(
+                            paymentAccountsComboBox.getConverter().toString(item),
+                            ContentDisplay.RIGHT);
+
+                    if (needsSigning) {
+                        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
+                                item.paymentAccountPayload);
+                        AccountAgeWitnessService.SignState signState =
+                                accountAgeWitnessService.getSignState(myWitness);
+                        String info = StringUtils.capitalize(signState.getPresentation());
+
+                        MaterialDesignIcon icon;
+
+                        switch (signState) {
+                            case PEER_SIGNER:
+                            case ARBITRATOR:
+                                icon = MaterialDesignIcon.APPROVAL;
+                                break;
+                            default:
+                                icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+                        }
+                        label.setIcon(icon, info);
+                    }
+                    setGraphic(label);
+                } else {
+                    setGraphic(null);
+                }
             }
         };
     }
@@ -854,8 +922,13 @@ public class GUIUtil {
         }
     }
 
-    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, Coin btcForIssuance, int txSize, BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter, String type,
+    public static void showBsqFeeInfoPopup(Coin fee,
+                                           Coin miningFee,
+                                           Coin btcForIssuance,
+                                           int txSize,
+                                           BsqFormatter bsqFormatter,
+                                           CoinFormatter btcFormatter,
+                                           String type,
                                            Runnable actionHandler) {
         String confirmationMessage;
 
@@ -878,7 +951,7 @@ public class GUIUtil {
                     txSize / 1000d,
                     type);
         }
-        new Popup<>().headLine(Res.get("dao.feeTx.confirm", type))
+        new Popup().headLine(Res.get("dao.feeTx.confirm", type))
                 .confirmation(confirmationMessage)
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(actionHandler)
@@ -887,12 +960,16 @@ public class GUIUtil {
     }
 
     public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txSize, BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter, String type,
+                                           CoinFormatter btcFormatter, String type,
                                            Runnable actionHandler) {
         showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
-    public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minNumRows, int maxNumRows) {
+    public static void setFitToRowsForTableView(TableView<?> tableView,
+                                                int rowHeight,
+                                                int headerHeight,
+                                                int minNumRows,
+                                                int maxNumRows) {
         int size = tableView.getItems().size();
         int minHeight = rowHeight * minNumRows + headerHeight;
         int maxHeight = rowHeight * maxNumRows + headerHeight;
@@ -903,7 +980,7 @@ public class GUIUtil {
         tableView.setVisible(false);
         // We need to delay the setter to the next render frame as otherwise views don' get updated in some cases
         // Not 100% clear what causes that issue, but seems the requestLayout method is not called otherwise.
-        // We still need to set the height immediately, otherwise some views render a incorrect layout.
+        // We still need to set the height immediately, otherwise some views render an incorrect layout.
         tableView.setPrefHeight(height);
 
         UserThread.execute(() -> {
@@ -998,7 +1075,9 @@ public class GUIUtil {
     }
 
     @NotNull
-    public static <T> ListCell<T> getComboBoxButtonCell(String title, ComboBox<T> comboBox, Boolean hideOriginalPrompt) {
+    public static <T> ListCell<T> getComboBoxButtonCell(String title,
+                                                        ComboBox<T> comboBox,
+                                                        Boolean hideOriginalPrompt) {
         return new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
@@ -1020,5 +1099,62 @@ public class GUIUtil {
     public static void openTxInBsqBlockExplorer(String txId, Preferences preferences) {
         if (txId != null)
             GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false);
+    }
+
+    public static String getBsqInUsd(Price bsqPrice,
+                                     Coin bsqAmount,
+                                     PriceFeedService priceFeedService,
+                                     BsqFormatter bsqFormatter) {
+        MarketPrice usdMarketPrice = priceFeedService.getMarketPrice("USD");
+        if (usdMarketPrice == null) {
+            return Res.get("shared.na");
+        }
+        long usdMarketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(usdMarketPrice.getPrice(),
+                Fiat.SMALLEST_UNIT_EXPONENT));
+        Price usdPrice = Price.valueOf("USD", usdMarketPriceAsLong);
+        String bsqAmountAsString = bsqFormatter.formatCoin(bsqAmount);
+        Volume bsqAmountAsVolume = Volume.parse(bsqAmountAsString, "BSQ");
+        Coin requiredBtc = bsqPrice.getAmountByVolume(bsqAmountAsVolume);
+        Volume volumeByAmount = usdPrice.getVolumeByAmount(requiredBtc);
+        return DisplayUtils.formatAverageVolumeWithCode(volumeByAmount);
+    }
+
+    public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {
+        return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
+                state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
+                MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+    }
+
+    public static RegexValidator addressRegexValidator() {
+        RegexValidator regexValidator = new RegexValidator();
+        String portRegexPattern = "(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])";
+        String onionV2RegexPattern = String.format("[a-zA-Z2-7]{16}\\.onion(?:\\:%1$s)?", portRegexPattern);
+        String onionV3RegexPattern = String.format("[a-zA-Z2-7]{56}\\.onion(?:\\:%1$s)?", portRegexPattern);
+        String ipv4RegexPattern = String.format("(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}" +
+                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+                "(?:\\:%1$s)?", portRegexPattern);
+        String ipv6RegexPattern = "(" +
+                "([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|" +          // 1:2:3:4:5:6:7:8
+                "([0-9a-fA-F]{1,4}:){1,7}:|" +                         // 1::                              1:2:3:4:5:6:7::
+                "([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +         // 1::8             1:2:3:4:5:6::8  1:2:3:4:5:6::8
+                "([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|" +  // 1::7:8           1:2:3:4:5::7:8  1:2:3:4:5::8
+                "([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|" +  // 1::6:7:8         1:2:3:4::6:7:8  1:2:3:4::8
+                "([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|" +  // 1::5:6:7:8       1:2:3::5:6:7:8  1:2:3::8
+                "([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|" +  // 1::4:5:6:7:8     1:2::4:5:6:7:8  1:2::8
+                "[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|" +       // 1::3:4:5:6:7:8   1::3:4:5:6:7:8  1::8
+                ":((:[0-9a-fA-F]{1,4}){1,7}|:)|" +                     // ::2:3:4:5:6:7:8  ::2:3:4:5:6:7:8 ::8       ::
+                "fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|" +     // fe80::7:8%eth0   fe80::7:8%1
+                "::(ffff(:0{1,4}){0,1}:){0,1}" +                       // (link-local IPv6 addresses with zone index)
+                "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}" +
+                "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|" +          // ::255.255.255.255   ::ffff:255.255.255.255  ::ffff:0:255.255.255.255
+                "([0-9a-fA-F]{1,4}:){1,4}:" +                          // (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
+                "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}" +
+                "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])" +           // 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33
+                ")";                                                   // (IPv4-Embedded IPv6 Address)
+        ipv6RegexPattern = String.format("(?:%1$s)|(?:\\[%1$s\\]\\:%2$s)", ipv6RegexPattern, portRegexPattern);
+        String fqdnRegexPattern = String.format("(((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\\.)+(?!onion)[a-zA-Z]{2,63}(?:\\:%1$s)?)", portRegexPattern);
+        regexValidator.setPattern(String.format("^(?:(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)|(?:%5$s)),\\s*)*(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)|(?:%5$s))*$",
+                onionV2RegexPattern, onionV3RegexPattern, ipv4RegexPattern, ipv6RegexPattern, fqdnRegexPattern));
+        return regexValidator;
     }
 }

@@ -17,13 +17,10 @@
 
 package bisq.common.proto.persistable;
 
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.util.CollectionUtils;
 
 import com.google.protobuf.Message;
 
-import org.springframework.util.CollectionUtils;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -38,16 +35,16 @@ import lombok.Setter;
 @Getter
 @Setter
 public class NavigationPath implements PersistableEnvelope {
-    private List<String> path = new ArrayList<>();
+    private List<String> path = List.of();
 
     @Override
     public Message toProtoMessage() {
-        final PB.NavigationPath.Builder builder = PB.NavigationPath.newBuilder();
+        final protobuf.NavigationPath.Builder builder = protobuf.NavigationPath.newBuilder();
         if (!CollectionUtils.isEmpty(path)) builder.addAllPath(path);
-        return PB.PersistableEnvelope.newBuilder().setNavigationPath(builder).build();
+        return protobuf.PersistableEnvelope.newBuilder().setNavigationPath(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(PB.NavigationPath proto) {
-        return new NavigationPath(new ArrayList<>(proto.getPathList()));
+    public static NavigationPath fromProto(protobuf.NavigationPath proto) {
+        return new NavigationPath(List.copyOf(proto.getPathList()));
     }
 }

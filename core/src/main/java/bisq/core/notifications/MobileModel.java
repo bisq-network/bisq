@@ -18,8 +18,11 @@
 package bisq.core.notifications;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import java.util.Arrays;
 
 import lombok.Data;
 import lombok.Getter;
@@ -29,6 +32,7 @@ import javax.annotation.Nullable;
 
 @Data
 @Slf4j
+@Singleton
 public class MobileModel {
     public static final String PHONE_SEPARATOR_ESCAPED = "\\|"; // see https://stackoverflow.com/questions/5675704/java-string-split-not-returning-the-right-values
     public static final String PHONE_SEPARATOR_WRITING = "|";
@@ -105,6 +109,12 @@ public class MobileModel {
         iPhone 8
         iPhone 8 Plus
         iPhone X
+        iPhone XS
+        iPhone XS Max
+        iPhone XR
+        iPhone 11
+        iPhone 11 Pro
+        iPhone 11 Pro Max
         iPad 2
         iPad 3
         iPad 4
@@ -121,20 +131,29 @@ public class MobileModel {
         iPad Pro 12.9 Inch 2. Generation
         iPad Pro 10.5 Inch
         */
-        // iPhone 6 does not support isContentAvailable, iPhone 7 does.
-        // We don't know for other versions, but lets assume all above iPhone 6 are ok.
+        // iPhone 6 does not support isContentAvailable, iPhone 6s and 7 does.
+        // We don't know about other versions, but let's assume all above iPhone 6 are ok.
         if (descriptor != null) {
             String[] descriptorTokens = descriptor.split(" ");
             if (descriptorTokens.length >= 1) {
                 String model = descriptorTokens[0];
                 if (model.equals("iPhone")) {
                     String versionString = descriptorTokens[1];
-                    versionString = versionString.substring(0, 1);
-                    if (versionString.equals("X") || versionString.equals("SE"))
+                    String[] validVersions = {"X", "XS", "XR"};
+                    if (Arrays.asList(validVersions).contains(versionString)) {
                         return true;
+                    }
+                    String versionSuffix = "";
+                    if (versionString.matches("\\d[^\\d]")) {
+                        versionSuffix = versionString.substring(1);
+                        versionString = versionString.substring(0, 1);
+                    } else if (versionString.matches("\\d{2}[^\\d]")) {
+                        versionSuffix = versionString.substring(2);
+                        versionString = versionString.substring(0, 2);
+                    }
                     try {
                         int version = Integer.parseInt(versionString);
-                        return version > 5;
+                        return version > 6 || (version == 6 && versionSuffix.equalsIgnoreCase("s"));
                     } catch (Throwable ignore) {
                     }
                 } else {

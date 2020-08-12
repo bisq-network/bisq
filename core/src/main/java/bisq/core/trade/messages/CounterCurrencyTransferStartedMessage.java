@@ -23,8 +23,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.util.Optional;
@@ -78,8 +76,8 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.CounterCurrencyTransferStartedMessage.Builder builder = PB.CounterCurrencyTransferStartedMessage.newBuilder();
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.CounterCurrencyTransferStartedMessage.Builder builder = protobuf.CounterCurrencyTransferStartedMessage.newBuilder();
         builder.setTradeId(tradeId)
                 .setBuyerPayoutAddress(buyerPayoutAddress)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -91,7 +89,7 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
         return getNetworkEnvelopeBuilder().setCounterCurrencyTransferStartedMessage(builder).build();
     }
 
-    public static CounterCurrencyTransferStartedMessage fromProto(PB.CounterCurrencyTransferStartedMessage proto, int messageVersion) {
+    public static CounterCurrencyTransferStartedMessage fromProto(protobuf.CounterCurrencyTransferStartedMessage proto, int messageVersion) {
         return new CounterCurrencyTransferStartedMessage(proto.getTradeId(),
                 proto.getBuyerPayoutAddress(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

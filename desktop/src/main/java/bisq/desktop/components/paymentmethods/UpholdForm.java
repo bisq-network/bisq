@@ -22,14 +22,14 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.UpholdValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.UpholdAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.control.TextField;
@@ -54,7 +54,7 @@ public class UpholdForm extends PaymentMethodForm {
 
     public UpholdForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
                       UpholdValidator upholdValidator, InputValidator inputValidator, GridPane gridPane,
-                      int gridRow, BSFormatter formatter) {
+                      int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.upholdAccount = (UpholdAccount) paymentAccount;
         this.upholdValidator = upholdValidator;
@@ -67,7 +67,7 @@ public class UpholdForm extends PaymentMethodForm {
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"));
         accountIdInputTextField.setValidator(upholdValidator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            upholdAccount.setAccountId(newValue);
+            upholdAccount.setAccountId(newValue.trim());
             updateFromInputs();
         });
 

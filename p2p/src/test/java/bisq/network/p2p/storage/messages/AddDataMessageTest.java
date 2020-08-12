@@ -28,8 +28,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.SealedAndSigned;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.RandomUtils;
 
 import java.security.InvalidKeyException;
@@ -37,6 +35,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
+
+import java.time.Clock;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,9 +74,9 @@ public class AddDataMessageTest {
         MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(prefixedSealedAndSignedMessage,
                 keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey());
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
-                keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
+                keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey(), Clock.systemDefaultZone());
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
-        PB.NetworkEnvelope envelope = dataMessage1.toProtoNetworkEnvelope();
+        protobuf.NetworkEnvelope envelope = dataMessage1.toProtoNetworkEnvelope();
 
         //TODO Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in io.bisq.common.
       /*  AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);

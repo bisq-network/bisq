@@ -24,15 +24,13 @@ import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
-import io.bisq.generated.protobuffer.PB;
-
-import org.springframework.util.CollectionUtils;
-
 import java.security.PublicKey;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -63,20 +61,27 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
         BUY,
         SELL;
 
-        public static OfferPayload.Direction fromProto(PB.OfferPayload.Direction direction) {
+        public static OfferPayload.Direction fromProto(protobuf.OfferPayload.Direction direction) {
             return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
         }
 
-        public static PB.OfferPayload.Direction toProtoMessage(Direction direction) {
-            return PB.OfferPayload.Direction.valueOf(direction.name());
+        public static protobuf.OfferPayload.Direction toProtoMessage(Direction direction) {
+            return protobuf.OfferPayload.Direction.valueOf(direction.name());
         }
     }
 
     // Keys for extra map
+    // Only set for fiat offers
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
+    // Only used in payment method F2F
     public static final String F2F_CITY = "f2fCity";
     public static final String F2F_EXTRA_INFO = "f2fExtraInfo";
+
+    // Comma separated list of ordinal of a bisq.common.app.Capability. E.g. ordinal of
+    // Capability.SIGNED_ACCOUNT_AGE_WITNESS is 11 and Capability.MEDIATION is 12 so if we want to signal that maker
+    // of the offer supports both capabilities we add "11, 12" to capabilities.
+    public static final String CAPABILITIES = "capabilities";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +112,11 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
 
+    @Deprecated
+    // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
     private final List<NodeAddress> arbitratorNodeAddresses;
+    @Deprecated
+    // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
     private final List<NodeAddress> mediatorNodeAddresses;
     private final String paymentMethodId;
     private final String makerPaymentAccountId;
@@ -137,13 +146,13 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // Close offer when certain price is reached
     private final boolean useAutoClose;
     // If useReOpenAfterAutoClose=true we re-open a new offer with the remaining funds if the trade amount
-    // was less then the offer's max. trade amount.
+    // was less than the offer's max. trade amount.
     private final boolean useReOpenAfterAutoClose;
     // Used when useAutoClose is set for canceling the offer when lowerClosePrice is triggered
     private final long lowerClosePrice;
     // Used when useAutoClose is set for canceling the offer when upperClosePrice is triggered
     private final long upperClosePrice;
-    // Reserved for possible future use to support private trades where the taker need to have an accessKey
+    // Reserved for possible future use to support private trades where the taker needs to have an accessKey
     private final boolean isPrivateOffer;
     @Nullable
     private final String hashOfChallenge;
@@ -246,8 +255,8 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        PB.OfferPayload.Builder builder = PB.OfferPayload.newBuilder()
+    public protobuf.StoragePayload toProtoMessage() {
+        protobuf.OfferPayload.Builder builder = protobuf.OfferPayload.newBuilder()
                 .setId(id)
                 .setDate(date)
                 .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
@@ -294,15 +303,15 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
         Optional.ofNullable(hashOfChallenge).ifPresent(builder::setHashOfChallenge);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
-        return PB.StoragePayload.newBuilder().setOfferPayload(builder).build();
+        return protobuf.StoragePayload.newBuilder().setOfferPayload(builder).build();
     }
 
-    public static OfferPayload fromProto(PB.OfferPayload proto) {
+    public static OfferPayload fromProto(protobuf.OfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
-                null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());
+                null : new ArrayList<>(proto.getAcceptedBankIdsList());
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
-                null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
+                null : new ArrayList<>(proto.getAcceptedCountryCodesList());
         String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
         Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                 null : proto.getExtraDataMap();
@@ -390,8 +399,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 ",\n     minAmount=" + minAmount +
                 ",\n     baseCurrencyCode='" + baseCurrencyCode + '\'' +
                 ",\n     counterCurrencyCode='" + counterCurrencyCode + '\'' +
-                ",\n     arbitratorNodeAddresses=" + arbitratorNodeAddresses +
-                ",\n     mediatorNodeAddresses=" + mediatorNodeAddresses +
                 ",\n     paymentMethodId='" + paymentMethodId + '\'' +
                 ",\n     makerPaymentAccountId='" + makerPaymentAccountId + '\'' +
                 ",\n     offerFeePaymentTxId='" + offerFeePaymentTxId + '\'' +

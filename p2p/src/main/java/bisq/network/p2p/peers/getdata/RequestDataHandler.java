@@ -25,10 +25,7 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
-import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
-import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -42,27 +39,31 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 class RequestDataHandler implements MessageListener {
     private static final long TIMEOUT = 90;
-    private NodeAddress peersNodeAddress;
 
+    private NodeAddress peersNodeAddress;
+    /*
+     */
+
+    /**
+     * when we are run as a seed node, we spawn a RequestDataHandler every hour. However, we do not want to receive
+     * {@link PersistableNetworkPayload}s (for now, as there are hardly any cases where such data goes out of sync). This
+     * flag indicates whether we already received our first set of {@link PersistableNetworkPayload}s.
+     *//*
+    private static boolean firstRequest = true;*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -93,10 +94,10 @@ class RequestDataHandler implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestDataHandler(NetworkNode networkNode,
-                              P2PDataStorage dataStorage,
-                              PeerManager peerManager,
-                              Listener listener) {
+    RequestDataHandler(NetworkNode networkNode,
+                       P2PDataStorage dataStorage,
+                       PeerManager peerManager,
+                       Listener listener) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
@@ -112,30 +113,15 @@ class RequestDataHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest) {
+    void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest) {
         peersNodeAddress = nodeAddress;
         if (!stopped) {
             GetDataRequest getDataRequest;
 
-            // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
-            // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
-            // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
-            // miss that event if we do not load the full set or use some delta handling.
-            Set<byte[]> excludedKeys = dataStorage.getAppendOnlyDataStoreMap().keySet().stream()
-                    .map(e -> e.bytes)
-                    .collect(Collectors.toSet());
-
-            Set<byte[]> excludedKeysFromPersistedEntryMap = dataStorage.getProtectedDataStoreMap().keySet()
-                    .stream()
-                    .map(e -> e.bytes)
-                    .collect(Collectors.toSet());
-
-            excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
-
             if (isPreliminaryDataRequest)
-                getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys);
+                getDataRequest = dataStorage.buildPreliminaryGetDataRequest(nonce);
             else
-                getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, excludedKeys);
+                getDataRequest = dataStorage.buildGetUpdatedDataRequest(networkNode.getNodeAddress(), nonce);
 
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -155,7 +141,8 @@ class RequestDataHandler implements MessageListener {
             log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
+            //noinspection UnstableApiUsage
+            Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
@@ -195,107 +182,34 @@ class RequestDataHandler implements MessageListener {
         if (networkEnvelope instanceof GetDataResponse) {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 if (!stopped) {
+                    long ts1 = System.currentTimeMillis();
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
-                    Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
-                    dataSet.stream().forEach(e -> {
-                        final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-                        if (protectedStoragePayload == null) {
-                            log.warn("StoragePayload was null: {}", networkEnvelope.toString());
-                            return;
-                        }
-
-                        // For logging different data types
-                        String className = protectedStoragePayload.getClass().getSimpleName();
-                        if (!payloadByClassName.containsKey(className))
-                            payloadByClassName.put(className, new HashSet<>());
-
-                        payloadByClassName.get(className).add(protectedStoragePayload);
-                    });
-
-
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-                    if (persistableNetworkPayloadSet != null) {
-                        persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
-                            // For logging different data types
-                            String className = persistableNetworkPayload.getClass().getSimpleName();
-                            if (!payloadByClassName.containsKey(className))
-                                payloadByClassName.put(className, new HashSet<>());
-
-                            payloadByClassName.get(className).add(persistableNetworkPayload);
-                        });
-                    }
-
-                    // Log different data types
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("\n#################################################################\n");
-                    sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
-                    final int items = dataSet.size() +
-                            (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
-                    sb.append("Received ").append(items).append(" instances\n");
-                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
-                            .append(": ")
-                            .append(e.getValue().size())
-                            .append("\n"));
-                    sb.append("#################################################################");
-                    log.info(sb.toString());
+                    logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
 
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
-                        checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
-                                "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
-                                        "at that moment");
-
-                        final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
-
-                        List<NetworkPayload> processDelayedItems = new ArrayList<>();
-                        dataSet.stream().forEach(e -> {
-                            if (e.getProtectedStoragePayload() instanceof LazyProcessedPayload) {
-                                processDelayedItems.add(e);
-                            } else {
-                                // We dont broadcast here (last param) as we are only connected to the seed node and would be pointless
-                                dataStorage.addProtectedStorageEntry(e, sender, null, false, false);
-                            }
-                        });
-
-                        if (persistableNetworkPayloadSet != null) {
-                            persistableNetworkPayloadSet.stream().forEach(e -> {
-                                if (e instanceof LazyProcessedPayload) {
-                                    processDelayedItems.add(e);
-                                } else {
-                                    // We dont broadcast here as we are only connected to the seed node and would be pointless
-                                    dataStorage.addPersistableNetworkPayload(e, sender, false, false, false, false);
-                                }
-                            });
+                        if (!connection.getPeersNodeAddressOptional().isPresent()) {
+                            log.error("RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
+                                    "at that moment");
+                            return;
                         }
 
-                        // We changed the earlier behaviour with delayed execution of chunks of the list as it caused
-                        // worse results as if it is processed in one go.
-                        // Main reason is probably that listeners trigger more code and if that is called early at
-                        // startup we have better chances that the user has not already navigated to a screen where the
-                        // trade statistics are used for UI rendering.
-                        // We need to take care that the update period between releases stay short as with the current
-                        // situation before 0.9 release we receive 4000 objects with a newly installed client, which
-                        // causes the application to stay stuck for quite a while at startup.
-                        log.info("Start processing {} items.", processDelayedItems.size());
-                        processDelayedItems.forEach(item -> {
-                            if (item instanceof ProtectedStorageEntry)
-                                dataStorage.addProtectedStorageEntry((ProtectedStorageEntry) item, sender, null,
-                                        false, false);
-                            else if (item instanceof PersistableNetworkPayload)
-                                dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender,
-                                        false, false, false, false);
-                        });
+                        dataStorage.processGetDataResponse(getDataResponse,
+                                connection.getPeersNodeAddressOptional().get());
 
                         cleanup();
                         listener.onComplete();
+                        // firstRequest = false;
                     } else {
-                        log.debug("Nonce not matching. That can happen rarely if we get a response after a canceled " +
+                        log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +
                                         "connection was closed).\n\t" +
                                         "We drop that message. nonce={} / requestNonce={}",
                                 nonce, getDataResponse.getRequestNonce());
                     }
+                    log.info("Processing GetDataResponse took {} ms", System.currentTimeMillis() - ts1);
                 } else {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
@@ -313,9 +227,52 @@ class RequestDataHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void logContents(NetworkEnvelope networkEnvelope,
+                             Set<ProtectedStorageEntry> dataSet,
+                             Set<PersistableNetworkPayload> persistableNetworkPayloadSet) {
+        Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
+        dataSet.forEach(e -> {
+            ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+            if (protectedStoragePayload == null) {
+                log.warn("StoragePayload was null: {}", networkEnvelope.toString());
+                return;
+            }
+
+            // For logging different data types
+            String className = protectedStoragePayload.getClass().getSimpleName();
+            if (!payloadByClassName.containsKey(className))
+                payloadByClassName.put(className, new HashSet<>());
+
+            payloadByClassName.get(className).add(protectedStoragePayload);
+        });
+
+        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
+            // For logging different data types
+            String className = persistableNetworkPayload.getClass().getSimpleName();
+            if (!payloadByClassName.containsKey(className))
+                payloadByClassName.put(className, new HashSet<>());
+
+            payloadByClassName.get(className).add(persistableNetworkPayload);
+        });
+
+        // Log different data types
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n#################################################################\n");
+        sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
+        final int items = dataSet.size() + persistableNetworkPayloadSet.size();
+        sb.append("Received ").append(items).append(" instances\n");
+        payloadByClassName.forEach((key, value) -> sb.append(key)
+                .append(": ")
+                .append(value.size())
+                .append("\n"));
+        sb.append("#################################################################");
+        log.info(sb.toString());
+    }
 
     @SuppressWarnings("UnusedParameters")
-    private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
+    private void handleFault(String errorMessage,
+                             NodeAddress nodeAddress,
+                             CloseConnectionReason closeConnectionReason) {
         cleanup();
         log.info(errorMessage);
         //peerManager.shutDownConnection(nodeAddress, closeConnectionReason);

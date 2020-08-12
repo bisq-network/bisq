@@ -22,23 +22,25 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.IBANValidator;
+import bisq.desktop.util.normalization.IBANNormalizer;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SepaAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 
@@ -75,7 +77,7 @@ public class SepaForm extends GeneralSepaForm {
 
     public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, IBANValidator ibanValidator,
                     BICValidator bicValidator, InputValidator inputValidator,
-                    GridPane gridPane, int gridRow, BSFormatter formatter) {
+                    GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.sepaAccount = (SepaAccount) paymentAccount;
         this.ibanValidator = ibanValidator;
@@ -95,6 +97,7 @@ public class SepaForm extends GeneralSepaForm {
         });
 
         ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, IBAN);
+        ibanInputTextField.setTextFormatter(new TextFormatter<>(new IBANNormalizer()));
         ibanInputTextField.setValidator(ibanValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setIban(newValue);
@@ -123,19 +126,11 @@ public class SepaForm extends GeneralSepaForm {
         if (CountryUtil.getAllSepaCountries().contains(country)) {
             countryComboBox.getSelectionModel().select(country);
             sepaAccount.setCountry(country);
-            TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
-            setupCurrency(country, currency);
         }
 
         updateFromInputs();
     }
 
-    @Override
-    void setupCurrency(Country country, TradeCurrency currency) {
-        final boolean isSepaCountry = CountryUtil.getAllSepaEuroCountries().contains(country);
-
-        updateCurrencyFormElements(currency, isSepaCountry, sepaAccount);
-    }
 
     private void addEuroCountriesGrid() {
         addCountriesGrid(Res.get("payment.accept.euro"), euroCountryCheckBoxes,

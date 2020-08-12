@@ -28,10 +28,7 @@ import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,7 +36,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -49,17 +46,15 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     private final Set<ProtectedStorageEntry> dataSet;
 
     // Set of PersistableNetworkPayload objects
-    // We added that in v 0.6 and we would get a null object from older peers, so keep it annotated with @Nullable
-    @Nullable
+    // We added that in v 0.6 and the fromProto code will create an empty HashSet if it doesn't exist
     private final Set<PersistableNetworkPayload> persistableNetworkPayloadSet;
 
     private final int requestNonce;
     private final boolean isGetUpdatedDataResponse;
-    @Nullable
     private final Capabilities supportedCapabilities;
 
-    public GetDataResponse(Set<ProtectedStorageEntry> dataSet,
-                           @Nullable Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
+    public GetDataResponse(@NotNull Set<ProtectedStorageEntry> dataSet,
+                           @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                            int requestNonce,
                            boolean isGetUpdatedDataResponse) {
         this(dataSet,
@@ -74,11 +69,11 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetDataResponse(Set<ProtectedStorageEntry> dataSet,
-                            @Nullable Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
+    private GetDataResponse(@NotNull Set<ProtectedStorageEntry> dataSet,
+                            @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                             int requestNonce,
                             boolean isGetUpdatedDataResponse,
-                            @Nullable Capabilities supportedCapabilities,
+                            @NotNull Capabilities supportedCapabilities,
                             int messageVersion) {
         super(messageVersion);
 
@@ -90,45 +85,46 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.GetDataResponse.Builder builder = PB.GetDataResponse.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.GetDataResponse.Builder builder = protobuf.GetDataResponse.newBuilder()
                 .addAllDataSet(dataSet.stream()
                         .map(protectedStorageEntry -> protectedStorageEntry instanceof ProtectedMailboxStorageEntry ?
-                                PB.StorageEntryWrapper.newBuilder()
-                                        .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
+                                protobuf.StorageEntryWrapper.newBuilder()
+                                        .setProtectedMailboxStorageEntry((protobuf.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
                                         .build()
                                 :
-                                PB.StorageEntryWrapper.newBuilder()
-                                        .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
+                                protobuf.StorageEntryWrapper.newBuilder()
+                                        .setProtectedStorageEntry((protobuf.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
                                         .build())
                         .collect(Collectors.toList()))
+                .addAllPersistableNetworkPayloadItems(persistableNetworkPayloadSet.stream()
+                        .map(PersistableNetworkPayload::toProtoMessage)
+                        .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
-                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
+                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
+                .addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities));
 
-        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
-        Optional.ofNullable(persistableNetworkPayloadSet).ifPresent(set -> builder.addAllPersistableNetworkPayloadItems(set.stream()
-                .map(PersistableNetworkPayload::toProtoMessage)
-                .collect(Collectors.toList())));
-
-        return getNetworkEnvelopeBuilder()
+        protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetDataResponse(builder)
                 .build();
+        log.info("Sending a GetDataResponse with {} kB", proto.getSerializedSize() / 1000d);
+        return proto;
     }
 
-    public static GetDataResponse fromProto(PB.GetDataResponse proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static GetDataResponse fromProto(protobuf.GetDataResponse proto,
+                                            NetworkProtoResolver resolver,
+                                            int messageVersion) {
+        log.info("Received a GetDataResponse with {} kB", proto.getSerializedSize() / 1000d);
         Set<ProtectedStorageEntry> dataSet = new HashSet<>(
                 proto.getDataSetList().stream()
                         .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
                         .collect(Collectors.toSet()));
 
-        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = proto.getPersistableNetworkPayloadItemsList().isEmpty() ?
-                null :
-                new HashSet<>(
-                        proto.getPersistableNetworkPayloadItemsList().stream()
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = new HashSet<>(
+                proto.getPersistableNetworkPayloadItemsList().stream()
                                 .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
                                 .collect(Collectors.toSet()));
 
-        //PersistableNetworkPayload
         return new GetDataResponse(dataSet,
                 persistableNetworkPayloadSet,
                 proto.getRequestNonce(),

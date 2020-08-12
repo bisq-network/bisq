@@ -202,7 +202,7 @@ public abstract class BsqNode implements DaoSetupService {
         return startBlockHeight;
     }
 
-    abstract protected void startParseBlocks();
+    protected abstract void startParseBlocks();
 
     protected void onParseBlockChainComplete() {
         log.info("onParseBlockChainComplete");
@@ -237,25 +237,27 @@ public abstract class BsqNode implements DaoSetupService {
             // not connecting from the latest height we had. The list is sorted by height
             if (!pendingBlocks.isEmpty()) {
                 // We take only first element after sorting (so it is the block with the next height) to avoid that
-                // we would repeat calls in recursions in case we  would iterate the list.
+                // we would repeat calls in recursions in case we would iterate the list.
                 pendingBlocks.sort(Comparator.comparing(RawBlock::getHeight));
-                doParseBlock(pendingBlocks.get(0));
+                RawBlock nextPending = pendingBlocks.get(0);
+                if (nextPending.getHeight() == daoStateService.getChainHeight() + 1)
+                    doParseBlock(nextPending);
             }
 
             return Optional.of(block);
         } catch (BlockHeightNotConnectingException e) {
             // There is no guaranteed order how we receive blocks. We could have received block 102 before 101.
-            // If block is in future we move the block to teh pendingBlocks list. At next block we look up the
+            // If block is in the future we move the block to the pendingBlocks list. At next block we look up the
             // list if there is any potential candidate with the correct height and if so we remove that from that list.
 
             int heightForNextBlock = daoStateService.getChainHeight() + 1;
             if (rawBlock.getHeight() > heightForNextBlock) {
                 if (!pendingBlocks.contains(rawBlock)) {
                     pendingBlocks.add(rawBlock);
-                    log.info("We received an block with a future block height. We store it as pending and try to apply " +
+                    log.info("We received a block with a future block height. We store it as pending and try to apply " +
                             "it at the next block. rawBlock: height/hash={}/{}", rawBlock.getHeight(), rawBlock.getHash());
                 } else {
-                    log.warn("We received an block with a future block height but we had it already added to our pendingBlocks.");
+                    log.warn("We received a block with a future block height but we had it already added to our pendingBlocks.");
                 }
             } else if (rawBlock.getHeight() >= daoStateService.getGenesisBlockHeight()) {
                 // We received an older block. We compare if we have it in our chain.

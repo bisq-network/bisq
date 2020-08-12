@@ -2,13 +2,16 @@
 ::   - Inno Setup unicode installed (http://www.jrsoftware.org/isdl.php)
 ::   - OracleJDK 10 installed
 ::     Note: OpenJDK 10 does not have the javapackager util, so must use OracleJDK
+::   - Sign Tool installed (https://docs.microsoft.com/en-us/windows/win32/seccrypto/signtool)
+::     Note: Sign Tool is part of Windows 10 SDK (https://go.microsoft.com/fwlink/?LinkID=698771)
+::   - Code signing certificate installed
 :: Prior to running this script:
 ::   - Update version below
 ::   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
 @echo off
 
-set version=1.1.2-SNAPSHOT
+set version=1.3.6-SNAPSHOT
 if not exist "%JAVA_HOME%\bin\javapackager.exe" (
     if not exist "%ProgramFiles%\Java\jdk-10.0.2" (
         echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
@@ -114,6 +117,9 @@ if not exist "%package_dir%\windows\Bisq-%version%.exe" (
     echo No exe file found at %package_dir%\windows\Bisq-%version%.exe
     exit /B 3
 )
+
+echo Signing executable with default Code Signing Certificate
+call "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /v /fd SHA256 /a "%package_dir%\windows\Bisq-%version%.exe"
 
 echo SHA256 of %package_dir%\windows\Bisq-%version%.exe:
 for /F "delims=" %%h in ('certutil -hashfile "%package_dir%\windows\Bisq-%version%.exe" SHA256 ^| findstr -i -v "SHA256" ^| findstr -i -v "certutil"') do (set hash=%%h)

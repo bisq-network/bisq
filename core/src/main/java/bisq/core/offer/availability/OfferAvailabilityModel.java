@@ -19,6 +19,8 @@ package bisq.core.offer.availability;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -41,6 +43,10 @@ public class OfferAvailabilityModel implements Model {
     private final P2PService p2PService;
     @Getter
     final private User user;
+    @Getter
+    private final MediatorManager mediatorManager;
+    @Getter
+    private final TradeStatisticsManager tradeStatisticsManager;
     private NodeAddress peerNodeAddress;  // maker
     private OfferAvailabilityResponse message;
     @Nullable
@@ -48,21 +54,38 @@ public class OfferAvailabilityModel implements Model {
     @Getter
     private NodeAddress selectedArbitrator;
 
+    // Added in v1.1.6
+    @Nullable
+    @Setter
+    @Getter
+    private NodeAddress selectedMediator;
+
+    // Added in v1.2.0
+    @Nullable
+    @Setter
+    @Getter
+    private NodeAddress selectedRefundAgent;
+
+
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,
                                   P2PService p2PService,
-                                  User user) {
+                                  User user,
+                                  MediatorManager mediatorManager,
+                                  TradeStatisticsManager tradeStatisticsManager) {
         this.offer = offer;
         this.pubKeyRing = pubKeyRing;
         this.p2PService = p2PService;
         this.user = user;
+        this.mediatorManager = mediatorManager;
+        this.tradeStatisticsManager = tradeStatisticsManager;
     }
 
     public NodeAddress getPeerNodeAddress() {
         return peerNodeAddress;
     }
 
-    public void setPeerNodeAddress(NodeAddress peerNodeAddress) {
+    void setPeerNodeAddress(NodeAddress peerNodeAddress) {
         this.peerNodeAddress = peerNodeAddress;
     }
 

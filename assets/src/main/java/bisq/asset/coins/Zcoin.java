@@ -19,12 +19,20 @@ package bisq.asset.coins;
 
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.XZC.msg")
 public class Zcoin extends Coin {
 
-    public Zcoin() {
-        super("Zcoin", "XZC", new DefaultAddressValidator());
+	public Zcoin() {
+		super("Zcoin", "XZC", new XzcAddressValidator());
+    }
+    
+    public static class XzcAddressValidator extends RegexAddressValidator {
+
+        public XzcAddressValidator() {
+            super("^a?[a-zA-Z0-9]{33}", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.XZC"));
+        }
     }
 }

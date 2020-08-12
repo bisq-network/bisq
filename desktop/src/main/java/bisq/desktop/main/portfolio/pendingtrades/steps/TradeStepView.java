@@ -22,15 +22,22 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
+import bisq.desktop.main.portfolio.pendingtrades.TradeStepInfo;
 import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
 import bisq.desktop.util.Layout;
 
-import bisq.core.arbitration.Dispute;
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 
-import bisq.common.Clock;
+import bisq.network.p2p.BootstrapListener;
+
+import bisq.common.ClockWatcher;
+import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -76,18 +83,19 @@ public abstract class TradeStepView extends AnchorPane {
     protected final Preferences preferences;
     protected final GridPane gridPane;
 
-    private Subscription disputeStateSubscription;
-    private Subscription tradePeriodStateSubscription;
+    private Subscription tradePeriodStateSubscription, disputeStateSubscription, mediationResultStateSubscription;
     protected int gridRow = 0;
-    protected TitledGroupBg tradeInfoTitledGroupBg;
     private TextField timeLeftTextField;
     private ProgressBar timeLeftProgressBar;
     private TxIdTextField txIdTextField;
-    protected TradeSubView.NotificationGroup notificationGroup;
+    private TradeStepInfo tradeStepInfo;
     private Subscription txIdSubscription;
-    private Clock.Listener clockListener;
+    private ClockWatcher.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
     protected Label infoLabel;
+    private Popup acceptMediationResultPopup;
+    private BootstrapListener bootstrapListener;
+    private TradeSubView.ChatCallback chatCallback;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -136,10 +144,10 @@ public abstract class TradeStepView extends AnchorPane {
 
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
-                showSupportFields();
+                new Popup().error(newValue).show();
         };
 
-        clockListener = new Clock.Listener() {
+        clockListener = new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
             }
@@ -165,20 +173,68 @@ public abstract class TradeStepView extends AnchorPane {
         }
         trade.errorMessageProperty().addListener(errorMessageListener);
 
-        disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), newValue -> {
-            if (newValue != null)
-                updateDisputeState(newValue);
-        });
+        if (!isMediationClosedState()) {
+            tradeStepInfo.setOnAction(e -> {
+                if (this.isTradePeriodOver()) {
+                    openSupportTicket();
+                } else {
+                    openChat();
+                }
+            });
+        }
+
+        // We get mailbox messages processed after we have bootstrapped. This will influence the states we
+        // handle in our disputeStateSubscription and mediationResultStateSubscriptions. To avoid that we show
+        // popups from incorrect states we wait until we have bootstrapped and the mailbox messages processed.
+        if (model.p2PService.isBootstrapped()) {
+            registerSubscriptions();
+        } else {
+            bootstrapListener = new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    registerSubscriptions();
+                }
+            };
+            model.p2PService.addP2PServiceListener(bootstrapListener);
+        }
 
         tradePeriodStateSubscription = EasyBind.subscribe(trade.tradePeriodStateProperty(), newValue -> {
             if (newValue != null)
                 updateTradePeriodState(newValue);
         });
 
-        model.clock.addListener(clockListener);
+        model.clockWatcher.addListener(clockListener);
 
         if (infoLabel != null)
             infoLabel.setText(getInfoText());
+    }
+
+    private void registerSubscriptions() {
+        disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), newValue -> {
+            if (newValue != null) {
+                updateDisputeState(newValue);
+            }
+        });
+
+        mediationResultStateSubscription = EasyBind.subscribe(trade.mediationResultStateProperty(), newValue -> {
+            if (newValue != null) {
+                updateMediationResultState(true);
+            }
+        });
+
+        UserThread.execute(() -> model.p2PService.removeP2PServiceListener(bootstrapListener));
+    }
+
+    private void openSupportTicket() {
+        applyOnDisputeOpened();
+        model.dataModel.onOpenDispute();
+    }
+
+    private void openChat() {
+        // call up the chain to open chat
+        if (this.chatCallback != null) {
+            this.chatCallback.onOpenChat(this.trade);
+        }
     }
 
     public void deactivate() {
@@ -194,14 +250,17 @@ public abstract class TradeStepView extends AnchorPane {
         if (disputeStateSubscription != null)
             disputeStateSubscription.unsubscribe();
 
+        if (mediationResultStateSubscription != null)
+            mediationResultStateSubscription.unsubscribe();
+
         if (tradePeriodStateSubscription != null)
             tradePeriodStateSubscription.unsubscribe();
 
         if (clockListener != null)
-            model.clock.removeListener(clockListener);
+            model.clockWatcher.removeListener(clockListener);
 
-        if (notificationGroup != null)
-            notificationGroup.button.setOnAction(null);
+        if (tradeStepInfo != null)
+            tradeStepInfo.setOnAction(null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +273,7 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addTradeInfoBlock() {
-        tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 3,
+        TitledGroupBg tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 3,
                 Res.get("portfolio.pending.tradeInformation"));
         GridPane.setColumnSpan(tradeInfoTitledGroupBg, 2);
 
@@ -266,7 +325,6 @@ public abstract class TradeStepView extends AnchorPane {
         GridPane.setColumnSpan(titledGroupBg, 2);
 
         infoLabel = addMultilineLabel(gridPane, gridRow, "", Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
-//        infoLabel = addMultilineLabel(gridPane, gridRow, "", 0);
         GridPane.setColumnSpan(infoLabel, 2);
     }
 
@@ -304,189 +362,278 @@ public abstract class TradeStepView extends AnchorPane {
 
     // We have the dispute button and text field on the left side, but we handle the content here as it
     // is trade state specific
-    public void setNotificationGroup(TradeSubView.NotificationGroup notificationGroup) {
-        this.notificationGroup = notificationGroup;
+    public void setTradeStepInfo(TradeStepInfo tradeStepInfo) {
+        this.tradeStepInfo = tradeStepInfo;
+
+        tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
+        tradeStepInfo.setPeriodOverWarnTextSupplier(this::getPeriodOverWarnText);
     }
 
-    private void showDisputeInfoLabel() {
-        if (notificationGroup != null)
-            notificationGroup.setLabelAndHeadlineVisible(true);
+    protected void hideTradeStepInfo() {
+        tradeStepInfo.setState(TradeStepInfo.State.TRADE_COMPLETED);
     }
 
-    private void showOpenDisputeButton() {
-        if (notificationGroup != null) {
-            notificationGroup.setButtonVisible(true);
-            notificationGroup.button.setOnAction(e -> {
-                notificationGroup.button.setDisable(true);
-                onDisputeOpened();
-                model.dataModel.onOpenDispute();
-            });
-        }
-    }
-
-    protected void setWarningHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("shared.warning"));
-        }
-    }
-
-    protected void setInformationHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.notification"));
-        }
-    }
-
-    protected void setOpenDisputeHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.openDispute"));
-        }
-    }
-
-    protected void setDisputeOpenedHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.disputeOpened"));
-        }
-    }
-
-    protected void setRequestSupportHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.openSupport"));
-        }
-    }
-
-    protected void setSupportOpenedHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.supportTicketOpened"));
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Support
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void showSupportFields() {
-        if (notificationGroup != null) {
-            notificationGroup.button.updateText(Res.get("portfolio.pending.requestSupport"));
-            notificationGroup.button.setId("open-support-button");
-            notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
-        }
-        new Popup<>().warning(trade.errorMessageProperty().getValue()
-                + "\n\n" + Res.get("portfolio.pending.error.requestSupport"))
-                .show();
-
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Warning
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void showWarning() {
-        showDisputeInfoLabel();
-
-        if (notificationGroup != null)
-            notificationGroup.label.setText(getWarningText());
-    }
-
-    private void removeWarning() {
-        hideNotificationGroup();
-    }
-
-    protected String getWarningText() {
+    protected String getFirstHalfOverWarnText() {
         return "";
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onOpenForDispute() {
-        showDisputeInfoLabel();
-        showOpenDisputeButton();
-        setOpenDisputeHeadline();
-
-        if (notificationGroup != null)
-            notificationGroup.label.setText(getOpenForDisputeText());
-    }
-
-    private void onDisputeOpened() {
-        showDisputeInfoLabel();
-        showOpenDisputeButton();
-        applyOnDisputeOpened();
-        setDisputeOpenedHeadline();
-
-        if (notificationGroup != null)
-            notificationGroup.button.setDisable(true);
-    }
-
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return "";
     }
 
     protected void applyOnDisputeOpened() {
     }
 
-    protected void hideNotificationGroup() {
-        notificationGroup.setLabelAndHeadlineVisible(false);
-        notificationGroup.setButtonVisible(false);
-    }
-
     private void updateDisputeState(Trade.DisputeState disputeState) {
+        deactivatePaymentButtons(false);
         Optional<Dispute> ownDispute;
         switch (disputeState) {
             case NO_DISPUTE:
                 break;
-            case DISPUTE_REQUESTED:
-                onDisputeOpened();
-                ownDispute = model.dataModel.disputeManager.findOwnDispute(trade.getId());
+            case MEDIATION_REQUESTED:
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
+                ownDispute = model.dataModel.mediationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
-                    String msg;
-                    if (dispute.isSupportTicket()) {
-                        setSupportOpenedHeadline();
-                        msg = Res.get("portfolio.pending.supportTicketOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    } else {
-                        setDisputeOpenedHeadline();
-                        msg = Res.get("portfolio.pending.disputeOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    }
-                    if (notificationGroup != null)
-                        notificationGroup.label.setText(msg);
+                    if (tradeStepInfo != null)
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_MEDIATION_SELF_REQUESTED);
                 });
 
                 break;
-            case DISPUTE_STARTED_BY_PEER:
-                onDisputeOpened();
-                ownDispute = model.dataModel.disputeManager.findOwnDispute(trade.getId());
+            case MEDIATION_STARTED_BY_PEER:
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
+                ownDispute = model.dataModel.mediationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
-                    String msg;
-                    if (dispute.isSupportTicket()) {
-                        setSupportOpenedHeadline();
-                        msg = Res.get("portfolio.pending.supportTicketOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    } else {
-                        setDisputeOpenedHeadline();
-                        msg = Res.get("portfolio.pending.disputeOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
+                    if (tradeStepInfo != null) {
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_MEDIATION_PEER_REQUESTED);
                     }
-                    if (notificationGroup != null)
-                        notificationGroup.label.setText(msg);
                 });
                 break;
-            case DISPUTE_CLOSED:
+            case MEDIATION_CLOSED:
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setOnAction(e -> {
+                        updateMediationResultState(false);
+                    });
+                }
+
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT);
+                }
+
+                updateMediationResultState(true);
+                break;
+            case REFUND_REQUESTED:
+                deactivatePaymentButtons(true);
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
+                ownDispute = model.dataModel.refundManager.findOwnDispute(trade.getId());
+                ownDispute.ifPresent(dispute -> {
+                    if (tradeStepInfo != null)
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
+                });
+
+                break;
+            case REFUND_REQUEST_STARTED_BY_PEER:
+                deactivatePaymentButtons(true);
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
+                ownDispute = model.dataModel.refundManager.findOwnDispute(trade.getId());
+                ownDispute.ifPresent(dispute -> {
+                    if (tradeStepInfo != null)
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
+                });
+                break;
+            case REFUND_REQUEST_CLOSED:
+                deactivatePaymentButtons(true);
                 break;
         }
     }
 
+    private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
+        if (isInArbitration()) {
+            if (isRefundRequestStartedByPeer()) {
+                tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
+            } else if (isRefundRequestSelfStarted()) {
+                tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
+            }
+        } else if (isMediationClosedState()) {
+            // We do not use the state itself as it is not guaranteed the last state reflects relevant information
+            // (e.g. we might receive a RECEIVED_SIG_MSG but then later a SIG_MSG_IN_MAILBOX).
+            if (hasSelfAccepted()) {
+                tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_SELF_ACCEPTED);
+                if (!blockOpeningOfResultAcceptedPopup)
+                    openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
+            } else if (peerAccepted()) {
+                tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_PEER_ACCEPTED);
+                if (acceptMediationResultPopup == null) {
+                    openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline.peerAccepted", trade.getShortId()));
+                }
+            } else {
+                tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT);
+                openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
+            }
+        }
+    }
+
+    private boolean isInArbitration() {
+        return isRefundRequestStartedByPeer() || isRefundRequestSelfStarted();
+    }
+
+    private boolean isRefundRequestStartedByPeer() {
+        return trade.getDisputeState() == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER;
+    }
+
+    private boolean isRefundRequestSelfStarted() {
+        return trade.getDisputeState() == Trade.DisputeState.REFUND_REQUESTED;
+    }
+
+    private boolean isMediationClosedState() {
+        return trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED;
+    }
+
+    private boolean isTradePeriodOver() {
+        return Trade.TradePeriodState.TRADE_PERIOD_OVER == trade.tradePeriodStateProperty().get();
+    }
+
+    private boolean hasSelfAccepted() {
+        return trade.getProcessModel().getMediatedPayoutTxSignature() != null;
+    }
+
+    private boolean peerAccepted() {
+        return trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null;
+    }
+
+    private void openMediationResultPopup(String headLine) {
+        if (acceptMediationResultPopup != null) {
+            return;
+        }
+
+        Optional<Dispute> optionalDispute = model.dataModel.mediationManager.findDispute(trade.getId());
+        if (!optionalDispute.isPresent()) {
+            return;
+        }
+
+        if (trade.getPayoutTx() != null) {
+            return;
+        }
+
+        if (trade.getDepositTx() == null) {
+            log.error("trade.getDepositTx() was null at openMediationResultPopup. " +
+                    "We add the trade to failed trades. TradeId={}", trade.getId());
+            model.dataModel.addTradeToFailedTrades();
+            new Popup().warning(Res.get("portfolio.pending.mediationResult.error.depositTxNull")).show();
+            return;
+        } else if (trade.getDelayedPayoutTx() == null) {
+            log.error("trade.getDelayedPayoutTx() was null at openMediationResultPopup. " +
+                    "We add the trade to failed trades. TradeId={}", trade.getId());
+            new Popup().warning(Res.get("portfolio.pending.mediationResult.error.delayedPayoutTxNull")).show();
+            return;
+        }
+
+        DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
+        Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
+        boolean isMyRoleBuyer = contract.isMyRoleBuyer(model.dataModel.getPubKeyRing());
+        String buyerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount());
+        String sellerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount());
+        String myPayoutAmount = isMyRoleBuyer ? buyerPayoutAmount : sellerPayoutAmount;
+        String peersPayoutAmount = isMyRoleBuyer ? sellerPayoutAmount : buyerPayoutAmount;
+
+        long lockTime = trade.getDelayedPayoutTx().getLockTime();
+        int bestChainHeight = model.dataModel.btcWalletService.getBestChainHeight();
+        long remaining = lockTime - bestChainHeight;
+
+        String actionButtonText = hasSelfAccepted() ?
+                Res.get("portfolio.pending.mediationResult.popup.alreadyAccepted") : Res.get("shared.accept");
+
+        acceptMediationResultPopup = new Popup().width(900)
+                .headLine(headLine)
+                .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
+                        myPayoutAmount,
+                        peersPayoutAmount,
+                        FormattingUtils.getDateFromBlockHeight(remaining),
+                        lockTime))
+                .actionButtonText(actionButtonText)
+                .onAction(() -> {
+                    model.dataModel.mediationManager.acceptMediationResult(trade,
+                            () -> {
+                                log.info("onAcceptMediationResult completed");
+                                acceptMediationResultPopup = null;
+                            },
+                            errorMessage -> {
+                                UserThread.execute(() -> {
+                                    new Popup().error(errorMessage).show();
+                                    if (acceptMediationResultPopup != null) {
+                                        acceptMediationResultPopup.hide();
+                                        acceptMediationResultPopup = null;
+                                    }
+                                });
+                            });
+                })
+                .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
+                .onSecondaryAction(() -> {
+                    model.dataModel.mediationManager.rejectMediationResult(trade);
+                    model.dataModel.onOpenDispute();
+                    acceptMediationResultPopup = null;
+                })
+                .onClose(() -> {
+                    acceptMediationResultPopup = null;
+                });
+
+        if (hasSelfAccepted()) {
+            acceptMediationResultPopup.disableActionButton();
+        }
+
+        acceptMediationResultPopup.show();
+    }
+
+    protected void deactivatePaymentButtons(boolean isDisabled) {
+    }
+
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {
-        if (trade.getDisputeState() != Trade.DisputeState.DISPUTE_REQUESTED &&
-                trade.getDisputeState() != Trade.DisputeState.DISPUTE_STARTED_BY_PEER) {
+        if (trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
             switch (tradePeriodState) {
                 case FIRST_HALF:
+                    // just for dev testing. not possible to go back in time ;-)
+                    if (tradeStepInfo.getState() == TradeStepInfo.State.WARN_PERIOD_OVER) {
+                        tradeStepInfo.setState(TradeStepInfo.State.WARN_HALF_PERIOD);
+                    } else if (tradeStepInfo.getState() == TradeStepInfo.State.WARN_HALF_PERIOD) {
+                        tradeStepInfo.setState(TradeStepInfo.State.SHOW_GET_HELP_BUTTON);
+                        tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
+                    }
                     break;
                 case SECOND_HALF:
-                    if (!trade.isFiatReceived())
-                        showWarning();
-                    else
-                        removeWarning();
+                    if (!trade.isFiatReceived()) {
+                        if (tradeStepInfo != null) {
+                            tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
+                            tradeStepInfo.setState(TradeStepInfo.State.WARN_HALF_PERIOD);
+                        }
+                    } else {
+                        tradeStepInfo.setState(TradeStepInfo.State.SHOW_GET_HELP_BUTTON);
+                    }
                     break;
                 case TRADE_PERIOD_OVER:
-                    onOpenForDispute();
+                    if (tradeStepInfo != null) {
+                        tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getPeriodOverWarnText);
+                        tradeStepInfo.setState(TradeStepInfo.State.WARN_PERIOD_OVER);
+                    }
                     break;
             }
         }
@@ -524,5 +671,9 @@ public abstract class TradeStepView extends AnchorPane {
         infoGridPane.getChildren().add(warningBox);
 
         return infoGridPane;
+    }
+
+    public void setChatCallback(TradeSubView.ChatCallback chatCallback) {
+        this.chatCallback = chatCallback;
     }
 }

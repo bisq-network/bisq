@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -39,8 +40,10 @@ import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -53,15 +56,15 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.wallet.Wallet;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
 
 import org.apache.commons.lang3.StringUtils;
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -97,6 +100,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -120,13 +124,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton;
     private Label amountLabel;
-    private TextField amountTextField, withdrawFromTextField, withdrawToTextField;
+    private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField;
 
     private final BtcWalletService walletService;
     private final TradeManager tradeManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final Preferences preferences;
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
@@ -156,7 +160,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            TradeManager tradeManager,
                            P2PService p2PService,
                            WalletsSetup walletsSetup,
-                           BSFormatter formatter,
+                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            Preferences preferences,
                            BtcAddressValidator btcAddressValidator,
                            WalletPasswordWindow walletPasswordWindow) {
@@ -206,7 +210,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField = feeTuple3.second;
         amountTextField.setMinWidth(180);
         feeExcludedRadioButton = feeTuple3.third;
-        RadioButton feeIncludedRadioButton = feeTuple3.forth;
+        RadioButton feeIncludedRadioButton = feeTuple3.fourth;
 
         withdrawFromTextField = addTopLabelTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode())).second;
@@ -214,6 +218,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
         withdrawToTextField.setMaxWidth(380);
+
+        withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
+        withdrawMemoTextField.setMaxWidth(380);
 
         final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
 
@@ -246,7 +254,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountListener = (observable, oldValue, newValue) -> {
             if (amountTextField.focusedProperty().get()) {
                 try {
-                    amountAsCoin = formatter.parseToCoin(amountTextField.getText());
+                    amountAsCoin = ParsingUtils.parseToCoin(amountTextField.getText(), formatter);
                 } catch (Throwable t) {
                     log.error("Error at amountTextField input. " + t.toString());
                 }
@@ -319,7 +327,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onWithdraw() {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
                 // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
                 Transaction feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
@@ -328,9 +336,28 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
-                Coin fee = feeEstimationTransaction.getFee();
-                sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin;
-                Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
+
+                Coin dust = getDust(feeEstimationTransaction);
+                Coin fee = feeEstimationTransaction.getFee().add(dust);
+                Coin receiverAmount = Coin.ZERO;
+                // amountAsCoin is what the user typed into the withdrawal field.
+                // this can be interpreted as either the senders amount or receivers amount depending
+                // on a radio button "fee excluded / fee included".
+                // therefore we calculate the actual sendersAmount and receiverAmount as follows:
+                if (feeExcluded) {
+                    receiverAmount = amountAsCoin;
+                    sendersAmount = receiverAmount.add(fee);
+                } else {
+                    sendersAmount = amountAsCoin.add(dust); // sendersAmount bumped up to UTXO size when dust is in play
+                    receiverAmount = sendersAmount.subtract(fee);
+                }
+                if (dust.isPositive()) {
+                    log.info("Dust output ({} satoshi) was detected, the dust amount has been added to the fee (was {}, now {})",
+                            dust.value,
+                            feeEstimationTransaction.getFee(),
+                            fee.value);
+                }
+
                 if (areInputsValid()) {
                     int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
@@ -338,20 +365,29 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     if (receiverAmount.isPositive()) {
                         double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                         double kb = txSize / 1000d;
-                        new Popup<>().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
-                                .confirmation(Res.get("shared.sendFundsDetailsWithFee",
-                                        formatter.formatCoinWithCode(sendersAmount),
-                                        withdrawFromTextField.getText(),
-                                        withdrawToTextField.getText(),
-                                        formatter.formatCoinWithCode(fee),
-                                        feePerByte,
-                                        kb,
-                                        formatter.formatCoinWithCode(receiverAmount)))
+
+                        String messageText = Res.get("shared.sendFundsDetailsWithFee",
+                            formatter.formatCoinWithCode(sendersAmount),
+                            withdrawFromTextField.getText(),
+                            withdrawToTextField.getText(),
+                            formatter.formatCoinWithCode(fee),
+                            feePerByte,
+                            kb,
+                            formatter.formatCoinWithCode(receiverAmount));
+                        if (dust.isPositive()) {
+                            messageText = Res.get("shared.sendFundsDetailsDust",
+                                dust.value, dust.value > 1 ? "s" : "")
+                                + messageText;
+                        }
+
+                        new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
+                                .confirmation(messageText)
                                 .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> doWithdraw(sendersAmount, fee, new FutureCallback<>() {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
+                                            transaction.setMemo(withdrawMemoTextField.getText());
                                             log.debug("onWithdraw onSuccess tx ID:{}", transaction.getHashAsString());
                                         } else {
                                             log.error("onWithdraw transaction is null");
@@ -375,18 +411,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } else {
-                        new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
+                        new Popup().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                     }
                 }
             } catch (InsufficientFundsException e) {
-                new Popup<>().warning(Res.get("funds.withdrawal.warn.amountExceeds") + "\n\nError message:\n" + e.getMessage()).show();
+                new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds") + "\n\nError message:\n" + e.getMessage()).show();
             } catch (Throwable e) {
                 e.printStackTrace();
                 log.error(e.toString());
-                new Popup<>().warning(e.toString()).show();
+                new Popup().warning(e.toString()).show();
             }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
@@ -469,18 +503,18 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             reset();
             updateList();
         } catch (AddressFormatException e) {
-            new Popup<>().warning(Res.get("validation.btc.invalidAddress")).show();
+            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
         } catch (Wallet.DustySendRequested e) {
-            new Popup<>().warning(Res.get("validation.amountBelowDust",
+            new Popup().warning(Res.get("validation.amountBelowDust",
                     formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
         } catch (AddressEntryException e) {
-            new Popup<>().error(e.getMessage()).show();
+            new Popup().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
             log.warn(e.getMessage());
-            new Popup<>().warning(Res.get("funds.withdrawal.notEnoughFunds") + "\n\nError message:\n" + e.getMessage()).show();
+            new Popup().warning(Res.get("funds.withdrawal.notEnoughFunds") + "\n\nError message:\n" + e.getMessage()).show();
         } catch (Throwable e) {
             log.warn(e.toString());
-            new Popup<>().warning(e.toString()).show();
+            new Popup().warning(e.toString()).show();
         }
     }
 
@@ -498,27 +532,30 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
 
+        withdrawMemoTextField.setText("");
+        withdrawMemoTextField.setPromptText(Res.get("funds.withdrawal.memo"));
+
         selectedItems.clear();
         tableView.getSelectionModel().clearSelection();
     }
 
     private boolean areInputsValid() {
         if (!sendersAmount.isPositive()) {
-            new Popup<>().warning(Res.get("validation.negative")).show();
+            new Popup().warning(Res.get("validation.negative")).show();
             return false;
         }
 
         if (!btcAddressValidator.validate(withdrawToTextField.getText()).isValid) {
-            new Popup<>().warning(Res.get("validation.btc.invalidAddress")).show();
+            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
             return false;
         }
         if (!totalAvailableAmountOfSelectedItems.isPositive()) {
-            new Popup<>().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
+            new Popup().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
             return false;
         }
 
         if (sendersAmount.compareTo(totalAvailableAmountOfSelectedItems) > 0) {
-            new Popup<>().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
+            new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
             return false;
         }
 
@@ -548,7 +585,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(address);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setAlignment(Pos.CENTER);
@@ -628,6 +665,21 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         };
                     }
                 });
+    }
+
+    // BISQ issue #4039: prevent dust outputs from being created.
+    // check the outputs of a proposed transaction, if any are below the dust threshold
+    // add up the dust, noting the details in the log.
+    // returns the 'dust amount' to indicate if any dust was detected.
+    private Coin getDust(Transaction transaction) {
+        Coin dust = Coin.ZERO;
+        for (TransactionOutput transactionOutput: transaction.getOutputs()) {
+            if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
+                dust = dust.add(transactionOutput.getValue());
+                log.info("dust TXO = {}", transactionOutput.toString());
+            }
+        }
+        return dust;
     }
 }
 

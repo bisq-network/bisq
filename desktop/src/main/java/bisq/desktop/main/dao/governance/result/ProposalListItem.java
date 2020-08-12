@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.governance.result;
 
 import bisq.desktop.util.FormBuilder;
 
+import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.CompensationProposal;
@@ -32,7 +33,7 @@ import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
@@ -40,8 +41,14 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TableRow;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+
+import javafx.geometry.Insets;
 
 import lombok.Getter;
+
+import org.jetbrains.annotations.NotNull;
 
 public class ProposalListItem {
 
@@ -50,16 +57,18 @@ public class ProposalListItem {
     @Getter
     private final Proposal proposal;
     private final Vote vote;
+    private final boolean isMyBallotIncluded;
     private final BsqFormatter bsqFormatter;
 
     private TableRow tableRow;
 
 
-    ProposalListItem(EvaluatedProposal evaluatedProposal, Ballot ballot, BsqFormatter bsqFormatter) {
+    ProposalListItem(EvaluatedProposal evaluatedProposal, Ballot ballot, boolean isMyBallotIncluded,
+                     BsqFormatter bsqFormatter) {
         this.evaluatedProposal = evaluatedProposal;
         proposal = evaluatedProposal.getProposal();
         vote = ballot.getVote();
-
+        this.isMyBallotIncluded = isMyBallotIncluded;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -68,16 +77,30 @@ public class ProposalListItem {
         Label myVoteIcon;
         if (vote != null) {
             if ((vote).isAccepted()) {
-                myVoteIcon = FormBuilder.getIcon(AwesomeIcon.THUMBS_UP);
-                myVoteIcon.getStyleClass().add("dao-accepted-icon");
+                myVoteIcon = getIcon(AwesomeIcon.THUMBS_UP, "dao-accepted-icon");
             } else {
-                myVoteIcon = FormBuilder.getIcon(AwesomeIcon.THUMBS_DOWN);
-                myVoteIcon.getStyleClass().add("dao-rejected-icon");
+                myVoteIcon = getIcon(AwesomeIcon.THUMBS_DOWN, "dao-rejected-icon");
+            }
+            if (!isMyBallotIncluded) {
+                Label notIncluded = FormBuilder.getIcon(AwesomeIcon.BAN_CIRCLE);
+                return new Label("", new HBox(10, new StackPane(myVoteIcon, notIncluded),
+                        getIcon(AwesomeIcon.MINUS, "dao-ignored-icon")));
             }
         } else {
-            myVoteIcon = FormBuilder.getIcon(AwesomeIcon.MINUS);
-            myVoteIcon.getStyleClass().add("dao-ignored-icon");
+            myVoteIcon = getIcon(AwesomeIcon.MINUS, "dao-ignored-icon");
+            if (!isMyBallotIncluded) {
+                myVoteIcon.setPadding(new Insets(0, 0, 0, 25));
+                return myVoteIcon;
+            }
         }
+        return myVoteIcon;
+    }
+
+    @NotNull
+    private Label getIcon(AwesomeIcon awesomeIcon, String s) {
+        Label myVoteIcon;
+        myVoteIcon = FormBuilder.getIcon(awesomeIcon);
+        myVoteIcon.getStyleClass().add(s);
         return myVoteIcon;
     }
 
@@ -100,6 +123,10 @@ public class ProposalListItem {
         return evaluatedProposal.isAccepted() ? AwesomeIcon.OK_SIGN : AwesomeIcon.BAN_CIRCLE;
     }
 
+    public boolean isAccepted() {
+        return evaluatedProposal.isAccepted();
+    }
+
     public String getColorStyleClass() {
         return evaluatedProposal.isAccepted() ? "dao-accepted-icon" : "dao-rejected-icon";
     }
@@ -108,11 +135,38 @@ public class ProposalListItem {
         return ProposalListItem.getProposalDetails(evaluatedProposal, bsqFormatter);
     }
 
+    public long getIssuedAmount() {
+        if (evaluatedProposal.getProposal().getType() == ProposalType.COMPENSATION_REQUEST) {
+            CompensationProposal compensationProposal = (CompensationProposal) proposal;
+            Coin requestedBsq = evaluatedProposal.isAccepted() ? compensationProposal.getRequestedBsq() : Coin.ZERO;
+            return requestedBsq.value;
+        }
+        return 0;
+    }
+
+    public String getThresholdAsString() {
+        return (evaluatedProposal.getProposalVoteResult().getThreshold() / 100D) + "%";
+    }
+
+    public long getThreshold() {
+        return evaluatedProposal.getProposalVoteResult().getThreshold();
+    }
+
+    public String getQuorumAsString() {
+        return bsqFormatter.formatCoinWithCode(Coin.valueOf(evaluatedProposal.getProposalVoteResult().getQuorum()));
+    }
+
+    public long getQuorum() {
+        return evaluatedProposal.getProposalVoteResult().getQuorum();
+    }
+
     private static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
         return getProposalDetails(evaluatedProposal, bsqFormatter, true);
     }
 
-    private static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter, boolean useDisplayString) {
+    private static String getProposalDetails(EvaluatedProposal evaluatedProposal,
+                                             BsqFormatter bsqFormatter,
+                                             boolean useDisplayString) {
         Proposal proposal = evaluatedProposal.getProposal();
         switch (proposal.getType()) {
             case COMPENSATION_REQUEST:

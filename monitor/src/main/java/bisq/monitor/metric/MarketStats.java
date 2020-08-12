@@ -90,7 +90,9 @@ public class MarketStats extends Metric {
             // prepare to receive data
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-            String all = in.readLine();
+            String line, all = "";
+            while ((line = in.readLine()) != null)
+                all += ' ' + line;
             in.close();
 
             Arrays.stream(all.substring(0, all.length() - 2).split("}")).forEach(trade -> {
@@ -103,7 +105,6 @@ public class MarketStats extends Metric {
                 }
                 amount.find();
                 timestamp.find();
-                System.err.println(getName() + ".volume." + market.group(1) + " " + amount.group(1) + " " + timestamp.group(1).substring(0, timestamp.group(1).length() - 3));
                 reporter.report("volume." + market.group(1), amount.group(1), timestamp.group(1), getName());
             });
         } catch (IllegalStateException ignore) {

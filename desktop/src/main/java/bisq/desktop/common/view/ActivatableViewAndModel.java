@@ -29,11 +29,6 @@ public abstract class ActivatableViewAndModel<R extends Node, M extends Activata
         super(checkNotNull(model, "Model must not be null"));
     }
 
-    public ActivatableViewAndModel() {
-        //noinspection unchecked
-        this((M) Activatable.NO_OP_INSTANCE);
-    }
-
     @Override
     protected void prepareInitialize() {
         if (root != null) {

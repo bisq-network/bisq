@@ -40,7 +40,7 @@ public class RelayMain {
     private static RelayService relayService;
 
     static {
-        // Need to set default locale initially otherwise we get problems at non-english OS
+        // Need to set default locale initially otherwise we get problems at non-English OS
         Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
     }
 

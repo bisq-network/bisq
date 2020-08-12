@@ -17,16 +17,11 @@
 
 package bisq.core.provider;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
-
-import bisq.network.NetworkOptionKeys;
+import bisq.common.config.Config;
 
 import com.google.inject.Inject;
 
 import javax.inject.Named;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,11 +39,11 @@ public class ProvidersRepository {
             "http://xc3nh4juf2hshy7e.onion/",   // @emzy
             "http://ceaanhbvluug4we6.onion/",   // @mrosseel
             "http://44mgyoe2b6oqiytt.onion/",   // @devinbileck
-            "http://5bmpx76qllutpcyp.onion/",   // @cbeams
-            "http://62nvujg5iou3vu3i.onion/"    // @alexej996
+            "http://62nvujg5iou3vu3i.onion/"   // @alexej996
     );
 
-    private final String providersFromProgramArgs;
+    private final Config config;
+    private final List<String> providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
 
     private List<String> providerList;
@@ -65,16 +60,17 @@ public class ProvidersRepository {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProvidersRepository(BisqEnvironment bisqEnvironment,
-                               @Named(AppOptionKeys.PROVIDERS) String providers,
-                               @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
+    public ProvidersRepository(Config config,
+                               @Named(Config.PROVIDERS) List<String> providers,
+                               @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
 
+        this.config = config;
         this.providersFromProgramArgs = providers;
         this.useLocalhostForP2P = useLocalhostForP2P;
 
         Collections.shuffle(DEFAULT_NODES);
 
-        applyBannedNodes(bisqEnvironment.getBannedPriceRelayNodes());
+        applyBannedNodes(config.bannedPriceRelayNodes);
     }
 
     public void applyBannedNodes(@Nullable List<String> bannedNodes) {
@@ -97,7 +93,7 @@ public class ProvidersRepository {
             baseUrl = providerList.get(index);
             index++;
 
-            if (providerList.size() == 1 && BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
+            if (providerList.size() == 1 && config.baseCurrencyNetwork.isMainnet())
                 log.warn("We only have one provider");
         } else {
             baseUrl = "";
@@ -108,7 +104,7 @@ public class ProvidersRepository {
 
     private void fillProviderList() {
         List<String> providers;
-        if (providersFromProgramArgs == null || providersFromProgramArgs.isEmpty()) {
+        if (providersFromProgramArgs.isEmpty()) {
             if (useLocalhostForP2P) {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
@@ -118,13 +114,15 @@ public class ProvidersRepository {
                 providers = DEFAULT_NODES;
             }
         } else {
-            providers = Arrays.asList(StringUtils.deleteWhitespace(providersFromProgramArgs).split(","));
+            providers = providersFromProgramArgs;
         }
         providerList = providers.stream()
                 .filter(e -> bannedNodes == null ||
                         !bannedNodes.contains(e.replace("http://", "")
                                 .replace("/", "")
                                 .replace(".onion", "")))
+                .map(e -> e.endsWith("/") ? e : e + "/")
+                .map(e -> e.startsWith("http") ? e : "http://" + e)
                 .collect(Collectors.toList());
     }
 }

@@ -28,6 +28,7 @@ import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
+import bisq.desktop.components.paymentmethods.JapanBankTransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
@@ -59,6 +60,7 @@ import bisq.desktop.util.validation.F2FValidator;
 import bisq.desktop.util.validation.HalCashValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
+import bisq.desktop.util.validation.JapanBankTransferValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
@@ -69,9 +71,9 @@ import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
 
-import bisq.core.app.BisqEnvironment;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
@@ -83,15 +85,18 @@ import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.USPostalMoneyOrderAccount;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.stage.Stage;
 
@@ -131,14 +136,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final ClearXchangeValidator clearXchangeValidator;
     private final ChaseQuickPayValidator chaseQuickPayValidator;
     private final InteracETransferValidator interacETransferValidator;
+    private final JapanBankTransferValidator japanBankTransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private final WeChatPayValidator weChatPayValidator;
     private final HalCashValidator halCashValidator;
     private final F2FValidator f2FValidator;
     private final PromptPayValidator promptPayValidator;
     private final AdvancedCashValidator advancedCashValidator;
-    private final AccountAgeWitnessService accountAgeWitnessService;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
@@ -160,6 +165,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             ClearXchangeValidator clearXchangeValidator,
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
+                            JapanBankTransferValidator japanBankTransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             WeChatPayValidator weChatPayValidator,
                             HalCashValidator halCashValidator,
@@ -167,8 +173,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             PromptPayValidator promptPayValidator,
                             AdvancedCashValidator advancedCashValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
-                            BSFormatter formatter) {
-        super(model);
+                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+        super(model, accountAgeWitnessService);
 
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
@@ -183,13 +189,13 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.clearXchangeValidator = clearXchangeValidator;
         this.chaseQuickPayValidator = chaseQuickPayValidator;
         this.interacETransferValidator = interacETransferValidator;
+        this.japanBankTransferValidator = japanBankTransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.weChatPayValidator = weChatPayValidator;
         this.halCashValidator = halCashValidator;
         this.f2FValidator = f2FValidator;
         this.promptPayValidator = promptPayValidator;
         this.advancedCashValidator = advancedCashValidator;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
 
@@ -217,7 +223,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         Coin maxTradeLimitSecondMonth = maxTradeLimitAsCoin.divide(2L);
         Coin maxTradeLimitFirstMonth = maxTradeLimitAsCoin.divide(4L);
         if (paymentAccount instanceof F2FAccount) {
-            new Popup<>().information(Res.get("payment.f2f.info"))
+            new Popup().information(Res.get("payment.f2f.info"))
                     .width(700)
                     .closeButtonText(Res.get("payment.f2f.info.openURL"))
                     .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/trading-rules.html#f2f-trading"))
@@ -226,59 +232,68 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .show();
         } else if (paymentAccount instanceof HalCashAccount) {
             // HalCash has no chargeback risk so we don't show the text from payment.limits.info.
-            new Popup<>().information(Res.get("payment.halCash.info"))
+            new Popup().information(Res.get("payment.halCash.info"))
                     .width(700)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
         } else {
-            new Popup<>().information(Res.get("payment.limits.info",
-                    formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
+
+            String limitsInfoKey = "payment.limits.info";
+            String initialLimit = formatter.formatCoinWithCode(maxTradeLimitFirstMonth);
+
+            if (PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), paymentAccount.getTradeCurrencies())) {
+                limitsInfoKey = "payment.limits.info.withSigning";
+                initialLimit = formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT);
+            }
+
+            new Popup().information(Res.get(limitsInfoKey,
+                    initialLimit,
                     formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
                     formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
                     .width(700)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> {
-                        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+                        final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
                         if (paymentAccount instanceof ClearXchangeAccount) {
-                            new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof WesternUnionAccount) {
-                            new Popup<>().information(Res.get("payment.westernUnion.info"))
+                            new Popup().information(Res.get("payment.westernUnion.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof MoneyGramAccount) {
-                            new Popup<>().information(Res.get("payment.moneyGram.info"))
+                            new Popup().information(Res.get("payment.moneyGram.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof CashDepositAccount) {
-                            new Popup<>().information(Res.get("payment.cashDeposit.info"))
+                            new Popup().information(Res.get("payment.cashDeposit.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof RevolutAccount) {
-                            new Popup<>().information(Res.get("payment.revolut.info"))
+                            new Popup().information(Res.get("payment.revolut.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof USPostalMoneyOrderAccount) {
-                            new Popup<>().information(Res.get("payment.usPostalMoneyOrder.info"))
+                            new Popup().information(Res.get("payment.usPostalMoneyOrder.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
@@ -298,7 +313,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
-            new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
+            new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
         }
     }
 
@@ -320,7 +335,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
         Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = addTopLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsListView = tuple.second;
-        paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
+        paymentAccountsListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         setPaymentAccountsCellFactory();
 
         Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
@@ -337,8 +352,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
+        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.selectPaymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
@@ -436,6 +450,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new SameBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SPECIFIC_BANKS_ID:
                 return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.JAPAN_BANK_ID:
+                return new JapanBankTransferForm(paymentAccount, accountAgeWitnessService, japanBankTransferValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.WECHAT_PAY_ID:

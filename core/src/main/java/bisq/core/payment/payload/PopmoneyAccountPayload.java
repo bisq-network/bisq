@@ -19,13 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
-import org.springframework.util.CollectionUtils;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,19 +68,19 @@ public final class PopmoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setPopmoneyAccountPayload(PB.PopmoneyAccountPayload.newBuilder()
+                .setPopmoneyAccountPayload(protobuf.PopmoneyAccountPayload.newBuilder()
                         .setAccountId(accountId)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static PopmoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static PopmoneyAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PopmoneyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getPopmoneyAccountPayload().getAccountId(),
                 proto.getPopmoneyAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -105,6 +101,11 @@ public final class PopmoneyAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(accountId.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(accountId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

@@ -17,7 +17,7 @@
 
 package bisq.core.btc.nodes;
 
-import bisq.core.app.BisqEnvironment;
+import bisq.common.config.Config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,13 +47,9 @@ public class BtcNodes {
     public List<BtcNode> getProvidedBtcNodes() {
         return useProvidedBtcNodes() ?
                 Arrays.asList(
-                        // ManfredKarrer
-                        new BtcNode("btc1.0-2-1.net", "r3dsojfhwcm7x7p6.onion", "159.89.16.222", BtcNode.DEFAULT_PORT, "@manfredkarrer"),
-                        new BtcNode("btc2.0-2-1.net", "vlf5i3grro3wux24.onion", "165.227.34.56", BtcNode.DEFAULT_PORT, "@manfredkarrer"),
-
                         // emzy
                         new BtcNode("kirsche.emzy.de", "fz6nsij6jiyuwlsc.onion", "78.47.61.83", BtcNode.DEFAULT_PORT, "@emzy"),
-                        new BtcNode("node2.emzy.de", "c6ac4jdfyeiakex2.onion", "62.75.210.81", BtcNode.DEFAULT_PORT, "@emzy"),
+                        new BtcNode("node2.emzy.de", "c6ac4jdfyeiakex2.onion", "62.171.129.32", BtcNode.DEFAULT_PORT, "@emzy"),
                         new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "167.86.90.239", BtcNode.DEFAULT_PORT, "@emzy"),
                         new BtcNode(null, "3xucqntxp5ddoaz5.onion", null, BtcNode.DEFAULT_PORT, "@emzy"), // cannot provide IP because no static IP
 
@@ -61,8 +57,8 @@ public class BtcNodes {
                         new BtcNode("bitcoin.christophatteneder.com", "lgkvbvro67jomosw.onion", "174.138.35.229", BtcNode.DEFAULT_PORT, "@Christoph"),
 
                         // mrosseel
-                        new BtcNode("btc.vante.me", "4jyh6llqj264oggs.onion", "138.68.117.247", BtcNode.DEFAULT_PORT, "@miker"),
-                        new BtcNode("btc2.vante.me", "mxdtrjhe2yfsx3pg.onion", "67.207.75.7", BtcNode.DEFAULT_PORT, "@miker"),
+                        new BtcNode("btc.vante.me", "4jyh6llqj264oggs.onion", "94.23.21.80", BtcNode.DEFAULT_PORT, "@miker"),
+                        new BtcNode("btc2.vante.me", "mxdtrjhe2yfsx3pg.onion", "94.23.205.110", BtcNode.DEFAULT_PORT, "@miker"),
 
                         // sqrrm
                         new BtcNode("btc1.sqrrm.net", "3r44ddzjitznyahw.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "@sqrrm"),
@@ -72,20 +68,26 @@ public class BtcNodes {
                         new BtcNode("btc.ispol.sk", "mbm6ffx6j5ygi2ck.onion", "193.58.196.212", BtcNode.DEFAULT_PORT, "@KanoczTomas"),
 
                         // Devin Bileck
-                        new BtcNode("btc1.dnsalias.net", "lva54pnbq2nsmjyr.onion", "165.227.34.198", BtcNode.DEFAULT_PORT, "@devinbileck"),
+                        new BtcNode("btc1.bisq.services", "lva54pnbq2nsmjyr.onion", "172.105.21.216", BtcNode.DEFAULT_PORT, "@devinbileck"),
+                        new BtcNode("btc2.bisq.services", "qxjrxmhyqp5vy5hj.onion", "173.255.240.205", BtcNode.DEFAULT_PORT, "@devinbileck"),
 
-                        // sgeisler
-                        new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "@sgeisler"),
+                        // m52go
+                        new BtcNode("btc.bisq.cc", "4nnuyxm5k5tlyjq3.onion", "167.71.168.194", BtcNode.DEFAULT_PORT, "@m52go"),
 
-                        // others
-                        new BtcNode("btc.jochen-hoenicke.de", "sslnjjhnmwllysv4.onion", "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke"),
-                        new BtcNode("bitcoin4-fullnode.csg.uzh.ch", null, "192.41.136.217", BtcNode.DEFAULT_PORT, "@tbocek") // requested onion
+                        // wiz
+                        new BtcNode("node100.hnl.wiz.biz", "m3yqzythryowgedc.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node140.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node210.fmt.wiz.biz", "orsy2v63ecrmdj55.onion", "103.99.170.210", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node220.fmt.wiz.biz", "z6mbqq7llxlrn4kq.onion", "103.99.170.220", BtcNode.DEFAULT_PORT, "@wiz"),
+
+                        // Rob Kaandorp
+                        new BtcNode(null, "2pj2o2mrawj7yotg.onion", null, BtcNode.DEFAULT_PORT, "@robkaandorp") // cannot provide IP because no static IP
                 ) :
                 new ArrayList<>();
     }
 
     public boolean useProvidedBtcNodes() {
-        return BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
+        return Config.baseCurrencyNetwork().isMainnet();
     }
 
     public static List<BtcNodes.BtcNode> toBtcNodesList(Collection<String> nodes) {
@@ -98,7 +100,7 @@ public class BtcNodes {
     @EqualsAndHashCode
     @Getter
     public static class BtcNode {
-        private static final int DEFAULT_PORT = BisqEnvironment.getParameters().getPort(); //8333
+        private static final int DEFAULT_PORT = Config.baseCurrencyNetworkParameters().getPort(); //8333
 
         @Nullable
         private final String onionAddress;
@@ -115,13 +117,32 @@ public class BtcNodes {
          * @return BtcNode instance
          */
         public static BtcNode fromFullAddress(String fullAddress) {
-            String[] parts = fullAddress.split(":");
+            String[] parts = fullAddress.split("]");
             checkArgument(parts.length > 0);
-            final String host = parts[0];
+            String host = "";
             int port = DEFAULT_PORT;
-            if (parts.length == 2)
-                port = Integer.valueOf(parts[1]);
+            if (parts[0].contains("[") && parts[0].contains(":")) {
+                // IPv6 address and optional port number
+                // address part delimited by square brackets e.g. [2a01:123:456:789::2]:8333
+                host = parts[0].replace("[", "").replace("]", "");
+                if (parts.length == 2)
+                    port = Integer.parseInt(parts[1].replace(":", ""));
+            }
+            else if (parts[0].contains(":") && !parts[0].contains(".")) {
+                // IPv6 address only; not delimited by square brackets
+                host = parts[0];
+            }
+            else if (parts[0].contains(".")) {
+                // address and an optional port number
+                // e.g. 127.0.0.1:8333 or abcdef123xyz.onion:9999
+                parts = fullAddress.split(":");
+                checkArgument(parts.length > 0);
+                host = parts[0];
+                if (parts.length == 2)
+                    port = Integer.parseInt(parts[1]);
+            }
 
+            checkArgument(host.length()>0, "BtcNode address format not recognised");
             return host.contains(".onion") ? new BtcNode(null, host, null, port, null) : new BtcNode(null, null, host, port, null);
         }
 

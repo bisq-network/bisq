@@ -18,11 +18,14 @@
 package bisq.core.dao.governance.proposal;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Proposal;
+
+import bisq.common.UserThread;
 
 import org.bitcoinj.core.TransactionConfidence;
 
@@ -47,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
  * our own proposal that is not critical). Foreign proposals are only shown if confirmed and fully validated.
  */
 @Slf4j
-public class ProposalListPresentation implements DaoStateListener, MyProposalListService.Listener {
+public class ProposalListPresentation implements DaoStateListener, MyProposalListService.Listener, DaoSetupService {
     private final ProposalService proposalService;
     private final DaoStateService daoStateService;
     private final MyProposalListService myProposalListService;
@@ -56,6 +59,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
     private final ObservableList<Proposal> allProposals = FXCollections.observableArrayList();
     @Getter
     private final FilteredList<Proposal> activeOrMyUnconfirmedProposals = new FilteredList<>(allProposals);
+    private final ListChangeListener<Proposal> proposalListChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,11 +81,27 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
         daoStateService.addDaoStateListener(this);
         myProposalListService.addListener(this);
 
-        proposalService.getTempProposals().addListener((ListChangeListener<Proposal>) c -> {
-            updateLists();
-        });
-        proposalService.getProposalPayloads().addListener((ListChangeListener<ProposalPayload>) c -> {
-            updateLists();
+        proposalListChangeListener = c -> updateLists();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoSetupService
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void addListeners() {
+    }
+
+    @Override
+    public void start() {
+        // We must set the listeners initially and not on onParseBlockChainComplete as activeOrMyUnconfirmedProposals
+        // is used in voteResults which can be called earlier during sync.
+        // To avoid unneeded upDateLists calls we delay one render frame so that once the proposalService is complete we
+        // register out listeners.
+        UserThread.execute(() -> {
+            proposalService.getTempProposals().addListener(proposalListChangeListener);
+            proposalService.getProposalPayloads().addListener((ListChangeListener<ProposalPayload>) c -> updateLists());
         });
     }
 
@@ -94,7 +114,6 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateLists();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MyProposalListService.Listener
@@ -114,7 +133,8 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
         List<Proposal> tempProposals = proposalService.getTempProposals();
         Set<Proposal> verifiedProposals = proposalService.getProposalPayloads().stream()
                 .map(ProposalPayload::getProposal)
-                .filter(proposal -> validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal))
+                .filter(proposal -> !daoStateService.isParseBlockChainComplete() ||
+                        validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal))
                 .collect(Collectors.toSet());
         Set<Proposal> set = new HashSet<>(tempProposals);
         set.addAll(verifiedProposals);
@@ -123,7 +143,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
         // in the list.
         // If a tx is not found in the daoStateService it can be that it is either unconfirmed or invalid.
         // To avoid inclusion of invalid txs we add a check for the confidence type PENDING from the bsqWalletService.
-        // So we only add proposals if they are unconfirmed and therefor not yet parsed. Once confirmed they have to be
+        // So we only add proposals if they are unconfirmed and therefore not yet parsed. Once confirmed they have to be
         // found in the daoStateService.
         List<Proposal> myUnconfirmedProposals = myProposalListService.getList().stream()
                 .filter(p -> !daoStateService.getTx(p.getTxId()).isPresent()) // Tx is still not in our bsq blocks

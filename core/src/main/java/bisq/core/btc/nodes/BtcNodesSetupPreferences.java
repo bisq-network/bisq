@@ -17,9 +17,9 @@
 
 package bisq.core.btc.nodes;
 
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.user.Preferences;
 
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import java.util.Collections;
@@ -83,7 +83,7 @@ public class BtcNodesSetupPreferences {
                 break;
             case PUBLIC:
                 // We keep the empty nodes
-                result = (int) Math.floor(WalletsSetup.DEFAULT_CONNECTIONS * 0.8);
+                result = (int) Math.floor(Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC * 0.8);
                 break;
             case PROVIDED:
             default:

@@ -69,7 +69,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Once a tx gets committed to out BSQ wallet we store the change output for allowing it to be spent in follow-up
+     * Once a tx gets committed to our BSQ wallet we store the change output for allowing it to be spent in follow-up
      * transactions.
      */
     public void onCommitTx(Transaction tx, TxType txType, Wallet wallet) {
@@ -84,7 +84,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
             case GENESIS:
                 return;
             case TRANSFER_BSQ:
-                changeOutputIndex = 1; // output 0 is receivers address
+                changeOutputIndex = 1; // output 0 is receiver's address
                 break;
             case PAY_TRADE_FEE:
                 changeOutputIndex = 0;
@@ -124,7 +124,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
         // It can be that we don't have a BSQ and a BTC change output.
         // If no BSQ change but a BTC change the index points to the BTC output and then
         // we detect that it is not part of our wallet.
-        // If there is a BSQ change but no BTC change it has not effect as we ignore BTC outputs anyway.
+        // If there is a BSQ change but no BTC change it has no effect as we ignore BTC outputs anyway.
         // If both change outputs do not exist then we might point to an index outside
         // of the list and we return at our scope check.
 
@@ -148,12 +148,16 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     }
 
     public void onReorganize() {
-        unconfirmedBsqChangeOutputList.clear();
-        persist();
+        reset();
+    }
+
+    public void onSpvResync() {
+        reset();
     }
 
     public void onTransactionConfidenceChanged(Transaction tx) {
-        if (tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+        if (tx != null &&
+                tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
             removeConnectedOutputsOfInputsOfTx(tx);
 
             tx.getOutputs().forEach(transactionOutput -> {
@@ -188,6 +192,11 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
                     unconfirmedBsqChangeOutputList.remove(txOutput);
                     persist();
                 });
+    }
+
+    private void reset() {
+        unconfirmedBsqChangeOutputList.clear();
+        persist();
     }
 
     private void persist() {

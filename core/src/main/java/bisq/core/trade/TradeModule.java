@@ -17,9 +17,10 @@
 
 package bisq.core.trade;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.AccountAgeWitnessStorageService;
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.sign.SignedWitnessStorageService;
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessStorageService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
@@ -28,17 +29,19 @@ import bisq.core.trade.statistics.TradeStatistics2StorageService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
+import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 
+import static bisq.common.config.Config.ALLOW_FAULTY_DELAYED_TXS;
+import static bisq.common.config.Config.DUMP_DELAYED_PAYOUT_TXS;
+import static bisq.common.config.Config.DUMP_STATISTICS;
 import static com.google.inject.name.Names.named;
 
 public class TradeModule extends AppModule {
 
-    public TradeModule(Environment environment) {
-        super(environment);
+    public TradeModule(Config config) {
+        super(config);
     }
 
     @Override
@@ -49,9 +52,13 @@ public class TradeModule extends AppModule {
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
         bind(AccountAgeWitnessService.class).in(Singleton.class);
-        bind(ReferralIdService.class).in(Singleton.class);
         bind(AccountAgeWitnessStorageService.class).in(Singleton.class);
+        bind(SignedWitnessService.class).in(Singleton.class);
+        bind(SignedWitnessStorageService.class).in(Singleton.class);
+        bind(ReferralIdService.class).in(Singleton.class);
         bind(AssetTradeActivityCheck.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(AppOptionKeys.DUMP_STATISTICS)).to(environment.getRequiredProperty(AppOptionKeys.DUMP_STATISTICS));
+        bindConstant().annotatedWith(named(DUMP_STATISTICS)).to(config.dumpStatistics);
+        bindConstant().annotatedWith(named(DUMP_DELAYED_PAYOUT_TXS)).to(config.dumpDelayedPayoutTxs);
+        bindConstant().annotatedWith(named(ALLOW_FAULTY_DELAYED_TXS)).to(config.allowFaultyDelayedTxs);
     }
 }

@@ -32,7 +32,7 @@ import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.storage.Storage;
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -115,7 +115,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     @Inject
     private WalletPasswordWindow(WalletsManager walletsManager,
-                                 @Named(Storage.STORAGE_DIR) File storageDir) {
+                                 @Named(Config.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
         this.storageDir = storageDir;
         type = Type.Attention;
@@ -223,7 +223,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                         busyAnimation.stop();
                         deriveStatusLabel.setText("");
 
-                        UserThread.runAfter(() -> new Popup<>()
+                        UserThread.runAfter(() -> new Popup()
                                 .warning(Res.get("password.wrongPw"))
                                 .onClose(this::blurAgain).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
                     }
@@ -329,7 +329,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup<>().warning(Res.get("seed.warn.walletNotEmpty.msg"))
+            new Popup().warning(Res.get("seed.warn.walletNotEmpty.msg"))
                     .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
                     .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
@@ -341,7 +341,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup<>().information(Res.get("seed.warn.notEncryptedAnymore"))
+            new Popup().information(Res.get("seed.warn.notEncryptedAnymore"))
                     .closeButtonText(Res.get("shared.no"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)

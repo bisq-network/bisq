@@ -9,8 +9,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Tuple3;
 
@@ -35,15 +34,12 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class NewsView extends ActivatableView<HBox, Void> {
 
-    private final Preferences preferences;
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private BsqAddressTextField addressTextField;
 
     @Inject
-    private NewsView(Preferences preferences, BsqWalletService bsqWalletService,
-                     BsqFormatter bsqFormatter) {
-        this.preferences = preferences;
+    private NewsView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
     }

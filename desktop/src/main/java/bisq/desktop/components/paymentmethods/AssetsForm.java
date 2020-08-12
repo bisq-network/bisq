@@ -17,26 +17,25 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.NewBadge;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.validation.AltCoinAddressValidator;
-import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple3;
@@ -47,18 +46,11 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-
-import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
-
-import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
@@ -72,7 +64,6 @@ public class AssetsForm extends PaymentMethodForm {
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AssetService assetService;
     private final FilterManager filterManager;
-    private final Preferences preferences;
 
     private InputTextField addressInputTextField;
     private CheckBox tradeInstantCheckBox;
@@ -93,16 +84,14 @@ public class AssetsForm extends PaymentMethodForm {
                       InputValidator inputValidator,
                       GridPane gridPane,
                       int gridRow,
-                      BSFormatter formatter,
+                      CoinFormatter formatter,
                       AssetService assetService,
-                      FilterManager filterManager,
-                      Preferences preferences) {
+                      FilterManager filterManager) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.assetAccount = (AssetAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;
         this.filterManager = filterManager;
-        this.preferences = preferences;
 
         tradeInstant = paymentAccount instanceof InstantCryptoCurrencyAccount;
     }
@@ -120,22 +109,14 @@ public class AssetsForm extends PaymentMethodForm {
         tradeInstantCheckBox.setOnAction(e -> {
             tradeInstant = tradeInstantCheckBox.isSelected();
             if (tradeInstant)
-                new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
+                new Popup().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
+            paymentLimitationsTextField.setText(getLimitationsText());
         });
 
-        // add new badge for this new feature for this release
-        // TODO: remove it with 0.9.6+
         gridPane.getChildren().remove(tradeInstantCheckBox);
         tradeInstantCheckBox.setPadding(new Insets(0, 40, 0, 0));
 
-        NewBadge instantTradeNewsBadge = new NewBadge(tradeInstantCheckBox, INSTANT_TRADE_NEWS, preferences);
-        instantTradeNewsBadge.setAlignment(Pos.CENTER_LEFT);
-        instantTradeNewsBadge.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-
-        GridPane.setRowIndex(instantTradeNewsBadge, gridRow);
-        GridPane.setHgrow(instantTradeNewsBadge, Priority.NEVER);
-        GridPane.setMargin(instantTradeNewsBadge, new Insets(10, 0, 0, 0));
-        gridPane.getChildren().add(instantTradeNewsBadge);
+        gridPane.getChildren().add(tradeInstantCheckBox);
 
         addressInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"));
@@ -218,18 +199,19 @@ public class AssetsForm extends PaymentMethodForm {
 
     @Override
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = FormBuilder.<TradeCurrency>addLabelSearchComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
+        currencyComboBox = FormBuilder.<TradeCurrency>addLabelAutocompleteComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
         currencyComboBox.setButtonCell(getComboBoxButtonCell(Res.get("payment.select.altcoin"), currencyComboBox));
 
-        currencyComboBox.getEditor().focusedProperty().addListener(observable -> {
-            currencyComboBox.setPromptText("");
-        });
+        currencyComboBox.getEditor().focusedProperty().addListener(observable ->
+                currencyComboBox.setPromptText(""));
 
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager)));
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 15));
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        ((AutocompleteComboBox<TradeCurrency>) currencyComboBox).setAutocompleteItems(
+                CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
+
+        currencyComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 return tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
@@ -237,17 +219,15 @@ public class AssetsForm extends PaymentMethodForm {
 
             @Override
             public TradeCurrency fromString(String s) {
-                Optional<TradeCurrency> tradeCurrencyOptional = currencyComboBox.getItems().stream().
-                        filter(tradeCurrency -> tradeCurrency.getNameAndCode().equals(s)).
-                        findAny();
-                return tradeCurrencyOptional.orElse(null);
+                return currencyComboBox.getItems().stream().
+                        filter(item -> item.getNameAndCode().equals(s)).
+                        findAny().orElse(null);
             }
         });
-        currencyComboBox.setOnAction(e -> {
 
+        ((AutocompleteComboBox<?>) currencyComboBox).setOnChangeConfirmed(e -> {
             addressInputTextField.resetValidation();
             addressInputTextField.validate();
-
             paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
             updateFromInputs();
         });

@@ -18,6 +18,7 @@
 package bisq.common.storage;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import static bisq.common.util.Preconditions.checkDir;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -50,13 +52,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class Storage<T extends PersistableEnvelope> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
-    public static final String STORAGE_DIR = "storageDir";
 
-    private static CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
-
-    public static void setCorruptedDatabaseFilesHandler(CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
-        Storage.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
-    }
+    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
 
     private final File dir;
     private FileManager<T> fileManager;
@@ -72,9 +69,12 @@ public class Storage<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage(@Named(STORAGE_DIR) File dir, PersistenceProtoResolver persistenceProtoResolver) {
-        this.dir = dir;
+    public Storage(@Named(Config.STORAGE_DIR) File dir,
+                   PersistenceProtoResolver persistenceProtoResolver,
+                   CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+        this.dir = checkDir(dir);
         this.persistenceProtoResolver = persistenceProtoResolver;
+        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
     }
 
     @Nullable

@@ -17,7 +17,6 @@
 
 package bisq.core.dao.state.model.governance;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalType;
@@ -25,14 +24,12 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.config.Config;
+import bisq.common.util.CollectionUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-
-import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.Map;
@@ -91,15 +88,15 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.CompensationProposal.Builder builder = PB.CompensationProposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.CompensationProposal.Builder builder = protobuf.CompensationProposal.newBuilder()
                 .setBsqAddress(bsqAddress)
                 .setRequestedBsq(requestedBsq);
         return super.getProposalBuilder().setCompensationProposal(builder);
     }
 
-    public static CompensationProposal fromProto(PB.Proposal proto) {
-        final PB.CompensationProposal proposalProto = proto.getCompensationProposal();
+    public static CompensationProposal fromProto(protobuf.Proposal proto) {
+        final protobuf.CompensationProposal proposalProto = proto.getCompensationProposal();
         return new CompensationProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getBsqAddress(),
@@ -123,7 +120,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     public Address getAddress() throws AddressFormatException {
         // Remove leading 'B'
         String underlyingBtcAddress = bsqAddress.substring(1, bsqAddress.length());
-        return Address.fromBase58(BisqEnvironment.getParameters(), underlyingBtcAddress);
+        return Address.fromBase58(Config.baseCurrencyNetworkParameters(), underlyingBtcAddress);
     }
 
 

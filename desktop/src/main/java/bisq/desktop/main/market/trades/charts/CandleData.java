@@ -24,13 +24,14 @@ public class CandleData {
     public final long high;
     public final long low;
     public final long average;
+    public final long median;
     public final long accumulatedAmount;
     public final long accumulatedVolume;
     public final long numTrades;
     public final boolean isBullish;
     public final String date;
 
-    public CandleData(long tick, long open, long close, long high, long low, long average,
+    public CandleData(long tick, long open, long close, long high, long low, long average, long median,
                       long accumulatedAmount, long accumulatedVolume, long numTrades,
                       boolean isBullish, String date) {
         this.tick = tick;
@@ -39,6 +40,7 @@ public class CandleData {
         this.high = high;
         this.low = low;
         this.average = average;
+        this.median = median;
         this.accumulatedAmount = accumulatedAmount;
         this.accumulatedVolume = accumulatedVolume;
         this.numTrades = numTrades;

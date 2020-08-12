@@ -22,13 +22,10 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
-
-import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
@@ -98,20 +95,26 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
+    public protobuf.StoragePayload toProtoMessage() {
         checkNotNull(ownerPubKeyBytes, "storagePublicKeyBytes must not be null");
         checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
-        final PB.Alert.Builder builder = PB.Alert.newBuilder()
+        protobuf.Alert.Builder builder = protobuf.Alert.newBuilder()
                 .setMessage(message)
                 .setIsUpdateInfo(isUpdateInfo)
                 .setVersion(version)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignatureAsBase64(signatureAsBase64);
         Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setAlert(builder).build();
+        return protobuf.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
-    public static Alert fromProto(PB.Alert proto) {
+    @Nullable
+    public static Alert fromProto(protobuf.Alert proto) {
+        // We got in dev testing sometimes an empty protobuf Alert. Not clear why that happened but as it causes an
+        // exception and corrupted user db file we prefer to set it to null.
+        if (proto.getSignatureAsBase64().isEmpty())
+            return null;
+
         return new Alert(proto.getMessage(),
                 proto.getIsUpdateInfo(),
                 proto.getVersion(),

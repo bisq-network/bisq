@@ -24,8 +24,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.util.Optional;
@@ -67,12 +65,12 @@ public class DecryptedBallotsWithMerits implements PersistablePayload, Immutable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.DecryptedBallotsWithMerits toProtoMessage() {
+    public protobuf.DecryptedBallotsWithMerits toProtoMessage() {
         return getBuilder().build();
     }
 
-    private PB.DecryptedBallotsWithMerits.Builder getBuilder() {
-        return PB.DecryptedBallotsWithMerits.newBuilder()
+    private protobuf.DecryptedBallotsWithMerits.Builder getBuilder() {
+        return protobuf.DecryptedBallotsWithMerits.newBuilder()
                 .setHashOfBlindVoteList(ByteString.copyFrom(hashOfBlindVoteList))
                 .setBlindVoteTxId(blindVoteTxId)
                 .setVoteRevealTxId(voteRevealTxId)
@@ -81,7 +79,7 @@ public class DecryptedBallotsWithMerits implements PersistablePayload, Immutable
                 .setMeritList(meritList.getBuilder());
     }
 
-    public static DecryptedBallotsWithMerits fromProto(PB.DecryptedBallotsWithMerits proto) {
+    public static DecryptedBallotsWithMerits fromProto(protobuf.DecryptedBallotsWithMerits proto) {
         return new DecryptedBallotsWithMerits(proto.getHashOfBlindVoteList().toByteArray(),
                 proto.getBlindVoteTxId(),
                 proto.getVoteRevealTxId(),

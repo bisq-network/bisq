@@ -22,8 +22,10 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressWithIconAndDirection;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
@@ -38,7 +40,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -50,7 +52,6 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXProgressBar;
 
@@ -71,13 +72,11 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -85,7 +84,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener,
+        BsqWalletService.WalletTransactionsChangeListener {
 
     private TableView<BsqTxListItem> tableView;
 
@@ -100,7 +100,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
     private final SortedList<BsqTxListItem> sortedList = new SortedList<>(observableList);
-    private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
     private ProgressBar chainSyncIndicator;
@@ -173,7 +172,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         VBox.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(vBox);
 
-        walletBsqTransactionsListener = change -> updateList();
         walletChainHeightListener = (observable, oldValue, newValue) -> {
             walletChainHeight = bsqWalletService.getBestChainHeight();
             onUpdateAnyChainHeight();
@@ -183,7 +181,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     @Override
     protected void activate() {
         bsqBalanceUtil.activate();
-        bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
+        bsqWalletService.addWalletTransactionsChangeListener(this);
         bsqWalletService.addBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
 
@@ -207,7 +205,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
         sortedList.comparatorProperty().unbind();
-        bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
+        bsqWalletService.removeWalletTransactionsChangeListener(this);
         bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
         daoFacade.removeBsqStateListener(this);
@@ -252,6 +250,15 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
             updateAnyChainHeightTimer.stop();
             updateAnyChainHeightTimer = null;
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqWalletService.WalletTransactionsChangeListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onWalletTransactionsChange() {
+        updateList();
     }
 
 
@@ -299,8 +306,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private void updateList() {
         observableList.forEach(BsqTxListItem::cleanup);
 
-        // copy list to avoid ConcurrentModificationException
-        final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
+        List<Transaction> walletTransactions = bsqWalletService.getClonedWalletTransactions();
         List<BsqTxListItem> items = walletTransactions.stream()
                 .map(transaction -> {
                     return new BsqTxListItem(transaction,
@@ -362,7 +368,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(bsqFormatter.formatDateTime(item.getDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getDate()));
                                 } else {
                                     setText("");
                                 }
@@ -397,7 +403,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
@@ -467,7 +473,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             // Received
                                             String addressString = item.getAddress();
                                             field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                                    MaterialDesignIcon.LINK, item.isReceived());
+                                                    item.isReceived());
                                             field.setOnAction(event -> openAddressInBlockExplorer(item));
                                             field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                             setGraphic(field);
@@ -625,7 +631,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTime));
+                                                String formattedDate = DisplayUtils.formatDateTime(new Date(blockTime));
                                                 toolTipText = Res.get("dao.tx.issuanceFromCompReq.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;
@@ -639,7 +645,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTime));
+                                                String formattedDate = DisplayUtils.formatDateTime(new Date(blockTime));
                                                 toolTipText = Res.get("dao.tx.issuanceFromReimbursement.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;

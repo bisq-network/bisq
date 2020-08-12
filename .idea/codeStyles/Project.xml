@@ -33,7 +33,11 @@
           <emptyLine />
           <package name="bisq.asset" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="io.bisq.generated" withSubpackages="true" static="false" />
+          <package name="bisq.proto.grpc" withSubpackages="true" static="false" />
+          <emptyLine />
+          <package name="protobuf" withSubpackages="true" static="false" />
+          <emptyLine />
+          <package name="io.grpc" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="com.google.protobuf" withSubpackages="true" static="false" />
           <emptyLine />
@@ -161,7 +165,7 @@
           <emptyLine />
           <package name="org.powermock" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="mockit" withSubpackages="true" static="false" />
+          <package name="org.mockito" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="org.junit" withSubpackages="true" static="false" />
           <emptyLine />
@@ -180,6 +184,7 @@
     <codeStyleSettings language="JAVA">
       <option name="RIGHT_MARGIN" value="120" />
       <option name="BLANK_LINES_BEFORE_PACKAGE" value="1" />
+      <option name="METHOD_PARAMETERS_WRAP" value="5" />
       <option name="WRAP_ON_TYPING" value="0" />
       <option name="SOFT_MARGINS" value="90" />
     </codeStyleSettings>

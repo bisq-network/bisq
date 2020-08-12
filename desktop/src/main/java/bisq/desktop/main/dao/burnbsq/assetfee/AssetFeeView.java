@@ -34,8 +34,10 @@ import bisq.core.dao.governance.asset.StatefulAsset;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.app.DevEnv;
 
@@ -44,6 +46,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -85,7 +88,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     private final BsqWalletService bsqWalletService;
     private final BsqValidator bsqValidator;
     private final AssetService assetService;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
 
     private final ObservableList<AssetListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<AssetListItem> sortedList = new SortedList<>(observableList);
@@ -108,7 +111,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                          BsqWalletService bsqWalletService,
                          BsqValidator bsqValidator,
                          AssetService assetService,
-                         BSFormatter btcFormatter) {
+                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;
@@ -161,6 +164,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         assetService.getUpdateFlag().addListener(updateListener);
         bsqWalletService.addBsqBalanceListener(this);
+        onUpdateAvailableConfirmedBalance(bsqWalletService.getAvailableConfirmedBalance());
 
         payFeeButton.setOnAction((event) -> {
             Coin listingFee = getListingFee();
@@ -183,15 +187,15 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                     }
                 } catch (InsufficientMoneyException | TxException e) {
                     e.printStackTrace();
-                    new Popup<>().error(e.toString()).show();
+                    new Popup().error(e.toString()).show();
                 }
             } else {
-                new Popup<>().warning(Res.get("dao.burnBsq.assets.toFewDays", minDays)).show();
+                new Popup().warning(Res.get("dao.burnBsq.assets.toFewDays", minDays)).show();
             }
         });
 
         updateList();
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
         updateButtonState();
 
         feeAmountInputTextField.resetValidation();
@@ -224,7 +228,8 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(availableConfirmedBalance);
+
+        onUpdateAvailableConfirmedBalance(availableConfirmedBalance);
     }
 
 
@@ -247,6 +252,11 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         updateListener = observable -> updateList();
     }
 
+    private void onUpdateAvailableConfirmedBalance(Coin availableConfirmedBalance) {
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
+        updateButtonState();
+    }
+
     private long getDays() {
         return getListingFee().value / assetService.getFeePerDay().value;
     }
@@ -263,7 +273,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                 .map(statefulAsset -> new AssetListItem(statefulAsset, bsqFormatter))
                 /*.sorted(Comparator.comparing(AssetListItem::getNameAndCode))*/
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
     }
 
     private void updateButtonState() {
@@ -273,7 +283,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     }
 
     private Coin getListingFee() {
-        return bsqFormatter.parseToCoin(feeAmountInputTextField.getText());
+        return ParsingUtils.parseToCoin(feeAmountInputTextField.getText(), bsqFormatter);
     }
 
     private void doPublishFeeTx(Transaction transaction) {
@@ -281,9 +291,9 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                 () -> {
                     assetComboBox.getSelectionModel().clearSelection();
                     if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                        new Popup().confirmation(Res.get("dao.tx.published.success")).show();
                 },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
+                errorMessage -> new Popup().warning(errorMessage).show());
 
         feeAmountInputTextField.clear();
     }

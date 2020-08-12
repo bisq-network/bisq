@@ -23,6 +23,8 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics2;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -49,11 +51,16 @@ public class PublishTradeStatistics extends TradeTask {
                     extraDataMap.put(OfferPayload.REFERRAL_ID, processModel.getReferralIdService().getOptionalReferralId().get());
                 }
 
-                NodeAddress arbitratorNodeAddress = trade.getArbitratorNodeAddress();
-                if (arbitratorNodeAddress != null) {
-                    // The first 4 chars are sufficient to identify an arbitrator
-                    String address = arbitratorNodeAddress.getFullAddress().substring(0, 4);
-                    extraDataMap.put(TradeStatistics2.ARBITRATOR_ADDRESS, address);
+                NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
+                if (mediatorNodeAddress != null) {
+                    // The first 4 chars are sufficient to identify a mediator.
+                    // For testing with regtest/localhost we use the full address as its localhost and would result in
+                    // same values for multiple mediators.
+                    NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
+                    String address = networkNode instanceof TorNetworkNode ?
+                            mediatorNodeAddress.getFullAddress().substring(0, 4) :
+                            mediatorNodeAddress.getFullAddress();
+                    extraDataMap.put(TradeStatistics2.MEDIATOR_ADDRESS, address);
                 }
 
                 Offer offer = trade.getOffer();
@@ -63,7 +70,7 @@ public class PublishTradeStatistics extends TradeTask {
                         trade.getTradePrice(),
                         trade.getTradeAmount(),
                         trade.getDate(),
-                        trade.getDepositTx().getHashAsString(),
+                        trade.getDepositTxId(),
                         extraDataMap);
                 processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
             }

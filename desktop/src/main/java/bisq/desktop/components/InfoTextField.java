@@ -17,22 +17,22 @@
 
 package bisq.desktop.components;
 
+import bisq.desktop.components.controlsfx.control.PopOver;
+
 import bisq.common.UserThread;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXTextField;
-
-import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import lombok.Getter;
 
 import static bisq.desktop.util.FormBuilder.getIcon;
+import static bisq.desktop.util.FormBuilder.getRegularIconForLabel;
 
 public class InfoTextField extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(InfoTextField.class);
@@ -49,15 +50,13 @@ public class InfoTextField extends AnchorPane {
 
     private final StringProperty text = new SimpleStringProperty();
     protected final Label infoIcon;
-    protected final Label privacyIcon;
     private Label currentIcon;
-    private Boolean hidePopover;
-    private PopOver popover;
+    private PopOverWrapper popoverWrapper = new PopOverWrapper();
     private PopOver.ArrowLocation arrowLocation;
 
     public InfoTextField() {
 
-        arrowLocation = PopOver.ArrowLocation.RIGHT_TOP;;
+        arrowLocation = PopOver.ArrowLocation.RIGHT_TOP;
         textField = new BisqTextField();
         textField.setLabelFloat(true);
         textField.setEditable(false);
@@ -69,18 +68,13 @@ public class InfoTextField extends AnchorPane {
         infoIcon.setLayoutY(5);
         infoIcon.getStyleClass().addAll("icon", "info");
 
-        privacyIcon = getIcon(AwesomeIcon.EYE_CLOSE);
-        privacyIcon.setLayoutY(5);
-        privacyIcon.getStyleClass().addAll("icon", "info");
-
         AnchorPane.setRightAnchor(infoIcon, 7.0);
-        AnchorPane.setRightAnchor(privacyIcon, 7.0);
         AnchorPane.setRightAnchor(textField, 0.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
         hideIcons();
 
-        getChildren().addAll(textField, infoIcon, privacyIcon);
+        getChildren().addAll(textField, infoIcon);
     }
 
 
@@ -97,21 +91,20 @@ public class InfoTextField extends AnchorPane {
         setActionHandlers(node);
     }
 
-    public void setContentForPrivacyPopOver(Node node) {
-        currentIcon = privacyIcon;
-
+    public void setContent(MaterialDesignIcon icon, String info, String style, double opacity) {
         hideIcons();
-        setActionHandlers(node);
-    }
 
-    public void setIconsLeftAligned() {
-        arrowLocation = PopOver.ArrowLocation.LEFT_TOP;;
+        currentIcon = new Label();
+        Text textIcon = getRegularIconForLabel(icon, currentIcon);
 
-        AnchorPane.clearConstraints(infoIcon);
-        AnchorPane.clearConstraints(privacyIcon);
+        setActionHandlers(new Label(info));
 
-        AnchorPane.setLeftAnchor(infoIcon, 7.0);
-        AnchorPane.setLeftAnchor(privacyIcon, 7.0);
+        currentIcon.setLayoutY(5);
+        textIcon.getStyleClass().addAll("icon", style);
+        currentIcon.setOpacity(opacity);
+        AnchorPane.setRightAnchor(currentIcon, 7.0);
+
+        getChildren().add(currentIcon);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -120,8 +113,6 @@ public class InfoTextField extends AnchorPane {
     private void hideIcons() {
         infoIcon.setManaged(false);
         infoIcon.setVisible(false);
-        privacyIcon.setManaged(false);
-        privacyIcon.setVisible(false);
     }
 
     private void setActionHandlers(Node node) {
@@ -130,27 +121,14 @@ public class InfoTextField extends AnchorPane {
         currentIcon.setVisible(true);
 
         // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-        currentIcon.setOnMouseEntered(e -> {
-            hidePopover = false;
-            showPopOver(node);
-        });
-        currentIcon.setOnMouseExited(e -> {
-            if (popover != null)
-                popover.hide();
-            hidePopover = true;
-            UserThread.runAfter(() -> {
-                if (hidePopover) {
-                    popover.hide();
-                    hidePopover = false;
-                }
-            }, 250, TimeUnit.MILLISECONDS);
-        });
+        currentIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createPopOver(node)));
+        currentIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
     }
 
-    private void showPopOver(Node node) {
+    private PopOver createPopOver(Node node) {
         node.getStyleClass().add("default-text");
 
-        popover = new PopOver(node);
+        PopOver popover = new PopOver(node);
         if (currentIcon.getScene() != null) {
             popover.setDetachable(false);
             popover.setArrowLocation(arrowLocation);
@@ -158,6 +136,7 @@ public class InfoTextField extends AnchorPane {
 
             popover.show(currentIcon, -17);
         }
+        return popover;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

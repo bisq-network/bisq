@@ -17,22 +17,21 @@
 
 package bisq.core.trade.protocol.tasks.seller_as_taker;
 
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.InputsAndChangeOutput;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SellerAsTakerCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -43,17 +42,14 @@ public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
             runInterceptHook();
             if (trade.getTradeAmount() != null) {
                 Coin txFee = trade.getTxFee();
-                Coin takerInputAmount = trade.getOffer().getSellerSecurityDeposit()
-                        .add(txFee).add(txFee).add(trade.getTradeAmount());
-
-                BtcWalletService walletService = processModel.getBtcWalletService();
-                Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(),
-                        AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-                InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(
+                Coin takerInputAmount = checkNotNull(trade.getOffer()).getSellerSecurityDeposit()
+                        .add(txFee)
+                        .add(txFee)
+                        .add(trade.getTradeAmount());
+                InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
                         processModel.getTakeOfferFeeTx(),
                         takerInputAmount,
-                        txFee,
-                        takersAddress);
+                        txFee);
 
                 processModel.setRawTransactionInputs(result.rawTransactionInputs);
                 processModel.setChangeOutputValue(result.changeOutputValue);

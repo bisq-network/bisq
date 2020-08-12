@@ -2,11 +2,11 @@
 
 * Update translations [translation-process.md](translation-process.md#synchronising-translations).
 * Update data stores [data-stores.md](data-stores.md#update-stores).
+* Update bitcoinj checkpoint [bitcoinj-checkpoint](bitcoinj-checkpoint.md#update-checkpoint).
 * Write release notes (see below).
 * Webpage (Prepare PR)
     * Update version number in:
         * [_config.yml](https://github.com/bisq-network/bisq-website/blob/master/_config.yml)
-        * [downloads.html](https://github.com/bisq-network/bisq-website/blob/master/downloads.html)
       
     * Update currency list in [market_currency_selector.html](https://github.com/bisq-network/bisq-website/blob/master/_includes/market_currency_selector.html) (use [MarketsPrintTool](https://github.com/bisq-network/bisq/blob/master/desktop/src/test/java/bisq/desktop/MarketsPrintTool.java)
     to create HTML content).
@@ -85,7 +85,7 @@ Build output expected in deploy directory (opened after successful build process
   2. `Bisq-${NEW-VERSION}.jar` Deterministic fat jar 
   3. `Bisq-${NEW-VERSION}.jar.txt` sha256 sum of deterministic fat jar 
   
-The build scripts also copies over the deterministic fat jar into the shared folders for the other VMs (Windows & Linux).
+The build script also copies over the deterministic fat jar into the shared folders for the other VMs (Windows & Linux).
 Before building the other binaries install the generated Bisq app on macOS and verify that everything works as expected.
 
 #### Linux
@@ -117,7 +117,7 @@ Build output expected:
   1. `F379A1C6.asc` Sig key of Manfred Karrer 
   2. `5BC5ED73.asc` Sig key of Chris Beams 
   3. `29CDFD3B.asc`Sig key of Christoph Atteneder 
-  4. `signingkey.asc` Fingerprint of key that was used for this builds 
+  4. `signingkey.asc` Fingerprint of key that was used for these builds 
   5. `Bisq-${NEW-VERSION}.jar.txt` Sha256 sum of deterministic fat jar
   6. `Bisq-${NEW-VERSION}.dmg` macOS installer
   7. `Bisq-${NEW-VERSION}.dmg.asc` Signature for macOS installer

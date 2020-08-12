@@ -17,14 +17,13 @@
 
 package bisq.core.alert;
 
-import bisq.core.app.AppOptionKeys;
-
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -32,8 +31,8 @@ import bisq.common.proto.network.NetworkEnvelope;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Charsets;
 
@@ -73,8 +72,8 @@ public class PrivateNotificationManager {
     @Inject
     public PrivateNotificationManager(P2PService p2PService,
                                       KeyRing keyRing,
-                                      @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
-                                      @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                                      @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
+                                      @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
 

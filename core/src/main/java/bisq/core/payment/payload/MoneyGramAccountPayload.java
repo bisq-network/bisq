@@ -21,13 +21,9 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
-import org.springframework.util.CollectionUtils;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +33,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -67,7 +61,7 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                                     String state,
                                     String email,
                                     long maxTradePeriod,
-                                    @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                    Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -80,8 +74,8 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        PB.MoneyGramAccountPayload.Builder builder =
-                PB.MoneyGramAccountPayload.newBuilder()
+        protobuf.MoneyGramAccountPayload.Builder builder =
+                protobuf.MoneyGramAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setCountryCode(countryCode)
                         .setState(state)
@@ -92,8 +86,8 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
-    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.MoneyGramAccountPayload moneyGramAccountPayload = proto.getMoneyGramAccountPayload();
+    public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.MoneyGramAccountPayload moneyGramAccountPayload = proto.getMoneyGramAccountPayload();
         return new MoneyGramAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 moneyGramAccountPayload.getCountryCode(),
@@ -101,7 +95,7 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                 moneyGramAccountPayload.getState(),
                 moneyGramAccountPayload.getEmail(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -130,6 +124,6 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                 this.state +
                 this.holderName +
                 this.email;
-        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
     }
 }

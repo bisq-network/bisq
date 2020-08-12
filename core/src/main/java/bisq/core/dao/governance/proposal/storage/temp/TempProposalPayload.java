@@ -19,22 +19,16 @@ package bisq.core.dao.governance.proposal.storage.temp;
 
 import bisq.core.dao.state.model.governance.Proposal;
 
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
-
-import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
@@ -60,8 +54,8 @@ import javax.annotation.concurrent.Immutable;
 @Getter
 @EqualsAndHashCode
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-public class TempProposalPayload implements LazyProcessedPayload, ProtectedStoragePayload,
-        ExpirablePayload, CapabilityRequiringPayload, PersistablePayload {
+public class TempProposalPayload implements ProcessOncePersistableNetworkPayload, ProtectedStoragePayload,
+        ExpirablePayload, PersistablePayload {
 
     protected final Proposal proposal;
     protected final byte[] ownerPubKeyEncoded;
@@ -94,8 +88,8 @@ public class TempProposalPayload implements LazyProcessedPayload, ProtectedStora
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyEncoded);
     }
 
-    private PB.TempProposalPayload.Builder getTempProposalPayloadBuilder() {
-        final PB.TempProposalPayload.Builder builder = PB.TempProposalPayload.newBuilder()
+    private protobuf.TempProposalPayload.Builder getTempProposalPayloadBuilder() {
+        final protobuf.TempProposalPayload.Builder builder = protobuf.TempProposalPayload.newBuilder()
                 .setProposal(proposal.getProposalBuilder())
                 .setOwnerPubKeyEncoded(ByteString.copyFrom(ownerPubKeyEncoded));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -103,11 +97,11 @@ public class TempProposalPayload implements LazyProcessedPayload, ProtectedStora
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        return PB.StoragePayload.newBuilder().setTempProposalPayload(getTempProposalPayloadBuilder()).build();
+    public protobuf.StoragePayload toProtoMessage() {
+        return protobuf.StoragePayload.newBuilder().setTempProposalPayload(getTempProposalPayloadBuilder()).build();
     }
 
-    public static TempProposalPayload fromProto(PB.TempProposalPayload proto) {
+    public static TempProposalPayload fromProto(protobuf.TempProposalPayload proto) {
         return new TempProposalPayload(Proposal.fromProto(proto.getProposal()),
                 proto.getOwnerPubKeyEncoded().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
@@ -121,16 +115,6 @@ public class TempProposalPayload implements LazyProcessedPayload, ProtectedStora
     @Override
     public PublicKey getOwnerPubKey() {
         return ownerPubKey;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // CapabilityRequiringPayload
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.PROPOSAL);
     }
 
 

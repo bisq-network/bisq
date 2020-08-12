@@ -91,6 +91,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -294,12 +295,16 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesRepository.getBonds();
     }
 
+    public List<BondedRole> getAcceptedBondedRoles() {
+        return bondedRolesRepository.getAcceptedBonds();
+    }
+
     // Show fee
     public Coin getProposalFee(int chainHeight) {
         return ProposalConsensus.getFee(daoStateService, chainHeight);
     }
 
-    // Publish proposal tx, proposal payload and and persist it to myProposalList
+    // Publish proposal tx, proposal payload and persist it to myProposalList
     public void publishMyProposal(Proposal proposal, Transaction transaction, ResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
         myProposalListService.publishTxAndPayload(proposal, transaction, resultHandler, errorMessageHandler);
@@ -393,7 +398,7 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Presentation of phases
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
     // next block which would be already the next phase we hide that last block to the user and add it to the break.
     public int getFirstBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
         int firstBlock = periodService.getFirstBlockOfPhase(height, phase);
@@ -422,7 +427,7 @@ public class DaoFacade implements DaoSetupService {
         return firstBlock;
     }
 
-    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
     // next block which would be already the next phase we hide that last block to the user and add it to the break.
     public int getLastBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
         int lastBlock = periodService.getLastBlockOfPhase(height, phase);
@@ -513,7 +518,10 @@ public class DaoFacade implements DaoSetupService {
         lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
-    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount,
+                                                               int lockTime,
+                                                               LockupReason lockupReason,
+                                                               byte[] hash)
             throws InsufficientMoneyException, IOException, TransactionVerificationException, WalletException {
         return lockupTxService.getMiningFeeAndTxSize(lockupAmount, lockTime, lockupReason, hash);
     }
@@ -620,8 +628,8 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getUnspentTxOutputs();
     }
 
-    public Set<Tx> getTxs() {
-        return daoStateService.getTxs();
+    public int getNumTxs() {
+        return daoStateService.getNumTxs();
     }
 
     public Optional<TxOutput> getLockupTxOutput(String txId) {
@@ -689,11 +697,19 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public String getParamValue(Param param) {
-        return daoStateService.getParamValue(param, periodService.getChainHeight());
+        return getParamValue(param, periodService.getChainHeight());
     }
 
-    public void resyncDao(Runnable resultHandler) {
-        daoStateStorageService.resetDaoState(resultHandler);
+    public String getParamValue(Param param, int blockHeight) {
+        return daoStateService.getParamValue(param, blockHeight);
+    }
+
+    public void resyncDaoStateFromGenesis(Runnable resultHandler) {
+        daoStateStorageService.resyncDaoStateFromGenesis(resultHandler);
+    }
+
+    public void resyncDaoStateFromResources(File storageDir) throws IOException {
+        daoStateStorageService.resyncDaoStateFromResources(storageDir);
     }
 
     public boolean isMyRole(Role role) {

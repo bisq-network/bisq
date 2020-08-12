@@ -22,32 +22,42 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.SwishValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SwishAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
+@Slf4j
 public class SwishForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(SwishForm.class);
-
     private final SwishAccount swishAccount;
     private final SwishValidator swishValidator;
     private InputTextField mobileNrInputTextField;
+
+    public SwishForm(PaymentAccount paymentAccount,
+                     AccountAgeWitnessService accountAgeWitnessService,
+                     SwishValidator swishValidator,
+                     InputValidator inputValidator,
+                     GridPane gridPane,
+                     int gridRow,
+                     CoinFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        this.swishAccount = (SwishAccount) paymentAccount;
+        this.swishValidator = swishValidator;
+    }
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -56,13 +66,6 @@ public class SwishForm extends PaymentMethodForm {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
                 ((SwishAccountPayload) paymentAccountPayload).getMobileNr());
         return gridRow;
-    }
-
-    public SwishForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, SwishValidator swishValidator,
-                     InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-        this.swishAccount = (SwishAccount) paymentAccount;
-        this.swishValidator = swishValidator;
     }
 
     @Override
@@ -117,6 +120,9 @@ public class SwishForm extends PaymentMethodForm {
 
     @Override
     public void updateAllInputsValid() {
+        if (swishValidator.validate(swishAccount.getMobileNr()).isValid) {
+            swishAccount.setMobileNr(swishValidator.getNormalizedPhoneNumber());
+        }
         allInputsValid.set(isAccountNameValid()
                 && swishValidator.validate(swishAccount.getMobileNr()).isValid
                 && inputValidator.validate(swishAccount.getHolderName()).isValid

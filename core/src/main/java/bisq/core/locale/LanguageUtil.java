@@ -31,23 +31,25 @@ public class LanguageUtil {
     private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de", // German
-            "el", // Greek
             "es", // Spanish
             "pt", // Portuguese
-            "zh", // Chinese
+            "pt-BR", // Portuguese (Brazil)
+            "zh-Hans", // Chinese [Han Simplified]
+            "zh-Hant", // Chinese [Han Traditional]
             "ru", // Russian
             "fr", // French
             "vi", // Vietnamese
             "th", // Thai
+            "ja", // Japanese
             "fa" // Persian
             /*
             // not translated yet
-            "sr", // Serbian
+            "el", // Greek
+            "sr-Latn-RS", // Serbian [Latin] (Serbia)
             "hu", // Hungarian
             "ro", // Romanian
             "tr" // Turkish
             "it", // Italian
-            "ja", // Japanese
             "iw", // Hebrew
             "hi", // Hindi
             "ko", // Korean
@@ -84,6 +86,12 @@ public class LanguageUtil {
             */
     );
 
+    private static final List<String> rtlLanguagesCodes = Arrays.asList(
+            "fa", // Persian
+            "ar", // Arabic
+            "iw" // Hebrew
+    );
+
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
@@ -105,22 +113,20 @@ public class LanguageUtil {
     }
 
     public static String getDefaultLanguageLocaleAsCode() {
-        return new Locale(LanguageUtil.getDefaultLanguage(), "").getLanguage();
+        return new Locale(LanguageUtil.getDefaultLanguage()).getLanguage();
     }
 
     public static String getEnglishLanguageLocaleCode() {
-        return new Locale(Locale.ENGLISH.getLanguage(), "").getLanguage();
+        return new Locale(Locale.ENGLISH.getLanguage()).getLanguage();
     }
 
     public static String getDisplayName(String code) {
-        Locale locale = new Locale(code.toUpperCase());
-        if (locale.getLanguage().equals("sr")) {
-            // Serbia
-            // shows it in russian by default
-            return "Srpski";
-        } else {
-            return locale.getDisplayName(locale);
-        }
+        Locale locale = Locale.forLanguageTag(code);
+        return locale.getDisplayName(locale);
+    }
+
+    public static boolean isDefaultLanguageRTL() {
+        return rtlLanguagesCodes.contains(LanguageUtil.getDefaultLanguageLocaleAsCode());
     }
 
     public static List<String> getUserLanguageCodes() {

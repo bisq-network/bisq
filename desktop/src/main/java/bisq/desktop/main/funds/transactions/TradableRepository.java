@@ -24,11 +24,13 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 
+@Singleton
 public class TradableRepository {
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
@@ -36,8 +38,10 @@ public class TradableRepository {
     private final FailedTradesManager failedTradesManager;
 
     @Inject
-    TradableRepository(OpenOfferManager openOfferManager, TradeManager tradeManager,
-                       ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager) {
+    TradableRepository(OpenOfferManager openOfferManager,
+                       TradeManager tradeManager,
+                       ClosedTradableManager closedTradableManager,
+                       FailedTradesManager failedTradesManager) {
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;

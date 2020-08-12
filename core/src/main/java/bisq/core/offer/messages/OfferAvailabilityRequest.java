@@ -23,20 +23,20 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Optional;
 import java.util.UUID;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
+// Here we add the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
 @EqualsAndHashCode(callSuper = true)
 @Value
+@Slf4j
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
     private final PubKeyRing pubKeyRing;
     private final long takersTradePrice;
@@ -72,8 +72,8 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.OfferAvailabilityRequest.Builder builder = PB.OfferAvailabilityRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.OfferAvailabilityRequest.Builder builder = protobuf.OfferAvailabilityRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setTakersTradePrice(takersTradePrice);
@@ -86,7 +86,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                 .build();
     }
 
-    public static OfferAvailabilityRequest fromProto(PB.OfferAvailabilityRequest proto, int messageVersion) {
+    public static OfferAvailabilityRequest fromProto(protobuf.OfferAvailabilityRequest proto, int messageVersion) {
         return new OfferAvailabilityRequest(proto.getOfferId(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getTakersTradePrice(),

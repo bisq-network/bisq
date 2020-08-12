@@ -35,7 +35,8 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.ParamChange;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
@@ -113,6 +114,8 @@ public class DaoStateService implements DaoSetupService {
         log.info("Apply snapshot with chain height {}", snapshot.getChainHeight());
 
         daoState.setChainHeight(snapshot.getChainHeight());
+
+        daoState.setTxCache(snapshot.getTxCache());
 
         daoState.getBlocks().clear();
         daoState.getBlocks().addAll(snapshot.getBlocks());
@@ -225,7 +228,25 @@ public class DaoStateService implements DaoSetupService {
         }
     }
 
-    // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
+    // Third we add each successfully parsed BSQ tx to the last block
+    public void onNewTxForLastBlock(Block block, Tx tx) {
+        assertDaoStateChange();
+
+        getLastBlock().ifPresent(lastBlock -> {
+            if (block == lastBlock) {
+                // We need to ensure that the txs in all blocks are in sync with the txs in our txMap (cache).
+                block.addTx(tx);
+                daoState.addToTxCache(tx);
+            } else {
+                // Not clear if this case can happen but at onNewBlockWithEmptyTxs we handle such a potential edge
+                // case as well, so we need to reflect that here as well.
+                log.warn("Block for parsing does not match last block. That might happen in edge cases at reorgs. " +
+                        "Received block={}", block);
+            }
+        });
+    }
+
+    // Fourth we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
         if (parseBlockChainComplete)
             log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
@@ -237,7 +258,7 @@ public class DaoStateService implements DaoSetupService {
         daoStateListeners.forEach(l -> l.onParseBlockComplete(block));
 
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
-        // blocks as that cause performance issues. In earlier versions when we updated at each block it took
+        // blocks as that causes performance issues. In earlier versions when we updated at each block it took
         // 50 sec. for 4000 blocks, after that change it was about 4 sec.
         // Clients
         if (parseBlockChainComplete)
@@ -306,9 +327,13 @@ public class DaoStateService implements DaoSetupService {
         return getBlockAtHeight(height).map(Block::getTime).orElse(0L);
     }
 
-    public List<Block> getBlocksFromBlockHeight(int fromBlockHeight) {
+    public List<Block> getBlocksFromBlockHeight(int fromBlockHeight, int numMaxBlocks) {
+        // We limit requests to numMaxBlocks blocks, to avoid performance issues and too
+        // large network data in case a node requests too far back in history.
         return getBlocks().stream()
                 .filter(block -> block.getHeight() >= fromBlockHeight)
+                .sorted(Comparator.comparing(Block::getHeight))
+                .limit(numMaxBlocks)
                 .collect(Collectors.toList());
     }
 
@@ -338,29 +363,24 @@ public class DaoStateService implements DaoSetupService {
     // Tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<Tx> getTxStream() {
-        return getBlocks().stream()
-                .flatMap(block -> block.getTxs().stream());
+    public Stream<Tx> getUnorderedTxStream() {
+        return daoState.getTxCache().values().stream();
     }
 
-    public TreeMap<String, Tx> getTxMap() {
-        return new TreeMap<>(getTxStream().collect(Collectors.toMap(Tx::getId, tx -> tx)));
-    }
-
-    public Set<Tx> getTxs() {
-        return getTxStream().collect(Collectors.toSet());
-    }
-
-    public Optional<Tx> getTx(String txId) {
-        return getTxStream().filter(tx -> tx.getId().equals(txId)).findAny();
+    public int getNumTxs() {
+        return daoState.getTxCache().size();
     }
 
     public List<Tx> getInvalidTxs() {
-        return getTxStream().filter(tx -> tx.getTxType() == TxType.INVALID).collect(Collectors.toList());
+        return getUnorderedTxStream().filter(tx -> tx.getTxType() == TxType.INVALID).collect(Collectors.toList());
     }
 
     public List<Tx> getIrregularTxs() {
-        return getTxStream().filter(tx -> tx.getTxType() == TxType.IRREGULAR).collect(Collectors.toList());
+        return getUnorderedTxStream().filter(tx -> tx.getTxType() == TxType.IRREGULAR).collect(Collectors.toList());
+    }
+
+    public Optional<Tx> getTx(String txId) {
+        return Optional.ofNullable(daoState.getTxCache().get(txId));
     }
 
     public boolean containsTx(String txId) {
@@ -390,11 +410,11 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public long getTotalBurntFee() {
-        return getTxStream().mapToLong(Tx::getBurntFee).sum();
+        return getUnorderedTxStream().mapToLong(Tx::getBurntFee).sum();
     }
 
     public Set<Tx> getBurntFeeTxs() {
-        return getTxStream()
+        return getUnorderedTxStream()
                 .filter(tx -> tx.getBurntFee() > 0)
                 .collect(Collectors.toSet());
     }
@@ -413,17 +433,17 @@ public class DaoStateService implements DaoSetupService {
     // TxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<TxOutput> getTxOutputStream() {
-        return getTxStream()
+    private Stream<TxOutput> getUnorderedTxOutputStream() {
+        return getUnorderedTxStream()
                 .flatMap(tx -> tx.getTxOutputs().stream());
     }
 
     public boolean existsTxOutput(TxOutputKey key) {
-        return getTxOutputStream().anyMatch(txOutput -> txOutput.getKey().equals(key));
+        return getUnorderedTxOutputStream().anyMatch(txOutput -> txOutput.getKey().equals(key));
     }
 
     public Optional<TxOutput> getTxOutput(TxOutputKey txOutputKey) {
-        return getTxOutputStream()
+        return getUnorderedTxOutputStream()
                 .filter(txOutput -> txOutput.getKey().equals(txOutputKey))
                 .findAny();
     }
@@ -508,8 +528,8 @@ public class DaoStateService implements DaoSetupService {
     // TxOutputType
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Set<TxOutput> getTxOutputsByTxOutputType(TxOutputType txOutputType) {
-        return getTxOutputStream()
+    private Set<TxOutput> getTxOutputsByTxOutputType(TxOutputType txOutputType) {
+        return getUnorderedTxOutputStream()
                 .filter(txOutput -> txOutput.getTxOutputType() == txOutputType)
                 .collect(Collectors.toSet());
     }
@@ -647,7 +667,7 @@ public class DaoStateService implements DaoSetupService {
     // Unlocking - UNLOCK txOutputs that are not yet spendable due to lock time
     // Unlocked - UNLOCK txOutputs that are spendable since the lock time has passed
     // LockTime - 0 means that the funds are spendable at the same block of the UNLOCK tx. For the user that is not
-    // supported as we do not expose unconfirmed BSQ txs so lockTime of 1 is the smallest the use can actually use.
+    // supported as we do not expose unconfirmed BSQ txs so lockTime of 1 is the smallest the user can actually use.
 
     // LockTime
     public Optional<Integer> getLockTime(String txId) {
@@ -818,12 +838,12 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public long getTotalAmountOfInvalidatedBsq() {
-        return getTxStream().mapToLong(Tx::getInvalidatedBsq).sum();
+        return getUnorderedTxStream().mapToLong(Tx::getInvalidatedBsq).sum();
     }
 
     // Contains burnt fee and invalidated bsq due invalid txs
     public long getTotalAmountOfBurntBsq() {
-        return getTxStream().mapToLong(Tx::getBurntBsq).sum();
+        return getUnorderedTxStream().mapToLong(Tx::getBurntBsq).sum();
     }
 
     // Confiscate bond
@@ -845,7 +865,7 @@ public class DaoStateService implements DaoSetupService {
                     doConfiscateBond(lockupTxId);
                 } else {
                     // We could be more radical here and confiscate the output if it is unspent but lock time is over,
-                    // but its probably better to stick to the rules that confiscation can only happen before lock time
+                    // but it's probably better to stick to the rules that confiscation can only happen before lock time
                     // is over.
                     log.warn("We could not confiscate the bond because the unlock tx was already spent or lock time " +
                             "has exceeded. unlockTxId={}", unlockTxId);
@@ -919,7 +939,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public double getParamValueAsPercentDouble(String paramValue) {
-        return bsqFormatter.parsePercentStringToDouble(paramValue);
+        return ParsingUtils.parsePercentStringToDouble(paramValue);
     }
 
     public int getParamValueAsBlock(String paramValue) {

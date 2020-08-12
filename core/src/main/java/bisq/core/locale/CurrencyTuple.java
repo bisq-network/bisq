@@ -26,7 +26,7 @@ public class CurrencyTuple {
     public final int precision; // precision 4 is 1/10000 -> 0.0001 is smallest unit
 
     public CurrencyTuple(String code, String name) {
-        // We use Fiat class and there precision is 4
+        // We use Fiat class and the precision is 4
         // In future we might add custom precision per currency
         this(code, name, 4);
     }

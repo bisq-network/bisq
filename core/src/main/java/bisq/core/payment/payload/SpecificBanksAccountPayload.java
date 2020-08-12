@@ -19,11 +19,7 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
-
-import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Joiner;
 
@@ -36,14 +32,12 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
 @Slf4j
 public final class SpecificBanksAccountPayload extends BankAccountPayload {
-    // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
+    // Don't use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks = new ArrayList<>();
 
     public SpecificBanksAccountPayload(String paymentMethod, String id) {
@@ -68,7 +62,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String nationalAccountId,
                                         ArrayList<String> acceptedBanks,
                                         long maxTradePeriod,
-                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                        Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -88,15 +82,15 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        final PB.SpecificBanksAccountPayload.Builder builder = PB.SpecificBanksAccountPayload.newBuilder()
+        final protobuf.SpecificBanksAccountPayload.Builder builder = protobuf.SpecificBanksAccountPayload.newBuilder()
                 .addAllAcceptedBanks(acceptedBanks);
 
-        PB.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+        protobuf.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .getBankAccountPayloadBuilder()
                 .setSpecificBanksAccountPayload(builder);
 
-        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+        protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setBankAccountPayload(bankAccountPayloadBuilder);
 
@@ -105,10 +99,10 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 .build();
     }
 
-    public static SpecificBanksAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        PB.SpecificBanksAccountPayload specificBanksAccountPayload = bankAccountPayload.getSpecificBanksAccountPayload();
+    public static SpecificBanksAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        protobuf.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+        protobuf.SpecificBanksAccountPayload specificBanksAccountPayload = bankAccountPayload.getSpecificBanksAccountPayload();
         return new SpecificBanksAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
@@ -122,7 +116,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getNationalAccountId().isEmpty() ? null : bankAccountPayload.getNationalAccountId(),
                 new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList()),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

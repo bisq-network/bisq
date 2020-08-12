@@ -33,7 +33,7 @@ public class GlobalSettings {
     static {
         locale = Locale.getDefault();
 
-        // On some systems there is not country defined, in that case we use en_US
+        // On some systems there is no country defined, in that case we use en_US
         if (locale.getCountry() == null || locale.getCountry().isEmpty())
             locale = Locale.US;
     }

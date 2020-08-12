@@ -21,8 +21,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.Getter;
 
 import javax.annotation.Nullable;
@@ -46,7 +44,7 @@ public enum TxType implements ImmutableDaoStateModel {
     UNLOCK(true, false),
     ASSET_LISTING_FEE(true, true),
     PROOF_OF_BURN(true, true),
-    IRREGULAR(false, false); // the params are here irrelevant as we can have any tx which violated the rules set to irregular
+    IRREGULAR(false, false); // the params are irrelevant here as we can have any tx that violated the rules set to irregular
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,11 +62,11 @@ public enum TxType implements ImmutableDaoStateModel {
     }
 
     @Nullable
-    public static TxType fromProto(PB.TxType txType) {
+    public static TxType fromProto(protobuf.TxType txType) {
         return ProtoUtil.enumFromProto(TxType.class, txType.name());
     }
 
-    public PB.TxType toProtoMessage() {
-        return PB.TxType.valueOf(name());
+    public protobuf.TxType toProtoMessage() {
+        return protobuf.TxType.valueOf(name());
     }
 }

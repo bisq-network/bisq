@@ -29,7 +29,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 
-import bisq.common.storage.Storage;
+import bisq.common.config.Config;
 
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
@@ -53,7 +53,6 @@ import javafx.beans.value.ChangeListener;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
@@ -61,6 +60,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.List;
+import java.util.TimeZone;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
@@ -93,7 +93,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private SeedWordsView(WalletsManager walletsManager,
                           BtcWalletService btcWalletService,
                           WalletPasswordWindow walletPasswordWindow,
-                          @Named(Storage.STORAGE_DIR) File storageDir) {
+                          @Named(Config.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
         this.btcWalletService = btcWalletService;
         this.walletPasswordWindow = walletPasswordWindow;
@@ -153,7 +153,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 seedWordsValid, seedWordsEdited));
 
         restoreButton.setOnAction(e -> {
-            new Popup<>().information(Res.get("account.seed.restore.info"))
+            new Popup().information(Res.get("account.seed.restore.info"))
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("account.seed.restore.ok"))
                     .onAction(this::onRestore)
@@ -163,7 +163,23 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         seedWordsTextArea.getStyleClass().remove("validation-error");
         restoreDatePicker.getStyleClass().remove("validation-error");
 
+        String key = "showBackupWarningAtSeedPhrase";
+        if (DontShowAgainLookup.showAgain(key)) {
+            new Popup().warning(Res.get("account.seed.backup.warning"))
+                .onAction(() -> {
+                    showSeedPhrase();
+                })
+                .actionButtonText(Res.get("shared.iUnderstand"))
+                .useIUnderstandButton()
+                .dontShowAgainId(key)
+                .hideCloseButton()
+                .show();
+        } else {
+            showSeedPhrase();
+        }
+    }
 
+    public void showSeedPhrase() {
         DeterministicSeed keyChainSeed = btcWalletService.getKeyChainSeed();
         // wallet creation date is not encrypted
         walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
@@ -172,7 +188,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         } else {
             String key = "showSeedWordsWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                new Popup<>().warning(Res.get("account.seed.warn.noPw.msg"))
+                new Popup().warning(Res.get("account.seed.warn.noPw.msg"))
                         .actionButtonText(Res.get("account.seed.warn.noPw.yes"))
                         .onAction(() -> {
                             DontShowAgainLookup.dontShowAgain(key, true);
@@ -226,7 +242,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup<>().warning(Res.get("seed.warn.walletNotEmpty.msg"))
+            new Popup().warning(Res.get("seed.warn.walletNotEmpty.msg"))
                     .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
                     .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
@@ -238,7 +254,20 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup<>().information(Res.get("seed.warn.notEncryptedAnymore"))
+            new Popup().information(Res.get("seed.warn.notEncryptedAnymore"))
+                    .closeButtonText(Res.get("shared.no"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(this::doRestoreDateCheck)
+                    .show();
+        } else {
+            doRestoreDateCheck();
+        }
+    }
+
+    private void doRestoreDateCheck() {
+        if (restoreDatePicker.getValue() == null) {
+            // Provide feedback when attempting to restore a wallet from seed words without specifying a date
+            new Popup().information(Res.get("seed.warn.walletDateEmpty"))
                     .closeButtonText(Res.get("shared.no"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
@@ -248,17 +277,31 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         }
     }
 
-    private void doRestore() {
-        LocalDate value = restoreDatePicker.getValue();
-        if (value == null) {
-            // If no date was specified, use Bisq 0.5 release date (no current Bisq wallet could have been created before that date).
-            value = LocalDate.of(2017, Month.JUNE, 28);
+    private LocalDate getWalletDate() {
+        LocalDate walletDate = restoreDatePicker.getValue();
+        // Even though no current Bisq wallet could have been created before the v0.5 release date (2017.06.28),
+        // the user may want to import from a seed generated by another wallet.
+        // So use when the BIP39 standard was finalised (2013.10.09) as the oldest possible wallet date.
+        LocalDate oldestWalletDate = LocalDate.ofInstant(
+                Instant.ofEpochMilli(MnemonicCode.BIP39_STANDARDISATION_TIME_SECS * 1000),
+                TimeZone.getDefault().toZoneId());
+        if (walletDate == null) {
+            // No date was specified, perhaps the user doesn't know the wallet date
+            walletDate = oldestWalletDate;
+        } else if (walletDate.isBefore(oldestWalletDate)) {
+            walletDate = oldestWalletDate;
+        } else if (walletDate.isAfter(LocalDate.now())) {
+            walletDate = LocalDate.now();
         }
+        return walletDate;
+    }
 
+    private void doRestore() {
+        LocalDate walletDate = getWalletDate();
         // We subtract 1 day to be sure to not have any issues with timezones. Even if we can be sure that the timezone
         // is handled correctly it could be that the user created the wallet in one timezone and make a restore at
         // a different timezone which could lead in the worst case that he miss the first day of the wallet transactions.
-        LocalDateTime localDateTime = value.atStartOfDay().minusDays(1);
+        LocalDateTime localDateTime = walletDate.atStartOfDay().minusDays(1);
         long date = localDateTime.toEpochSecond(ZoneOffset.UTC);
 
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);

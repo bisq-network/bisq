@@ -20,9 +20,11 @@ package bisq.desktop.main.funds.locked;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.listeners.BalanceListener;
@@ -35,15 +37,16 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -63,6 +66,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -78,7 +82,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final Preferences preferences;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final ObservableList<LockedListItem> observableList = FXCollections.observableArrayList();
@@ -94,7 +98,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Inject
     private LockedView(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
-                       BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -122,12 +126,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
         addressColumn.setComparator(Comparator.comparing(LockedListItem::getAddressString));
         detailsColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         balanceColumn.setComparator(Comparator.comparing(LockedListItem::getBalance));
-        dateColumn.setComparator((o1, o2) -> {
-            if (getTradable(o1).isPresent() && getTradable(o2).isPresent())
-                return getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate());
-            else
-                return 0;
-        });
+        dateColumn.setComparator(Comparator.comparing(o -> getTradable(o).map(Tradable::getDate).orElse(new Date(0))));
         tableView.getSortOrder().add(dateColumn);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
 
@@ -168,7 +167,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(LockedListItem::cleanup);
-        observableList.setAll(tradeManager.getLockedTradesStream()
+        observableList.setAll(tradeManager.getTradesStreamWithFundsLockedIn()
                 .map(trade -> {
                     final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
                     return addressEntryOptional.map(addressEntry -> new LockedListItem(trade,
@@ -228,7 +227,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             if (getTradable(item).isPresent())
-                                setGraphic(new AutoTooltipLabel(formatter.formatDateTime(getTradable(item).get().getDate())));
+                                setGraphic(new AutoTooltipLabel(DisplayUtils.formatDateTime(getTradable(item).get().getDate())));
                             else
                                 setGraphic(new AutoTooltipLabel(Res.get("shared.noDateAvailable")));
                         } else {
@@ -264,8 +263,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
-                            } else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR) {
-                                setGraphic(new AutoTooltipLabel(Res.get("shared.arbitratorsFee")));
                             } else {
                                 setGraphic(new AutoTooltipLabel(Res.get("shared.noDetailsAvailable")));
                             }
@@ -299,7 +296,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(address);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setGraphic(hyperlinkWithIcon);

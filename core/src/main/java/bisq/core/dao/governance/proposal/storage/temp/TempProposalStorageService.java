@@ -21,10 +21,10 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
+import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
-import com.google.inject.name.Named;
-
+import javax.inject.Named;
 import javax.inject.Inject;
 
 import java.io.File;
@@ -43,7 +43,7 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TempProposalStorageService(@Named(Storage.STORAGE_DIR) File storageDir,
+    public TempProposalStorageService(@Named(Config.STORAGE_DIR) File storageDir,
                                       Storage<TempProposalStore> persistableNetworkPayloadMapStorage) {
         super(storageDir, persistableNetworkPayloadMapStorage);
     }

@@ -216,8 +216,8 @@ public class FullNode extends BsqNode {
                         parseBlocksIfNewBlockAvailable(chainHeight);
                     }, this::handleError);
         } else {
-            log.warn("We are trying to start with a block which is above the chain height of bitcoin core. " +
-                    "We need probably wait longer until bitcoin core has fully synced. " +
+            log.warn("We are trying to start with a block which is above the chain height of Bitcoin Core. " +
+                    "We need probably wait longer until Bitcoin Core has fully synced. " +
                     "We try again after a delay of 1 min.");
             UserThread.runAfter(() -> requestChainHeadHeightAndParseBlocks(startBlockHeight), 60);
         }

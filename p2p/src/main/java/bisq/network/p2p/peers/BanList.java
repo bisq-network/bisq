@@ -17,10 +17,11 @@
 
 package bisq.network.p2p.peers;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.NodeAddress;
 
-import com.google.inject.name.Named;
+import bisq.common.config.Config;
+
+import javax.inject.Named;
 
 import javax.inject.Inject;
 
@@ -43,8 +44,8 @@ public class BanList {
     }
 
     @Inject
-    public BanList(@Named(NetworkOptionKeys.BAN_LIST) String banList) {
-        if (banList != null && !banList.isEmpty())
-            BanList.list = Arrays.asList(StringUtils.deleteWhitespace(banList).split(",")).stream().map(NodeAddress::new).collect(Collectors.toList());
+    public BanList(@Named(Config.BAN_LIST) List<String> banList) {
+        if (!banList.isEmpty())
+            BanList.list = banList.stream().map(NodeAddress::new).collect(Collectors.toList());
     }
 }

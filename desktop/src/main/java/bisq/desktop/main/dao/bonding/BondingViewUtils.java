@@ -34,9 +34,11 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
@@ -47,6 +49,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -56,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
+@Singleton
 public class BondingViewUtils {
     private final P2PService p2PService;
     private final MyReputationListService myReputationListService;
@@ -104,20 +108,19 @@ public class BondingViewUtils {
 
     private void lockupBond(byte[] hash, Coin lockupAmount, int lockupTime, LockupReason lockupReason,
                             Consumer<String> resultHandler) {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             if (!DevEnv.isDevMode()) {
                 try {
                     Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getLockupTxMiningFeeAndTxSize(lockupAmount, lockupTime, lockupReason, hash);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
-                    BSFormatter formatter = new BSFormatter();
-                    String duration = formatter.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
-                    new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
+                    String duration = FormattingUtils.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
+                    new Popup().headLine(Res.get("dao.bond.reputation.lockup.headline"))
                             .confirmation(Res.get("dao.bond.reputation.lockup.details",
                                     bsqFormatter.formatCoinWithCode(lockupAmount),
                                     lockupTime,
                                     duration,
-                                    formatter.formatCoinWithCode(miningFee),
+                                    bsqFormatter.formatBTCWithCode(miningFee),
                                     CoinUtil.getFeePerByte(miningFee, txSize),
                                     txSize / 1000d
                             ))
@@ -128,13 +131,11 @@ public class BondingViewUtils {
                 } catch (Throwable e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                    new Popup<>().warning(e.getMessage()).show();
+                    new Popup().warning(e.getMessage()).show();
                 }
             } else {
                 publishLockupTx(lockupAmount, lockupTime, lockupReason, hash, resultHandler);
             }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
@@ -145,7 +146,7 @@ public class BondingViewUtils {
                 hash,
                 txId -> {
                     if (!DevEnv.isDevMode())
-                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
+                        new Popup().feedback(Res.get("dao.tx.published.success")).show();
 
                     if (resultHandler != null)
                         resultHandler.accept(txId);
@@ -159,7 +160,7 @@ public class BondingViewUtils {
     }
 
     public void unLock(String lockupTxId, Consumer<String> resultHandler) {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(lockupTxId);
             checkArgument(lockupTxOutput.isPresent(), "Lockup output must be present. TxId=" + lockupTxId);
             Coin unlockAmount = Coin.valueOf(lockupTxOutput.get().getValue());
@@ -171,14 +172,13 @@ public class BondingViewUtils {
                     Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getUnlockTxMiningFeeAndTxSize(lockupTxId);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
-                    BSFormatter formatter = new BSFormatter();
-                    String duration = formatter.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
-                    new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
+                    String duration = FormattingUtils.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
+                    new Popup().headLine(Res.get("dao.bond.reputation.unlock.headline"))
                             .confirmation(Res.get("dao.bond.reputation.unlock.details",
                                     bsqFormatter.formatCoinWithCode(unlockAmount),
                                     lockTime,
                                     duration,
-                                    formatter.formatCoinWithCode(miningFee),
+                                    bsqFormatter.formatBTCWithCode(miningFee),
                                     CoinUtil.getFeePerByte(miningFee, txSize),
                                     txSize / 1000d
                             ))
@@ -192,10 +192,8 @@ public class BondingViewUtils {
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
-                new Popup<>().warning(t.getMessage()).show();
+                new Popup().warning(t.getMessage()).show();
             }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
         log.info("unlock tx: {}", lockupTxId);
     }
@@ -204,12 +202,12 @@ public class BondingViewUtils {
         daoFacade.publishUnlockTx(lockupTxId,
                 txId -> {
                     if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                        new Popup().confirmation(Res.get("dao.tx.published.success")).show();
 
                     if (resultHandler != null)
                         resultHandler.accept(txId);
                 },
-                errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
+                errorMessage -> new Popup().warning(errorMessage.toString()).show()
         );
     }
 
@@ -217,14 +215,14 @@ public class BondingViewUtils {
         if (throwable instanceof InsufficientMoneyException) {
             final Coin missingCoin = ((InsufficientMoneyException) throwable).missing;
             final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-            new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
+            new Popup().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
         } else {
             log.error(throwable.toString());
             throwable.printStackTrace();
-            new Popup<>().warning(throwable.toString()).show();
+            new Popup().warning(throwable.toString()).show();
         }
     }
 }

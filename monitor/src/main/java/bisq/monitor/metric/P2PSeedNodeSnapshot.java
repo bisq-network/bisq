@@ -17,49 +17,54 @@
 
 package bisq.monitor.metric;
 
-import bisq.monitor.AvailableTor;
-import bisq.monitor.Metric;
-import bisq.monitor.Monitor;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
-import bisq.monitor.ThreadGate;
 
-import bisq.core.proto.network.CoreNetworkProtoResolver;
+import bisq.core.account.witness.AccountAgeWitnessStore;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.core.dao.monitoring.model.StateHash;
+import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.GetStateHashesResponse;
+import bisq.core.proto.persistable.CorePersistenceProtoResolver;
+import bisq.core.trade.statistics.TradeStatistics2Store;
 
-import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
-import bisq.network.p2p.network.MessageListener;
-import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
+import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
-
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
+import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.storage.Storage;
 
 import java.net.MalformedURLException;
 
+import java.nio.ByteBuffer;
+
+import java.io.File;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.NotNull;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -69,56 +74,28 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * buckets, the Metric reports (for each host) the message types observed and
  * their number.
  *
+ * Furthermore, since the DAO is a thing now, the consistency of the DAO state held by each host is assessed and reported.
+ *
  * @author Florian Reimair
  *
  */
 @Slf4j
-public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
+public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
+    private static final String DATABASE_DIR = "run.dbDir";
 
-    private static final String HOSTS = "run.hosts";
-    private static final String TOR_PROXY_PORT = "run.torProxyPort";
     Statistics statistics;
-    final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
-    private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
-    private final ThreadGate gate = new ThreadGate();
-
-    /**
-     * Statistics Interface for use with derived classes.
-     *
-     * @param <T> the value type of the statistics implementation
-     */
-    protected interface Statistics<T> {
-
-        Statistics create();
-
-        void log(ProtectedStoragePayload message);
-
-        Map<String, T> values();
-
-        void reset();
-    }
-
-    /**
-     * Efficient way to count message occurrences.
-     */
-    private class Counter {
-        private int value = 0;
-
-        int value() {
-            return value;
-        }
-
-        void increment() {
-            value++;
-        }
-    }
+    final Map<NodeAddress, Statistics<Set<Integer>>> bucketsPerHost = new ConcurrentHashMap<>();
+    protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
+    private int daostateheight = 594000;
+    private int proposalheight = daostateheight;
+    private int blindvoteheight = daostateheight;
 
     /**
      * Use a counter to do statistics.
      */
-    private class MyStatistics  implements  Statistics<Counter> {
+    private class MyStatistics implements Statistics<Set<Integer>> {
 
-        private final Map<String, Counter> buckets = new HashMap<>();
+        private final Map<String, Set<Integer>> buckets = new HashMap<>();
 
         @Override
         public Statistics create() {
@@ -126,17 +103,17 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
         }
 
         @Override
-        public synchronized void log(ProtectedStoragePayload message) {
+        public synchronized void log(Object message) {
 
             // For logging different data types
             String className = message.getClass().getSimpleName();
 
-            buckets.putIfAbsent(className, new Counter());
-            buckets.get(className).increment();
+            buckets.putIfAbsent(className, new HashSet<>());
+            buckets.get(className).add(message.hashCode());
         }
 
         @Override
-        public Map<String, Counter> values() {
+        public Map<String, Set<Integer>> values() {
             return buckets;
         }
 
@@ -153,62 +130,39 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
     }
 
     @Override
-    protected void execute() {
-        // start the network node
-        final NetworkNode networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
-                new CoreNetworkProtoResolver(), false,
-                new AvailableTor(Monitor.TOR_WORKING_DIR, "unused"));
-        // we do not need to start the networkNode, as we do not need the HS
-        //networkNode.start(this);
+    public void configure(Properties properties) {
+        super.configure(properties);
 
-        // clear our buckets
-        bucketsPerHost.clear();
-        ArrayList<Thread> threadList = new ArrayList<>();
+        if (hashes.isEmpty() && configuration.getProperty(DATABASE_DIR) != null) {
+            File dir = new File(configuration.getProperty(DATABASE_DIR));
+            String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
+            try {
+                Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
+                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.initAndGetPersistedWithFileName(TradeStatistics2Store.class.getSimpleName() + networkPostfix, 0);
+                hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
 
-        // for each configured host
-        for (String current : configuration.getProperty(HOSTS, "").split(",")) {
-            threadList.add(new Thread(() -> {
-
-                    try {
-                        // parse Url
-                        NodeAddress target = OnionParser.getNodeAddress(current);
-
-                        // do the data request
-                        SettableFuture<Connection> future = networkNode.sendMessage(target,
-                                new PreliminaryGetDataRequest(new Random().nextInt(), hashes));
-
-                        Futures.addCallback(future, new FutureCallback<>() {
-                            @Override
-                            public void onSuccess(Connection connection) {
-                                connection.addMessageListener(P2PSeedNodeSnapshot.this);
-                            }
-
-                            @Override
-                            public void onFailure(@NotNull Throwable throwable) {
-                                gate.proceed();
-                                log.error(
-                                        "Sending PreliminaryDataRequest failed. That is expected if the peer is offline.\n\tException="
-                                                + throwable.getMessage());
-                            }
-                        });
-
-                    } catch (Exception e) {
-                        gate.proceed(); // release the gate on error
-                        e.printStackTrace();
-                    }
-
-            }, current));
+                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.initAndGetPersistedWithFileName(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix, 0);
+                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
+            } catch (NullPointerException e) {
+                // in case there is no store file
+                log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
+            }
         }
+    }
 
-        gate.engage(threadList.size());
+    protected List<NetworkEnvelope> getRequests() {
+        List<NetworkEnvelope> result = new ArrayList<>();
 
-        // start all threads and wait until they all finished. We do that so we can
-        // minimize the time between querying the hosts and therefore the chance of
-        // inconsistencies.
-        threadList.forEach(Thread::start);
-        gate.await();
+        Random random = new Random();
+        result.add(new PreliminaryGetDataRequest(random.nextInt(), hashes));
 
-        report();
+        result.add(new GetDaoStateHashesRequest(daostateheight, random.nextInt()));
+
+        result.add(new GetProposalStateHashesRequest(proposalheight, random.nextInt()));
+
+        result.add(new GetBlindVoteStateHashesRequest(blindvoteheight, random.nextInt()));
+
+        return result;
     }
 
     /**
@@ -219,31 +173,35 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
         // report
         Map<String, String> report = new HashMap<>();
         // - assemble histograms
-        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((type, counter) -> report
-                .put(OnionParser.prettyPrint(host) + ".numberOfMessages." + type, String.valueOf(((Counter) counter).value()))));
+        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((type, set) -> report
+                .put(OnionParser.prettyPrint(host) + ".numberOfMessages." + type, Integer.toString(set.size()))));
 
         // - assemble diffs
         //   - transfer values
-        Map<String, Statistics> messagesPerHost = new HashMap<>();
+        Map<String, Statistics<Set<Integer>>> messagesPerHost = new HashMap<>();
         bucketsPerHost.forEach((host, value) -> messagesPerHost.put(OnionParser.prettyPrint(host), value));
 
         //   - pick reference seed node and its values
-        Optional<String> referenceHost = messagesPerHost.keySet().stream().sorted().findFirst();
-        Map<String, Counter> referenceValues = messagesPerHost.get(referenceHost.get()).values();
+        String referenceHost = "overall_number_of_unique_messages";
+        Map<String, Set<Object>> referenceValues = new HashMap<>();
+        messagesPerHost.forEach((host, statistics) -> statistics.values().forEach((type, set) -> {
+            referenceValues.putIfAbsent(type, new HashSet<>());
+            referenceValues.get(type).addAll(set);
+        }));
 
         //   - calculate diffs
         messagesPerHost.forEach(
             (host, statistics) -> {
-                statistics.values().forEach((messageType, count) -> {
+                statistics.values().forEach((messageType, set) -> {
                     try {
                         report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                String.valueOf(((Counter) count).value() - referenceValues.get(messageType).value()));
-                    } catch (MalformedURLException ignore) {
-                        log.error("we should never got here");
+                                String.valueOf(set.size() - referenceValues.get(messageType).size()));
+                    } catch (MalformedURLException | NullPointerException ignore) {
+                        log.error("we should never have gotten here", ignore);
                     }
                 });
                 try {
-                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost.get());
+                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
                 } catch (MalformedURLException ignore) {
                     log.error("we should never got here");
                 }
@@ -256,11 +214,109 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
         if (hashes.size() > 150000)
             hashes.clear();
 
+        //   - report
         reporter.report(report, getName());
+
+        // - assemble dao report
+        Map<String, String> daoreport = new HashMap<>();
+
+        //   - transcode
+        Map<String, Map<NodeAddress, Tuple>> perType = new HashMap<>();
+        daoData.forEach((nodeAddress, daostatistics) -> daostatistics.values().forEach((type, tuple) -> {
+            perType.putIfAbsent(type, new HashMap<>());
+            perType.get(type).put(nodeAddress, tuple);
+        }));
+
+        //   - process dao data
+        perType.forEach((type, nodeAddressTupleMap) -> {
+            //   - find head
+            int head = (int) nodeAddressTupleMap.values().stream().max(Comparator.comparingLong(Tuple::getHeight)).get().height;
+            int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
+
+            //   - update queried height
+            if(type.contains("DaoState"))
+                daostateheight = oldest - 20;
+            else if(type.contains("Proposal"))
+                proposalheight = oldest - 20;
+            else
+                blindvoteheight = oldest - 20;
+
+            //   - calculate diffs
+            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".head", Long.toString(tuple.height - head)));
+
+            //   - memorize hashes
+            Map<ByteBuffer, Integer> hitcount = new HashMap<>();
+            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> {
+                ByteBuffer hash = ByteBuffer.wrap(tuple.hash);
+                if (hitcount.containsKey(hash)) {
+                    hitcount.put(hash, hitcount.get(hash) + 1);
+                } else
+                    hitcount.put(hash, 1);
+            });
+
+            List<ByteBuffer> states = hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(byteBufferIntegerEntry -> byteBufferIntegerEntry.getKey()).collect(Collectors.toList());
+            hitcount.clear();
+
+            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
+
+            //   - report reference head
+            daoreport.put(type + ".referenceHead", Integer.toString(head));
+        });
+
+        daoData.clear();
+
+        //   - report
+        reporter.report(daoreport, "DaoStateSnapshot");
     }
 
-    @Override
-    public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
+    private class Tuple {
+        @Getter
+        private final long height;
+        private final byte[] hash;
+
+        Tuple(long height, byte[] hash) {
+            this.height = height;
+            this.hash = hash;
+        }
+    }
+
+    private class DaoStatistics implements Statistics<Tuple> {
+
+        Map<String, Tuple> buckets = new ConcurrentHashMap<>();
+
+        @Override
+        public Statistics create() {
+            return new DaoStatistics();
+        }
+
+        @Override
+        public void log(Object message) {
+            // get last entry
+            StateHash last = (StateHash) ((GetStateHashesResponse) message).getStateHashes().get(((GetStateHashesResponse) message).getStateHashes().size() - 1);
+
+            // For logging different data types
+            String className = last.getClass().getSimpleName();
+
+            buckets.putIfAbsent(className, new Tuple(last.getHeight(), last.getHash()));
+        }
+
+        @Override
+        public Map<String, Tuple> values() {
+            return buckets;
+        }
+
+        @Override
+        public void reset() {
+            buckets.clear();
+        }
+    }
+
+    private Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
+
+    protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection) {
+        checkNotNull(connection.getPeersNodeAddressProperty(),
+                "although the property is nullable, we need it to not be null");
+
         if (networkEnvelope instanceof GetDataResponse) {
 
             Statistics result = this.statistics.create();
@@ -277,32 +333,25 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
                 result.log(protectedStoragePayload);
             });
 
-            Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
-                    .getPersistableNetworkPayloadSet();
-            if (persistableNetworkPayloadSet != null) {
-                persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
+            dataResponse.getPersistableNetworkPayloadSet().forEach(persistableNetworkPayload -> {
+                // memorize message hashes
+                //Byte[] bytes = new Byte[persistableNetworkPayload.getHash().length];
+                //Arrays.setAll(bytes, n -> persistableNetworkPayload.getHash()[n]);
 
-                    // memorize message hashes
-                    //Byte[] bytes = new Byte[persistableNetworkPayload.getHash().length];
-                    //Arrays.setAll(bytes, n -> persistableNetworkPayload.getHash()[n]);
+                //hashes.add(bytes);
 
-                    //hashes.add(bytes);
+                hashes.add(persistableNetworkPayload.getHash());
+            });
 
-                    hashes.add(persistableNetworkPayload.getHash());
-                });
-            }
-
-            checkNotNull(connection.getPeersNodeAddressProperty(),
-                    "although the property is nullable, we need it to not be null");
             bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), result);
+            return true;
+        } else if (networkEnvelope instanceof GetStateHashesResponse) {
+            daoData.putIfAbsent(connection.getPeersNodeAddressProperty().getValue(), new DaoStatistics());
 
-            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
-            gate.proceed();
-        } else if (networkEnvelope instanceof CloseConnectionMessage) {
-            gate.unlock();
-        } else {
-            log.warn("Got a message of type <{}>, expected <GetDataResponse>",
-                    networkEnvelope.getClass().getSimpleName());
+            daoData.get(connection.getPeersNodeAddressProperty().getValue()).log(networkEnvelope);
+
+            return true;
         }
+        return false;
     }
 }

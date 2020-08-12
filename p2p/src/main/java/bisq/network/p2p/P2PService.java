@@ -75,6 +75,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import java.security.PublicKey;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -97,7 +98,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener,
         HashMapChangedListener, PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
-    public static final int MAX_CONNECTIONS_DEFAULT = 12;
 
     private final SeedNodeRepository seedNodeRepository;
     private final EncryptionService encryptionService;
@@ -128,6 +128,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private boolean isBootstrapped;
     private final KeepAliveManager keepAliveManager;
     private final Socks5ProxyProvider socks5ProxyProvider;
+
+    @Getter
+    private static NodeAddress myNodeAddress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -195,11 +198,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onAllServicesInitialized() {
         if (networkNode.getNodeAddress() != null) {
             maybeProcessAllMailboxEntries();
+            myNodeAddress = networkNode.getNodeAddress();
         } else {
             // If our HS is still not published
             networkNode.nodeAddressProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue != null)
+                if (newValue != null) {
                     maybeProcessAllMailboxEntries();
+                    myNodeAddress = networkNode.getNodeAddress();
+                }
             });
         }
     }
@@ -311,6 +317,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
 
         requestDataManager.requestUpdateData();
+        /*if (Capabilities.app.containsAll(Capability.SEED_NODE))
+            UserThread.runPeriodically(() -> requestDataManager.requestUpdateData(), 1, TimeUnit.HOURS);*/
 
         // If we start up first time we don't have any peers so we need to request from seed node.
         // As well it can be that the persisted peer list is outdated with dead peers.
@@ -430,15 +438,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAdded(ProtectedStorageEntry protectedStorageEntry) {
-        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-            processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+    public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+        });
     }
 
     @Override
-    public void onRemoved(ProtectedStorageEntry data) {
-    }
-
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) { }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DirectMessages
@@ -527,7 +535,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderNodeAddress));
                     } else {
                         log.warn("tryDecryptMailboxData: Expected MailboxMessage but got other type. " +
-                                "decryptedMsgWithPubKey.message=", decryptedMessageWithPubKey.getNetworkEnvelope());
+                                "decryptedMsgWithPubKey.message={}", decryptedMessageWithPubKey.getNetworkEnvelope());
                     }
                 } catch (CryptoException e) {
                     log.debug(e.toString());
@@ -537,7 +545,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     log.error("Protobuffer data could not be processed: {}", e.toString());
                 }
             } else {
-                log.debug("Wrong blurredAddressHash. The message is not intended for us.");
+                log.trace("Wrong blurredAddressHash. The message is not intended for us.");
             }
         }
     }
@@ -628,10 +636,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 log.warn("We don't send the message because the peer does not support the required capability. " +
                         "peersNodeAddress={}", peersNodeAddress);
 
-            return result;
+            return !result;
         }
 
-        log.warn("We don't have the peer in our persisted peers so we don't know his capabilities. " +
+        log.warn("We don't have the peer in our persisted peers so we don't know their capabilities. " +
                 "We decide to not sent the msg. peersNodeAddress={}", peersNodeAddress);
         return true;
 
@@ -696,14 +704,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             // to the logic from BroadcastHandler.sendToPeer
                         }
                     };
-                    boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
+                    boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener);
                     if (!result) {
-                        //TODO remove and add again with a delay to ensure the data will be broadcasted
-                        // The p2PDataStorage.remove makes probably sense but need to be analysed more.
-                        // Don't change that if it is not 100% clear.
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
-                        boolean removeResult = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
-                        log.debug("remove result=" + removeResult);
+
+                        // This should only fail if there are concurrent calls to addProtectedStorageEntry with the
+                        // same ProtectedMailboxStorageEntry. This is an unexpected use case so if it happens we
+                        // want to see it, but it is not worth throwing an exception.
+                        log.error("Unexpected state: adding mailbox message that already exists.");
                     }
                 } catch (CryptoException e) {
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
@@ -757,7 +765,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             expirableMailboxStoragePayload,
                             keyRing.getSignatureKeyPair(),
                             receiversPubKey);
-                    p2PDataStorage.removeMailboxData(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
+                    p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress());
                 } catch (CryptoException e) {
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 }
@@ -776,14 +784,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean addPersistableNetworkPayload(PersistableNetworkPayload payload, boolean reBroadcast) {
-        return p2PDataStorage.addPersistableNetworkPayload(payload, networkNode.getNodeAddress(), true, true, reBroadcast, false);
+        return p2PDataStorage.addPersistableNetworkPayload(payload, networkNode.getNodeAddress(), reBroadcast);
     }
 
-    public boolean addProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
+    public boolean addProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload) {
         if (isBootstrapped()) {
             try {
                 ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedStorageEntry(protectedStoragePayload, keyRing.getSignatureKeyPair());
-                return p2PDataStorage.addProtectedStorageEntry(protectedStorageEntry, networkNode.getNodeAddress(), null, isDataOwner);
+                return p2PDataStorage.addProtectedStorageEntry(protectedStorageEntry, networkNode.getNodeAddress(), null);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;
@@ -793,11 +801,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public boolean refreshTTL(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
+    public boolean refreshTTL(ProtectedStoragePayload protectedStoragePayload) {
         if (isBootstrapped()) {
             try {
                 RefreshOfferMessage refreshTTLMessage = p2PDataStorage.getRefreshTTLMessage(protectedStoragePayload, keyRing.getSignatureKeyPair());
-                return p2PDataStorage.refreshTTL(refreshTTLMessage, networkNode.getNodeAddress(), isDataOwner);
+                return p2PDataStorage.refreshTTL(refreshTTLMessage, networkNode.getNodeAddress());
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;
@@ -807,11 +815,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public boolean removeData(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
+    public boolean removeData(ProtectedStoragePayload protectedStoragePayload) {
         if (isBootstrapped()) {
             try {
                 ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedStorageEntry(protectedStoragePayload, keyRing.getSignatureKeyPair());
-                return p2PDataStorage.remove(protectedStorageEntry, networkNode.getNodeAddress(), isDataOwner);
+                return p2PDataStorage.remove(protectedStorageEntry, networkNode.getNodeAddress());
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;

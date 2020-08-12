@@ -19,10 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.proto.CoreProtoResolver;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistableList;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.proto.persistable.UserThreadMappedPersistableList;
 
 import com.google.protobuf.Message;
 
@@ -33,7 +30,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public class PaymentAccountList extends PersistableList<PaymentAccount> {
+public class PaymentAccountList extends UserThreadMappedPersistableList<PaymentAccount> {
 
     public PaymentAccountList(List<PaymentAccount> list) {
         super(list);
@@ -41,13 +38,13 @@ public class PaymentAccountList extends PersistableList<PaymentAccount> {
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
-                .setPaymentAccountList(PB.PaymentAccountList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setPaymentAccountList(protobuf.PaymentAccountList.newBuilder()
                         .addAllPaymentAccount(getList().stream().map(PaymentAccount::toProtoMessage).collect(Collectors.toList())))
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
+    public static PaymentAccountList fromProto(protobuf.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
         return new PaymentAccountList(new ArrayList<>(proto.getPaymentAccountList().stream()
                 .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
                 .collect(Collectors.toList())));

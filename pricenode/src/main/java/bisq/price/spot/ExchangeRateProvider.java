@@ -30,7 +30,7 @@ import java.util.Set;
  * {@link org.springframework.core.annotation.Order} annotation to determine their
  * precedence over each other in the case of two or more services returning exchange rate
  * data for the same currency pair. In such cases, results from the provider with the
- * higher order value will taking precedence over the provider with a lower value,
+ * higher order value will take precedence over the provider with a lower value,
  * presuming that such providers are being iterated over in an ordered list.
  *
  * @see ExchangeRateService#ExchangeRateService(java.util.List)

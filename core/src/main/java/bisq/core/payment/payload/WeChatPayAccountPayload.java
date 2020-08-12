@@ -19,13 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
-import org.springframework.util.CollectionUtils;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +30,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -57,7 +51,7 @@ public final class WeChatPayAccountPayload extends PaymentAccountPayload {
                                     String id,
                                     String accountNr,
                                     long maxTradePeriod,
-                                    @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                    Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -68,17 +62,17 @@ public final class WeChatPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setWeChatPayAccountPayload(PB.WeChatPayAccountPayload.newBuilder()
+                .setWeChatPayAccountPayload(protobuf.WeChatPayAccountPayload.newBuilder()
                         .setAccountNr(accountNr))
                 .build();
     }
 
-    public static WeChatPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static WeChatPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new WeChatPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getWeChatPayAccountPayload().getAccountNr(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -98,6 +92,6 @@ public final class WeChatPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(accountNr.getBytes(StandardCharsets.UTF_8));
     }
 }

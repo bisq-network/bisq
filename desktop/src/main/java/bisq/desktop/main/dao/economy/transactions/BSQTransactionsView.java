@@ -143,7 +143,7 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateWithBsqBlockChainData() {
-        allTxTextField.setText(String.valueOf(daoFacade.getTxs().size()));
+        allTxTextField.setText(String.valueOf(daoFacade.getNumTxs()));
         utxoTextField.setText(String.valueOf(daoFacade.getUnspentTxOutputs().size()));
         compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.COMPENSATION)));
         reimbursementIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.REIMBURSEMENT)));

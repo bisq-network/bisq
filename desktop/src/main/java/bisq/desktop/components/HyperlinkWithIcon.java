@@ -52,11 +52,21 @@ public class HyperlinkWithIcon extends Hyperlink {
     }
 
     public HyperlinkWithIcon(String text, GlyphIcons icon) {
+        this(text, icon, null);
+    }
+
+    public HyperlinkWithIcon(String text, GlyphIcons icon, String style) {
         super(text);
 
         Text textIcon = FormBuilder.getIcon(icon);
         textIcon.setOpacity(0.7);
         textIcon.getStyleClass().addAll("hyperlink", "no-underline");
+
+        if (style != null) {
+            textIcon.getStyleClass().add(style);
+            getStyleClass().add(style);
+        }
+
         setPadding(new Insets(0));
 
         setIcon(textIcon);
@@ -71,9 +81,6 @@ public class HyperlinkWithIcon extends Hyperlink {
 
         setContentDisplay(ContentDisplay.RIGHT);
         setGraphicTextGap(7.0);
-
-        //TODO: replace workaround of setting the style this way
-        tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.setStyle("-fx-text-fill: #000"));
     }
 
     public void clear() {

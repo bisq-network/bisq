@@ -17,19 +17,18 @@
 
 package bisq.core.payment.validation;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+
+import bisq.asset.AssetRegistry;
+
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-
-
-import bisq.asset.AssetRegistry;
 
 public class AltCoinAddressValidatorTest {
 
@@ -37,7 +36,7 @@ public class AltCoinAddressValidatorTest {
     public void test() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator(new AssetRegistry());
 
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         String currencyCode = baseCurrencyNetwork.getCurrencyCode();
         Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());

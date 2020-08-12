@@ -24,7 +24,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -40,11 +40,11 @@ class ReservedListItem {
     private final OpenOffer openOffer;
     private final AddressEntry addressEntry;
     private final BtcWalletService btcWalletService;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final String addressString;
     private Coin balance;
 
-    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, BtcWalletService btcWalletService, BSFormatter formatter) {
+    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, BtcWalletService btcWalletService, CoinFormatter formatter) {
         this.openOffer = openOffer;
         this.addressEntry = addressEntry;
         this.btcWalletService = btcWalletService;

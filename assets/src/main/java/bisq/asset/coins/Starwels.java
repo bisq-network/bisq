@@ -23,6 +23,6 @@ import bisq.asset.Coin;
 public class Starwels extends Coin {
 
     public Starwels() {
-        super("Starwels", "MAI", new Base58BitcoinAddressValidator());
+        super("Starwels", "USDH", new Base58BitcoinAddressValidator());
     }
 }

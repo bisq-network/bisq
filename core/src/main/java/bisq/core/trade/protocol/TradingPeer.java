@@ -25,8 +25,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
@@ -40,10 +38,23 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+// Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
+// persist them.
+//todo clean up older fields as well to make most transient
 @Slf4j
 @Getter
 @Setter
 public final class TradingPeer implements PersistablePayload {
+    // Transient/Mutable
+    // Added in v1.2.0
+    @Setter
+    @Nullable
+    transient private byte[] delayedPayoutTxSignature;
+    @Setter
+    @Nullable
+    transient private byte[] preparedDepositTx;
+
+    // Persistable mutable
     @Nullable
     private String accountId;
     @Nullable
@@ -73,30 +84,37 @@ public final class TradingPeer implements PersistablePayload {
     private byte[] accountAgeWitnessSignature;
     private long currentDate;
 
+    // Added in v.1.1.6
+    @Nullable
+    private byte[] mediatedPayoutTxSignature;
+
+
     public TradingPeer() {
     }
 
     @Override
     public Message toProtoMessage() {
-        final PB.TradingPeer.Builder builder = PB.TradingPeer.newBuilder()
+        final protobuf.TradingPeer.Builder builder = protobuf.TradingPeer.newBuilder()
                 .setChangeOutputValue(changeOutputValue);
         Optional.ofNullable(accountId).ifPresent(builder::setAccountId);
-        Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((PB.PaymentAccountPayload) e.toProtoMessage()));
+        Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((protobuf.PaymentAccountPayload) e.toProtoMessage()));
         Optional.ofNullable(payoutAddressString).ifPresent(builder::setPayoutAddressString);
         Optional.ofNullable(contractAsJson).ifPresent(builder::setContractAsJson);
         Optional.ofNullable(contractSignature).ifPresent(builder::setContractSignature);
         Optional.ofNullable(signature).ifPresent(e -> builder.setSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(pubKeyRing).ifPresent(e -> builder.setPubKeyRing(e.toProtoMessage()));
         Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(e)));
-        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(e)));
+        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(
+                ProtoUtil.collectionToProto(e, protobuf.RawTransactionInput.class)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignature).ifPresent(e -> builder.setAccountAgeWitnessSignature(ByteString.copyFrom(e)));
+        Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
         return builder.build();
     }
 
-    public static TradingPeer fromProto(PB.TradingPeer proto, CoreProtoResolver coreProtoResolver) {
+    public static TradingPeer fromProto(protobuf.TradingPeer proto, CoreProtoResolver coreProtoResolver) {
         if (proto.getDefaultInstanceForType().equals(proto)) {
             return null;
         } else {
@@ -120,6 +138,7 @@ public final class TradingPeer implements PersistablePayload {
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()));
             tradingPeer.setAccountAgeWitnessSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignature()));
             tradingPeer.setCurrentDate(proto.getCurrentDate());
+            tradingPeer.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
             return tradingPeer;
         }
     }

@@ -30,7 +30,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.MathUtils;
@@ -38,6 +38,7 @@ import bisq.common.util.MathUtils;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,23 +46,22 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class MarketAlerts {
     private final OfferBookService offerBookService;
     private final MobileNotificationService mobileNotificationService;
     private final User user;
     private final PriceFeedService priceFeedService;
     private final KeyRing keyRing;
-    private final BSFormatter formatter;
 
     @Inject
-    public MarketAlerts(OfferBookService offerBookService, MobileNotificationService mobileNotificationService,
-                        User user, PriceFeedService priceFeedService, KeyRing keyRing, BSFormatter formatter) {
+    private MarketAlerts(OfferBookService offerBookService, MobileNotificationService mobileNotificationService,
+                         User user, PriceFeedService priceFeedService, KeyRing keyRing) {
         this.offerBookService = offerBookService;
         this.mobileNotificationService = mobileNotificationService;
         this.user = user;
         this.priceFeedService = priceFeedService;
         this.keyRing = keyRing;
-        this.formatter = formatter;
     }
 
 
@@ -178,9 +178,9 @@ public class MarketAlerts {
                             ratio = Math.abs(ratio);
                             String msg = Res.get("account.notifications.marketAlert.message.msg",
                                     direction,
-                                    formatter.getCurrencyPair(currencyCode),
-                                    formatter.formatPrice(offerPrice),
-                                    formatter.formatToPercentWithSymbol(ratio / 10000d),
+                                    CurrencyUtil.getCurrencyPair(currencyCode),
+                                    FormattingUtils.formatPrice(offerPrice),
+                                    FormattingUtils.formatToPercentWithSymbol(ratio / 10000d),
                                     marketDir,
                                     Res.get(offer.getPaymentMethod().getId()),
                                     shortOfferId);

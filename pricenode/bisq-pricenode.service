@@ -1,0 +1,22 @@
+[Unit]
+Description=Bisq Price Node
+After=network.target
+
+[Service]
+SyslogIdentifier=bisq-pricenode
+EnvironmentFile=/etc/default/bisq-pricenode.env
+ExecStart=/bisq/bisq/bisq-pricenode 2
+ExecStop=/bin/kill -TERM ${MAINPID}
+Restart=on-failure
+
+User=bisq
+Group=bisq
+
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+MemoryDenyWriteExecute=false
+
+[Install]
+WantedBy=multi-user.target

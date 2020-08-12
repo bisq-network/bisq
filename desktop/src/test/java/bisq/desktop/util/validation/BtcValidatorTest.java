@@ -17,11 +17,13 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
+
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import org.bitcoinj.core.Coin;
 
@@ -33,9 +35,11 @@ import static org.junit.Assert.assertTrue;
 
 public class BtcValidatorTest {
 
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
+
     @Before
     public void setup() {
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        final BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
         Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
@@ -44,7 +48,7 @@ public class BtcValidatorTest {
 
     @Test
     public void testIsValid() {
-        BtcValidator validator = new BtcValidator(new BSFormatter());
+        BtcValidator validator = new BtcValidator(coinFormatter);
 
         assertTrue(validator.validate("1").isValid);
         assertTrue(validator.validate("0,1").isValid);

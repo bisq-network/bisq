@@ -20,24 +20,20 @@ package bisq.core.trade.closed;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.DumpDelayedPayoutTx;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
 
-import javax.inject.Named;
-
 import com.google.common.collect.ImmutableList;
 
 import javafx.collections.ObservableList;
-
-import java.io.File;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,19 +46,21 @@ public class ClosedTradableManager implements PersistedDataHost {
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
+    private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
 
     @Inject
-    public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService,
-                                 PersistenceProtoResolver persistenceProtoResolver,
+    public ClosedTradableManager(KeyRing keyRing,
+                                 PriceFeedService priceFeedService,
                                  BtcWalletService btcWalletService,
-                                 @Named(Storage.STORAGE_DIR) File storageDir) {
+                                 Storage<TradableList<Tradable>> storage,
+                                 DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
-        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        tradableListStorage = storage;
+        this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         // The ClosedTrades object can become a few MB so we don't keep so many backups
         tradableListStorage.setNumMaxBackupFiles(3);
-
     }
 
     @Override
@@ -75,10 +73,16 @@ public class ClosedTradableManager implements PersistedDataHost {
                 trade.setTransientFields(tradableListStorage, btcWalletService);
             }
         });
+
+        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(closedTradables, "delayed_payout_txs_closed");
     }
 
     public void add(Tradable tradable) {
         closedTradables.add(tradable);
+    }
+
+    public void remove(Tradable tradable) {
+        closedTradables.remove(tradable);
     }
 
     public boolean wasMyOffer(Offer offer) {
@@ -100,7 +104,7 @@ public class ClosedTradableManager implements PersistedDataHost {
         return closedTradables.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
-    public Stream<Trade> getLockedTradesStream() {
+    public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return getClosedTrades().stream()
                 .filter(Trade::isFundsLockedIn);
     }

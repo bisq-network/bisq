@@ -17,10 +17,11 @@
 
 package bisq.core.app.misc;
 
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.SetupUtils;
 import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.network.crypto.EncryptionService;
@@ -30,6 +31,7 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
 
@@ -46,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AppSetupWithP2P extends AppSetup {
     protected final P2PService p2PService;
     protected final AccountAgeWitnessService accountAgeWitnessService;
+    private final SignedWitnessService signedWitnessService;
     protected final FilterManager filterManager;
     private final TorSetup torSetup;
     protected BooleanProperty p2pNetWorkReady;
@@ -58,12 +61,15 @@ public class AppSetupWithP2P extends AppSetup {
                            P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
+                           SignedWitnessService signedWitnessService,
                            FilterManager filterManager,
-                           TorSetup torSetup) {
-        super(encryptionService, keyRing);
+                           TorSetup torSetup,
+                           Config config) {
+        super(encryptionService, keyRing, config);
         this.p2PService = p2PService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.signedWitnessService = signedWitnessService;
         this.filterManager = filterManager;
         this.torSetup = torSetup;
         this.persistedDataHosts = new ArrayList<>();
@@ -86,7 +92,7 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        SetupUtils.readFromResources(p2PService.getP2PDataStorage()).addListener((observable, oldValue, newValue) -> {
+        SetupUtils.readFromResources(p2PService.getP2PDataStorage(), config).addListener((observable, oldValue, newValue) -> {
             if (newValue)
                 startInitP2PNetwork();
         });
@@ -184,6 +190,7 @@ public class AppSetupWithP2P extends AppSetup {
         tradeStatisticsManager.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
+        signedWitnessService.onAllServicesInitialized();
 
         filterManager.onAllServicesInitialized();
     }

@@ -21,21 +21,16 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
-
-import org.springframework.util.CollectionUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -43,8 +38,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -59,15 +52,16 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     private String bic = "";
     private String email = ""; // not used anymore but need to keep it for backward compatibility, must not be null but empty string, otherwise hash check fails for contract
 
-    // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
+    // Don't use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
 
     public SepaAccountPayload(String paymentMethod, String id, List<Country> acceptedCountries) {
         super(paymentMethod, id);
-        Set<String> acceptedCountryCodesAsSet = acceptedCountries.stream()
-                .map(e -> e.code).collect(Collectors.toSet());
-        acceptedCountryCodes = new ArrayList<>(acceptedCountryCodesAsSet);
-        acceptedCountryCodes.sort(String::compareTo);
+        acceptedCountryCodes = acceptedCountries.stream()
+                .map(e -> e.code)
+                .sorted()
+                .distinct()
+                .collect(Collectors.toList());
     }
 
 
@@ -84,7 +78,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                                String email,
                                List<String> acceptedCountryCodes,
                                long maxTradePeriod,
-                               @Nullable Map<String, String> excludeFromJsonDataMap) {
+                               Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -100,14 +94,14 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
 
     @Override
     public Message toProtoMessage() {
-        PB.SepaAccountPayload.Builder builder =
-                PB.SepaAccountPayload.newBuilder()
+        protobuf.SepaAccountPayload.Builder builder =
+                protobuf.SepaAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setIban(iban)
                         .setBic(bic)
                         .setEmail(email)
                         .addAllAcceptedCountryCodes(acceptedCountryCodes);
-        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
+        final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setSepaAccountPayload(builder);
         return getPaymentAccountPayloadBuilder()
@@ -115,9 +109,9 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 .build();
     }
 
-    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.SepaAccountPayload sepaAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaAccountPayload();
+    public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        protobuf.SepaAccountPayload sepaAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
@@ -127,7 +121,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 sepaAccountPayloadPB.getEmail(),
                 new ArrayList<>(sepaAccountPayloadPB.getAcceptedCountryCodesList()),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -141,13 +135,13 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     }
 
     public void removeAcceptedCountry(String countryCode) {
-        if (acceptedCountryCodes.contains(countryCode))
-            acceptedCountryCodes.remove(countryCode);
+        acceptedCountryCodes.remove(countryCode);
     }
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", " + Res.getWithCol("payment.bank.country") + " " + getCountryCode();
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", IBAN: " +
+                iban + ", BIC: " + bic + ", " + Res.getWithCol("payment.bank.country") + " " + getCountryCode();
     }
 
     @Override
@@ -162,6 +156,10 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     public byte[] getAgeWitnessInputData() {
         // We don't add holderName because we don't want to break age validation if the user recreates an account with
         // slight changes in holder name (e.g. add or remove middle name)
-        return super.getAgeWitnessInputData(ArrayUtils.addAll(iban.getBytes(Charset.forName("UTF-8")), bic.getBytes(Charset.forName("UTF-8"))));
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
+    }
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

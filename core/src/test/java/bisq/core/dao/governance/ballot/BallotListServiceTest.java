@@ -11,11 +11,7 @@ import bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -23,8 +19,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({PeriodService.class, ProposalPayload.class, ProposalValidatorProvider.class})
 public class BallotListServiceTest {
     @Test
     @SuppressWarnings("unchecked")

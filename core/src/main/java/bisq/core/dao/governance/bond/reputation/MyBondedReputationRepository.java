@@ -26,12 +26,9 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
-import org.bitcoinj.core.Transaction;
-
 import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.Arrays;
@@ -50,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * unconfirmed txs.
  */
 @Slf4j
-public class MyBondedReputationRepository implements DaoSetupService {
+public class MyBondedReputationRepository implements DaoSetupService, BsqWalletService.WalletTransactionsChangeListener {
     private final DaoStateService daoStateService;
     private final BsqWalletService bsqWalletService;
     private final MyReputationListService myReputationListService;
@@ -84,7 +81,7 @@ public class MyBondedReputationRepository implements DaoSetupService {
                 update();
             }
         });
-        bsqWalletService.getWalletTransactions().addListener((ListChangeListener<Transaction>) c -> update());
+        bsqWalletService.addWalletTransactionsChangeListener(this);
     }
 
     @Override
@@ -93,10 +90,21 @@ public class MyBondedReputationRepository implements DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqWalletService.WalletTransactionsChangeListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onWalletTransactionsChange() {
+        update();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void update() {
+        log.debug("update");
         // It can be that the same salt/hash is in several lockupTxs, so we use the bondByLockupTxIdMap to eliminate
         // duplicates by the collection algorithm.
         Map<String, MyBondedReputation> bondByLockupTxIdMap = new HashMap<>();
@@ -109,8 +117,8 @@ public class MyBondedReputationRepository implements DaoSetupService {
                     if (BondRepository.isConfiscated(myBondedReputation, daoStateService)) {
                         myBondedReputation.setBondState(BondState.CONFISCATED);
                     } else {
-                        // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but lets keep the code so if needed
-                        // its there.
+                        // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but let's keep the code so if needed
+                        // it's there.
                         if (BondRepository.isLockupTxUnconfirmed(bsqWalletService, myBondedReputation.getBondedAsset()) &&
                                 myBondedReputation.getBondState() == BondState.READY_FOR_LOCKUP) {
                             myBondedReputation.setBondState(BondState.LOCKUP_TX_PENDING);

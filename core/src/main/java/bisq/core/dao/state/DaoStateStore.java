@@ -20,9 +20,7 @@ package bisq.core.dao.state;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -37,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @Slf4j
-public class DaoStateStore implements PersistableEnvelope {
+public class DaoStateStore implements ThreadedPersistableEnvelope {
     // DaoState is always a clone and must not be used for read access beside initial read from disc when we apply
     // the snapshot!
     @Getter
@@ -59,17 +57,17 @@ public class DaoStateStore implements PersistableEnvelope {
 
     public Message toProtoMessage() {
         checkNotNull(daoState, "daoState must not be null when toProtoMessage is invoked");
-        PB.DaoStateStore.Builder builder = PB.DaoStateStore.newBuilder()
+        protobuf.DaoStateStore.Builder builder = protobuf.DaoStateStore.newBuilder()
                 .setDaoState(daoState.getBsqStateBuilder())
                 .addAllDaoStateHash(daoStateHashChain.stream()
                         .map(DaoStateHash::toProtoMessage)
                         .collect(Collectors.toList()));
-        return PB.PersistableEnvelope.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
                 .setDaoStateStore(builder)
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.DaoStateStore proto) {
+    public static DaoStateStore fromProto(protobuf.DaoStateStore proto) {
         LinkedList<DaoStateHash> daoStateHashList = proto.getDaoStateHashList().isEmpty() ?
                 new LinkedList<>() :
                 new LinkedList<>(proto.getDaoStateHashList().stream()

@@ -17,11 +17,7 @@
 
 package bisq.core.payment.payload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
-
-import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,8 +27,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -54,7 +48,7 @@ public final class InstantCryptoCurrencyPayload extends AssetsAccountPayload {
                                          String id,
                                          String address,
                                          long maxTradePeriod,
-                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                         Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 address,
@@ -65,16 +59,16 @@ public final class InstantCryptoCurrencyPayload extends AssetsAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setInstantCryptoCurrencyAccountPayload(PB.InstantCryptoCurrencyAccountPayload.newBuilder()
+                .setInstantCryptoCurrencyAccountPayload(protobuf.InstantCryptoCurrencyAccountPayload.newBuilder()
                         .setAddress(address))
                 .build();
     }
 
-    public static InstantCryptoCurrencyPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static InstantCryptoCurrencyPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new InstantCryptoCurrencyPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getInstantCryptoCurrencyAccountPayload().getAddress(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 }

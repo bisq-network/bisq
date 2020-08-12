@@ -20,25 +20,22 @@ package bisq.desktop.app;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
-import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.debug.DebugView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.EmptyWalletWindow;
+import bisq.desktop.main.overlays.windows.BsqEmptyWalletWindow;
+import bisq.desktop.main.overlays.windows.BtcEmptyWalletWindow;
 import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
+import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.alert.AlertManager;
-import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyModeService;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -47,6 +44,7 @@ import bisq.core.user.Preferences;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
+import bisq.common.config.Config;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Profiler;
@@ -56,8 +54,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
-import org.reactfx.EventStreams;
-
 import javafx.application.Application;
 
 import javafx.stage.Modality;
@@ -66,16 +62,14 @@ import javafx.stage.StageStyle;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -150,16 +144,16 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     @Override
     public void stop() {
         if (!shutDownRequested) {
-            new Popup<>().headLine(Res.get("popup.shutDownInProgress.headline"))
+            new Popup().headLine(Res.get("popup.shutDownInProgress.headline"))
                     .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();
-            UserThread.runAfter(() -> {
+            new Thread(() -> {
                 gracefulShutDownHandler.gracefulShutDown(() -> {
                     log.debug("App shutdown complete");
                 });
-            }, 200, TimeUnit.MILLISECONDS);
+            }).start();
             shutDownRequested = true;
         }
     }
@@ -175,21 +169,17 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             if (scene == null) {
                 log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in Guice. throwable=" + throwable.toString());
                 scene = new Scene(new StackPane(), 1000, 650);
-                scene.getStylesheets().setAll(
-                        "/bisq/desktop/bisq.css",
-                        "/bisq/desktop/images.css");
+                CssTheme.loadSceneStyles(scene, CssTheme.CSS_THEME_LIGHT);
                 stage.setScene(scene);
                 stage.show();
             }
             try {
                 try {
                     if (!popupOpened) {
-                        String message = throwable.getMessage();
                         popupOpened = true;
-                        if (message != null)
-                            new Popup<>().error(message).onClose(() -> popupOpened = false).show();
-                        else
-                            new Popup<>().error(throwable.toString()).onClose(() -> popupOpened = false).show();
+                        new Popup().error(Objects.requireNonNullElse(throwable.getMessage(), throwable.toString()))
+                                .onClose(() -> popupOpened = false)
+                                .show();
                     }
                 } catch (Throwable throwable3) {
                     log.error("Error at displaying Throwable.");
@@ -222,16 +212,20 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         }
         Scene scene = new Scene(mainView.getRoot(),
                 maxWindowBounds.width < INITIAL_WINDOW_WIDTH ?
-                        (maxWindowBounds.width < MIN_WINDOW_WIDTH ? MIN_WINDOW_WIDTH : maxWindowBounds.width) :
+                        Math.max(maxWindowBounds.width, MIN_WINDOW_WIDTH) :
                         INITIAL_WINDOW_WIDTH,
                 maxWindowBounds.height < INITIAL_WINDOW_HEIGHT ?
-                        (maxWindowBounds.height < MIN_WINDOW_HEIGHT ? MIN_WINDOW_HEIGHT : maxWindowBounds.height) :
+                        Math.max(maxWindowBounds.height, MIN_WINDOW_HEIGHT) :
                         INITIAL_WINDOW_HEIGHT);
-        scene.getStylesheets().setAll(
-                "/bisq/desktop/bisq.css",
-                "/bisq/desktop/images.css",
-                "/bisq/desktop/CandleStickChart.css");
+
         addSceneKeyEventHandler(scene, injector);
+
+        Preferences preferences = injector.getInstance(Preferences.class);
+        preferences.getCssThemeProperty().addListener((ov) -> {
+            CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
+        });
+        CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
+
         return scene;
     }
 
@@ -245,26 +239,15 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         });
 
         // configure the primary stage
-        String appName = injector.getInstance(Key.get(String.class, Names.named(AppOptionKeys.APP_NAME_KEY)));
-        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
-            appName += " [" + Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) + "]";
+        String appName = injector.getInstance(Key.get(String.class, Names.named(Config.APP_NAME)));
+        if (!Config.baseCurrencyNetwork().isMainnet())
+            appName += " [" + Res.get(Config.baseCurrencyNetwork().name()) + "]";
 
         stage.setTitle(appName);
         stage.setScene(scene);
         stage.setMinWidth(MIN_WINDOW_WIDTH);
         stage.setMinHeight(MIN_WINDOW_HEIGHT);
-
-        // on Windows the title icon is also used as task bar icon in a larger size
-        // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
-        String iconPath;
-        if (Utilities.isOSX())
-            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
-        else if (Utilities.isWindows())
-            iconPath = "/images/task_bar_icon_windows.png";
-        else
-            iconPath = "/images/task_bar_icon_linux.png";
-
-        stage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+        stage.getIcons().add(ImageUtil.getApplicationIconImage());
 
         // make the UI visible
         stage.show();
@@ -282,14 +265,14 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 shutDownByUser();
             } else {
                 if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
-                    showBtcEmergencyWalletPopup(injector);
+                    injector.getInstance(BtcEmptyWalletWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
-                    showBsqEmergencyWalletPopup(injector);
+                    injector.getInstance(BsqEmptyWalletWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
-                    showSendAlertMessagePopup(injector);
+                    injector.getInstance(SendAlertMessageWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
-                    showFilterPopup(injector);
-                } else if (Utilities.isAltOrCtrlPressed(KeyCode.UP, keyEvent)) {
+                    injector.getInstance(FilterWindow.class).show();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.H, keyEvent)) {
                     log.warn("We re-published all proposalPayloads and blindVotePayloads to the P2P network.");
                     injector.getInstance(MissingDataRequestService.class).reRepublishAllGovernanceData();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.T, keyEvent)) {
@@ -308,19 +291,15 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     if (walletsManager.areWalletsAvailable())
                         new ShowWalletDataWindow(walletsManager).show();
                     else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
                     if (injector.getInstance(BtcWalletService.class).isWalletReady())
                         injector.getInstance(ManualPayoutTxWindow.class).show();
                     else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.isDevMode()) {
-                    // dev ode only
-                    if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
-                        showFPSWindow(scene);
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent))
                         showDebugWindow(scene, injector);
-                    }
                 }
             }
         });
@@ -343,7 +322,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         // We show a popup to inform user that open offers will be removed if Bisq is not running.
         String key = "showOpenOfferWarnPopupAtShutDown";
         if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
-            new Popup<>().information(Res.get("popup.info.shutDownWithOpenOffers"))
+            new Popup().information(Res.get("popup.info.shutDownWithOpenOffers"))
                     .dontShowAgainId(key)
                     .useShutDownButton()
                     .closeButtonText(Res.get("shared.cancel"))
@@ -351,36 +330,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         } else {
             stop();
         }
-    }
-
-    private void showSendAlertMessagePopup(Injector injector) {
-        AlertManager alertManager = injector.getInstance(AlertManager.class);
-        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new SendAlertMessageWindow(useDevPrivilegeKeys)
-                .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
-                .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
-                .show();
-    }
-
-    private void showFilterPopup(Injector injector) {
-        FilterManager filterManager = injector.getInstance(FilterManager.class);
-        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new FilterWindow(filterManager, useDevPrivilegeKeys)
-                .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
-                .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
-                .show();
-    }
-
-    private void showBtcEmergencyWalletPopup(Injector injector) {
-        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setIsBtc(true);
-        emptyWalletWindow.show();
-    }
-
-    private void showBsqEmergencyWalletPopup(Injector injector) {
-        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setIsBtc(false);
-        emptyWalletWindow.show();
     }
 
     // Used for debugging trade process
@@ -396,32 +345,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         stage.initOwner(scene.getWindow());
         stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
         stage.setY(this.stage.getY());
-        stage.show();
-    }
-
-    private void showFPSWindow(Scene scene) {
-        Label label = new AutoTooltipLabel();
-        EventStreams.animationTicks()
-                .latestN(100)
-                .map(ticks -> {
-                    int n = ticks.size() - 1;
-                    return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
-                })
-                .map(d -> String.format("FPS: %.3f", d)) // Don't translate, just for dev
-                .feedTo(label.textProperty());
-
-        Pane root = new StackPane();
-        root.getChildren().add(label);
-        Stage stage = new Stage();
-        stage.setScene(new Scene(root));
-        stage.setTitle("FPS"); // Don't translate, just for dev
-        stage.initModality(Modality.NONE);
-        stage.initStyle(StageStyle.UTILITY);
-        stage.initOwner(scene.getWindow());
-        stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
-        stage.setY(this.stage.getY());
-        stage.setWidth(200);
-        stage.setHeight(100);
         stage.show();
     }
 }

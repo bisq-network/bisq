@@ -23,10 +23,7 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-
-import io.bisq.generated.protobuffer.PB;
-
-import org.springframework.util.CollectionUtils;
+import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.Map;
@@ -79,14 +76,14 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.ConfiscateBondProposal.Builder builder = PB.ConfiscateBondProposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.ConfiscateBondProposal.Builder builder = protobuf.ConfiscateBondProposal.newBuilder()
                 .setLockupTxId(lockupTxId);
         return super.getProposalBuilder().setConfiscateBondProposal(builder);
     }
 
-    public static ConfiscateBondProposal fromProto(PB.Proposal proto) {
-        final PB.ConfiscateBondProposal proposalProto = proto.getConfiscateBondProposal();
+    public static ConfiscateBondProposal fromProto(protobuf.Proposal proto) {
+        final protobuf.ConfiscateBondProposal proposalProto = proto.getConfiscateBondProposal();
         return new ConfiscateBondProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getLockupTxId(),

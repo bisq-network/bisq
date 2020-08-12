@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 public abstract class OfferMessage extends NetworkEnvelope implements DirectMessage, UidMessage {
     public final String offerId;
 
-    // Added at version 0.7.1. Can be null if we receive the msg from an peer with an older version
+    // Added in version 0.7.1. Can be null if we receive the msg from a peer with an older version
     @Nullable
     protected final String uid;
 

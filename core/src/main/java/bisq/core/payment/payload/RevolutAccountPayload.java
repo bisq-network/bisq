@@ -19,13 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
-import org.springframework.util.CollectionUtils;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,17 +65,17 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setRevolutAccountPayload(PB.RevolutAccountPayload.newBuilder()
+                .setRevolutAccountPayload(protobuf.RevolutAccountPayload.newBuilder()
                         .setAccountId(accountId))
                 .build();
     }
 
-    public static RevolutAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static RevolutAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new RevolutAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getRevolutAccountPayload().getAccountId(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -99,6 +95,6 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(accountId.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(accountId.getBytes(StandardCharsets.UTF_8));
     }
 }

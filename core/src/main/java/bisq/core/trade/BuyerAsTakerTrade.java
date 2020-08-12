@@ -27,8 +27,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
@@ -52,10 +50,22 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                              long tradePrice,
                              NodeAddress tradingPeerNodeAddress,
                              @Nullable NodeAddress arbitratorNodeAddress,
+                             @Nullable NodeAddress mediatorNodeAddress,
+                             @Nullable NodeAddress refundAgentNodeAddress,
                              Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService) {
-        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress,
-                arbitratorNodeAddress, storage, btcWalletService);
+        super(offer,
+                tradeAmount,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                tradePrice,
+                tradingPeerNodeAddress,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                refundAgentNodeAddress,
+                storage,
+                btcWalletService);
     }
 
 
@@ -64,18 +74,18 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.Tradable toProtoMessage() {
-        return PB.Tradable.newBuilder()
-                .setBuyerAsTakerTrade(PB.BuyerAsTakerTrade.newBuilder()
-                        .setTrade((PB.Trade) super.toProtoMessage()))
+    public protobuf.Tradable toProtoMessage() {
+        return protobuf.Tradable.newBuilder()
+                .setBuyerAsTakerTrade(protobuf.BuyerAsTakerTrade.newBuilder()
+                        .setTrade((protobuf.Trade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(PB.BuyerAsTakerTrade buyerAsTakerTradeProto,
+    public static Tradable fromProto(protobuf.BuyerAsTakerTrade buyerAsTakerTradeProto,
                                      Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
-        PB.Trade proto = buyerAsTakerTradeProto.getTrade();
+        protobuf.Trade proto = buyerAsTakerTradeProto.getTrade();
         return fromProto(new BuyerAsTakerTrade(
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),
@@ -85,6 +95,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                         proto.getTradePrice(),
                         proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null,
                         proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
+                        proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
+                        proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                         storage,
                         btcWalletService),
                 proto,

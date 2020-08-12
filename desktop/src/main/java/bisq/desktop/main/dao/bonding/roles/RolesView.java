@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.util.FormBuilder;
@@ -33,11 +34,9 @@ import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import javax.inject.Inject;
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -46,6 +45,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -96,7 +96,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
         tableView = FormBuilder.addTableViewWithHeader(root, gridRow, Res.get("dao.bond.bondedRoles"), "last");
         createColumns();
         tableView.setItems(sortedList);
-
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
         bondedRoleListChangeListener = c -> updateList();
     }
 
@@ -120,7 +120,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        observableList.setAll(daoFacade.getBondedRoles().stream()
+        observableList.setAll(daoFacade.getAcceptedBondedRoles().stream()
                 .map(bond -> new RolesListItem(bond, daoFacade))
                 .sorted(Comparator.comparing(RolesListItem::getLockupDate).reversed())
                 .collect(Collectors.toList()));
@@ -174,7 +174,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     String link = item.getRole().getLink();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(link, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(link);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(link));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("shared.openURL", link)));
                                     setGraphic(hyperlinkWithIcon);
@@ -244,7 +244,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                 if (item != null && !empty) {
                                     String transactionId = item.getBondedRole().getLockupTxId();
                                     if (transactionId != null) {
-                                        hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                        hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                         hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId, preferences));
                                         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                         setGraphic(hyperlinkWithIcon);

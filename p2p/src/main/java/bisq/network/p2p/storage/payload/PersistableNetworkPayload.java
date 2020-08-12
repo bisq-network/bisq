@@ -21,7 +21,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
 
 /**
  * Marker interface for NetworkPayload which gets persisted in PersistableNetworkPayloadMap.
@@ -33,11 +32,11 @@ import io.bisq.generated.protobuffer.PB;
  */
 public interface PersistableNetworkPayload extends NetworkPayload, PersistablePayload {
 
-    static PersistableNetworkPayload fromProto(PB.PersistableNetworkPayload payload, ProtoResolver resolver) {
+    static PersistableNetworkPayload fromProto(protobuf.PersistableNetworkPayload payload, ProtoResolver resolver) {
         return (PersistableNetworkPayload) resolver.fromProto(payload);
     }
 
-    PB.PersistableNetworkPayload toProtoMessage();
+    protobuf.PersistableNetworkPayload toProtoMessage();
 
     // Hash which will be used as key in the in-memory hashMap
     byte[] getHash();

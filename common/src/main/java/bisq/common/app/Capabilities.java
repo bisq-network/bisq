@@ -17,14 +17,19 @@
 
 package bisq.common.app;
 
+import com.google.common.base.Joiner;
+
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * hold a set of capabilities and offers appropriate comparison methods.
@@ -32,12 +37,17 @@ import lombok.EqualsAndHashCode;
  * @author Florian Reimair
  */
 @EqualsAndHashCode
+@Slf4j
 public class Capabilities {
 
     /**
      * The global set of capabilities, i.e. the capabilities if the local app.
      */
     public static final Capabilities app = new Capabilities();
+
+    // Defines which most recent capability any node need to support.
+    // This helps to clean network from very old inactive but still running nodes.
+    private static final Capability MANDATORY_CAPABILITY = Capability.DAO_STATE;
 
     protected final Set<Capability> capabilities = new HashSet<>();
 
@@ -71,7 +81,7 @@ public class Capabilities {
     }
 
     public void addAll(Capabilities capabilities) {
-        if(capabilities != null)
+        if (capabilities != null)
             this.capabilities.addAll(capabilities.capabilities);
     }
 
@@ -81,6 +91,10 @@ public class Capabilities {
 
     public boolean containsAll(final Capabilities capabilities) {
         return containsAll(capabilities.capabilities);
+    }
+
+    public boolean containsAll(Capability... capabilities) {
+        return this.capabilities.containsAll(Arrays.asList(capabilities));
     }
 
     public boolean isEmpty() {
@@ -95,7 +109,7 @@ public class Capabilities {
      * @return int list of Capability ordinals
      */
     public static List<Integer> toIntList(Capabilities capabilities) {
-        return capabilities.capabilities.stream().map(capability -> capability.ordinal()).sorted().collect(Collectors.toList());
+        return capabilities.capabilities.stream().map(Enum::ordinal).sorted().collect(Collectors.toList());
     }
 
     /**
@@ -107,13 +121,59 @@ public class Capabilities {
     public static Capabilities fromIntList(List<Integer> capabilities) {
         return new Capabilities(capabilities.stream()
                 .filter(integer -> integer < Capability.values().length)
+                .filter(integer -> integer >= 0)
                 .map(integer -> Capability.values()[integer])
                 .collect(Collectors.toSet()));
+    }
+
+    /**
+     *
+     * @param list      Comma separated list of Capability ordinals.
+     * @return Capabilities
+     */
+    public static Capabilities fromStringList(String list) {
+        if (list == null || list.isEmpty())
+            return new Capabilities();
+
+        List<String> entries = List.of(list.replace(" ", "").split(","));
+        List<Integer> capabilitiesList = entries.stream()
+                .map(c -> {
+                    try {
+                        return Integer.parseInt(c);
+                    } catch (Throwable e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return Capabilities.fromIntList(capabilitiesList);
+    }
+
+    /**
+     * @return Converts capabilities to list of ordinals as comma separated strings
+     */
+    public String toStringList() {
+        return Joiner.on(", ").join(Capabilities.toIntList(this));
+    }
+
+    public static boolean hasMandatoryCapability(Capabilities capabilities) {
+        return hasMandatoryCapability(capabilities, MANDATORY_CAPABILITY);
+    }
+
+    public static boolean hasMandatoryCapability(Capabilities capabilities, Capability mandatoryCapability) {
+        return capabilities.capabilities.stream().anyMatch(c -> c == mandatoryCapability);
     }
 
     @Override
     public String toString() {
         return Arrays.toString(Capabilities.toIntList(this).toArray());
+    }
+
+    public String prettyPrint() {
+        return capabilities.stream()
+                .sorted(Comparator.comparingInt(Enum::ordinal))
+                .map(e -> e.name() + " [" + e.ordinal() + "]")
+                .collect(Collectors.joining(", "));
     }
 
     public int size() {

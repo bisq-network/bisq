@@ -17,10 +17,8 @@
 
 package bisq.monitor;
 
-import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.btc.BtcOptionKeys.BASE_CURRENCY_NETWORK;
+import static bisq.common.config.Config.BASE_CURRENCY_NETWORK;
 
 /**
  * Starts a Metric (in its own {@link Thread}), manages its properties and shuts
@@ -119,13 +117,17 @@ public abstract class Metric extends Configurable implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setName("Metric: " + getName());
+        try {
+            Thread.currentThread().setName("Metric: " + getName());
 
-        // execute all the things
-        synchronized (this) {
-            log.info("{} started", getName());
-            execute();
-            log.info("{} done", getName());
+            // execute all the things
+            synchronized (this) {
+                    log.info("{} started", getName());
+                    execute();
+                    log.info("{} done", getName());
+            }
+        } catch(Throwable e) {
+            log.error("A metric misbehaved!", e);
         }
     }
 

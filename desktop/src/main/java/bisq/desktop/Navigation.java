@@ -28,6 +28,8 @@ import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
 
+import javax.inject.Singleton;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
+@Singleton
 public final class Navigation implements PersistedDataHost {
     private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
 
@@ -81,8 +84,7 @@ public final class Navigation implements PersistedDataHost {
             List<Class<? extends View>> viewClasses = persisted.getPath().stream()
                     .map(className -> {
                         try {
-                            //noinspection unchecked
-                            return ((Class<? extends View>) Class.forName(className));
+                            return (Class<? extends View>) Class.forName(className).asSubclass(View.class);
                         } catch (ClassNotFoundException e) {
                             log.warn("Could not find the viewPath class {}; exception: {}", className, e);
                         }
@@ -115,13 +117,12 @@ public final class Navigation implements PersistedDataHost {
             Class<? extends View> viewClass = newPath.get(i);
             temp.add(viewClass);
             if (currentPath == null ||
-                    (currentPath != null &&
-                            currentPath.size() > i &&
+                    (currentPath.size() > i &&
                             viewClass != currentPath.get(i) &&
                             i != newPath.size() - 1)) {
                 ArrayList<Class<? extends View>> temp2 = new ArrayList<>(temp);
                 for (int n = i + 1; n < newPath.size(); n++) {
-                    //noinspection unchecked,unchecked,unchecked
+                    //noinspection unchecked
                     Class<? extends View>[] newTemp = new Class[i + 1];
                     currentPath = ViewPath.to(temp2.toArray(newTemp));
                     navigateTo(currentPath, data);
@@ -140,7 +141,7 @@ public final class Navigation implements PersistedDataHost {
 
     private void queueUpForSave() {
         if (currentPath.tip() != null) {
-            navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toList()));
+            navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toUnmodifiableList()));
         }
         storage.queueUpForSave(navigationPath, 1000);
     }

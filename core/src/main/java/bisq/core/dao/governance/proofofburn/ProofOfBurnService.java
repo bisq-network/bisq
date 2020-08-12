@@ -134,11 +134,11 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
     public Transaction burn(String preImageAsString, long amount) throws InsufficientMoneyException, TxException {
         try {
             // We create a prepared Bsq Tx for the burn amount
-            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTx(Coin.valueOf(amount));
+            Transaction preparedBurnFeeTx = bsqWalletService.getPreparedProofOfBurnTx(Coin.valueOf(amount));
             byte[] hash = getHashFromPreImage(preImageAsString);
             byte[] opReturnData = ProofOfBurnConsensus.getOpReturnData(hash);
             // We add the BTC inputs for the miner fee.
-            final Transaction txWithBtcFee = btcWalletService.completePreparedBurnBsqTx(preparedBurnFeeTx, opReturnData);
+            Transaction txWithBtcFee = btcWalletService.completePreparedBurnBsqTx(preparedBurnFeeTx, opReturnData);
             // We sign the BSQ inputs of the final tx.
             Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
             log.info("Proof of burn tx: " + transaction);
@@ -199,7 +199,9 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
             return Optional.empty();
 
         try {
-            String signatureBase64 = key.signMessage(message);
+            String signatureBase64 = bsqWalletService.isEncrypted()
+                    ? key.signMessage(message, bsqWalletService.getAesKey())
+                    : key.signMessage(message);
             return Optional.of(signatureBase64);
         } catch (Throwable t) {
             log.error(t.toString());

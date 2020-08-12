@@ -23,11 +23,12 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Tuple3;
 
@@ -49,11 +50,12 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
     private final BsqWalletService bsqWalletService;
     private final DaoStateService daoStateService;
     private final BsqFormatter bsqFormatter;
+    private final DaoFacade daoFacade;
 
     // Displaying general BSQ info
     private TextField availableBalanceTextField, verifiedBalanceTextField, availableNonBsqBalanceTextField,
             unverifiedBalanceTextField, lockedForVoteBalanceTextField,
-            lockedInBondsBalanceTextField, unconfirmedChangTextField;
+            lockedInBondsBalanceTextField, unconfirmedChangTextField, reputationBalanceTextField;
 
     // Displaying bond dashboard info
     private TextField lockupAmountTextField, unlockingAmountTextField;
@@ -62,10 +64,12 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
     @Inject
     private BsqBalanceUtil(BsqWalletService bsqWalletService,
                            DaoStateService daoStateService,
-                           BsqFormatter bsqFormatter) {
+                           BsqFormatter bsqFormatter,
+                           DaoFacade daoFacade) {
         this.bsqWalletService = bsqWalletService;
         this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
+        this.daoFacade = daoFacade;
     }
 
 
@@ -125,6 +129,8 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
         availableNonBsqBalanceTextField.setVisible(isNonBsqBalanceAvailable);
         availableNonBsqBalanceTextField.setManaged(isNonBsqBalanceAvailable);
         availableNonBsqBalanceTextField.setText(bsqFormatter.formatBTCWithCode(availableNonBsqBalance.value));
+        String bsqSatoshi = bsqFormatter.formatBSQSatoshisWithCode(daoFacade.getAvailableMerit());
+        reputationBalanceTextField.setText(bsqSatoshi);
     }
 
 
@@ -162,6 +168,8 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
                 Res.get("dao.lockedForVoteBalance"), Layout.FIRST_ROW_DISTANCE).second;
         lockedInBondsBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
                 Res.get("dao.lockedInBonds")).second;
+        reputationBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
+                Res.get("dao.reputationBalance")).second;
         Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
                 Res.get("dao.availableNonBsqBalance"));
         // Match left column

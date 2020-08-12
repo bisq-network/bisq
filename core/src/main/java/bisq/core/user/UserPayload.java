@@ -18,18 +18,17 @@
 package bisq.core.user;
 
 import bisq.core.alert.Alert;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.Mediator;
 import bisq.core.filter.Filter;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.PersistableEnvelope;
-
-import io.bisq.generated.protobuffer.PB;
+import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,7 +46,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Data
 @AllArgsConstructor
-public class UserPayload implements PersistableEnvelope {
+public class UserPayload implements UserThreadMappedPersistableEnvelope {
     @Nullable
     private String accountId;
     @Nullable
@@ -75,15 +74,21 @@ public class UserPayload implements PersistableEnvelope {
     @Nullable
     private List<MarketAlertFilter> marketAlertFilters = new ArrayList<>();
 
+    // Added v1.2.0
+    @Nullable
+    private RefundAgent registeredRefundAgent;
+    @Nullable
+    private List<RefundAgent> acceptedRefundAgents = new ArrayList<>();
+
     public UserPayload() {
     }
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        PB.UserPayload.Builder builder = PB.UserPayload.newBuilder();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        protobuf.UserPayload.Builder builder = protobuf.UserPayload.newBuilder();
         Optional.ofNullable(accountId).ifPresent(e -> builder.setAccountId(accountId));
         Optional.ofNullable(paymentAccounts)
-                .ifPresent(e -> builder.addAllPaymentAccounts(ProtoUtil.collectionToProto(paymentAccounts)));
+                .ifPresent(e -> builder.addAllPaymentAccounts(ProtoUtil.collectionToProto(paymentAccounts, protobuf.PaymentAccount.class)));
         Optional.ofNullable(currentPaymentAccount)
                 .ifPresent(e -> builder.setCurrentPaymentAccount(currentPaymentAccount.toProtoMessage()));
         Optional.ofNullable(acceptedLanguageLocaleCodes)
@@ -97,20 +102,26 @@ public class UserPayload implements PersistableEnvelope {
         Optional.ofNullable(registeredArbitrator)
                 .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
+                .ifPresent(registeredMediator -> builder.setRegisteredMediator(registeredMediator.toProtoMessage().getMediator()));
         Optional.ofNullable(acceptedArbitrators)
                 .ifPresent(e -> builder.addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators,
-                        message -> ((PB.StoragePayload) message).getArbitrator())));
+                        message -> ((protobuf.StoragePayload) message).getArbitrator())));
         Optional.ofNullable(acceptedMediators)
                 .ifPresent(e -> builder.addAllAcceptedMediators(ProtoUtil.collectionToProto(acceptedMediators,
-                        message -> ((PB.StoragePayload) message).getMediator())));
+                        message -> ((protobuf.StoragePayload) message).getMediator())));
         Optional.ofNullable(priceAlertFilter).ifPresent(priceAlertFilter -> builder.setPriceAlertFilter(priceAlertFilter.toProtoMessage()));
         Optional.ofNullable(marketAlertFilters)
-                .ifPresent(e -> builder.addAllMarketAlertFilters(ProtoUtil.collectionToProto(marketAlertFilters)));
-        return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
+                .ifPresent(e -> builder.addAllMarketAlertFilters(ProtoUtil.collectionToProto(marketAlertFilters, protobuf.MarketAlertFilter.class)));
+
+        Optional.ofNullable(registeredRefundAgent)
+                .ifPresent(registeredRefundAgent -> builder.setRegisteredRefundAgent(registeredRefundAgent.toProtoMessage().getRefundAgent()));
+        Optional.ofNullable(acceptedRefundAgents)
+                .ifPresent(e -> builder.addAllAcceptedRefundAgents(ProtoUtil.collectionToProto(acceptedRefundAgents,
+                        message -> ((protobuf.StoragePayload) message).getRefundAgent())));
+        return protobuf.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
-    public static UserPayload fromProto(PB.UserPayload proto, CoreProtoResolver coreProtoResolver) {
+    public static UserPayload fromProto(protobuf.UserPayload proto, CoreProtoResolver coreProtoResolver) {
         return new UserPayload(
                 ProtoUtil.stringOrNullFromProto(proto.getAccountId()),
                 proto.getPaymentAccountsList().isEmpty() ? new HashSet<>() : new HashSet<>(proto.getPaymentAccountsList().stream()
@@ -132,6 +143,11 @@ public class UserPayload implements PersistableEnvelope {
                 PriceAlertFilter.fromProto(proto.getPriceAlertFilter()),
                 proto.getMarketAlertFiltersList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getMarketAlertFiltersList().stream()
                         .map(e -> MarketAlertFilter.fromProto(e, coreProtoResolver))
-                        .collect(Collectors.toSet())));
+                        .collect(Collectors.toSet())),
+                proto.hasRegisteredRefundAgent() ? RefundAgent.fromProto(proto.getRegisteredRefundAgent()) : null,
+                proto.getAcceptedRefundAgentsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedRefundAgentsList().stream()
+                        .map(RefundAgent::fromProto)
+                        .collect(Collectors.toList()))
+        );
     }
 }

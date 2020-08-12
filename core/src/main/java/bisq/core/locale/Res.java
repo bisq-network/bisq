@@ -17,11 +17,10 @@
 
 package bisq.core.locale;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
-
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -46,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class Res {
     public static void setup() {
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
     }
@@ -133,7 +132,7 @@ class UTF8Control extends ResourceBundle.Control {
 
     public ResourceBundle newBundle(String baseName, @NotNull Locale locale, @NotNull String format, ClassLoader loader, boolean reload)
             throws IllegalAccessException, InstantiationException, IOException {
-        // The below is a copy of the default implementation.
+        // Below is a copy of the default implementation.
         final String bundleName = toBundleName(baseName, locale);
         final String resourceName = toResourceName(bundleName, "properties");
         ResourceBundle bundle = null;
@@ -152,7 +151,7 @@ class UTF8Control extends ResourceBundle.Control {
         }
         if (stream != null) {
             try {
-                // Only this line is changed to make it to read properties files as UTF-8.
+                // Only this line is changed to make it read properties files as UTF-8.
                 bundle = new PropertyResourceBundle(new InputStreamReader(stream, "UTF-8"));
             } finally {
                 stream.close();

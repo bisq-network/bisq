@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ApplyFilter extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public ApplyFilter(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -48,7 +48,7 @@ public class ApplyFilter extends TradeTask {
 
             FilterManager filterManager = processModel.getFilterManager();
             if (nodeAddress != null && filterManager.isNodeAddressBanned(nodeAddress)) {
-                failed("Other trader is banned by his node address.\n" +
+                failed("Other trader is banned by their node address.\n" +
                         "tradingPeerNodeAddress=" + nodeAddress);
             } else if (filterManager.isOfferIdBanned(trade.getId())) {
                 failed("Offer ID is banned.\n" +
@@ -60,7 +60,7 @@ public class ApplyFilter extends TradeTask {
                 failed("Payment method is banned.\n" +
                         "Payment method=" + trade.getOffer().getPaymentMethod().getId());
             } else if (filterManager.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
-                failed("Other trader is banned by his trading account data.\n" +
+                failed("Other trader is banned by their trading account data.\n" +
                         "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
             } else if (filterManager.requireUpdateToNewVersionForTrading()) {

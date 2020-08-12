@@ -22,7 +22,7 @@ import bisq.desktop.main.overlays.Overlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Popup<T extends Overlay> extends Overlay<Popup> {
+public class Popup extends Overlay<Popup> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public Popup() {
@@ -41,6 +41,4 @@ public class Popup<T extends Overlay> extends Overlay<Popup> {
     protected void onHidden() {
         PopupManager.onHidden(this);
     }
-
-
 }

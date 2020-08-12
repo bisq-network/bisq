@@ -21,6 +21,8 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import bisq.network.p2p.network.NetworkNode;
 
+import bisq.common.config.Config;
+
 import com.google.inject.Inject;
 
 import javax.inject.Named;
@@ -58,8 +60,8 @@ public class Socks5ProxyProvider {
     private final Socks5Proxy socks5ProxyHttp;
 
     @Inject
-    public Socks5ProxyProvider(@Named(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) String socks5ProxyBtcAddress,
-                               @Named(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) String socks5ProxyHttpAddress) {
+    public Socks5ProxyProvider(@Named(Config.SOCKS_5_PROXY_BTC_ADDRESS) String socks5ProxyBtcAddress,
+                               @Named(Config.SOCKS_5_PROXY_HTTP_ADDRESS) String socks5ProxyHttpAddress) {
         socks5ProxyBtc = getProxyFromAddress(socks5ProxyBtcAddress);
         socks5ProxyHttp = getProxyFromAddress(socks5ProxyHttpAddress);
     }

@@ -22,7 +22,6 @@ import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
 import bisq.core.dao.node.parser.exceptions.BlockHeightNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
-import bisq.core.dao.state.model.blockchain.Tx;
 
 import bisq.common.app.DevEnv;
 
@@ -31,7 +30,6 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 
 import java.util.LinkedList;
-import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +37,7 @@ import javax.annotation.concurrent.Immutable;
 
 /**
  * Parse a rawBlock and creates a block from it with an empty tx list.
- * Iterates all rawTx and if the tx is a a BSQ tx it gets added to the tx list.
+ * Iterates all rawTx and if the tx is a BSQ tx it gets added to the tx list.
  */
 @Slf4j
 @Immutable
@@ -55,7 +53,6 @@ public class BlockParser {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public BlockParser(TxParser txParser,
                        DaoStateService daoStateService) {
@@ -80,7 +77,7 @@ public class BlockParser {
      */
     public Block parseBlock(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
         int blockHeight = rawBlock.getHeight();
-        log.debug("Parse block at height={} ", blockHeight);
+        log.trace("Parse block at height={} ", blockHeight);
 
         validateIfBlockIsConnecting(rawBlock);
 
@@ -101,23 +98,21 @@ public class BlockParser {
 
         // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
-        // Realistically we don't expect more then a few recursive calls.
+        // Realistically we don't expect more than a few recursive calls.
         // There are some blocks with testing such dependency chains like block 130768 where at each iteration only
         // one get resolved.
         // Lately there is a patter with 24 iterations observed
         long startTs = System.currentTimeMillis();
-        List<Tx> txList = block.getTxs();
 
         rawBlock.getRawTxs().forEach(rawTx ->
                 txParser.findTx(rawTx,
                         genesisTxId,
                         genesisBlockHeight,
                         genesisTotalSupply)
-                        .ifPresent(txList::add));
+                        .ifPresent(tx -> daoStateService.onNewTxForLastBlock(block, tx)));
 
-        if (System.currentTimeMillis() - startTs > 0)
-            log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
-                    blockHeight, System.currentTimeMillis() - startTs);
+        log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
+                blockHeight, System.currentTimeMillis() - startTs);
 
         daoStateService.onParseBlockComplete(block);
         return block;

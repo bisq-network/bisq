@@ -25,11 +25,11 @@ import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+
+// This message is sent only to full DAO nodes
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class RepublishGovernanceDataRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
@@ -48,13 +48,13 @@ public final class RepublishGovernanceDataRequest extends NetworkEnvelope implem
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setRepublishGovernanceDataRequest(PB.RepublishGovernanceDataRequest.newBuilder())
+                .setRepublishGovernanceDataRequest(protobuf.RepublishGovernanceDataRequest.newBuilder())
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.RepublishGovernanceDataRequest proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.RepublishGovernanceDataRequest proto, int messageVersion) {
         return new RepublishGovernanceDataRequest(messageVersion);
     }
 
