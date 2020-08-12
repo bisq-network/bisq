@@ -117,6 +117,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     }
 
     @Override
+    @SuppressWarnings({"EmptyMethod"})
     public void start() {
     }
 

@@ -112,12 +112,12 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AssetFeeView(BsqFormatter bsqFormatter,
-                         BsqWalletService bsqWalletService,
-                         BsqValidator bsqValidator,
-                         AssetService assetService,
-                         DaoStateService daoStateService,
-                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
+    public AssetFeeView(BsqFormatter bsqFormatter,
+                        BsqWalletService bsqWalletService,
+                        BsqValidator bsqValidator,
+                        AssetService assetService,
+                        DaoStateService daoStateService,
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;
