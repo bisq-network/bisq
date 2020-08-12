@@ -173,7 +173,9 @@ public class AvoidStandbyModeService {
 
     private File getSoundFile() throws IOException, ResourceNotFoundException {
         File soundFile = new File(config.appDataDir, "prevent-app-nap-silent-sound.aiff");
-        if (!soundFile.exists()) {
+        // We replaced the old file which was 42 MB with a smaller file of 0.8 MB. To enforce replacement we check for
+        // the size...
+        if (!soundFile.exists() || soundFile.length() > 42000000) {
             FileUtil.resourceToFile("prevent-app-nap-silent-sound.aiff", soundFile);
         }
         return soundFile;
