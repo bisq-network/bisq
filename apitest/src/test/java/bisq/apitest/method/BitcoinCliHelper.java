@@ -42,7 +42,7 @@ public final class BitcoinCliHelper {
             BitcoinCli newAddress = new BitcoinCli(config, "getnewaddress").run();
 
             if (newAddress.isError())
-                fail(format("Could generate new bitcoin address:%n%s", newAddress.getErrorMessage()));
+                fail(format("Could not generate new bitcoin address:%n%s", newAddress.getErrorMessage()));
 
             return newAddress.getOutput();
         } catch (IOException | InterruptedException ex) {
