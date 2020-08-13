@@ -33,11 +33,13 @@ public class BitcoinCli extends AbstractLinuxProcess implements LinuxProcess {
     private String commandWithOptions;
     private String output;
     private boolean error;
+    private String errorMessage;
 
     public BitcoinCli(ApiTestConfig config, String command) {
         super("bitcoin-cli", config);
         this.command = command;
         this.error = false;
+        this.errorMessage = null;
     }
 
     public BitcoinCli run() throws IOException, InterruptedException {
@@ -138,6 +140,10 @@ public class BitcoinCli extends AbstractLinuxProcess implements LinuxProcess {
         return error;
     }
 
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
     @Override
     public void start() throws InterruptedException, IOException {
         verifyBitcoinPathsExist(false);
@@ -146,8 +152,17 @@ public class BitcoinCli extends AbstractLinuxProcess implements LinuxProcess {
                 + " -rpcuser=" + config.bitcoinRpcUser
                 + " -rpcpassword=" + config.bitcoinRpcPassword
                 + " " + command;
-        output = new BashCommand(commandWithOptions).run().getOutput();
-        error = output.startsWith("error");
+        BashCommand bashCommand = new BashCommand(commandWithOptions).run();
+
+        error = bashCommand.getExitStatus() != 0;
+        if (error) {
+            errorMessage = bashCommand.getError();
+            if (errorMessage == null || errorMessage.isEmpty())
+                throw new IllegalStateException("bitcoin-cli returned an error without a message");
+
+        } else {
+            output = bashCommand.getOutput();
+        }
     }
 
     @Override

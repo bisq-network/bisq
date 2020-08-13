@@ -20,7 +20,6 @@ package bisq.apitest.method;
 import java.io.IOException;
 
 import static java.lang.String.format;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -40,9 +39,12 @@ public final class BitcoinCliHelper {
 
     public String getNewBtcAddress() {
         try {
-            String newAddress = new BitcoinCli(config, "getnewaddress").run().getOutput();
-            assertNotNull(newAddress);
-            return newAddress;
+            BitcoinCli newAddress = new BitcoinCli(config, "getnewaddress").run();
+
+            if (newAddress.isError())
+                fail(format("Could generate new bitcoin address:%n%s", newAddress.getErrorMessage()));
+
+            return newAddress.getOutput();
         } catch (IOException | InterruptedException ex) {
             fail(ex);
             return null;
@@ -53,9 +55,11 @@ public final class BitcoinCliHelper {
         try {
             String generateToAddressCmd = format("generatetoaddress %d \"%s\"", blocks, address);
             BitcoinCli generateToAddress = new BitcoinCli(config, generateToAddressCmd).run();
-            String[] txids = generateToAddress.getOutputValueAsStringArray();
-            assertNotNull(txids);
-            return txids;
+
+            if (generateToAddress.isError())
+                fail(format("Could not generate bitcoin block(s):%n%s", generateToAddress.getErrorMessage()));
+
+            return generateToAddress.getOutputValueAsStringArray();
         } catch (IOException | InterruptedException ex) {
             fail(ex);
             return null;
@@ -75,9 +79,11 @@ public final class BitcoinCliHelper {
             String sendToAddressCmd = format("sendtoaddress \"%s\" %s \"\" \"\" false",
                     address, amount);
             BitcoinCli sendToAddress = new BitcoinCli(config, sendToAddressCmd).run();
-            String txid = sendToAddress.getOutput();
-            assertNotNull(txid);
-            return txid;
+
+            if (sendToAddress.isError())
+                fail(format("Could not send BTC to address:%n%s", sendToAddress.getErrorMessage()));
+
+            return sendToAddress.getOutput();
         } catch (IOException | InterruptedException ex) {
             fail(ex);
             return null;
