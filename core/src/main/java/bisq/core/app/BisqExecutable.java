@@ -67,7 +67,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected Injector injector;
     protected AppModule module;
     protected Config config;
-    private boolean isShutdown = false;
+    private boolean isShutdownInProgress;
 
     public BisqExecutable(String fullName, String scriptName, String appName, String version) {
         this.fullName = fullName;
@@ -204,47 +204,56 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     // This might need to be overwritten in case the application is not using all modules
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
-        if (isShutdown) // prevent double cleanup
+        log.info("Start graceful shutDown");
+        if (isShutdownInProgress) {
             return;
+        }
 
-        isShutdown = true;
+        isShutdownInProgress = true;
+
+        if (injector == null) {
+            log.warn("Shut down called before injector was created");
+            resultHandler.handleResult();
+            System.exit(0);
+        }
+
         try {
-            if (injector != null) {
-                injector.getInstance(ArbitratorManager.class).shutDown();
-                injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(DaoSetup.class).shutDown();
-                injector.getInstance(OpenOfferManager.class).shutDown(() -> {
-                    log.info("OpenOfferManager shutdown completed");
+            injector.getInstance(ArbitratorManager.class).shutDown();
+            injector.getInstance(TradeManager.class).shutDown();
+            injector.getInstance(DaoSetup.class).shutDown();
+            injector.getInstance(AvoidStandbyModeService.class).shutDown();
+            injector.getInstance(OpenOfferManager.class).shutDown(() -> {
+                log.info("OpenOfferManager shutdown completed");
+
+                injector.getInstance(BtcWalletService.class).shutDown();
+                injector.getInstance(BsqWalletService.class).shutDown();
+
+                // We need to shutdown BitcoinJ before the P2PService as it uses Tor.
+                WalletsSetup walletsSetup = injector.getInstance(WalletsSetup.class);
+                walletsSetup.shutDownComplete.addListener((ov, o, n) -> {
+                    log.info("WalletsSetup shutdown completed");
+
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         log.info("P2PService shutdown completed");
-                        injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            log.info("WalletsSetup shutdown completed");
-                            module.close(injector);
-                            resultHandler.handleResult();
-                            log.info("Graceful shutdown completed. Exiting now.");
-                            System.exit(0);
-                        });
-                        injector.getInstance(WalletsSetup.class).shutDown();
-                        injector.getInstance(BtcWalletService.class).shutDown();
-                        injector.getInstance(BsqWalletService.class).shutDown();
+
+                        module.close(injector);
+                        resultHandler.handleResult();
+                        log.info("Graceful shutdown completed. Exiting now.");
+                        System.exit(0);
                     });
                 });
-                injector.getInstance(AvoidStandbyModeService.class).shutDown();
-                // we wait max 20 sec.
-                UserThread.runAfter(() -> {
-                    log.warn("Timeout triggered resultHandler");
-                    resultHandler.handleResult();
-                    System.exit(0);
-                }, 20);
-            } else {
-                log.warn("injector == null triggered resultHandler");
-                UserThread.runAfter(() -> {
-                    resultHandler.handleResult();
-                    System.exit(0);
-                }, 1);
-            }
+                walletsSetup.shutDown();
+
+            });
+
+            // Wait max 20 sec.
+            UserThread.runAfter(() -> {
+                log.warn("Timeout triggered resultHandler");
+                resultHandler.handleResult();
+                System.exit(0);
+            }, 20);
         } catch (Throwable t) {
-            log.error("App shutdown failed with exception");
+            log.error("App shutdown failed with exception {}", t.toString());
             t.printStackTrace();
             System.exit(1);
         }
