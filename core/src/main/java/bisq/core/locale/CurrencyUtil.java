@@ -131,6 +131,7 @@ public class CurrencyUtil {
         if (DevEnv.isDaoTradingActivated())
             result.add(new CryptoCurrency("BSQ", "BSQ"));
 
+        result.add(new CryptoCurrency("ANKER", "Anker"));
         result.add(new CryptoCurrency("BEAM", "Beam"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
