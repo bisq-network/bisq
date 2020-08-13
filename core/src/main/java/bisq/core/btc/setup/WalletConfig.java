@@ -599,8 +599,6 @@ public class WalletConfig extends AbstractIdleService {
             log.info("PeerGroup stopped");
         } catch (BlockStoreException e) {
             throw new IOException(e);
-        } catch (Throwable t) {
-            log.error(t.toString(), t);
         }
     }
 
