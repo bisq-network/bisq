@@ -173,9 +173,9 @@ public class ApiTestConfig {
                         .ofType(String.class).defaultsTo("localhost");
 
         ArgumentAcceptingOptionSpec<Integer> bitcoinRpcPortOpt =
-                parser.accepts(BITCOIN_RPC_PORT, "Bitcoin Core rpc port")
+                parser.accepts(BITCOIN_RPC_PORT, "Bitcoin Core rpc port (non-default)")
                         .withRequiredArg()
-                        .ofType(Integer.class).defaultsTo(18443);
+                        .ofType(Integer.class).defaultsTo(19443);
 
         ArgumentAcceptingOptionSpec<String> bitcoinRpcUserOpt =
                 parser.accepts(BITCOIN_RPC_USER, "Bitcoin rpc user")

@@ -149,6 +149,7 @@ public class BitcoinCli extends AbstractLinuxProcess implements LinuxProcess {
         verifyBitcoinPathsExist(false);
         verifyBitcoindRunning();
         commandWithOptions = config.bitcoinPath + "/bitcoin-cli -regtest "
+                + " -rpcport=" + config.bitcoinRpcPort
                 + " -rpcuser=" + config.bitcoinRpcUser
                 + " -rpcpassword=" + config.bitcoinRpcPassword
                 + " " + command;
