@@ -22,10 +22,13 @@ import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.DaoKillSwitch;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
@@ -34,8 +37,10 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -97,6 +102,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private final List<WalletTransactionsChangeListener> walletTransactionsChangeListeners = new ArrayList<>();
     private boolean updateBsqWalletTransactionsPending;
+    @Getter
+    private final BsqFormatter bsqFormatter;
 
 
     // balance of non BSQ satoshis
@@ -128,7 +135,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                             UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
                             Preferences preferences,
                             FeeService feeService,
-                            DaoKillSwitch daoKillSwitch) {
+                            DaoKillSwitch daoKillSwitch,
+                            BsqFormatter bsqFormatter) {
         super(walletsSetup,
                 preferences,
                 feeService);
@@ -138,6 +146,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.daoStateService = daoStateService;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.daoKillSwitch = daoKillSwitch;
+        this.bsqFormatter = bsqFormatter;
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBsqWallet();
@@ -737,6 +746,31 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Atomic trade tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Tuple2<Transaction, Coin> prepareAtomicBsqInputs(Coin requiredInput) throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
+
+        var dummyTx = new Transaction(params);
+        var coinSelection = bsqCoinSelector.select(requiredInput, wallet.calculateAllSpendCandidates());
+        coinSelection.gathered.forEach(dummyTx::addInput);
+
+        var change = Coin.ZERO;
+        try {
+            change = bsqCoinSelector.getChange(requiredInput, coinSelection);
+        } catch (InsufficientMoneyException e) {
+            log.error("Missing funds in takerPreparesAtomicBsqInputs");
+            throw new InsufficientBsqException(e.missing);
+        }
+        checkArgument(Restrictions.isAboveDust(change));
+
+//        printTx("takerPreparesAtomicBsqInputs", dummyTx);
+        return new Tuple2<>(dummyTx, change);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Blind vote tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -836,5 +870,47 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     @Override
     protected boolean isDustAttackUtxo(TransactionOutput output) {
         return false;
+    }
+
+    public long getBsqRawInputAmount(List<RawTransactionInput> inputs, DaoFacade daoFacade) {
+        return inputs.stream()
+                .map(rawInput -> {
+                    var tx = getTxFromSerializedTx(rawInput.parentTransaction);
+                    return daoFacade.getUnspentTxOutputs().stream()
+                            .filter(output -> output.getTxId().equals(tx.getHashAsString()))
+                            .filter(output -> output.getIndex() == rawInput.index)
+                            .map(BaseTxOutput::getValue)
+                            .findAny()
+                            .orElse(0L);
+                }).reduce(Long::sum)
+                .orElse(0L);
+    }
+
+    public long getBsqInputAmount(List<TransactionInput> inputs, DaoFacade daoFacade) {
+        return inputs.stream()
+                .map(input -> {
+                    var txId = input.getOutpoint().getHash().toString();
+                    return daoFacade.getUnspentTxOutputs().stream()
+                            .filter(output -> output.getTxId().equals(txId))
+                            .filter(output -> output.getIndex() == input.getOutpoint().getIndex())
+                            .map(BaseTxOutput::getValue)
+                            .findAny()
+                            .orElse(0L);
+                })
+                .reduce(Long::sum)
+                .orElse(0L);
+    }
+
+    public TransactionInput verifyTransactionInput(TransactionInput input, RawTransactionInput rawTransactionInput) {
+        var connectedOutputTx = getTransaction(input.getOutpoint().getHash());
+        checkNotNull(connectedOutputTx);
+        var outPoint1 = input.getOutpoint();
+        var outPoint2 = new TransactionOutPoint(params,
+                rawTransactionInput.index, new Transaction(params, rawTransactionInput.parentTransaction));
+        if (!outPoint1.equals(outPoint2))
+            return null;
+        var dummyTx = new Transaction(params);
+        dummyTx.addInput(connectedOutputTx.getOutput(input.getOutpoint().getIndex()));
+        return dummyTx.getInput(0);
     }
 }

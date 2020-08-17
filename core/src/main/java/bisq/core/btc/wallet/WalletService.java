@@ -479,6 +479,10 @@ public abstract class WalletService {
         return getNumTxOutputsForAddress(address) == 0;
     }
 
+    public boolean isMine(TransactionOutput transactionOutput) {
+        return transactionOutput.isMine(wallet);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Empty complete Wallet
