@@ -20,34 +20,25 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
+import org.knowm.xchange.bitbay.BitbayExchange;
+
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Stub implementation of CoinMarketCap price provider to prevent NullPointerExceptions within legacy clients
- */
 @Component
-class CoinMarketCap extends ExchangeRateProvider {
+class Bitbay extends ExchangeRateProvider {
 
-    public CoinMarketCap() {
-        super("CMC", "coinmarketcap", Duration.ofMinutes(5)); // large data structure, so don't request it too often
+    public Bitbay() {
+        super("BITBAY", "bitbay", Duration.ofMinutes(1));
     }
 
-    /**
-     * Returns a Set with a non existing symbol for the CoinMarketCap price provider.
-     * Price data of CMC provider is not used in the client anymore, except for the last update timestamp.
-     * To prevent a unnecessary warning log in that case we have to pass at least one element.
-     *
-     * @return Empty Set
-     */
     @Override
     public Set<ExchangeRate> doGet() {
-        HashSet<ExchangeRate> exchangeRates = new HashSet<>();
-        exchangeRates.add(new ExchangeRate("NON_EXISTING_SYMBOL", 0, 0L, "CMC"));
-        return exchangeRates;
+        // Supported fiat: EUR, GBP, PLN, USD
+        // Supported alts: DASH, ETH, LTC
+        return doGet(BitbayExchange.class);
     }
 }

@@ -20,34 +20,33 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
+import org.knowm.xchange.luno.LunoExchange;
+
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Stub implementation of CoinMarketCap price provider to prevent NullPointerExceptions within legacy clients
- */
 @Component
-class CoinMarketCap extends ExchangeRateProvider {
+class Luno extends ExchangeRateProvider {
 
-    public CoinMarketCap() {
-        super("CMC", "coinmarketcap", Duration.ofMinutes(5)); // large data structure, so don't request it too often
+    public Luno() {
+        super("LUNO", "luno", Duration.ofMinutes(1));
     }
 
-    /**
-     * Returns a Set with a non existing symbol for the CoinMarketCap price provider.
-     * Price data of CMC provider is not used in the client anymore, except for the last update timestamp.
-     * To prevent a unnecessary warning log in that case we have to pass at least one element.
-     *
-     * @return Empty Set
-     */
     @Override
     public Set<ExchangeRate> doGet() {
-        HashSet<ExchangeRate> exchangeRates = new HashSet<>();
-        exchangeRates.add(new ExchangeRate("NON_EXISTING_SYMBOL", 0, 0L, "CMC"));
-        return exchangeRates;
+        // Supported fiat: IDR (Indonesian rupiah), MYR (Malaysian ringgit),
+        // NGN (Nigerian Naira), ZAR (South African rand)
+        // Supported alts: -
+        return doGet(LunoExchange.class);
+    }
+
+    @Override
+    protected long getMarketDataCallDelay() {
+        // Luno allows only 1 MarketData call per second
+        // (see https://www.luno.com/en/developers/api )
+        return 1000;
     }
 }

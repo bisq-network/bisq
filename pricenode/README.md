@@ -24,7 +24,6 @@ Operating a production pricenode is a valuable service to the Bisq network, and 
 
 To run a pricenode, you will need:
 
-  - [BitcoinAverage API keys](https://bitcoinaverage.com/en/plans). Free plans are fine for local development or personal nodes; paid plans should be used for well-known production nodes.
   - JDK 8 if you want to build and run a node locally.
   - The `tor` binary (e.g. `brew install tor`) if you want to run a hidden service locally.
 
@@ -39,21 +38,6 @@ curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/pricenode/ins
 ```
 
 At the end of the installer script, it should print your Tor onion hostname.
-
-### Setting your BitcoinAverage API keys
-
-Open `/etc/default/bisq-pricenode.env` in a text editor and look for these lines:
-```bash
-BITCOIN_AVG_PUBKEY=foo
-BITCOIN_AVG_PRIVKEY=bar
-```
-
-Add your pubkey and privkey and then reload/restart bisq-pricenode service:
-
-```bash
-systemctl daemon-reload
-systemctl restart bisq-pricenode
-```
 
 ### Test
 
