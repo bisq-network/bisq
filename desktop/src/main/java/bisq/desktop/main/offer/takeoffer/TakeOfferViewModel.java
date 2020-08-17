@@ -484,18 +484,29 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void applyTradeState() {
-        if (trade.isDepositPublished()) {
+        if (trade.isAtomicBsqTrade() && trade.isPayoutPublished()) {
+            if (trade.getProcessModel().getAtomicModel().getVerifiedAtomicTx() != null) {
+                takeOfferSuccess();
+            } else {
+                final String msg = "verified atomic tx must not be null.";
+                DevEnv.logErrorAndThrowIfDevMode(msg);
+            }
+        } else if (trade.isDepositPublished()) {
             if (trade.getDepositTx() != null) {
-                if (takeOfferSucceededHandler != null)
-                    takeOfferSucceededHandler.run();
-
-                showTransactionPublishedScreen.set(true);
-                updateSpinnerInfo();
+                takeOfferSuccess();
             } else {
                 final String msg = "trade.getDepositTx() must not be null.";
                 DevEnv.logErrorAndThrowIfDevMode(msg);
             }
         }
+    }
+
+    private void takeOfferSuccess() {
+        if (takeOfferSucceededHandler != null)
+            takeOfferSucceededHandler.run();
+
+        showTransactionPublishedScreen.set(true);
+        updateSpinnerInfo();
     }
 
     private void updateButtonDisableState() {

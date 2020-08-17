@@ -209,7 +209,12 @@ class TransactionsListItem {
             } else if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
                 TransactionAwareTrade transactionAwareTrade = (TransactionAwareTrade) transactionAwareTradable;
-                if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().equals(txId)) {
+                if (isAtomic(trade)) {
+                    direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.atomicBuy") :
+                            Res.get("funds.tx.direction.atomicSell");
+                    addressString = "";
+                    details = Res.get("funds.tx.atomicTx", tradeId);
+                } else if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().equals(txId)) {
                     details = Res.get("funds.tx.takeOfferFee", tradeId);
                 } else {
                     Offer offer = trade.getOffer();
@@ -283,6 +288,10 @@ class TransactionsListItem {
         }
     }
 
+    private boolean isAtomic(Trade trade) {
+        return trade.getAtomicTxId() != null && trade.getAtomicTxId().equals(txId);
+    }
+
     public void cleanup() {
         btcWalletService.removeTxConfidenceListener(txConfidenceListener);
     }
@@ -343,6 +352,8 @@ class TransactionsListItem {
         return String.valueOf(confirmations);
     }
 
-    public String getMemo() { return memo; }
+    public String getMemo() {
+        return memo;
+    }
 }
 

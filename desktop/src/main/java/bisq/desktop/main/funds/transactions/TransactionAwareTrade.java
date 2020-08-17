@@ -73,9 +73,10 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
         boolean isDelayedPayoutTx = isDelayedPayoutTx(txId);
         boolean isRefundPayoutTx = isRefundPayoutTx(txId);
+        boolean isAtomicTx = isAtomicTx(txId);
 
         return isTakerOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx ||
-                isDisputedPayoutTx || isDelayedPayoutTx || isRefundPayoutTx;
+                isDisputedPayoutTx || isDelayedPayoutTx || isRefundPayoutTx || isAtomicTx;
     }
 
     private boolean isPayoutTx(String txId) {
@@ -172,6 +173,10 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         });
 
         return isRefundTx.get() && isDisputeRelatedToThis.get();
+    }
+
+    private boolean isAtomicTx(String txId) {
+        return (txId.equals(trade.getAtomicTxId()));
     }
 
     @Override

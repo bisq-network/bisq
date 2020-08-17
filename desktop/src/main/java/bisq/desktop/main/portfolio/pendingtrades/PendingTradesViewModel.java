@@ -34,7 +34,6 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
