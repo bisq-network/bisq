@@ -98,6 +98,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private final List<WalletTransactionsChangeListener> walletTransactionsChangeListeners = new ArrayList<>();
     private boolean updateBsqWalletTransactionsPending;
 
+
     // balance of non BSQ satoshis
     @Getter
     private Coin availableNonBsqBalance = Coin.ZERO;
@@ -485,27 +486,52 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
         for (int i = 0; i < tx.getInputs().size(); i++) {
-            TransactionInput txIn = tx.getInputs().get(i);
-            TransactionOutput connectedOutput = txIn.getConnectedOutput();
-            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
-                signTransactionInput(wallet, aesKey, tx, txIn, i);
-                checkScriptSig(tx, txIn, i);
-            }
+            signInput(tx, i);
         }
 
         for (TransactionOutput txo : tx.getOutputs()) {
-            Coin value = txo.getValue();
-            // OpReturn outputs have value 0
-            if (value.isPositive()) {
-                checkArgument(Restrictions.isAboveDust(txo.getValue()),
-                        "An output value is below dust limit. Transaction=" + tx);
-            }
+            verifyNonDustTxo(tx, txo);
         }
 
         checkWalletConsistency(wallet);
         verifyTransaction(tx);
         printTx("BSQ wallet: Signed Tx", tx);
         return tx;
+    }
+
+    public Transaction signInputs(Transaction tx, List<TransactionInput> transactionInputs)
+            throws WalletException, TransactionVerificationException {
+        for (int i = 0; i < tx.getInputs().size(); i++) {
+            if (transactionInputs.contains(tx.getInput(i)))
+                signInput(tx, i);
+        }
+
+        for (TransactionOutput txo : tx.getOutputs()) {
+            verifyNonDustTxo(tx, txo);
+        }
+
+        checkWalletConsistency(wallet);
+        verifyTransaction(tx);
+        printTx("BSQ wallet: Signed Tx", tx);
+        return tx;
+    }
+
+    private void signInput(Transaction tx, int i) throws TransactionVerificationException{
+        TransactionInput txIn = tx.getInputs().get(i);
+        TransactionOutput connectedOutput = txIn.getConnectedOutput();
+        if (connectedOutput != null && connectedOutput.isMine(wallet)) {
+            signTransactionInput(wallet, aesKey, tx, txIn, i);
+            checkScriptSig(tx, txIn, i);
+        }
+    }
+
+    private void verifyNonDustTxo(Transaction tx, TransactionOutput txo) {
+        Coin value = txo.getValue();
+        // OpReturn outputs have value 0
+        if (value.isPositive()) {
+            checkArgument(Restrictions.isAboveDust(txo.getValue()),
+                    "An output value is below dust limit. Transaction=" + tx);
+        }
     }
 
 
