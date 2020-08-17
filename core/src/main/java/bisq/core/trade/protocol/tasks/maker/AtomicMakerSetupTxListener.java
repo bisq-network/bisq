@@ -49,7 +49,7 @@ public class AtomicMakerSetupTxListener extends AtomicSetupTxListener {
             if (atomicModel.getMakerBtcAddress() != null) {
                 walletService = processModel.getBtcWalletService();
                 myAddress = Address.fromBase58(walletService.getParams(), atomicModel.getMakerBtcAddress());
-            } else if (atomicModel.getMakerBsqAddress() != null){
+            } else if (atomicModel.getMakerBsqAddress() != null) {
                 // Listen to BSQ address
                 walletService = processModel.getBsqWalletService();
                 myAddress = Address.fromBase58(walletService.getParams(), atomicModel.getMakerBsqAddress());

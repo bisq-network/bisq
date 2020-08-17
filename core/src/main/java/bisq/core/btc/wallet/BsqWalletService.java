@@ -525,7 +525,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return tx;
     }
 
-    private void signInput(Transaction tx, int i) throws TransactionVerificationException{
+    private void signInput(Transaction tx, int i) throws TransactionVerificationException {
         TransactionInput txIn = tx.getInputs().get(i);
         TransactionOutput connectedOutput = txIn.getConnectedOutput();
         if (connectedOutput != null && connectedOutput.isMine(wallet)) {
@@ -765,7 +765,6 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         }
         checkArgument(Restrictions.isAboveDust(change));
 
-//        printTx("takerPreparesAtomicBsqInputs", dummyTx);
         return new Tuple2<>(dummyTx, change);
     }
 

@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CreateAtomicTxRequest;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -66,7 +65,6 @@ public class AtomicMakerVerifiesTakerInputs extends TradeTask {
             var atomicModel = checkNotNull(processModel.getAtomicModel(), "AtomicModel must not be null");
             atomicModel.updateFromCreateAtomicTxRequest(message);
 
-            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             if (message.getTradePrice() != atomicModel.getTradePrice())
                 failed(Res.get("validation.protocol.badPrice"));
             trade.setTradePrice(message.getTradePrice());

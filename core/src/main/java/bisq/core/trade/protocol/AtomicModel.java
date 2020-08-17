@@ -109,12 +109,6 @@ public class AtomicModel {
             bsqAmountFromVolume(trade.getTradeVolume()).ifPresent(this::setBsqTradeAmount);
         bsqAmountFromVolume(offer.getVolume()).ifPresent(this::setBsqMaxTradeAmount);
         bsqAmountFromVolume(offer.getMinVolume()).ifPresent(this::setBsqMinTradeAmount);
-//            setBsqTradeAmount(
-//                    (Objects.requireNonNull(trade.getTradeVolume()).getMonetary().getValue() + 500_000) / 1_000_000);
-//        setBsqMaxTradeAmount(
-//                (Objects.requireNonNull(offer.getVolume()).getMonetary().getValue() + 500_000) / 1_000_000);
-//        setBsqMinTradeAmount(
-//                (Objects.requireNonNull(offer.getMinVolume()).getMonetary().getValue() + 500_000) / 1_000_000);
         // Atomic trades only allow fixed prices
         var price = offer.isUseMarketBasedPrice() ? 0 : Objects.requireNonNull(offer.getPrice()).getValue();
         setTradePrice(price);

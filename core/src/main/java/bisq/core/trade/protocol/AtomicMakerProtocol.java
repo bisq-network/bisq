@@ -28,7 +28,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 
-public interface AtomicMakerProtocol{
+public interface AtomicMakerProtocol {
     default void handleTakeAtomicRequest(CreateAtomicTxRequest tradeMessage,
                                          NodeAddress sender,
                                          ErrorMessageHandler errorMessageHandler) {
