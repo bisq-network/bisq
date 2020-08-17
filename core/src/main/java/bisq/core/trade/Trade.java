@@ -21,6 +21,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
@@ -171,7 +172,6 @@ public abstract class Trade implements Tradable, Model {
         BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
         // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG
         BUYER_SAW_PAYOUT_TX_IN_NETWORK(Phase.PAYOUT_PUBLISHED),
-
 
         // #################### Phase WITHDRAWN
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
@@ -356,6 +356,10 @@ public abstract class Trade implements Tradable, Model {
     private String counterCurrencyTxId;
     @Getter
     private final ObservableList<ChatMessage> chatMessages = FXCollections.observableArrayList();
+    @Getter
+    @Setter
+    @Nullable
+    private String atomicTxId;
 
     // Transient
     // Immutable
@@ -538,6 +542,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
         Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
+        Optional.ofNullable(atomicTxId).ifPresent(builder::setAtomicTxId);
         return builder.build();
     }
 
@@ -570,6 +575,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setDelayedPayoutTxBytes(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxBytes()));
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
+        trade.setAtomicTxId(ProtoUtil.stringOrNullFromProto(proto.getAtomicTxId()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -592,6 +598,7 @@ public abstract class Trade implements Tradable, Model {
                      BtcWalletService btcWalletService,
                      BsqWalletService bsqWalletService,
                      TradeWalletService tradeWalletService,
+                     WalletsManager walletsManager,
                      DaoFacade daoFacade,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
@@ -613,6 +620,7 @@ public abstract class Trade implements Tradable, Model {
                 btcWalletService,
                 bsqWalletService,
                 tradeWalletService,
+                walletsManager,
                 daoFacade,
                 referralIdService,
                 user,
@@ -1078,6 +1086,11 @@ public abstract class Trade implements Tradable, Model {
         lastRefreshRequestDate = time;
     }
 
+    public boolean isAtomicBsqTrade() {
+        checkNotNull(getOffer(), "Offer must not be null");
+        return getOffer().getPaymentMethod().isAtomic();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1187,6 +1200,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
                 ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
+                ",\n     atomicTxId=" + atomicTxId +
                 "\n}";
     }
 }

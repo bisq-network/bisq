@@ -22,6 +22,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
@@ -84,6 +85,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private BtcWalletService btcWalletService;
     transient private BsqWalletService bsqWalletService;
     transient private TradeWalletService tradeWalletService;
+    transient private WalletsManager walletsManager;
     transient private DaoFacade daoFacade;
     transient private Offer offer;
     transient private User user;
@@ -163,6 +165,10 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
+    // Added in v.1.3.x
+    @Setter
+    private AtomicModel atomicModel = new AtomicModel();
+
     public ProcessModel() {
     }
 
@@ -240,6 +246,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          BtcWalletService walletService,
                                          BsqWalletService bsqWalletService,
                                          TradeWalletService tradeWalletService,
+                                         WalletsManager walletsManager,
                                          DaoFacade daoFacade,
                                          ReferralIdService referralIdService,
                                          User user,
@@ -258,6 +265,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.btcWalletService = walletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
+        this.walletsManager = walletsManager;
         this.daoFacade = daoFacade;
         this.referralIdService = referralIdService;
         this.user = user;

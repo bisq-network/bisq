@@ -20,7 +20,9 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.messages.CreateAtomicTxRequest;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.AtomicMakerProtocol;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.SellerAsMakerProtocol;
 
@@ -111,7 +113,17 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
     }
 
     @Override
-    public void handleTakeOfferRequest(InputsForDepositTxRequest message, NodeAddress taker, ErrorMessageHandler errorMessageHandler) {
+    public void handleTakeOfferRequest(InputsForDepositTxRequest message,
+                                       NodeAddress taker,
+                                       ErrorMessageHandler errorMessageHandler) {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker, errorMessageHandler);
     }
+
+    @Override
+    public void handleTakeAtomicRequest(CreateAtomicTxRequest message,
+                                 NodeAddress taker,
+                                 ErrorMessageHandler errorMessageHandler) {
+        ((AtomicMakerProtocol) tradeProtocol).handleTakeAtomicRequest(message, taker, errorMessageHandler);
+    }
+
 }

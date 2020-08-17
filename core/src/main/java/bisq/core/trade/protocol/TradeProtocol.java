@@ -57,6 +57,8 @@ import javafx.beans.value.ChangeListener;
 
 import java.security.PublicKey;
 
+import org.slf4j.Logger;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -113,7 +115,11 @@ public abstract class TradeProtocol {
         processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
 
         stateChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue.getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED && trade instanceof MakerTrade)
+            if (!(trade instanceof MakerTrade))
+                return;
+            var takerFeePublished = newValue.getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED;
+            var atomicTxPublished = trade.isAtomicBsqTrade() && newValue.getPhase() == Trade.Phase.WITHDRAWN;
+            if (takerFeePublished || atomicTxPublished)
                 processModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
         };
         trade.stateProperty().addListener(stateChangeListener);
@@ -419,5 +425,9 @@ public abstract class TradeProtocol {
                         "about the deposit tx nor saw it in the network. tradeId={}, tradeState={}", trade.getId(), trade.getState());
             }
         }
+    }
+
+    public Logger getLog() {
+        return log;
     }
 }

@@ -58,7 +58,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtocol, MakerProtocol {
+public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtocol, MakerProtocol, AtomicMakerProtocol {
     private final SellerAsMakerTrade sellerAsMakerTrade;
 
 

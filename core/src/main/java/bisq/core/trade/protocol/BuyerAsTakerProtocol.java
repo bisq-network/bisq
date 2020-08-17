@@ -21,6 +21,7 @@ package bisq.core.trade.protocol;
 import bisq.core.offer.Offer;
 import bisq.core.trade.BuyerAsTakerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.CreateAtomicTxResponse;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
@@ -44,6 +45,7 @@ import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSendsDepositTxMessage;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
+import bisq.core.trade.protocol.tasks.taker.AtomicTakerSendsAtomicRequest;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessesInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
@@ -62,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol, TakerProtocol {
+public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol, TakerProtocol, AtomicTakerProtocol {
     private final BuyerAsTakerTrade buyerAsTakerTrade;
 
 
@@ -74,9 +76,11 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         super(trade);
 
         this.buyerAsTakerTrade = trade;
-
         Offer offer = checkNotNull(trade.getOffer());
         processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
+
+        // Atomic trades don't have a deposit tx, return early
+        if (trade.isAtomicBsqTrade()) return;
 
         Trade.Phase phase = trade.getState().getPhase();
         if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
@@ -125,20 +129,24 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 () -> handleTaskRunnerSuccess("takeAvailableOffer"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(
-                TakerVerifyMakerAccount.class,
-                TakerVerifyMakerFeePayment.class,
-                CreateTakerFeeTx.class,
-                BuyerAsTakerCreatesDepositTxInputs.class,
-                TakerSendInputsForDepositTxRequest.class
-        );
-
+        if (trade.isAtomicBsqTrade()) {
+            taskRunner.addTasks(
+                    AtomicTakerSendsAtomicRequest.class
+            );
+        } else {
+            taskRunner.addTasks(
+                    TakerVerifyMakerAccount.class,
+                    TakerVerifyMakerFeePayment.class,
+                    CreateTakerFeeTx.class,
+                    BuyerAsTakerCreatesDepositTxInputs.class,
+                    TakerSendInputsForDepositTxRequest.class
+            );
+        }
         //TODO if peer does get an error he does not respond and all we get is the timeout now knowing why it failed.
         // We should add an error message the peer sends us in such cases.
         startTimeout();
         taskRunner.run();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
@@ -283,6 +291,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof RefreshTradeStateRequest) {
             handle();
+        } else if (tradeMessage instanceof CreateAtomicTxResponse) {
+            handle((CreateAtomicTxResponse) tradeMessage, sender);
         }
     }
 }

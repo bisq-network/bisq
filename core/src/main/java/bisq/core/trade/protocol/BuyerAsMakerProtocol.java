@@ -56,7 +56,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol, MakerProtocol {
+public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol, MakerProtocol, AtomicMakerProtocol {
     private final BuyerAsMakerTrade buyerAsMakerTrade;
 
 
@@ -140,7 +140,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         // get the deposit tx set at MakerSetupDepositTxListener once it is seen in the bitcoin network
         taskRunner.run();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling

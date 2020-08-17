@@ -22,6 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.SellerAsTakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.CreateAtomicTxResponse;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.messages.TradeMessage;
@@ -41,6 +42,7 @@ import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignsDepositTx;
+import bisq.core.trade.protocol.tasks.taker.AtomicTakerSendsAtomicRequest;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessesInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
@@ -59,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtocol, TakerProtocol {
+public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtocol, TakerProtocol, AtomicTakerProtocol {
     private final SellerAsTakerTrade sellerAsTakerTrade;
 
 
@@ -101,14 +103,19 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 () -> handleTaskRunnerSuccess("takeAvailableOffer"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(
-                TakerVerifyMakerAccount.class,
-                TakerVerifyMakerFeePayment.class,
-                CreateTakerFeeTx.class,
-                SellerAsTakerCreatesDepositTxInputs.class,
-                TakerSendInputsForDepositTxRequest.class
-        );
-
+        if (trade.isAtomicBsqTrade()) {
+            taskRunner.addTasks(
+                    AtomicTakerSendsAtomicRequest.class
+            );
+        } else {
+            taskRunner.addTasks(
+                    TakerVerifyMakerAccount.class,
+                    TakerVerifyMakerFeePayment.class,
+                    CreateTakerFeeTx.class,
+                    SellerAsTakerCreatesDepositTxInputs.class,
+                    TakerSendInputsForDepositTxRequest.class
+            );
+        }
         startTimeout();
         taskRunner.run();
     }
@@ -261,6 +268,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
             handle((DelayedPayoutTxSignatureResponse) tradeMessage, sender);
         } else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof CreateAtomicTxResponse) {
+            handle((CreateAtomicTxResponse) tradeMessage, sender);
         }
     }
 }

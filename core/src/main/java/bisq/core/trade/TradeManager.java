@@ -26,6 +26,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -41,6 +42,7 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
+import bisq.core.trade.messages.CreateAtomicTxRequest;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
@@ -117,6 +119,7 @@ public class TradeManager implements PersistedDataHost {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
+    private final WalletsManager walletsManager;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
@@ -158,6 +161,7 @@ public class TradeManager implements PersistedDataHost {
                         BtcWalletService btcWalletService,
                         BsqWalletService bsqWalletService,
                         TradeWalletService tradeWalletService,
+                        WalletsManager walletsManager,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,
                         FailedTradesManager failedTradesManager,
@@ -180,6 +184,7 @@ public class TradeManager implements PersistedDataHost {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
+        this.walletsManager = walletsManager;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
@@ -205,6 +210,8 @@ public class TradeManager implements PersistedDataHost {
             // Handler for incoming initial network_messages from taker
             if (networkEnvelope instanceof InputsForDepositTxRequest) {
                 handlePayDepositRequest((InputsForDepositTxRequest) networkEnvelope, peerNodeAddress);
+            } else if (networkEnvelope instanceof CreateAtomicTxRequest) {
+                handleTakeAtomicRequest((CreateAtomicTxRequest) networkEnvelope, peerNodeAddress);
             }
         });
 
@@ -421,11 +428,64 @@ public class TradeManager implements PersistedDataHost {
         }
     }
 
+
+    private void handleTakeAtomicRequest(CreateAtomicTxRequest createAtomicTxRequest, NodeAddress peer) {
+        log.info("Received CreateAtomicTxRequest from {} with tradeId {} and uid {}",
+                peer, createAtomicTxRequest.getTradeId(), createAtomicTxRequest.getUid());
+
+        try {
+            Validator.nonEmptyStringOf(createAtomicTxRequest.getTradeId());
+        } catch (Throwable t) {
+            log.warn("Invalid createAtomicTxRequest " + createAtomicTxRequest.toString());
+            return;
+        }
+
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(createAtomicTxRequest.getTradeId());
+        if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
+            OpenOffer openOffer = openOfferOptional.get();
+            Offer offer = openOffer.getOffer();
+            openOfferManager.reserveOpenOffer(openOffer);
+            Trade trade;
+            if (offer.isBuyOffer())
+                trade = new BuyerAsMakerTrade(offer,
+                        Coin.valueOf(createAtomicTxRequest.getTxFee()),
+                        Coin.valueOf(createAtomicTxRequest.getTakerFee()),
+                        createAtomicTxRequest.isCurrencyForTakerFeeBtc(),
+                        null,
+                        null,
+                        null,
+                        tradableListStorage,
+                        btcWalletService);
+            else
+                trade = new SellerAsMakerTrade(offer,
+                        Coin.valueOf(createAtomicTxRequest.getTxFee()),
+                        Coin.valueOf(createAtomicTxRequest.getTakerFee()),
+                        createAtomicTxRequest.isCurrencyForTakerFeeBtc(),
+                        null,
+                        null,
+                        null,
+                        tradableListStorage,
+                        btcWalletService);
+
+            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
+                    trade.getProcessModel().getFundsNeededForTradeAsLong());
+            trade.getProcessModel().getAtomicModel().initFromTrade(trade);
+            tradableList.add(trade);
+            ((MakerTrade) trade).handleTakeAtomicRequest(createAtomicTxRequest, peer, errorMessage -> {
+                if (takeOfferRequestErrorMessageHandler != null)
+                    takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+            });
+        } else {
+            log.debug("We received a take offer request but don't have that offer anymore.");
+        }
+    }
+
     private void initTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
         trade.init(p2PService,
                 btcWalletService,
                 bsqWalletService,
                 tradeWalletService,
+                walletsManager,
                 daoFacade,
                 this,
                 openOfferManager,
