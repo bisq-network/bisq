@@ -911,6 +911,7 @@ message PaymentAccountPayload {
         AdvancedCashAccountPayload advanced_cash_account_payload = 26;
         InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
         JapanBankAccountPayload japan_bank_account_payload = 28;
+        AtomicAccountPayload atomic_account_payload = 29;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1034,6 +1035,10 @@ message CryptoCurrencyAccountPayload {
 
 message InstantCryptoCurrencyAccountPayload {
     string address = 1;
+}
+
+message AtomicAccountPayload {
+    string generic_string = 1;
 }
 
 message FasterPaymentsAccountPayload {

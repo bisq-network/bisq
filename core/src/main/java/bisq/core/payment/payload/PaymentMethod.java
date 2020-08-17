@@ -92,6 +92,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String PROMPT_PAY_ID = "PROMPT_PAY";
     public static final String ADVANCED_CASH_ID = "ADVANCED_CASH";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
+    public static final String ATOMIC_ID = "ATOMIC";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -129,6 +130,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
+    public static PaymentMethod ATOMIC;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -192,7 +194,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             // Altcoins
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
             // Altcoins with 1 hour trade period
-            BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
+            BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
+            // BSQ Atomic Trade
+            ATOMIC = new PaymentMethod(ATOMIC_ID, 1, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
     ));
 
     static {
@@ -324,8 +328,16 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         return id.compareTo(other.id);
     }
 
+    public boolean isFiat() {
+        return !isAsset() && !isAtomic();
+    }
+
     public boolean isAsset() {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
+    }
+
+    public boolean isAtomic() {
+        return this.equals(ATOMIC);
     }
 
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod, List<TradeCurrency> tradeCurrencies) {

@@ -23,6 +23,7 @@ import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
+import bisq.core.payment.payload.AtomicAccountPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
@@ -146,6 +147,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return AdvancedCashAccountPayload.fromProto(proto);
                 case INSTANT_CRYPTO_CURRENCY_ACCOUNT_PAYLOAD:
                     return InstantCryptoCurrencyPayload.fromProto(proto);
+                case ATOMIC_ACCOUNT_PAYLOAD:
+                    return AtomicAccountPayload.fromProto(proto);
 
                 // Cannot be deleted as it would break old trade history entries
                 case O_K_PAY_ACCOUNT_PAYLOAD:
