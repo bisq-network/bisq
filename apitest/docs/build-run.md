@@ -50,7 +50,7 @@ To run a single test case:
 
     $ ./gradlew  :apitest:test --tests "bisq.apitest.method.GetBalanceTest" -DrunApiTests=true
 
-To run test cases from an Intellij, add two JVM arguments to your JUnit launchers:
+To run test cases from Intellij, add two JVM arguments to your JUnit launchers:
 
     -DrunApiTests=true -Dlogback.configurationFile=apitest/build/resources/main/logback.xml
 
