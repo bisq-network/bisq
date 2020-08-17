@@ -88,7 +88,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private void fillAndSortPaymentAccounts() {
         if (user.getPaymentAccounts() != null) {
             List<PaymentAccount> list = user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> !paymentAccount.getPaymentMethod().isAsset())
+                    .filter(paymentAccount -> paymentAccount.getPaymentMethod().isFiat())
                     .collect(Collectors.toList());
             paymentAccounts.setAll(list);
             paymentAccounts.sort(Comparator.comparing(PaymentAccount::getAccountName));

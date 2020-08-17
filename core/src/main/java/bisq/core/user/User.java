@@ -19,10 +19,13 @@ package bisq.core.user;
 
 import bisq.core.alert.Alert;
 import bisq.core.filter.Filter;
+import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.LanguageUtil;
+import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
+import bisq.core.payment.AtomicAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -127,7 +130,23 @@ public class User implements PersistedDataHost {
             requestPersistence();
         });
 
+        // TODO(sq): move to some better location
+        addAtomicAccount();
+
         requestPersistence();
+    }
+
+    private void addAtomicAccount() {
+        checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
+        if (userPayload.getPaymentAccounts().stream()
+                .anyMatch(paymentAccount -> paymentAccount instanceof AtomicAccount))
+            return;
+
+        var account = new AtomicAccount();
+        account.init();
+        account.setAccountName(Res.get("ATOMIC"));
+        account.setSingleTradeCurrency(new CryptoCurrency("BSQ", "BSQ"));
+        addPaymentAccount(account);
     }
 
     public void requestPersistence() {
