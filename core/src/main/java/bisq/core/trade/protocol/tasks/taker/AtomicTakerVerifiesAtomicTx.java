@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.taker;
 
+import bisq.core.locale.Res;
 import bisq.core.trade.DonationAddressValidation;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CreateAtomicTxResponse;
@@ -72,9 +73,7 @@ public class AtomicTakerVerifiesAtomicTx extends TradeTask {
             checkArgument(!processModel.getOffer().isMyOffer(processModel.getKeyRing()), "must not take own offer");
             var isBuyer = !processModel.getOffer().isBuyOffer();
 
-            if (!(processModel.getTradeMessage() instanceof CreateAtomicTxResponse))
-                failed("Expected CreateAtomicTxResponse");
-
+            checkArgument(processModel.getTradeMessage() instanceof CreateAtomicTxResponse);
 
             var serializedAtomicTx = ((CreateAtomicTxResponse) processModel.getTradeMessage()).getAtomicTx();
             var atomicTx = processModel.getBtcWalletService().getTxFromSerializedTx(serializedAtomicTx);
@@ -91,22 +90,22 @@ public class AtomicTakerVerifiesAtomicTx extends TradeTask {
                 var verifiedInput = processModel.getBsqWalletService().verifyTransactionInput(
                         atomicTx.getInput(inputIndex), rawInput);
                 if (verifiedInput == null)
-                    failed("Taker BSQ input mismatch");
+                    failed(Res.get("validation.protocol.badBsqInput"));
                 atomicTxInputs.add(verifiedInput);
                 inputIndex++;
                 if (inputIndex > inputsSize)
-                    failed("Not enough inputs");
+                    failed(Res.get("validation.protocol.missngInputs"));
             }
             if (atomicModel.getRawTakerBtcInputs() != null) {
                 for (var rawInput : atomicModel.getRawTakerBtcInputs()) {
                     var verifiedInput = processModel.getTradeWalletService().verifyTransactionInput(
                             atomicTx.getInput(inputIndex), rawInput);
                     if (verifiedInput == null)
-                        failed("Taker BTC input mismatch");
+                        failed(Res.get("validation.protocol.badBtcInput"));
                     atomicTxInputs.add(verifiedInput);
                     inputIndex++;
                     if (inputIndex > inputsSize)
-                        failed("Not enough inputs");
+                        failed(Res.get("validation.protocol.missngInputs"));
                 }
             }
             List<TransactionInput> makerInputs = new ArrayList<>();
@@ -120,7 +119,7 @@ public class AtomicTakerVerifiesAtomicTx extends TradeTask {
 
             // Verify makerInputs are not mine
             if (makerInputs.stream().anyMatch(this::isMine))
-                failed("Maker input must not me mine");
+                failed(Res.get("validation.protocol.badOwnerInput"));
 
             var makerBsqInputAmount =
                     processModel.getBsqWalletService().getBsqInputAmount(makerInputs, processModel.getDaoFacade());
@@ -138,7 +137,7 @@ public class AtomicTakerVerifiesAtomicTx extends TradeTask {
             var bsqInputAmount = processModel.getBsqWalletService().getBsqInputAmount(
                     atomicTx.getInputs(), processModel.getDaoFacade());
             if (expectedBsqTradeFeeAmount + expectedTakerBsqOutAmount + expectedMakerBsqOutAmount != bsqInputAmount)
-                failed("Unexpected BSQ input amount");
+                failed(Res.get("validation.protocol.badBsqInputAmount"));
 
             var takerBtcOutputIndex = 0;
             if (expectedMakerBsqOutAmount > 0)
@@ -152,9 +151,9 @@ public class AtomicTakerVerifiesAtomicTx extends TradeTask {
                 var takerBsqOutputAddress = processModel.getBsqWalletService().getBsqFormatter().
                         getBsqAddressStringFromAddress(takerBsqOutputAddressInBtcFormat);
                 if (!takerBsqOutputAddress.equals(atomicModel.getTakerBsqAddress()))
-                    failed("Taker BSQ address mismatch");
+                    failed(Res.get("validation.protocol.badTakerBsqAddress"));
                 if (expectedTakerBsqOutAmount != takerBsqOutput.getValue().getValue())
-                    failed("Taker BSQ amount mismatch");
+                    failed(Res.get("validation.protocol.badTakerBsqAmount"));
             }
 
             // Verify taker BTC output (vout index depends on the number of BSQ outputs, as calculated above)
@@ -162,16 +161,16 @@ public class AtomicTakerVerifiesAtomicTx extends TradeTask {
             var takerBtcOutputAddress = Objects.requireNonNull(takerBtcOutput.getAddressFromP2PKHScript(
                     processModel.getBtcWalletService().getParams())).toString();
             if (!takerBtcOutputAddress.equals(atomicModel.getTakerBtcAddress()))
-                failed("Taker BTC output address mismatch");
+                failed(Res.get("validation.protocol.badTakerBtcAddress"));
             if (expectedTakerBtcAmount != takerBtcOutput.getValue().getValue())
-                failed("Taker BTC output amount mismatch");
+                failed("validation.protocol.badTakerBtcAmount");
 
             if (expectedBtcTradeFee > 0) {
                 var tradeFeeOutput = atomicTx.getOutput(outputsSize - 1);
                 DonationAddressValidation.validateDonationAddress(tradeFeeOutput, atomicTx, processModel.getDaoFacade(),
                         processModel.getBtcWalletService());
                 if (expectedBtcTradeFee != tradeFeeOutput.getValue().getValue())
-                    failed("Unexpected trade fee amount");
+                    failed(Res.get("validation.protocol.badTradeFeeAmount"));
             }
 
             atomicModel.setVerifiedAtomicTx(atomicTx);

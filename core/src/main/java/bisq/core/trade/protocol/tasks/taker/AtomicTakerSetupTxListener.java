@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.taker;
 
+import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.AtomicSetupTxListener;
 
@@ -53,7 +54,7 @@ public class AtomicTakerSetupTxListener extends AtomicSetupTxListener {
                 walletService = processModel.getBsqWalletService();
                 myAddress = Address.fromBase58(walletService.getParams(), atomicModel.getTakerBsqAddress());
             } else {
-                failed("No maker address set");
+                failed(Res.get("validation.protocol.missingMakerAddress"));
             }
 
             super.run();

@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CreateAtomicTxRequest;
@@ -59,8 +60,7 @@ public class AtomicMakerVerifiesTakerInputs extends TradeTask {
             checkArgument(processModel.getOffer().isMyOffer(processModel.getKeyRing()), "must process own offer");
             var isBuyer = processModel.getOffer().isBuyOffer();
 
-            if (!(processModel.getTradeMessage() instanceof CreateAtomicTxRequest))
-                failed("Expected CreateAtomicTxRequest");
+            checkArgument(processModel.getTradeMessage() instanceof CreateAtomicTxRequest);
 
             var message = (CreateAtomicTxRequest) processModel.getTradeMessage();
             var atomicModel = checkNotNull(processModel.getAtomicModel(), "AtomicModel must not be null");
@@ -68,7 +68,7 @@ public class AtomicMakerVerifiesTakerInputs extends TradeTask {
 
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             if (message.getTradePrice() != atomicModel.getTradePrice())
-                failed("Unexpected trade price");
+                failed(Res.get("validation.protocol.badPrice"));
             trade.setTradePrice(message.getTradePrice());
             processModel.getTradingPeer().setPubKeyRing(checkNotNull(message.getTakerPubKeyRing()));
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
@@ -76,16 +76,16 @@ public class AtomicMakerVerifiesTakerInputs extends TradeTask {
 
             if (message.getBsqTradeAmount() < atomicModel.getBsqMinTradeAmount() ||
                     message.getBsqTradeAmount() > atomicModel.getBsqMaxTradeAmount())
-                failed("bsqTradeAmount not within range");
+                failed(Res.get("validation.protocol.badBsqRange"));
             if (message.getBtcTradeAmount() < atomicModel.getBtcMinTradeAmount() ||
                     message.getBtcTradeAmount() > atomicModel.getBtcMaxTradeAmount())
-                failed("btcTradeAmount not within range");
+                failed(Res.get("validation.protocol.badBtcRange"));
             if (message.getTakerFee() !=
                     (message.isCurrencyForTakerFeeBtc() ? atomicModel.getBtcTradeFee() : atomicModel.getBsqTradeFee()))
-                failed("Taker fee mismatch");
+                failed(Res.get("validation.protocol.badTakerFee"));
             var bsqAmount = atomicModel.bsqAmountFromVolume(trade.getTradeVolume()).orElse(null);
             if (bsqAmount == null || bsqAmount != message.getBsqTradeAmount())
-                failed("Amounts don't match price");
+                failed(Res.get("validation.protocol.badAmountVsPrice"));
             // TODO verify txFee is reasonable
 
             // Verify taker bsq address
@@ -132,11 +132,11 @@ public class AtomicMakerVerifiesTakerInputs extends TradeTask {
             var bsqIn = takerBsqInputAmount + makerBsqInputAmount;
             var bsqOut = takerBsqOutputAmount + makerBsqOutputAmount;
             if (bsqIn != bsqOut + bsqTradeFee)
-                failed("BSQ in does not match BSQ out");
+                failed(Res.get("validation.protocol.badBsqSum"));
             var btcIn = takerBtcInputAmount + makerBtcInputAmount + bsqTradeFee;
             var btcOut = takerBtcOutputAmount + makerBtcOutputAmount + btcTradeFeeAmount;
             if (btcIn != btcOut + txFee)
-                failed("BTC in does not match BTC out");
+                failed(Res.get("validation.protocol.badBtcSum"));
 
             // Message data is verified as correct, update model with data from message
             atomicModel.setMakerBtcInputs(makerBtcInputs);
