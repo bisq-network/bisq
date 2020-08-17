@@ -44,7 +44,10 @@ public class TxFeeEstimationService {
     public static int TYPICAL_TX_WITH_1_INPUT_SIZE = 260;
     private static int DEPOSIT_TX_SIZE = 320;
     private static int PAYOUT_TX_SIZE = 380;
+    private static int ATOMIC_TX_SIZE = 975;
     private static int BSQ_INPUT_INCREASE = 150;
+    private static int EXTRA_INPUT_INCREASE = 225;
+    private static int EXTRA_OUTPUT_INCREASE = 70;
     private static int MAX_ITERATIONS = 10;
 
     private final FeeService feeService;
@@ -78,6 +81,15 @@ public class TxFeeEstimationService {
                 feeService,
                 btcWalletService,
                 preferences);
+    }
+
+    public Tuple2<Coin, Integer> getEstimatedAtomicFeeAndTxSize(int estimatedInputs, int estimatedOutputs) {
+        var txFeePerByte = feeService.getTxFeePerByte();
+        var extraInputSize = estimatedInputs > 3 ? (estimatedInputs - 3) * EXTRA_INPUT_INCREASE : 0;
+        var extraOutputSize = estimatedOutputs > 4 ? (estimatedOutputs - 4) * EXTRA_OUTPUT_INCREASE : 0;
+        var estimatedSize = ATOMIC_TX_SIZE + extraInputSize + extraOutputSize;
+        var txFee = txFeePerByte.multiply(estimatedSize);
+        return new Tuple2<>(txFee, estimatedSize);
     }
 
     private Tuple2<Coin, Integer> getEstimatedFeeAndTxSize(boolean isTaker,
