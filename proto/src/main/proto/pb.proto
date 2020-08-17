@@ -78,6 +78,9 @@ message NetworkEnvelope {
 
         RefreshTradeStateRequest refresh_trade_state_request = 50;
         TraderSignedWitnessMessage trader_signed_witness_message = 51;
+
+        CreateAtomicTxRequest create_atomic_tx_request = 52;
+        CreateAtomicTxResponse create_atomic_tx_response = 53;
     }
 }
 
@@ -335,6 +338,34 @@ message TraderSignedWitnessMessage {
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
     SignedWitness signed_witness = 4;
+}
+
+// Atomic trade
+
+message CreateAtomicTxRequest {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    PubKeyRing taker_pub_key_ring = 4;
+    int64 bsq_trade_amount = 5;
+    int64 btc_trade_amount = 6;
+    int64 trade_price = 7;
+    int64 tx_fee = 8;
+    int64 taker_fee = 9;
+    bool is_currency_for_taker_fee_btc = 10;
+    int64 taker_bsq_output_value = 11;
+    string taker_bsq_output_address = 12;
+    int64 taker_btc_output_value = 13;
+    string taker_btc_output_address = 14;
+    repeated RawTransactionInput taker_bsq_inputs = 15;
+    repeated RawTransactionInput taker_btc_inputs = 16;
+}
+
+message CreateAtomicTxResponse {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes atomic_tx = 4;
 }
 
 // dispute
@@ -1390,6 +1421,7 @@ message Trade {
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;
     int64 last_refresh_request_date = 36;
+    string atomic_tx_id = 37;
 }
 
 message BuyerAsMakerTrade {
