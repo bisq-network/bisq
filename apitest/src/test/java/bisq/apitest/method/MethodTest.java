@@ -84,6 +84,5 @@ public class MethodTest extends ApiTestCase {
                 .findFirst()
                 .get()
                 .getAddress();
-
     }
 }

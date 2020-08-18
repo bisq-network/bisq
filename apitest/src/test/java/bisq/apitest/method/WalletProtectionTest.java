@@ -87,7 +87,6 @@ public class WalletProtectionTest extends MethodTest {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 grpcStubs.walletsService.lockWallet(request));
         assertEquals("UNKNOWN: wallet is already locked", exception.getMessage());
-
     }
 
     @Test
@@ -128,7 +127,6 @@ public class WalletProtectionTest extends MethodTest {
         grpcStubs.walletsService.removeWalletPassword(request);
         getBalance(); // should not throw 'wallet locked' exception
     }
-
 
     @AfterAll
     public static void tearDown() {
