@@ -17,6 +17,8 @@
 
 package bisq.apitest.config;
 
+import bisq.common.config.CompositeOptionSet;
+
 import joptsimple.AbstractOptionSpec;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.HelpFormatter;
