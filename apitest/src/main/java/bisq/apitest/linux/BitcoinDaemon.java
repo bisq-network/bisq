@@ -109,6 +109,7 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
 
             log.info("Stopped");
         } catch (InterruptedException ignored) {
+            // empty
         } catch (IOException e) {
             this.shutdownExceptions.add(new IllegalStateException("Error shutting down bitcoind.", e));
         }

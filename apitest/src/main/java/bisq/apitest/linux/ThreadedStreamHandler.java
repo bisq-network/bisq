@@ -80,6 +80,7 @@ class ThreadedStreamHandler extends Thread {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException ignored) {
+            // empty
         }
     }
 

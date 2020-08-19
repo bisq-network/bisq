@@ -188,6 +188,7 @@ public class Scaffold {
                             firstException = Optional.of(p.getShutdownExceptions().get(0));
                     }
                 } catch (InterruptedException ignored) {
+                    // empty
                 }
             }
         }

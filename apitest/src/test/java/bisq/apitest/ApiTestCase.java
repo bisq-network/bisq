@@ -88,6 +88,7 @@ public class ApiTestCase {
         try {
             MILLISECONDS.sleep(ms);
         } catch (InterruptedException ignored) {
+            // empty
         }
     }
 }
