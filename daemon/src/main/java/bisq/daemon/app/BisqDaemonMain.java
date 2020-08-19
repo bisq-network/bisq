@@ -20,7 +20,6 @@ package bisq.daemon.app;
 import bisq.core.app.BisqHeadlessAppMain;
 import bisq.core.app.BisqSetup;
 import bisq.core.app.CoreModule;
-import bisq.core.grpc.GrpcServer;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
@@ -33,10 +32,14 @@ import java.util.concurrent.ThreadFactory;
 
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import bisq.daemon.grpc.GrpcServer;
+
 @Slf4j
 public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.BisqSetupListener {
 
-    public static void main(String[] args)  {
+    public static void main(String[] args) {
         new BisqDaemonMain().execute(args);
     }
 

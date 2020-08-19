@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.daemon.grpc;
 
 import io.grpc.Metadata;
 import io.grpc.ServerCall;

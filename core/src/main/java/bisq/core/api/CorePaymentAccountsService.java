@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.core.api;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.FiatCurrency;
@@ -34,7 +34,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CorePaymentAccountsService {
+class CorePaymentAccountsService {
 
     private final Config config;
     private final AccountAgeWitnessService accountAgeWitnessService;

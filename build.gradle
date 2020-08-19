@@ -328,19 +328,6 @@ configure(project(':core')) {
             exclude(module: 'jackson-annotations')
         }
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
-        implementation("io.grpc:grpc-protobuf:$grpcVersion") {
-            exclude(module: 'guava')
-            exclude(module: 'animal-sniffer-annotations')
-        }
-        implementation("io.grpc:grpc-stub:$grpcVersion") {
-            exclude(module: 'guava')
-            exclude(module: 'animal-sniffer-annotations')
-        }
-        compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
-        runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
-            exclude(module: 'guava')
-            exclude(module: 'animal-sniffer-annotations')
-        }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
@@ -543,6 +530,7 @@ configure(project(':daemon')) {
     mainClassName = 'bisq.daemon.app.BisqDaemonMain'
 
     dependencies {
+        compile project(':proto')
         compile project(':core')
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
@@ -551,6 +539,10 @@ configure(project(':daemon')) {
             exclude(module: 'animal-sniffer-annotations')
         }
         implementation("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+            exclude(module: 'animal-sniffer-annotations')
+        }
+        runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
