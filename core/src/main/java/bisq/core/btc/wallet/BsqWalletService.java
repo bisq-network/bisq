@@ -521,7 +521,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
         checkWalletConsistency(wallet);
         verifyTransaction(tx);
-        printTx("BSQ wallet: Signed Tx", tx);
+        // printTx("BSQ wallet: Signed Tx", tx);
         return tx;
     }
 
