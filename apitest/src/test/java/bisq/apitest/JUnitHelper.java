@@ -34,7 +34,11 @@ public class JUnitHelper {
         printTestResults(result);
     }
 
-    public static void printTestResults(Result result) {
+    public static boolean allTestsPassed() {
+        return allPass;
+    }
+
+    private static void printTestResults(Result result) {
         log.info("Total tests: {},  Failed: {},  Ignored: {}",
                 result.getRunCount(),
                 result.getFailureCount(),
@@ -50,9 +54,5 @@ public class JUnitHelper {
                     f.getDescription().getMethodName(),
                     f.getTrace())));
         }
-    }
-
-    public static boolean allTestsPassed() {
-        return allPass;
     }
 }
