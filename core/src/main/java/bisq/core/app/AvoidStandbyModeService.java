@@ -52,6 +52,13 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
+/**
+ * Prevents that Bisq gets hibernated from the OS. On OSX there is a tool called caffeinate but it seems it does not
+ * provide the behaviour we need, thus we use the trick to play a almost silent sound file in a loop. This keeps the
+ * application active even if the OS has moved to hibernate. Hibernating Bisq would cause network degradations and other
+ * resource limitations which would lead to offers not published or if a taker takes an offer that the trade process is
+ * at risk to fail due too slow response time.
+ */
 @Slf4j
 @Singleton
 public class AvoidStandbyModeService {
@@ -88,7 +95,7 @@ public class AvoidStandbyModeService {
 
     private void start() {
         isStopped = false;
-        if (Utilities.isLinux() || Utilities.isOSX()) {
+        if (Utilities.isLinux()) {
             startInhibitor();
         } else {
             new Thread(this::playSilentAudioFile, "AvoidStandbyModeService-thread").start();
@@ -125,7 +132,6 @@ public class AvoidStandbyModeService {
 
     private void stopInhibitor() {
         try {
-            // Cannot toggle off osx caffeinate, but it will shutdown with bisq.
             if (Utilities.isLinux()) {
                 if (!isStopped) {
                     Objects.requireNonNull(stopLinuxInhibitorCountdownLatch).await();
@@ -167,7 +173,9 @@ public class AvoidStandbyModeService {
 
     private File getSoundFile() throws IOException, ResourceNotFoundException {
         File soundFile = new File(config.appDataDir, "prevent-app-nap-silent-sound.aiff");
-        if (!soundFile.exists()) {
+        // We replaced the old file which was 42 MB with a smaller file of 0.8 MB. To enforce replacement we check for
+        // the size...
+        if (!soundFile.exists() || soundFile.length() > 42000000) {
             FileUtil.resourceToFile("prevent-app-nap-silent-sound.aiff", soundFile);
         }
         return soundFile;
@@ -196,7 +204,7 @@ public class AvoidStandbyModeService {
                         ? new String[]{cmd, "--app-id", "Bisq", "--inhibit", "suspend", "--reason", "Avoid Standby", "--inhibit-only"}
                         : new String[]{cmd, "--who", "Bisq", "--what", "sleep", "--why", "Avoid Standby", "--mode", "block", "tail", "-f", "/dev/null"};
             } else {
-                params = Utilities.isOSX() ? new String[]{cmd, "-w", "" + ProcessHandle.current().pid()} : null;
+                params = null;
             }
         } else {
             params = null; // fall back to silent audio file player
@@ -235,7 +243,6 @@ public class AvoidStandbyModeService {
             new ArrayList<>() {{
                 add(gnomeSessionInhibitPathSpec.get()); // On linux, preferred inhibitor is gnome-session-inhibit,
                 add(systemdInhibitPathSpec.get());      // then fall back to systemd-inhibit if it is installed.
-                add(caffeinatePathSec.get());           // On OSX, caffeinate should be installed.
             }};
 
     private final Supplier<Optional<String>> gnomeSessionInhibitPathSpec = () ->
@@ -243,7 +250,4 @@ public class AvoidStandbyModeService {
 
     private final Supplier<Optional<String>> systemdInhibitPathSpec = () ->
             cmdPath.apply(new String[]{"/usr/bin/systemd-inhibit", "/bin/systemd-inhibit"});
-
-    private final Supplier<Optional<String>> caffeinatePathSec = () ->
-            cmdPath.apply(new String[]{"/usr/bin/caffeinate"});
 }

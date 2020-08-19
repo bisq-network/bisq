@@ -285,29 +285,6 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                 });
         votesTableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.stakeAndMerit"));
-        column.setSortable(false);
-        column.setMinWidth(100);
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-                    @Override
-                    public TableCell<VoteListItem, VoteListItem> call(
-                            TableColumn<VoteListItem, VoteListItem> column) {
-                        return new TableCell<>() {
-                            @Override
-                            public void updateItem(final VoteListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getMeritAndStake());
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        votesTableView.getColumns().add(column);
-
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.merit"));
         column.setSortable(false);
         column.setMinWidth(100);
@@ -346,6 +323,29 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getStake());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        votesTableView.getColumns().add(column);
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.stakeAndMerit"));
+        column.setSortable(false);
+        column.setMinWidth(100);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<VoteListItem, VoteListItem> call(
+                            TableColumn<VoteListItem, VoteListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final VoteListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getMeritAndStake());
                                 else
                                     setText("");
                             }
