@@ -83,7 +83,7 @@ public class PriceFeedService {
     private String currencyCode;
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
     private final IntegerProperty updateCounter = new SimpleIntegerProperty(0);
-    private long epochInSecondAtLastRequest;
+    private long epochInMillisAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
     private long retryDelay = 1;
     private long requestTs;
@@ -280,24 +280,8 @@ public class PriceFeedService {
         return updateCounter;
     }
 
-    public Date getLastRequestTimeStampBtcAverage() {
-        return new Date(epochInSecondAtLastRequest);
-    }
-
-    public Date getLastRequestTimeStampPoloniex() {
-        Long ts = timeStampMap.get("btcAverageTs");
-        if (ts != null) {
-            return new Date(ts);
-        } else
-            return new Date();
-    }
-
-    public Date getLastRequestTimeStampCoinmarketcap() {
-        Long ts = timeStampMap.get("coinmarketcapTs");
-        if (ts != null) {
-            return new Date(ts);
-        } else
-            return new Date();
+    public Date getLastRequestTimeStamp() {
+        return new Date(epochInMillisAtLastRequest);
     }
 
     public void applyLatestBisqMarketPrice(Set<TradeStatistics2> tradeStatisticsSet) {
@@ -400,7 +384,12 @@ public class PriceFeedService {
                 UserThread.execute(() -> {
                     checkNotNull(result, "Result must not be null at requestAllPrices");
                     timeStampMap = result.first;
-                    epochInSecondAtLastRequest = timeStampMap.get("btcAverageTs");
+
+                    // Each currency rate has a different timestamp, depending on when
+                    // the pricenode aggregate rate was calculated
+                    // However, the request timestamp is when the pricenode was queried
+                    epochInMillisAtLastRequest = System.currentTimeMillis();
+
                     final Map<String, MarketPrice> priceMap = result.second;
 
                     cache.putAll(priceMap);

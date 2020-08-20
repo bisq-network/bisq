@@ -78,10 +78,8 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         label = addLabel(root, gridRow, Res.get(isBtc ? "setting.about.apisWithFee" : "setting.about.apis"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setHalignment(label, HPos.LEFT);
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders",
-                "BitcoinAverage (https://bitcoinaverage.com)",
-                "Poloniex (https://poloniex.com)",
-                "Coinmarketcap (https://coinmarketcap.com)"));
+        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"),
+                "Bisq Price Index (https://bisq.wiki/Bisq_Price_Index)");
         if (isBtc)
             addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "mempool.space (https://mempool.space)");
 

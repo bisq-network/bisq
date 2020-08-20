@@ -47,6 +47,7 @@ import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
+import bisq.core.provider.price.MarketPrice;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -95,6 +96,7 @@ import javafx.beans.value.ChangeListener;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import java.util.Date;
 import java.util.Locale;
 
 import lombok.Setter;
@@ -512,7 +514,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     private void updateMarketPriceLabel(Label label) {
         if (model.getIsPriceAvailable().get()) {
             if (model.getIsExternallyProvidedPrice().get()) {
-                label.setText(Res.get("mainView.marketPriceWithProvider.label", getPriceProvider()));
+                label.setText(Res.get("mainView.marketPriceWithProvider.label", "Bisq Price Index"));
                 label.setTooltip(new Tooltip(getPriceProviderTooltipString()));
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
@@ -528,22 +530,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     @NotNull
     private String getPriceProviderTooltipString() {
 
-        String res;
-        if (model.getIsFiatCurrencyPriceFeedSelected().get()) {
-            res = Res.get("mainView.marketPrice.tooltip",
-                    "https://bitcoinaverage.com",
-                    "",
-                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
-                    model.getPriceFeedService().getProviderNodeAddress());
-        } else {
-            String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
-            res = Res.get("mainView.marketPrice.tooltip",
-                    "https://poloniex.com",
-                    altcoinExtra,
-                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
-                    model.getPriceFeedService().getProviderNodeAddress());
-        }
-        return res;
+        String selectedCurrencyCode = model.getPriceFeedService().getCurrencyCode();
+        MarketPrice selectedMarketPrice = model.getPriceFeedService().getMarketPrice(selectedCurrencyCode);
+
+        return Res.get("mainView.marketPrice.tooltip",
+                "Bisq Price Index for " + selectedCurrencyCode,
+                "",
+                DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())),
+                model.getPriceFeedService().getProviderNodeAddress());
     }
 
     private VBox createSplashScreen() {
