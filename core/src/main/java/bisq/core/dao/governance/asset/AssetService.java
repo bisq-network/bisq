@@ -238,6 +238,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Get the trade volume from lookupDate until current date
     private long getTradeVolume(long lookupDate, @Nullable List<TradeAmountDateTuple> tradeAmountDateTupleList) {
         if (tradeAmountDateTupleList == null) {
             // Was never traded
