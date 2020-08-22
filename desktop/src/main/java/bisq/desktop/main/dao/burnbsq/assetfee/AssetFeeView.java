@@ -290,7 +290,6 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     // We only update on new BSQ blocks and at view activation. We do not update at each trade statistics change as
     // that would cause too much CPU load. The assetService.updateAssetStates() call takes about 22 ms.
     private void updateList() {
-        log.error("updateList");
         // Here we exclude the assets which have been removed by voting. Paying a fee would not change the state.
         List<StatefulAsset> statefulAssets = assetService.getStatefulAssets();
         ObservableList<StatefulAsset> nonRemovedStatefulAssets = FXCollections.observableArrayList(statefulAssets.stream()
