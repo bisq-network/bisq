@@ -32,6 +32,9 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.asset.StatefulAsset;
 import bisq.core.dao.governance.proposal.TxException;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
@@ -39,6 +42,7 @@ import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
@@ -56,7 +60,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import javafx.beans.InvalidationListener;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
@@ -68,6 +71,8 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -77,7 +82,7 @@ import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class AssetFeeView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
+public class AssetFeeView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
     private ComboBox<StatefulAsset> assetComboBox;
     private InputTextField feeAmountInputTextField;
     private TextField trialPeriodTextField;
@@ -88,6 +93,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     private final BsqWalletService bsqWalletService;
     private final BsqValidator bsqValidator;
     private final AssetService assetService;
+    private final DaoStateService daoStateService;
     private final CoinFormatter btcFormatter;
 
     private final ObservableList<AssetListItem> observableList = FXCollections.observableArrayList();
@@ -99,7 +105,6 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     private ChangeListener<String> amountInputTextFieldListener;
     @Nullable
     private StatefulAsset selectedAsset;
-    private InvalidationListener updateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -107,15 +112,17 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AssetFeeView(BsqFormatter bsqFormatter,
-                         BsqWalletService bsqWalletService,
-                         BsqValidator bsqValidator,
-                         AssetService assetService,
-                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
+    public AssetFeeView(BsqFormatter bsqFormatter,
+                        BsqWalletService bsqWalletService,
+                        BsqValidator bsqValidator,
+                        AssetService assetService,
+                        DaoStateService daoStateService,
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;
         this.assetService = assetService;
+        this.daoStateService = daoStateService;
         this.btcFormatter = btcFormatter;
     }
 
@@ -162,8 +169,13 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
-        assetService.getUpdateFlag().addListener(updateListener);
+        daoStateService.addDaoStateListener(this);
+
         bsqWalletService.addBsqBalanceListener(this);
+
+        assetService.updateAssetStates();
+        updateList();
+
         onUpdateAvailableConfirmedBalance(bsqWalletService.getAvailableConfirmedBalance());
 
         payFeeButton.setOnAction((event) -> {
@@ -194,7 +206,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
             }
         });
 
-        updateList();
+
         GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
         updateButtonState();
 
@@ -208,13 +220,15 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         feeAmountInputTextField.textProperty().removeListener(amountInputTextFieldListener);
         feeAmountInputTextField.focusedProperty().removeListener(amountFocusOutListener);
 
-        assetService.getUpdateFlag().removeListener(updateListener);
+        daoStateService.removeDaoStateListener(this);
+
         bsqWalletService.removeBsqBalanceListener(this);
 
         sortedList.comparatorProperty().unbind();
 
         payFeeButton.setOnAction(null);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BsqBalanceListener
@@ -234,6 +248,20 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        // Delay a bit to reduce load at onParseBlockCompleteAfterBatchProcessing event
+        UserThread.runAfter(() -> {
+            assetService.updateAssetStates();
+            updateList();
+        }, 300, TimeUnit.MILLISECONDS);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -248,8 +276,6 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
             trialPeriodTextField.setText(Res.get("dao.burnBsq.assets.days", getDays()));
             updateButtonState();
         };
-
-        updateListener = observable -> updateList();
     }
 
     private void onUpdateAvailableConfirmedBalance(Coin availableConfirmedBalance) {
@@ -261,17 +287,19 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         return getListingFee().value / assetService.getFeePerDay().value;
     }
 
+    // We only update on new BSQ blocks and at view activation. We do not update at each trade statistics change as
+    // that would cause too much CPU load. The assetService.updateAssetStates() call takes about 22 ms.
     private void updateList() {
         // Here we exclude the assets which have been removed by voting. Paying a fee would not change the state.
-        ObservableList<StatefulAsset> nonRemovedStatefulAssets = FXCollections.observableArrayList(assetService.getStatefulAssets().stream()
+        List<StatefulAsset> statefulAssets = assetService.getStatefulAssets();
+        ObservableList<StatefulAsset> nonRemovedStatefulAssets = FXCollections.observableArrayList(statefulAssets.stream()
                 .filter(e -> !e.wasRemovedByVoting())
                 .collect(Collectors.toList()));
         assetComboBox.setItems(nonRemovedStatefulAssets);
 
-        // In the table we want to show all.
-        observableList.setAll(assetService.getStatefulAssets().stream()
+        // In the table we want to show all including removed assets.
+        observableList.setAll(statefulAssets.stream()
                 .map(statefulAsset -> new AssetListItem(statefulAsset, bsqFormatter))
-                /*.sorted(Comparator.comparing(AssetListItem::getNameAndCode))*/
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
     }

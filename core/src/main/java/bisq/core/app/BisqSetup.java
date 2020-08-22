@@ -31,7 +31,6 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetup;
-import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
@@ -58,7 +57,6 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeTxException;
-import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -183,8 +181,6 @@ public class BisqSetup {
     private final PriceAlert priceAlert;
     private final MarketAlerts marketAlerts;
     private final VoteResultService voteResultService;
-    private final AssetTradeActivityCheck tradeActivityCheck;
-    private final AssetService assetService;
     private final TorSetup torSetup;
     private final TradeLimits tradeLimits;
     private final CoinFormatter formatter;
@@ -275,8 +271,6 @@ public class BisqSetup {
                      PriceAlert priceAlert,
                      MarketAlerts marketAlerts,
                      VoteResultService voteResultService,
-                     AssetTradeActivityCheck tradeActivityCheck,
-                     AssetService assetService,
                      TorSetup torSetup,
                      TradeLimits tradeLimits,
                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
@@ -322,8 +316,6 @@ public class BisqSetup {
         this.priceAlert = priceAlert;
         this.marketAlerts = marketAlerts;
         this.voteResultService = voteResultService;
-        this.tradeActivityCheck = tradeActivityCheck;
-        this.assetService = assetService;
         this.torSetup = torSetup;
         this.tradeLimits = tradeLimits;
         this.formatter = formatter;
@@ -784,9 +776,6 @@ public class BisqSetup {
         }
 
         tradeStatisticsManager.onAllServicesInitialized();
-        tradeActivityCheck.onAllServicesInitialized();
-
-        assetService.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
         signedWitnessService.onAllServicesInitialized();
