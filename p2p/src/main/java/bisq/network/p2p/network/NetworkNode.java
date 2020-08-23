@@ -132,10 +132,8 @@ public abstract class NetworkNode implements MessageListener {
                     }
                     Socket socket = createSocket(peersNodeAddress);
                     long duration = System.currentTimeMillis() - startTs;
-                    if (log.isDebugEnabled()) {
-                        log.debug("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
-                                duration);
-                    }
+                    log.info("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
+                            duration);
 
                     if (duration > CREATE_SOCKET_TIMEOUT)
                         throw new TimeoutException("A timeout occurred when creating a socket.");
