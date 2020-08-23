@@ -19,7 +19,7 @@ BISQ_HOME=/bisq
 BISQ_REPO_URL=https://github.com/bisq-network/bisq
 BISQ_REPO_NAME=bisq
 BISQ_REPO_TAG=master
-BISQ_LATEST_RELEASE=$(curl -s https://api.github.com/repos/bisq-network/bisq/releases/latest|grep tag_name|head -1|cut -d '"' -f4)
+BISQ_LATEST_RELEASE=master
 BISQ_TORHS=pricenode
 
 TOR_PKG="tor"
