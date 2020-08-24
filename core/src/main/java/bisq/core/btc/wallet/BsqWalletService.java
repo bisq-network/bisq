@@ -763,7 +763,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             log.error("Missing funds in takerPreparesAtomicBsqInputs");
             throw new InsufficientBsqException(e.missing);
         }
-        checkArgument(Restrictions.isAboveDust(change));
+        checkArgument(change.isZero() || Restrictions.isAboveDust(change));
 
         return new Tuple2<>(dummyTx, change);
     }
