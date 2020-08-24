@@ -238,7 +238,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 log.debug("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
                         connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
                 receivedBlocks.add(extBlockId);
-                broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null), null);
+                broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
                 listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
             } else {
                 log.debug("We had that message already and do not further broadcast it. extBlockId={}", extBlockId);

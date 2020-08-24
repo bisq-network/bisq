@@ -55,6 +55,11 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void broadcast(BroadcastMessage message,
+                          @Nullable NodeAddress sender) {
+        broadcast(message, sender, null);
+    }
+
+    public void broadcast(BroadcastMessage message,
                           @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener) {
         BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager);
