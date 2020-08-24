@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc.model;
+package bisq.core.api.model;
 
 import bisq.common.Payload;
 
