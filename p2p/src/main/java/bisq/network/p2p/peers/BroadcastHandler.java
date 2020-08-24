@@ -45,7 +45,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class BroadcastHandler implements PeerManager.Listener {
-    private static final long TIMEOUT = 60;
+    // TODO check if that is not too low
+    private static final long BASE_TIMEOUT_MS = 60;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,14 +60,12 @@ public class BroadcastHandler implements PeerManager.Listener {
     }
 
     public interface Listener {
-        @SuppressWarnings({"EmptyMethod", "UnusedParameters"})
         void onBroadcasted(BroadcastMessage message, int numOfCompletedBroadcasts);
 
         void onBroadcastedToFirstPeer(BroadcastMessage message);
 
         void onBroadcastCompleted(BroadcastMessage message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts);
 
-        @SuppressWarnings({"EmptyMethod", "UnusedParameters"})
         void onBroadcastFailed(String errorMessage);
     }
 
@@ -76,7 +75,7 @@ public class BroadcastHandler implements PeerManager.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    public final String uid;
+    private final String uid;
     private final PeerManager peerManager;
     private boolean stopped = false;
     private int numOfCompletedBroadcasts = 0;
@@ -93,11 +92,12 @@ public class BroadcastHandler implements PeerManager.Listener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BroadcastHandler(NetworkNode networkNode, PeerManager peerManager) {
+    BroadcastHandler(NetworkNode networkNode, PeerManager peerManager) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
-        peerManager.addListener(this);
         uid = UUID.randomUUID().toString();
+
+        peerManager.addListener(this);
     }
 
     public void cancel() {
@@ -110,7 +110,9 @@ public class BroadcastHandler implements PeerManager.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, ResultHandler resultHandler,
+    public void broadcast(BroadcastMessage message,
+                          @Nullable NodeAddress sender,
+                          ResultHandler resultHandler,
                           @Nullable Listener listener) {
         this.message = message;
         this.resultHandler = resultHandler;
@@ -118,102 +120,128 @@ public class BroadcastHandler implements PeerManager.Listener {
 
         Set<Connection> connectedPeersSet = networkNode.getConfirmedConnections()
                 .stream()
-                .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
+                .filter(connection -> connection.getPeersNodeAddressOptional().isPresent() &&
+                        !connection.getPeersNodeAddressOptional().get().equals(sender)) // We don't broadcast back to sender
                 .collect(Collectors.toSet());
-        if (!connectedPeersSet.isEmpty()) {
-            numOfCompletedBroadcasts = 0;
 
-            List<Connection> connectedPeersList = new ArrayList<>(connectedPeersSet);
-            Collections.shuffle(connectedPeersList);
-            numPeers = connectedPeersList.size();
-            int delay = 50;
-
-            boolean isDataOwner = (sender != null) && sender.equals(networkNode.getNodeAddress());
-            if (!isDataOwner) {
-                // for not data owner (relay nodes) we send to max. 7 nodes and use a longer delay
-                numPeers = Math.min(7, connectedPeersList.size());
-                delay = 100;
-            }
-
-            long timeoutDelay = TIMEOUT + delay * numPeers;
-            timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
-                String errorMessage = "Timeout: Broadcast did not complete after " + timeoutDelay + " sec.";
-
-                log.debug(errorMessage + "\n\t" +
-                        "numOfPeers=" + numPeers + "\n\t" +
-                        "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
-                        "numOfFailedBroadcasts=" + numOfFailedBroadcasts);
-                onFault(errorMessage, false);
-            }, timeoutDelay);
-
-            log.debug("Broadcast message to {} peers out of {} total connected peers.", numPeers, connectedPeersSet.size());
-            for (int i = 0; i < numPeers; i++) {
-                if (stopped)
-                    break;  // do not continue sending after a timeout or a cancellation
-
-                final long minDelay = (i + 1) * delay;
-                final long maxDelay = (i + 2) * delay;
-                final Connection connection = connectedPeersList.get(i);
-                UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
-            }
-        } else {
+        if (connectedPeersSet.isEmpty()) {
             onFault("Message not broadcasted because we have no available peers yet.\n\t" +
                     "message = " + Utilities.toTruncatedString(message), false);
+            return;
+        }
+
+        numOfCompletedBroadcasts = 0;
+
+        List<Connection> connectedPeersList = new ArrayList<>(connectedPeersSet);
+        Collections.shuffle(connectedPeersList);
+        int delay;
+
+        // If we are the owner of the data we broadcast faster and with higher resilience
+        boolean isDataOwner = sender != null && sender.equals(networkNode.getNodeAddress());
+        if (isDataOwner) {
+            numPeers = connectedPeersList.size();
+            delay = 50;
+        } else {
+            // Relay nodes do not broadcast to all connected nodes
+            numPeers = Math.min(7, connectedPeersList.size());
+            delay = 100;
+        }
+
+        long timeoutDelay = BASE_TIMEOUT_MS + delay * numPeers;
+        timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
+            String errorMessage = "Timeout: Broadcast did not complete after " + timeoutDelay + " sec.";
+
+            log.warn(errorMessage + "\n\t" +
+                    "numOfPeers=" + numPeers + "\n\t" +
+                    "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
+                    "numOfFailedBroadcasts=" + numOfFailedBroadcasts);
+            onFault(errorMessage, true);
+        }, timeoutDelay);
+
+        log.debug("Broadcast message to {} peers out of {} total connected peers.", numPeers, connectedPeersSet.size());
+        for (int i = 0; i < numPeers; i++) {
+            if (stopped)
+                break;  // Do not continue sending after a timeout or a cancellation
+
+            long minDelay = (i + 1) * delay;
+            long maxDelay = (i + 2) * delay;
+            Connection connection = connectedPeersList.get(i);
+            UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
         }
     }
 
     private void sendToPeer(Connection connection, BroadcastMessage message) {
         String errorMessage = "Message not broadcasted because we have stopped the handler already.\n\t" +
                 "message = " + Utilities.toTruncatedString(message);
-        if (!stopped) {
-            if (!connection.isStopped()) {
-                if (connection.noCapabilityRequiredOrCapabilityIsSupported(message)) {
-                    NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-                    SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
-                    Futures.addCallback(future, new FutureCallback<Connection>() {
-                        @Override
-                        public void onSuccess(Connection connection) {
-                            numOfCompletedBroadcasts++;
-                            if (!stopped) {
-                                if (listener != null)
-                                    listener.onBroadcasted(message, numOfCompletedBroadcasts);
 
-                                if (listener != null && numOfCompletedBroadcasts == 1)
-                                    listener.onBroadcastedToFirstPeer(message);
-
-                                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numPeers) {
-                                    if (listener != null)
-                                        listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
-
-                                    cleanup();
-                                    resultHandler.onCompleted(BroadcastHandler.this);
-                                }
-                            } else {
-                                // TODO investigate why that is called very often at seed nodes
-                                onFault("stopped at onSuccess: " + errorMessage, false);
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(@NotNull Throwable throwable) {
-                            numOfFailedBroadcasts++;
-                            if (!stopped) {
-                                log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
-                                        "ErrorMessage=" + throwable.getMessage());
-                                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numPeers)
-                                    onFault("stopped at onFailure: " + errorMessage);
-                            } else {
-                                onFault("stopped at onFailure: " + errorMessage);
-                            }
-                        }
-                    });
-                }
-            } else {
-                onFault("Connection stopped already", false);
-            }
-        } else {
-            onFault("stopped at sendToPeer: " + errorMessage, false);
+        if (stopped) {
+            onFault("Handler stopped already: " + errorMessage, false);
+            return;
         }
+
+        if (connection.isStopped()) {
+            onFault("Connection stopped already.", false);
+            return;
+        }
+
+        if (!connection.noCapabilityRequiredOrCapabilityIsSupported(message)) {
+            onFault("Peer does not support requires capability.", false);
+            return;
+        }
+
+        if (!connection.getPeersNodeAddressOptional().isPresent()) {
+            onFault("Peer node address is not present.", false);
+            return;
+        }
+
+        NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+        SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(Connection connection) {
+                numOfCompletedBroadcasts++;
+
+                if (stopped) {
+                    // TODO investigate why that is called very often at seed nodes
+                    onFault("stopped at onSuccess: " + errorMessage, false);
+                    return;
+                }
+
+                if (listener != null) {
+                    listener.onBroadcasted(message, numOfCompletedBroadcasts);
+
+                    if (numOfCompletedBroadcasts == 1) {
+                        listener.onBroadcastedToFirstPeer(message);
+                    }
+                }
+
+
+                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numPeers) {
+                    if (listener != null) {
+                        listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
+                    }
+
+                    cleanup();
+                    resultHandler.onCompleted(BroadcastHandler.this);
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                numOfFailedBroadcasts++;
+
+                if (stopped) {
+                    onFault("stopped at onFailure: " + errorMessage, true);
+                    return;
+                }
+
+                log.warn("Broadcast to {} failed. ErrorMessage={}", nodeAddress, throwable.getMessage());
+
+                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numPeers) {
+                    onFault("Last broadcast cause a failure: " + errorMessage, true);
+                }
+            }
+        });
     }
 
 
@@ -248,23 +276,20 @@ public class BroadcastHandler implements PeerManager.Listener {
         }
     }
 
-    private void onFault(String errorMessage) {
-        onFault(errorMessage, true);
-    }
-
     private void onFault(String errorMessage, boolean logWarning) {
         cleanup();
 
-        if (logWarning)
+        if (logWarning) {
             log.warn(errorMessage);
-        else
-            log.debug(errorMessage);
+        }
 
-        if (listener != null)
+        if (listener != null) {
             listener.onBroadcastFailed(errorMessage);
 
-        if (listener != null && (numOfCompletedBroadcasts + numOfFailedBroadcasts == numPeers || stopped))
-            listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
+            if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numPeers || stopped) {
+                listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
+            }
+        }
 
         resultHandler.onFault(this);
     }
@@ -282,6 +307,6 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     @Override
     public int hashCode() {
-        return uid != null ? uid.hashCode() : 0;
+        return uid.hashCode();
     }
 }

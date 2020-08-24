@@ -31,7 +31,6 @@ import org.jetbrains.annotations.Nullable;
 public class Broadcaster implements BroadcastHandler.ResultHandler {
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
-
     private final Set<BroadcastHandler> broadcastHandlers = new CopyOnWriteArraySet<>();
 
 
@@ -46,7 +45,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     }
 
     public void shutDown() {
-        broadcastHandlers.stream().forEach(BroadcastHandler::cancel);
+        broadcastHandlers.forEach(BroadcastHandler::cancel);
         broadcastHandlers.clear();
     }
 
@@ -55,7 +54,8 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
+    public void broadcast(BroadcastMessage message,
+                          @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener) {
         BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager);
         broadcastHandler.broadcast(message, sender, this, listener);
