@@ -43,12 +43,12 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
-import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 
+import bisq.common.BisqException;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
@@ -318,15 +318,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             }
         });
 
-        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
-                sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
+        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton,
+                getNavigationSeparator(), sellButton, getNavigationSeparator(),
+                portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
 
-        primaryNav.setAlignment(Pos.CENTER_LEFT);
+        primaryNav.setAlignment(Pos.CENTER);
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButtonWithBadge, getNavigationSpacer(), daoButtonWithBadge);
+        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSeparator(),
+                settingsButton, getNavigationSeparator(), accountButtonWithBadge,
+                getNavigationSeparator(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -341,14 +343,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         priceAndBalance.getStyleClass().add("nav-price-balance");
 
         HBox navPane = new HBox(primaryNav, secondaryNav,
-                priceAndBalance) {{
+                getNavigationSpacer(), priceAndBalance) {{
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 0d);
             setPadding(new Insets(0, 0, 0, 0));
             getStyleClass().add("top-navigation");
         }};
-        navPane.setAlignment(Pos.CENTER);
+        navPane.setAlignment(Pos.CENTER_LEFT);
 
         AnchorPane contentContainer = new AnchorPane() {{
             getStyleClass().add("content-pane");
