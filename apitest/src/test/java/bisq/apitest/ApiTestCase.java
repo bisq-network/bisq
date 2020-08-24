@@ -73,9 +73,9 @@ public class ApiTestCase {
         grpcStubs = new GrpcStubs(alicedaemon, config).init();
     }
 
-    public static void setUpScaffold()
+    public static void setUpScaffold(String[] params)
             throws InterruptedException, ExecutionException, IOException {
-        scaffold = new Scaffold(new String[]{}).setUp();
+        scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
         grpcStubs = new GrpcStubs(alicedaemon, config).init();
     }
