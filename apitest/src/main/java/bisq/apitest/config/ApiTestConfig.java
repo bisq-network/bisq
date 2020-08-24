@@ -112,7 +112,6 @@ public class ApiTestConfig {
     public final String baseBuildResourcesDir;
     public final String baseSrcResourcesDir;
 
-
     // The parser that will be used to parse both cmd line and config file options
     private final OptionParser parser = new OptionParser();
 
@@ -125,8 +124,10 @@ public class ApiTestConfig {
         this.rootProjectDir = isRunningTest
                 ? Paths.get(userDir).getParent().toFile().getAbsolutePath()
                 : Paths.get(userDir).toFile().getAbsolutePath();
-        this.baseBuildResourcesDir = Paths.get(rootProjectDir, "apitest", "build", "resources", "main").toFile().getAbsolutePath();
-        this.baseSrcResourcesDir = Paths.get(rootProjectDir, "apitest", "src", "main", "resources").toFile().getAbsolutePath();
+        this.baseBuildResourcesDir = Paths.get(rootProjectDir, "apitest", "build", "resources", "main")
+                .toFile().getAbsolutePath();
+        this.baseSrcResourcesDir = Paths.get(rootProjectDir, "apitest", "src", "main", "resources")
+                .toFile().getAbsolutePath();
 
         this.defaultConfigFile = absoluteConfigFile(baseBuildResourcesDir, DEFAULT_CONFIG_FILE_NAME);
         this.bitcoinDatadir = Paths.get(baseBuildResourcesDir, "Bitcoin-regtest").toFile().getAbsolutePath();
