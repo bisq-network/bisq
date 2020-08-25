@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.daemon.grpc;
 
-import bisq.core.grpc.model.OfferInfo;
+import bisq.core.api.CoreApi;
+import bisq.core.api.model.OfferInfo;
 import bisq.core.trade.handlers.TransactionResultHandler;
 
 import bisq.proto.grpc.CreateOfferReply;

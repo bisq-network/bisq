@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.core.api;
 
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 
 @Slf4j
-public class CoreOffersService {
+class CoreOffersService {
 
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;

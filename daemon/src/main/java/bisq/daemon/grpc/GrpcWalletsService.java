@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.daemon.grpc;
 
-import bisq.core.grpc.model.AddressBalanceInfo;
+import bisq.core.api.CoreApi;
+import bisq.core.api.model.AddressBalanceInfo;
 
 import bisq.proto.grpc.GetAddressBalanceReply;
 import bisq.proto.grpc.GetAddressBalanceRequest;

@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.core.api;
 
+import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.grpc.model.AddressBalanceInfo;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionConfidence;

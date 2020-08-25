@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.daemon.grpc;
 
+import bisq.core.api.CoreApi;
 import bisq.core.payment.PaymentAccount;
 
 import bisq.proto.grpc.CreatePaymentAccountReply;
@@ -32,7 +33,7 @@ import javax.inject.Inject;
 import java.util.stream.Collectors;
 
 
-public class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImplBase {
+class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImplBase {
 
     private final CoreApi coreApi;
 
