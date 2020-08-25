@@ -534,11 +534,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         String selectedCurrencyCode = model.getPriceFeedService().getCurrencyCode();
         MarketPrice selectedMarketPrice = model.getPriceFeedService().getMarketPrice(selectedCurrencyCode);
-
         return Res.get("mainView.marketPrice.tooltip",
                 "Bisq Price Index for " + selectedCurrencyCode,
                 "",
-                DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())),
+                selectedMarketPrice != null ? DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())) : Res.get("shared.na"),
                 model.getPriceFeedService().getProviderNodeAddress());
     }
 

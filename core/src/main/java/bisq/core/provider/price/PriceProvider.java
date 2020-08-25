@@ -70,7 +70,12 @@ public class PriceProvider extends HttpClientProvider {
                 final double price = (Double) treeMap.get("price");
                 // json uses double for our timestampSec long value...
                 final long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
-                marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
+                if (currencyCode.equals("USDT")) {
+                    addPrice(marketPriceMap, "USDT-O", price, timestampSec);
+                    addPrice(marketPriceMap, "USDT-E", price, timestampSec);
+                    addPrice(marketPriceMap, "L-USDT", price, timestampSec);
+                }
+                addPrice(marketPriceMap, currencyCode, price, timestampSec);
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
@@ -78,6 +83,10 @@ public class PriceProvider extends HttpClientProvider {
 
         });
         return new Tuple2<>(tsMap, marketPriceMap);
+    }
+
+    private void addPrice(Map<String, MarketPrice> marketPriceMap, String currencyCode, double price, long timestampSec) {
+        marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
     }
 
     public String getBaseUrl() {
