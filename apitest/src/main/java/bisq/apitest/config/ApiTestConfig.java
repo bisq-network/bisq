@@ -69,6 +69,7 @@ public class ApiTestConfig {
     static final String SKIP_TESTS = "skipTests";
     static final String SHUTDOWN_AFTER_TESTS = "shutdownAfterTests";
     static final String SUPPORTING_APPS = "supportingApps";
+    static final String ENABLE_BISQ_DEBUGGING = "enableBisqDebugging";
 
     // Default values for certain options
     static final String DEFAULT_CONFIG_FILE_NAME = "apitest.properties";
@@ -99,6 +100,7 @@ public class ApiTestConfig {
     public final boolean skipTests;
     public final boolean shutdownAfterTests;
     public final List<String> supportingApps;
+    public final boolean enableBisqDebugging;
 
     // Immutable system configurations set in the constructor.
     public final String bitcoinDatadir;
@@ -224,6 +226,12 @@ public class ApiTestConfig {
                         .ofType(String.class)
                         .defaultsTo("bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon");
 
+        ArgumentAcceptingOptionSpec<Boolean> enableBisqDebuggingOpt =
+                parser.accepts(ENABLE_BISQ_DEBUGGING,
+                        "Start Bisq apps with remote debug options")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(false);
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -279,6 +287,7 @@ public class ApiTestConfig {
             this.skipTests = options.valueOf(skipTestsOpt);
             this.shutdownAfterTests = options.valueOf(shutdownAfterTestsOpt);
             this.supportingApps = asList(options.valueOf(supportingAppsOpt).split(","));
+            this.enableBisqDebugging = options.valueOf(enableBisqDebuggingOpt);
 
             // Assign values to special-case static fields.
             BASH_PATH_VALUE = bashPath;
