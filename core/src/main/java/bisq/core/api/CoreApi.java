@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.core.api;
 
-import bisq.core.grpc.model.AddressBalanceInfo;
+import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;

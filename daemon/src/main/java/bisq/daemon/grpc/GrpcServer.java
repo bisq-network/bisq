@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.grpc;
+package bisq.daemon.grpc;
 
+import bisq.core.api.CoreApi;
 import bisq.core.trade.statistics.TradeStatistics2;
 
 import bisq.common.config.Config;

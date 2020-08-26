@@ -16,7 +16,7 @@ class CurrencyFormat {
     static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    static final String formatSatoshis(long sats) {
+    static String formatSatoshis(long sats) {
         return BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
     }
 

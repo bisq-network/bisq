@@ -524,3 +524,8 @@
 .jfx-date-picker .left-button, .jfx-date-picker .right-button{
     -fx-background-color: derive(-bs-color-gray-0, -10%);
 }
+
+
+.popup-bg, .notification-popup-bg, .peer-info-popup-bg {
+    -fx-effect: dropshadow(gaussian, -bs-color-gray-fafa, 44, 0, 0, 0);
+}
