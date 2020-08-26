@@ -39,7 +39,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class Broadcaster implements BroadcastHandler.ResultHandler {
-    private static final long BROADCAST_INTERVAL_MS = 1000;
+    private static final long BROADCAST_INTERVAL_MS = 2000;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
