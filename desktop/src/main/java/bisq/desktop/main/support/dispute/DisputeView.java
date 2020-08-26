@@ -235,6 +235,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     if (selectedDisputeClosedPropertyListener != null)
                         selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
                     selectedDispute.setIsClosed(false);
+                    handleOnSelectDispute(selectedDispute);
                 }
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
                 if (selectedDispute != null) {
