@@ -24,6 +24,7 @@ import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -220,15 +221,9 @@ public class BroadcastHandler implements PeerManager.Listener {
                 .collect(Collectors.toList());
     }
 
-    private BundleOfEnvelopes getBundle(List<Broadcaster.BroadcastRequest> broadcastRequests) {
-        return new BundleOfEnvelopes(broadcastRequests.stream()
-                .map(Broadcaster.BroadcastRequest::getMessage)
-                .collect(Collectors.toList()));
-    }
-
     private void sendToPeer(Connection connection, List<Broadcaster.BroadcastRequest> broadcastRequestsForConnection) {
-        BundleOfEnvelopes bundleForConnection = getBundle(broadcastRequestsForConnection);
-        SettableFuture<Connection> future = networkNode.sendMessage(connection, bundleForConnection);
+        NetworkEnvelope networkEnvelope = getNetworkEnvelope(broadcastRequestsForConnection);
+        SettableFuture<Connection> future = networkNode.sendMessage(connection, networkEnvelope);
 
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
@@ -260,6 +255,17 @@ public class BroadcastHandler implements PeerManager.Listener {
                 checkForCompletion();
             }
         });
+    }
+
+    private NetworkEnvelope getNetworkEnvelope(List<Broadcaster.BroadcastRequest> broadcastRequests) {
+        if (broadcastRequests.size() == 1) {
+            // If we only have 1 message we avoid the overhead of the BundleOfEnvelopes and send the message directly
+            return broadcastRequests.get(0).getMessage();
+        } else {
+            return new BundleOfEnvelopes(broadcastRequests.stream()
+                    .map(Broadcaster.BroadcastRequest::getMessage)
+                    .collect(Collectors.toList()));
+        }
     }
 
     private void maybeNotifyListeners(List<Broadcaster.BroadcastRequest> broadcastRequests) {
