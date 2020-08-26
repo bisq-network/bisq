@@ -75,7 +75,7 @@ public class Statistic {
 
         // We log statistics every minute
         UserThread.runPeriodically(() -> {
-            log.error("Network statistics:\n" +
+            log.info("Network statistics:\n" +
                             "totalSentBytes: {} kb;\n" +
                             "numTotalSentMessages/totalSentMessages: {} / {};\n" +
                             "numTotalSentMessagesLastSec/totalSentMessagesPerSec: {} / {};\n" +
