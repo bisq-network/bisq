@@ -58,6 +58,8 @@ public class Statistic {
     private final static LongProperty numTotalReceivedMessages = new SimpleLongProperty(0);
     private final static LongProperty numTotalReceivedMessagesLastSec = new SimpleLongProperty(0);
     private final static DoubleProperty numTotalReceivedMessagesPerSec = new SimpleDoubleProperty(0);
+    private static String totalSentMessagesPerSecString;
+    private static String totalReceivedMessagesPerSecString;
 
     static {
         UserThread.runPeriodically(() -> {
@@ -69,8 +71,14 @@ public class Statistic {
             long passed = (System.currentTimeMillis() - startTime) / 1000;
             numTotalSentMessagesPerSec.set(((double) numTotalSentMessages.get()) / passed);
             numTotalReceivedMessagesPerSec.set(((double) numTotalReceivedMessages.get()) / passed);
-            totalSentMessagesPerSec.clear();
-            totalReceivedMessagesPerSec.clear();
+
+            // We keep totalSentMessagesPerSec in a string so it is available at logging (totalSentMessagesPerSec is reset)
+            totalSentMessagesPerSecString = totalSentMessagesPerSec.toString();
+            totalReceivedMessagesPerSecString = totalReceivedMessagesPerSec.toString();
+
+            // We do not clear the map as the totalSentMessagesPerSec is not thread safe and clearing could lead to null pointers
+            totalSentMessagesPerSec.entrySet().forEach(e -> e.setValue(0));
+            totalReceivedMessagesPerSec.entrySet().forEach(e -> e.setValue(0));
         }, 1);
 
         // We log statistics every minute
@@ -79,15 +87,15 @@ public class Statistic {
                             "totalSentBytes: {} kb;\n" +
                             "numTotalSentMessages/totalSentMessages: {} / {};\n" +
                             "numTotalSentMessagesLastSec/totalSentMessagesPerSec: {} / {};\n" +
-                            "totalReceivedBytes: {} kb" +
+                            "totalReceivedBytes: {} kb\n" +
                             "numTotalReceivedMessages/totalReceivedMessages: {} / {};\n" +
                             "numTotalReceivedMessagesLastSec/totalReceivedMessagesPerSec: {} / {};",
                     totalSentBytes.get() / 1024d,
                     numTotalSentMessages.get(), totalSentMessages,
-                    numTotalSentMessagesLastSec.get(), totalSentMessagesPerSec,
+                    numTotalSentMessagesLastSec.get(), totalSentMessagesPerSecString,
                     totalReceivedBytes.get() / 1024d,
                     numTotalReceivedMessages.get(), totalReceivedMessages,
-                    numTotalReceivedMessagesLastSec.get(), totalReceivedMessagesPerSec);
+                    numTotalReceivedMessagesLastSec.get(), totalReceivedMessagesPerSecString);
         }, 60);
     }
 
