@@ -109,7 +109,8 @@ public class BroadcastHandler implements PeerManager.Listener {
             delay = 100;
         }
 
-        setupTimeoutHandler(broadcastRequests, delay); // todo missing 1 delay if we start with 1
+        setupTimeoutHandler(broadcastRequests, delay);
+
         int iterations = numPeers;
         for (int i = 0; i < iterations; i++) {
             long minDelay = (i + 1) * delay;
