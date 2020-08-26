@@ -81,6 +81,8 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
                           @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener) {
         broadcastRequests.add(new BroadcastRequest(message, sender, listener));
+        log.info("Broadcast requested for {}. We queue it up for next bundled broadcast.",
+                message.getClass().getSimpleName());
 
         if (timer == null) {
             timer = UserThread.runAfter(this::maybeBroadcastBundle, BROADCAST_INTERVAL_MS, TimeUnit.MILLISECONDS);
@@ -89,9 +91,10 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
 
     private void maybeBroadcastBundle() {
         if (!broadcastRequests.isEmpty()) {
+            log.info("Broadcast bundled requests of {} messages", broadcastRequests.size());
             BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
-            broadcastHandler.broadcast(new ArrayList<>(broadcastRequests));
             broadcastHandlers.add(broadcastHandler);
+            broadcastHandler.broadcast(new ArrayList<>(broadcastRequests));
             broadcastRequests.clear();
 
             timer = null;
