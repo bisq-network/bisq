@@ -44,6 +44,10 @@ public final class BundleOfEnvelopes extends NetworkEnvelope implements Extended
         this(new ArrayList<>(), Version.getP2PMessageVersion());
     }
 
+    public BundleOfEnvelopes(List<NetworkEnvelope> envelopes) {
+        this(envelopes, Version.getP2PMessageVersion());
+    }
+
     public void add(NetworkEnvelope networkEnvelope) {
         envelopes.add(networkEnvelope);
     }
@@ -67,7 +71,9 @@ public final class BundleOfEnvelopes extends NetworkEnvelope implements Extended
                 .build();
     }
 
-    public static BundleOfEnvelopes fromProto(protobuf.BundleOfEnvelopes proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static BundleOfEnvelopes fromProto(protobuf.BundleOfEnvelopes proto,
+                                              NetworkProtoResolver resolver,
+                                              int messageVersion) {
         List<NetworkEnvelope> envelopes = proto.getEnvelopesList()
                 .stream()
                 .map(envelope -> {

@@ -37,7 +37,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
-import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
@@ -53,7 +52,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
 
@@ -77,6 +75,7 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -446,7 +445,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     @Override
-    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) { }
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DirectMessages
@@ -463,7 +463,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress, PubKeyRing pubKeyRing, NetworkEnvelope message,
+    private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress,
+                                              PubKeyRing pubKeyRing,
+                                              NetworkEnvelope message,
                                               SendDirectMessageListener sendDirectMessageListener) {
         log.debug("Send encrypted direct message {} to peer {}",
                 message.getClass().getSimpleName(), peersNodeAddress);
@@ -667,41 +669,21 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                     BroadcastHandler.Listener listener = new BroadcastHandler.Listener() {
                         @Override
-                        public void onBroadcasted(BroadcastMessage message, int numOfCompletedBroadcasts) {
+                        public void onSufficientlyBroadcast(List<Broadcaster.BroadcastRequest> broadcastRequests) {
+                            broadcastRequests.stream()
+                                    .filter(broadcastRequest -> broadcastRequest.getMessage() instanceof AddDataMessage)
+                                    .filter(broadcastRequest -> {
+                                        AddDataMessage addDataMessage = (AddDataMessage) broadcastRequest.getMessage();
+                                        return addDataMessage.getProtectedStorageEntry().equals(protectedMailboxStorageEntry);
+                                    })
+                                    .forEach(e -> sendMailboxMessageListener.onStoredInMailbox());
                         }
 
                         @Override
-                        public void onBroadcastedToFirstPeer(BroadcastMessage message) {
-                            // The reason for that check was to separate different callback for different send calls.
-                            // We only want to notify our sendMailboxMessageListener for the calls he is interested in.
-                            if (message instanceof AddDataMessage &&
-                                    ((AddDataMessage) message).getProtectedStorageEntry().equals(protectedMailboxStorageEntry)) {
-                                // We delay a bit to give more time for sufficient propagation in the P2P network.
-                                // This should help to avoid situations where a user closes the app too early and the msg
-                                // does not arrive.
-                                // We could use onBroadcastCompleted instead but it might take too long if one peer
-                                // is very badly connected.
-                                // TODO We could check for a certain threshold of no. of incoming network_messages of the same msg
-                                // to see how well it is propagated. BitcoinJ uses such an approach for tx propagation.
-                                UserThread.runAfter(() -> {
-                                    log.info("Broadcasted to first peer (3 sec. ago):  Message = {}", Utilities.toTruncatedString(message));
-                                    sendMailboxMessageListener.onStoredInMailbox();
-                                }, 3);
-                            }
-                        }
-
-                        @Override
-                        public void onBroadcastCompleted(BroadcastMessage message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts) {
-                            log.info("Broadcast completed: Sent to {} peers (failed: {}). Message = {}",
-                                    numOfCompletedBroadcasts, numOfFailedBroadcasts, Utilities.toTruncatedString(message));
-                            if (numOfCompletedBroadcasts == 0)
-                                sendMailboxMessageListener.onFault("Broadcast completed without any successful broadcast");
-                        }
-
-                        @Override
-                        public void onBroadcastFailed(String errorMessage) {
-                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably
-                            // to the logic from BroadcastHandler.sendToPeer
+                        public void onNotSufficientlyBroadcast(int numOfCompletedBroadcasts, int numOfFailedBroadcast) {
+                            sendMailboxMessageListener.onFault("Message was not sufficiently broadcast.\n" +
+                                    "numOfCompletedBroadcasts: " + numOfCompletedBroadcasts + ".\n" +
+                                    "numOfFailedBroadcast=" + numOfFailedBroadcast);
                         }
                     };
                     boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener);
@@ -714,7 +696,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.error("Unexpected state: adding mailbox message that already exists.");
                     }
                 } catch (CryptoException e) {
-                    log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
+                    log.error("Signing at getMailboxDataWithSignedSeqNr failed.");
                 }
             } else {
                 sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +

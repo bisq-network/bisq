@@ -21,17 +21,31 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
+
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
 
+@Slf4j
 public class Broadcaster implements BroadcastHandler.ResultHandler {
+    private static final long BROADCAST_INTERVAL_MS = 1000;
+
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Set<BroadcastHandler> broadcastHandlers = new CopyOnWriteArraySet<>();
+    private final List<BroadcastRequest> broadcastRequests = new ArrayList<>();
+    private Timer timer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +60,10 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
 
     public void shutDown() {
         broadcastHandlers.forEach(BroadcastHandler::cancel);
-        broadcastHandlers.clear();
+
+        if (timer != null) {
+            timer.stop();
+        }
     }
 
 
@@ -59,12 +76,26 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         broadcast(message, sender, null);
     }
 
+
     public void broadcast(BroadcastMessage message,
                           @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener) {
-        BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager);
-        broadcastHandler.broadcast(message, sender, this, listener);
-        broadcastHandlers.add(broadcastHandler);
+        broadcastRequests.add(new BroadcastRequest(message, sender, listener));
+
+        if (timer == null) {
+            timer = UserThread.runAfter(this::maybeBroadcastBundle, BROADCAST_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void maybeBroadcastBundle() {
+        if (!broadcastRequests.isEmpty()) {
+            BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
+            broadcastHandler.broadcast(new ArrayList<>(broadcastRequests));
+            broadcastHandlers.add(broadcastHandler);
+            broadcastRequests.clear();
+
+            timer = null;
+        }
     }
 
 
@@ -77,8 +108,25 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         broadcastHandlers.remove(broadcastHandler);
     }
 
-    @Override
-    public void onFault(BroadcastHandler broadcastHandler) {
-        broadcastHandlers.remove(broadcastHandler);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BroadcastRequest class
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Value
+    public static class BroadcastRequest {
+        private BroadcastMessage message;
+        @Nullable
+        private NodeAddress sender;
+        @Nullable
+        private BroadcastHandler.Listener listener;
+
+        private BroadcastRequest(BroadcastMessage message,
+                                 @Nullable NodeAddress sender,
+                                 @Nullable BroadcastHandler.Listener listener) {
+            this.message = message;
+            this.sender = sender;
+            this.listener = listener;
+        }
     }
 }
