@@ -20,8 +20,10 @@ package bisq.network.p2p.network;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 
@@ -29,29 +31,96 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Network statistics per connection. As we are also interested in total network statistics
+ * we use static properties to get traffic of all connections combined.
+ */
+@Slf4j
 public class Statistic {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
+    private final static long startTime = System.currentTimeMillis();
     private final static LongProperty totalSentBytes = new SimpleLongProperty(0);
     private final static LongProperty totalReceivedBytes = new SimpleLongProperty(0);
+    private final static Map<String, Integer> totalReceivedMessages = new ConcurrentHashMap<>();
+    private final static Map<String, Integer> totalSentMessages = new ConcurrentHashMap<>();
+    private final static Map<String, Integer> totalReceivedMessagesPerSec = new ConcurrentHashMap<>();
+    private final static Map<String, Integer> totalSentMessagesPerSec = new ConcurrentHashMap<>();
+    private final static LongProperty numTotalSentMessages = new SimpleLongProperty(0);
+    private final static LongProperty numTotalSentMessagesLastSec = new SimpleLongProperty(0);
+    private final static DoubleProperty numTotalSentMessagesPerSec = new SimpleDoubleProperty(0);
+    private final static LongProperty numTotalReceivedMessages = new SimpleLongProperty(0);
+    private final static LongProperty numTotalReceivedMessagesLastSec = new SimpleLongProperty(0);
+    private final static DoubleProperty numTotalReceivedMessagesPerSec = new SimpleDoubleProperty(0);
 
-    public static long getTotalSentBytes() {
-        return totalSentBytes.get();
+    static {
+        UserThread.runPeriodically(() -> {
+            numTotalSentMessages.set(totalSentMessages.values().stream().mapToInt(Integer::intValue).sum());
+            numTotalSentMessagesLastSec.set(totalSentMessagesPerSec.values().stream().mapToInt(Integer::intValue).sum());
+            numTotalReceivedMessages.set(totalReceivedMessages.values().stream().mapToInt(Integer::intValue).sum());
+            numTotalReceivedMessagesLastSec.set(totalReceivedMessagesPerSec.values().stream().mapToInt(Integer::intValue).sum());
+
+            long passed = (System.currentTimeMillis() - startTime) / 1000;
+            numTotalSentMessagesPerSec.set(((double) numTotalSentMessages.get()) / passed);
+            numTotalReceivedMessagesPerSec.set(((double) numTotalReceivedMessages.get()) / passed);
+            totalSentMessagesPerSec.clear();
+            totalReceivedMessagesPerSec.clear();
+        }, 1);
+
+        // We log statistics every minute
+        UserThread.runPeriodically(() -> {
+            log.error("Network statistics:\n" +
+                            "totalSentBytes: {} kb;\n" +
+                            "numTotalSentMessages/totalSentMessages: {} / {};\n" +
+                            "numTotalSentMessagesLastSec/totalSentMessagesPerSec: {} / {};\n" +
+                            "totalReceivedBytes: {} kb" +
+                            "numTotalReceivedMessages/totalReceivedMessages: {} / {};\n" +
+                            "numTotalReceivedMessagesLastSec/totalReceivedMessagesPerSec: {} / {};",
+                    totalSentBytes.get() / 1024d,
+                    numTotalSentMessages.get(), totalSentMessages,
+                    numTotalSentMessagesLastSec.get(), totalSentMessagesPerSec,
+                    totalReceivedBytes.get() / 1024d,
+                    numTotalReceivedMessages.get(), totalReceivedMessages,
+                    numTotalReceivedMessagesLastSec.get(), totalReceivedMessagesPerSec);
+        }, 60);
     }
 
     public static LongProperty totalSentBytesProperty() {
         return totalSentBytes;
     }
 
-    public static long getTotalReceivedBytes() {
-        return totalReceivedBytes.get();
-    }
-
     public static LongProperty totalReceivedBytesProperty() {
         return totalReceivedBytes;
+    }
+
+    public static LongProperty numTotalSentMessagesProperty() {
+        return numTotalSentMessages;
+    }
+
+    public static LongProperty numTotalSentMessagesLastSecProperty() {
+        return numTotalSentMessagesLastSec;
+    }
+
+    public static DoubleProperty numTotalSentMessagesPerSecProperty() {
+        return numTotalSentMessagesPerSec;
+    }
+
+    public static LongProperty numTotalReceivedMessagesProperty() {
+        return numTotalReceivedMessages;
+    }
+
+    public static LongProperty numTotalReceivedMessagesLastSecProperty() {
+        return numTotalReceivedMessagesLastSec;
+    }
+
+    public static DoubleProperty numTotalReceivedMessagesPerSecProperty() {
+        return numTotalReceivedMessagesPerSec;
     }
 
 
@@ -72,7 +141,7 @@ public class Statistic {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Statistic() {
+    Statistic() {
         creationDate = new Date();
     }
 
@@ -80,18 +149,18 @@ public class Statistic {
     // Update, increment
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateLastActivityTimestamp() {
+    void updateLastActivityTimestamp() {
         UserThread.execute(() -> lastActivityTimestamp = System.currentTimeMillis());
     }
 
-    public void addSentBytes(int value) {
+    void addSentBytes(int value) {
         UserThread.execute(() -> {
             sentBytes.set(sentBytes.get() + value);
             totalSentBytes.set(totalSentBytes.get() + value);
         });
     }
 
-    public void addReceivedBytes(int value) {
+    void addReceivedBytes(int value) {
         UserThread.execute(() -> {
             receivedBytes.set(receivedBytes.get() + value);
             totalReceivedBytes.set(totalReceivedBytes.get() + value);
@@ -99,22 +168,46 @@ public class Statistic {
     }
 
     // TODO would need msg inspection to get useful information...
-    public void addReceivedMessage(NetworkEnvelope networkEnvelope) {
+    void addReceivedMessage(NetworkEnvelope networkEnvelope) {
         String messageClassName = networkEnvelope.getClass().getSimpleName();
         int counter = 1;
-        if (receivedMessages.containsKey(messageClassName))
+        if (receivedMessages.containsKey(messageClassName)) {
             counter = receivedMessages.get(messageClassName) + 1;
-
+        }
         receivedMessages.put(messageClassName, counter);
+
+        counter = 1;
+        if (totalReceivedMessages.containsKey(messageClassName)) {
+            counter = totalReceivedMessages.get(messageClassName) + 1;
+        }
+        totalReceivedMessages.put(messageClassName, counter);
+
+        counter = 1;
+        if (totalReceivedMessagesPerSec.containsKey(messageClassName)) {
+            counter = totalReceivedMessagesPerSec.get(messageClassName) + 1;
+        }
+        totalReceivedMessagesPerSec.put(messageClassName, counter);
     }
 
-    public void addSentMessage(NetworkEnvelope networkEnvelope) {
+    void addSentMessage(NetworkEnvelope networkEnvelope) {
         String messageClassName = networkEnvelope.getClass().getSimpleName();
         int counter = 1;
-        if (sentMessages.containsKey(messageClassName))
+        if (sentMessages.containsKey(messageClassName)) {
             counter = sentMessages.get(messageClassName) + 1;
-
+        }
         sentMessages.put(messageClassName, counter);
+
+        counter = 1;
+        if (totalSentMessages.containsKey(messageClassName)) {
+            counter = totalSentMessages.get(messageClassName) + 1;
+        }
+        totalSentMessages.put(messageClassName, counter);
+
+        counter = 1;
+        if (totalSentMessagesPerSec.containsKey(messageClassName)) {
+            counter = totalSentMessagesPerSec.get(messageClassName) + 1;
+        }
+        totalSentMessagesPerSec.put(messageClassName, counter);
     }
 
     public void setRoundTripTime(int roundTripTime) {
@@ -160,11 +253,13 @@ public class Statistic {
     @Override
     public String toString() {
         return "Statistic{" +
-                "creationDate=" + creationDate +
-                ", lastActivityTimestamp=" + lastActivityTimestamp +
-                ", sentBytes=" + sentBytes +
-                ", receivedBytes=" + receivedBytes +
-                '}';
+                "\n     creationDate=" + creationDate +
+                ",\n     lastActivityTimestamp=" + lastActivityTimestamp +
+                ",\n     sentBytes=" + sentBytes +
+                ",\n     receivedBytes=" + receivedBytes +
+                ",\n     receivedMessages=" + receivedMessages +
+                ",\n     sentMessages=" + sentMessages +
+                ",\n     roundTripTime=" + roundTripTime +
+                "\n}";
     }
-
 }
