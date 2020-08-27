@@ -170,9 +170,9 @@ public class AutoConfirmationManager {
             Coin tradeAmount = trade.getTradeAmount();
             Coin tradeLimit = Coin.valueOf(preferences.getAutoConfirmSettings().tradeLimit);
             if (tradeAmount.isGreaterThan(tradeLimit)) {
-                trade.setXmrProofResult(new XmrProofResult(XmrProofResult.State.FEATURE_DISABLED, null));
                 log.warn("Trade amount {} is higher than settings limit {}, will not attempt auto-confirm",
                         tradeAmount.toFriendlyString(), tradeLimit.toFriendlyString());
+                trade.setXmrProofResult(new XmrProofResult(XmrProofResult.State.TRADE_LIMIT_EXCEEDED, null));
                 return;
             }
 

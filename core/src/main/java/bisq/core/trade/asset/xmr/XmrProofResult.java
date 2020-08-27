@@ -40,6 +40,7 @@ public class XmrProofResult {
         TX_KEY_INVALID,
         ADDRESS_INVALID,
         AMOUNT_NOT_MATCHING,
+        TRADE_LIMIT_EXCEEDED,
         TRADE_DATE_NOT_MATCHING;
     }
 
