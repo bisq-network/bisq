@@ -672,7 +672,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     BroadcastHandler.Listener listener = new BroadcastHandler.Listener() {
                         @Override
                         public void onSufficientlyBroadcast(List<Broadcaster.BroadcastRequest> broadcastRequests) {
-                            log.error("onSufficientlyBroadcast");
                             broadcastRequests.stream()
                                     .filter(broadcastRequest -> broadcastRequest.getMessage() instanceof AddDataMessage)
                                     .filter(broadcastRequest -> {
@@ -684,7 +683,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onNotSufficientlyBroadcast(int numOfCompletedBroadcasts, int numOfFailedBroadcast) {
-                            log.error("onNotSufficientlyBroadcast");
                             sendMailboxMessageListener.onFault("Message was not sufficiently broadcast.\n" +
                                     "numOfCompletedBroadcasts: " + numOfCompletedBroadcasts + ".\n" +
                                     "numOfFailedBroadcast=" + numOfFailedBroadcast);
