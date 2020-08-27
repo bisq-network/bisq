@@ -110,7 +110,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         if (!broadcastRequests.isEmpty()) {
             log.info("Broadcast bundled requests of {} messages. Message types: {}",
                     broadcastRequests.size(),
-                    broadcastRequests.stream().map(e -> e.getClass().getSimpleName()).collect(Collectors.toList()));
+                    broadcastRequests.stream().map(e -> e.getMessage().getClass().getSimpleName()).collect(Collectors.toList()));
             BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
             broadcastHandlers.add(broadcastHandler);
             broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested);
