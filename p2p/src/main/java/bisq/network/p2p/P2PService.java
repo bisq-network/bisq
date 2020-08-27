@@ -121,7 +121,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final BooleanProperty preliminaryDataReceived = new SimpleBooleanProperty();
     private final IntegerProperty numConnectedPeers = new SimpleIntegerProperty(0);
 
-    private boolean shutDownComplete;
     private final Subscription networkReadySubscription;
     private boolean isBootstrapped;
     private final KeepAliveManager keepAliveManager;
@@ -221,7 +220,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private void doShutDown() {
-        log.error("doShutDown");
         if (p2PDataStorage != null) {
             p2PDataStorage.shutDown();
         }
@@ -249,11 +247,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (networkNode != null) {
             networkNode.shutDown(() -> {
                 shutDownResultHandlers.forEach(Runnable::run);
-                shutDownComplete = true;
             });
         } else {
             shutDownResultHandlers.forEach(Runnable::run);
-            shutDownComplete = true;
         }
     }
 
