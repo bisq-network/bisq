@@ -1153,19 +1153,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             String info;
                             String timeSinceSigning;
 
-                            if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
-                                AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
-                                icon = GUIUtil.getIconForSignState(signState);
-                                info = Res.get("offerbook.timeSinceSigning.info",
-                                        signState.getPresentation());
-                                long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
-                                        accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
-                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
-                                        daysSinceSigning);
-                            } else {
-                                boolean needsSigning = PaymentMethod.hasChargebackRisk(
-                                        item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
-                                if (needsSigning) {
+                            boolean needsSigning = PaymentMethod.hasChargebackRisk(
+                                    item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
+
+                            if (needsSigning) {
+                                if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
+                                    AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
+                                    icon = GUIUtil.getIconForSignState(signState);
+                                    info = Res.get("offerbook.timeSinceSigning.info",
+                                            signState.getPresentation());
+                                    long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
+                                            accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
+                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
+                                            daysSinceSigning);
+                                } else {
                                     AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
 
                                     icon = GUIUtil.getIconForSignState(signState);
@@ -1180,11 +1181,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         info = Res.get("shared.notSigned");
                                         timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
                                     }
-                                } else {
-                                    icon = MaterialDesignIcon.INFORMATION_OUTLINE;
-                                    info = Res.get("shared.notSigned.noNeed");
-                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
                                 }
+
+                            } else {
+                                icon = MaterialDesignIcon.INFORMATION_OUTLINE;
+                                info = Res.get("shared.notSigned.noNeed");
+                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
                             }
 
                             InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(timeSinceSigning, icon, ContentDisplay.RIGHT, info);

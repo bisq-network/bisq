@@ -163,7 +163,23 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         seedWordsTextArea.getStyleClass().remove("validation-error");
         restoreDatePicker.getStyleClass().remove("validation-error");
 
+        String key = "showBackupWarningAtSeedPhrase";
+        if (DontShowAgainLookup.showAgain(key)) {
+            new Popup().warning(Res.get("account.seed.backup.warning"))
+                .onAction(() -> {
+                    showSeedPhrase();
+                })
+                .actionButtonText(Res.get("shared.iUnderstand"))
+                .useIUnderstandButton()
+                .dontShowAgainId(key)
+                .hideCloseButton()
+                .show();
+        } else {
+            showSeedPhrase();
+        }
+    }
 
+    public void showSeedPhrase() {
         DeterministicSeed keyChainSeed = btcWalletService.getKeyChainSeed();
         // wallet creation date is not encrypted
         walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();

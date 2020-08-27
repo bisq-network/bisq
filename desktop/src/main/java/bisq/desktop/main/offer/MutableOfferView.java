@@ -373,9 +373,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         String message = null;
         if (makerFee != null) {
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                    bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getBsqBalance())));
+                    bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getUsableBsqBalance())));
 
-        } else if (model.getDataModel().getBsqBalance().isZero())
+        } else if (model.getDataModel().getUsableBsqBalance().isZero())
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
@@ -1109,9 +1109,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             String missingBsq = null;
             if (makerFee != null) {
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                        bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getBsqBalance())));
+                        bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getUsableBsqBalance())));
 
-            } else if (model.getDataModel().getBsqBalance().isZero()) {
+            } else if (model.getDataModel().getUsableBsqBalance().isZero()) {
                 missingBsq = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
             }
 

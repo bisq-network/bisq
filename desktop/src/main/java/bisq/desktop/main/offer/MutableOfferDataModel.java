@@ -718,8 +718,14 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return totalToPayAsCoin;
     }
 
-    Coin getBsqBalance() {
-        return bsqWalletService.getAvailableConfirmedBalance();
+    Coin getUsableBsqBalance() {
+        // we have to keep a minimum amount of BSQ == bitcoin dust limit
+        // otherwise there would be dust violations for change UTXOs
+        // essentially means the minimum usable balance of BSQ is 5.46
+        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(Restrictions.getMinNonDustOutput());
+        if (usableBsqBalance.isNegative())
+            usableBsqBalance = Coin.ZERO;
+        return usableBsqBalance;
     }
 
     public void setMarketPriceAvailable(boolean marketPriceAvailable) {

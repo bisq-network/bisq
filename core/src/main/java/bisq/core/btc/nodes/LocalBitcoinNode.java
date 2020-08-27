@@ -81,7 +81,7 @@ public class LocalBitcoinNode {
      */
     private static boolean detect(int port) {
         try (Socket socket = new Socket()) {
-            var address = new InetSocketAddress(InetAddress.getLocalHost(), port);
+            var address = new InetSocketAddress(InetAddress.getLoopbackAddress(), port);
             socket.connect(address, CONNECTION_TIMEOUT);
             log.info("Local Bitcoin node detected on port {}", port);
             return true;

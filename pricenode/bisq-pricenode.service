@@ -5,7 +5,7 @@ After=network.target
 [Service]
 SyslogIdentifier=bisq-pricenode
 EnvironmentFile=/etc/default/bisq-pricenode.env
-ExecStart=/bisq/bisq/bisq-pricenode 2 2
+ExecStart=/bisq/bisq/bisq-pricenode 2
 ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
 
