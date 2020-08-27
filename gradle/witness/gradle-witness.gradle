@@ -28,7 +28,7 @@ dependencyVerification {
         'com.github.JesusMcCloud.tor-binary:tor-binary-macos:db5aef1082fdd8afb4f7f21cf0956f46a76e93aad75bed6ed149dd3e3767c0a7',
         'com.github.JesusMcCloud.tor-binary:tor-binary-windows:1bb83786a71449d8edb152e40ce5efc129eaca6a0900f4912d7555b6df2f52a2',
         'com.github.JesusMcCloud:jtorctl:389d61b1b5a85eb2f23c582c3913ede49f80c9f2b553e4762382c836270e57e5',
-        'com.github.bisq-network:bitcoinj:713a894a1dd8787ba59ac455d605b02734d220b0194ffa581a2d2a4dc6f77275',
+        'com.github.bisq-network:bitcoinj:06aa2aac966471d662031811474322ca16481e93b38648448998b212ebc48186',
         'com.github.ravn:jsocks:3c71600af027b2b6d4244e4ad14d98ff2352a379410daebefff5d8cd48d742a4',
         'com.github.sarxos:webcam-capture:d960b7ea8ec3ddf2df0725ef214c3fccc9699ea7772df37f544e1f8e4fd665f6',
         'com.google.android:annotations:ba734e1e84c09d615af6a09d33034b4f0442f8772dec120efb376d86a565ae15',
