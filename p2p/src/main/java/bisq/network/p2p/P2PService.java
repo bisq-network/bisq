@@ -121,7 +121,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final BooleanProperty preliminaryDataReceived = new SimpleBooleanProperty();
     private final IntegerProperty numConnectedPeers = new SimpleIntegerProperty(0);
 
-    private volatile boolean shutDownInProgress;
     private boolean shutDownComplete;
     private final Subscription networkReadySubscription;
     private boolean isBootstrapped;
@@ -210,48 +209,51 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {
-        if (!shutDownInProgress) {
-            shutDownInProgress = true;
+        shutDownResultHandlers.add(shutDownCompleteHandler);
 
-            shutDownResultHandlers.add(shutDownCompleteHandler);
-
-            if (p2PDataStorage != null)
-                p2PDataStorage.shutDown();
-
-            if (peerManager != null)
-                peerManager.shutDown();
-
-            if (broadcaster != null)
-                broadcaster.shutDown();
-
-            if (requestDataManager != null)
-                requestDataManager.shutDown();
-
-            if (peerExchangeManager != null)
-                peerExchangeManager.shutDown();
-
-            if (keepAliveManager != null)
-                keepAliveManager.shutDown();
-
-            if (networkReadySubscription != null)
-                networkReadySubscription.unsubscribe();
-
-            if (networkNode != null) {
-                networkNode.shutDown(() -> {
-                    shutDownResultHandlers.stream().forEach(Runnable::run);
-                    shutDownComplete = true;
-                });
-            } else {
-                shutDownResultHandlers.stream().forEach(Runnable::run);
-                shutDownComplete = true;
-            }
+        // We need to make sure queued up messages are flushed out before we continue shut down other network
+        // services
+        if (broadcaster != null) {
+            broadcaster.shutDown(this::doShutDown);
         } else {
-            log.debug("shutDown already in progress");
-            if (shutDownComplete) {
-                shutDownCompleteHandler.run();
-            } else {
-                shutDownResultHandlers.add(shutDownCompleteHandler);
-            }
+            doShutDown();
+        }
+    }
+
+    private void doShutDown() {
+        log.error("doShutDown");
+        if (p2PDataStorage != null) {
+            p2PDataStorage.shutDown();
+        }
+
+        if (peerManager != null) {
+            peerManager.shutDown();
+        }
+
+        if (requestDataManager != null) {
+            requestDataManager.shutDown();
+        }
+
+        if (peerExchangeManager != null) {
+            peerExchangeManager.shutDown();
+        }
+
+        if (keepAliveManager != null) {
+            keepAliveManager.shutDown();
+        }
+
+        if (networkReadySubscription != null) {
+            networkReadySubscription.unsubscribe();
+        }
+
+        if (networkNode != null) {
+            networkNode.shutDown(() -> {
+                shutDownResultHandlers.forEach(Runnable::run);
+                shutDownComplete = true;
+            });
+        } else {
+            shutDownResultHandlers.forEach(Runnable::run);
+            shutDownComplete = true;
         }
     }
 
@@ -670,6 +672,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     BroadcastHandler.Listener listener = new BroadcastHandler.Listener() {
                         @Override
                         public void onSufficientlyBroadcast(List<Broadcaster.BroadcastRequest> broadcastRequests) {
+                            log.error("onSufficientlyBroadcast");
                             broadcastRequests.stream()
                                     .filter(broadcastRequest -> broadcastRequest.getMessage() instanceof AddDataMessage)
                                     .filter(broadcastRequest -> {
@@ -681,6 +684,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onNotSufficientlyBroadcast(int numOfCompletedBroadcasts, int numOfFailedBroadcast) {
+                            log.error("onNotSufficientlyBroadcast");
                             sendMailboxMessageListener.onFault("Message was not sufficiently broadcast.\n" +
                                     "numOfCompletedBroadcasts: " + numOfCompletedBroadcasts + ".\n" +
                                     "numOfFailedBroadcast=" + numOfFailedBroadcast);
