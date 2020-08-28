@@ -36,6 +36,10 @@ import bisq.common.util.RestartUtil;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 import java.io.IOException;
 
 import java.util.concurrent.Executors;
@@ -129,17 +133,36 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     }
 
     protected void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
-        UserThread.runPeriodically(() -> {
-            if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
-                log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                "Shut down as node was running longer as {} hours" +
-                                "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
-                        SHUTDOWN_INTERVAL / 3600000);
+        if (config.seedNodeRestartTime < 0 || config.seedNodeRestartTime > 23) {
+            // -1 is default value which means not defined. Valid values are 0-23, anything else is ignored.
+            // We restart 24 hours after started. There might be some risk for restart of multiple seed nodes around the
+            // same time which can lead to lost data.
+            UserThread.runPeriodically(() -> {
+                if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
+                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                    "Shut down as node was running longer as {} hours" +
+                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                            SHUTDOWN_INTERVAL / 3600000);
 
-                shutDown(gracefulShutDownHandler);
-            }
+                    shutDown(gracefulShutDownHandler);
+                }
+            }, CHECK_SHUTDOWN_SEC);
+        } else {
+            // We interpret the value as hour of day (0-23). If all seeds have updated clocks and a different hour for
+            // the restart we avoid the risk of a restart of multiple nodes.
 
-        }, CHECK_SHUTDOWN_SEC);
+            // We wrap our periodic check in a delay of 2 hours to avoid that we get
+            // triggered multiple times after a restart while being in the same hour
+            UserThread.runAfter(() -> {
+                // We check every hour if we are in the target hour.
+                UserThread.runPeriodically(() -> {
+                    int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("GMT0")).getHour();
+                    if (currentHour == config.seedNodeRestartTime) {
+                        shutDown(gracefulShutDownHandler);
+                    }
+                }, TimeUnit.MINUTES.toSeconds(10));
+            }, TimeUnit.HOURS.toSeconds(2));
+        }
     }
 
     protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
