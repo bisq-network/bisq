@@ -332,7 +332,17 @@ public abstract class NetworkNode implements MessageListener {
 
             Set<Connection> allConnections = getAllConnections();
             int numConnections = allConnections.size();
+
+            if (numConnections == 0) {
+                log.info("Shutdown immediately because no connections are open.");
+                if (shutDownCompleteHandler != null) {
+                    shutDownCompleteHandler.run();
+                }
+                return;
+            }
+
             log.info("Shutdown {} connections", numConnections);
+
             AtomicInteger shutdownCompleted = new AtomicInteger();
             Timer timeoutHandler = UserThread.runAfter(() -> {
                 if (shutDownCompleteHandler != null) {
@@ -340,6 +350,7 @@ public abstract class NetworkNode implements MessageListener {
                     shutDownCompleteHandler.run();
                 }
             }, 3);
+
             allConnections.forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN,
                     () -> {
                         shutdownCompleted.getAndIncrement();
