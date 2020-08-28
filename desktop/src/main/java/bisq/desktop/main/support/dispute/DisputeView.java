@@ -55,6 +55,8 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
+
 import com.google.common.collect.Lists;
 
 import javafx.scene.Scene;
@@ -67,6 +69,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -163,13 +166,31 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     public void initialize() {
         Label label = new AutoTooltipLabel(Res.get("support.filter"));
         HBox.setMargin(label, new Insets(5, 0, 0, 0));
+        HBox.setHgrow(label, Priority.NEVER);
+
         filterTextField = new InputTextField();
         filterTextField.setText("open");
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+        HBox.setHgrow(filterTextField, Priority.NEVER);
+
+        Button reportButton = new AutoTooltipButton(Res.get("support.reportButton.label"));
+        HBox.setHgrow(reportButton, Priority.NEVER);
+        reportButton.setOnAction(e -> {
+            showCompactReport();
+        });
+
+        Button fullReportButton = new AutoTooltipButton(Res.get("support.fullReportButton.label"));
+        HBox.setHgrow(fullReportButton, Priority.NEVER);
+        fullReportButton.setOnAction(e -> {
+            showFullReport();
+        });
+
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         filterBox = new HBox();
         filterBox.setSpacing(5);
-        filterBox.getChildren().addAll(label, filterTextField);
+        filterBox.getChildren().addAll(label, filterTextField, spacer, reportButton, fullReportButton);
         VBox.setVgrow(filterBox, Priority.NEVER);
         filterBox.setVisible(false);
         filterBox.setManaged(false);
@@ -225,11 +246,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> chatView.setInputBoxVisible(!newValue);
 
         keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
-                showFullReport();
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.K, event)) {
-                showCompactReport();
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.U, event)) {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.U, event)) {
                 // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
                 if (selectedDispute != null) {
                     if (selectedDisputeClosedPropertyListener != null)
@@ -274,15 +291,24 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             list.add(dispute);
         });
 
-        List<List<Dispute>> disputeGroups = new ArrayList<>();
-        map.forEach((key, value) -> disputeGroups.add(value));
-        disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
+        List<List<Dispute>> allDisputes = new ArrayList<>();
+        map.forEach((key, value) -> allDisputes.add(value));
+        allDisputes.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
         StringBuilder stringBuilder = new StringBuilder();
         AtomicInteger disputeIndex = new AtomicInteger();
-        disputeGroups.forEach(disputeGroup -> {
-            if (disputeGroup.size() > 0) {
-                Dispute dispute0 = disputeGroup.get(0);
-                Date openingDate = dispute0.getOpeningDate();
+        allDisputes.forEach(disputesPerTrade -> {
+            if (disputesPerTrade.size() > 0) {
+                Dispute firstDispute = disputesPerTrade.get(0);
+                Date openingDate = firstDispute.getOpeningDate();
+                Contract contract = firstDispute.getContract();
+                String buyersRole = contract.isBuyerMakerAndSellerTaker() ? "Buyer as maker" : "Buyer as taker";
+                String sellersRole = contract.isBuyerMakerAndSellerTaker() ? "Seller as taker" : "Seller as maker";
+                String opener = firstDispute.isDisputeOpenerIsBuyer() ? buyersRole : sellersRole;
+                DisputeResult disputeResult = firstDispute.getDisputeResultProperty().get();
+                String winner = disputeResult != null &&
+                        disputeResult.getWinner() == DisputeResult.Winner.BUYER ? "Buyer" : "Seller";
+                String buyerPayoutAmount = disputeResult != null ? disputeResult.getBuyerPayoutAmount().toFriendlyString() : "";
+                String sellerPayoutAmount = disputeResult != null ? disputeResult.getSellerPayoutAmount().toFriendlyString() : "";
                 stringBuilder.append("\n")
                         .append("Dispute nr. ")
                         .append(disputeIndex.incrementAndGet())
@@ -290,43 +316,65 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                         .append("Opening date: ")
                         .append(DisplayUtils.formatDateTime(openingDate))
                         .append("\n");
-                DisputeResult disputeResult0 = dispute0.getDisputeResultProperty().get();
                 String summaryNotes0 = "";
-                if (disputeResult0 != null) {
-                    Date closeDate = disputeResult0.getCloseDate();
+                if (disputeResult != null) {
+                    Date closeDate = disputeResult.getCloseDate();
                     long duration = closeDate.getTime() - openingDate.getTime();
                     stringBuilder.append("Close date: ")
                             .append(DisplayUtils.formatDateTime(closeDate))
                             .append("\n")
-                            .append("Duration: ")
+                            .append("Dispute duration: ")
                             .append(FormattingUtils.formatDurationAsWords(duration))
                             .append("\n");
+                }
 
-                    summaryNotes0 = disputeResult0.getSummaryNotesProperty().get();
+                stringBuilder.append("Payment method: ")
+                        .append(Res.get(contract.getPaymentMethodId()))
+                        .append("\n")
+                        .append("Currency: ")
+                        .append(CurrencyUtil.getNameAndCode(contract.getOfferPayload().getCurrencyCode()))
+                        .append("\n")
+                        .append("Trade amount: ")
+                        .append(contract.getTradeAmount().toFriendlyString())
+                        .append("\n")
+                        .append("Buyer/seller security deposit: ")
+                        .append(Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()).toFriendlyString())
+                        .append("/")
+                        .append(Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()).toFriendlyString())
+                        .append("\n")
+                        .append("Dispute opened by: ")
+                        .append(opener)
+                        .append("\n")
+                        .append("Payout to buyer/seller (winner): ")
+                        .append(buyerPayoutAmount).append("/")
+                        .append(sellerPayoutAmount).append(" (")
+                        .append(winner)
+                        .append(")\n");
+
+                if (disputeResult != null) {
+                    DisputeResult.Reason reason = disputeResult.getReason();
+                    if (firstDispute.disputeResultProperty().get().getReason() != null) {
+                        disputesByReason.putIfAbsent(reason.name(), new ArrayList<>());
+                        disputesByReason.get(reason.name()).add(firstDispute);
+                        stringBuilder.append("Reason: ")
+                                .append(reason.name())
+                                .append("\n");
+                    }
+
+                    summaryNotes0 = disputeResult.getSummaryNotesProperty().get();
                     stringBuilder.append("Summary notes: ").append(summaryNotes0).append("\n");
                 }
 
                 // We might have a different summary notes at second trader. Only if it
                 // is different we show it.
-                if (disputeGroup.size() > 1) {
-                    Dispute dispute1 = disputeGroup.get(1);
+                if (disputesPerTrade.size() > 1) {
+                    Dispute dispute1 = disputesPerTrade.get(1);
                     DisputeResult disputeResult1 = dispute1.getDisputeResultProperty().get();
                     if (disputeResult1 != null) {
                         String summaryNotes1 = disputeResult1.getSummaryNotesProperty().get();
                         if (!summaryNotes1.equals(summaryNotes0)) {
-                            stringBuilder.append("Summary notes (trader 2): ").append(summaryNotes1).append("\n");
+                            stringBuilder.append("Summary notes (different message to other trader was used): ").append(summaryNotes1).append("\n");
                         }
-                    }
-                }
-
-                if (dispute0.disputeResultProperty().get() != null) {
-                    DisputeResult.Reason reason = dispute0.disputeResultProperty().get().getReason();
-                    if (dispute0.disputeResultProperty().get().getReason() != null) {
-                        disputesByReason.putIfAbsent(reason.name(), new ArrayList<>());
-                        disputesByReason.get(reason.name()).add(dispute0);
-                        stringBuilder.append("Reason: ")
-                                .append(reason.name())
-                                .append("\n");
                     }
                 }
             }
@@ -337,7 +385,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         });
 
         String message = stringBuilder.toString();
-        new Popup().headLine("Compact summary of all disputes (" + disputeGroups.size() + ")")
+        new Popup().headLine("Report for " + allDisputes.size() + " disputes")
                 .maxMessageLength(500)
                 .information(message)
                 .width(1200)
@@ -364,7 +412,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         StringBuilder stringBuilder = new StringBuilder();
 
         // We don't translate that as it is not intended for the public
-        stringBuilder.append("Summary of all disputes (No. of disputes: ").append(disputeGroups.size()).append(")\n\n");
         disputeGroups.forEach(disputeGroup -> {
             Dispute dispute0 = disputeGroup.get(0);
             stringBuilder.append("##########################################################################################/\n")
@@ -403,11 +450,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         });
         String message = stringBuilder.toString();
         // We don't translate that as it is not intended for the public
-        new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
+        new Popup().headLine("Detailed text dump for " + disputeGroups.size() + " disputes")
                 .maxMessageLength(1000)
                 .information(message)
                 .width(1200)
-                .actionButtonText("Copy")
+                .actionButtonText("Copy to clipboard")
                 .onAction(() -> Utilities.copyToClipboard(message))
                 .show();
     }

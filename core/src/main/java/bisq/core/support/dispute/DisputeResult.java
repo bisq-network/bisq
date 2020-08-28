@@ -57,9 +57,12 @@ public final class DisputeResult implements NetworkPayload {
         BUG,
         USABILITY,
         SCAM,
-        PROTOCOL_VIOLATION,
-        NO_REPLY,
-        BANK_PROBLEMS
+        PROTOCOL_VIOLATION, // Not used anymore
+        NO_REPLY, // Not used anymore
+        BANK_PROBLEMS,
+        OPTION_TRADE,
+        SELLER_NOT_RESPONDING,
+        WRONG_SENDER_ACCOUNT
     }
 
     private final String tradeId;
