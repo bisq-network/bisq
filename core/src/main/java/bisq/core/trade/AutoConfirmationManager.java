@@ -180,7 +180,7 @@ public class AutoConfirmationManager {
             // XMR satoshis have 12 decimal places vs. bitcoin's 8
             long amountXmr = offer.getVolumeByAmount(tradeAmount).getValue() * 10000L;
             int confirmsRequired = preferences.getAutoConfirmSettings().requiredConfirmations;
-            trade.setAutoConfirmResult(new AutoConfirmResult(0, confirmsRequired, AutoConfirmResult.State.TX_NOT_FOUND));
+            trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.TX_NOT_FOUND));
             List<String> serviceAddresses = preferences.getAutoConfirmSettings().serviceAddresses;
             txProofResultsPending.put(trade.getId(), serviceAddresses.size()); // need result from each service address
             for (String serviceAddress : serviceAddresses) {

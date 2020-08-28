@@ -159,8 +159,10 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 DisplayUtils.formatVolumeWithCode(trade.getTradeVolume()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 FormattingUtils.formatPrice(trade.getTradePrice()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"),
-                Res.get(offer.getPaymentMethod().getId()));
+        String methodText = Res.get(offer.getPaymentMethod().getId());
+        if (trade.getAutoConfirmResult() != null && trade.getAutoConfirmResult().isSuccessState())
+            methodText += " (" + trade.getAutoConfirmResult().getTextStatus() + ")";
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), methodText);
 
         // second group
         rows = 6;

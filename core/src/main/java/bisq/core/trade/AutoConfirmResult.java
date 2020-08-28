@@ -19,6 +19,8 @@ package bisq.core.trade;
 
 import bisq.core.locale.Res;
 
+import bisq.common.proto.ProtoUtil;
+
 import javax.annotation.Nullable;
 
 import lombok.Value;
@@ -42,23 +44,38 @@ public class AutoConfirmResult {
         AMOUNT_NOT_MATCHING,
         TRADE_LIMIT_EXCEEDED,
         TRADE_DATE_NOT_MATCHING;
+
+        public static AutoConfirmResult.State fromProto(protobuf.Trade.AutoConfirmResult result) {
+            return ProtoUtil.enumFromProto(AutoConfirmResult.State.class, result.name());
+        }
+
+        public static protobuf.Trade.AutoConfirmResult toProtoMessage(AutoConfirmResult.State result) {
+            return protobuf.Trade.AutoConfirmResult.valueOf(result.name());
+        }
     }
 
-    private final int confirmCount;
-    private final int confirmsRequired;
     private final State state;
+    private final transient int confirmCount;
+    private final transient int confirmsRequired;
 
-    public AutoConfirmResult(int confirmCount, int confirmsRequired, State state) {
+    public AutoConfirmResult(State state) {
+        this.state = state;
+        this.confirmCount = 0;
+        this.confirmsRequired = 0;
+    }
+
+    // alternate constructor for showing confirmation progress information
+    public AutoConfirmResult(State state, int confirmCount, int confirmsRequired) {
+        this.state = state;
         this.confirmCount = confirmCount;
         this.confirmsRequired = confirmsRequired;
-        this.state = state;
     }
 
     // alternate constructor for error scenarios
     public AutoConfirmResult(State state, @Nullable String errorMsg) {
+        this.state = state;
         this.confirmCount = 0;
         this.confirmsRequired = 0;
-        this.state = state;
         if (isErrorState())
             log.error(errorMsg != null ? errorMsg : state.toString());
     }
@@ -93,4 +110,16 @@ public class AutoConfirmResult {
         return (!isPendingState() && !isSuccessState());
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTOBUF
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public protobuf.Trade.AutoConfirmResult toProtoMessage() {
+        return State.toProtoMessage(state);
+    }
+
+    public static AutoConfirmResult fromProto(protobuf.Trade.AutoConfirmResult proto) {
+        return new AutoConfirmResult(AutoConfirmResult.State.fromProto(proto));
+    }
 }

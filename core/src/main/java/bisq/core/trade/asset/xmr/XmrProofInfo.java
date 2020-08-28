@@ -155,9 +155,9 @@ public class XmrProofInfo {
                     if (jsonAmount == amount || DevEnv.isDevMode()) {   // any amount ok in dev mode
                         if (confirmations < confirmsRequired)
                             // we return TX_NOT_CONFIRMED which will cause a retry later
-                            return new AutoConfirmResult(confirmations, confirmsRequired, AutoConfirmResult.State.TX_NOT_CONFIRMED);
+                            return new AutoConfirmResult(AutoConfirmResult.State.TX_NOT_CONFIRMED, confirmations, confirmsRequired);
                         else
-                            return new AutoConfirmResult(confirmations, confirmsRequired, AutoConfirmResult.State.PROOF_OK);
+                            return new AutoConfirmResult(AutoConfirmResult.State.PROOF_OK, confirmations, confirmsRequired);
                     }
                 }
             }

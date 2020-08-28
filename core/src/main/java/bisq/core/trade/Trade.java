@@ -38,7 +38,6 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.AutoConfirmResult;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -436,10 +435,9 @@ public abstract class Trade implements Tradable, Model {
     @Setter
     private String counterCurrencyExtraData;
 
-    // autoConfirmResult is not persisted yet
     @Getter
     @Nullable
-    private transient AutoConfirmResult autoConfirmResult;
+    private AutoConfirmResult autoConfirmResult;
 
     public void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
         this.autoConfirmResult = autoConfirmResult;
@@ -560,6 +558,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
         Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
+        Optional.ofNullable(autoConfirmResult).ifPresent(e -> builder.setAutoConfirmResult(autoConfirmResult.toProtoMessage()));
 
         return builder.build();
     }
@@ -594,6 +593,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
+        trade.setAutoConfirmResult(AutoConfirmResult.fromProto(protobuf.Trade.AutoConfirmResult.valueOf(proto.getAutoConfirmResultValue())));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)

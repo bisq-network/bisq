@@ -156,7 +156,7 @@ public class SellerStep3View extends TradeStepView {
             // display the initial value, or FEATURE_DISABLED if there is none
             AutoConfirmResult autoConfirmResult = trade.getAutoConfirmResult();
             if (autoConfirmResult == null)
-                autoConfirmResult = new AutoConfirmResult(0, 0, AutoConfirmResult.State.FEATURE_DISABLED);
+                autoConfirmResult = new AutoConfirmResult(AutoConfirmResult.State.FEATURE_DISABLED);
             autoConfirmStatusField.setText(autoConfirmResult.getTextStatus());
         }
     }
