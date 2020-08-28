@@ -118,7 +118,6 @@ public class Config {
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
     public static final String API_PASSWORD = "apiPassword";
     public static final String API_PORT = "apiPort";
-    public static final String SEED_NODE_RESTART_TIME = "seedNodeRestartTime";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -204,7 +203,6 @@ public class Config {
     public final boolean allowFaultyDelayedTxs;
     public final String apiPassword;
     public final int apiPort;
-    public final int seedNodeRestartTime;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -632,12 +630,6 @@ public class Config {
                         .ofType(Integer.class)
                         .defaultsTo(9998);
 
-        ArgumentAcceptingOptionSpec<Integer> seedNodeRestartTimeOpt =
-                parser.accepts(SEED_NODE_RESTART_TIME, "Seed node restart time in GMT-0 (values: 0-23)")
-                        .withRequiredArg()
-                        .ofType(Integer.class)
-                        .defaultsTo(-1);
-
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -752,7 +744,6 @@ public class Config {
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
             this.apiPort = options.valueOf(apiPortOpt);
-            this.seedNodeRestartTime = options.valueOf(seedNodeRestartTimeOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),

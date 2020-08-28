@@ -24,7 +24,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -42,6 +44,9 @@ import java.time.ZonedDateTime;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -132,37 +137,36 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         }
     }
 
-    protected void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
-        if (config.seedNodeRestartTime < 0 || config.seedNodeRestartTime > 23) {
-            // -1 is default value which means not defined. Valid values are 0-23, anything else is ignored.
-            // We restart 24 hours after started. There might be some risk for restart of multiple seed nodes around the
-            // same time which can lead to lost data.
-            UserThread.runPeriodically(() -> {
-                if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
-                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                    "Shut down as node was running longer as {} hours" +
-                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
-                            SHUTDOWN_INTERVAL / 3600000);
+    public void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
+        List<NodeAddress> seedNodeAddresses = new ArrayList<>(injector.getInstance(SeedNodeRepository.class).getSeedNodeAddresses());
+        seedNodeAddresses.sort(Comparator.comparing(NodeAddress::getFullAddress));
 
+        NodeAddress myAddress = injector.getInstance(P2PService.class).getNetworkNode().getNodeAddress();
+        int myIndex = -1;
+        for (int i = 0; i < seedNodeAddresses.size(); i++) {
+            if (seedNodeAddresses.get(i).equals(myAddress)) {
+                myIndex = i;
+                break;
+            }
+        }
+
+        // We interpret the value of myIndex as hour of day (0-23). That way we avoid the risk of a restart of
+        // multiple nodes around the same time in case it would be not deterministic.
+
+        // We wrap our periodic check in a delay of 2 hours to avoid that we get
+        // triggered multiple times after a restart while being in the same hour. It can be that we miss our target
+        // hour during that delay but that is not considered problematic, the seed would just restart a bit longer than
+        // 24 hours.
+        int finalMyIndex = myIndex;
+        UserThread.runAfter(() -> {
+            // We check every hour if we are in the target hour.
+            UserThread.runPeriodically(() -> {
+                int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("GMT0")).getHour();
+                if (currentHour == finalMyIndex) {
                     shutDown(gracefulShutDownHandler);
                 }
-            }, CHECK_SHUTDOWN_SEC);
-        } else {
-            // We interpret the value as hour of day (0-23). If all seeds have updated clocks and a different hour for
-            // the restart we avoid the risk of a restart of multiple nodes.
-
-            // We wrap our periodic check in a delay of 2 hours to avoid that we get
-            // triggered multiple times after a restart while being in the same hour
-            UserThread.runAfter(() -> {
-                // We check every hour if we are in the target hour.
-                UserThread.runPeriodically(() -> {
-                    int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("GMT0")).getHour();
-                    if (currentHour == config.seedNodeRestartTime) {
-                        shutDown(gracefulShutDownHandler);
-                    }
-                }, TimeUnit.MINUTES.toSeconds(10));
-            }, TimeUnit.HOURS.toSeconds(2));
-        }
+            }, TimeUnit.MINUTES.toSeconds(10));
+        }, TimeUnit.HOURS.toSeconds(2));
     }
 
     protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
