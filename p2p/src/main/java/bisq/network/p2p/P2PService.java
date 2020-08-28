@@ -444,6 +444,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        // not used
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
