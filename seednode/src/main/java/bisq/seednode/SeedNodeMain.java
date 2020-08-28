@@ -101,22 +101,27 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
             @Override
             public void onDataReceived() {
+                // Do nothing
             }
 
             @Override
             public void onNoSeedNodeAvailable() {
+                // Do nothing
             }
 
             @Override
             public void onNoPeersAvailable() {
+                // Do nothing
             }
 
             @Override
             public void onUpdatedDataReceived() {
+                // Do nothing
             }
 
             @Override
             public void onTorNodeReady() {
+                // Do nothing
             }
 
             @Override
@@ -126,10 +131,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+                // Do nothing
             }
 
             @Override
             public void onRequestCustomBridges() {
+                // Do nothing
             }
         });
     }
