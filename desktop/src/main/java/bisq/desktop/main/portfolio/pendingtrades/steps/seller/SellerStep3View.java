@@ -42,7 +42,7 @@ import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.trade.asset.xmr.XmrProofResult;
+import bisq.core.trade.AutoConfirmResult;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;
@@ -77,7 +77,7 @@ public class SellerStep3View extends TradeStepView {
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
     private TextFieldWithCopyIcon autoConfirmStatusField;
-    private final ChangeListener<XmrProofResult> xmrProofResultListener;
+    private final ChangeListener<AutoConfirmResult> autoConfirmResultListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -86,8 +86,8 @@ public class SellerStep3View extends TradeStepView {
     public SellerStep3View(PendingTradesViewModel model) {
         super(model);
 
-        // we listen for updates on the trade xmrProofResult field
-        xmrProofResultListener = (observable, oldValue, newValue) -> {
+        // we listen for updates on the trade autoConfirmResult field
+        autoConfirmResultListener = (observable, oldValue, newValue) -> {
             autoConfirmStatusField.setText(newValue.getTextStatus());
         };
     }
@@ -150,14 +150,14 @@ public class SellerStep3View extends TradeStepView {
             }
         });
 
-        // we listen for updates on the trade xmrProofResult field
+        // we listen for updates on the trade autoConfirmResult field
         if (autoConfirmStatusField != null) {
-            trade.getXmrProofResultProperty().addListener(xmrProofResultListener);
+            trade.getAutoConfirmResultProperty().addListener(autoConfirmResultListener);
             // display the initial value, or FEATURE_DISABLED if there is none
-            XmrProofResult xmrProofResult = trade.getXmrProofResult();
-            if (xmrProofResult == null)
-                xmrProofResult = new XmrProofResult(0, 0, XmrProofResult.State.FEATURE_DISABLED);
-            autoConfirmStatusField.setText(xmrProofResult.getTextStatus());
+            AutoConfirmResult autoConfirmResult = trade.getAutoConfirmResult();
+            if (autoConfirmResult == null)
+                autoConfirmResult = new AutoConfirmResult(0, 0, AutoConfirmResult.State.FEATURE_DISABLED);
+            autoConfirmStatusField.setText(autoConfirmResult.getTextStatus());
         }
     }
 
@@ -175,7 +175,7 @@ public class SellerStep3View extends TradeStepView {
         if (timeoutTimer != null)
             timeoutTimer.stop();
 
-        trade.getXmrProofResultProperty().removeListener(xmrProofResultListener);
+        trade.getAutoConfirmResultProperty().removeListener(autoConfirmResultListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

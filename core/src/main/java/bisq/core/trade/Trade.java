@@ -38,7 +38,7 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.asset.xmr.XmrProofResult;
+import bisq.core.trade.AutoConfirmResult;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -436,18 +436,18 @@ public abstract class Trade implements Tradable, Model {
     @Setter
     private String counterCurrencyExtraData;
 
-    // xmrProofResult is not persisted yet
+    // autoConfirmResult is not persisted yet
     @Getter
     @Nullable
-    private transient XmrProofResult xmrProofResult;
+    private transient AutoConfirmResult autoConfirmResult;
 
-    public void setXmrProofResult(XmrProofResult xmrProofResult) {
-        this.xmrProofResult = xmrProofResult;
-        xmrProofResultProperty.setValue(xmrProofResult);
+    public void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
+        this.autoConfirmResult = autoConfirmResult;
+        autoConfirmResultProperty.setValue(autoConfirmResult);
     }
     @Getter
     // This observable property can be used for UI to show a notification to user of the XMR proof status
-    transient final private ObjectProperty<XmrProofResult> xmrProofResultProperty = new SimpleObjectProperty<>();
+    transient final private ObjectProperty<AutoConfirmResult> autoConfirmResultProperty = new SimpleObjectProperty<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -1187,7 +1187,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     counterCurrencyTxId='" + counterCurrencyTxId + '\'' +
                 ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
-                ",\n     xmrProofResult='" + xmrProofResult + '\'' +
+                ",\n     autoConfirmResult='" + autoConfirmResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     txFee=" + txFee +
                 ",\n     takerFee=" + takerFee +

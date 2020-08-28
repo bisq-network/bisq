@@ -1,5 +1,7 @@
 package bisq.core.trade.asset.xmr;
 
+import bisq.core.trade.AutoConfirmResult;
+
 import java.time.Instant;
 
 import java.util.Date;
@@ -46,13 +48,13 @@ public class XmrProofInfoTest {
     public void testJsonRoot() {
         // checking what happens when bad input is provided
         assertTrue(xmrProofInfo.checkApiResponse(
-                "invalid json data").getState() == XmrProofResult.State.API_INVALID);
+                "invalid json data").getState() == AutoConfirmResult.State.API_INVALID);
         assertTrue(xmrProofInfo.checkApiResponse(
-                "").getState() == XmrProofResult.State.API_INVALID);
+                "").getState() == AutoConfirmResult.State.API_INVALID);
         assertTrue(xmrProofInfo.checkApiResponse(
-                "[]").getState() == XmrProofResult.State.API_INVALID);
+                "[]").getState() == AutoConfirmResult.State.API_INVALID);
         assertTrue(xmrProofInfo.checkApiResponse(
-                "{}").getState() == XmrProofResult.State.API_INVALID);
+                "{}").getState() == AutoConfirmResult.State.API_INVALID);
     }
 
     @Test
@@ -60,34 +62,34 @@ public class XmrProofInfoTest {
         // testing the top level fields: data and status
         assertTrue(xmrProofInfo.checkApiResponse(
                 "{'data':{'title':''},'status':'fail'}" )
-                .getState() == XmrProofResult.State.TX_NOT_FOUND);
+                .getState() == AutoConfirmResult.State.TX_NOT_FOUND);
         assertTrue(xmrProofInfo.checkApiResponse(
                 "{'data':{'title':''},'missingstatus':'success'}" )
-                .getState() == XmrProofResult.State.API_INVALID);
+                .getState() == AutoConfirmResult.State.API_INVALID);
         assertTrue(xmrProofInfo.checkApiResponse(
                 "{'missingdata':{'title':''},'status':'success'}" )
-                .getState() == XmrProofResult.State.API_INVALID);
+                .getState() == AutoConfirmResult.State.API_INVALID);
     }
 
     @Test
     public void testJsonAddress() {
         assertTrue(xmrProofInfo.checkApiResponse(
                 "{'data':{'missingaddress':'irrelevant'},'status':'success'}" )
-                .getState() == XmrProofResult.State.API_INVALID);
+                .getState() == AutoConfirmResult.State.API_INVALID);
         assertTrue(xmrProofInfo.checkApiResponse(
                 "{'data':{'address':'e957dac7'},'status':'success'}" )
-                .getState() == XmrProofResult.State.ADDRESS_INVALID);
+                .getState() == AutoConfirmResult.State.ADDRESS_INVALID);
     }
 
     @Test
     public void testJsonTxHash() {
         String missing_tx_hash = "{'data':{'address':'" + recipientAddressHex + "'}, 'status':'success'}";
         assertTrue(xmrProofInfo.checkApiResponse(missing_tx_hash).getState()
-                == XmrProofResult.State.API_INVALID);
+                == AutoConfirmResult.State.API_INVALID);
 
         String invalid_tx_hash = "{'data':{'address':'" + recipientAddressHex + "', 'tx_hash':'488e48'}, 'status':'success'}";
         assertTrue(xmrProofInfo.checkApiResponse(invalid_tx_hash).getState()
-                == XmrProofResult.State.TX_HASH_INVALID);
+                == AutoConfirmResult.State.TX_HASH_INVALID);
     }
 
     @Test
@@ -95,13 +97,13 @@ public class XmrProofInfoTest {
         String missing_tx_key = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "'}, 'status':'success'}";
         assertTrue(xmrProofInfo.checkApiResponse(missing_tx_key).getState()
-                == XmrProofResult.State.API_INVALID);
+                == AutoConfirmResult.State.API_INVALID);
 
         String invalid_tx_key = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "', " +
                 "'viewkey':'cdce04'}, 'status':'success'}";
         assertTrue(xmrProofInfo.checkApiResponse(invalid_tx_key).getState()
-                == XmrProofResult.State.TX_KEY_INVALID);
+                == AutoConfirmResult.State.TX_KEY_INVALID);
     }
 
     @Test
@@ -110,14 +112,14 @@ public class XmrProofInfoTest {
                 "'tx_hash':'" + txHash + "'," +
                 "'viewkey':'" + txKey + "'}, 'status':'success'}";
         assertTrue(xmrProofInfo.checkApiResponse(missing_tx_timestamp).getState()
-                == XmrProofResult.State.API_INVALID);
+                == AutoConfirmResult.State.API_INVALID);
 
         String invalid_tx_timestamp = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "', " +
                 "'viewkey':'" + txKey + "'," +
                 "'tx_timestamp':'12345'}, 'status':'success'}";
         assertTrue(xmrProofInfo.checkApiResponse(invalid_tx_timestamp).getState()
-                == XmrProofResult.State.TRADE_DATE_NOT_MATCHING);
+                == AutoConfirmResult.State.TRADE_DATE_NOT_MATCHING);
     }
 
     @Test
@@ -135,19 +137,19 @@ public class XmrProofInfoTest {
                 "'tx_timestamp':'" + Long.toString(epochDate) + "'}" +
                 "}";
         assertTrue(xmrProofInfo.checkApiResponse(json).getState()
-                == XmrProofResult.State.PROOF_OK);
+                == AutoConfirmResult.State.PROOF_OK);
         json = json.replaceFirst("777", "0");
         assertTrue(xmrProofInfo.checkApiResponse(json).getState()
-                == XmrProofResult.State.TX_NOT_CONFIRMED);
+                == AutoConfirmResult.State.TX_NOT_CONFIRMED);
         json = json.replaceFirst("100000000000", "100000000001");
         assertTrue(xmrProofInfo.checkApiResponse(json).getState()
-                == XmrProofResult.State.AMOUNT_NOT_MATCHING);
+                == AutoConfirmResult.State.AMOUNT_NOT_MATCHING);
     }
 
     @Test
     public void testJsonFail() {
         String failedJson = "{\"data\":null,\"message\":\"Cant parse tx hash: a\",\"status\":\"error\"}";
         assertTrue(xmrProofInfo.checkApiResponse(failedJson).getState()
-                == XmrProofResult.State.API_INVALID);
+                == AutoConfirmResult.State.API_INVALID);
     }
 }

@@ -17,6 +17,8 @@
 
 package bisq.core.trade.asset.xmr;
 
+import bisq.core.trade.AutoConfirmResult;
+
 import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.UserThread;
@@ -43,7 +45,7 @@ public class XmrTransferProofRequester {
             "XmrTransferProofRequester", 3, 5, 10 * 60);
     private final XmrTxProofHttpClient httpClient;
     private final XmrProofInfo xmrProofInfo;
-    private final Consumer<XmrProofResult> resultHandler;
+    private final Consumer<AutoConfirmResult> resultHandler;
     private final FaultHandler faultHandler;
     private boolean terminated;
     private long firstRequest;
@@ -58,7 +60,7 @@ public class XmrTransferProofRequester {
 
     XmrTransferProofRequester(Socks5ProxyProvider socks5ProxyProvider,
                               XmrProofInfo xmrProofInfo,
-                              Consumer<XmrProofResult> resultHandler,
+                              Consumer<AutoConfirmResult> resultHandler,
                               FaultHandler faultHandler) {
         this.httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
         this.httpClient.setBaseUrl("http://" + xmrProofInfo.getServiceAddress());
@@ -89,7 +91,7 @@ public class XmrTransferProofRequester {
             log.info("Request() aborted, this object has been terminated: {}", httpClient.toString());
             return;
         }
-        ListenableFuture<XmrProofResult> future = executorService.submit(() -> {
+        ListenableFuture<AutoConfirmResult> future = executorService.submit(() -> {
             Thread.currentThread().setName("XmrTransferProofRequest-" + xmrProofInfo.getKey());
             String param = "/api/outputs?txhash=" + xmrProofInfo.getTxHash() +
                     "&address=" + xmrProofInfo.getRecipientAddress() +
@@ -103,7 +105,7 @@ public class XmrTransferProofRequester {
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(XmrProofResult result) {
+            public void onSuccess(AutoConfirmResult result) {
                 if (terminated) {
                     log.info("API terminated from higher level: {}", httpClient.toString());
                     return;
@@ -122,7 +124,7 @@ public class XmrTransferProofRequester {
                 String errorMessage = "Request to " + httpClient.getBaseUrl() + " failed";
                 faultHandler.handleFault(errorMessage, throwable);
                 UserThread.execute(() -> resultHandler.accept(
-                        new XmrProofResult(XmrProofResult.State.CONNECTION_FAIL, errorMessage)));
+                        new AutoConfirmResult(AutoConfirmResult.State.CONNECTION_FAIL, errorMessage)));
             }
         });
     }

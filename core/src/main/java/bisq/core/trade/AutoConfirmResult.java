@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.asset.xmr;
+package bisq.core.trade;
 
 import bisq.core.locale.Res;
 
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
-public class XmrProofResult {
+public class AutoConfirmResult {
     public enum State {
         FEATURE_DISABLED,
         TX_NOT_FOUND,
@@ -48,14 +48,14 @@ public class XmrProofResult {
     private final int confirmsRequired;
     private final State state;
 
-    public XmrProofResult(int confirmCount, int confirmsRequired, State state) {
+    public AutoConfirmResult(int confirmCount, int confirmsRequired, State state) {
         this.confirmCount = confirmCount;
         this.confirmsRequired = confirmsRequired;
         this.state = state;
     }
 
     // alternate constructor for error scenarios
-    public XmrProofResult(State state, @Nullable String errorMsg) {
+    public AutoConfirmResult(State state, @Nullable String errorMsg) {
         this.confirmCount = 0;
         this.confirmsRequired = 0;
         this.state = state;

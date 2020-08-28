@@ -23,10 +23,10 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.asset.xmr.XmrProofInfo;
-import bisq.core.trade.asset.xmr.XmrProofResult;
 import bisq.core.trade.asset.xmr.XmrTransferProofService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.AutoConfirmResult;
 import bisq.core.user.Preferences;
 import bisq.core.btc.setup.WalletsSetup;
 
@@ -154,7 +154,7 @@ public class AutoConfirmationManager {
                         if (alreadyUsed) {
                             String message = "Peer used the XMR tx key already at another trade with trade ID " +
                                     t.getId() + ". This might be a scam attempt.";
-                            trade.setXmrProofResult(new XmrProofResult(XmrProofResult.State.TX_KEY_REUSED, message));
+                            trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.TX_KEY_REUSED, message));
                         }
                         return alreadyUsed;
                     });
@@ -164,7 +164,7 @@ public class AutoConfirmationManager {
             }
 
             if (!preferences.getAutoConfirmSettings().enabled || this.isAutoConfDisabledByFilter()) {
-                trade.setXmrProofResult(new XmrProofResult(XmrProofResult.State.FEATURE_DISABLED, null));
+                trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.FEATURE_DISABLED, null));
                 return;
             }
             Coin tradeAmount = trade.getTradeAmount();
@@ -172,7 +172,7 @@ public class AutoConfirmationManager {
             if (tradeAmount.isGreaterThan(tradeLimit)) {
                 log.warn("Trade amount {} is higher than settings limit {}, will not attempt auto-confirm",
                         tradeAmount.toFriendlyString(), tradeLimit.toFriendlyString());
-                trade.setXmrProofResult(new XmrProofResult(XmrProofResult.State.TRADE_LIMIT_EXCEEDED, null));
+                trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.TRADE_LIMIT_EXCEEDED, null));
                 return;
             }
 
@@ -180,7 +180,7 @@ public class AutoConfirmationManager {
             // XMR satoshis have 12 decimal places vs. bitcoin's 8
             long amountXmr = offer.getVolumeByAmount(tradeAmount).getValue() * 10000L;
             int confirmsRequired = preferences.getAutoConfirmSettings().requiredConfirmations;
-            trade.setXmrProofResult(new XmrProofResult(0, confirmsRequired, XmrProofResult.State.TX_NOT_FOUND));
+            trade.setAutoConfirmResult(new AutoConfirmResult(0, confirmsRequired, AutoConfirmResult.State.TX_NOT_FOUND));
             List<String> serviceAddresses = preferences.getAutoConfirmSettings().serviceAddresses;
             txProofResultsPending.put(trade.getId(), serviceAddresses.size()); // need result from each service address
             for (String serviceAddress : serviceAddresses) {
@@ -205,7 +205,7 @@ public class AutoConfirmationManager {
         }
     }
 
-    private boolean handleProofResult(XmrProofResult result, Trade trade) {
+    private boolean handleProofResult(AutoConfirmResult result, Trade trade) {
         boolean success = true;
         boolean failure = false;
 
@@ -228,7 +228,7 @@ public class AutoConfirmationManager {
         if (result.isPendingState()) {
             log.info("Auto confirm received a {} message for tradeId {}, retry will happen automatically",
                     result.getState(), trade.getShortId());
-            trade.setXmrProofResult(result);         // this updates the GUI with the status..
+            trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
             // Repeating the requests is handled in XmrTransferProofRequester
             return success;
         }
@@ -243,7 +243,7 @@ public class AutoConfirmationManager {
             }
             // we've received the final PROOF_OK, all good here.
             txProofResultsPending.remove(trade.getId());
-            trade.setXmrProofResult(result);            // this updates the GUI with the status..
+            trade.setAutoConfirmResult(result);            // this updates the GUI with the status..
             log.info("Auto confirm was successful, transitioning trade {} to next step...", trade.getShortId());
             if (!trade.isPayoutPublished()) {
                 // note that this state can also be triggered by auto confirmation feature
@@ -262,7 +262,7 @@ public class AutoConfirmationManager {
         //   TX_KEY_INVALID, ADDRESS_INVALID, AMOUNT_NOT_MATCHING, TRADE_DATE_NOT_MATCHING
         log.warn("Tx Proof Failure {}, shutting down all open API requests for this trade {}",
                 result.getState(), trade.getShortId());
-        trade.setXmrProofResult(result);         // this updates the GUI with the status..
+        trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
         resultsCountdown = -1;  // signal all API requestors to cease
         txProofResultsPending.put(trade.getId(), resultsCountdown);   // track proof result count
         return failure;
