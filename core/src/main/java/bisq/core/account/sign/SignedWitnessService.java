@@ -180,7 +180,7 @@ public class SignedWitnessService {
     public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
         return getSignedWitnessSet(accountAgeWitness).stream()
                 .map(SignedWitness::getWitnessOwnerPubKey)
-                .anyMatch(ownerPubKey -> filterManager.isSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
+                .anyMatch(ownerPubKey -> filterManager.isWitnessSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
     }
 
     private byte[] ownerPubKey(AccountAgeWitness accountAgeWitness) {
@@ -442,7 +442,7 @@ public class SignedWitnessService {
     private boolean isValidSignerWitnessInternal(SignedWitness signedWitness,
                                                  long childSignedWitnessDateMillis,
                                                  Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
-        if (filterManager.isSignerPubKeyBanned(Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))) {
+        if (filterManager.isWitnessSignerPubKeyBanned(Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))) {
             return false;
         }
         if (!verifySignature(signedWitness)) {

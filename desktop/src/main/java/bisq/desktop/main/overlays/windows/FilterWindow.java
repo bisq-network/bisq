@@ -160,42 +160,54 @@ public class FilterWindow extends Overlay<FilterWindow> {
             disableDaoBelowVersionInputTextField.setText(filter.getDisableDaoBelowVersion());
             disableTradeBelowVersionInputTextField.setText(filter.getDisableTradeBelowVersion());
         }
-        Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
-        sendButton.setOnAction(e -> {
-            if (filterManager.addFilterMessageIfKeyIsValid(
-                    new Filter(
-                            readAsList(offerIdsInputTextField),
-                            readAsList(nodesInputTextField),
-                            readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
-                            readAsList(bannedCurrenciesInputTextField),
-                            readAsList(bannedPaymentMethodsInputTextField),
-                            readAsList(arbitratorsInputTextField),
-                            readAsList(seedNodesInputTextField),
-                            readAsList(priceRelayNodesInputTextField),
-                            preventPublicBtcNetworkCheckBox.isSelected(),
-                            readAsList(btcNodesInputTextField),
-                            disableDaoCheckBox.isSelected(),
-                            disableDaoBelowVersionInputTextField.getText(),
-                            disableTradeBelowVersionInputTextField.getText(),
-                            readAsList(mediatorsInputTextField),
-                            readAsList(refundAgentsInputTextField),
-                            readAsList(bannedSignerPubKeysInputTextField),
-                            readAsList(btcFeeReceiverAddressesInputTextField)
-                    ),
-                    keyInputTextField.getText())
-            )
-                hide();
-            else
-                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
-        });
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
+        removeFilterMessageButton.setDisable(filterManager.getDevelopersFilter() == null);
+
+        Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
+        sendButton.setOnAction(e -> {
+            if (keyInputTextField.getText().isEmpty()) {
+                return;
+            }
+            Filter newFilter = new Filter(
+                    readAsList(offerIdsInputTextField),
+                    readAsList(nodesInputTextField),
+                    readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
+                    readAsList(bannedCurrenciesInputTextField),
+                    readAsList(bannedPaymentMethodsInputTextField),
+                    readAsList(arbitratorsInputTextField),
+                    readAsList(seedNodesInputTextField),
+                    readAsList(priceRelayNodesInputTextField),
+                    preventPublicBtcNetworkCheckBox.isSelected(),
+                    readAsList(btcNodesInputTextField),
+                    disableDaoCheckBox.isSelected(),
+                    disableDaoBelowVersionInputTextField.getText(),
+                    disableTradeBelowVersionInputTextField.getText(),
+                    readAsList(mediatorsInputTextField),
+                    readAsList(refundAgentsInputTextField),
+                    readAsList(bannedSignerPubKeysInputTextField),
+                    readAsList(btcFeeReceiverAddressesInputTextField),
+                    filterManager.getOwnerPubKey()
+            );
+            if (filterManager.isValidDevPrivilegeKey(keyInputTextField.getText())) {
+                filterManager.publishFilter(newFilter);
+                removeFilterMessageButton.setDisable(filterManager.getDevelopersFilter() == null);
+                hide();
+            } else {
+                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+            }
+        });
+
         removeFilterMessageButton.setOnAction(e -> {
-            if (keyInputTextField.getText().length() > 0) {
-                if (filterManager.removeFilterMessageIfKeyIsValid(keyInputTextField.getText()))
-                    hide();
-                else
-                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+            if (keyInputTextField.getText().isEmpty()) {
+                return;
+            }
+
+            if (filterManager.isValidDevPrivilegeKey(keyInputTextField.getText())) {
+                filterManager.removeFilter();
+                hide();
+            } else {
+                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
@@ -215,13 +227,13 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     private void setupFieldFromList(InputTextField field, List<String> values) {
         if (values != null)
-            field.setText(values.stream().collect(Collectors.joining(", ")));
+            field.setText(String.join(", ", values));
     }
 
     private void setupFieldFromPaymentAccountFiltersList(InputTextField field, List<PaymentAccountFilter> values) {
         if (values != null) {
             StringBuilder sb = new StringBuilder();
-            values.stream().forEach(e -> {
+            values.forEach(e -> {
                 if (e != null && e.getPaymentMethodId() != null) {
                     sb
                             .append(e.getPaymentMethodId())

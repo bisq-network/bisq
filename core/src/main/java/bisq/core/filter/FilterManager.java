@@ -29,9 +29,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
@@ -39,6 +37,7 @@ import bisq.common.config.ConfigFileEditor;
 import bisq.common.crypto.KeyRing;
 
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
@@ -47,33 +46,35 @@ import javax.inject.Named;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.security.SignatureException;
+import org.spongycastle.util.encoders.Base64;
+
+import java.security.PublicKey;
+
+import java.nio.charset.StandardCharsets;
 
 import java.math.BigInteger;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 import java.lang.reflect.Method;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.bitcoinj.core.Utils.HEX;
 
+/**
+ * We only support one active filter, if we receive multiple we use the one with the more recent creationDate.
+ */
+@Slf4j
 public class FilterManager {
-
-    private static final Logger log = LoggerFactory.getLogger(FilterManager.class);
-
-    public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
-    public static final String BANNED_SEED_NODES = "bannedSeedNodes";
-    public static final String BANNED_BTC_NODES = "bannedBtcNodes";
+    private static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
+    private static final String BANNED_SEED_NODES = "bannedSeedNodes";
+    private static final String BANNED_BTC_NODES = "bannedBtcNodes";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,16 +91,16 @@ public class FilterManager {
     private final Preferences preferences;
     private final ConfigFileEditor configFileEditor;
     private final ProvidersRepository providersRepository;
-    private boolean ignoreDevMsg;
+    private final boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
-
     private final String pubKeyAsHex;
+
     private ECKey filterSigningKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, Initialization
+    // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
@@ -118,47 +119,54 @@ public class FilterManager {
         this.configFileEditor = new ConfigFileEditor(config.configFile);
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
+
         pubKeyAsHex = useDevPrivilegeKeys ?
                 DevEnv.DEV_PRIVILEGE_PUB_KEY :
                 "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void onAllServicesInitialized() {
-        if (!ignoreDevMsg) {
-
-            final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getP2PDataStorage().getMap().values());
-            list.forEach(e -> {
-                final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-                if (protectedStoragePayload instanceof Filter)
-                    addFilter((Filter) protectedStoragePayload);
-            });
-
-            p2PService.addHashSetChangedListener(new HashMapChangedListener() {
-                @Override
-                public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-                    protectedStorageEntries.forEach(protectedStorageEntry -> {
-                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
-                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
-                            boolean wasValid = addFilter(filter);
-                            if (!wasValid) {
-                                UserThread.runAfter(() -> p2PService.getP2PDataStorage().removeInvalidProtectedStorageEntry(protectedStorageEntry), 1);
-                            }
-                        }
-                    });
-                }
-
-                @Override
-                public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-                    protectedStorageEntries.forEach(protectedStorageEntry -> {
-                        if (protectedStorageEntry.getProtectedStoragePayload() instanceof Filter) {
-                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
-                            if (verifySignature(filter) && getFilter().equals(filter))
-                                resetFilters();
-                        }
-                    });
-                }
-            });
+        if (ignoreDevMsg) {
+            return;
         }
+
+        p2PService.getP2PDataStorage().getMap().values().stream()
+                .map(ProtectedStorageEntry::getProtectedStoragePayload)
+                .filter(protectedStoragePayload -> protectedStoragePayload instanceof Filter)
+                .map(protectedStoragePayload -> (Filter) protectedStoragePayload)
+                .filter(this::verifySignature)
+                .forEach(this::onFilterAddedFromNetwork);
+
+        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+            @Override
+            public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.stream()
+                        .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof Filter)
+                        .forEach(protectedStorageEntry -> {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            if (verifySignature(filter)) {
+                                onFilterAddedFromNetwork(filter);
+                            }
+                        });
+            }
+
+            @Override
+            public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.stream()
+                        .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof Filter)
+                        .forEach(protectedStorageEntry -> {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            if (verifySignature(filter)) {
+                                onFilterRemovedFromNetwork(filter);
+                            }
+                        });
+            }
+        });
 
         p2PService.addP2PServiceListener(new P2PServiceListener() {
             @Override
@@ -175,12 +183,12 @@ public class FilterManager {
 
             @Override
             public void onUpdatedDataReceived() {
-                // We should have received all data at that point and if the filers were not set we
-                // clean up as it might be that we missed the filter remove message if we have not been online.
-                UserThread.runAfter(() -> {
-                    if (filterProperty.get() == null)
-                        resetFilters();
-                }, 1);
+                // We should have received all data at that point and if the filters were not set we
+                // clean up the persisted banned nodes in the options file as it might be that we missed the filter
+                // remove message if we have not been online.
+                if (filterProperty.get() == null) {
+                    clearBannedNodes();
+                }
             }
 
             @Override
@@ -201,54 +209,37 @@ public class FilterManager {
         });
     }
 
-    private void resetFilters() {
-        saveBannedNodes(BANNED_BTC_NODES, null);
-        saveBannedNodes(BANNED_SEED_NODES, null);
-        saveBannedNodes(BANNED_PRICE_RELAY_NODES, null);
-
-        if (providersRepository.getBannedNodes() != null)
-            providersRepository.applyBannedNodes(null);
-
-        filterProperty.set(null);
-    }
-
-    private boolean addFilter(Filter filter) {
-        if (verifySignature(filter)) {
-            // Seed nodes are requested at startup before we get the filter so we only apply the banned
-            // nodes at the next startup and don't update the list in the P2P network domain.
-            // We persist it to the property file which is read before any other initialisation.
-            saveBannedNodes(BANNED_SEED_NODES, filter.getSeedNodes());
-            saveBannedNodes(BANNED_BTC_NODES, filter.getBtcNodes());
-
-            // Banned price relay nodes we can apply at runtime
-            final List<String> priceRelayNodes = filter.getPriceRelayNodes();
-            saveBannedNodes(BANNED_PRICE_RELAY_NODES, priceRelayNodes);
-
-            providersRepository.applyBannedNodes(priceRelayNodes);
-
-            filterProperty.set(filter);
-            listeners.forEach(e -> e.onFilterAdded(filter));
-
-            if (filter.isPreventPublicBtcNetwork() &&
-                    preferences.getBitcoinNodesOptionOrdinal() == BtcNodes.BitcoinNodesOption.PUBLIC.ordinal())
-                preferences.setBitcoinNodesOptionOrdinal(BtcNodes.BitcoinNodesOption.PROVIDED.ordinal());
-            return true;
-        } else {
+    public boolean isValidDevPrivilegeKey(String privKeyString) {
+        try {
+            filterSigningKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));
+            return pubKeyAsHex.equals(Utils.HEX.encode(filterSigningKey.getPubKey()));
+        } catch (Throwable t) {
             return false;
         }
     }
 
-    private void saveBannedNodes(String optionName, List<String> bannedNodes) {
-        if (bannedNodes != null)
-            configFileEditor.setOption(optionName, String.join(",", bannedNodes));
-        else
-            configFileEditor.clearOption(optionName);
+    public void publishFilter(Filter filterWithoutSig) {
+        String signatureAsBase64 = getSignature(filterWithoutSig);
+        Filter filterWithSig = Filter.cloneWithSig(filterWithoutSig, signatureAsBase64);
+        user.setDevelopersFilter(filterWithSig);
+
+        p2PService.addProtectedStorageEntry(filterWithSig);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void removeFilter() {
+        Filter filterWithSig = user.getDevelopersFilter();
+        if (filterWithSig == null) {
+            // Should not happen as UI button is deactivated in that case
+            return;
+        }
+
+        if (p2PService.removeData(filterWithSig)) {
+            user.setDevelopersFilter(null);
+        } else {
+            log.warn("Removing dev filter from network failed");
+        }
+    }
 
     public void addListener(Listener listener) {
         listeners.add(listener);
@@ -261,80 +252,6 @@ public class FilterManager {
     @Nullable
     public Filter getFilter() {
         return filterProperty.get();
-    }
-
-    public boolean addFilterMessageIfKeyIsValid(Filter filter, String privKeyString) {
-        // if there is a previous message we remove that first
-        if (user.getDevelopersFilter() != null)
-            removeFilterMessageIfKeyIsValid(privKeyString);
-
-        boolean isKeyValid = isKeyValid(privKeyString);
-        if (isKeyValid) {
-            signAndAddSignatureToFilter(filter);
-            user.setDevelopersFilter(filter);
-
-            boolean result = p2PService.addProtectedStorageEntry(filter);
-            if (result)
-                log.trace("Add filter to network was successful. FilterMessage = {}", filter);
-
-        }
-        return isKeyValid;
-    }
-
-    public boolean removeFilterMessageIfKeyIsValid(String privKeyString) {
-        if (isKeyValid(privKeyString)) {
-            Filter filter = user.getDevelopersFilter();
-            if (filter == null) {
-                log.warn("Developers filter is null");
-            } else if (p2PService.removeData(filter)) {
-                log.trace("Remove filter from network was successful. FilterMessage = {}", filter);
-                user.setDevelopersFilter(null);
-            } else {
-                log.warn("Filter remove failed");
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean isKeyValid(String privKeyString) {
-        try {
-            filterSigningKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));
-            return pubKeyAsHex.equals(Utils.HEX.encode(filterSigningKey.getPubKey()));
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    private void signAndAddSignatureToFilter(Filter filter) {
-        filter.setSigAndPubKey(filterSigningKey.signMessage(getHexFromData(filter)), keyRing.getSignatureKeyPair().getPublic());
-    }
-
-    private boolean verifySignature(Filter filter) {
-        try {
-            ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(getHexFromData(filter), filter.getSignatureAsBase64());
-            return true;
-        } catch (SignatureException e) {
-            log.warn("verifySignature failed. filter={}", filter);
-            return false;
-        }
-    }
-
-    // We don't use full data from Filter as we are only interested in the filter data not the sig and keys
-    private String getHexFromData(Filter filter) {
-        protobuf.Filter.Builder builder = protobuf.Filter.newBuilder()
-                .addAllBannedOfferIds(filter.getBannedOfferIds())
-                .addAllBannedNodeAddress(filter.getBannedNodeAddress())
-                .addAllBannedPaymentAccounts(filter.getBannedPaymentAccounts().stream()
-                        .map(PaymentAccountFilter::toProtoMessage)
-                        .collect(Collectors.toList()));
-
-        Optional.ofNullable(filter.getBannedCurrencies()).ifPresent(builder::addAllBannedCurrencies);
-        Optional.ofNullable(filter.getBannedPaymentMethods()).ifPresent(builder::addAllBannedPaymentMethods);
-        Optional.ofNullable(filter.getBannedSignerPubKeys()).ifPresent(builder::addAllBannedSignerPubKeys);
-
-        return Utils.HEX.encode(builder.build().toByteArray());
     }
 
     @Nullable
@@ -396,8 +313,8 @@ public class FilterManager {
         return requireUpdateToNewVersion;
     }
 
-    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
-                                                      PaymentAccountFilter[] appliedPaymentAccountFilter) {
+    public boolean arePeersPaymentAccountDataBanned(PaymentAccountPayload paymentAccountPayload,
+                                                    PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return getFilter() != null &&
                 getFilter().getBannedPaymentAccounts().stream()
                         .anyMatch(paymentAccountFilter -> {
@@ -419,11 +336,115 @@ public class FilterManager {
                         });
     }
 
-    public boolean isSignerPubKeyBanned(String signerPubKeyAsHex) {
+    public boolean isWitnessSignerPubKeyBanned(String witnessSignerPubKeyAsHex) {
         return getFilter() != null &&
                 getFilter().getBannedSignerPubKeys() != null &&
                 getFilter().getBannedSignerPubKeys().stream()
-                        .anyMatch(e -> e.equals(signerPubKeyAsHex));
+                        .anyMatch(e -> e.equals(witnessSignerPubKeyAsHex));
     }
 
+    public PublicKey getOwnerPubKey() {
+        return keyRing.getSignatureKeyPair().getPublic();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onFilterAddedFromNetwork(Filter filter) {
+        if (filterProperty.get() != null && filterProperty.get().getCreationDate() > filter.getCreationDate()) {
+            log.warn("We received a new filter from the network but the creation date is older than the " +
+                            "filter we have already. We ignore the new filter.\n" +
+                            "New filer={}\n" +
+                            "Old filter={}",
+                    filter, filterProperty.get());
+            return;
+        }
+
+        // Our new filter is newer so we apply it.
+        // We do not require strict guarantees here (e.g. clocks not synced) as only trusted developers have the key
+        // for deploying filters and this is only in place to avoid unintended situations of multiple filters
+        // from multiple devs or if same dev publishes new filter from different app without the persisted devFilter.
+        filterProperty.set(filter);
+
+        // Seed nodes are requested at startup before we get the filter so we only apply the banned
+        // nodes at the next startup and don't update the list in the P2P network domain.
+        // We persist it to the property file which is read before any other initialisation.
+        saveBannedNodes(BANNED_SEED_NODES, filter.getSeedNodes());
+        saveBannedNodes(BANNED_BTC_NODES, filter.getBtcNodes());
+
+        // Banned price relay nodes we can apply at runtime
+        List<String> priceRelayNodes = filter.getPriceRelayNodes();
+        saveBannedNodes(BANNED_PRICE_RELAY_NODES, priceRelayNodes);
+        providersRepository.applyBannedNodes(priceRelayNodes);
+
+        if (filter.isPreventPublicBtcNetwork() &&
+                preferences.getBitcoinNodesOptionOrdinal() == BtcNodes.BitcoinNodesOption.PUBLIC.ordinal()) {
+            preferences.setBitcoinNodesOptionOrdinal(BtcNodes.BitcoinNodesOption.PROVIDED.ordinal());
+        }
+
+        listeners.forEach(e -> e.onFilterAdded(filter));
+    }
+
+    // We clean up potentially banned nodes and set value of filter property to null
+    private void onFilterRemovedFromNetwork(Filter filter) {
+        if (!filterProperty.get().equals(filter)) {
+            return;
+        }
+
+        clearBannedNodes();
+
+        if (filter.equals(user.getDevelopersFilter())) {
+            user.setDevelopersFilter(null);
+        }
+        filterProperty.set(null);
+    }
+
+    // Clears options files from banned nodes
+    private void clearBannedNodes() {
+        saveBannedNodes(BANNED_BTC_NODES, null);
+        saveBannedNodes(BANNED_SEED_NODES, null);
+        saveBannedNodes(BANNED_PRICE_RELAY_NODES, null);
+
+        if (providersRepository.getBannedNodes() != null) {
+            providersRepository.applyBannedNodes(null);
+        }
+    }
+
+    private void saveBannedNodes(String optionName, List<String> bannedNodes) {
+        if (bannedNodes != null)
+            configFileEditor.setOption(optionName, String.join(",", bannedNodes));
+        else
+            configFileEditor.clearOption(optionName);
+    }
+
+    private String getSignature(Filter filterWithoutSig) {
+        Sha256Hash hash = getSha256Hash(filterWithoutSig);
+        ECKey.ECDSASignature ecdsaSignature = filterSigningKey.sign(hash);
+        byte[] encodeToDER = ecdsaSignature.encodeToDER();
+        return new String(Base64.encode(encodeToDER), StandardCharsets.UTF_8);
+    }
+
+    private boolean verifySignature(Filter filter) {
+        try {
+            Filter filterForSigVerification = Filter.cloneWithoutSig(filter);
+            Sha256Hash hash = getSha256Hash(filterForSigVerification);
+
+            checkNotNull(filter.getSignatureAsBase64(), "filter.getSignatureAsBase64() must not be null");
+            byte[] sigData = Base64.decode(filter.getSignatureAsBase64());
+            ECKey.ECDSASignature ecdsaSignature = ECKey.ECDSASignature.decodeFromDER(sigData);
+
+            ECKey ecPubKey = ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex));
+            return ecPubKey.verify(hash, ecdsaSignature);
+        } catch (Throwable e) {
+            log.warn("verifySignature failed. filter={}", filter);
+            return false;
+        }
+    }
+
+    private Sha256Hash getSha256Hash(Filter filter) {
+        byte[] filterData = filter.toProtoMessage().toByteArray();
+        return Sha256Hash.of(filterData);
+    }
 }
