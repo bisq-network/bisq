@@ -20,6 +20,9 @@ package bisq.seednode;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PServiceListener;
+
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
@@ -47,7 +50,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-        startShutDownInterval(this);
         CommonSetup.setup(this);
 
         keepRunning();
@@ -95,5 +97,40 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     @Override
     protected void startApplication() {
         seedNode.startApplication();
+
+        injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
+            @Override
+            public void onDataReceived() {
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+            }
+
+            @Override
+            public void onUpdatedDataReceived() {
+            }
+
+            @Override
+            public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+                startShutDownInterval(SeedNodeMain.this);
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges() {
+            }
+        });
     }
 }
