@@ -121,9 +121,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final BooleanProperty preliminaryDataReceived = new SimpleBooleanProperty();
     private final IntegerProperty numConnectedPeers = new SimpleIntegerProperty(0);
 
-    private volatile boolean shutDownInProgress;
-    @Getter
-    private boolean shutDownComplete;
     private final Subscription networkReadySubscription;
     private boolean isBootstrapped;
     private final KeepAliveManager keepAliveManager;
