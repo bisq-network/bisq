@@ -123,6 +123,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final IntegerProperty numConnectedPeers = new SimpleIntegerProperty(0);
 
     private volatile boolean shutDownInProgress;
+    @Getter
     private boolean shutDownComplete;
     private final Subscription networkReadySubscription;
     private boolean isBootstrapped;
@@ -446,7 +447,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     @Override
-    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) { }
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        // not handled
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DirectMessages
@@ -463,7 +466,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress, PubKeyRing pubKeyRing, NetworkEnvelope message,
+    private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress,
+                                              PubKeyRing pubKeyRing,
+                                              NetworkEnvelope message,
                                               SendDirectMessageListener sendDirectMessageListener) {
         log.debug("Send encrypted direct message {} to peer {}",
                 message.getClass().getSimpleName(), peersNodeAddress);
@@ -691,7 +696,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         }
 
                         @Override
-                        public void onBroadcastCompleted(BroadcastMessage message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts) {
+                        public void onBroadcastCompleted(BroadcastMessage message,
+                                                         int numOfCompletedBroadcasts,
+                                                         int numOfFailedBroadcasts) {
                             log.info("Broadcast completed: Sent to {} peers (failed: {}). Message = {}",
                                     numOfCompletedBroadcasts, numOfFailedBroadcasts, Utilities.toTruncatedString(message));
                             if (numOfCompletedBroadcasts == 0)

@@ -24,7 +24,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -36,8 +38,15 @@ import bisq.common.util.RestartUtil;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -106,6 +115,62 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         }
     }
 
+    public void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
+        List<NodeAddress> seedNodeAddresses = new ArrayList<>(injector.getInstance(SeedNodeRepository.class).getSeedNodeAddresses());
+        seedNodeAddresses.sort(Comparator.comparing(NodeAddress::getFullAddress));
+
+        NodeAddress myAddress = injector.getInstance(P2PService.class).getNetworkNode().getNodeAddress();
+        int myIndex = -1;
+        for (int i = 0; i < seedNodeAddresses.size(); i++) {
+            if (seedNodeAddresses.get(i).equals(myAddress)) {
+                myIndex = i;
+                break;
+            }
+        }
+
+        if (myIndex == -1) {
+            log.warn("We did not find our node address in the seed nodes repository. " +
+                            "We use a 24 hour delay after startup as shut down strategy." +
+                            "myAddress={}, seedNodeAddresses={}",
+                    myAddress, seedNodeAddresses);
+
+            UserThread.runPeriodically(() -> {
+                if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
+                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                    "Shut down as node was running longer as {} hours" +
+                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                            SHUTDOWN_INTERVAL / 3600000);
+
+                    shutDown(gracefulShutDownHandler);
+                }
+
+            }, CHECK_SHUTDOWN_SEC);
+            return;
+        }
+
+        // We interpret the value of myIndex as hour of day (0-23). That way we avoid the risk of a restart of
+        // multiple nodes around the same time in case it would be not deterministic.
+
+        // We wrap our periodic check in a delay of 2 hours to avoid that we get
+        // triggered multiple times after a restart while being in the same hour. It can be that we miss our target
+        // hour during that delay but that is not considered problematic, the seed would just restart a bit longer than
+        // 24 hours.
+        int target = myIndex;
+        UserThread.runAfter(() -> {
+            // We check every hour if we are in the target hour.
+            UserThread.runPeriodically(() -> {
+                int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("GMT0")).getHour();
+                if (currentHour == target) {
+                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                            "Shut down node at hour {}" +
+                            "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n", target);
+                    shutDown(gracefulShutDownHandler);
+                }
+            }, TimeUnit.MINUTES.toSeconds(10));
+        }, TimeUnit.HOURS.toSeconds(2));
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UncaughtExceptionHandler implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -126,20 +191,6 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
             } catch (InterruptedException ignore) {
             }
         }
-    }
-
-    protected void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
-        UserThread.runPeriodically(() -> {
-            if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
-                log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                "Shut down as node was running longer as {} hours" +
-                                "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
-                        SHUTDOWN_INTERVAL / 3600000);
-
-                shutDown(gracefulShutDownHandler);
-            }
-
-        }, CHECK_SHUTDOWN_SEC);
     }
 
     protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
