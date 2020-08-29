@@ -19,6 +19,8 @@ package bisq.core.support.messages;
 
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Attachment;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -59,7 +61,6 @@ import javax.annotation.Nullable;
 @Getter
 @Slf4j
 public final class ChatMessage extends SupportMessage {
-
     public interface Listener {
         void onMessageStateChanged();
     }
@@ -326,6 +327,16 @@ public final class ChatMessage extends SupportMessage {
 
     public void addWeakMessageStateListener(Listener listener) {
         this.listener = new WeakReference<>(listener);
+    }
+
+    public boolean isResultMessage(Dispute dispute) {
+        DisputeResult disputeResult = dispute.getDisputeResultProperty().get();
+        if (disputeResult == null) {
+            return false;
+        }
+
+        ChatMessage resultChatMessage = disputeResult.getChatMessage();
+        return resultChatMessage != null && resultChatMessage.getUid().equals(uid);
     }
 
     private void notifyChangeListener() {

@@ -188,11 +188,6 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
         dispute.setIsClosed(true);
 
-        if (dispute.disputeResultProperty().get() != null) {
-            log.warn("We got already a dispute result. That should only happen if a dispute needs to be closed " +
-                    "again because the first close did not succeed. TradeId = " + tradeId);
-        }
-
         dispute.setDisputeResult(disputeResult);
 
         Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);

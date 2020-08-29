@@ -122,6 +122,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final IntegerProperty numConnectedPeers = new SimpleIntegerProperty(0);
 
     private volatile boolean shutDownInProgress;
+    @Getter
     private boolean shutDownComplete;
     private final Subscription networkReadySubscription;
     private boolean isBootstrapped;
@@ -446,6 +447,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        // not handled
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

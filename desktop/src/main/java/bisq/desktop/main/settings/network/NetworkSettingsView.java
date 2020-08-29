@@ -304,16 +304,14 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         sentDataTextField.textProperty().bind(createStringBinding(() -> Res.get("settings.net.sentData",
                 FormattingUtils.formatBytes(Statistic.totalSentBytesProperty().get()),
                 Statistic.numTotalSentMessagesProperty().get(),
-                Statistic.numTotalSentMessagesPerSecProperty().get(),
-                Statistic.numTotalSentMessagesLastSecProperty().get()),
-                Statistic.numTotalSentMessagesLastSecProperty()));
+                Statistic.numTotalSentMessagesPerSecProperty().get()),
+                Statistic.numTotalSentMessagesPerSecProperty()));
 
         receivedDataTextField.textProperty().bind(createStringBinding(() -> Res.get("settings.net.receivedData",
                 FormattingUtils.formatBytes(Statistic.totalReceivedBytesProperty().get()),
                 Statistic.numTotalReceivedMessagesProperty().get(),
-                Statistic.numTotalReceivedMessagesPerSecProperty().get(),
-                Statistic.numTotalReceivedMessagesLastSecProperty().get()),
-                Statistic.numTotalReceivedMessagesLastSecProperty()));
+                Statistic.numTotalReceivedMessagesPerSecProperty().get()),
+                Statistic.numTotalReceivedMessagesPerSecProperty()));
 
         bitcoinSortedList.comparatorProperty().bind(bitcoinPeersTableView.comparatorProperty());
         bitcoinPeersTableView.setItems(bitcoinSortedList);
