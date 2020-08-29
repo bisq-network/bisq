@@ -946,7 +946,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 List<String> serviceAddresses = Arrays.asList(StringUtils.deleteWhitespace(newValue).split(","));
                 // revert to default service providers when user empties the list
                 if (serviceAddresses.size() == 1 && serviceAddresses.get(0).length() == 0)
-                    serviceAddresses = Preferences.DEFAULT_XMR_PROOF_PROVIDERS;
+                    serviceAddresses = Preferences.getDefaultXmrProofProviders();
                 preferences.setAutoConfServiceAddresses(serviceAddresses);
             }
         };

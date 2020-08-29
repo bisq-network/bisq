@@ -33,6 +33,7 @@ import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
+import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -123,8 +124,15 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     ));
 
     // list of XMR proof providers : this list will be used if no preference has been set
-    public static final List<String> DEFAULT_XMR_PROOF_PROVIDERS = new ArrayList<> (Arrays.asList(
-            "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
+    public static final List<String> getDefaultXmrProofProviders() {
+        if (DevEnv.isDevMode()) {
+            return new ArrayList<>(Arrays.asList(
+                    "78.47.61.90:8081"));
+        } else {
+            return new ArrayList<>(Arrays.asList(
+                    "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
+        }
+    }
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
 
@@ -411,7 +419,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         if (prefPayload.getAutoConfirmSettingsList().size() == 0) {
             // default values for AutoConfirmSettings when persisted payload is empty:
             prefPayload.getAutoConfirmSettingsList().add(new AutoConfirmSettings(
-                    false, 5, Coin.valueOf(10000000).value, DEFAULT_XMR_PROOF_PROVIDERS, "XMR"));
+                    false, 5, Coin.valueOf(10000000).value, getDefaultXmrProofProviders(), "XMR"));
         }
         return prefPayload.getAutoConfirmSettingsList().get(0);
     }
