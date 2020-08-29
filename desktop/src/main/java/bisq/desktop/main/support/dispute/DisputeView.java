@@ -42,6 +42,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -66,7 +67,6 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -84,6 +84,8 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -103,6 +105,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
+
+import javax.annotation.Nullable;
 
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
@@ -128,12 +132,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
-    protected EventHandler<KeyEvent> keyEventEventHandler;
+    private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
     protected FilteredList<Dispute> filteredList;
-    private InputTextField filterTextField;
+    protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
-    protected HBox filterBox;
+    private HBox filterBox;
+    protected AutoTooltipButton reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
+    private Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
+    @Nullable
+    private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -169,17 +177,38 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         HBox.setHgrow(label, Priority.NEVER);
 
         filterTextField = new InputTextField();
-        filterTextField.setText("open");
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
         HBox.setHgrow(filterTextField, Priority.NEVER);
 
-        Button reportButton = new AutoTooltipButton(Res.get("support.reportButton.label"));
+        reOpenButton = new AutoTooltipButton(Res.get("support.reOpenButton.label"));
+        reOpenButton.setDisable(true);
+        reOpenButton.setVisible(false);
+        reOpenButton.setManaged(false);
+        HBox.setHgrow(reOpenButton, Priority.NEVER);
+        reOpenButton.setOnAction(e -> {
+            reOpenDisputeFromButton();
+        });
+
+        sendPrivateNotificationButton = new AutoTooltipButton(Res.get("support.sendNotificationButton.label"));
+        sendPrivateNotificationButton.setDisable(true);
+        sendPrivateNotificationButton.setVisible(false);
+        sendPrivateNotificationButton.setManaged(false);
+        HBox.setHgrow(sendPrivateNotificationButton, Priority.NEVER);
+        sendPrivateNotificationButton.setOnAction(e -> {
+            sendPrivateNotification();
+        });
+
+        reportButton = new AutoTooltipButton(Res.get("support.reportButton.label"));
+        reportButton.setVisible(false);
+        reportButton.setManaged(false);
         HBox.setHgrow(reportButton, Priority.NEVER);
         reportButton.setOnAction(e -> {
             showCompactReport();
         });
 
-        Button fullReportButton = new AutoTooltipButton(Res.get("support.fullReportButton.label"));
+        fullReportButton = new AutoTooltipButton(Res.get("support.fullReportButton.label"));
+        fullReportButton.setVisible(false);
+        fullReportButton.setManaged(false);
         HBox.setHgrow(fullReportButton, Priority.NEVER);
         fullReportButton.setOnAction(e -> {
             showFullReport();
@@ -190,10 +219,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         filterBox = new HBox();
         filterBox.setSpacing(5);
-        filterBox.getChildren().addAll(label, filterTextField, spacer, reportButton, fullReportButton);
+        filterBox.getChildren().addAll(label, filterTextField, spacer, reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton);
         VBox.setVgrow(filterBox, Priority.NEVER);
-        filterBox.setVisible(false);
-        filterBox.setManaged(false);
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.SOMETIMES);
@@ -201,82 +228,302 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         root.getChildren().addAll(filterBox, tableView);
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
-        placeholder.setWrapText(true);
-        tableView.setPlaceholder(placeholder);
-        tableView.getSelectionModel().clearSelection();
-
-        tableView.getColumns().add(getSelectColumn());
-
-        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
-        tableView.getColumns().add(contractColumn);
-
-        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
-        tableView.getColumns().add(dateColumn);
-
-        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
-        tableView.getColumns().add(tradeIdColumn);
-
-        TableColumn<Dispute, Dispute> buyerOnionAddressColumn = getBuyerOnionAddressColumn();
-        tableView.getColumns().add(buyerOnionAddressColumn);
-
-        TableColumn<Dispute, Dispute> sellerOnionAddressColumn = getSellerOnionAddressColumn();
-        tableView.getColumns().add(sellerOnionAddressColumn);
-
-
-        TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
-        tableView.getColumns().add(marketColumn);
-
-        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
-        tableView.getColumns().add(roleColumn);
-
-        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
-        tableView.getColumns().add(stateColumn);
-
-        tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
-        dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
-        buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
-        sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
-        marketColumn.setComparator((o1, o2) -> CurrencyUtil.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
-
-        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getSortOrder().add(dateColumn);
+        setupTable();
 
         selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> chatView.setInputBoxVisible(!newValue);
 
-        keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.U, event)) {
-                // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
-                if (selectedDispute != null) {
-                    if (selectedDisputeClosedPropertyListener != null)
-                        selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-                    selectedDispute.setIsClosed(false);
-                    handleOnSelectDispute(selectedDispute);
-                }
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
-                if (selectedDispute != null) {
-                    PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
-                    NodeAddress nodeAddress;
-                    if (pubKeyRing.equals(selectedDispute.getContract().getBuyerPubKeyRing()))
-                        nodeAddress = selectedDispute.getContract().getBuyerNodeAddress();
-                    else
-                        nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
-
-                    new SendPrivateNotificationWindow(
-                            privateNotificationManager,
-                            pubKeyRing,
-                            nodeAddress,
-                            useDevPrivilegeKeys
-                    ).show();
-                }
-            } else {
-                handleKeyPressed(event);
-            }
-        };
+        keyEventEventHandler = this::handleKeyPressed;
 
         chatView = new ChatView(disputeManager, formatter);
         chatView.initialize();
+    }
+
+    @Override
+    protected void activate() {
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+
+        filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
+        applyFilteredListPredicate(filterTextField.getText());
+
+        sortedList = new SortedList<>(filteredList);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
+
+        // sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
+        selectedDisputeSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
+
+        Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
+        if (selectedItem != null)
+            tableView.getSelectionModel().select(selectedItem);
+        else if (sortedList.size() > 0)
+            tableView.getSelectionModel().select(0);
+
+        if (chatView != null) {
+            chatView.activate();
+            chatView.scrollToBottom();
+        }
+
+        scene = root.getScene();
+        if (scene != null)
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        // If doPrint=true we print out a html page which opens tabs with all deposit txs
+        // (firefox needs about:config change to allow > 20 tabs)
+        // Useful to check if there any funds in not finished trades (no payout tx done).
+        // Last check 10.02.2017 found 8 trades and we contacted all traders as far as possible (email if available
+        // otherwise in-app private notification)
+        boolean doPrint = false;
+        //noinspection ConstantConditions
+        if (doPrint) {
+            try {
+                DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
+                //noinspection UnusedAssignment
+                Date startDate = formatter.parse("10/02/17");
+                startDate = new Date(0); // print all from start
+
+                HashMap<String, Dispute> map = new HashMap<>();
+                disputeManager.getDisputesAsObservableList().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
+
+                final Date finalStartDate = startDate;
+                List<Dispute> disputes = new ArrayList<>(map.values());
+                disputes.sort(Comparator.comparing(Dispute::getOpeningDate));
+                List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
+                StringBuilder sb = new StringBuilder();
+                // We don't translate that as it is not intended for the public
+                subLists.forEach(list -> {
+                    StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
+                    StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
+                    list.forEach(dispute -> {
+                        if (dispute.getOpeningDate().after(finalStartDate)) {
+                            String txId = dispute.getDepositTxId();
+                            sb1.append("window.open(\"https://blockchain.info/tx/").append(txId).append("\", '_blank');\n");
+
+                            sb2.append("Dispute ID: ").append(dispute.getId()).
+                                    append(" Tx ID: ").
+                                    append("<a href=\"https://blockchain.info/tx/").append(txId).append("\">").
+                                    append(txId).append("</a> ").
+                                    append("Opening date: ").append(formatter.format(dispute.getOpeningDate())).append("<br/>\n");
+                        }
+                    });
+                    sb2.append("</body></html>");
+                    String res = sb1.toString() + sb2.toString();
+
+                    sb.append(res).append("\n\n\n");
+                });
+                log.info(sb.toString());
+            } catch (ParseException ignore) {
+            }
+        }
+        GUIUtil.requestFocus(filterTextField);
+    }
+
+    @Override
+    protected void deactivate() {
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        sortedList.comparatorProperty().unbind();
+        selectedDisputeSubscription.unsubscribe();
+        removeListenersOnSelectDispute();
+
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        if (chatView != null)
+            chatView.deactivate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    protected void setupReOpenDisputeListener() {
+        disputesListener = c -> {
+            c.next();
+            if (c.wasAdded()) {
+                onDisputesAdded(c.getAddedSubList());
+            } else if (c.wasRemoved()) {
+                onDisputesRemoved(c.getRemoved());
+            }
+        };
+    }
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    protected void activateReOpenDisputeListener() {
+        // Register listeners on all disputes for potential re-opening
+        onDisputesAdded(disputeManager.getDisputesAsObservableList());
+        disputeManager.getDisputesAsObservableList().addListener(disputesListener);
+
+        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
+            if (dispute.isClosed()) {
+                ObservableList<ChatMessage> chatMessages = dispute.getChatMessages();
+                // If last message is not a result message we re-open as we might have received a new message from the
+                // trader/mediator/arbitrator who has reopened the case
+                if (!chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
+                    onSelectDispute(dispute);
+                    reOpenDispute();
+                }
+            }
+        });
+    }
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    protected void deactivateReOpenDisputeListener() {
+        onDisputesRemoved(disputeManager.getDisputesAsObservableList());
+        disputeManager.getDisputesAsObservableList().removeListener(disputesListener);
+    }
+
+    protected abstract SupportType getType();
+
+    protected abstract DisputeSession getConcreteDisputeChatSession(Dispute dispute);
+
+    protected void applyFilteredListPredicate(String filterString) {
+        // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
+        filteredList.setPredicate(dispute -> !dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing()));
+    }
+
+    protected void reOpenDisputeFromButton() {
+        reOpenDispute();
+    }
+
+    protected abstract void handleOnSelectDispute(Dispute dispute);
+
+    protected void onCloseDispute(Dispute dispute) {
+        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
+        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
+            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
+                    .show(dispute);
+        } else {
+            new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
+        }
+    }
+
+    protected void handleKeyPressed(KeyEvent event) {
+    }
+
+    protected void reOpenDispute() {
+        if (selectedDispute != null) {
+            selectedDispute.setIsClosed(false);
+            handleOnSelectDispute(selectedDispute);
+        }
+    }
+
+    protected boolean anyMatchOfFilterString(Dispute dispute, String filterString) {
+        boolean matchesTradeId = dispute.getTradeId().contains(filterString);
+        boolean matchesDate = DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString);
+        boolean isBuyerOnion = dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString);
+        boolean isSellerOnion = dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString);
+        boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+        boolean matchesSellersPaymentAccountData = dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+        return matchesTradeId || matchesDate || isBuyerOnion || isSellerOnion ||
+                matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onOpenContract(Dispute dispute) {
+        contractWindow.show(dispute);
+    }
+
+    private void removeListenersOnSelectDispute() {
+        if (selectedDispute != null) {
+            if (selectedDisputeClosedPropertyListener != null)
+                selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+        }
+    }
+
+    private void addListenersOnSelectDispute() {
+        if (selectedDispute != null)
+            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+    }
+
+    private void onSelectDispute(Dispute dispute) {
+        removeListenersOnSelectDispute();
+        if (dispute == null) {
+            if (root.getChildren().size() > 2) {
+                root.getChildren().remove(2);
+            }
+
+            selectedDispute = null;
+        } else if (selectedDispute != dispute) {
+            selectedDispute = dispute;
+            if (chatView != null) {
+                handleOnSelectDispute(dispute);
+            }
+
+            if (root.getChildren().size() > 2) {
+                root.getChildren().remove(2);
+            }
+            root.getChildren().add(2, chatView);
+        }
+
+        reOpenButton.setDisable(selectedDispute == null || !selectedDispute.isClosed());
+        sendPrivateNotificationButton.setDisable(selectedDispute == null);
+
+        addListenersOnSelectDispute();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    private void onDisputesAdded(List<? extends Dispute> addedDisputes) {
+        addedDisputes.forEach(dispute -> {
+            ListChangeListener<ChatMessage> listener = c -> {
+                c.next();
+                if (c.wasAdded()) {
+                    c.getAddedSubList().forEach(chatMessage -> {
+                        if (dispute.isClosed()) {
+                            if (chatMessage.isResultMessage(dispute)) {
+                                onSelectDispute(null);
+                            } else {
+                                onSelectDispute(dispute);
+                                reOpenDispute();
+                            }
+                        }
+                    });
+                }
+                // We never remove chat messages so no remove listener
+            };
+            dispute.getChatMessages().addListener(listener);
+            disputeChatMessagesListeners.put(dispute.getId(), listener);
+        });
+    }
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    private void onDisputesRemoved(List<? extends Dispute> removedDisputes) {
+        removedDisputes.forEach(dispute -> {
+            String id = dispute.getId();
+            if (disputeChatMessagesListeners.containsKey(id)) {
+                ListChangeListener<ChatMessage> listener = disputeChatMessagesListeners.get(id);
+                dispute.getChatMessages().removeListener(listener);
+                disputeChatMessagesListeners.remove(id);
+            }
+        });
+    }
+
+    private void sendPrivateNotification() {
+        if (selectedDispute != null) {
+            PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
+            NodeAddress nodeAddress;
+            Contract contract = selectedDispute.getContract();
+            if (pubKeyRing.equals(contract.getBuyerPubKeyRing())) {
+                nodeAddress = contract.getBuyerNodeAddress();
+            } else {
+                nodeAddress = contract.getSellerNodeAddress();
+            }
+
+            new SendPrivateNotificationWindow(
+                    privateNotificationManager,
+                    pubKeyRing,
+                    nodeAddress,
+                    useDevPrivilegeKeys
+            ).show();
+        }
     }
 
     private void showCompactReport() {
@@ -460,170 +707,54 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 .show();
     }
 
-    @Override
-    protected void activate() {
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-
-        filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
-        applyFilteredListPredicate(filterTextField.getText());
-
-        sortedList = new SortedList<>(filteredList);
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
-
-        // sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
-        selectedDisputeSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
-
-        Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
-        if (selectedItem != null)
-            tableView.getSelectionModel().select(selectedItem);
-        else if (sortedList.size() > 0)
-            tableView.getSelectionModel().select(0);
-
-        if (chatView != null) {
-            chatView.activate();
-            chatView.scrollToBottom();
-        }
-
-        scene = root.getScene();
-        if (scene != null)
-            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
-
-        // If doPrint=true we print out a html page which opens tabs with all deposit txs
-        // (firefox needs about:config change to allow > 20 tabs)
-        // Useful to check if there any funds in not finished trades (no payout tx done).
-        // Last check 10.02.2017 found 8 trades and we contacted all traders as far as possible (email if available
-        // otherwise in-app private notification)
-        boolean doPrint = false;
-        //noinspection ConstantConditions
-        if (doPrint) {
-            try {
-                DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
-                //noinspection UnusedAssignment
-                Date startDate = formatter.parse("10/02/17");
-                startDate = new Date(0); // print all from start
-
-                HashMap<String, Dispute> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
-
-                final Date finalStartDate = startDate;
-                List<Dispute> disputes = new ArrayList<>(map.values());
-                disputes.sort(Comparator.comparing(Dispute::getOpeningDate));
-                List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
-                StringBuilder sb = new StringBuilder();
-                // We don't translate that as it is not intended for the public
-                subLists.forEach(list -> {
-                    StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
-                    StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
-                    list.forEach(dispute -> {
-                        if (dispute.getOpeningDate().after(finalStartDate)) {
-                            String txId = dispute.getDepositTxId();
-                            sb1.append("window.open(\"https://blockchain.info/tx/").append(txId).append("\", '_blank');\n");
-
-                            sb2.append("Dispute ID: ").append(dispute.getId()).
-                                    append(" Tx ID: ").
-                                    append("<a href=\"https://blockchain.info/tx/").append(txId).append("\">").
-                                    append(txId).append("</a> ").
-                                    append("Opening date: ").append(formatter.format(dispute.getOpeningDate())).append("<br/>\n");
-                        }
-                    });
-                    sb2.append("</body></html>");
-                    String res = sb1.toString() + sb2.toString();
-
-                    sb.append(res).append("\n\n\n");
-                });
-                log.info(sb.toString());
-            } catch (ParseException ignore) {
-            }
-        }
-        GUIUtil.requestFocus(filterTextField);
-    }
-
-    @Override
-    protected void deactivate() {
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
-        sortedList.comparatorProperty().unbind();
-        selectedDisputeSubscription.unsubscribe();
-        removeListenersOnSelectDispute();
-
-        if (scene != null)
-            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
-
-        if (chatView != null)
-            chatView.deactivate();
-    }
-
-    protected abstract SupportType getType();
-
-    protected abstract DisputeSession getConcreteDisputeChatSession(Dispute dispute);
-
-    protected void applyFilteredListPredicate(String filterString) {
-        // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
-        filteredList.setPredicate(dispute -> !dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing()));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onOpenContract(Dispute dispute) {
-        contractWindow.show(dispute);
-    }
-
-    protected void removeListenersOnSelectDispute() {
-        if (selectedDispute != null) {
-            if (selectedDisputeClosedPropertyListener != null)
-                selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-        }
-    }
-
-    protected void addListenersOnSelectDispute() {
-        if (selectedDispute != null)
-            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
-    }
-
-    protected void onSelectDispute(Dispute dispute) {
-        removeListenersOnSelectDispute();
-        if (dispute == null) {
-            if (root.getChildren().size() > 2)
-                root.getChildren().remove(2);
-
-            selectedDispute = null;
-        } else if (selectedDispute != dispute) {
-            this.selectedDispute = dispute;
-            if (chatView != null) {
-                handleOnSelectDispute(dispute);
-            }
-
-            if (root.getChildren().size() > 2)
-                root.getChildren().remove(2);
-            root.getChildren().add(2, chatView);
-        }
-
-        addListenersOnSelectDispute();
-    }
-
-    protected abstract void handleOnSelectDispute(Dispute dispute);
-
-    protected void onCloseDispute(Dispute dispute) {
-        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
-        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
-            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
-                    .show(dispute);
-        } else {
-            new Popup()
-                    .warning(Res.get("support.wrongVersion", protocolVersion))
-                    .show();
-        }
-    }
-
-    protected void handleKeyPressed(KeyEvent event) {
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupTable() {
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
+        placeholder.setWrapText(true);
+        tableView.setPlaceholder(placeholder);
+        tableView.getSelectionModel().clearSelection();
+
+        tableView.getColumns().add(getSelectColumn());
+
+        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
+        tableView.getColumns().add(contractColumn);
+
+        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
+        tableView.getColumns().add(dateColumn);
+
+        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
+        tableView.getColumns().add(tradeIdColumn);
+
+        TableColumn<Dispute, Dispute> buyerOnionAddressColumn = getBuyerOnionAddressColumn();
+        tableView.getColumns().add(buyerOnionAddressColumn);
+
+        TableColumn<Dispute, Dispute> sellerOnionAddressColumn = getSellerOnionAddressColumn();
+        tableView.getColumns().add(sellerOnionAddressColumn);
+
+
+        TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
+        tableView.getColumns().add(marketColumn);
+
+        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
+        tableView.getColumns().add(roleColumn);
+
+        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
+        tableView.getColumns().add(stateColumn);
+
+        tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
+        dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
+        buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
+        sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
+        marketColumn.setComparator((o1, o2) -> CurrencyUtil.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
+    }
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.select"));
