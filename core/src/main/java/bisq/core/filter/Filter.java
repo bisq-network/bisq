@@ -28,6 +28,8 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.security.PublicKey;
 
 import java.util.List;
@@ -176,27 +178,28 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Filter(List<String> bannedOfferIds,
-                   List<String> bannedNodeAddress,
-                   List<PaymentAccountFilter> bannedPaymentAccounts,
-                   List<String> bannedCurrencies,
-                   List<String> bannedPaymentMethods,
-                   List<String> arbitrators,
-                   List<String> seedNodes,
-                   List<String> priceRelayNodes,
-                   boolean preventPublicBtcNetwork,
-                   List<String> btcNodes,
-                   boolean disableDao,
-                   String disableDaoBelowVersion,
-                   String disableTradeBelowVersion,
-                   List<String> mediators,
-                   List<String> refundAgents,
-                   List<String> bannedSignerPubKeys,
-                   List<String> btcFeeReceiverAddresses,
-                   byte[] ownerPubKeyBytes,
-                   long creationDate,
-                   @Nullable Map<String, String> extraDataMap,
-                   @Nullable String signatureAsBase64) {
+    @VisibleForTesting
+    public Filter(List<String> bannedOfferIds,
+                  List<String> bannedNodeAddress,
+                  List<PaymentAccountFilter> bannedPaymentAccounts,
+                  List<String> bannedCurrencies,
+                  List<String> bannedPaymentMethods,
+                  List<String> arbitrators,
+                  List<String> seedNodes,
+                  List<String> priceRelayNodes,
+                  boolean preventPublicBtcNetwork,
+                  List<String> btcNodes,
+                  boolean disableDao,
+                  String disableDaoBelowVersion,
+                  String disableTradeBelowVersion,
+                  List<String> mediators,
+                  List<String> refundAgents,
+                  List<String> bannedSignerPubKeys,
+                  List<String> btcFeeReceiverAddresses,
+                  byte[] ownerPubKeyBytes,
+                  long creationDate,
+                  @Nullable Map<String, String> extraDataMap,
+                  @Nullable String signatureAsBase64) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -219,7 +222,12 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
         this.signatureAsBase64 = signatureAsBase64;
 
-        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
+        // ownerPubKeyBytes can be null when called from tests
+        if (ownerPubKeyBytes != null) {
+            ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
+        } else {
+            ownerPubKey = null;
+        }
     }
 
     @Override
