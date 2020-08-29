@@ -18,6 +18,7 @@
 package bisq.desktop.main.support.dispute.client.mediation;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -25,6 +26,7 @@ import bisq.desktop.main.support.dispute.client.DisputeClientView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.locale.Res;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
@@ -37,9 +39,8 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class MediationClientView extends DisputeClientView {
@@ -60,6 +61,26 @@ public class MediationClientView extends DisputeClientView {
     }
 
     @Override
+    public void initialize() {
+        super.initialize();
+        reOpenButton.setVisible(true);
+        reOpenButton.setManaged(true);
+        setupReOpenDisputeListener();
+    }
+
+    @Override
+    protected void activate() {
+        super.activate();
+        activateReOpenDisputeListener();
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+        deactivateReOpenDisputeListener();
+    }
+
+    @Override
     protected SupportType getType() {
         return SupportType.MEDIATION;
     }
@@ -67,5 +88,13 @@ public class MediationClientView extends DisputeClientView {
     @Override
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
         return new MediationSession(dispute, disputeManager.isTrader(dispute));
+    }
+
+    @Override
+    protected void reOpenDisputeFromButton() {
+        new Popup().attention(Res.get("support.reOpenByTrader.prompt"))
+                .actionButtonText(Res.get("shared.yes"))
+                .onAction(this::reOpenDispute)
+                .show();
     }
 }

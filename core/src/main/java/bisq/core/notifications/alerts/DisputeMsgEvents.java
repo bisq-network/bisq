@@ -22,7 +22,8 @@ import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.messages.ChatMessage;
 
 import bisq.network.p2p.P2PService;
@@ -31,6 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 
 import java.util.UUID;
 
@@ -39,28 +41,38 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class DisputeMsgEvents {
+    private final RefundManager refundManager;
+    private final MediationManager mediationManager;
     private final P2PService p2PService;
     private final MobileNotificationService mobileNotificationService;
 
     @Inject
-    public DisputeMsgEvents(ArbitrationManager arbitrationManager,
+    public DisputeMsgEvents(RefundManager refundManager,
+                            MediationManager mediationManager,
                             P2PService p2PService,
                             MobileNotificationService mobileNotificationService) {
+        this.refundManager = refundManager;
+        this.mediationManager = mediationManager;
         this.p2PService = p2PService;
         this.mobileNotificationService = mobileNotificationService;
+    }
 
-        // We need to handle it here in the constructor otherwise we get repeated the messages sent.
-        arbitrationManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> {
+    public void onAllServicesInitialized() {
+        refundManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> {
             c.next();
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(this::setDisputeListener);
             }
         });
-        arbitrationManager.getDisputesAsObservableList().forEach(this::setDisputeListener);
-    }
+        refundManager.getDisputesAsObservableList().forEach(this::setDisputeListener);
 
-    // We ignore that onAllServicesInitialized here
-    public void onAllServicesInitialized() {
+        mediationManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> {
+            c.next();
+            if (c.wasAdded()) {
+                c.getAddedSubList().forEach(this::setDisputeListener);
+            }
+        });
+        mediationManager.getDisputesAsObservableList().forEach(this::setDisputeListener);
     }
 
     private void setDisputeListener(Dispute dispute) {
@@ -70,24 +82,24 @@ public class DisputeMsgEvents {
             log.debug("We got a ChatMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
             c.next();
             if (c.wasAdded()) {
-                c.getAddedSubList().forEach(this::setChatMessage);
+                c.getAddedSubList().forEach(chatMessage -> onChatMessage(chatMessage, dispute));
             }
         });
 
         //TODO test
         if (!dispute.getChatMessages().isEmpty())
-            setChatMessage(dispute.getChatMessages().get(0));
+            onChatMessage(dispute.getChatMessages().get(0), dispute);
     }
 
-    private void setChatMessage(ChatMessage disputeMsg) {
+    private void onChatMessage(ChatMessage chatMessage, Dispute dispute) {
         // TODO we need to prevent to send msg for old dispute messages again at restart
         // Maybe we need a new property in ChatMessage
         // As key is not set in initial iterations it seems we don't need an extra handling.
         // the mailbox msg is set a bit later so that triggers a notification, but not the old messages.
 
         // We only send msg in case we are not the sender
-        if (!disputeMsg.getSenderNodeAddress().equals(p2PService.getAddress())) {
-            String shortId = disputeMsg.getShortId();
+        if (!chatMessage.getSenderNodeAddress().equals(p2PService.getAddress())) {
+            String shortId = chatMessage.getShortId();
             MobileMessage message = new MobileMessage(Res.get("account.notifications.dispute.message.title"),
                     Res.get("account.notifications.dispute.message.msg", shortId),
                     shortId,
@@ -98,6 +110,16 @@ public class DisputeMsgEvents {
                 log.error(e.toString());
                 e.printStackTrace();
             }
+        }
+
+        // We check at every new message if it might be a message sent after the dispute had been closed. If that is the
+        // case we revert the isClosed flag so that the UI can reopen the dispute and indicate that a new dispute
+        // message arrived.
+        ObservableList<ChatMessage> chatMessages = dispute.getChatMessages();
+        // If last message is not a result message we re-open as we might have received a new message from the
+        // trader/mediator/arbitrator who has reopened the case
+        if (dispute.isClosed() && !chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
+            dispute.setIsClosed(false);
         }
     }
 
