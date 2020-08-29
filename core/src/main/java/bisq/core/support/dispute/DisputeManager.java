@@ -19,9 +19,16 @@ package bisq.core.support.dispute;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.Price;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportManager;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -37,12 +44,17 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
+import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.Storage;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import javafx.beans.property.IntegerProperty;
 
@@ -51,6 +63,7 @@ import javafx.collections.ObservableList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -68,6 +81,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final OpenOfferManager openOfferManager;
     protected final PubKeyRing pubKeyRing;
     protected final DisputeListService<T> disputeListService;
+    private final PriceFeedService priceFeedService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +96,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           PubKeyRing pubKeyRing,
-                          DisputeListService<T> disputeListService) {
+                          DisputeListService<T> disputeListService,
+                          PriceFeedService priceFeedService) {
         super(p2PService, walletsSetup);
 
         this.tradeWalletService = tradeWalletService;
@@ -92,6 +107,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.openOfferManager = openOfferManager;
         this.pubKeyRing = pubKeyRing;
         this.disputeListService = disputeListService;
+        this.priceFeedService = priceFeedService;
     }
 
 
@@ -255,19 +271,20 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
-
+        dispute.setStorage(disputeListService.getStorage());
         // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
         dispute.setSupportType(openNewDisputeMessage.getSupportType());
 
-        dispute.setStorage(disputeListService.getStorage());
-        Contract contractFromOpener = dispute.getContract();
-        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
+        Contract contract = dispute.getContract();
+        addPriceInfoMessage(dispute);
+
+        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
         if (isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
                     disputeList.add(dispute);
-                    errorMessage = sendPeerOpenedDisputeMessage(dispute, contractFromOpener, peersPubKeyRing);
+                    sendPeerOpenedDisputeMessage(dispute, contract, peersPubKeyRing);
                 } else {
                     // valid case if both have opened a dispute and agent was not online.
                     log.debug("We got a dispute already open for that trade and trading peer. TradeId = {}",
@@ -286,7 +303,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         ObservableList<ChatMessage> messages = dispute.getChatMessages();
         if (!messages.isEmpty()) {
             ChatMessage chatMessage = messages.get(0);
-            PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
+            PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
             sendAckMessage(chatMessage, sendersPubKeyRing, errorMessage == null, errorMessage);
         }
 
@@ -468,14 +485,27 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    // dispute agent sends that to trading peer when he received openDispute request
-    private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
+    // Dispute agent sends that to trading peer when he received openDispute request
+    private void sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
+                                              Contract contractFromOpener,
+                                              PubKeyRing pubKeyRing) {
+        // We delay a bit for sending the message to the peer to allow that a openDispute message from the peer is
+        // being used as the valid msg. If dispute agent was offline and both peer requested we want to see the correct
+        // message and not skip the system message of the peer as it would be the case if we have created the system msg
+        // from the code below.
+        UserThread.runAfter(() -> doSendPeerOpenedDisputeMessage(disputeFromOpener,
+                contractFromOpener,
+                pubKeyRing),
+                100, TimeUnit.MILLISECONDS);
+    }
+
+    private void doSendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
                                                 Contract contractFromOpener,
                                                 PubKeyRing pubKeyRing) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
-            return null;
+            return;
         }
 
         Dispute dispute = new Dispute(disputeListService.getStorage(),
@@ -500,91 +530,94 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
-        if (!storedDisputeOptional.isPresent()) {
-            String disputeInfo = getDisputeInfo(dispute);
-            String disputeMessage = getDisputeIntroForPeer(disputeInfo);
-            String sysMsg = dispute.isSupportTicket() ?
-                    Res.get("support.peerOpenedTicket", disputeInfo, Version.VERSION)
-                    : disputeMessage;
-            ChatMessage chatMessage = new ChatMessage(
-                    getSupportType(),
-                    dispute.getTradeId(),
-                    pubKeyRing.hashCode(),
-                    false,
-                    Res.get("support.systemMsg", sysMsg),
-                    p2PService.getAddress());
-            chatMessage.setSystemMessage(true);
-            dispute.addAndPersistChatMessage(chatMessage);
-            disputeList.add(dispute);
 
-            // we mirrored dispute already!
-            Contract contract = dispute.getContract();
-            PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
-            NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
-            PeerOpenedDisputeMessage peerOpenedDisputeMessage = new PeerOpenedDisputeMessage(dispute,
-                    p2PService.getAddress(),
-                    UUID.randomUUID().toString(),
-                    getSupportType());
-
-            log.info("Send {} to peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, chatMessage.uid={}",
-                    peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
-                    peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                    chatMessage.getUid());
-
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
-                    peersPubKeyRing,
-                    peerOpenedDisputeMessage,
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
-                                            "chatMessage.uid={}",
-                                    peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
-                                    peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                                    chatMessage.getUid());
-
-                            // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
-                            // the state, as that is displayed to the user and we only persist that msg
-                            chatMessage.setArrived(true);
-                            disputeList.persist();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
-                                            "chatMessage.uid={}",
-                                    peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
-                                    peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                                    chatMessage.getUid());
-
-                            // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
-                            // the state, as that is displayed to the user and we only persist that msg
-                            chatMessage.setStoredInMailbox(true);
-                            disputeList.persist();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
-                                            "chatMessage.uid={}, errorMessage={}",
-                                    peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
-                                    peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                                    chatMessage.getUid(), errorMessage);
-
-                            // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
-                            // the state, as that is displayed to the user and we only persist that msg
-                            chatMessage.setSendMessageError(errorMessage);
-                            disputeList.persist();
-                        }
-                    }
-            );
-            return null;
-        } else {
-            // valid case if both have opened a dispute and agent was not online.
-            log.debug("We got a dispute already open for that trade and trading peer. TradeId = {}",
+        // Valid case if both have opened a dispute and agent was not online.
+        if (storedDisputeOptional.isPresent()) {
+            log.info("We got a dispute already open for that trade and trading peer. TradeId = {}",
                     dispute.getTradeId());
-            return null;
+            return;
         }
+
+        String disputeInfo = getDisputeInfo(dispute);
+        String disputeMessage = getDisputeIntroForPeer(disputeInfo);
+        String sysMsg = dispute.isSupportTicket() ?
+                Res.get("support.peerOpenedTicket", disputeInfo, Version.VERSION)
+                : disputeMessage;
+        ChatMessage chatMessage = new ChatMessage(
+                getSupportType(),
+                dispute.getTradeId(),
+                pubKeyRing.hashCode(),
+                false,
+                Res.get("support.systemMsg", sysMsg),
+                p2PService.getAddress());
+        chatMessage.setSystemMessage(true);
+        dispute.addAndPersistChatMessage(chatMessage);
+
+        addPriceInfoMessage(dispute);
+
+        disputeList.add(dispute);
+
+        // We mirrored dispute already!
+        Contract contract = dispute.getContract();
+        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
+        NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
+        PeerOpenedDisputeMessage peerOpenedDisputeMessage = new PeerOpenedDisputeMessage(dispute,
+                p2PService.getAddress(),
+                UUID.randomUUID().toString(),
+                getSupportType());
+
+        log.info("Send {} to peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, chatMessage.uid={}",
+                peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
+                chatMessage.getUid());
+
+        p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+                peersPubKeyRing,
+                peerOpenedDisputeMessage,
+                new SendMailboxMessageListener() {
+                    @Override
+                    public void onArrived() {
+                        log.info("{} arrived at peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
+                                        "chatMessage.uid={}",
+                                peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                                peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
+                                chatMessage.getUid());
+
+                        // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
+                        // the state, as that is displayed to the user and we only persist that msg
+                        chatMessage.setArrived(true);
+                        disputeList.persist();
+                    }
+
+                    @Override
+                    public void onStoredInMailbox() {
+                        log.info("{} stored in mailbox for peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
+                                        "chatMessage.uid={}",
+                                peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                                peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
+                                chatMessage.getUid());
+
+                        // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
+                        // the state, as that is displayed to the user and we only persist that msg
+                        chatMessage.setStoredInMailbox(true);
+                        disputeList.persist();
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage) {
+                        log.error("{} failed: Peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
+                                        "chatMessage.uid={}, errorMessage={}",
+                                peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                                peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
+                                chatMessage.getUid(), errorMessage);
+
+                        // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
+                        // the state, as that is displayed to the user and we only persist that msg
+                        chatMessage.setSendMessageError(errorMessage);
+                        disputeList.persist();
+                    }
+                }
+        );
     }
 
     // dispute agent send result to trader
@@ -730,5 +763,88 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeList.stream()
                 .filter(e -> e.getTradeId().equals(tradeId))
                 .findAny();
+    }
+
+    // If price was going down between take offer time and open dispute time the buyer has an incentive to
+    // not send the payment but to try to make a new trade with the better price. We risks to lose part of the
+    // security deposit (in mediation we will always get back 0.003 BTC to keep some incentive to accept mediated
+    // proposal). But if gain is larger than this loss he has economically an incentive to default in the trade.
+    // We do all those calculations to give a hint to mediators to detect option trades.
+    private void addPriceInfoMessage(Dispute dispute) {
+        Contract contract = dispute.getContract();
+        OfferPayload offerPayload = contract.getOfferPayload();
+        Price priceAtDisputeOpening = getPrice(offerPayload.getCurrencyCode());
+        if (priceAtDisputeOpening == null) {
+            log.info("PriceAtDisputeOpening is null. Price provider might not support that {}.", offerPayload.getCurrencyCode());
+            return;
+        }
+
+        // The amount we would get if we do a new trade with current price
+        Coin potentialAmountAtDisputeOpening = priceAtDisputeOpening.getAmountByVolume(contract.getTradeVolume());
+        Coin buyerSecurityDeposit = Coin.valueOf(offerPayload.getBuyerSecurityDeposit());
+        Coin minRefundAtMediatedDispute = Restrictions.getMinRefundAtMediatedDispute();
+        // minRefundAtMediatedDispute is always larger as buyerSecurityDeposit at mediated payout, we ignore refund agent case here as there it can be 0.
+        Coin maxLossSecDeposit = buyerSecurityDeposit.subtract(minRefundAtMediatedDispute);
+        Coin tradeAmount = contract.getTradeAmount();
+        Coin potentialGain = potentialAmountAtDisputeOpening.subtract(tradeAmount).subtract(maxLossSecDeposit);
+        String optionTradeDetails;
+        // We don't translate those strings (yet) as it is only displayed to mediators/arbitrators.
+        String headline;
+        if (potentialGain.isPositive()) {
+            headline = "Warning: This might be a potential option trade!";
+            optionTradeDetails = "\nBTC amount calculated with price at dispute opening: " + potentialAmountAtDisputeOpening.toFriendlyString() +
+                    "\nMax loss of security deposit is: " + maxLossSecDeposit.toFriendlyString() +
+                    "\nPossible gain from an option trade is: " + potentialGain.toFriendlyString();
+        } else {
+            headline = "It does not appear to be an option trade.";
+            optionTradeDetails = "\nBTC amount calculated with price at dispute opening: " + potentialAmountAtDisputeOpening.toFriendlyString() +
+                    "\nMax loss of security deposit is: " + maxLossSecDeposit.toFriendlyString() +
+                    "\nPossible loss from an option trade is: " + potentialGain.multiply(-1).toFriendlyString();
+        }
+
+        String percentagePriceDetails = offerPayload.isUseMarketBasedPrice() ?
+                " (market based price was used: " + offerPayload.getMarketPriceMargin() * 100 + "%)" :
+                " (fix price was used)";
+
+        String priceInfoText = headline +
+                "\n\nTrade price: " + contract.getTradePrice().toFriendlyString() + percentagePriceDetails +
+                "\nTrade amount: " + tradeAmount.toFriendlyString() +
+                "\nPrice at dispute opening: " + priceAtDisputeOpening.toFriendlyString() +
+                optionTradeDetails +
+                "\n\nPlease note: This message is displayed only to the mediator/arbitrator not to the trader. " +
+                "Only the BTC buyer can do an option trade. The calculation is based on the price at dispute opening. " +
+                "If seller opens the dispute this might not reflect the buyers point of view. Use this information only " +
+                "as help for detecting an option trade, it is not a proof for it.";
+
+        // We use the existing msg to copy over the users data
+        ChatMessage firstMessage = dispute.getChatMessages().get(0);
+        ChatMessage priceInfoMessage = new ChatMessage(firstMessage.getSupportType(),
+                firstMessage.getTradeId(), firstMessage.getTraderId(),
+                firstMessage.isSenderIsTrader(),
+                priceInfoText,
+                firstMessage.getSenderNodeAddress());
+        priceInfoMessage.setSystemMessage(true);
+        dispute.addAndPersistChatMessage(priceInfoMessage);
+    }
+
+    @Nullable
+    private Price getPrice(String currencyCode) {
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
+            double marketPriceAsDouble = marketPrice.getPrice();
+            try {
+                int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                        Altcoin.SMALLEST_UNIT_EXPONENT :
+                        Fiat.SMALLEST_UNIT_EXPONENT;
+                double scaled = MathUtils.scaleUpByPowerOf10(marketPriceAsDouble, precision);
+                long roundedToLong = MathUtils.roundDoubleToLong(scaled);
+                return Price.valueOf(currencyCode, roundedToLong);
+            } catch (Exception e) {
+                log.error("Exception at getPrice / parseToFiat: " + e.toString());
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 }
