@@ -211,11 +211,15 @@ public class FilterManager {
 
     public boolean isValidDevPrivilegeKey(String privKeyString) {
         try {
-            filterSigningKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));
+            ECKey filterSigningKey = toECKey(privKeyString);
             return pubKeyAsHex.equals(Utils.HEX.encode(filterSigningKey.getPubKey()));
         } catch (Throwable t) {
             return false;
         }
+    }
+
+    public void setFilterSigningKey(String privKeyString) {
+        this.filterSigningKey = toECKey(privKeyString);
     }
 
     public void publishFilter(Filter filterWithoutSig) {
@@ -441,6 +445,10 @@ public class FilterManager {
             log.warn("verifySignature failed. filter={}", filter);
             return false;
         }
+    }
+
+    private ECKey toECKey(String privKeyString) {
+        return ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));
     }
 
     private Sha256Hash getSha256Hash(Filter filter) {

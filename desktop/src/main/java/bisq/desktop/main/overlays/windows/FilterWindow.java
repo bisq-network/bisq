@@ -165,8 +165,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
         removeFilterMessageButton.setDisable(filterManager.getDevelopersFilter() == null);
 
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
+        String privKeyString = keyInputTextField.getText();
         sendButton.setOnAction(e -> {
-            if (keyInputTextField.getText().isEmpty()) {
+            if (privKeyString.isEmpty()) {
                 return;
             }
             Filter newFilter = new Filter(
@@ -189,7 +190,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                     readAsList(btcFeeReceiverAddressesInputTextField),
                     filterManager.getOwnerPubKey()
             );
-            if (filterManager.isValidDevPrivilegeKey(keyInputTextField.getText())) {
+            if (filterManager.isValidDevPrivilegeKey(privKeyString)) {
+                filterManager.setFilterSigningKey(privKeyString);
                 filterManager.publishFilter(newFilter);
                 removeFilterMessageButton.setDisable(filterManager.getDevelopersFilter() == null);
                 hide();
@@ -199,11 +201,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
         });
 
         removeFilterMessageButton.setOnAction(e -> {
-            if (keyInputTextField.getText().isEmpty()) {
+            if (privKeyString.isEmpty()) {
                 return;
             }
 
-            if (filterManager.isValidDevPrivilegeKey(keyInputTextField.getText())) {
+            if (filterManager.isValidDevPrivilegeKey(privKeyString)) {
+                filterManager.setFilterSigningKey(privKeyString);
                 filterManager.removeFilter();
                 hide();
             } else {
