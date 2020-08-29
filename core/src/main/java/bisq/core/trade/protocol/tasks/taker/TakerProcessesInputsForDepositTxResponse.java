@@ -17,11 +17,13 @@
 
 package bisq.core.trade.protocol.tasks.taker;
 
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
+import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -58,8 +60,15 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             byte[] preparedDepositTx = inputsForDepositTxResponse.getPreparedDepositTx();
             processModel.setPreparedDepositTx(checkNotNull(preparedDepositTx));
             long lockTime = inputsForDepositTxResponse.getLockTime();
-            //todo for dev testing deactivated
-            //checkArgument(lockTime >= processModel.getBtcWalletService().getBestChainHeight() + 144 * 20);
+            if (Config.baseCurrencyNetwork().isMainnet()) {
+                int myLockTime = processModel.getBtcWalletService().getBestChainHeight() +
+                        Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
+                // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in case a new
+                // block was just found
+                checkArgument(Math.abs(lockTime - myLockTime) <= 3,
+                        "Lock time of maker is more than 3 blocks different to the locktime I " +
+                                "calculated. Makers lockTime= " + lockTime + ", myLockTime=" + myLockTime);
+            }
             trade.setLockTime(lockTime);
             log.info("lockTime={}, delay={}", lockTime, (processModel.getBtcWalletService().getBestChainHeight() - lockTime));
 
