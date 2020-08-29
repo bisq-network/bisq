@@ -211,48 +211,48 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {
-        if (!shutDownInProgress) {
-            shutDownInProgress = true;
+        shutDownResultHandlers.add(shutDownCompleteHandler);
 
-            shutDownResultHandlers.add(shutDownCompleteHandler);
-
-            if (p2PDataStorage != null)
-                p2PDataStorage.shutDown();
-
-            if (peerManager != null)
-                peerManager.shutDown();
-
-            if (broadcaster != null)
-                broadcaster.shutDown();
-
-            if (requestDataManager != null)
-                requestDataManager.shutDown();
-
-            if (peerExchangeManager != null)
-                peerExchangeManager.shutDown();
-
-            if (keepAliveManager != null)
-                keepAliveManager.shutDown();
-
-            if (networkReadySubscription != null)
-                networkReadySubscription.unsubscribe();
-
-            if (networkNode != null) {
-                networkNode.shutDown(() -> {
-                    shutDownResultHandlers.stream().forEach(Runnable::run);
-                    shutDownComplete = true;
-                });
-            } else {
-                shutDownResultHandlers.stream().forEach(Runnable::run);
-                shutDownComplete = true;
-            }
+        // We need to make sure queued up messages are flushed out before we continue shut down other network
+        // services
+        if (broadcaster != null) {
+            broadcaster.shutDown(this::doShutDown);
         } else {
-            log.debug("shutDown already in progress");
-            if (shutDownComplete) {
-                shutDownCompleteHandler.run();
-            } else {
-                shutDownResultHandlers.add(shutDownCompleteHandler);
-            }
+            doShutDown();
+        }
+    }
+
+    private void doShutDown() {
+        if (p2PDataStorage != null) {
+            p2PDataStorage.shutDown();
+        }
+
+        if (peerManager != null) {
+            peerManager.shutDown();
+        }
+
+        if (requestDataManager != null) {
+            requestDataManager.shutDown();
+        }
+
+        if (peerExchangeManager != null) {
+            peerExchangeManager.shutDown();
+        }
+
+        if (keepAliveManager != null) {
+            keepAliveManager.shutDown();
+        }
+
+        if (networkReadySubscription != null) {
+            networkReadySubscription.unsubscribe();
+        }
+
+        if (networkNode != null) {
+            networkNode.shutDown(() -> {
+                shutDownResultHandlers.forEach(Runnable::run);
+            });
+        } else {
+            shutDownResultHandlers.forEach(Runnable::run);
         }
     }
 
@@ -447,7 +447,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-        // not handled
+        // not used
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
+import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
@@ -36,7 +37,7 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class BundleOfEnvelopes extends NetworkEnvelope implements ExtendedDataSizePermission, CapabilityRequiringPayload {
+public final class BundleOfEnvelopes extends BroadcastMessage implements ExtendedDataSizePermission, CapabilityRequiringPayload {
 
     private final List<NetworkEnvelope> envelopes;
 
