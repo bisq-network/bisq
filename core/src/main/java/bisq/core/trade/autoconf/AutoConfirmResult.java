@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.autoconf;
+
+import bisq.core.trade.autoconf.xmr.XmrAutoConfirmResult;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -51,7 +53,7 @@ public abstract class AutoConfirmResult {
 
     // We use fromProto as kind of factory method to get the specific AutoConfirmResult
     @Nullable
-    static AutoConfirmResult fromProto(protobuf.AutoConfirmResult proto, String currencyCode) {
+    public static AutoConfirmResult fromProto(protobuf.AutoConfirmResult proto, String currencyCode) {
         switch (currencyCode) {
             case "XMR":
                 return XmrAutoConfirmResult.fromProto(proto);

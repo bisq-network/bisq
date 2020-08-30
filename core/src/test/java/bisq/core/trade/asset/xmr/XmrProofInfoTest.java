@@ -1,6 +1,7 @@
 package bisq.core.trade.asset.xmr;
 
-import bisq.core.trade.XmrAutoConfirmResult;
+import bisq.core.trade.autoconf.xmr.XmrAutoConfirmResult;
+import bisq.core.trade.autoconf.xmr.XmrProofInfo;
 
 import java.time.Instant;
 

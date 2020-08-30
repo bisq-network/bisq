@@ -38,6 +38,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.autoconf.xmr.XmrAutoConfirmationManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;

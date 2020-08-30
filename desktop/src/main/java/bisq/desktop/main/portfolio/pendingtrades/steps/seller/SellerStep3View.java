@@ -40,9 +40,9 @@ import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
-import bisq.core.trade.AutoConfirmResult;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+import bisq.core.trade.autoconf.AutoConfirmResult;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;

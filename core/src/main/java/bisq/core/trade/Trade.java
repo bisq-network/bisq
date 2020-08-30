@@ -38,6 +38,8 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.trade.autoconf.AutoConfirmResult;
+import bisq.core.trade.autoconf.xmr.XmrAutoConfirmationManager;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -442,7 +444,7 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     private AutoConfirmResult autoConfirmResult;
 
-    void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
+    public void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
         this.autoConfirmResult = autoConfirmResult;
         autoConfirmResultProperty.setValue(autoConfirmResult);
     }

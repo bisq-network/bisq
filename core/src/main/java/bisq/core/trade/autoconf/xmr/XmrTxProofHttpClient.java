@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.asset.xmr;
+package bisq.core.trade.autoconf.xmr;
 
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.http.HttpClient;

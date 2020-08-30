@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.autoconf.xmr;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.autoconf.AutoConfirmResult;
 
 import bisq.common.proto.ProtoUtil;
 

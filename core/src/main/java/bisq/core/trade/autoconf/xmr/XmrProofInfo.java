@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.asset.xmr;
-
-import bisq.core.trade.XmrAutoConfirmResult;
+package bisq.core.trade.autoconf.xmr;
 
 import bisq.asset.CryptoNoteAddressValidator;
 
