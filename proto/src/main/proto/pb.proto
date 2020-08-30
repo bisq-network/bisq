@@ -810,6 +810,11 @@ message DisputeResult {
         PROTOCOL_VIOLATION = 5;
         NO_REPLY = 6;
         BANK_PROBLEMS = 7;
+        OPTION_TRADE = 8;
+        SELLER_NOT_RESPONDING = 9;
+        WRONG_SENDER_ACCOUNT = 10;
+        TRADE_ALREADY_SETTLED = 11;
+        PEER_WAS_LATE = 12;
     }
 
     string trade_id = 1;

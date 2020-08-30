@@ -603,8 +603,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 text,
                 p2PService.getAddress());
 
-        dispute.addAndPersistChatMessage(chatMessage);
         disputeResult.setChatMessage(chatMessage);
+        dispute.addAndPersistChatMessage(chatMessage);
 
         NodeAddress peersNodeAddress;
         Contract contract = dispute.getContract();

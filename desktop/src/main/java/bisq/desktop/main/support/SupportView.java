@@ -51,8 +51,6 @@ import bisq.common.crypto.PubKeyRing;
 
 import javax.inject.Inject;
 
-import javafx.fxml.FXML;
-
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
@@ -60,13 +58,17 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.MapChangeListener;
 
+import javax.annotation.Nullable;
+
 @FxmlView
 public class SupportView extends ActivatableView<TabPane, Void> {
 
-    @FXML
-    Tab tradersMediationDisputesTab, tradersRefundDisputesTab, tradersArbitrationDisputesTab;
-
-    private Tab arbitratorTab, mediatorTab, refundAgentTab;
+    private Tab tradersMediationDisputesTab, tradersRefundDisputesTab;
+    @Nullable
+    private Tab tradersArbitrationDisputesTab;
+    private Tab mediatorTab, refundAgentTab;
+    @Nullable
+    private Tab arbitratorTab;
 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
@@ -108,12 +110,29 @@ public class SupportView extends ActivatableView<TabPane, Void> {
 
     @Override
     public void initialize() {
-        // has to be called before loadView
+        tradersMediationDisputesTab = new Tab();
+        tradersMediationDisputesTab.setClosable(false);
+        root.getTabs().add(tradersMediationDisputesTab);
+
+        tradersRefundDisputesTab = new Tab();
+        tradersRefundDisputesTab.setClosable(false);
+        root.getTabs().add(tradersRefundDisputesTab);
+
+        // We only show tradersArbitrationDisputesTab if we have cases
+        if (!arbitrationManager.getDisputesAsObservableList().isEmpty()) {
+            tradersArbitrationDisputesTab = new Tab();
+            tradersArbitrationDisputesTab.setClosable(false);
+            root.getTabs().add(tradersArbitrationDisputesTab);
+        }
+
+        // Has to be called before loadView
         updateAgentTabs();
 
         tradersMediationDisputesTab.setText(Res.get("support.tab.mediation.support").toUpperCase());
         tradersRefundDisputesTab.setText(Res.get("support.tab.arbitration.support").toUpperCase());
-        tradersArbitrationDisputesTab.setText(Res.get("support.tab.legacyArbitration.support").toUpperCase());
+        if (tradersArbitrationDisputesTab != null) {
+            tradersArbitrationDisputesTab.setText(Res.get("support.tab.legacyArbitration.support").toUpperCase());
+        }
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SupportView.class) == 1)
                 loadView(viewPath.tip());
@@ -142,16 +161,19 @@ public class SupportView extends ActivatableView<TabPane, Void> {
     private void updateAgentTabs() {
         PubKeyRing myPubKeyRing = keyRing.getPubKeyRing();
 
-        boolean isActiveArbitrator = arbitratorManager.getObservableMap().values().stream()
-                .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(myPubKeyRing));
-        if (arbitratorTab == null) {
-            // In case a arbitrator has become inactive he still might get disputes from pending trades
-            boolean hasDisputesAsArbitrator = arbitrationManager.getDisputesAsObservableList().stream()
-                    .anyMatch(d -> d.getAgentPubKeyRing().equals(myPubKeyRing));
-            if (isActiveArbitrator || hasDisputesAsArbitrator) {
-                arbitratorTab = new Tab();
-                arbitratorTab.setClosable(false);
-                root.getTabs().add(arbitratorTab);
+        boolean hasArbitrationCases = !arbitrationManager.getDisputesAsObservableList().isEmpty();
+        if (hasArbitrationCases) {
+            boolean isActiveArbitrator = arbitratorManager.getObservableMap().values().stream()
+                    .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(myPubKeyRing));
+            if (arbitratorTab == null) {
+                // In case a arbitrator has become inactive he still might get disputes from pending trades
+                boolean hasDisputesAsArbitrator = arbitrationManager.getDisputesAsObservableList().stream()
+                        .anyMatch(d -> d.getAgentPubKeyRing().equals(myPubKeyRing));
+                if (isActiveArbitrator || hasDisputesAsArbitrator) {
+                    arbitratorTab = new Tab();
+                    arbitratorTab.setClosable(false);
+                    root.getTabs().add(arbitratorTab);
+                }
             }
         }
 
@@ -224,11 +246,12 @@ public class SupportView extends ActivatableView<TabPane, Void> {
         }
 
         String key = "supportInfo";
-        if (!DevEnv.isDevMode())
+        if (!DevEnv.isDevMode()) {
             new Popup().backgroundInfo(Res.get("support.backgroundInfo"))
                     .width(900)
                     .dontShowAgainId(key)
                     .show();
+        }
     }
 
     @Override

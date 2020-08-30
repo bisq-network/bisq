@@ -22,7 +22,6 @@ import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.support.dispute.DisputeView;
-import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
@@ -66,27 +65,29 @@ public abstract class DisputeAgentView extends DisputeView {
     public void initialize() {
         super.initialize();
 
-        filterBox.setVisible(true);
-        filterBox.setManaged(true);
+        filterTextField.setText("open");
+
+        sendPrivateNotificationButton.setVisible(true);
+        sendPrivateNotificationButton.setManaged(true);
+
+        reportButton.setVisible(true);
+        reportButton.setManaged(true);
+
+        fullReportButton.setVisible(true);
+        fullReportButton.setManaged(true);
     }
 
     @Override
     protected void applyFilteredListPredicate(String filterString) {
-        // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
         filteredList.setPredicate(dispute -> {
-            boolean matchesTradeId = dispute.getTradeId().contains(filterString);
-            boolean matchesDate = DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString);
-            boolean isBuyerOnion = dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString);
-            boolean isSellerOnion = dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString);
-            boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-            boolean matchesSellersPaymentAccountData = dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-
-            boolean anyMatch = matchesTradeId || matchesDate || isBuyerOnion || isSellerOnion ||
-                    matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
-
-            boolean open = !dispute.isClosed() && filterString.toLowerCase().equals("open");
-            boolean isMyCase = dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing());
-            return isMyCase && (open || filterString.isEmpty() || anyMatch);
+            // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
+            if (!dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
+                return false;
+            }
+            boolean isOpen = !dispute.isClosed() && filterString.toLowerCase().equals("open");
+            return filterString.isEmpty() ||
+                    isOpen ||
+                    anyMatchOfFilterString(dispute, filterString);
         });
     }
 

@@ -642,8 +642,8 @@ tree-table-view:focused {
 }
 
 .top-navigation .separator:vertical .line {
-    -fx-border-color: transparent transparent transparent transparent;
-    -fx-border-width: 3;
+    -fx-border-color: transparent transparent transparent -bs-rd-nav-border-color;
+    -fx-border-width: 1;
     -fx-border-insets: 0 0 0 1;
 }
 
@@ -661,6 +661,7 @@ tree-table-view:focused {
 .nav-price-balance {
     -fx-background-color: -bs-color-gray-background;
     -fx-background-radius: 3;
+    -fx-effect: innershadow(gaussian, -bs-text-color-transparent, 3, 0, 0, 1);
     -fx-pref-height: 41;
     -fx-padding: 0 10 0 0;
 }
@@ -2119,3 +2120,4 @@ textfield */
     -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
     -fx-fill: -bs-background-color !important;
 }
+
