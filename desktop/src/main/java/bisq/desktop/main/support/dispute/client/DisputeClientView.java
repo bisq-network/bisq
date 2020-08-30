@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.support.dispute.client;
 
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -53,5 +52,17 @@ public abstract class DisputeClientView extends DisputeView {
     protected void handleOnSelectDispute(Dispute dispute) {
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
         chatView.display(chatSession, root.widthProperty());
+    }
+
+    @Override
+    protected void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(dispute -> {
+            // As we are in the client view we hide disputes where we are the agent
+            if (dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
+                return false;
+            }
+
+            return filterString.isEmpty() || anyMatchOfFilterString(dispute, filterString);
+        });
     }
 }

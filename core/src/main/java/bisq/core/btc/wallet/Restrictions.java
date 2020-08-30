@@ -84,7 +84,7 @@ public class Restrictions {
         return SELLER_SECURITY_DEPOSIT;
     }
 
-    // This value must not be lower than MIN_BUYER_SECURITY_DEPOSIT or SELLER_SECURITY_DEPOSIT
+    // This value must be lower than MIN_BUYER_SECURITY_DEPOSIT and SELLER_SECURITY_DEPOSIT
     public static Coin getMinRefundAtMediatedDispute() {
         if (MIN_REFUND_AT_MEDIATED_DISPUTE == null)
             MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.003"); // 0.003 BTC about 21 USD @ 7000 USD/BTC

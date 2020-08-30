@@ -385,15 +385,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             contentContainer.getChildren().setAll(view.getRoot());
 
             try {
-            	navButtons.getToggles().stream()
-                    .filter(toggle -> toggle instanceof NavButton)
-                    .filter(button -> viewClass == ((NavButton) button).viewClass)
-                    .findFirst()
-                    .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
-                    .setSelected(true);
+                navButtons.getToggles().stream()
+                        .filter(toggle -> toggle instanceof NavButton)
+                        .filter(button -> viewClass == ((NavButton) button).viewClass)
+                        .findFirst()
+                        .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
+                        .setSelected(true);
             } catch (BisqException e) {
                 navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
-			}
+            }
         });
 
         VBox splashScreen = createSplashScreen();
@@ -540,7 +540,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         return Res.get("mainView.marketPrice.tooltip",
                 "Bisq Price Index for " + selectedCurrencyCode,
                 "",
-                DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())),
+                selectedMarketPrice != null ? DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())) : Res.get("shared.na"),
                 model.getPriceFeedService().getProviderNodeAddress());
     }
 

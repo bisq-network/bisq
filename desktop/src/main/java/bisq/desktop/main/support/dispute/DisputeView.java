@@ -42,6 +42,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -55,6 +56,8 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
+
 import com.google.common.collect.Lists;
 
 import javafx.scene.Scene;
@@ -64,9 +67,9 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -81,6 +84,8 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -100,6 +105,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
+
+import javax.annotation.Nullable;
 
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
@@ -125,12 +132,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
-    protected EventHandler<KeyEvent> keyEventEventHandler;
+    private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
     protected FilteredList<Dispute> filteredList;
-    private InputTextField filterTextField;
+    protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
-    protected HBox filterBox;
+    private HBox filterBox;
+    protected AutoTooltipButton reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
+    private Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
+    @Nullable
+    private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -163,16 +174,53 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     public void initialize() {
         Label label = new AutoTooltipLabel(Res.get("support.filter"));
         HBox.setMargin(label, new Insets(5, 0, 0, 0));
+        HBox.setHgrow(label, Priority.NEVER);
+
         filterTextField = new InputTextField();
-        filterTextField.setText("open");
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+        HBox.setHgrow(filterTextField, Priority.NEVER);
+
+        reOpenButton = new AutoTooltipButton(Res.get("support.reOpenButton.label"));
+        reOpenButton.setDisable(true);
+        reOpenButton.setVisible(false);
+        reOpenButton.setManaged(false);
+        HBox.setHgrow(reOpenButton, Priority.NEVER);
+        reOpenButton.setOnAction(e -> {
+            reOpenDisputeFromButton();
+        });
+
+        sendPrivateNotificationButton = new AutoTooltipButton(Res.get("support.sendNotificationButton.label"));
+        sendPrivateNotificationButton.setDisable(true);
+        sendPrivateNotificationButton.setVisible(false);
+        sendPrivateNotificationButton.setManaged(false);
+        HBox.setHgrow(sendPrivateNotificationButton, Priority.NEVER);
+        sendPrivateNotificationButton.setOnAction(e -> {
+            sendPrivateNotification();
+        });
+
+        reportButton = new AutoTooltipButton(Res.get("support.reportButton.label"));
+        reportButton.setVisible(false);
+        reportButton.setManaged(false);
+        HBox.setHgrow(reportButton, Priority.NEVER);
+        reportButton.setOnAction(e -> {
+            showCompactReport();
+        });
+
+        fullReportButton = new AutoTooltipButton(Res.get("support.fullReportButton.label"));
+        fullReportButton.setVisible(false);
+        fullReportButton.setManaged(false);
+        HBox.setHgrow(fullReportButton, Priority.NEVER);
+        fullReportButton.setOnAction(e -> {
+            showFullReport();
+        });
+
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         filterBox = new HBox();
         filterBox.setSpacing(5);
-        filterBox.getChildren().addAll(label, filterTextField);
+        filterBox.getChildren().addAll(label, filterTextField, spacer, reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton);
         VBox.setVgrow(filterBox, Priority.NEVER);
-        filterBox.setVisible(false);
-        filterBox.setManaged(false);
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.SOMETIMES);
@@ -180,236 +228,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         root.getChildren().addAll(filterBox, tableView);
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
-        placeholder.setWrapText(true);
-        tableView.setPlaceholder(placeholder);
-        tableView.getSelectionModel().clearSelection();
-
-        tableView.getColumns().add(getSelectColumn());
-
-        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
-        tableView.getColumns().add(contractColumn);
-
-        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
-        tableView.getColumns().add(dateColumn);
-
-        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
-        tableView.getColumns().add(tradeIdColumn);
-
-        TableColumn<Dispute, Dispute> buyerOnionAddressColumn = getBuyerOnionAddressColumn();
-        tableView.getColumns().add(buyerOnionAddressColumn);
-
-        TableColumn<Dispute, Dispute> sellerOnionAddressColumn = getSellerOnionAddressColumn();
-        tableView.getColumns().add(sellerOnionAddressColumn);
-
-
-        TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
-        tableView.getColumns().add(marketColumn);
-
-        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
-        tableView.getColumns().add(roleColumn);
-
-        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
-        tableView.getColumns().add(stateColumn);
-
-        tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
-        dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
-        buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
-        sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
-        marketColumn.setComparator((o1, o2) -> CurrencyUtil.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
-
-        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getSortOrder().add(dateColumn);
+        setupTable();
 
         selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> chatView.setInputBoxVisible(!newValue);
 
-        keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
-                showFullReport();
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.K, event)) {
-                showCompactReport();
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.U, event)) {
-                // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
-                if (selectedDispute != null) {
-                    if (selectedDisputeClosedPropertyListener != null)
-                        selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-                    selectedDispute.setIsClosed(false);
-                }
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
-                if (selectedDispute != null) {
-                    PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
-                    NodeAddress nodeAddress;
-                    if (pubKeyRing.equals(selectedDispute.getContract().getBuyerPubKeyRing()))
-                        nodeAddress = selectedDispute.getContract().getBuyerNodeAddress();
-                    else
-                        nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
-
-                    new SendPrivateNotificationWindow(
-                            privateNotificationManager,
-                            pubKeyRing,
-                            nodeAddress,
-                            useDevPrivilegeKeys
-                    ).show();
-                }
-            } else {
-                handleKeyPressed(event);
-            }
-        };
+        keyEventEventHandler = this::handleKeyPressed;
 
         chatView = new ChatView(disputeManager, formatter);
         chatView.initialize();
-    }
-
-    private void showCompactReport() {
-        Map<String, List<Dispute>> map = new HashMap<>();
-        Map<String, List<Dispute>> disputesByReason = new HashMap<>();
-        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
-            String tradeId = dispute.getTradeId();
-            List<Dispute> list;
-            if (!map.containsKey(tradeId))
-                map.put(tradeId, new ArrayList<>());
-
-            list = map.get(tradeId);
-            list.add(dispute);
-        });
-
-        List<List<Dispute>> disputeGroups = new ArrayList<>();
-        map.forEach((key, value) -> disputeGroups.add(value));
-        disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
-        StringBuilder stringBuilder = new StringBuilder();
-        AtomicInteger disputeIndex = new AtomicInteger();
-        disputeGroups.forEach(disputeGroup -> {
-            if (disputeGroup.size() > 0) {
-                Dispute dispute0 = disputeGroup.get(0);
-                Date openingDate = dispute0.getOpeningDate();
-                stringBuilder.append("\n")
-                        .append("Dispute nr. ")
-                        .append(disputeIndex.incrementAndGet())
-                        .append("\n")
-                        .append("Opening date: ")
-                        .append(DisplayUtils.formatDateTime(openingDate))
-                        .append("\n");
-                DisputeResult disputeResult0 = dispute0.getDisputeResultProperty().get();
-                String summaryNotes0 = "";
-                if (disputeResult0 != null) {
-                    Date closeDate = disputeResult0.getCloseDate();
-                    long duration = closeDate.getTime() - openingDate.getTime();
-                    stringBuilder.append("Close date: ")
-                            .append(DisplayUtils.formatDateTime(closeDate))
-                            .append("\n")
-                            .append("Duration: ")
-                            .append(FormattingUtils.formatDurationAsWords(duration))
-                            .append("\n");
-
-                    summaryNotes0 = disputeResult0.getSummaryNotesProperty().get();
-                    stringBuilder.append("Summary notes: ").append(summaryNotes0).append("\n");
-                }
-
-                // We might have a different summary notes at second trader. Only if it
-                // is different we show it.
-                if (disputeGroup.size() > 1) {
-                    Dispute dispute1 = disputeGroup.get(1);
-                    DisputeResult disputeResult1 = dispute1.getDisputeResultProperty().get();
-                    if (disputeResult1 != null) {
-                        String summaryNotes1 = disputeResult1.getSummaryNotesProperty().get();
-                        if (!summaryNotes1.equals(summaryNotes0)) {
-                            stringBuilder.append("Summary notes (trader 2): ").append(summaryNotes1).append("\n");
-                        }
-                    }
-                }
-
-                if (dispute0.disputeResultProperty().get() != null) {
-                    DisputeResult.Reason reason = dispute0.disputeResultProperty().get().getReason();
-                    if (dispute0.disputeResultProperty().get().getReason() != null) {
-                        disputesByReason.putIfAbsent(reason.name(), new ArrayList<>());
-                        disputesByReason.get(reason.name()).add(dispute0);
-                        stringBuilder.append("Reason: ")
-                                .append(reason.name())
-                                .append("\n");
-                    }
-                }
-            }
-        });
-        stringBuilder.append("\n").append("Summary of reasons for disputes: ").append("\n");
-        disputesByReason.forEach((k, v) -> {
-            stringBuilder.append(k).append(": ").append(v.size()).append("\n");
-        });
-
-        String message = stringBuilder.toString();
-        new Popup().headLine("Compact summary of all disputes (" + disputeGroups.size() + ")")
-                .maxMessageLength(500)
-                .information(message)
-                .width(1200)
-                .actionButtonText("Copy to clipboard")
-                .onAction(() -> Utilities.copyToClipboard(message))
-                .show();
-
-    }
-
-    private void showFullReport() {
-        Map<String, List<Dispute>> map = new HashMap<>();
-        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
-            String tradeId = dispute.getTradeId();
-            List<Dispute> list;
-            if (!map.containsKey(tradeId))
-                map.put(tradeId, new ArrayList<>());
-
-            list = map.get(tradeId);
-            list.add(dispute);
-        });
-        List<List<Dispute>> disputeGroups = new ArrayList<>();
-        map.forEach((key, value) -> disputeGroups.add(value));
-        disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
-        StringBuilder stringBuilder = new StringBuilder();
-
-        // We don't translate that as it is not intended for the public
-        stringBuilder.append("Summary of all disputes (No. of disputes: ").append(disputeGroups.size()).append(")\n\n");
-        disputeGroups.forEach(disputeGroup -> {
-            Dispute dispute0 = disputeGroup.get(0);
-            stringBuilder.append("##########################################################################################/\n")
-                    .append("## Trade ID: ")
-                    .append(dispute0.getTradeId())
-                    .append("\n")
-                    .append("## Date: ")
-                    .append(DisplayUtils.formatDateTime(dispute0.getOpeningDate()))
-                    .append("\n")
-                    .append("## Is support ticket: ")
-                    .append(dispute0.isSupportTicket())
-                    .append("\n");
-            if (dispute0.disputeResultProperty().get() != null && dispute0.disputeResultProperty().get().getReason() != null) {
-                stringBuilder.append("## Reason: ")
-                        .append(dispute0.disputeResultProperty().get().getReason())
-                        .append("\n");
-            }
-            stringBuilder.append("##########################################################################################/\n")
-                    .append("\n");
-            disputeGroup.forEach(dispute -> {
-                stringBuilder
-                        .append("*******************************************************************************************\n")
-                        .append("** Trader's ID: ")
-                        .append(dispute.getTraderId())
-                        .append("\n*******************************************************************************************\n")
-                        .append("\n");
-                dispute.getChatMessages().forEach(m -> {
-                    String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
-                    stringBuilder.append(role)
-                            .append(m.getMessage())
-                            .append("\n");
-                });
-                stringBuilder.append("\n");
-            });
-            stringBuilder.append("\n");
-        });
-        String message = stringBuilder.toString();
-        // We don't translate that as it is not intended for the public
-        new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
-                .maxMessageLength(1000)
-                .information(message)
-                .width(1200)
-                .actionButtonText("Copy")
-                .onAction(() -> Utilities.copyToClipboard(message))
-                .show();
     }
 
     @Override
@@ -505,6 +331,48 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             chatView.deactivate();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    protected void setupReOpenDisputeListener() {
+        disputesListener = c -> {
+            c.next();
+            if (c.wasAdded()) {
+                onDisputesAdded(c.getAddedSubList());
+            } else if (c.wasRemoved()) {
+                onDisputesRemoved(c.getRemoved());
+            }
+        };
+    }
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    protected void activateReOpenDisputeListener() {
+        // Register listeners on all disputes for potential re-opening
+        onDisputesAdded(disputeManager.getDisputesAsObservableList());
+        disputeManager.getDisputesAsObservableList().addListener(disputesListener);
+
+        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
+            if (dispute.isClosed()) {
+                ObservableList<ChatMessage> chatMessages = dispute.getChatMessages();
+                // If last message is not a result message we re-open as we might have received a new message from the
+                // trader/mediator/arbitrator who has reopened the case
+                if (!chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
+                    onSelectDispute(dispute);
+                    reOpenDispute();
+                }
+            }
+        });
+    }
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    protected void deactivateReOpenDisputeListener() {
+        onDisputesRemoved(disputeManager.getDisputesAsObservableList());
+        disputeManager.getDisputesAsObservableList().removeListener(disputesListener);
+    }
+
     protected abstract SupportType getType();
 
     protected abstract DisputeSession getConcreteDisputeChatSession(Dispute dispute);
@@ -514,46 +382,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         filteredList.setPredicate(dispute -> !dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing()));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onOpenContract(Dispute dispute) {
-        contractWindow.show(dispute);
-    }
-
-    protected void removeListenersOnSelectDispute() {
-        if (selectedDispute != null) {
-            if (selectedDisputeClosedPropertyListener != null)
-                selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-        }
-    }
-
-    protected void addListenersOnSelectDispute() {
-        if (selectedDispute != null)
-            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
-    }
-
-    protected void onSelectDispute(Dispute dispute) {
-        removeListenersOnSelectDispute();
-        if (dispute == null) {
-            if (root.getChildren().size() > 2)
-                root.getChildren().remove(2);
-
-            selectedDispute = null;
-        } else if (selectedDispute != dispute) {
-            this.selectedDispute = dispute;
-            if (chatView != null) {
-                handleOnSelectDispute(dispute);
-            }
-
-            if (root.getChildren().size() > 2)
-                root.getChildren().remove(2);
-            root.getChildren().add(2, chatView);
-        }
-
-        addListenersOnSelectDispute();
+    protected void reOpenDisputeFromButton() {
+        reOpenDispute();
     }
 
     protected abstract void handleOnSelectDispute(Dispute dispute);
@@ -564,18 +394,367 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
                     .show(dispute);
         } else {
-            new Popup()
-                    .warning(Res.get("support.wrongVersion", protocolVersion))
-                    .show();
+            new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
         }
     }
 
     protected void handleKeyPressed(KeyEvent event) {
     }
 
+    protected void reOpenDispute() {
+        if (selectedDispute != null) {
+            selectedDispute.setIsClosed(false);
+            handleOnSelectDispute(selectedDispute);
+        }
+    }
+
+    protected boolean anyMatchOfFilterString(Dispute dispute, String filterString) {
+        boolean matchesTradeId = dispute.getTradeId().contains(filterString);
+        boolean matchesDate = DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString);
+        boolean isBuyerOnion = dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString);
+        boolean isSellerOnion = dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString);
+        boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+        boolean matchesSellersPaymentAccountData = dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+        return matchesTradeId || matchesDate || isBuyerOnion || isSellerOnion ||
+                matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onOpenContract(Dispute dispute) {
+        contractWindow.show(dispute);
+    }
+
+    private void removeListenersOnSelectDispute() {
+        if (selectedDispute != null) {
+            if (selectedDisputeClosedPropertyListener != null)
+                selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+        }
+    }
+
+    private void addListenersOnSelectDispute() {
+        if (selectedDispute != null)
+            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+    }
+
+    private void onSelectDispute(Dispute dispute) {
+        removeListenersOnSelectDispute();
+        if (dispute == null) {
+            if (root.getChildren().size() > 2) {
+                root.getChildren().remove(2);
+            }
+
+            selectedDispute = null;
+        } else if (selectedDispute != dispute) {
+            selectedDispute = dispute;
+            if (chatView != null) {
+                handleOnSelectDispute(dispute);
+            }
+
+            if (root.getChildren().size() > 2) {
+                root.getChildren().remove(2);
+            }
+            root.getChildren().add(2, chatView);
+        }
+
+        reOpenButton.setDisable(selectedDispute == null || !selectedDispute.isClosed());
+        sendPrivateNotificationButton.setDisable(selectedDispute == null);
+
+        addListenersOnSelectDispute();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    private void onDisputesAdded(List<? extends Dispute> addedDisputes) {
+        addedDisputes.forEach(dispute -> {
+            ListChangeListener<ChatMessage> listener = c -> {
+                c.next();
+                if (c.wasAdded()) {
+                    c.getAddedSubList().forEach(chatMessage -> {
+                        if (dispute.isClosed()) {
+                            if (chatMessage.isResultMessage(dispute)) {
+                                onSelectDispute(null);
+                            } else {
+                                onSelectDispute(dispute);
+                                reOpenDispute();
+                            }
+                        }
+                    });
+                }
+                // We never remove chat messages so no remove listener
+            };
+            dispute.getChatMessages().addListener(listener);
+            disputeChatMessagesListeners.put(dispute.getId(), listener);
+        });
+    }
+
+    // Reopen feature is only use in mediation from both mediator and traders
+    private void onDisputesRemoved(List<? extends Dispute> removedDisputes) {
+        removedDisputes.forEach(dispute -> {
+            String id = dispute.getId();
+            if (disputeChatMessagesListeners.containsKey(id)) {
+                ListChangeListener<ChatMessage> listener = disputeChatMessagesListeners.get(id);
+                dispute.getChatMessages().removeListener(listener);
+                disputeChatMessagesListeners.remove(id);
+            }
+        });
+    }
+
+    private void sendPrivateNotification() {
+        if (selectedDispute != null) {
+            PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
+            NodeAddress nodeAddress;
+            Contract contract = selectedDispute.getContract();
+            if (pubKeyRing.equals(contract.getBuyerPubKeyRing())) {
+                nodeAddress = contract.getBuyerNodeAddress();
+            } else {
+                nodeAddress = contract.getSellerNodeAddress();
+            }
+
+            new SendPrivateNotificationWindow(
+                    privateNotificationManager,
+                    pubKeyRing,
+                    nodeAddress,
+                    useDevPrivilegeKeys
+            ).show();
+        }
+    }
+
+    private void showCompactReport() {
+        Map<String, List<Dispute>> map = new HashMap<>();
+        Map<String, List<Dispute>> disputesByReason = new HashMap<>();
+        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
+            String tradeId = dispute.getTradeId();
+            List<Dispute> list;
+            if (!map.containsKey(tradeId))
+                map.put(tradeId, new ArrayList<>());
+
+            list = map.get(tradeId);
+            list.add(dispute);
+        });
+
+        List<List<Dispute>> allDisputes = new ArrayList<>();
+        map.forEach((key, value) -> allDisputes.add(value));
+        allDisputes.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
+        StringBuilder stringBuilder = new StringBuilder();
+        AtomicInteger disputeIndex = new AtomicInteger();
+        allDisputes.forEach(disputesPerTrade -> {
+            if (disputesPerTrade.size() > 0) {
+                Dispute firstDispute = disputesPerTrade.get(0);
+                Date openingDate = firstDispute.getOpeningDate();
+                Contract contract = firstDispute.getContract();
+                String buyersRole = contract.isBuyerMakerAndSellerTaker() ? "Buyer as maker" : "Buyer as taker";
+                String sellersRole = contract.isBuyerMakerAndSellerTaker() ? "Seller as taker" : "Seller as maker";
+                String opener = firstDispute.isDisputeOpenerIsBuyer() ? buyersRole : sellersRole;
+                DisputeResult disputeResult = firstDispute.getDisputeResultProperty().get();
+                String winner = disputeResult != null &&
+                        disputeResult.getWinner() == DisputeResult.Winner.BUYER ? "Buyer" : "Seller";
+                String buyerPayoutAmount = disputeResult != null ? disputeResult.getBuyerPayoutAmount().toFriendlyString() : "";
+                String sellerPayoutAmount = disputeResult != null ? disputeResult.getSellerPayoutAmount().toFriendlyString() : "";
+                stringBuilder.append("\n")
+                        .append("Dispute nr. ")
+                        .append(disputeIndex.incrementAndGet())
+                        .append("\n")
+                        .append("Opening date: ")
+                        .append(DisplayUtils.formatDateTime(openingDate))
+                        .append("\n");
+                String summaryNotes0 = "";
+                if (disputeResult != null) {
+                    Date closeDate = disputeResult.getCloseDate();
+                    long duration = closeDate.getTime() - openingDate.getTime();
+                    stringBuilder.append("Close date: ")
+                            .append(DisplayUtils.formatDateTime(closeDate))
+                            .append("\n")
+                            .append("Dispute duration: ")
+                            .append(FormattingUtils.formatDurationAsWords(duration))
+                            .append("\n");
+                }
+
+                stringBuilder.append("Payment method: ")
+                        .append(Res.get(contract.getPaymentMethodId()))
+                        .append("\n")
+                        .append("Currency: ")
+                        .append(CurrencyUtil.getNameAndCode(contract.getOfferPayload().getCurrencyCode()))
+                        .append("\n")
+                        .append("Trade amount: ")
+                        .append(contract.getTradeAmount().toFriendlyString())
+                        .append("\n")
+                        .append("Buyer/seller security deposit: ")
+                        .append(Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()).toFriendlyString())
+                        .append("/")
+                        .append(Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()).toFriendlyString())
+                        .append("\n")
+                        .append("Dispute opened by: ")
+                        .append(opener)
+                        .append("\n")
+                        .append("Payout to buyer/seller (winner): ")
+                        .append(buyerPayoutAmount).append("/")
+                        .append(sellerPayoutAmount).append(" (")
+                        .append(winner)
+                        .append(")\n");
+
+                if (disputeResult != null) {
+                    DisputeResult.Reason reason = disputeResult.getReason();
+                    if (firstDispute.disputeResultProperty().get().getReason() != null) {
+                        disputesByReason.putIfAbsent(reason.name(), new ArrayList<>());
+                        disputesByReason.get(reason.name()).add(firstDispute);
+                        stringBuilder.append("Reason: ")
+                                .append(reason.name())
+                                .append("\n");
+                    }
+
+                    summaryNotes0 = disputeResult.getSummaryNotesProperty().get();
+                    stringBuilder.append("Summary notes: ").append(summaryNotes0).append("\n");
+                }
+
+                // We might have a different summary notes at second trader. Only if it
+                // is different we show it.
+                if (disputesPerTrade.size() > 1) {
+                    Dispute dispute1 = disputesPerTrade.get(1);
+                    DisputeResult disputeResult1 = dispute1.getDisputeResultProperty().get();
+                    if (disputeResult1 != null) {
+                        String summaryNotes1 = disputeResult1.getSummaryNotesProperty().get();
+                        if (!summaryNotes1.equals(summaryNotes0)) {
+                            stringBuilder.append("Summary notes (different message to other trader was used): ").append(summaryNotes1).append("\n");
+                        }
+                    }
+                }
+            }
+        });
+        stringBuilder.append("\n").append("Summary of reasons for disputes: ").append("\n");
+        disputesByReason.forEach((k, v) -> {
+            stringBuilder.append(k).append(": ").append(v.size()).append("\n");
+        });
+
+        String message = stringBuilder.toString();
+        new Popup().headLine("Report for " + allDisputes.size() + " disputes")
+                .maxMessageLength(500)
+                .information(message)
+                .width(1200)
+                .actionButtonText("Copy to clipboard")
+                .onAction(() -> Utilities.copyToClipboard(message))
+                .show();
+
+    }
+
+    private void showFullReport() {
+        Map<String, List<Dispute>> map = new HashMap<>();
+        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
+            String tradeId = dispute.getTradeId();
+            List<Dispute> list;
+            if (!map.containsKey(tradeId))
+                map.put(tradeId, new ArrayList<>());
+
+            list = map.get(tradeId);
+            list.add(dispute);
+        });
+        List<List<Dispute>> disputeGroups = new ArrayList<>();
+        map.forEach((key, value) -> disputeGroups.add(value));
+        disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
+        StringBuilder stringBuilder = new StringBuilder();
+
+        // We don't translate that as it is not intended for the public
+        disputeGroups.forEach(disputeGroup -> {
+            Dispute dispute0 = disputeGroup.get(0);
+            stringBuilder.append("##########################################################################################/\n")
+                    .append("## Trade ID: ")
+                    .append(dispute0.getTradeId())
+                    .append("\n")
+                    .append("## Date: ")
+                    .append(DisplayUtils.formatDateTime(dispute0.getOpeningDate()))
+                    .append("\n")
+                    .append("## Is support ticket: ")
+                    .append(dispute0.isSupportTicket())
+                    .append("\n");
+            if (dispute0.disputeResultProperty().get() != null && dispute0.disputeResultProperty().get().getReason() != null) {
+                stringBuilder.append("## Reason: ")
+                        .append(dispute0.disputeResultProperty().get().getReason())
+                        .append("\n");
+            }
+            stringBuilder.append("##########################################################################################/\n")
+                    .append("\n");
+            disputeGroup.forEach(dispute -> {
+                stringBuilder
+                        .append("*******************************************************************************************\n")
+                        .append("** Trader's ID: ")
+                        .append(dispute.getTraderId())
+                        .append("\n*******************************************************************************************\n")
+                        .append("\n");
+                dispute.getChatMessages().forEach(m -> {
+                    String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
+                    stringBuilder.append(role)
+                            .append(m.getMessage())
+                            .append("\n");
+                });
+                stringBuilder.append("\n");
+            });
+            stringBuilder.append("\n");
+        });
+        String message = stringBuilder.toString();
+        // We don't translate that as it is not intended for the public
+        new Popup().headLine("Detailed text dump for " + disputeGroups.size() + " disputes")
+                .maxMessageLength(1000)
+                .information(message)
+                .width(1200)
+                .actionButtonText("Copy to clipboard")
+                .onAction(() -> Utilities.copyToClipboard(message))
+                .show();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupTable() {
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
+        placeholder.setWrapText(true);
+        tableView.setPlaceholder(placeholder);
+        tableView.getSelectionModel().clearSelection();
+
+        tableView.getColumns().add(getSelectColumn());
+
+        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
+        tableView.getColumns().add(contractColumn);
+
+        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
+        tableView.getColumns().add(dateColumn);
+
+        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
+        tableView.getColumns().add(tradeIdColumn);
+
+        TableColumn<Dispute, Dispute> buyerOnionAddressColumn = getBuyerOnionAddressColumn();
+        tableView.getColumns().add(buyerOnionAddressColumn);
+
+        TableColumn<Dispute, Dispute> sellerOnionAddressColumn = getSellerOnionAddressColumn();
+        tableView.getColumns().add(sellerOnionAddressColumn);
+
+
+        TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
+        tableView.getColumns().add(marketColumn);
+
+        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
+        tableView.getColumns().add(roleColumn);
+
+        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
+        tableView.getColumns().add(stateColumn);
+
+        tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
+        dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
+        buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
+        sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
+        marketColumn.setComparator((o1, o2) -> CurrencyUtil.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
+    }
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.select"));

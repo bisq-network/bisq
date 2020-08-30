@@ -132,10 +132,8 @@ public abstract class NetworkNode implements MessageListener {
                     }
                     Socket socket = createSocket(peersNodeAddress);
                     long duration = System.currentTimeMillis() - startTs;
-                    if (log.isDebugEnabled()) {
-                        log.debug("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
-                                duration);
-                    }
+                    log.info("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
+                            duration);
 
                     if (duration > CREATE_SOCKET_TIMEOUT)
                         throw new TimeoutException("A timeout occurred when creating a socket.");
@@ -334,7 +332,17 @@ public abstract class NetworkNode implements MessageListener {
 
             Set<Connection> allConnections = getAllConnections();
             int numConnections = allConnections.size();
+
+            if (numConnections == 0) {
+                log.info("Shutdown immediately because no connections are open.");
+                if (shutDownCompleteHandler != null) {
+                    shutDownCompleteHandler.run();
+                }
+                return;
+            }
+
             log.info("Shutdown {} connections", numConnections);
+
             AtomicInteger shutdownCompleted = new AtomicInteger();
             Timer timeoutHandler = UserThread.runAfter(() -> {
                 if (shutDownCompleteHandler != null) {
@@ -342,6 +350,7 @@ public abstract class NetworkNode implements MessageListener {
                     shutDownCompleteHandler.run();
                 }
             }, 3);
+
             allConnections.forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN,
                     () -> {
                         shutdownCompleted.getAndIncrement();

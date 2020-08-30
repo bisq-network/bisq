@@ -52,9 +52,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 class RequestDataHandler implements MessageListener {
-    private static final long TIMEOUT = 90;
+    private static final long TIMEOUT = 180;
 
     private NodeAddress peersNodeAddress;
+    private String getDataRequestType;
     /*
      */
 
@@ -138,7 +139,8 @@ class RequestDataHandler implements MessageListener {
                         TIMEOUT);
             }
 
-            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
+            getDataRequestType = getDataRequest.getClass().getSimpleName();
+            log.info("We send a {} to peer {}. ", getDataRequestType, nodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             //noinspection UnstableApiUsage
@@ -259,8 +261,9 @@ class RequestDataHandler implements MessageListener {
         StringBuilder sb = new StringBuilder();
         sb.append("\n#################################################################\n");
         sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
-        final int items = dataSet.size() + persistableNetworkPayloadSet.size();
-        sb.append("Received ").append(items).append(" instances\n");
+        int items = dataSet.size() + persistableNetworkPayloadSet.size();
+        sb.append("Received ").append(items).append(" instances from a ")
+                .append(getDataRequestType).append("\n");
         payloadByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")
                 .append(value.size())
