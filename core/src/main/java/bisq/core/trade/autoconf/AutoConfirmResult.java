@@ -73,5 +73,5 @@ public abstract class AutoConfirmResult {
 
     abstract public boolean isSuccessState();
 
-    abstract public String getTextStatus();
+    abstract public String getStatusAsDisplayString();
 }

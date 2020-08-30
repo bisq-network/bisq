@@ -105,7 +105,7 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getTextStatus() {
+    public String getStatusAsDisplayString() {
         switch (state) {
             case TX_NOT_CONFIRMED:
                 return Res.get("portfolio.pending.autoConfirmPending")

@@ -88,7 +88,7 @@ public class SellerStep3View extends TradeStepView {
 
         // we listen for updates on the trade autoConfirmResult field
         autoConfirmResultListener = (observable, oldValue, newValue) -> {
-            autoConfirmStatusField.setText(newValue.getTextStatus());
+            autoConfirmStatusField.setText(newValue.getStatusAsDisplayString());
         };
     }
 
@@ -154,7 +154,7 @@ public class SellerStep3View extends TradeStepView {
         if (autoConfirmStatusField != null) {
             trade.getAutoConfirmResultProperty().addListener(autoConfirmResultListener);
             // display the initial value, or FEATURE_DISABLED if there is none
-            autoConfirmStatusField.setText(trade.getAutoConfirmResult().getTextStatus());
+            autoConfirmStatusField.setText(trade.getAutoConfirmResult().getStatusAsDisplayString());
         }
     }
 
