@@ -208,23 +208,20 @@ public class XmrAutoConfirmationManager {
     }
 
     private boolean handleProofResult(XmrAutoConfirmResult result, Trade trade) {
-        boolean success = true;
-        boolean failure = false;
-
         // here we count the Trade's API results from all
         // different serviceAddress and figure out when all have finished
         int resultsCountdown = txProofResultsPending.getOrDefault(trade.getId(), 0);
         if (resultsCountdown < 0) {   // see failure scenario below
             log.info("Ignoring stale API result [{}], tradeId {} due to previous error",
                     result.getState(), trade.getShortId());
-            return failure;   // terminate any pending responses
+            return false;   // terminate any pending responses
         }
 
         if (trade.isPayoutPublished()) {
             log.warn("Trade payout already published, shutting down all open API requests for this trade {}",
                     trade.getShortId());
             txProofResultsPending.remove(trade.getId());
-            return failure;
+            return false;
         }
 
         if (result.isPendingState()) {
@@ -232,7 +229,7 @@ public class XmrAutoConfirmationManager {
                     result.getState(), trade.getShortId());
             trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
             // Repeating the requests is handled in XmrTransferProofRequester
-            return success;
+            return true;
         }
 
         if (result.isSuccessState()) {
@@ -241,7 +238,7 @@ public class XmrAutoConfirmationManager {
                     result.getState(), resultsCountdown, trade.getShortId());
             if (resultsCountdown > 0) {
                 txProofResultsPending.put(trade.getId(), resultsCountdown);   // track proof result count
-                return success; // not all APIs have confirmed yet
+                return true; // not all APIs have confirmed yet
             }
             // we've received the final PROOF_OK, all good here.
             txProofResultsPending.remove(trade.getId());
@@ -257,7 +254,7 @@ public class XmrAutoConfirmationManager {
                     },
                     errorMessage -> {
                     });
-            return success;
+            return true;
         }
 
         // error case.  any validation error from XmrProofRequester or XmrProofInfo.check
@@ -269,7 +266,7 @@ public class XmrAutoConfirmationManager {
         trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
         resultsCountdown = -1;  // signal all API requestors to cease
         txProofResultsPending.put(trade.getId(), resultsCountdown);   // track proof result count
-        return failure;
+        return false;
     }
 
     private boolean isAutoConfDisabledByFilter() {
