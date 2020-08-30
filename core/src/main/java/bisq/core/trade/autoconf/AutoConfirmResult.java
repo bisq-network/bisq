@@ -48,12 +48,13 @@ public abstract class AutoConfirmResult {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTOBUF
+    // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We use fromProto as kind of factory method to get the specific AutoConfirmResult
     @Nullable
     public static AutoConfirmResult fromProto(protobuf.AutoConfirmResult proto, String currencyCode) {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (currencyCode) {
             case "XMR":
                 return XmrAutoConfirmResult.fromProto(proto);

@@ -35,13 +35,13 @@ import javax.annotation.Nullable;
  * Manages the XMR transfers proof requests for multiple trades.
  */
 @Slf4j
-public class XmrTransferProofService {
-    private Map<String, XmrTransferProofRequester> map = new HashMap<>();
+class XmrTransferProofService {
+    private final Map<String, XmrTransferProofRequester> map = new HashMap<>();
     @Nullable
-    private Socks5ProxyProvider socks5ProxyProvider;
+    private final Socks5ProxyProvider socks5ProxyProvider;
 
     @Inject
-    public XmrTransferProofService(@Nullable Socks5ProxyProvider provider) {
+    private XmrTransferProofService(@Nullable Socks5ProxyProvider provider) {
         socks5ProxyProvider = provider;
     }
 

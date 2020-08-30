@@ -87,7 +87,7 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTOBUF
+    // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -131,7 +131,7 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
         return (state == State.PROOF_OK);
     }
 
-    public boolean isErrorState() {
+    private boolean isErrorState() {
         return (!isPendingState() && !isSuccessState());
     }
 }

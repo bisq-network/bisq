@@ -98,7 +98,7 @@ public class XmrProofInfo {
                 }
             }
 
-            // validate that the txhash matches
+            // validate that the txHash matches
             JsonElement jsonTxHash = jsonData.get("tx_hash");
             if (jsonTxHash == null) {
                 return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing tx_hash field");
@@ -109,7 +109,7 @@ public class XmrProofInfo {
                 }
             }
 
-            // validate that the txkey matches
+            // validate that the txKey matches
             JsonElement jsonViewkey = jsonData.get("viewkey");
             if (jsonViewkey == null) {
                 return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing viewkey field");
@@ -138,11 +138,11 @@ public class XmrProofInfo {
 
             // calculate how many confirms are still needed
             int confirmations;
-            JsonElement jsonConfs = jsonData.get("tx_confirmations");
-            if (jsonConfs == null) {
+            JsonElement jsonConfirmations = jsonData.get("tx_confirmations");
+            if (jsonConfirmations == null) {
                 return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing tx_confirmations field");
             } else {
-                confirmations = jsonConfs.getAsInt();
+                confirmations = jsonConfirmations.getAsInt();
                 log.info("Confirmations: {}, xmr txHash: {}", confirmations, txHash);
             }
 

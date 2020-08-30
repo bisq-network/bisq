@@ -24,7 +24,7 @@ import javax.inject.Inject;
 
 import javax.annotation.Nullable;
 
-public class XmrTxProofHttpClient extends HttpClient {
+class XmrTxProofHttpClient extends HttpClient {
     @Inject
     public XmrTxProofHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
         super(socks5ProxyProvider);

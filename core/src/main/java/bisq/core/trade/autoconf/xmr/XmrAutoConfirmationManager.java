@@ -61,21 +61,21 @@ public class XmrAutoConfirmationManager {
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private Map<String, Integer> txProofResultsPending = new HashMap<>();
+    private final Map<String, Integer> txProofResultsPending = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    XmrAutoConfirmationManager(FilterManager filterManager,
-                               Preferences preferences,
-                               XmrTransferProofService xmrTransferProofService,
-                               ClosedTradableManager closedTradableManager,
-                               FailedTradesManager failedTradesManager,
-                               P2PService p2PService,
-                               WalletsSetup walletsSetup,
-                               AccountAgeWitnessService accountAgeWitnessService
+    private XmrAutoConfirmationManager(FilterManager filterManager,
+                                       Preferences preferences,
+                                       XmrTransferProofService xmrTransferProofService,
+                                       ClosedTradableManager closedTradableManager,
+                                       FailedTradesManager failedTradesManager,
+                                       P2PService p2PService,
+                                       WalletsSetup walletsSetup,
+                                       AccountAgeWitnessService accountAgeWitnessService
     ) {
         this.filterManager = filterManager;
         this.preferences = preferences;
@@ -127,6 +127,7 @@ public class XmrAutoConfirmationManager {
 
         Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
         if (offer.getCurrencyCode().equals("XMR")) {
+            //noinspection UnnecessaryLocalVariable
             String txKey = counterCurrencyExtraData;
 
             if (!txHash.matches("[a-fA-F0-9]{64}") || !txKey.matches("[a-fA-F0-9]{64}")) {
@@ -264,7 +265,7 @@ public class XmrAutoConfirmationManager {
         log.warn("Tx Proof Failure {}, shutting down all open API requests for this trade {}",
                 result.getState(), trade.getShortId());
         trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
-        resultsCountdown = -1;  // signal all API requestors to cease
+        resultsCountdown = -1;  // signal all API requesters to cease
         txProofResultsPending.put(trade.getId(), resultsCountdown);   // track proof result count
         return false;
     }

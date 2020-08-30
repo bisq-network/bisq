@@ -39,10 +39,10 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 @Slf4j
-public class XmrTransferProofRequester {
+class XmrTransferProofRequester {
     // these settings are not likely to change and therefore not put into Config
-    private static long REPEAT_REQUEST_PERIOD = TimeUnit.SECONDS.toMillis(90);
-    private static long MAX_REQUEST_PERIOD = TimeUnit.HOURS.toMillis(12);
+    private static final long REPEAT_REQUEST_PERIOD = TimeUnit.SECONDS.toMillis(90);
+    private static final long MAX_REQUEST_PERIOD = TimeUnit.HOURS.toMillis(12);
 
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "XmrTransferProofRequester", 3, 5, 10 * 60);
@@ -52,7 +52,7 @@ public class XmrTransferProofRequester {
     private final FaultHandler faultHandler;
 
     private boolean terminated;
-    private long firstRequest;
+    private final long firstRequest;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
