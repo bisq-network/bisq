@@ -74,6 +74,7 @@ import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.Trade;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -465,14 +466,26 @@ public class BuyerStep2View extends TradeStepView {
                         .onAction(() -> {
                             String txKey = setXmrTxKeyWindow.getTxKey();
                             String txHash = setXmrTxKeyWindow.getTxHash();
-                            if (txKey.length() == 64 && txHash.length() == 64) {
-                                trade.setCounterCurrencyExtraData(txKey);
-                                trade.setCounterCurrencyTxId(txHash);
-                                showConfirmPaymentStartedPopup();
-                            } else {
-                                UserThread.runAfter(() ->
-                                    showProofWarningPopup(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                            if (txKey == null || txHash == null || txKey.isEmpty() || txHash.isEmpty()) {
+                                UserThread.runAfter(this::showProofWarningPopup, Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                                return;
                             }
+
+                            InputValidator.ValidationResult validateTxKey = setXmrTxKeyWindow.getRegexValidator().validate(txKey);
+                            if (!validateTxKey.isValid) {
+                                UserThread.runAfter(() -> new Popup().warning(validateTxKey.errorMessage).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                                return;
+                            }
+
+                            InputValidator.ValidationResult validateTxHash = setXmrTxKeyWindow.getRegexValidator().validate(txHash);
+                            if (!validateTxHash.isValid) {
+                                UserThread.runAfter(() -> new Popup().warning(validateTxHash.errorMessage).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                                return;
+                            }
+
+                            trade.setCounterCurrencyExtraData(txKey);
+                            trade.setCounterCurrencyTxId(txHash);
+                            showConfirmPaymentStartedPopup();
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(setXmrTxKeyWindow::hide)
@@ -485,8 +498,8 @@ public class BuyerStep2View extends TradeStepView {
 
     private void showProofWarningPopup() {
         Popup popup = new Popup();
-        popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.warningTitle"))
-                .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.warning"))
+        popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.proof.warningTitle"))
+                .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.proof.noneProvided"))
                 .width(700)
                 .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.warningButton"))
                 .onAction(this::showConfirmPaymentStartedPopup)

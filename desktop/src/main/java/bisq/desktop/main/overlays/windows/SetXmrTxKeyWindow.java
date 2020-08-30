@@ -30,6 +30,8 @@ import javafx.scene.layout.Priority;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 
 import static bisq.common.app.DevEnv.isDevMode;
@@ -38,6 +40,8 @@ import static bisq.desktop.util.FormBuilder.addInputTextField;
 public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
 
     private InputTextField txHashInputTextField, txKeyInputTextField;
+    @Getter
+    private RegexValidator regexValidator;
 
     public SetXmrTxKeyWindow() {
         type = Type.Attention;
@@ -53,9 +57,9 @@ public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
         addContent();
         addButtons();
 
-        RegexValidator regexValidator = new RegexValidator();
+        regexValidator = new RegexValidator();
         regexValidator.setPattern("[a-fA-F0-9]{64}");
-        regexValidator.setErrorMessage("Input must be a 32 byte hexadeximal number");
+        regexValidator.setErrorMessage(Res.get("portfolio.pending.step2_buyer.confirmStart.proof.invalidInput"));
         txHashInputTextField.setValidator(regexValidator);
         txKeyInputTextField.setValidator(regexValidator);
         if (isDevMode()) {
