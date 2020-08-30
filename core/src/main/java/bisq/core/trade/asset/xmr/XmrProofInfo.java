@@ -30,6 +30,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -70,11 +71,13 @@ public class XmrProofInfo {
     public AutoConfirmResult checkApiResponse(String jsonTxt) {
         try {
             JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
-            if (json == null)
+            if (json == null) {
                 return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Empty json");
+            }
             // there should always be "data" and "status" at the top level
-            if (json.get("data") == null || !json.get("data").isJsonObject() || json.get("status") == null)
+            if (json.get("data") == null || !json.get("data").isJsonObject() || json.get("status") == null) {
                 return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing data / status fields");
+            }
             JsonObject jsonData = json.get("data").getAsJsonObject();
             String jsonStatus = json.get("status").getAsString();
             if (jsonStatus.matches("fail")) {
@@ -127,7 +130,8 @@ public class XmrProofInfo {
             } else {
                 long tradeDateSeconds = tradeDate.getTime() / 1000;
                 long difference = tradeDateSeconds - jsonTimestamp.getAsLong();
-                if (difference > 60 * 60 * 24 && !DevEnv.isDevMode()) { // accept up to 1 day difference
+                // Accept up to 2 hours difference. Some tolerance is needed if users clock is out of sync
+                if (difference > TimeUnit.HOURS.toSeconds(2) && !DevEnv.isDevMode()) {
                     log.warn("tx_timestamp {}, tradeDate: {}, difference {}",
                             jsonTimestamp.getAsLong(), tradeDateSeconds, difference);
                     return new AutoConfirmResult(AutoConfirmResult.State.TRADE_DATE_NOT_MATCHING, null);
@@ -135,22 +139,24 @@ public class XmrProofInfo {
             }
 
             // calculate how many confirms are still needed
-            int confirmations = 0;
+            int confirmations;
             JsonElement jsonConfs = jsonData.get("tx_confirmations");
             if (jsonConfs == null) {
                 return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing tx_confirmations field");
             } else {
                 confirmations = jsonConfs.getAsInt();
-                log.info("Confirmations: {}, xmr txid: {}", confirmations, txHash);
+                log.info("Confirmations: {}, xmr txHash: {}", confirmations, txHash);
             }
 
             // iterate through the list of outputs, one of them has to match the amount we are trying to verify.
             // check that the "match" field is true as well as validating the amount value
             // (except that in dev mode we allow any amount as valid)
             JsonArray jsonOutputs = jsonData.get("outputs").getAsJsonArray();
+            boolean anyMatchFound = false;
             for (int i = 0; i < jsonOutputs.size(); i++) {
                 JsonObject out = jsonOutputs.get(i).getAsJsonObject();
                 if (out.get("match").getAsBoolean()) {
+                    anyMatchFound = true;
                     long jsonAmount = out.get("amount").getAsLong();
                     if (jsonAmount == amount || DevEnv.isDevMode()) {   // any amount ok in dev mode
                         if (confirmations < confirmsRequired)
@@ -160,6 +166,11 @@ public class XmrProofInfo {
                             return new AutoConfirmResult(AutoConfirmResult.State.PROOF_OK, confirmations, confirmsRequired);
                     }
                 }
+            }
+
+            // None of the outputs had a match entry
+            if (!anyMatchFound) {
+                return new AutoConfirmResult(AutoConfirmResult.State.NO_MATCH_FOUND, null);
             }
 
             // reaching this point means there was no matching amount

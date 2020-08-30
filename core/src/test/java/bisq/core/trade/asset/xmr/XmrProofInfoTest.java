@@ -144,6 +144,12 @@ public class XmrProofInfoTest {
         json = json.replaceFirst("100000000000", "100000000001");
         assertTrue(xmrProofInfo.checkApiResponse(json).getState()
                 == AutoConfirmResult.State.AMOUNT_NOT_MATCHING);
+
+        // Revert change of amount
+        json = json.replaceFirst("100000000001", "100000000000");
+        json = json.replaceFirst("'match':true", "'match':false");
+        assertTrue(xmrProofInfo.checkApiResponse(json).getState()
+                == AutoConfirmResult.State.NO_MATCH_FOUND);
     }
 
     @Test
