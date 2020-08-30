@@ -1356,23 +1356,6 @@ message Trade {
         TRADE_PERIOD_OVER = 3;
     }
 
-    enum AutoConfirmResult {
-        FEATURE_DISABLED = 0;
-        TX_NOT_FOUND = 1;
-        TX_NOT_CONFIRMED = 2;
-        PROOF_OK = 3;
-        CONNECTION_FAIL = 4;
-        API_FAILURE = 5;
-        API_INVALID = 6;
-        TX_KEY_REUSED = 7;
-        TX_HASH_INVALID = 8;
-        TX_KEY_INVALID = 9;
-        ADDRESS_INVALID = 10;
-        AMOUNT_NOT_MATCHING = 11;
-        TRADE_LIMIT_EXCEEDED = 12;
-        TRADE_DATE_NOT_MATCHING = 13;
-    }
-
     Offer offer = 1;
     ProcessModel process_model = 2;
     string taker_fee_tx_id = 3;
@@ -1411,6 +1394,10 @@ message Trade {
     int64 last_refresh_request_date = 36;
     string counter_currency_extra_data = 37;
     AutoConfirmResult auto_confirm_result = 38;
+}
+
+message AutoConfirmResult {
+    string stateName = 1; // name of AutoConfirmResult.State enum
 }
 
 message BuyerAsMakerTrade {

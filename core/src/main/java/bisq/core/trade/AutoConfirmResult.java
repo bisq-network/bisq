@@ -21,15 +21,16 @@ import bisq.core.locale.Res;
 
 import bisq.common.proto.ProtoUtil;
 
-import javax.annotation.Nullable;
-
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 @Value
 public class AutoConfirmResult {
     public enum State {
+        UNDEFINED,
         FEATURE_DISABLED,
         TX_NOT_FOUND,
         TX_NOT_CONFIRMED,
@@ -41,27 +42,25 @@ public class AutoConfirmResult {
         TX_HASH_INVALID,
         TX_KEY_INVALID,
         ADDRESS_INVALID,
+        NO_MATCH_FOUND,
         AMOUNT_NOT_MATCHING,
         TRADE_LIMIT_EXCEEDED,
-        TRADE_DATE_NOT_MATCHING;
-
-        public static AutoConfirmResult.State fromProto(protobuf.Trade.AutoConfirmResult result) {
-            return ProtoUtil.enumFromProto(AutoConfirmResult.State.class, result.name());
-        }
-
-        public static protobuf.Trade.AutoConfirmResult toProtoMessage(AutoConfirmResult.State result) {
-            return protobuf.Trade.AutoConfirmResult.valueOf(result.name());
-        }
+        TRADE_DATE_NOT_MATCHING
     }
 
+    // Only state gets persisted
     private final State state;
+
     private final transient int confirmCount;
     private final transient int confirmsRequired;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public AutoConfirmResult(State state) {
-        this.state = state;
-        this.confirmCount = 0;
-        this.confirmsRequired = 0;
+        this(state, 0, 0);
     }
 
     // alternate constructor for showing confirmation progress information
@@ -73,12 +72,32 @@ public class AutoConfirmResult {
 
     // alternate constructor for error scenarios
     public AutoConfirmResult(State state, @Nullable String errorMsg) {
-        this.state = state;
-        this.confirmCount = 0;
-        this.confirmsRequired = 0;
-        if (isErrorState())
+        this(state, 0, 0);
+
+        if (isErrorState()) {
             log.error(errorMsg != null ? errorMsg : state.toString());
+        }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTOBUF
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public protobuf.AutoConfirmResult toProtoMessage() {
+        return protobuf.AutoConfirmResult.newBuilder().setStateName(state.name()).build();
+    }
+
+    public static AutoConfirmResult fromProto(protobuf.AutoConfirmResult proto) {
+        AutoConfirmResult.State state = ProtoUtil.enumFromProto(AutoConfirmResult.State.class, proto.getStateName());
+        return state != null ? new AutoConfirmResult(state) : new AutoConfirmResult(State.UNDEFINED);
+
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getTextStatus() {
         switch (state) {
@@ -108,18 +127,5 @@ public class AutoConfirmResult {
 
     public boolean isErrorState() {
         return (!isPendingState() && !isSuccessState());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTOBUF
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public protobuf.Trade.AutoConfirmResult toProtoMessage() {
-        return State.toProtoMessage(state);
-    }
-
-    public static AutoConfirmResult fromProto(protobuf.Trade.AutoConfirmResult proto) {
-        return new AutoConfirmResult(AutoConfirmResult.State.fromProto(proto));
     }
 }

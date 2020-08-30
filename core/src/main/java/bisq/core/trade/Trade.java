@@ -439,13 +439,15 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     private AutoConfirmResult autoConfirmResult;
 
-    public void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
+    void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
         this.autoConfirmResult = autoConfirmResult;
         autoConfirmResultProperty.setValue(autoConfirmResult);
     }
+
     @Getter
     // This observable property can be used for UI to show a notification to user of the XMR proof status
     transient final private ObjectProperty<AutoConfirmResult> autoConfirmResultProperty = new SimpleObjectProperty<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -593,7 +595,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
-        trade.setAutoConfirmResult(AutoConfirmResult.fromProto(protobuf.Trade.AutoConfirmResult.valueOf(proto.getAutoConfirmResultValue())));
+        trade.setAutoConfirmResult(AutoConfirmResult.fromProto(proto.getAutoConfirmResult()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
