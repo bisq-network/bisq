@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class XmrTransferProofService {
     private Map<String, XmrTransferProofRequester> map = new HashMap<>();
+    @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
 
     @Inject
@@ -51,17 +52,18 @@ public class XmrTransferProofService {
                              FaultHandler faultHandler) {
         String key = xmrProofInfo.getKey();
         if (map.containsKey(key)) {
-            log.warn("We started a proof request for trade with ID {} already", key);
+            log.warn("We started a proof request for key {} already", key);
             return;
         }
-        log.info("requesting tx proof for " + key);
+        log.info("requesting tx proof with key {}", key);
 
         XmrTransferProofRequester requester = new XmrTransferProofRequester(
                 socks5ProxyProvider,
                 xmrProofInfo,
                 result -> {
-                    if (result.isSuccessState())
+                    if (result.isSuccessState()) {
                         cleanup(key);
+                    }
                     resultHandler.accept(result);
                 },
                 (errorMsg, throwable) -> {
@@ -76,12 +78,13 @@ public class XmrTransferProofService {
         String key = xmrProofInfo.getKey();
         XmrTransferProofRequester requester = map.getOrDefault(key, null);
         if (requester != null) {
-            log.info("Terminating API request for {}", key);
+            log.info("Terminating API request for request with key {}", key);
             requester.stop();
             cleanup(key);
         }
     }
-    private void cleanup(String identifier) {
-        map.remove(identifier);
+
+    private void cleanup(String key) {
+        map.remove(key);
     }
 }
