@@ -17,7 +17,7 @@
 
 package bisq.core.trade.asset.xmr;
 
-import bisq.core.trade.AutoConfirmResult;
+import bisq.core.trade.XmrAutoConfirmResult;
 
 import bisq.asset.CryptoNoteAddressValidator;
 
@@ -68,57 +68,57 @@ public class XmrProofInfo {
         return txHash + "|" + serviceAddress;
     }
 
-    public AutoConfirmResult checkApiResponse(String jsonTxt) {
+    public XmrAutoConfirmResult checkApiResponse(String jsonTxt) {
         try {
             JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
             if (json == null) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Empty json");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Empty json");
             }
             // there should always be "data" and "status" at the top level
             if (json.get("data") == null || !json.get("data").isJsonObject() || json.get("status") == null) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing data / status fields");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing data / status fields");
             }
             JsonObject jsonData = json.get("data").getAsJsonObject();
             String jsonStatus = json.get("status").getAsString();
             if (jsonStatus.matches("fail")) {
                 // the API returns "fail" until the transaction has successfully reached the mempool.
                 // we return TX_NOT_FOUND which will cause a retry later
-                return new AutoConfirmResult(AutoConfirmResult.State.TX_NOT_FOUND, null);
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_NOT_FOUND, null);
             } else if (!jsonStatus.matches("success")) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_FAILURE, "Unhandled status value");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_FAILURE, "Unhandled status value");
             }
 
             // validate that the address matches
             JsonElement jsonAddress = jsonData.get("address");
             if (jsonAddress == null) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing address field");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing address field");
             } else {
                 String expectedAddressHex = CryptoNoteAddressValidator.convertToRawHex(this.recipientAddress);
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
                     log.warn("address {}, expected: {}", jsonAddress.getAsString(), expectedAddressHex);
-                    return new AutoConfirmResult(AutoConfirmResult.State.ADDRESS_INVALID, null);
+                    return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.ADDRESS_INVALID, null);
                 }
             }
 
             // validate that the txhash matches
             JsonElement jsonTxHash = jsonData.get("tx_hash");
             if (jsonTxHash == null) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing tx_hash field");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing tx_hash field");
             } else {
                 if (!jsonTxHash.getAsString().equalsIgnoreCase(txHash)) {
                     log.warn("txHash {}, expected: {}", jsonTxHash.getAsString(), txHash);
-                    return new AutoConfirmResult(AutoConfirmResult.State.TX_HASH_INVALID, null);
+                    return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_HASH_INVALID, null);
                 }
             }
 
             // validate that the txkey matches
             JsonElement jsonViewkey = jsonData.get("viewkey");
             if (jsonViewkey == null) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing viewkey field");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing viewkey field");
             } else {
                 if (!jsonViewkey.getAsString().equalsIgnoreCase(this.txKey)) {
                     log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), txKey);
-                    return new AutoConfirmResult(AutoConfirmResult.State.TX_KEY_INVALID, null);
+                    return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_KEY_INVALID, null);
                 }
             }
 
@@ -126,7 +126,7 @@ public class XmrProofInfo {
             // (except that in dev mode we let this check pass anyway)
             JsonElement jsonTimestamp = jsonData.get("tx_timestamp");
             if (jsonTimestamp == null) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing tx_timestamp field");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing tx_timestamp field");
             } else {
                 long tradeDateSeconds = tradeDate.getTime() / 1000;
                 long difference = tradeDateSeconds - jsonTimestamp.getAsLong();
@@ -134,7 +134,7 @@ public class XmrProofInfo {
                 if (difference > TimeUnit.HOURS.toSeconds(2) && !DevEnv.isDevMode()) {
                     log.warn("tx_timestamp {}, tradeDate: {}, difference {}",
                             jsonTimestamp.getAsLong(), tradeDateSeconds, difference);
-                    return new AutoConfirmResult(AutoConfirmResult.State.TRADE_DATE_NOT_MATCHING, null);
+                    return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TRADE_DATE_NOT_MATCHING, null);
                 }
             }
 
@@ -142,7 +142,7 @@ public class XmrProofInfo {
             int confirmations;
             JsonElement jsonConfs = jsonData.get("tx_confirmations");
             if (jsonConfs == null) {
-                return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, "Missing tx_confirmations field");
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing tx_confirmations field");
             } else {
                 confirmations = jsonConfs.getAsInt();
                 log.info("Confirmations: {}, xmr txHash: {}", confirmations, txHash);
@@ -161,23 +161,23 @@ public class XmrProofInfo {
                     if (jsonAmount == amount || DevEnv.isDevMode()) {   // any amount ok in dev mode
                         if (confirmations < confirmsRequired)
                             // we return TX_NOT_CONFIRMED which will cause a retry later
-                            return new AutoConfirmResult(AutoConfirmResult.State.TX_NOT_CONFIRMED, confirmations, confirmsRequired);
+                            return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_NOT_CONFIRMED, confirmations, confirmsRequired);
                         else
-                            return new AutoConfirmResult(AutoConfirmResult.State.PROOF_OK, confirmations, confirmsRequired);
+                            return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.PROOF_OK, confirmations, confirmsRequired);
                     }
                 }
             }
 
             // None of the outputs had a match entry
             if (!anyMatchFound) {
-                return new AutoConfirmResult(AutoConfirmResult.State.NO_MATCH_FOUND, null);
+                return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.NO_MATCH_FOUND, null);
             }
 
             // reaching this point means there was no matching amount
-            return new AutoConfirmResult(AutoConfirmResult.State.AMOUNT_NOT_MATCHING, null);
+            return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.AMOUNT_NOT_MATCHING, null);
 
         } catch (JsonParseException | NullPointerException e) {
-            return new AutoConfirmResult(AutoConfirmResult.State.API_INVALID, e.toString());
+            return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, e.toString());
         }
     }
 }

@@ -17,7 +17,7 @@
 
 package bisq.core.trade.asset.xmr;
 
-import bisq.core.trade.AutoConfirmResult;
+import bisq.core.trade.XmrAutoConfirmResult;
 
 import bisq.network.Socks5ProxyProvider;
 
@@ -48,7 +48,7 @@ public class XmrTransferProofService {
     }
 
     public void requestProof(XmrProofInfo xmrProofInfo,
-                             Consumer<AutoConfirmResult> resultHandler,
+                             Consumer<XmrAutoConfirmResult> resultHandler,
                              FaultHandler faultHandler) {
         String key = xmrProofInfo.getKey();
         if (map.containsKey(key)) {

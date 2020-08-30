@@ -17,66 +17,31 @@
 
 package bisq.core.trade;
 
-import bisq.core.locale.Res;
-
-import bisq.common.proto.ProtoUtil;
-
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import javax.annotation.Nullable;
 
-@Slf4j
-@Value
-public class AutoConfirmResult {
-    public enum State {
-        UNDEFINED,
-        FEATURE_DISABLED,
-        TX_NOT_FOUND,
-        TX_NOT_CONFIRMED,
-        PROOF_OK,
-        CONNECTION_FAIL,
-        API_FAILURE,
-        API_INVALID,
-        TX_KEY_REUSED,
-        TX_HASH_INVALID,
-        TX_KEY_INVALID,
-        ADDRESS_INVALID,
-        NO_MATCH_FOUND,
-        AMOUNT_NOT_MATCHING,
-        TRADE_LIMIT_EXCEEDED,
-        TRADE_DATE_NOT_MATCHING
-    }
+/**
+ * Base class for AutoConfirm implementations
+ */
+@EqualsAndHashCode
+@Getter
+public abstract class AutoConfirmResult {
 
-    // Only state gets persisted
-    private final State state;
-
-    private final transient int confirmCount;
-    private final transient int confirmsRequired;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public AutoConfirmResult(State state) {
-        this(state, 0, 0);
-    }
-
-    // alternate constructor for showing confirmation progress information
-    public AutoConfirmResult(State state, int confirmCount, int confirmsRequired) {
-        this.state = state;
-        this.confirmCount = confirmCount;
-        this.confirmsRequired = confirmsRequired;
-    }
-
-    // alternate constructor for error scenarios
-    public AutoConfirmResult(State state, @Nullable String errorMsg) {
-        this(state, 0, 0);
-
-        if (isErrorState()) {
-            log.error(errorMsg != null ? errorMsg : state.toString());
+    public static AutoConfirmResult fromCurrencyCode(String currencyCode) {
+        switch (currencyCode) {
+            case "XMR":
+                return new XmrAutoConfirmResult();
+            default:
+                return null;
         }
+    }
+
+    private final String stateName;
+
+    protected AutoConfirmResult(String stateName) {
+        this.stateName = stateName;
     }
 
 
@@ -84,48 +49,25 @@ public class AutoConfirmResult {
     // PROTOBUF
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public protobuf.AutoConfirmResult toProtoMessage() {
-        return protobuf.AutoConfirmResult.newBuilder().setStateName(state.name()).build();
+    // We use fromProto as kind of factory method to get the specific AutoConfirmResult
+    @Nullable
+    static AutoConfirmResult fromProto(protobuf.AutoConfirmResult proto, String currencyCode) {
+        switch (currencyCode) {
+            case "XMR":
+                return XmrAutoConfirmResult.fromProto(proto);
+            default:
+                return null;
+        }
     }
 
-    public static AutoConfirmResult fromProto(protobuf.AutoConfirmResult proto) {
-        AutoConfirmResult.State state = ProtoUtil.enumFromProto(AutoConfirmResult.State.class, proto.getStateName());
-        return state != null ? new AutoConfirmResult(state) : new AutoConfirmResult(State.UNDEFINED);
-
-    }
+    public abstract protobuf.AutoConfirmResult toProtoMessage();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getTextStatus() {
-        switch (state) {
-            case TX_NOT_CONFIRMED:
-                return Res.get("portfolio.pending.autoConfirmPending")
-                        + " " + confirmCount
-                        + "/" + confirmsRequired;
-            case TX_NOT_FOUND:
-                return Res.get("portfolio.pending.autoConfirmTxNotFound");
-            case FEATURE_DISABLED:
-                return Res.get("portfolio.pending.autoConfirmDisabled");
-            case PROOF_OK:
-                return Res.get("portfolio.pending.autoConfirmSuccess");
-            default:
-                // any other statuses we display the enum name
-                return this.state.toString();
-        }
-    }
+    abstract public boolean isSuccessState();
 
-    public boolean isPendingState() {
-        return (state == State.TX_NOT_FOUND || state == State.TX_NOT_CONFIRMED);
-    }
-
-    public boolean isSuccessState() {
-        return (state == State.PROOF_OK);
-    }
-
-    public boolean isErrorState() {
-        return (!isPendingState() && !isSuccessState());
-    }
+    abstract public String getTextStatus();
 }

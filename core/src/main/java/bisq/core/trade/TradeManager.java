@@ -126,7 +126,7 @@ public class TradeManager implements PersistedDataHost {
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final AutoConfirmationManager autoConfirmationManager;
+    private final XmrAutoConfirmationManager xmrAutoConfirmationManager;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
@@ -168,7 +168,7 @@ public class TradeManager implements PersistedDataHost {
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
                         AccountAgeWitnessService accountAgeWitnessService,
-                        AutoConfirmationManager autoConfirmationManager,
+                        XmrAutoConfirmationManager xmrAutoConfirmationManager,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         RefundAgentManager refundAgentManager,
@@ -191,7 +191,7 @@ public class TradeManager implements PersistedDataHost {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.autoConfirmationManager = autoConfirmationManager;
+        this.xmrAutoConfirmationManager = xmrAutoConfirmationManager;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
@@ -436,7 +436,7 @@ public class TradeManager implements PersistedDataHost {
                 user,
                 filterManager,
                 accountAgeWitnessService,
-                autoConfirmationManager,
+                xmrAutoConfirmationManager,
                 tradeStatisticsManager,
                 arbitratorManager,
                 mediatorManager,

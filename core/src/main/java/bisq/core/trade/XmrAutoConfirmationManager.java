@@ -20,6 +20,7 @@ package bisq.core.trade;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.FilterManager;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -49,7 +50,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
-public class AutoConfirmationManager {
+public class XmrAutoConfirmationManager {
 
     private final FilterManager filterManager;
     private final Preferences preferences;
@@ -66,15 +67,15 @@ public class AutoConfirmationManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    AutoConfirmationManager(FilterManager filterManager,
-                            Preferences preferences,
-                            XmrTransferProofService xmrTransferProofService,
-                            ClosedTradableManager closedTradableManager,
-                            FailedTradesManager failedTradesManager,
-                            P2PService p2PService,
-                            WalletsSetup walletsSetup,
-                            AccountAgeWitnessService accountAgeWitnessService
-                            ) {
+    XmrAutoConfirmationManager(FilterManager filterManager,
+                               Preferences preferences,
+                               XmrTransferProofService xmrTransferProofService,
+                               ClosedTradableManager closedTradableManager,
+                               FailedTradesManager failedTradesManager,
+                               P2PService p2PService,
+                               WalletsSetup walletsSetup,
+                               AccountAgeWitnessService accountAgeWitnessService
+    ) {
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.xmrTransferProofService = xmrTransferProofService;
@@ -153,7 +154,7 @@ public class AutoConfirmationManager {
                         if (alreadyUsed) {
                             String message = "Peer used the XMR tx key already at another trade with trade ID " +
                                     t.getId() + ". This might be a scam attempt.";
-                            trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.TX_KEY_REUSED, message));
+                            trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_KEY_REUSED, message));
                         }
                         return alreadyUsed;
                     });
@@ -163,23 +164,24 @@ public class AutoConfirmationManager {
             }
 
             if (!preferences.getAutoConfirmSettings().enabled || this.isAutoConfDisabledByFilter()) {
-                trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.FEATURE_DISABLED, null));
+                trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.FEATURE_DISABLED, null));
                 return;
             }
             Coin tradeAmount = trade.getTradeAmount();
             Coin tradeLimit = Coin.valueOf(preferences.getAutoConfirmSettings().tradeLimit);
-            if (tradeAmount.isGreaterThan(tradeLimit)) {
+            if (tradeAmount != null && tradeAmount.isGreaterThan(tradeLimit)) {
                 log.warn("Trade amount {} is higher than settings limit {}, will not attempt auto-confirm",
                         tradeAmount.toFriendlyString(), tradeLimit.toFriendlyString());
-                trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.TRADE_LIMIT_EXCEEDED, null));
+                trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TRADE_LIMIT_EXCEEDED, null));
                 return;
             }
 
             String address = sellersAssetsAccountPayload.getAddress();
             // XMR satoshis have 12 decimal places vs. bitcoin's 8
-            long amountXmr = offer.getVolumeByAmount(tradeAmount).getValue() * 10000L;
+            Volume volume = offer.getVolumeByAmount(tradeAmount);
+            long amountXmr = volume != null ? volume.getValue() * 10000L : 0L;
             int confirmsRequired = preferences.getAutoConfirmSettings().requiredConfirmations;
-            trade.setAutoConfirmResult(new AutoConfirmResult(AutoConfirmResult.State.TX_NOT_FOUND));
+            trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_NOT_FOUND));
             List<String> serviceAddresses = preferences.getAutoConfirmSettings().serviceAddresses;
             txProofResultsPending.put(trade.getId(), serviceAddresses.size()); // need result from each service address
             for (String serviceAddress : serviceAddresses) {
@@ -204,7 +206,7 @@ public class AutoConfirmationManager {
         }
     }
 
-    private boolean handleProofResult(AutoConfirmResult result, Trade trade) {
+    private boolean handleProofResult(XmrAutoConfirmResult result, Trade trade) {
         boolean success = true;
         boolean failure = false;
 
@@ -250,8 +252,10 @@ public class AutoConfirmationManager {
             }
             accountAgeWitnessService.maybeSignWitness(trade);
             // transition the trade to step 4:
-            ((SellerTrade) trade).onFiatPaymentReceived(() -> { },
-                    errorMessage -> { });
+            ((SellerTrade) trade).onFiatPaymentReceived(() -> {
+                    },
+                    errorMessage -> {
+                    });
             return success;
         }
 

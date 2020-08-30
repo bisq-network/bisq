@@ -435,7 +435,10 @@ public abstract class Trade implements Tradable, Model {
     @Setter
     private String counterCurrencyExtraData;
 
-    @Getter
+    public AutoConfirmResult getAutoConfirmResult() {
+        return autoConfirmResult != null ? autoConfirmResult : AutoConfirmResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
+    }
+
     @Nullable
     private AutoConfirmResult autoConfirmResult;
 
@@ -595,7 +598,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
-        trade.setAutoConfirmResult(AutoConfirmResult.fromProto(proto.getAutoConfirmResult()));
+        trade.setAutoConfirmResult(AutoConfirmResult.fromProto(proto.getAutoConfirmResult(), checkNotNull(trade.getOffer()).getCurrencyCode()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -625,7 +628,7 @@ public abstract class Trade implements Tradable, Model {
                      User user,
                      FilterManager filterManager,
                      AccountAgeWitnessService accountAgeWitnessService,
-                     AutoConfirmationManager autoConfirmationManager,
+                     XmrAutoConfirmationManager xmrAutoConfirmationManager,
                      TradeStatisticsManager tradeStatisticsManager,
                      ArbitratorManager arbitratorManager,
                      MediatorManager mediatorManager,
@@ -645,7 +648,7 @@ public abstract class Trade implements Tradable, Model {
                 user,
                 filterManager,
                 accountAgeWitnessService,
-                autoConfirmationManager,
+                xmrAutoConfirmationManager,
                 tradeStatisticsManager,
                 arbitratorManager,
                 mediatorManager,

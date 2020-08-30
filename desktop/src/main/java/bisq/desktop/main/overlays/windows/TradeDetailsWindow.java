@@ -39,7 +39,6 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
 
@@ -160,8 +159,9 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 FormattingUtils.formatPrice(trade.getTradePrice()));
         String methodText = Res.get(offer.getPaymentMethod().getId());
-        if (trade.getAutoConfirmResult() != null && trade.getAutoConfirmResult().isSuccessState())
+        if (trade.getAutoConfirmResult().isSuccessState()) {
             methodText += " (" + trade.getAutoConfirmResult().getTextStatus() + ")";
+        }
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), methodText);
 
         // second group

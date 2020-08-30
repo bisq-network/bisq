@@ -40,9 +40,9 @@ import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.trade.AutoConfirmResult;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.trade.AutoConfirmResult;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;
@@ -154,10 +154,7 @@ public class SellerStep3View extends TradeStepView {
         if (autoConfirmStatusField != null) {
             trade.getAutoConfirmResultProperty().addListener(autoConfirmResultListener);
             // display the initial value, or FEATURE_DISABLED if there is none
-            AutoConfirmResult autoConfirmResult = trade.getAutoConfirmResult();
-            if (autoConfirmResult == null)
-                autoConfirmResult = new AutoConfirmResult(AutoConfirmResult.State.FEATURE_DISABLED);
-            autoConfirmStatusField.setText(autoConfirmResult.getTextStatus());
+            autoConfirmStatusField.setText(trade.getAutoConfirmResult().getTextStatus());
         }
     }
 
