@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 public abstract class AutoConfirmResult {
 
     public static AutoConfirmResult fromCurrencyCode(String currencyCode) {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (currencyCode) {
             case "XMR":
                 return new XmrAutoConfirmResult();

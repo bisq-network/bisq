@@ -17,7 +17,7 @@
 
 package bisq.core.trade.autoconf.xmr;
 
-import bisq.asset.CryptoNoteAddressValidator;
+import bisq.asset.CryptoNoteUtils;
 
 import bisq.common.app.DevEnv;
 
@@ -91,7 +91,7 @@ public class XmrProofInfo {
             if (jsonAddress == null) {
                 return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.API_INVALID, "Missing address field");
             } else {
-                String expectedAddressHex = CryptoNoteAddressValidator.convertToRawHex(this.recipientAddress);
+                String expectedAddressHex = CryptoNoteUtils.convertToRawHex(this.recipientAddress);
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
                     log.warn("address {}, expected: {}", jsonAddress.getAsString(), expectedAddressHex);
                     return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.ADDRESS_INVALID, null);
