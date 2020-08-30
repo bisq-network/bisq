@@ -127,6 +127,7 @@ public class TradeManager implements PersistedDataHost {
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    @Getter
     private final XmrAutoConfirmationManager xmrAutoConfirmationManager;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
@@ -437,7 +438,6 @@ public class TradeManager implements PersistedDataHost {
                 user,
                 filterManager,
                 accountAgeWitnessService,
-                xmrAutoConfirmationManager,
                 tradeStatisticsManager,
                 arbitratorManager,
                 mediatorManager,

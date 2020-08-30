@@ -39,7 +39,6 @@ import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.autoconf.AutoConfirmResult;
-import bisq.core.trade.autoconf.xmr.XmrAutoConfirmationManager;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -431,23 +430,15 @@ public abstract class Trade implements Tradable, Model {
     private long refreshInterval;
     private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
 
-    // Added after v1.3.7
+    // Added at v1.3.8
     // We use that for the XMR txKey but want to keep it generic to be flexible for other payment methods or assets.
     @Getter
     @Setter
     private String counterCurrencyExtraData;
 
-    public AutoConfirmResult getAutoConfirmResult() {
-        return autoConfirmResult != null ? autoConfirmResult : AutoConfirmResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
-    }
-
+    // Added at v1.3.8
     @Nullable
     private AutoConfirmResult autoConfirmResult;
-
-    public void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
-        this.autoConfirmResult = autoConfirmResult;
-        autoConfirmResultProperty.setValue(autoConfirmResult);
-    }
 
     @Getter
     // This observable property can be used for UI to show a notification to user of the XMR proof status
@@ -630,7 +621,6 @@ public abstract class Trade implements Tradable, Model {
                      User user,
                      FilterManager filterManager,
                      AccountAgeWitnessService accountAgeWitnessService,
-                     XmrAutoConfirmationManager xmrAutoConfirmationManager,
                      TradeStatisticsManager tradeStatisticsManager,
                      ArbitratorManager arbitratorManager,
                      MediatorManager mediatorManager,
@@ -650,7 +640,6 @@ public abstract class Trade implements Tradable, Model {
                 user,
                 filterManager,
                 accountAgeWitnessService,
-                xmrAutoConfirmationManager,
                 tradeStatisticsManager,
                 arbitratorManager,
                 mediatorManager,
@@ -764,6 +753,20 @@ public abstract class Trade implements Tradable, Model {
         errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
     }
 
+    public boolean allowedRefresh() {
+        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
+        if (!allowRefresh) {
+            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
+        }
+        return allowRefresh;
+    }
+
+    public void logRefresh() {
+        var time = new Date().getTime();
+        log.debug("Log refresh at {}", time);
+        lastRefreshRequestDate = time;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -870,6 +873,11 @@ public abstract class Trade implements Tradable, Model {
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
         errorMessageProperty.set(errorMessage);
+    }
+
+    public void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
+        this.autoConfirmResult = autoConfirmResult;
+        autoConfirmResultProperty.setValue(autoConfirmResult);
     }
 
 
@@ -1084,6 +1092,11 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty.get();
     }
 
+    public AutoConfirmResult getAutoConfirmResult() {
+        return autoConfirmResult != null ? autoConfirmResult : AutoConfirmResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
+    }
+
+
     public byte[] getArbitratorBtcPubKey() {
         // In case we are already in a trade the arbitrator can have been revoked and we still can complete the trade
         // Only new trades cannot start without any arbitrator
@@ -1097,19 +1110,6 @@ public abstract class Trade implements Tradable, Model {
         return arbitratorBtcPubKey;
     }
 
-    public boolean allowedRefresh() {
-        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
-        if (!allowRefresh) {
-            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
-        }
-        return allowRefresh;
-    }
-
-    public void logRefresh() {
-        var time = new Date().getTime();
-        log.debug("Log refresh at {}", time);
-        lastRefreshRequestDate = time;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
