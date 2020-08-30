@@ -19,26 +19,36 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
+import bisq.common.proto.ProtoUtil;
+
 import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @EqualsAndHashCode(callSuper = true)
 @ToString
-@Setter
-@Getter
 @Slf4j
 public final class RevolutAccountPayload extends PaymentAccountPayload {
-    private String accountId = "";
+    // Not used anymore from outside. Only used as internal Id to not break existing account witness objects
+    private String accountId = null;
+
+    // Was added in 1.3.8
+    // To not break signed accounts we keep accountId as internal id used for signing.
+    // Old accounts get a popup to add the new required field userName but accountId is
+    // left unchanged. Newly created accounts fill accountId with the value of userName.
+    // In the UI we only use userName.
+    @Nullable
+    private String userName = null;
 
     public RevolutAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -52,6 +62,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
     private RevolutAccountPayload(String paymentMethod,
                                   String id,
                                   String accountId,
+                                  @Nullable String userName,
                                   long maxTradePeriod,
                                   Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
@@ -60,20 +71,23 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
                 excludeFromJsonDataMap);
 
         this.accountId = accountId;
+        this.userName = userName;
     }
 
     @Override
     public Message toProtoMessage() {
-        return getPaymentAccountPayloadBuilder()
-                .setRevolutAccountPayload(protobuf.RevolutAccountPayload.newBuilder()
-                        .setAccountId(accountId))
-                .build();
+        protobuf.RevolutAccountPayload.Builder revolutBuilder = protobuf.RevolutAccountPayload.newBuilder().setAccountId(accountId);
+        Optional.ofNullable(userName).ifPresent(revolutBuilder::setUserName);
+        return getPaymentAccountPayloadBuilder().setRevolutAccountPayload(revolutBuilder).build();
     }
 
+
     public static RevolutAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
         return new RevolutAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getRevolutAccountPayload().getAccountId(),
+                revolutAccountPayload.getAccountId(),
+                ProtoUtil.stringOrNullFromProto(revolutAccountPayload.getUserName()),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -85,7 +99,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account") + " " + accountId;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.userName") + " " + userName;
     }
 
     @Override
@@ -95,6 +109,26 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(accountId.getBytes(StandardCharsets.UTF_8));
+        // getAgeWitnessInputData is called at new account creation when accountId is null, we use empty string as
+        // it has been the case before
+        String input = this.accountId == null ? "" : this.accountId;
+        return super.getAgeWitnessInputData(input.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public void setUserName(@Nullable String userName) {
+        this.userName = userName;
+        // We only set accountId to userName for new accounts. Existing accounts have accountId set with email
+        // or phone nr. and we keep that to not break account signing.
+        if (accountId == null) {
+            accountId = userName;
+        }
+    }
+
+    public String getUserName() {
+        return userName != null ? userName : accountId;
+    }
+
+    public boolean userNameNotSet() {
+        return userName == null;
     }
 }

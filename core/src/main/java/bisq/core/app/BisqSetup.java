@@ -44,6 +44,7 @@ import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
@@ -221,6 +222,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Runnable showPopupIfInvalidBtcConfigHandler;
+    @Setter
+    @Nullable
+    private Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler;
 
     @Getter
     final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
@@ -823,6 +827,8 @@ public class BisqSetup {
         disputeMsgEvents.onAllServicesInitialized();
         priceAlert.onAllServicesInitialized();
         marketAlerts.onAllServicesInitialized();
+
+        user.onAllServicesInitialized(revolutAccountsUpdateHandler);
 
         allBasicServicesInitialized = true;
     }
