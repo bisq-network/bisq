@@ -18,6 +18,7 @@
 package bisq.core.trade;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.AssetsAccountPayload;
@@ -26,9 +27,7 @@ import bisq.core.trade.asset.xmr.XmrProofInfo;
 import bisq.core.trade.asset.xmr.XmrTransferProofService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
-import bisq.core.trade.AutoConfirmResult;
 import bisq.core.user.Preferences;
-import bisq.core.btc.setup.WalletsSetup;
 
 import bisq.network.p2p.P2PService;
 
@@ -259,7 +258,7 @@ public class AutoConfirmationManager {
         // error case.  any validation error from XmrProofRequester or XmrProofInfo.check
         // the following error codes will end up here:
         //   CONNECTION_FAIL, API_FAILURE, API_INVALID, TX_KEY_REUSED, TX_HASH_INVALID,
-        //   TX_KEY_INVALID, ADDRESS_INVALID, AMOUNT_NOT_MATCHING, TRADE_DATE_NOT_MATCHING
+        //   TX_KEY_INVALID, ADDRESS_INVALID, NO_MATCH_FOUND, AMOUNT_NOT_MATCHING, TRADE_DATE_NOT_MATCHING
         log.warn("Tx Proof Failure {}, shutting down all open API requests for this trade {}",
                 result.getState(), trade.getShortId());
         trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
