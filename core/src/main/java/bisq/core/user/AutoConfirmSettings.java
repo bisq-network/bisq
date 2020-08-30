@@ -43,6 +43,11 @@ public final class AutoConfirmSettings implements PersistablePayload {
         this.currencyCode = currencyCode;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public Message toProtoMessage() {
         return protobuf.AutoConfirmSettings.newBuilder()

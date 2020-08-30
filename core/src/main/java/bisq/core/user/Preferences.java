@@ -128,9 +128,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     // list of XMR proof providers : this list will be used if no preference has been set
     public static final List<String> getDefaultXmrProofProviders() {
         if (DevEnv.isDevMode()) {
-            return new ArrayList<>(Arrays.asList(
-                    "78.47.61.90:8081"));
+            return new ArrayList<>(Arrays.asList("78.47.61.90:8081"));
         } else {
+            // TODO we need at least 2 for relase
             return new ArrayList<>(Arrays.asList(
                     "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
         }
@@ -410,7 +410,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    // AutoConfirmSettings is currently only used for one coin: XMR.  Although it could
+    // AutoConfirmSettings is currently only used for XMR.  Although it could
     // potentially in the future be used for others too.  In the interest of flexibility
     // we store it as a list in the proto definition, but in practical terms the
     // application is not coded to handle more than one entry.  For now this API

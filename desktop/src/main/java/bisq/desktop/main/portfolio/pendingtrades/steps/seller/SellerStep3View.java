@@ -225,7 +225,7 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        if (isBlockChain && trade.getOffer().getCurrencyCode().equalsIgnoreCase("XMR")) {
+        if (isBlockChain && trade.getOffer().getCurrencyCode().equals("XMR")) {
             autoConfirmStatusField = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                     Res.get("portfolio.pending.step3_seller.autoConfirmStatus"),
                     "", Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;

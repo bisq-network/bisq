@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 /**
- * Manages the XMR transfers proof requests for multiple trades.
+ * Manages the XMR transfers proof requests for multiple trades and multiple services.
  */
 @Slf4j
 class XmrTransferProofService {

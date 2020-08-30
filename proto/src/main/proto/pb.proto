@@ -1396,10 +1396,6 @@ message Trade {
     AutoConfirmResult auto_confirm_result = 38;
 }
 
-message AutoConfirmResult {
-    string stateName = 1;
-}
-
 message BuyerAsMakerTrade {
     Trade trade = 1;
 }
@@ -1561,6 +1557,14 @@ message PreferencesPayload {
     repeated AutoConfirmSettings auto_confirm_settings = 56;
 }
 
+message AutoConfirmSettings {
+    bool enabled = 1;
+    int32 required_confirmations = 2;
+    int64 trade_limit = 3;
+    repeated string service_addresses = 4;
+    string currency_code = 5;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // UserPayload
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1581,6 +1585,10 @@ message UserPayload {
     repeated MarketAlertFilter market_alert_filters = 13;
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
+}
+
+message AutoConfirmResult {
+    string stateName = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -2040,14 +2048,6 @@ message TradeCurrency {
         CryptoCurrency crypto_currency = 3;
         FiatCurrency fiat_currency = 4;
     }
-}
-
-message AutoConfirmSettings {
-    bool enabled = 1;
-    int32 required_confirmations = 2;
-    int64 trade_limit = 3;
-    repeated string service_addresses = 4;
-    string currency_code = 5;
 }
 
 message CryptoCurrency {

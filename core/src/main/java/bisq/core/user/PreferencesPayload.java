@@ -127,7 +127,7 @@ public final class PreferencesPayload implements UserThreadMappedPersistableEnve
     private int blockNotifyPort;
     private boolean tacAcceptedV120;
 
-    // Added after 1.3.7
+    // Added at 1.3.8
     private List<AutoConfirmSettings> autoConfirmSettingsList = new ArrayList<>();
 
 
