@@ -153,10 +153,13 @@
         </TableView>
     </VBox>
 
-    <BisqTextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" editable="false"
+    <BisqTextField fx:id="sentDataTextField" GridPane.rowIndex="7" editable="false"
                    focusTraversable="false" labelFloat="true"/>
 
-    <AutoTooltipButton fx:id="openTorSettingsButton" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+    <BisqTextField fx:id="receivedDataTextField" GridPane.rowIndex="8" editable="false"
+                   focusTraversable="false" labelFloat="true"/>
+
+    <AutoTooltipButton fx:id="openTorSettingsButton" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS" minWidth="500"/>
