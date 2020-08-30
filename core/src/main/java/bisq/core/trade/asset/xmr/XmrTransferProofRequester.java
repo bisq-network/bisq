@@ -38,8 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public class XmrTransferProofRequester {
+    // these settings are not likely to change and therefore not put into Config
+    private static long REPEAT_REQUEST_PERIOD = TimeUnit.SECONDS.toMillis(90);
+    private static long MAX_REQUEST_PERIOD = TimeUnit.HOURS.toMillis(12);
 
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "XmrTransferProofRequester", 3, 5, 10 * 60);
@@ -47,18 +52,16 @@ public class XmrTransferProofRequester {
     private final XmrProofInfo xmrProofInfo;
     private final Consumer<AutoConfirmResult> resultHandler;
     private final FaultHandler faultHandler;
+
     private boolean terminated;
     private long firstRequest;
-    // these settings are not likely to change and therefore not put into Config
-    private long REPEAT_REQUEST_PERIOD = TimeUnit.SECONDS.toMillis(90);
-    private long MAX_REQUEST_PERIOD = TimeUnit.HOURS.toMillis(12);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTransferProofRequester(Socks5ProxyProvider socks5ProxyProvider,
+    XmrTransferProofRequester(@Nullable Socks5ProxyProvider socks5ProxyProvider,
                               XmrProofInfo xmrProofInfo,
                               Consumer<AutoConfirmResult> resultHandler,
                               FaultHandler faultHandler) {
@@ -88,7 +91,7 @@ public class XmrTransferProofRequester {
         if (terminated) {
             // the XmrTransferProofService has asked us to terminate i.e. not make any further api calls
             // this scenario may happen if a re-request is scheduled from the callback below
-            log.info("Request() aborted, this object has been terminated: {}", httpClient.toString());
+            log.info("Request() aborted, this object has been terminated. Service: {}", httpClient.getBaseUrl());
             return;
         }
         ListenableFuture<AutoConfirmResult> future = executorService.submit(() -> {
@@ -97,21 +100,21 @@ public class XmrTransferProofRequester {
                     "&address=" + xmrProofInfo.getRecipientAddress() +
                     "&viewkey=" + xmrProofInfo.getTxKey() +
                     "&txprove=1";
-            log.info(httpClient.toString());
-            log.info(param);
+            log.info("Requesting from {} with param {}", httpClient.getBaseUrl(), param);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
-            log.info(json);
-            return xmrProofInfo.checkApiResponse(json);
+            AutoConfirmResult autoConfirmResult = xmrProofInfo.checkApiResponse(json);
+            log.info("Response json {} resulted in autoConfirmResult {}", json, autoConfirmResult);
+            return autoConfirmResult;
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(AutoConfirmResult result) {
                 if (terminated) {
-                    log.info("API terminated from higher level: {}", httpClient.toString());
+                    log.info("API terminated from higher level: {}", httpClient.getBaseUrl());
                     return;
                 }
                 if (System.currentTimeMillis() - firstRequest > MAX_REQUEST_PERIOD) {
-                    log.warn("We have tried this service API for too long, giving up: {}", httpClient.toString());
+                    log.warn("We have tried requesting from {} for too long, giving up.", httpClient.getBaseUrl());
                     return;
                 }
                 if (result.isPendingState()) {
