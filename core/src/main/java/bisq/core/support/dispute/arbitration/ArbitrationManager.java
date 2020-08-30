@@ -165,6 +165,11 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
     }
 
+    @Override
+    protected void addPriceInfoMessage(Dispute dispute, int counter) {
+        // Arbitrator is not used anymore.
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////

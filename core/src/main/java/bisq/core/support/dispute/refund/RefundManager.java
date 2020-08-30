@@ -142,6 +142,14 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
     }
 
+    @Override
+    protected void addPriceInfoMessage(Dispute dispute, int counter) {
+        // At refund agent we do not add the option trade price check as the time for dispute opening is not correct.
+        // In case of an option trade the mediator adds to the result summary message automatically the system message
+        // with the option trade detection info so the refund agent can see that as well.
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////

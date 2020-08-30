@@ -276,7 +276,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         dispute.setSupportType(openNewDisputeMessage.getSupportType());
 
         Contract contract = dispute.getContract();
-        addPriceInfoMessage(dispute);
+        addPriceInfoMessage(dispute, 0);
 
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
         if (isAgent(dispute)) {
@@ -307,19 +307,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             sendAckMessage(chatMessage, sendersPubKeyRing, errorMessage == null, errorMessage);
         }
 
-        // In case of refundAgent we add a message with the mediatorsDisputeSummary. Only visible for refundAgent.
-        if (dispute.getMediatorsDisputeResult() != null) {
-            String mediatorsDisputeResult = Res.get("support.mediatorsDisputeSummary", dispute.getMediatorsDisputeResult());
-            ChatMessage mediatorsDisputeResultMessage = new ChatMessage(
-                    getSupportType(),
-                    dispute.getTradeId(),
-                    pubKeyRing.hashCode(),
-                    false,
-                    mediatorsDisputeResult,
-                    p2PService.getAddress());
-            mediatorsDisputeResultMessage.setSystemMessage(true);
-            dispute.addAndPersistChatMessage(mediatorsDisputeResultMessage);
-        }
+        addMediationResultMessage(dispute);
     }
 
     // not dispute requester receives that from dispute agent
@@ -553,7 +541,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         chatMessage.setSystemMessage(true);
         dispute.addAndPersistChatMessage(chatMessage);
 
-        addPriceInfoMessage(dispute);
+        addPriceInfoMessage(dispute, 0);
 
         disputeList.add(dispute);
 
@@ -765,17 +753,45 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 .findAny();
     }
 
+    private void addMediationResultMessage(Dispute dispute) {
+        // In case of refundAgent we add a message with the mediatorsDisputeSummary. Only visible for refundAgent.
+        if (dispute.getMediatorsDisputeResult() != null) {
+            String mediatorsDisputeResult = Res.get("support.mediatorsDisputeSummary", dispute.getMediatorsDisputeResult());
+            ChatMessage mediatorsDisputeResultMessage = new ChatMessage(
+                    getSupportType(),
+                    dispute.getTradeId(),
+                    pubKeyRing.hashCode(),
+                    false,
+                    mediatorsDisputeResult,
+                    p2PService.getAddress());
+            mediatorsDisputeResultMessage.setSystemMessage(true);
+            dispute.addAndPersistChatMessage(mediatorsDisputeResultMessage);
+        }
+    }
+
     // If price was going down between take offer time and open dispute time the buyer has an incentive to
     // not send the payment but to try to make a new trade with the better price. We risks to lose part of the
     // security deposit (in mediation we will always get back 0.003 BTC to keep some incentive to accept mediated
     // proposal). But if gain is larger than this loss he has economically an incentive to default in the trade.
     // We do all those calculations to give a hint to mediators to detect option trades.
-    private void addPriceInfoMessage(Dispute dispute) {
+    protected void addPriceInfoMessage(Dispute dispute, int counter) {
+        if (!priceFeedService.hasPrices()) {
+            if (counter < 3) {
+                log.info("Price provider has still no data. This is expected at startup. We try again in 10 sec.");
+                UserThread.runAfter(() -> addPriceInfoMessage(dispute, counter + 1), 10);
+            } else {
+                log.warn("Price provider still has no data after 3 repeated requests and 30 seconds delay. We give up.");
+            }
+            return;
+        }
+
         Contract contract = dispute.getContract();
         OfferPayload offerPayload = contract.getOfferPayload();
         Price priceAtDisputeOpening = getPrice(offerPayload.getCurrencyCode());
         if (priceAtDisputeOpening == null) {
-            log.info("PriceAtDisputeOpening is null. Price provider might not support that {}.", offerPayload.getCurrencyCode());
+            log.info("Price provider did not provide a price for {}. " +
+                            "This is expected if this currency is not supported by the price providers.",
+                    offerPayload.getCurrencyCode());
             return;
         }
 
@@ -791,7 +807,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         // We don't translate those strings (yet) as it is only displayed to mediators/arbitrators.
         String headline;
         if (potentialGain.isPositive()) {
-            headline = "Warning: This might be a potential option trade!";
+            headline = "This might be a potential option trade!";
             optionTradeDetails = "\nBTC amount calculated with price at dispute opening: " + potentialAmountAtDisputeOpening.toFriendlyString() +
                     "\nMax loss of security deposit is: " + maxLossSecDeposit.toFriendlyString() +
                     "\nPossible gain from an option trade is: " + potentialGain.toFriendlyString();
@@ -806,23 +822,20 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 " (market based price was used: " + offerPayload.getMarketPriceMargin() * 100 + "%)" :
                 " (fix price was used)";
 
-        String priceInfoText = headline +
+        String priceInfoText = "System message: " + headline +
                 "\n\nTrade price: " + contract.getTradePrice().toFriendlyString() + percentagePriceDetails +
                 "\nTrade amount: " + tradeAmount.toFriendlyString() +
                 "\nPrice at dispute opening: " + priceAtDisputeOpening.toFriendlyString() +
-                optionTradeDetails +
-                "\n\nPlease note: This message is displayed only to the mediator/arbitrator not to the trader. " +
-                "Only the BTC buyer can do an option trade. The calculation is based on the price at dispute opening. " +
-                "If seller opens the dispute this might not reflect the buyers point of view. Use this information only " +
-                "as help for detecting an option trade, it is not a proof for it.";
+                optionTradeDetails;
 
         // We use the existing msg to copy over the users data
-        ChatMessage firstMessage = dispute.getChatMessages().get(0);
-        ChatMessage priceInfoMessage = new ChatMessage(firstMessage.getSupportType(),
-                firstMessage.getTradeId(), firstMessage.getTraderId(),
-                firstMessage.isSenderIsTrader(),
+        ChatMessage priceInfoMessage = new ChatMessage(
+                getSupportType(),
+                dispute.getTradeId(),
+                pubKeyRing.hashCode(),
+                false,
                 priceInfoText,
-                firstMessage.getSenderNodeAddress());
+                p2PService.getAddress());
         priceInfoMessage.setSystemMessage(true);
         dispute.addAndPersistChatMessage(priceInfoMessage);
     }

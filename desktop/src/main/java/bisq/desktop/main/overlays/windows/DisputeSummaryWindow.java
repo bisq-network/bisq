@@ -486,18 +486,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addReasonControls() {
-        reasonWasBugRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.bug"));
-        reasonWasUsabilityIssueRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.usability"));
-        reasonProtocolViolationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.protocolViolation"));
-        reasonNoReplyRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.noReply"));
-        reasonWasScamRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.scam"));
-        reasonWasBankRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.bank"));
-        reasonWasOtherRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.other"));
-        reasonWasOptionTradeRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.optionTrade"));
-        reasonWasSellerNotRespondingRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.sellerNotResponding"));
-        reasonWasWrongSenderAccountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.wrongSenderAccount"));
-        reasonWasPeerWasLateRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.peerWasLate"));
-        reasonWasTradeAlreadySettledRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.tradeAlreadySettled"));
+        reasonWasBugRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.BUG.name()));
+        reasonWasUsabilityIssueRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.USABILITY.name()));
+        reasonProtocolViolationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.PROTOCOL_VIOLATION.name()));
+        reasonNoReplyRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.NO_REPLY.name()));
+        reasonWasScamRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.SCAM.name()));
+        reasonWasBankRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.BANK_PROBLEMS.name()));
+        reasonWasOtherRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.OTHER.name()));
+        reasonWasOptionTradeRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.OPTION_TRADE.name()));
+        reasonWasSellerNotRespondingRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.SELLER_NOT_RESPONDING.name()));
+        reasonWasWrongSenderAccountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.WRONG_SENDER_ACCOUNT.name()));
+        reasonWasPeerWasLateRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.PEER_WAS_LATE.name()));
+        reasonWasTradeAlreadySettledRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.TRADE_ALREADY_SETTLED.name()));
 
         HBox feeRadioButtonPane = new HBox();
         feeRadioButtonPane.setSpacing(20);
@@ -745,11 +745,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
         dispute.setIsClosed(true);
+        DisputeResult.Reason reason = disputeResult.getReason();
         String text = Res.get("disputeSummaryWindow.close.msg",
                 DisplayUtils.formatDateTime(disputeResult.getCloseDate()),
                 formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                 formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
+                Res.get("disputeSummaryWindow.reason." + reason.name()),
                 disputeResult.summaryNotesProperty().get());
+
+        if (reason == DisputeResult.Reason.OPTION_TRADE &&
+                dispute.getChatMessages().size() > 1 &&
+                dispute.getChatMessages().get(1).isSystemMessage()) {
+            text += "\n\n" + dispute.getChatMessages().get(1).getMessage();
+        }
 
         if (dispute.getSupportType() == SupportType.MEDIATION) {
             text += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
