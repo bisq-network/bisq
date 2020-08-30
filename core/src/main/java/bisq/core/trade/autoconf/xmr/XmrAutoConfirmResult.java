@@ -57,7 +57,7 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
+    // Constructors
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public XmrAutoConfirmResult() {
@@ -105,6 +105,7 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public String getStatusAsDisplayString() {
         switch (state) {
             case TX_NOT_CONFIRMED:
@@ -123,12 +124,18 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
         }
     }
 
-    public boolean isPendingState() {
-        return (state == State.TX_NOT_FOUND || state == State.TX_NOT_CONFIRMED);
-    }
-
+    @Override
     public boolean isSuccessState() {
         return (state == State.PROOF_OK);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    boolean isPendingState() {
+        return (state == State.TX_NOT_FOUND || state == State.TX_NOT_CONFIRMED);
     }
 
     private boolean isErrorState() {
