@@ -80,7 +80,7 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
     public XmrAutoConfirmResult(State state, @Nullable String errorMsg) {
         this(state, 0, 0);
 
-        if (isErrorState()) {
+        if (!isPendingState() && !isSuccessState() && state != State.FEATURE_DISABLED && state != State.UNDEFINED) {
             log.error(errorMsg != null ? errorMsg : state.toString());
         }
     }
@@ -136,9 +136,5 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
 
     boolean isPendingState() {
         return (state == State.TX_NOT_FOUND || state == State.TX_NOT_CONFIRMED);
-    }
-
-    private boolean isErrorState() {
-        return (!isPendingState() && !isSuccessState());
     }
 }

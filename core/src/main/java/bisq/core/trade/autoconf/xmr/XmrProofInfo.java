@@ -167,7 +167,7 @@ public class XmrProofInfo {
             }
 
             // None of the outputs had a match entry
-            if (!anyMatchFound) {
+            if (!anyMatchFound && !DevEnv.isDevMode()) {
                 return new XmrAutoConfirmResult(XmrAutoConfirmResult.State.NO_MATCH_FOUND, null);
             }
 
