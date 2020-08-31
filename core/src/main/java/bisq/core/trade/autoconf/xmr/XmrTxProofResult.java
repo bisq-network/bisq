@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class XmrAutoConfirmResult extends AssetTxProofResult {
+public class XmrTxProofResult extends AssetTxProofResult {
     public enum State {
         UNDEFINED,
         FEATURE_DISABLED,
@@ -60,16 +60,16 @@ public class XmrAutoConfirmResult extends AssetTxProofResult {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public XmrAutoConfirmResult() {
+    public XmrTxProofResult() {
         this(State.UNDEFINED, 0, 0);
     }
 
-    XmrAutoConfirmResult(State state) {
+    XmrTxProofResult(State state) {
         this(state, 0, 0);
     }
 
     // alternate constructor for showing confirmation progress information
-    XmrAutoConfirmResult(State state, int confirmCount, int confirmsRequired) {
+    XmrTxProofResult(State state, int confirmCount, int confirmsRequired) {
         super(state.name());
         this.state = state;
         this.confirmCount = confirmCount;
@@ -77,7 +77,7 @@ public class XmrAutoConfirmResult extends AssetTxProofResult {
     }
 
     // alternate constructor for error scenarios
-    XmrAutoConfirmResult(State state, @Nullable String errorMsg) {
+    XmrTxProofResult(State state, @Nullable String errorMsg) {
         this(state, 0, 0);
 
         if (!isPendingState() && !isSuccessState() && state != State.FEATURE_DISABLED && state != State.UNDEFINED) {
@@ -95,9 +95,9 @@ public class XmrAutoConfirmResult extends AssetTxProofResult {
         return protobuf.AutoConfirmResult.newBuilder().setStateName(state.name()).build();
     }
 
-    public static XmrAutoConfirmResult fromProto(protobuf.AutoConfirmResult proto) {
-        XmrAutoConfirmResult.State state = ProtoUtil.enumFromProto(XmrAutoConfirmResult.State.class, proto.getStateName());
-        return state != null ? new XmrAutoConfirmResult(state) : new XmrAutoConfirmResult(State.UNDEFINED);
+    public static XmrTxProofResult fromProto(protobuf.AutoConfirmResult proto) {
+        XmrTxProofResult.State state = ProtoUtil.enumFromProto(XmrTxProofResult.State.class, proto.getStateName());
+        return state != null ? new XmrTxProofResult(state) : new XmrTxProofResult(State.UNDEFINED);
     }
 
 

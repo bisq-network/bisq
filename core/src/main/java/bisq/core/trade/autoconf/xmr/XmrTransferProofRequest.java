@@ -46,7 +46,7 @@ class XmrTransferProofRequest {
             "XmrTransferProofRequester", 3, 5, 10 * 60);
     private final XmrTxProofHttpClient httpClient;
     private final XmrProofInfo xmrProofInfo;
-    private final Consumer<XmrAutoConfirmResult> resultHandler;
+    private final Consumer<XmrTxProofResult> resultHandler;
     private final FaultHandler faultHandler;
 
     private boolean terminated;
@@ -59,7 +59,7 @@ class XmrTransferProofRequest {
 
     XmrTransferProofRequest(Socks5ProxyProvider socks5ProxyProvider,
                             XmrProofInfo xmrProofInfo,
-                            Consumer<XmrAutoConfirmResult> resultHandler,
+                            Consumer<XmrTxProofResult> resultHandler,
                             FaultHandler faultHandler) {
         this.httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
         this.httpClient.setBaseUrl("http://" + xmrProofInfo.getServiceAddress());
@@ -90,7 +90,7 @@ class XmrTransferProofRequest {
             log.info("Request() aborted, this object has been terminated. Service: {}", httpClient.getBaseUrl());
             return;
         }
-        ListenableFuture<XmrAutoConfirmResult> future = executorService.submit(() -> {
+        ListenableFuture<XmrTxProofResult> future = executorService.submit(() -> {
             Thread.currentThread().setName("XmrTransferProofRequest-" + xmrProofInfo.getUID());
             String param = "/api/outputs?txhash=" + xmrProofInfo.getTxHash() +
                     "&address=" + xmrProofInfo.getRecipientAddress() +
@@ -98,13 +98,13 @@ class XmrTransferProofRequest {
                     "&txprove=1";
             log.info("Requesting from {} with param {}", httpClient.getBaseUrl(), param);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
-            XmrAutoConfirmResult autoConfirmResult = XmrProofParser.parse(xmrProofInfo, json);
+            XmrTxProofResult autoConfirmResult = XmrProofParser.parse(xmrProofInfo, json);
             log.info("Response json {} resulted in autoConfirmResult {}", json, autoConfirmResult);
             return autoConfirmResult;
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(XmrAutoConfirmResult result) {
+            public void onSuccess(XmrTxProofResult result) {
                 if (terminated) {
                     log.info("API terminated from higher level: {}", httpClient.getBaseUrl());
                     return;
@@ -123,7 +123,7 @@ class XmrTransferProofRequest {
                 String errorMessage = "Request to " + httpClient.getBaseUrl() + " failed";
                 faultHandler.handleFault(errorMessage, throwable);
                 UserThread.execute(() -> resultHandler.accept(
-                        new XmrAutoConfirmResult(XmrAutoConfirmResult.State.CONNECTION_FAIL, errorMessage)));
+                        new XmrTxProofResult(XmrTxProofResult.State.CONNECTION_FAIL, errorMessage)));
             }
         });
     }

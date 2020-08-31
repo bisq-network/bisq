@@ -17,7 +17,7 @@
 
 package bisq.core.trade.autoconf;
 
-import bisq.core.trade.autoconf.xmr.XmrAutoConfirmResult;
+import bisq.core.trade.autoconf.xmr.XmrTxProofResult;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +35,7 @@ public abstract class AssetTxProofResult {
         //noinspection SwitchStatementWithTooFewBranches
         switch (currencyCode) {
             case "XMR":
-                return new XmrAutoConfirmResult();
+                return new XmrTxProofResult();
             default:
                 return null;
         }
@@ -58,7 +58,7 @@ public abstract class AssetTxProofResult {
         //noinspection SwitchStatementWithTooFewBranches
         switch (currencyCode) {
             case "XMR":
-                return XmrAutoConfirmResult.fromProto(proto);
+                return XmrTxProofResult.fromProto(proto);
             default:
                 return null;
         }

@@ -43,7 +43,7 @@ class XmrTransferProofService {
     }
 
     void requestProof(XmrProofInfo xmrProofInfo,
-                      Consumer<XmrAutoConfirmResult> resultHandler,
+                      Consumer<XmrTxProofResult> resultHandler,
                       FaultHandler faultHandler) {
         String uid = xmrProofInfo.getUID();
         if (map.containsKey(uid)) {

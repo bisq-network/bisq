@@ -156,7 +156,7 @@ public class XmrAutoConfirmationManager {
                         if (alreadyUsed) {
                             String message = "Peer used the XMR tx key already at another trade with trade ID " +
                                     t.getId() + ". This might be a scam attempt.";
-                            trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_KEY_REUSED, message));
+                            trade.setAssetTxProofResult(new XmrTxProofResult(XmrTxProofResult.State.TX_KEY_REUSED, message));
                         }
                         return alreadyUsed;
                     });
@@ -166,7 +166,7 @@ public class XmrAutoConfirmationManager {
             }
 
             if (!preferences.getAutoConfirmSettings().enabled || this.isAutoConfDisabledByFilter()) {
-                trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.FEATURE_DISABLED, null));
+                trade.setAssetTxProofResult(new XmrTxProofResult(XmrTxProofResult.State.FEATURE_DISABLED, null));
                 return;
             }
             Coin tradeAmount = trade.getTradeAmount();
@@ -174,7 +174,7 @@ public class XmrAutoConfirmationManager {
             if (tradeAmount != null && tradeAmount.isGreaterThan(tradeLimit)) {
                 log.warn("Trade amount {} is higher than settings limit {}, will not attempt auto-confirm",
                         tradeAmount.toFriendlyString(), tradeLimit.toFriendlyString());
-                trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TRADE_LIMIT_EXCEEDED, null));
+                trade.setAssetTxProofResult(new XmrTxProofResult(XmrTxProofResult.State.TRADE_LIMIT_EXCEEDED, null));
                 return;
             }
 
@@ -183,7 +183,7 @@ public class XmrAutoConfirmationManager {
             Volume volume = offer.getVolumeByAmount(tradeAmount);
             long amountXmr = volume != null ? volume.getValue() * 10000L : 0L;
             int confirmsRequired = preferences.getAutoConfirmSettings().requiredConfirmations;
-            trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_NOT_FOUND));
+            trade.setAssetTxProofResult(new XmrTxProofResult(XmrTxProofResult.State.TX_NOT_FOUND));
             List<String> serviceAddresses = preferences.getAutoConfirmSettings().serviceAddresses;
             txProofResultsPending.put(trade.getId(), serviceAddresses.size()); // need result from each service address
             for (String serviceAddress : serviceAddresses) {
@@ -208,7 +208,7 @@ public class XmrAutoConfirmationManager {
         }
     }
 
-    private boolean handleProofResult(XmrAutoConfirmResult result, Trade trade) {
+    private boolean handleProofResult(XmrTxProofResult result, Trade trade) {
         // here we count the Trade's API results from all
         // different serviceAddress and figure out when all have finished
         int resultsCountdown = txProofResultsPending.getOrDefault(trade.getId(), 0);
