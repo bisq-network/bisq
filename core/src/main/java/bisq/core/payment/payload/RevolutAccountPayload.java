@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public final class RevolutAccountPayload extends PaymentAccountPayload {
     // Not used anymore from outside. Only used as internal Id to not break existing account witness objects
-    private String accountId = null;
+    private String accountId = "";
 
     // Was added in 1.3.8
     // To not break signed accounts we keep accountId as internal id used for signing.
@@ -76,7 +76,8 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        protobuf.RevolutAccountPayload.Builder revolutBuilder = protobuf.RevolutAccountPayload.newBuilder().setAccountId(accountId);
+        protobuf.RevolutAccountPayload.Builder revolutBuilder = protobuf.RevolutAccountPayload.newBuilder()
+                .setAccountId(accountId);
         Optional.ofNullable(userName).ifPresent(revolutBuilder::setUserName);
         return getPaymentAccountPayloadBuilder().setRevolutAccountPayload(revolutBuilder).build();
     }
@@ -99,7 +100,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.userName") + " " + userName;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.userName") + " " + getUserName();
     }
 
     @Override
@@ -109,17 +110,15 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        // getAgeWitnessInputData is called at new account creation when accountId is null, we use empty string as
-        // it has been the case before
-        String input = this.accountId == null ? "" : this.accountId;
-        return super.getAgeWitnessInputData(input.getBytes(StandardCharsets.UTF_8));
+        // getAgeWitnessInputData is called at new account creation when accountId is empty string.
+        return super.getAgeWitnessInputData(accountId.getBytes(StandardCharsets.UTF_8));
     }
 
     public void setUserName(@Nullable String userName) {
         this.userName = userName;
         // We only set accountId to userName for new accounts. Existing accounts have accountId set with email
         // or phone nr. and we keep that to not break account signing.
-        if (accountId == null) {
+        if (accountId.isEmpty()) {
             accountId = userName;
         }
     }
