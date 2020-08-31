@@ -22,8 +22,6 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.account.sign.SignedWitness;
-import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
@@ -34,17 +32,13 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.messages.RefreshTradeStateRequest;
-import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 
-import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.ClockWatcher;
 import bisq.common.app.DevEnv;
@@ -63,7 +57,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.Date;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -370,63 +363,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 .size();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // AccountAgeWitness signing
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public boolean isSignWitnessTrade() {
-        checkNotNull(trade, "trade must not be null");
-        checkNotNull(trade.getOffer(), "offer must not be null");
-        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(dataModel.getSellersPaymentAccountPayload());
-
-        accountAgeWitnessService.getAccountAgeWitnessUtils().witnessDebugLog(trade, myWitness);
-
-        return accountAgeWitnessService.accountIsSigner(myWitness) &&
-                !accountAgeWitnessService.peerHasSignedWitness(trade) &&
-                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
-    }
-
-    public void maybeSignWitness() {
-        if (isSignWitnessTrade()) {
-            var signedWitness = accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
-            signedWitness.ifPresent(this::sendSignedWitnessToPeer);
-        }
-    }
-
-    private void sendSignedWitnessToPeer(SignedWitness signedWitness) {
-        Trade trade = getTrade();
-        if (trade == null) return;
-
-        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-        var traderSignedWitnessMessage = new TraderSignedWitnessMessage(UUID.randomUUID().toString(), trade.getId(),
-                tradingPeerNodeAddress, signedWitness);
-
-        p2PService.sendEncryptedMailboxMessage(
-                tradingPeerNodeAddress,
-                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
-                traderSignedWitnessMessage,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-                }
-        );
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States

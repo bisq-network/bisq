@@ -17,8 +17,8 @@
 
 package bisq.core.user;
 
-import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -33,11 +33,14 @@ import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
+import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -82,6 +85,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("mempool.space Tor V3", "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/tx/", "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/address/"),
             new BlockChainExplorer("mempool.emzy.de (@emzy)", "https://mempool.emzy.de/tx/", "https://mempool.emzy.de/address/"),
             new BlockChainExplorer("mempool.emzy.de Tor V3", "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/tx/", "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/address/"),
+            new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/tx/", "https://mempool.bisq.services/address/"),
+            new BlockChainExplorer("mempool.bisq.services Tor V3", "http://mempoolusb2f67qi7mz2it7n5e77a6komdzx6wftobcduxszkdfun2yd.onion/tx/", "http://mempoolusb2f67qi7mz2it7n5e77a6komdzx6wftobcduxszkdfun2yd.onion/address/"),
             new BlockChainExplorer("Blockstream.info", "https://blockstream.info/tx/", "https://blockstream.info/address/"),
             new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/address/"),
             new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
@@ -119,6 +124,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("bsq.emzy.de (@emzy)", "https://bsq.emzy.de/tx.html?tx=", "https://bsq.emzy.de/Address.html?addr="),
             new BlockChainExplorer("bsq.bisq.cc (@m52go)", "https://bsq.bisq.cc/tx.html?tx=", "https://bsq.bisq.cc/Address.html?addr=")
     ));
+
+    // list of XMR proof providers : this list will be used if no preference has been set
+    public static final List<String> getDefaultXmrProofProviders() {
+        if (DevEnv.isDevMode()) {
+            return new ArrayList<>(Arrays.asList("78.47.61.90:8081"));
+        } else {
+            // TODO we need at least 2 for release
+            return new ArrayList<>(Arrays.asList(
+                    "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
+        }
+    }
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
 
@@ -392,6 +408,35 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void setTacAcceptedV120(boolean tacAccepted) {
         prefPayload.setTacAcceptedV120(tacAccepted);
         persist();
+    }
+
+    // AutoConfirmSettings is currently only used for XMR.  Although it could
+    // potentially in the future be used for others too.  In the interest of flexibility
+    // we store it as a list in the proto definition, but in practical terms the
+    // application is not coded to handle more than one entry.  For now this API
+    // to get/set AutoConfirmSettings is the gatekeeper.  If in the future we adapt
+    // the application to manage more than one altcoin AutoConfirmSettings then
+    // this API will need to incorporate lookup by coin.
+    public AutoConfirmSettings getAutoConfirmSettings() {
+        if (prefPayload.getAutoConfirmSettingsList().size() == 0) {
+            // default values for AutoConfirmSettings when persisted payload is empty:
+            prefPayload.getAutoConfirmSettingsList().add(new AutoConfirmSettings(
+                    false, 5, Coin.COIN.value, getDefaultXmrProofProviders(), "XMR"));
+        }
+        return prefPayload.getAutoConfirmSettingsList().get(0);
+    }
+
+    public void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings) {
+        // see above comment regarding only one entry in this list currently
+        prefPayload.getAutoConfirmSettingsList().clear();
+        prefPayload.getAutoConfirmSettingsList().add(autoConfirmSettings);
+        persist();
+    }
+
+    public void setAutoConfServiceAddresses(List<String> serviceAddresses) {
+        AutoConfirmSettings x = this.getAutoConfirmSettings();
+        this.setAutoConfirmSettings(new AutoConfirmSettings(
+                x.enabled, x.requiredConfirmations, x.tradeLimit, serviceAddresses, x.currencyCode));
     }
 
     private void persist() {
@@ -736,7 +781,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
     }
 
-    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers() { return BSQ_MAIN_NET_EXPLORERS; }
+    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers() {
+        return BSQ_MAIN_NET_EXPLORERS;
+    }
 
     public boolean showAgain(String key) {
         return !prefPayload.getDontShowAgainMap().containsKey(key) || !prefPayload.getDontShowAgainMap().get(key);
@@ -834,8 +881,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     private boolean blockExplorerExists(ArrayList<BlockChainExplorer> explorers,
-                                              BlockChainExplorer explorer)
-    {
+                                        BlockChainExplorer explorer) {
         if (explorer != null && explorers != null && explorers.size() > 0)
             for (int i = 0; i < explorers.size(); i++)
                 if (explorers.get(i).name.equals(explorer.name))
@@ -965,5 +1011,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         int getBlockNotifyPort();
 
         void setTacAcceptedV120(boolean tacAccepted);
+
+        void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
     }
 }

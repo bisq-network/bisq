@@ -43,12 +43,12 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 
-import bisq.common.BisqException;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
@@ -195,6 +195,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         daoButtonWithBadge.getStyleClass().add("new");
         JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
         accountButtonWithBadge.getStyleClass().add("new");
+        JFXBadge settingsButtonWithBadge = new JFXBadge(settingsButton);
+        settingsButtonWithBadge.getStyleClass().add("new");
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -318,16 +320,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             }
         });
 
-        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton,
-                getNavigationSeparator(), sellButton, getNavigationSeparator(),
-                portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
+        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
+                sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
 
-        primaryNav.setAlignment(Pos.CENTER);
+        primaryNav.setAlignment(Pos.CENTER_LEFT);
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSeparator(),
-                settingsButton, getNavigationSeparator(), accountButtonWithBadge,
+                settingsButtonWithBadge, getNavigationSeparator(), accountButtonWithBadge,
                 getNavigationSeparator(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
@@ -343,14 +344,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         priceAndBalance.getStyleClass().add("nav-price-balance");
 
         HBox navPane = new HBox(primaryNav, secondaryNav,
-                getNavigationSpacer(), priceAndBalance) {{
+                priceAndBalance) {{
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 0d);
             setPadding(new Insets(0, 0, 0, 0));
             getStyleClass().add("top-navigation");
         }};
-        navPane.setAlignment(Pos.CENTER_LEFT);
+        navPane.setAlignment(Pos.CENTER);
 
         AnchorPane contentContainer = new AnchorPane() {{
             getStyleClass().add("content-pane");
@@ -373,6 +374,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
         setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
         setupBadge(accountButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowAccountUpdatesNotification());
+        setupBadge(settingsButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowSettingsUpdatesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
@@ -383,15 +385,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             contentContainer.getChildren().setAll(view.getRoot());
 
             try {
-            	navButtons.getToggles().stream()
-                    .filter(toggle -> toggle instanceof NavButton)
-                    .filter(button -> viewClass == ((NavButton) button).viewClass)
-                    .findFirst()
-                    .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
-                    .setSelected(true);
+                navButtons.getToggles().stream()
+                        .filter(toggle -> toggle instanceof NavButton)
+                        .filter(button -> viewClass == ((NavButton) button).viewClass)
+                        .findFirst()
+                        .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
+                        .setSelected(true);
             } catch (BisqException e) {
                 navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
-			}
+            }
         });
 
         VBox splashScreen = createSplashScreen();
@@ -538,7 +540,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         return Res.get("mainView.marketPrice.tooltip",
                 "Bisq Price Index for " + selectedCurrencyCode,
                 "",
-                DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())),
+                selectedMarketPrice != null ? DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())) : Res.get("shared.na"),
                 model.getPriceFeedService().getProviderNodeAddress());
     }
 

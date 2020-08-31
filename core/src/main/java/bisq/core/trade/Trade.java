@@ -38,6 +38,7 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -158,6 +159,7 @@ public abstract class Trade implements Tradable, Model {
         SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
 
         // #################### Phase FIAT_RECEIVED
+        // note that this state can also be triggered by auto confirmation feature
         SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
 
         // #################### Phase PAYOUT_PAID
@@ -428,6 +430,21 @@ public abstract class Trade implements Tradable, Model {
     private long refreshInterval;
     private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
 
+    // Added at v1.3.8
+    // We use that for the XMR txKey but want to keep it generic to be flexible for other payment methods or assets.
+    @Getter
+    @Setter
+    private String counterCurrencyExtraData;
+
+    // Added at v1.3.8
+    @Nullable
+    private AssetTxProofResult assetTxProofResult;
+
+    @Getter
+    // This observable property can be used for UI to show a notification to user of the XMR proof status
+    transient final private ObjectProperty<AssetTxProofResult> assetTxProofResultProperty = new SimpleObjectProperty<>();
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -538,6 +555,9 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
         Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
+        Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
+        Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.toProtoMessage()));
+
         return builder.build();
     }
 
@@ -570,6 +590,8 @@ public abstract class Trade implements Tradable, Model {
         trade.setDelayedPayoutTxBytes(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxBytes()));
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
+        trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
+        trade.setAssetTxProofResult(AssetTxProofResult.fromProto(proto.getAssetTxProofResult(), checkNotNull(trade.getOffer()).getCurrencyCode()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -731,6 +753,20 @@ public abstract class Trade implements Tradable, Model {
         errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
     }
 
+    public boolean allowedRefresh() {
+        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
+        if (!allowRefresh) {
+            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
+        }
+        return allowRefresh;
+    }
+
+    public void logRefresh() {
+        var time = new Date().getTime();
+        log.debug("Log refresh at {}", time);
+        lastRefreshRequestDate = time;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -837,6 +873,11 @@ public abstract class Trade implements Tradable, Model {
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
         errorMessageProperty.set(errorMessage);
+    }
+
+    public void setAssetTxProofResult(AssetTxProofResult assetTxProofResult) {
+        this.assetTxProofResult = assetTxProofResult;
+        assetTxProofResultProperty.setValue(assetTxProofResult);
     }
 
 
@@ -1051,6 +1092,12 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty.get();
     }
 
+    @Nullable
+    public AssetTxProofResult getAssetTxProofResult() {
+        return assetTxProofResult != null ? assetTxProofResult : AssetTxProofResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
+    }
+
+
     public byte[] getArbitratorBtcPubKey() {
         // In case we are already in a trade the arbitrator can have been revoked and we still can complete the trade
         // Only new trades cannot start without any arbitrator
@@ -1064,19 +1111,6 @@ public abstract class Trade implements Tradable, Model {
         return arbitratorBtcPubKey;
     }
 
-    public boolean allowedRefresh() {
-        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
-        if (!allowRefresh) {
-            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
-        }
-        return allowRefresh;
-    }
-
-    public void logRefresh() {
-        var time = new Date().getTime();
-        log.debug("Log refresh at {}", time);
-        lastRefreshRequestDate = time;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -1160,6 +1194,8 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     counterCurrencyTxId='" + counterCurrencyTxId + '\'' +
+                ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
+                ",\n     assetTxProofResult='" + assetTxProofResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     txFee=" + txFee +
                 ",\n     takerFee=" + takerFee +

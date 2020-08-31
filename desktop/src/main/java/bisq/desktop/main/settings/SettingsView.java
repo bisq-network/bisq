@@ -24,11 +24,14 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.presentation.SettingsPresentation;
 import bisq.desktop.main.settings.about.AboutView;
 import bisq.desktop.main.settings.network.NetworkSettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 
 import javax.inject.Inject;
 
@@ -46,13 +49,15 @@ public class SettingsView extends ActivatableView<TabPane, Void> {
     Tab preferencesTab, networkTab, aboutTab;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private Preferences preferences;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
     @Inject
-    public SettingsView(CachingViewLoader viewLoader, Navigation navigation) {
+    public SettingsView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.preferences = preferences;
     }
 
     @Override
@@ -82,6 +87,15 @@ public class SettingsView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
+        // Hide new badge if user saw this section
+        preferences.dontShowAgain(SettingsPresentation.SETTINGS_NEWS, true);
+        String key = "autoConfirmInfo";
+        new Popup()
+                .headLine(Res.get("setting.info.headline"))
+                .backgroundInfo(Res.get("setting.info.msg"))
+                .dontShowAgainId(key)
+                .show();
+
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 

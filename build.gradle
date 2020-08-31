@@ -497,6 +497,14 @@ configure(project(':pricenode')) {
 
     test {
         useJUnitPlatform()
+        
+        // Disabled by default, since spot provider tests include connections to external API endpoints
+        // Can be enabled by adding -Dtest.pricenode.includeSpotProviderTests=true to the gradle command:
+        // ./gradlew test -Dtest.pricenode.includeSpotProviderTests=true
+        if (System.properties['test.pricenode.includeSpotProviderTests'] != 'true') {
+            project.logger.lifecycle('Pricenode: Skipping spot provider tests')
+            exclude 'bisq/price/spot/providers/**'
+        }
     }
 
     task stage {

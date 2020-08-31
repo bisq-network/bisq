@@ -38,6 +38,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.autoconf.xmr.XmrTxProofService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -65,8 +66,6 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -93,7 +92,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -129,6 +127,8 @@ public class TradeManager implements PersistedDataHost {
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    @Getter
+    private final XmrTxProofService xmrTxProofService;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
@@ -170,6 +170,7 @@ public class TradeManager implements PersistedDataHost {
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
                         AccountAgeWitnessService accountAgeWitnessService,
+                        XmrTxProofService xmrTxProofService,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         RefundAgentManager refundAgentManager,
@@ -192,6 +193,7 @@ public class TradeManager implements PersistedDataHost {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.xmrTxProofService = xmrTxProofService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
@@ -322,6 +324,11 @@ public class TradeManager implements PersistedDataHost {
                             addTradeToFailedTradesList.add(trade);
                         }
                     }
+
+            if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG &&
+                    trade.getCounterCurrencyExtraData() != null) {
+                xmrTxProofService.maybeStartRequestTxProofProcess(trade, tradableList.getList());
+            }
                 }
         );
 

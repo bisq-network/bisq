@@ -54,6 +54,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
                     processModel.getMyNodeAddress(),
                     processModel.getPayoutTxSignature(),
                     trade.getCounterCurrencyTxId(),
+                    trade.getCounterCurrencyExtraData(),
                     UUID.randomUUID().toString()
             );
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();

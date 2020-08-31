@@ -21,6 +21,7 @@ import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -41,17 +42,24 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
     @Nullable
     private final String counterCurrencyTxId;
 
+    // Added after v1.3.7
+    // We use that for the XMR txKey but want to keep it generic to be flexible for data of other payment methods or assets.
+    @Nullable
+    private String counterCurrencyExtraData;
+
     public CounterCurrencyTransferStartedMessage(String tradeId,
                                                  String buyerPayoutAddress,
                                                  NodeAddress senderNodeAddress,
                                                  byte[] buyerSignature,
                                                  @Nullable String counterCurrencyTxId,
+                                                 @Nullable String counterCurrencyExtraData,
                                                  String uid) {
         this(tradeId,
                 buyerPayoutAddress,
                 senderNodeAddress,
                 buyerSignature,
                 counterCurrencyTxId,
+                counterCurrencyExtraData,
                 uid,
                 Version.getP2PMessageVersion());
     }
@@ -66,6 +74,7 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
                                                   NodeAddress senderNodeAddress,
                                                   byte[] buyerSignature,
                                                   @Nullable String counterCurrencyTxId,
+                                                  @Nullable String counterCurrencyExtraData,
                                                   String uid,
                                                   int messageVersion) {
         super(messageVersion, tradeId, uid);
@@ -73,6 +82,7 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
         this.senderNodeAddress = senderNodeAddress;
         this.buyerSignature = buyerSignature;
         this.counterCurrencyTxId = counterCurrencyTxId;
+        this.counterCurrencyExtraData = counterCurrencyExtraData;
     }
 
     @Override
@@ -85,16 +95,19 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
                 .setUid(uid);
 
         Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
+        Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
 
         return getNetworkEnvelopeBuilder().setCounterCurrencyTransferStartedMessage(builder).build();
     }
 
-    public static CounterCurrencyTransferStartedMessage fromProto(protobuf.CounterCurrencyTransferStartedMessage proto, int messageVersion) {
+    public static CounterCurrencyTransferStartedMessage fromProto(protobuf.CounterCurrencyTransferStartedMessage proto,
+                                                                  int messageVersion) {
         return new CounterCurrencyTransferStartedMessage(proto.getTradeId(),
                 proto.getBuyerPayoutAddress(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getBuyerSignature().toByteArray(),
-                proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId(),
+                ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyTxId()),
+                ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()),
                 proto.getUid(),
                 messageVersion);
     }
@@ -106,6 +119,7 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMessage im
                 "\n     buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     counterCurrencyTxId=" + counterCurrencyTxId +
+                ",\n     counterCurrencyExtraData=" + counterCurrencyExtraData +
                 ",\n     uid='" + uid + '\'' +
                 ",\n     buyerSignature=" + Utilities.bytesAsHexString(buyerSignature) +
                 "\n} " + super.toString();

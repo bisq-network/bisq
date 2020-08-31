@@ -293,6 +293,7 @@ message CounterCurrencyTransferStartedMessage {
     bytes buyer_signature = 4;
     string counter_currency_tx_id = 5;
     string uid = 6;
+    string counter_currency_extra_data = 7;
 }
 
 message FinalizePayoutTxRequest {
@@ -638,6 +639,7 @@ message Filter {
     repeated string refundAgents = 18;
     repeated string bannedSignerPubKeys = 19;
     repeated string btc_fee_receiver_addresses = 20;
+    bool disable_auto_conf = 21;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
@@ -810,6 +812,11 @@ message DisputeResult {
         PROTOCOL_VIOLATION = 5;
         NO_REPLY = 6;
         BANK_PROBLEMS = 7;
+        OPTION_TRADE = 8;
+        SELLER_NOT_RESPONDING = 9;
+        WRONG_SENDER_ACCOUNT = 10;
+        TRADE_ALREADY_SETTLED = 11;
+        PEER_WAS_LATE = 12;
     }
 
     string trade_id = 1;
@@ -1385,6 +1392,8 @@ message Trade {
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;
     int64 last_refresh_request_date = 36;
+    string counter_currency_extra_data = 37;
+    AutoConfirmResult asset_tx_proof_result = 38;
 }
 
 message BuyerAsMakerTrade {
@@ -1545,6 +1554,15 @@ message PreferencesPayload {
     int32 block_notify_port = 53;
     int32 css_theme = 54;
     bool tac_accepted_v120 = 55;
+    repeated AutoConfirmSettings auto_confirm_settings = 56;
+}
+
+message AutoConfirmSettings {
+    bool enabled = 1;
+    int32 required_confirmations = 2;
+    int64 trade_limit = 3;
+    repeated string service_addresses = 4;
+    string currency_code = 5;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1567,6 +1585,10 @@ message UserPayload {
     repeated MarketAlertFilter market_alert_filters = 13;
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
+}
+
+message AutoConfirmResult {
+    string stateName = 1; // name of state enum
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
