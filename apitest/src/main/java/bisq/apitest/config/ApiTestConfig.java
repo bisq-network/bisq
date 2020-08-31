@@ -65,13 +65,11 @@ public class ApiTestConfig {
     static final String ROOT_APP_DATA_DIR = "rootAppDataDir";
     static final String API_PASSWORD = "apiPassword";
     static final String RUN_SUBPROJECT_JARS = "runSubprojectJars";
-    static final String RUN_ARB_NODE_AS_DESKTOP = "runArbNodeAsDesktop";
-    static final String RUN_ALICE_NODE_AS_DESKTOP = "runAliceNodeAsDesktop";
-    static final String RUN_BOB_NODE_AS_DESKTOP = "runBobNodeAsDesktop";
     static final String BISQ_APP_INIT_TIME = "bisqAppInitTime";
     static final String SKIP_TESTS = "skipTests";
     static final String SHUTDOWN_AFTER_TESTS = "shutdownAfterTests";
     static final String SUPPORTING_APPS = "supportingApps";
+    static final String ENABLE_BISQ_DEBUGGING = "enableBisqDebugging";
 
     // Default values for certain options
     static final String DEFAULT_CONFIG_FILE_NAME = "apitest.properties";
@@ -98,13 +96,11 @@ public class ApiTestConfig {
     // Daemon instances can use same gRPC password, but each needs a different apiPort.
     public final String apiPassword;
     public final boolean runSubprojectJars;
-    public final boolean runArbNodeAsDesktop;
-    public final boolean runAliceNodeAsDesktop;
-    public final boolean runBobNodeAsDesktop;
     public final long bisqAppInitTime;
     public final boolean skipTests;
     public final boolean shutdownAfterTests;
     public final List<String> supportingApps;
+    public final boolean enableBisqDebugging;
 
     // Immutable system configurations set in the constructor.
     public final String bitcoinDatadir;
@@ -202,27 +198,6 @@ public class ApiTestConfig {
                         .ofType(Boolean.class)
                         .defaultsTo(false);
 
-        ArgumentAcceptingOptionSpec<Boolean> runArbNodeAsDesktopOpt =
-                parser.accepts(RUN_ARB_NODE_AS_DESKTOP,
-                        "Run Arbitration node as desktop")
-                        .withRequiredArg()
-                        .ofType(Boolean.class)
-                        .defaultsTo(false); // TODO how do I register mediator?
-
-        ArgumentAcceptingOptionSpec<Boolean> runAliceNodeAsDesktopOpt =
-                parser.accepts(RUN_ALICE_NODE_AS_DESKTOP,
-                        "Run Alice node as desktop")
-                        .withRequiredArg()
-                        .ofType(Boolean.class)
-                        .defaultsTo(false);
-
-        ArgumentAcceptingOptionSpec<Boolean> runBobNodeAsDesktopOpt =
-                parser.accepts(RUN_BOB_NODE_AS_DESKTOP,
-                        "Run Bob node as desktop")
-                        .withRequiredArg()
-                        .ofType(Boolean.class)
-                        .defaultsTo(false);
-
         ArgumentAcceptingOptionSpec<Long> bisqAppInitTimeOpt =
                 parser.accepts(BISQ_APP_INIT_TIME,
                         "Amount of time (ms) to wait on a Bisq instance's initialization")
@@ -251,6 +226,12 @@ public class ApiTestConfig {
                         .ofType(String.class)
                         .defaultsTo("bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon");
 
+        ArgumentAcceptingOptionSpec<Boolean> enableBisqDebuggingOpt =
+                parser.accepts(ENABLE_BISQ_DEBUGGING,
+                        "Start Bisq apps with remote debug options")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(false);
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -302,13 +283,11 @@ public class ApiTestConfig {
             this.bitcoinRpcPassword = options.valueOf(bitcoinRpcPasswordOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
             this.runSubprojectJars = options.valueOf(runSubprojectJarsOpt);
-            this.runArbNodeAsDesktop = options.valueOf(runArbNodeAsDesktopOpt);
-            this.runAliceNodeAsDesktop = options.valueOf(runAliceNodeAsDesktopOpt);
-            this.runBobNodeAsDesktop = options.valueOf(runBobNodeAsDesktopOpt);
             this.bisqAppInitTime = options.valueOf(bisqAppInitTimeOpt);
             this.skipTests = options.valueOf(skipTestsOpt);
             this.shutdownAfterTests = options.valueOf(shutdownAfterTestsOpt);
             this.supportingApps = asList(options.valueOf(supportingAppsOpt).split(","));
+            this.enableBisqDebugging = options.valueOf(enableBisqDebuggingOpt);
 
             // Assign values to special-case static fields.
             BASH_PATH_VALUE = bashPath;

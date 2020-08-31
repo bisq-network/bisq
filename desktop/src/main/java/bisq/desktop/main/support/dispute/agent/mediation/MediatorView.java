@@ -37,8 +37,8 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class MediatorView extends DisputeAgentView {
@@ -64,6 +64,31 @@ public class MediatorView extends DisputeAgentView {
                 tradeDetailsWindow,
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+        reOpenButton.setVisible(true);
+        reOpenButton.setManaged(true);
+        setupReOpenDisputeListener();
+    }
+
+    @Override
+    protected void activate() {
+        super.activate();
+        activateReOpenDisputeListener();
+
+        // We need to call applyFilteredListPredicate after we called activateReOpenDisputeListener as we use the
+        // "open" string by default and it was applied in the super call but the disputes got set in
+        // activateReOpenDisputeListener
+        applyFilteredListPredicate(filterTextField.getText());
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+        deactivateReOpenDisputeListener();
     }
 
     @Override

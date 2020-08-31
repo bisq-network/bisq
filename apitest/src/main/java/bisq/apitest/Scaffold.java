@@ -311,17 +311,25 @@ public class Scaffold {
             bitcoinDaemon.verifyBitcoindRunning();
         }
 
+        // Start Bisq apps defined by the supportingApps option, in the in proper order.
+
         if (config.hasSupportingApp(seednode.name()))
             startBisqApp(seednode, executor, countdownLatch);
 
-        if (config.hasSupportingApp(arbdaemon.name(), arbdesktop.name()))
-            startBisqApp(config.runArbNodeAsDesktop ? arbdesktop : arbdaemon, executor, countdownLatch);
+        if (config.hasSupportingApp(arbdaemon.name()))
+            startBisqApp(arbdaemon, executor, countdownLatch);
+        else if (config.hasSupportingApp(arbdesktop.name()))
+            startBisqApp(arbdesktop, executor, countdownLatch);
 
-        if (config.hasSupportingApp(alicedaemon.name(), alicedesktop.name()))
-            startBisqApp(config.runAliceNodeAsDesktop ? alicedesktop : alicedaemon, executor, countdownLatch);
+        if (config.hasSupportingApp(alicedaemon.name()))
+            startBisqApp(alicedaemon, executor, countdownLatch);
+        else if (config.hasSupportingApp(alicedesktop.name()))
+            startBisqApp(alicedesktop, executor, countdownLatch);
 
-        if (config.hasSupportingApp(bobdaemon.name(), bobdesktop.name()))
-            startBisqApp(config.runBobNodeAsDesktop ? bobdesktop : bobdaemon, executor, countdownLatch);
+        if (config.hasSupportingApp(bobdaemon.name()))
+            startBisqApp(bobdaemon, executor, countdownLatch);
+        else if (config.hasSupportingApp(bobdesktop.name()))
+            startBisqApp(bobdesktop, executor, countdownLatch);
     }
 
     private void startBisqApp(BisqAppConfig bisqAppConfig,
@@ -329,28 +337,24 @@ public class Scaffold {
                               CountDownLatch countdownLatch)
             throws IOException, InterruptedException {
 
-        BisqApp bisqApp;
+        BisqApp bisqApp = createBisqApp(bisqAppConfig);
         switch (bisqAppConfig) {
             case seednode:
-                bisqApp = createBisqApp(seednode);
                 seedNodeTask = new SetupTask(bisqApp, countdownLatch);
                 seedNodeTaskFuture = executor.submit(seedNodeTask);
                 break;
             case arbdaemon:
             case arbdesktop:
-                bisqApp = createBisqApp(config.runArbNodeAsDesktop ? arbdesktop : arbdaemon);
                 arbNodeTask = new SetupTask(bisqApp, countdownLatch);
                 arbNodeTaskFuture = executor.submit(arbNodeTask);
                 break;
             case alicedaemon:
             case alicedesktop:
-                bisqApp = createBisqApp(config.runAliceNodeAsDesktop ? alicedesktop : alicedaemon);
                 aliceNodeTask = new SetupTask(bisqApp, countdownLatch);
                 aliceNodeTaskFuture = executor.submit(aliceNodeTask);
                 break;
             case bobdaemon:
             case bobdesktop:
-                bisqApp = createBisqApp(config.runBobNodeAsDesktop ? bobdesktop : bobdaemon);
                 bobNodeTask = new SetupTask(bisqApp, countdownLatch);
                 bobNodeTaskFuture = executor.submit(bobNodeTask);
                 break;

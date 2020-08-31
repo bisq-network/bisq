@@ -133,21 +133,11 @@ public class CliMain {
         if (password == null)
             throw new IllegalArgumentException("missing required 'password' option");
 
-        var credentials = new PasswordCallCredentials(password);
-
-        var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-        }));
-
-        var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var offersService = OffersGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
+        var versionService = grpcStubs.versionService;
+        var offersService = grpcStubs.offersService;
+        var paymentAccountsService =  grpcStubs.paymentAccountsService;
+        var walletsService = grpcStubs.walletsService;
 
         try {
             switch (method) {
