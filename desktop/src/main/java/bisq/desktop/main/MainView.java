@@ -43,12 +43,12 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
-import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 
+import bisq.common.BisqException;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
@@ -532,6 +532,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         String selectedCurrencyCode = model.getPriceFeedService().getCurrencyCode();
         MarketPrice selectedMarketPrice = model.getPriceFeedService().getMarketPrice(selectedCurrencyCode);
+
         return Res.get("mainView.marketPrice.tooltip",
                 "Bisq Price Index for " + selectedCurrencyCode,
                 "",
