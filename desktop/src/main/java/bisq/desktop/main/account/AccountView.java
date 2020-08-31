@@ -33,6 +33,7 @@ import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView;
 import bisq.desktop.main.account.register.mediator.MediatorRegistrationView;
 import bisq.desktop.main.account.register.refundagent.RefundAgentRegistrationView;
+import bisq.desktop.main.account.register.signing.SigningView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.presentation.AccountPresentation;
 
@@ -77,9 +78,11 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private Tab arbitratorRegistrationTab;
     private Tab mediatorRegistrationTab;
     private Tab refundAgentRegistrationTab;
+    private Tab signingTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
     private MediatorRegistrationView mediatorRegistrationView;
     private RefundAgentRegistrationView refundAgentRegistrationView;
+    private SigningView signingView;
     private Scene scene;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private ListChangeListener<Tab> tabListChangeListener;
@@ -109,6 +112,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 } else if (mediatorRegistrationTab == null && viewPath.get(2).equals(MediatorRegistrationView.class)) {
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                 } else if (refundAgentRegistrationTab == null && viewPath.get(2).equals(RefundAgentRegistrationView.class)) {
+                    navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                } else if (signingTab == null && viewPath.get(2).equals(SigningView.class)) {
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                 } else {
                     loadView(viewPath.tip());
@@ -141,6 +146,11 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 refundAgentRegistrationTab.setClosable(true);
                 root.getTabs().add(refundAgentRegistrationTab);
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.I, event) && signingTab == null) {
+                signingTab = new Tab(Res.get("account.tab.signing").toUpperCase());
+                signingTab.setClosable(true);
+                root.getTabs().add(signingTab);
+                navigation.navigateTo(MainView.class, AccountView.class, SigningView.class);
             }
         };
 
@@ -151,6 +161,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             } else if (refundAgentRegistrationTab != null && selectedTab != refundAgentRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
+            } else if (newValue == signingTab && selectedTab != signingTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, SigningView.class);
             } else if (newValue == fiatAccountsTab && selectedTab != fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             } else if (newValue == altcoinAccountsTab && selectedTab != altcoinAccountsTab) {
@@ -177,6 +189,9 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
             if (removedTabs.size() == 1 && removedTabs.get(0).equals(refundAgentRegistrationTab))
                 onRefundAgentRegistrationTabRemoved();
+
+            if (removedTabs.size() == 1 && removedTabs.get(0).equals(signingTab))
+                onSigningTabRemoved();
         };
     }
 
@@ -192,6 +207,11 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
     private void onRefundAgentRegistrationTabRemoved() {
         refundAgentRegistrationTab = null;
+        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+    }
+
+    private void onSigningTabRemoved() {
+        signingTab = null;
         navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
     }
 
@@ -216,6 +236,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             else if (refundAgentRegistrationTab != null)
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
+            else if (signingTab != null)
+                navigation.navigateTo(MainView.class, AccountView.class, SigningView.class);
             else if (root.getSelectionModel().getSelectedItem() == fiatAccountsTab)
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             else if (root.getSelectionModel().getSelectedItem() == altcoinAccountsTab)
@@ -273,6 +295,11 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 selectedTab = refundAgentRegistrationTab;
                 refundAgentRegistrationView = (RefundAgentRegistrationView) view;
                 refundAgentRegistrationView.onTabSelection(true);
+            }
+        } else if (view instanceof SigningView) {
+            if (signingTab != null) {
+                selectedTab = signingTab;
+                signingView = (SigningView) view;
             }
         } else if (view instanceof FiatAccountsView) {
             selectedTab = fiatAccountsTab;
