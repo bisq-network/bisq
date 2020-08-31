@@ -22,6 +22,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.autoconf.xmr.XmrTxProofModel;
 
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -64,8 +65,8 @@ public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
         txKeyInputTextField.setValidator(regexValidator);
         if (isDevMode()) {
             // pre-populate the fields with test data when in dev mode
-            txHashInputTextField.setText("e8dcd8160aee016d8a0d9c480355d65773dc577313a0af8237c35f9d997b01c0");
-            txKeyInputTextField.setText("300fa18ff99b32ff097d75c64d62732bdb486af8c225f558ee48c5f777f9b509");
+            txHashInputTextField.setText(XmrTxProofModel.DEV_TX_HASH);
+            txKeyInputTextField.setText(XmrTxProofModel.DEV_TX_KEY);
         }
 
         applyStyles();

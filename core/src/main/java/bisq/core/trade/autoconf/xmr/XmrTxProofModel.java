@@ -24,7 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
-class XmrTxProofModel {
+public class XmrTxProofModel {
+    // Those are values from a valid tx which are set automatically if DevEnv.isDevMode is enabled
+    public static final String DEV_ADDRESS = "85q13WDADXE26W6h7cStpPMkn8tWpvWgHbpGWWttFEafGXyjsBTXxxyQms4UErouTY5sdKpYHVjQm6SagiCqytseDkzfgub";
+    public static final String DEV_TX_KEY = "f3ce66c9d395e5e460c8802b2c3c1fff04e508434f9738ee35558aac4678c906";
+    public static final String DEV_TX_HASH = "5e665addf6d7c6300670e8a89564ed12b5c1a21c336408e2835668f9a6a0d802";
+    public static final long DEV_AMOUNT = 8902597360000L;
+
     private final String txHash;
     private final String txKey;
     private final String recipientAddress;
