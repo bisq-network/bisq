@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class XmrTransferProofService {
-    private final Map<String, XmrTransferProofRequest> map = new HashMap<>();
+    private final Map<String, XmrTxProofRequest> map = new HashMap<>();
     private final Socks5ProxyProvider socks5ProxyProvider;
 
     @Inject
@@ -52,7 +52,7 @@ class XmrTransferProofService {
         }
         log.info("requesting tx proof with uid {}", uid);
 
-        XmrTransferProofRequest requester = new XmrTransferProofRequest(
+        XmrTxProofRequest requester = new XmrTxProofRequest(
                 socks5ProxyProvider,
                 xmrTxProofModel,
                 result -> {
@@ -71,7 +71,7 @@ class XmrTransferProofService {
 
     void terminateRequest(XmrTxProofModel xmrTxProofModel) {
         String uid = xmrTxProofModel.getUID();
-        XmrTransferProofRequest requester = map.getOrDefault(uid, null);
+        XmrTxProofRequest requester = map.getOrDefault(uid, null);
         if (requester != null) {
             log.info("Terminating API request for request with uid {}", uid);
             requester.stop();

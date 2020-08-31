@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
-class XmrTransferProofRequest {
+class XmrTxProofRequest {
     // these settings are not likely to change and therefore not put into Config
     private static final long REPEAT_REQUEST_PERIOD = TimeUnit.SECONDS.toMillis(90);
     private static final long MAX_REQUEST_PERIOD = TimeUnit.HOURS.toMillis(12);
@@ -57,10 +57,10 @@ class XmrTransferProofRequest {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTransferProofRequest(Socks5ProxyProvider socks5ProxyProvider,
-                            XmrTxProofModel xmrTxProofModel,
-                            Consumer<XmrTxProofResult> resultHandler,
-                            FaultHandler faultHandler) {
+    XmrTxProofRequest(Socks5ProxyProvider socks5ProxyProvider,
+                      XmrTxProofModel xmrTxProofModel,
+                      Consumer<XmrTxProofResult> resultHandler,
+                      FaultHandler faultHandler) {
         this.httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
         this.httpClient.setBaseUrl("http://" + xmrTxProofModel.getServiceAddress());
         if (xmrTxProofModel.getServiceAddress().matches("^192.*|^localhost.*")) {
