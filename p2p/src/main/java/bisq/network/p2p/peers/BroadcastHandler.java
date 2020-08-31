@@ -289,18 +289,14 @@ public class BroadcastHandler implements PeerManager.Listener {
                     .map(Broadcaster.BroadcastRequest::getListener)
                     .forEach(listener -> listener.onSufficientlyBroadcast(broadcastRequests));
         } else {
-            // Number of open requests to peers is less than we need to reach numOfCompletedBroadcastsTarget.
+            // We check if number of open requests to peers is less than we need to reach numOfCompletedBroadcastsTarget.
             // Thus we never can reach required resilience as too many numOfFailedBroadcasts occurred.
-            int openRequests = numPeersForBroadcast - numOfCompletedBroadcasts - numOfFailedBroadcasts;
-            int maxPossibleSuccessCases = openRequests + numOfCompletedBroadcasts;
+            int maxPossibleSuccessCases = numPeersForBroadcast - numOfFailedBroadcasts;
             // We subtract 1 as we want to have it called only once, with a < comparision we would trigger repeatedly.
-            if (maxPossibleSuccessCases == numOfCompletedBroadcastsTarget - 1) {
-                broadcastRequests.stream()
-                        .filter(broadcastRequest -> broadcastRequest.getListener() != null)
-                        .map(Broadcaster.BroadcastRequest::getListener)
-                        .forEach(listener -> listener.onNotSufficientlyBroadcast(numOfCompletedBroadcasts, numOfFailedBroadcasts));
-            } else if (timeoutTriggered && numOfCompletedBroadcasts < numOfCompletedBroadcastsTarget) {
-                // We did not reach resilience level and timeout prevents to reach it later
+            boolean notEnoughSucceededOrOpen = maxPossibleSuccessCases == numOfCompletedBroadcastsTarget - 1;
+            // We did not reach resilience level and timeout prevents to reach it later
+            boolean timeoutAndNotEnoughSucceeded = timeoutTriggered && numOfCompletedBroadcasts < numOfCompletedBroadcastsTarget;
+            if (notEnoughSucceededOrOpen || timeoutAndNotEnoughSucceeded) {
                 broadcastRequests.stream()
                         .filter(broadcastRequest -> broadcastRequest.getListener() != null)
                         .map(Broadcaster.BroadcastRequest::getListener)
