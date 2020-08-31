@@ -175,7 +175,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(seedNodesTF, filter.getSeedNodes());
             setupFieldFromList(priceRelayNodesTF, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesTF, filter.getBtcNodes());
-            setupFieldFromList(btcNodesTF, filter.getBtcNodes());
             setupFieldFromList(bannedPrivilegedDevPubKeysTF, filter.getBannedPrivilegedDevPubKeys());
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());

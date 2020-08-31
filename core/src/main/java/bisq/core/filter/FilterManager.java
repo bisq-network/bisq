@@ -220,7 +220,7 @@ public class FilterManager {
             return false;
         }
         if (!isValidDevPrivilegeKey(privKeyString)) {
-            log.warn("There is no persisted dev filter to be removed.");
+            log.warn("Key in invalid");
             return false;
         }
 
@@ -258,14 +258,8 @@ public class FilterManager {
             return false;
         }
 
-        if (!isPublicKeyInList(developersFilter.getSignerPubKeyAsHex())) {
-            log.warn("The SignerPubKey from the filter is not in our pubKey list. " +
-                    "filterSignerPubKey={}, publicKeys={}", developersFilter.getSignerPubKeyAsHex(), publicKeys);
-            return false;
-        }
-
         if (!isValidDevPrivilegeKey(privKeyString)) {
-            log.warn("There is no persisted dev filter to be removed.");
+            log.warn("Key in invalid.");
             return false;
         }
 
