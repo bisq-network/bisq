@@ -98,7 +98,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         broadcastRequests.add(new BroadcastRequest(message, sender, listener));
         // Keep that log on INFO for better debugging if the feature works as expected. Later it can
         // be remove or set to DEBUG
-        log.info("Broadcast requested for {}. We queue it up for next bundled broadcast.",
+        log.debug("Broadcast requested for {}. We queue it up for next bundled broadcast.",
                 message.getClass().getSimpleName());
 
         if (timer == null) {
@@ -108,7 +108,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
 
     private void maybeBroadcastBundle() {
         if (!broadcastRequests.isEmpty()) {
-            log.info("Broadcast bundled requests of {} messages. Message types: {}",
+            log.debug("Broadcast bundled requests of {} messages. Message types: {}",
                     broadcastRequests.size(),
                     broadcastRequests.stream().map(e -> e.getMessage().getClass().getSimpleName()).collect(Collectors.toList()));
             BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
