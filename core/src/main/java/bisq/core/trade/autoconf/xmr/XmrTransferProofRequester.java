@@ -93,7 +93,7 @@ class XmrTransferProofRequester {
             return;
         }
         ListenableFuture<XmrAutoConfirmResult> future = executorService.submit(() -> {
-            Thread.currentThread().setName("XmrTransferProofRequest-" + xmrProofInfo.getKey());
+            Thread.currentThread().setName("XmrTransferProofRequest-" + xmrProofInfo.getUID());
             String param = "/api/outputs?txhash=" + xmrProofInfo.getTxHash() +
                     "&address=" + xmrProofInfo.getRecipientAddress() +
                     "&viewkey=" + xmrProofInfo.getTxKey() +

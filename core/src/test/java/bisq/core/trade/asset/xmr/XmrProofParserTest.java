@@ -41,9 +41,9 @@ public class XmrProofParserTest {
 
     @Test
     public void testKey() {
-        assertTrue(xmrProofInfo.getKey().contains(xmrProofInfo.getTxHash()));
-        assertTrue(xmrProofInfo.getKey().contains(xmrProofInfo.getServiceAddress()));
-        assertFalse(xmrProofInfo.getKey().contains(xmrProofInfo.getRecipientAddress()));
+        assertTrue(xmrProofInfo.getUID().contains(xmrProofInfo.getTxHash()));
+        assertTrue(xmrProofInfo.getUID().contains(xmrProofInfo.getServiceAddress()));
+        assertFalse(xmrProofInfo.getUID().contains(xmrProofInfo.getRecipientAddress()));
     }
 
     @Test

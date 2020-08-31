@@ -48,37 +48,37 @@ class XmrTransferProofService {
     public void requestProof(XmrProofInfo xmrProofInfo,
                              Consumer<XmrAutoConfirmResult> resultHandler,
                              FaultHandler faultHandler) {
-        String key = xmrProofInfo.getKey();
-        if (map.containsKey(key)) {
-            log.warn("We started a proof request for key {} already", key);
+        String uid = xmrProofInfo.getUID();
+        if (map.containsKey(uid)) {
+            log.warn("We started a proof request for uid {} already", uid);
             return;
         }
-        log.info("requesting tx proof with key {}", key);
+        log.info("requesting tx proof with uid {}", uid);
 
         XmrTransferProofRequester requester = new XmrTransferProofRequester(
                 socks5ProxyProvider,
                 xmrProofInfo,
                 result -> {
                     if (result.isSuccessState()) {
-                        cleanup(key);
+                        cleanup(uid);
                     }
                     resultHandler.accept(result);
                 },
                 (errorMsg, throwable) -> {
-                    cleanup(key);
+                    cleanup(uid);
                     faultHandler.handleFault(errorMsg, throwable);
                 });
-        map.put(key, requester);
+        map.put(uid, requester);
         requester.request();
     }
 
     public void terminateRequest(XmrProofInfo xmrProofInfo) {
-        String key = xmrProofInfo.getKey();
-        XmrTransferProofRequester requester = map.getOrDefault(key, null);
+        String uid = xmrProofInfo.getUID();
+        XmrTransferProofRequester requester = map.getOrDefault(uid, null);
         if (requester != null) {
-            log.info("Terminating API request for request with key {}", key);
+            log.info("Terminating API request for request with uid {}", uid);
             requester.stop();
-            cleanup(key);
+            cleanup(uid);
         }
     }
 

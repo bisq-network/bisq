@@ -50,8 +50,7 @@ public class XmrProofInfo {
         this.serviceAddress = serviceAddress;
     }
 
-    // something to uniquely identify this object by
-    public String getKey() {
+    public String getUID() {
         return txHash + "|" + serviceAddress;
     }
 }
