@@ -79,7 +79,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         if (headLine == null)
             headLine = Res.get("filterWindow.headline");
 
-        width = 968;
+        width = 1000;
 
         createGridPane();
 
@@ -87,7 +87,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         scrollPane.setContent(gridPane);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setMaxHeight(1000);
+        scrollPane.setMaxHeight(700);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         addHeadLine();
@@ -139,7 +139,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField disableDaoBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableDaoBelowVersion"));
         InputTextField disableTradeBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableTradeBelowVersion"));
 
-        final Filter filter = filterManager.getDevelopersFilter();
+        Filter filter = filterManager.getDevFilter();
         if (filter != null) {
             setupFieldFromList(offerIdsInputTextField, filter.getBannedOfferIds());
             setupFieldFromList(nodesInputTextField, filter.getBannedNodeAddress());
@@ -162,55 +162,50 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
-        removeFilterMessageButton.setDisable(filterManager.getDevelopersFilter() == null);
+        removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
 
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
-        String privKeyString = keyInputTextField.getText();
         sendButton.setOnAction(e -> {
-            if (privKeyString.isEmpty()) {
-                return;
-            }
-            Filter newFilter = new Filter(
-                    readAsList(offerIdsInputTextField),
-                    readAsList(nodesInputTextField),
-                    readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
-                    readAsList(bannedCurrenciesInputTextField),
-                    readAsList(bannedPaymentMethodsInputTextField),
-                    readAsList(arbitratorsInputTextField),
-                    readAsList(seedNodesInputTextField),
-                    readAsList(priceRelayNodesInputTextField),
-                    preventPublicBtcNetworkCheckBox.isSelected(),
-                    readAsList(btcNodesInputTextField),
-                    disableDaoCheckBox.isSelected(),
-                    disableDaoBelowVersionInputTextField.getText(),
-                    disableTradeBelowVersionInputTextField.getText(),
-                    readAsList(mediatorsInputTextField),
-                    readAsList(refundAgentsInputTextField),
-                    readAsList(bannedSignerPubKeysInputTextField),
-                    readAsList(btcFeeReceiverAddressesInputTextField),
-                    filterManager.getOwnerPubKey()
-            );
-            if (filterManager.isValidDevPrivilegeKey(privKeyString)) {
-                filterManager.setFilterSigningKey(privKeyString);
-                filterManager.publishFilter(newFilter);
-                removeFilterMessageButton.setDisable(filterManager.getDevelopersFilter() == null);
+            String privKeyString = keyInputTextField.getText();
+            if (filterManager.canAddDevFilter(privKeyString)) {
+                String signerPubKeyAsHex = filterManager.getSignerPubKeyAsHex(privKeyString);
+                Filter newFilter = new Filter(
+                        readAsList(offerIdsInputTextField),
+                        readAsList(nodesInputTextField),
+                        readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
+                        readAsList(bannedCurrenciesInputTextField),
+                        readAsList(bannedPaymentMethodsInputTextField),
+                        readAsList(arbitratorsInputTextField),
+                        readAsList(seedNodesInputTextField),
+                        readAsList(priceRelayNodesInputTextField),
+                        preventPublicBtcNetworkCheckBox.isSelected(),
+                        readAsList(btcNodesInputTextField),
+                        disableDaoCheckBox.isSelected(),
+                        disableDaoBelowVersionInputTextField.getText(),
+                        disableTradeBelowVersionInputTextField.getText(),
+                        readAsList(mediatorsInputTextField),
+                        readAsList(refundAgentsInputTextField),
+                        readAsList(bannedSignerPubKeysInputTextField),
+                        readAsList(btcFeeReceiverAddressesInputTextField),
+                        filterManager.getOwnerPubKey(),
+                        signerPubKeyAsHex
+                );
+
+                filterManager.addDevFilter(newFilter, privKeyString);
+                removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
                 hide();
             } else {
-                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                new Popup().warning(Res.get("shared.invalidKey")).onClose(this::blurAgain).show();
             }
         });
 
         removeFilterMessageButton.setOnAction(e -> {
-            if (privKeyString.isEmpty()) {
-                return;
-            }
-
-            if (filterManager.isValidDevPrivilegeKey(privKeyString)) {
-                filterManager.setFilterSigningKey(privKeyString);
-                filterManager.removeFilter();
+            String privKeyString = keyInputTextField.getText();
+            if (filterManager.canRemoveDevFilter(privKeyString)) {
+                filterManager.removeDevFilter(privKeyString);
                 hide();
             } else {
-                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                new Popup().warning(Res.get("shared.invalidKey")).onClose(this::blurAgain).show();
             }
         });
 

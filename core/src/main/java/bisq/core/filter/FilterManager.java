@@ -38,7 +38,6 @@ import bisq.common.crypto.KeyRing;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -55,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.math.BigInteger;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -94,8 +94,7 @@ public class FilterManager {
     private final boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
-    private final String pubKeyAsHex;
-
+    private final List<String> publicKeys;
     private ECKey filterSigningKey;
 
 
@@ -120,9 +119,12 @@ public class FilterManager {
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
 
-        pubKeyAsHex = useDevPrivilegeKeys ?
-                DevEnv.DEV_PRIVILEGE_PUB_KEY :
-                "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
+        //todo test
+        publicKeys = !useDevPrivilegeKeys ?
+                Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY) :
+                List.of("0358d47858acdc41910325fce266571540681ef83a0d6fedce312bef9810793a27",
+                        "029340c3e7d4bb0f9e651b5f590b434fecb6175aeaa57145c7804ff05d210e534f");
+
     }
 
 
@@ -139,6 +141,7 @@ public class FilterManager {
                 .map(ProtectedStorageEntry::getProtectedStoragePayload)
                 .filter(protectedStoragePayload -> protectedStoragePayload instanceof Filter)
                 .map(protectedStoragePayload -> (Filter) protectedStoragePayload)
+                .filter(this::isFilterPublicKeyInList)
                 .filter(this::verifySignature)
                 .forEach(this::onFilterAddedFromNetwork);
 
@@ -149,7 +152,7 @@ public class FilterManager {
                         .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof Filter)
                         .forEach(protectedStorageEntry -> {
                             Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
-                            if (verifySignature(filter)) {
+                            if (isFilterPublicKeyInList(filter) && verifySignature(filter)) {
                                 onFilterAddedFromNetwork(filter);
                             }
                         });
@@ -161,7 +164,7 @@ public class FilterManager {
                         .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof Filter)
                         .forEach(protectedStorageEntry -> {
                             Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
-                            if (verifySignature(filter)) {
+                            if (isFilterPublicKeyInList(filter) && verifySignature(filter)) {
                                 onFilterRemovedFromNetwork(filter);
                             }
                         });
@@ -209,20 +212,24 @@ public class FilterManager {
         });
     }
 
-    public boolean isValidDevPrivilegeKey(String privKeyString) {
-        try {
-            ECKey filterSigningKey = toECKey(privKeyString);
-            return pubKeyAsHex.equals(Utils.HEX.encode(filterSigningKey.getPubKey()));
-        } catch (Throwable t) {
+    public boolean canAddDevFilter(String privKeyString) {
+        if (privKeyString == null || privKeyString.isEmpty()) {
             return false;
         }
+        if (!isValidDevPrivilegeKey(privKeyString)) {
+            log.warn("There is no persisted dev filter to be removed.");
+            return false;
+        }
+        return true;
     }
 
-    public void setFilterSigningKey(String privKeyString) {
-        this.filterSigningKey = toECKey(privKeyString);
+    public String getSignerPubKeyAsHex(String privKeyString) {
+        ECKey ecKey = toECKey(privKeyString);
+        return getPubKeyAsHex(ecKey);
     }
 
-    public void publishFilter(Filter filterWithoutSig) {
+    public void addDevFilter(Filter filterWithoutSig, String privKeyString) {
+        setFilterSigningKey(privKeyString);
         String signatureAsBase64 = getSignature(filterWithoutSig);
         Filter filterWithSig = Filter.cloneWithSig(filterWithoutSig, signatureAsBase64);
         user.setDevelopersFilter(filterWithSig);
@@ -230,8 +237,42 @@ public class FilterManager {
         p2PService.addProtectedStorageEntry(filterWithSig);
     }
 
+    public boolean canRemoveDevFilter(String privKeyString) {
+        if (privKeyString == null || privKeyString.isEmpty()) {
+            return false;
+        }
 
-    public void removeFilter() {
+        Filter developersFilter = getDevFilter();
+        if (developersFilter == null) {
+            log.warn("There is no persisted dev filter to be removed.");
+            return false;
+        }
+
+        if (!isPublicKeyInList(developersFilter.getSignerPubKeyAsHex())) {
+            log.warn("The SignerPubKey from the filter is not in our pubKey list. " +
+                    "filterSignerPubKey={}, publicKeys={}", developersFilter.getSignerPubKeyAsHex(), publicKeys);
+            return false;
+        }
+
+        if (!isValidDevPrivilegeKey(privKeyString)) {
+            log.warn("There is no persisted dev filter to be removed.");
+            return false;
+        }
+
+        ECKey ecKeyFromPrivate = toECKey(privKeyString);
+        String pubKeyAsHex = getPubKeyAsHex(ecKeyFromPrivate);
+        if (!developersFilter.getSignerPubKeyAsHex().equals(pubKeyAsHex)) {
+            log.warn("pubKeyAsHex derived from private key does not match filterSignerPubKey. " +
+                            "filterSignerPubKey={}, pubKeyAsHex derived from private key={}",
+                    developersFilter.getSignerPubKeyAsHex(), pubKeyAsHex);
+            return false;
+        }
+
+        return true;
+    }
+
+    public void removeDevFilter(String privKeyString) {
+        setFilterSigningKey(privKeyString);
         Filter filterWithSig = user.getDevelopersFilter();
         if (filterWithSig == null) {
             // Should not happen as UI button is deactivated in that case
@@ -259,8 +300,12 @@ public class FilterManager {
     }
 
     @Nullable
-    public Filter getDevelopersFilter() {
+    public Filter getDevFilter() {
         return user.getDevelopersFilter();
+    }
+
+    public PublicKey getOwnerPubKey() {
+        return keyRing.getSignatureKeyPair().getPublic();
     }
 
     public boolean isCurrencyBanned(String currencyCode) {
@@ -347,10 +392,6 @@ public class FilterManager {
                         .anyMatch(e -> e.equals(witnessSignerPubKeyAsHex));
     }
 
-    public PublicKey getOwnerPubKey() {
-        return keyRing.getSignatureKeyPair().getPublic();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -423,11 +464,34 @@ public class FilterManager {
             configFileEditor.clearOption(optionName);
     }
 
+    private boolean isValidDevPrivilegeKey(String privKeyString) {
+        try {
+            ECKey filterSigningKey = toECKey(privKeyString);
+            String pubKeyAsHex = getPubKeyAsHex(filterSigningKey);
+            return isPublicKeyInList(pubKeyAsHex);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private void setFilterSigningKey(String privKeyString) {
+        this.filterSigningKey = toECKey(privKeyString);
+    }
+
     private String getSignature(Filter filterWithoutSig) {
         Sha256Hash hash = getSha256Hash(filterWithoutSig);
         ECKey.ECDSASignature ecdsaSignature = filterSigningKey.sign(hash);
         byte[] encodeToDER = ecdsaSignature.encodeToDER();
         return new String(Base64.encode(encodeToDER), StandardCharsets.UTF_8);
+    }
+
+    private boolean isFilterPublicKeyInList(Filter filter) {
+        String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
+        if (!isPublicKeyInList(signerPubKeyAsHex)) {
+            log.warn("signerPubKeyAsHex from filter is not part of our pub key list. filter={}, publicKeys={}", filter, publicKeys);
+            return false;
+        }
+        return true;
     }
 
     private boolean verifySignature(Filter filter) {
@@ -439,7 +503,9 @@ public class FilterManager {
             byte[] sigData = Base64.decode(filter.getSignatureAsBase64());
             ECKey.ECDSASignature ecdsaSignature = ECKey.ECDSASignature.decodeFromDER(sigData);
 
-            ECKey ecPubKey = ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex));
+            String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
+            byte[] decode = HEX.decode(signerPubKeyAsHex);
+            ECKey ecPubKey = ECKey.fromPublicOnly(decode);
             return ecPubKey.verify(hash, ecdsaSignature);
         } catch (Throwable e) {
             log.warn("verifySignature failed. filter={}", filter);
@@ -454,5 +520,17 @@ public class FilterManager {
     private Sha256Hash getSha256Hash(Filter filter) {
         byte[] filterData = filter.toProtoMessage().toByteArray();
         return Sha256Hash.of(filterData);
+    }
+
+    private String getPubKeyAsHex(ECKey ecKey) {
+        return HEX.encode(ecKey.getPubKey());
+    }
+
+    private boolean isPublicKeyInList(String pubKeyAsHex) {
+        boolean isPublicKeyInList = publicKeys.contains(pubKeyAsHex);
+        if (!isPublicKeyInList) {
+            log.warn("pubKeyAsHex is not part of our pub key list. pubKeyAsHex={}, publicKeys={}", pubKeyAsHex, publicKeys);
+        }
+        return isPublicKeyInList;
     }
 }

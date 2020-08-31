@@ -60,6 +60,7 @@ public class UserPayloadModelVOTest {
                 null,
                 0,
                 null,
+                null,
                 null));
 
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());

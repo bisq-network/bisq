@@ -639,6 +639,7 @@ message Filter {
     repeated string bannedSignerPubKeys = 19;
     repeated string btc_fee_receiver_addresses = 20;
     int64 creation_date = 21;
+    string signer_pub_key_as_hex = 22;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
