@@ -42,7 +42,7 @@ import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.trade.autoconf.AutoConfirmResult;
+import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;
@@ -77,7 +77,7 @@ public class SellerStep3View extends TradeStepView {
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
     private TextFieldWithCopyIcon autoConfirmStatusField;
-    private final ChangeListener<AutoConfirmResult> autoConfirmResultListener;
+    private final ChangeListener<AssetTxProofResult> autoConfirmResultListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -152,9 +152,9 @@ public class SellerStep3View extends TradeStepView {
 
         // we listen for updates on the trade autoConfirmResult field
         if (autoConfirmStatusField != null) {
-            trade.getAutoConfirmResultProperty().addListener(autoConfirmResultListener);
+            trade.getAssetTxProofResultProperty().addListener(autoConfirmResultListener);
             // display the initial value, or FEATURE_DISABLED if there is none
-            autoConfirmStatusField.setText(trade.getAutoConfirmResult().getStatusAsDisplayString());
+            autoConfirmStatusField.setText(trade.getAssetTxProofResult().getStatusAsDisplayString());
         }
     }
 
@@ -172,7 +172,7 @@ public class SellerStep3View extends TradeStepView {
         if (timeoutTimer != null)
             timeoutTimer.stop();
 
-        trade.getAutoConfirmResultProperty().removeListener(autoConfirmResultListener);
+        trade.getAssetTxProofResultProperty().removeListener(autoConfirmResultListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

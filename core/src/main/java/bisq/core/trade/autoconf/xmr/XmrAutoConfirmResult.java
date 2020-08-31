@@ -18,7 +18,7 @@
 package bisq.core.trade.autoconf.xmr;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.autoconf.AutoConfirmResult;
+import bisq.core.trade.autoconf.AssetTxProofResult;
 
 import bisq.common.proto.ProtoUtil;
 
@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class XmrAutoConfirmResult extends AutoConfirmResult {
+public class XmrAutoConfirmResult extends AssetTxProofResult {
     public enum State {
         UNDEFINED,
         FEATURE_DISABLED,

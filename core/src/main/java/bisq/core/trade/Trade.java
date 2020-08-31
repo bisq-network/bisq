@@ -38,7 +38,7 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.autoconf.AutoConfirmResult;
+import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -438,11 +438,11 @@ public abstract class Trade implements Tradable, Model {
 
     // Added at v1.3.8
     @Nullable
-    private AutoConfirmResult autoConfirmResult;
+    private AssetTxProofResult assetTxProofResult;
 
     @Getter
     // This observable property can be used for UI to show a notification to user of the XMR proof status
-    transient final private ObjectProperty<AutoConfirmResult> autoConfirmResultProperty = new SimpleObjectProperty<>();
+    transient final private ObjectProperty<AssetTxProofResult> assetTxProofResultProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -556,7 +556,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
         Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
-        Optional.ofNullable(autoConfirmResult).ifPresent(e -> builder.setAutoConfirmResult(autoConfirmResult.toProtoMessage()));
+        Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.toProtoMessage()));
 
         return builder.build();
     }
@@ -591,7 +591,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
-        trade.setAutoConfirmResult(AutoConfirmResult.fromProto(proto.getAutoConfirmResult(), checkNotNull(trade.getOffer()).getCurrencyCode()));
+        trade.setAssetTxProofResult(AssetTxProofResult.fromProto(proto.getAssetTxProofResult(), checkNotNull(trade.getOffer()).getCurrencyCode()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -875,9 +875,9 @@ public abstract class Trade implements Tradable, Model {
         errorMessageProperty.set(errorMessage);
     }
 
-    public void setAutoConfirmResult(AutoConfirmResult autoConfirmResult) {
-        this.autoConfirmResult = autoConfirmResult;
-        autoConfirmResultProperty.setValue(autoConfirmResult);
+    public void setAssetTxProofResult(AssetTxProofResult assetTxProofResult) {
+        this.assetTxProofResult = assetTxProofResult;
+        assetTxProofResultProperty.setValue(assetTxProofResult);
     }
 
 
@@ -1092,8 +1092,8 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty.get();
     }
 
-    public AutoConfirmResult getAutoConfirmResult() {
-        return autoConfirmResult != null ? autoConfirmResult : AutoConfirmResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
+    public AssetTxProofResult getAssetTxProofResult() {
+        return assetTxProofResult != null ? assetTxProofResult : AssetTxProofResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
     }
 
 
@@ -1194,7 +1194,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     counterCurrencyTxId='" + counterCurrencyTxId + '\'' +
                 ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
-                ",\n     autoConfirmResult='" + autoConfirmResult + '\'' +
+                ",\n     assetTxProofResult='" + assetTxProofResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     txFee=" + txFee +
                 ",\n     takerFee=" + takerFee +

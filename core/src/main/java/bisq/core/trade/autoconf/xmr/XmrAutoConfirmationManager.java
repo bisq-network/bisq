@@ -156,7 +156,7 @@ public class XmrAutoConfirmationManager {
                         if (alreadyUsed) {
                             String message = "Peer used the XMR tx key already at another trade with trade ID " +
                                     t.getId() + ". This might be a scam attempt.";
-                            trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_KEY_REUSED, message));
+                            trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_KEY_REUSED, message));
                         }
                         return alreadyUsed;
                     });
@@ -166,7 +166,7 @@ public class XmrAutoConfirmationManager {
             }
 
             if (!preferences.getAutoConfirmSettings().enabled || this.isAutoConfDisabledByFilter()) {
-                trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.FEATURE_DISABLED, null));
+                trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.FEATURE_DISABLED, null));
                 return;
             }
             Coin tradeAmount = trade.getTradeAmount();
@@ -174,7 +174,7 @@ public class XmrAutoConfirmationManager {
             if (tradeAmount != null && tradeAmount.isGreaterThan(tradeLimit)) {
                 log.warn("Trade amount {} is higher than settings limit {}, will not attempt auto-confirm",
                         tradeAmount.toFriendlyString(), tradeLimit.toFriendlyString());
-                trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TRADE_LIMIT_EXCEEDED, null));
+                trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TRADE_LIMIT_EXCEEDED, null));
                 return;
             }
 
@@ -183,7 +183,7 @@ public class XmrAutoConfirmationManager {
             Volume volume = offer.getVolumeByAmount(tradeAmount);
             long amountXmr = volume != null ? volume.getValue() * 10000L : 0L;
             int confirmsRequired = preferences.getAutoConfirmSettings().requiredConfirmations;
-            trade.setAutoConfirmResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_NOT_FOUND));
+            trade.setAssetTxProofResult(new XmrAutoConfirmResult(XmrAutoConfirmResult.State.TX_NOT_FOUND));
             List<String> serviceAddresses = preferences.getAutoConfirmSettings().serviceAddresses;
             txProofResultsPending.put(trade.getId(), serviceAddresses.size()); // need result from each service address
             for (String serviceAddress : serviceAddresses) {
@@ -228,7 +228,7 @@ public class XmrAutoConfirmationManager {
         if (result.isPendingState()) {
             log.info("Auto confirm received a {} message for tradeId {}, retry will happen automatically",
                     result.getState(), trade.getShortId());
-            trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
+            trade.setAssetTxProofResult(result);         // this updates the GUI with the status..
             // Repeating the requests is handled in XmrTransferProofRequester
             return true;
         }
@@ -243,7 +243,7 @@ public class XmrAutoConfirmationManager {
             }
             // we've received the final PROOF_OK, all good here.
             txProofResultsPending.remove(trade.getId());
-            trade.setAutoConfirmResult(result);            // this updates the GUI with the status..
+            trade.setAssetTxProofResult(result);            // this updates the GUI with the status..
             log.info("Auto confirm was successful, transitioning trade {} to next step...", trade.getShortId());
             if (!trade.isPayoutPublished()) {
                 // note that this state can also be triggered by auto confirmation feature
@@ -264,7 +264,7 @@ public class XmrAutoConfirmationManager {
         //   TX_KEY_INVALID, ADDRESS_INVALID, NO_MATCH_FOUND, AMOUNT_NOT_MATCHING, TRADE_DATE_NOT_MATCHING
         log.warn("Tx Proof Failure {}, shutting down all open API requests for this trade {}",
                 result.getState(), trade.getShortId());
-        trade.setAutoConfirmResult(result);         // this updates the GUI with the status..
+        trade.setAssetTxProofResult(result);         // this updates the GUI with the status..
         resultsCountdown = -1;  // signal all API requesters to cease
         txProofResultsPending.put(trade.getId(), resultsCountdown);   // track proof result count
         return false;

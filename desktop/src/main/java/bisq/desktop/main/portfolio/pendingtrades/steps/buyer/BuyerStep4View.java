@@ -117,7 +117,7 @@ public class BuyerStep4View extends TradeStepView {
         GridPane.setMargin(hBox2, new Insets(18, -10, -12, -10));
         gridPane.getChildren().add(hBox2);
         GridPane.setRowSpan(hBox2, 5);
-        if (!trade.getAutoConfirmResult().isSuccessState()) {
+        if (!trade.getAssetTxProofResult().isSuccessState()) {
             autoConfBadge.setVisible(false);
         }
 

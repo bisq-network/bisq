@@ -29,9 +29,9 @@ import javax.annotation.Nullable;
  */
 @EqualsAndHashCode
 @Getter
-public abstract class AutoConfirmResult {
+public abstract class AssetTxProofResult {
 
-    public static AutoConfirmResult fromCurrencyCode(String currencyCode) {
+    public static AssetTxProofResult fromCurrencyCode(String currencyCode) {
         //noinspection SwitchStatementWithTooFewBranches
         switch (currencyCode) {
             case "XMR":
@@ -43,7 +43,7 @@ public abstract class AutoConfirmResult {
 
     private final String stateName;
 
-    protected AutoConfirmResult(String stateName) {
+    protected AssetTxProofResult(String stateName) {
         this.stateName = stateName;
     }
 
@@ -54,7 +54,7 @@ public abstract class AutoConfirmResult {
 
     // We use fromProto as kind of factory method to get the specific AutoConfirmResult
     @Nullable
-    public static AutoConfirmResult fromProto(protobuf.AutoConfirmResult proto, String currencyCode) {
+    public static AssetTxProofResult fromProto(protobuf.AutoConfirmResult proto, String currencyCode) {
         //noinspection SwitchStatementWithTooFewBranches
         switch (currencyCode) {
             case "XMR":
