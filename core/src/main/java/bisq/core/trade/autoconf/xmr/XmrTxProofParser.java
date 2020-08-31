@@ -49,7 +49,7 @@ class XmrTxProofParser {
             if (jsonStatus.matches("fail")) {
                 // the API returns "fail" until the transaction has successfully reached the mempool.
                 // we return TX_NOT_FOUND which will cause a retry later
-                return new XmrTxProofResult(XmrTxProofResult.State.TX_NOT_FOUND, null);
+                return new XmrTxProofResult(XmrTxProofResult.State.TX_NOT_FOUND);
             } else if (!jsonStatus.matches("success")) {
                 return new XmrTxProofResult(XmrTxProofResult.State.API_FAILURE, "Unhandled status value");
             }
@@ -62,7 +62,7 @@ class XmrTxProofParser {
                 String expectedAddressHex = CryptoNoteUtils.convertToRawHex(xmrTxProofModel.getRecipientAddress());
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
                     log.warn("address {}, expected: {}", jsonAddress.getAsString(), expectedAddressHex);
-                    return new XmrTxProofResult(XmrTxProofResult.State.ADDRESS_INVALID, null);
+                    return new XmrTxProofResult(XmrTxProofResult.State.ADDRESS_INVALID);
                 }
             }
 
@@ -73,7 +73,7 @@ class XmrTxProofParser {
             } else {
                 if (!jsonTxHash.getAsString().equalsIgnoreCase(txHash)) {
                     log.warn("txHash {}, expected: {}", jsonTxHash.getAsString(), txHash);
-                    return new XmrTxProofResult(XmrTxProofResult.State.TX_HASH_INVALID, null);
+                    return new XmrTxProofResult(XmrTxProofResult.State.TX_HASH_INVALID);
                 }
             }
 
@@ -84,7 +84,7 @@ class XmrTxProofParser {
             } else {
                 if (!jsonViewkey.getAsString().equalsIgnoreCase(xmrTxProofModel.getTxKey())) {
                     log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), xmrTxProofModel.getTxKey());
-                    return new XmrTxProofResult(XmrTxProofResult.State.TX_KEY_INVALID, null);
+                    return new XmrTxProofResult(XmrTxProofResult.State.TX_KEY_INVALID);
                 }
             }
 
@@ -100,7 +100,7 @@ class XmrTxProofParser {
                 if (difference > TimeUnit.HOURS.toSeconds(2) && !DevEnv.isDevMode()) {
                     log.warn("tx_timestamp {}, tradeDate: {}, difference {}",
                             jsonTimestamp.getAsLong(), tradeDateSeconds, difference);
-                    return new XmrTxProofResult(XmrTxProofResult.State.TRADE_DATE_NOT_MATCHING, null);
+                    return new XmrTxProofResult(XmrTxProofResult.State.TRADE_DATE_NOT_MATCHING);
                 }
             }
 
@@ -119,29 +119,38 @@ class XmrTxProofParser {
             // (except that in dev mode we allow any amount as valid)
             JsonArray jsonOutputs = jsonData.get("outputs").getAsJsonArray();
             boolean anyMatchFound = false;
+            boolean amountMatches = false;
             for (int i = 0; i < jsonOutputs.size(); i++) {
                 JsonObject out = jsonOutputs.get(i).getAsJsonObject();
                 if (out.get("match").getAsBoolean()) {
                     anyMatchFound = true;
                     long jsonAmount = out.get("amount").getAsLong();
-                    if (jsonAmount == xmrTxProofModel.getAmount() || DevEnv.isDevMode()) {   // any amount ok in dev mode
-                        int confirmsRequired = xmrTxProofModel.getConfirmsRequired();
-                        if (confirmations < confirmsRequired)
-                            // we return TX_NOT_CONFIRMED which will cause a retry later
-                            return new XmrTxProofResult(XmrTxProofResult.State.TX_NOT_CONFIRMED, confirmations, confirmsRequired);
-                        else
-                            return new XmrTxProofResult(XmrTxProofResult.State.PROOF_OK, confirmations, confirmsRequired);
+                    amountMatches = jsonAmount == xmrTxProofModel.getAmount();
+                    if (amountMatches) {
+                        break;
                     }
                 }
             }
 
             // None of the outputs had a match entry
-            if (!anyMatchFound && !DevEnv.isDevMode()) {
-                return new XmrTxProofResult(XmrTxProofResult.State.NO_MATCH_FOUND, null);
+            if (!anyMatchFound) {
+                return new XmrTxProofResult(XmrTxProofResult.State.NO_MATCH_FOUND);
             }
 
-            // reaching this point means there was no matching amount
-            return new XmrTxProofResult(XmrTxProofResult.State.AMOUNT_NOT_MATCHING, null);
+            // None of the outputs had a match entry
+            if (!amountMatches) {
+                return new XmrTxProofResult(XmrTxProofResult.State.AMOUNT_NOT_MATCHING);
+            }
+
+            int confirmsRequired = xmrTxProofModel.getConfirmsRequired();
+            if (confirmations < confirmsRequired) {
+                XmrTxProofResult xmrTxProofResult = new XmrTxProofResult(XmrTxProofResult.State.PENDING_CONFIRMATIONS);
+                xmrTxProofResult.setNumConfirmations(confirmations);
+                xmrTxProofResult.setRequiredConfirmations(confirmsRequired);
+                return xmrTxProofResult;
+            } else {
+                return new XmrTxProofResult(XmrTxProofResult.State.SINGLE_SERVICE_SUCCEEDED);
+            }
 
         } catch (JsonParseException | NullPointerException e) {
             return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, e.toString());

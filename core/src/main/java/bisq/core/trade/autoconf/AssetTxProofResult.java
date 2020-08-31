@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 @Getter
 public abstract class AssetTxProofResult {
 
+    @Nullable
     public static AssetTxProofResult fromCurrencyCode(String currencyCode) {
         //noinspection SwitchStatementWithTooFewBranches
         switch (currencyCode) {

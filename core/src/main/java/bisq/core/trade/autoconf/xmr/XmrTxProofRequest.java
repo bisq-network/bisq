@@ -24,6 +24,9 @@ import bisq.common.app.Version;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.util.Utilities;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -36,6 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Requests for the XMR tx proof for a particular trade and one service.
+ * Repeats requests if tx is not confirmed yet.
+ */
 @Slf4j
 class XmrTxProofRequest {
     // these settings are not likely to change and therefore not put into Config
@@ -98,9 +105,11 @@ class XmrTxProofRequest {
                     "&txprove=1";
             log.info("Requesting from {} with param {}", httpClient.getBaseUrl(), param);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
-            XmrTxProofResult autoConfirmResult = XmrTxProofParser.parse(xmrTxProofModel, json);
-            log.info("Response json {} resulted in autoConfirmResult {}", json, autoConfirmResult);
-            return autoConfirmResult;
+            String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
+            log.info("Response json\n{}", prettyJson);
+            XmrTxProofResult xmrTxProofResult = XmrTxProofParser.parse(xmrTxProofModel, json);
+            log.info("xmrTxProofResult {}", xmrTxProofResult);
+            return xmrTxProofResult;
         });
 
         Futures.addCallback(future, new FutureCallback<>() {

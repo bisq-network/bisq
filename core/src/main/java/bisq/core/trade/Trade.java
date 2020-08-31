@@ -1092,6 +1092,7 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty.get();
     }
 
+    @Nullable
     public AssetTxProofResult getAssetTxProofResult() {
         return assetTxProofResult != null ? assetTxProofResult : AssetTxProofResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
     }

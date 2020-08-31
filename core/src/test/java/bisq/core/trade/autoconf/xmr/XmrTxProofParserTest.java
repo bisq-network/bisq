@@ -19,7 +19,6 @@ public class XmrTxProofParserTest {
 
     @Before
     public void prepareMocksAndObjects() {
-
         long amount = 100000000000L;
         Date tradeDate = Date.from(Instant.now());
         int confirmsRequired = 10;
@@ -135,10 +134,12 @@ public class XmrTxProofParserTest {
                 "'tx_timestamp':'" + Long.toString(epochDate) + "'}" +
                 "}";
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getState()
-                == XmrTxProofResult.State.PROOF_OK);
+                == XmrTxProofResult.State.SINGLE_SERVICE_SUCCEEDED);
         json = json.replaceFirst("777", "0");
+
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getState()
-                == XmrTxProofResult.State.TX_NOT_CONFIRMED);
+                == XmrTxProofResult.State.PENDING_CONFIRMATIONS);
+
         json = json.replaceFirst("100000000000", "100000000001");
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getState()
                 == XmrTxProofResult.State.AMOUNT_NOT_MATCHING);

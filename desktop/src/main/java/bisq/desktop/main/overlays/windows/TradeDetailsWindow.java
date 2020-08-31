@@ -33,6 +33,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.autoconf.xmr.XmrTxProofResult;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -67,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.FormBuilder.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(TradeDetailsWindow.class);
@@ -159,9 +161,6 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 FormattingUtils.formatPrice(trade.getTradePrice()));
         String paymentMethodText = Res.get(offer.getPaymentMethod().getId());
-        if (trade.getAssetTxProofResult().isSuccessState()) {
-            paymentMethodText += " (" + trade.getAssetTxProofResult().getStatusAsDisplayString() + ")";
-        }
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), paymentMethodText);
 
         // second group
@@ -235,11 +234,21 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
                     trade.getTradingPeerNodeAddress().getFullAddress());
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
-                Res.get("tradeDetailsWindow.tradingPeersPubKeyHash"),
-                trade.getContract() != null ? Utils.HEX.encode(trade.getContract().getPeersPubKeyRing(
-                        tradeManager.getKeyRing().getPubKeyRing()).getSignaturePubKeyBytes()) :
-                        Res.get("shared.na"));
+        if (checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR") &&
+                trade.getAssetTxProofResult() != null &&
+                ((XmrTxProofResult) trade.getAssetTxProofResult()).getState() != XmrTxProofResult.State.UNDEFINED) {
+            // As the window is already overloaded we replace the tradingPeersPubKeyHash field with the auto-conf state
+            // if XMR is the currency
+            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
+                    Res.get("portfolio.pending.step3_seller.autoConf.status.label"),
+                    trade.getAssetTxProofResult().getStatusAsDisplayString());
+        } else {
+            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
+                    Res.get("tradeDetailsWindow.tradingPeersPubKeyHash"),
+                    trade.getContract() != null ? Utils.HEX.encode(trade.getContract().getPeersPubKeyRing(
+                            tradeManager.getKeyRing().getPubKeyRing()).getSignaturePubKeyBytes()) :
+                            Res.get("shared.na"));
+        }
 
         if (contract != null) {
             if (buyerPaymentAccountPayload != null) {

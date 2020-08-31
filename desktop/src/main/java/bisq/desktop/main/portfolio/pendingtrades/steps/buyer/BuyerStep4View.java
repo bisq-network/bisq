@@ -110,14 +110,14 @@ public class BuyerStep4View extends TradeStepView {
         completedTradeLabel.setText(Res.get("portfolio.pending.step5_buyer.groupTitle"));
 
         JFXBadge autoConfBadge = new JFXBadge(new Label(""), Pos.BASELINE_RIGHT);
-        autoConfBadge.setText(Res.get("portfolio.pending.autoConfirmSuccess"));
+        autoConfBadge.setText(Res.get("portfolio.pending.autoConf"));
         autoConfBadge.getStyleClass().add("autoconf");
 
         HBox hBox2 = new HBox(1, completedTradeLabel, autoConfBadge);
         GridPane.setMargin(hBox2, new Insets(18, -10, -12, -10));
         gridPane.getChildren().add(hBox2);
         GridPane.setRowSpan(hBox2, 5);
-        if (!trade.getAssetTxProofResult().isSuccessState()) {
+        if (trade.getAssetTxProofResult() != null && !trade.getAssetTxProofResult().isSuccessState()) {
             autoConfBadge.setVisible(false);
         }
 

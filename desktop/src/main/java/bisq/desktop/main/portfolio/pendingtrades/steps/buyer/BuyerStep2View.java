@@ -457,40 +457,40 @@ public class BuyerStep2View extends TradeStepView {
             } else {
                 showConfirmPaymentStartedPopup();
             }
-        } else if (sellersPaymentAccountPayload instanceof AssetsAccountPayload) {
-            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
-            if (offer.getCurrencyCode().equals("XMR")) {
-                SetXmrTxKeyWindow setXmrTxKeyWindow = new SetXmrTxKeyWindow();
-                setXmrTxKeyWindow
-                        .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
-                        .onAction(() -> {
-                            String txKey = setXmrTxKeyWindow.getTxKey();
-                            String txHash = setXmrTxKeyWindow.getTxHash();
-                            if (txKey == null || txHash == null || txKey.isEmpty() || txHash.isEmpty()) {
-                                UserThread.runAfter(this::showProofWarningPopup, Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
-                                return;
-                            }
+        } else if (sellersPaymentAccountPayload instanceof AssetsAccountPayload &&
+                checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR")) {
+            SetXmrTxKeyWindow setXmrTxKeyWindow = new SetXmrTxKeyWindow();
+            setXmrTxKeyWindow
+                    .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
+                    .onAction(() -> {
+                        String txKey = setXmrTxKeyWindow.getTxKey();
+                        String txHash = setXmrTxKeyWindow.getTxHash();
+                        if (txKey == null || txHash == null || txKey.isEmpty() || txHash.isEmpty()) {
+                            UserThread.runAfter(this::showProofWarningPopup, Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                            return;
+                        }
 
-                            InputValidator.ValidationResult validateTxKey = setXmrTxKeyWindow.getRegexValidator().validate(txKey);
-                            if (!validateTxKey.isValid) {
-                                UserThread.runAfter(() -> new Popup().warning(validateTxKey.errorMessage).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
-                                return;
-                            }
+                        InputValidator.ValidationResult validateTxKey = setXmrTxKeyWindow.getRegexValidator().validate(txKey);
+                        if (!validateTxKey.isValid) {
+                            UserThread.runAfter(() -> new Popup().warning(validateTxKey.errorMessage).show(),
+                                    Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                            return;
+                        }
 
-                            InputValidator.ValidationResult validateTxHash = setXmrTxKeyWindow.getRegexValidator().validate(txHash);
-                            if (!validateTxHash.isValid) {
-                                UserThread.runAfter(() -> new Popup().warning(validateTxHash.errorMessage).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
-                                return;
-                            }
+                        InputValidator.ValidationResult validateTxHash = setXmrTxKeyWindow.getRegexValidator().validate(txHash);
+                        if (!validateTxHash.isValid) {
+                            UserThread.runAfter(() -> new Popup().warning(validateTxHash.errorMessage).show(),
+                                    Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                            return;
+                        }
 
-                            trade.setCounterCurrencyExtraData(txKey);
-                            trade.setCounterCurrencyTxId(txHash);
-                            showConfirmPaymentStartedPopup();
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .onClose(setXmrTxKeyWindow::hide)
-                        .show();
-            }
+                        trade.setCounterCurrencyExtraData(txKey);
+                        trade.setCounterCurrencyTxId(txHash);
+                        showConfirmPaymentStartedPopup();
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(setXmrTxKeyWindow::hide)
+                    .show();
         } else {
             showConfirmPaymentStartedPopup();
         }

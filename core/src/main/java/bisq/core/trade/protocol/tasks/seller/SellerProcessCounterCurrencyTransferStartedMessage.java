@@ -58,7 +58,7 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
             String counterCurrencyExtraData = message.getCounterCurrencyExtraData();
             if (counterCurrencyExtraData != null && counterCurrencyExtraData.length() < 100) {
                 trade.setCounterCurrencyExtraData(counterCurrencyExtraData);
-                processModel.getTradeManager().getXmrTxProofService().startRequestTxProofProcess(
+                processModel.getTradeManager().getXmrTxProofService().maybeStartRequestTxProofProcess(
                         trade, processModel.getTradeManager().getTradableList());
             }
             processModel.removeMailboxMessageAfterProcessing(trade);

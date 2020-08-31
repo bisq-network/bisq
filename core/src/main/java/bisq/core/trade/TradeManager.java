@@ -324,6 +324,11 @@ public class TradeManager implements PersistedDataHost {
                             addTradeToFailedTradesList.add(trade);
                         }
                     }
+
+            if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG &&
+                    trade.getCounterCurrencyExtraData() != null) {
+                xmrTxProofService.maybeStartRequestTxProofProcess(trade, tradableList.getList());
+            }
                 }
         );
 

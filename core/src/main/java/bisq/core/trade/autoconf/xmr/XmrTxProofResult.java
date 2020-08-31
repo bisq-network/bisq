@@ -24,20 +24,35 @@ import bisq.common.proto.ProtoUtil;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
-@Getter
 @EqualsAndHashCode(callSuper = true)
+@ToString
 public class XmrTxProofResult extends AssetTxProofResult {
     public enum State {
         UNDEFINED,
+
+        // Feature disable cases
         FEATURE_DISABLED,
+        TRADE_LIMIT_EXCEEDED,
+
+        // Pending state
+        REQUEST_STARTED,
         TX_NOT_FOUND,
-        TX_NOT_CONFIRMED,
-        PROOF_OK,
+        PENDING_SERVICE_RESULTS,
+        PENDING_CONFIRMATIONS,
+
+        SINGLE_SERVICE_SUCCEEDED,   // Individual service has delivered proof ok
+
+        // Success state
+        ALL_SERVICES_SUCCEEDED, // All services delivered PROOF_OK
+
+        // Error state
         CONNECTION_FAIL,
         API_FAILURE,
         API_INVALID,
@@ -47,13 +62,21 @@ public class XmrTxProofResult extends AssetTxProofResult {
         ADDRESS_INVALID,
         NO_MATCH_FOUND,
         AMOUNT_NOT_MATCHING,
-        TRADE_LIMIT_EXCEEDED,
         TRADE_DATE_NOT_MATCHING
     }
 
-    private final State state;
-    private final transient int confirmCount;
-    private final transient int confirmsRequired;
+    @Getter
+    private transient final State state;
+    @Setter
+    private transient int numConfirmations;
+    @Setter
+    private transient int requiredConfirmations;
+    @Nullable
+    private transient String errorMsg;
+    @Setter
+    private transient int pendingServiceResults;
+    @Setter
+    private transient int requiredServiceResults;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -61,28 +84,20 @@ public class XmrTxProofResult extends AssetTxProofResult {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public XmrTxProofResult() {
-        this(State.UNDEFINED, 0, 0);
+        this(State.UNDEFINED);
     }
 
     XmrTxProofResult(State state) {
-        this(state, 0, 0);
-    }
-
-    // alternate constructor for showing confirmation progress information
-    XmrTxProofResult(State state, int confirmCount, int confirmsRequired) {
         super(state.name());
+
         this.state = state;
-        this.confirmCount = confirmCount;
-        this.confirmsRequired = confirmsRequired;
     }
 
-    // alternate constructor for error scenarios
-    XmrTxProofResult(State state, @Nullable String errorMsg) {
-        this(state, 0, 0);
+    XmrTxProofResult(State state, String errorMsg) {
+        this(state);
 
-        if (!isPendingState() && !isSuccessState() && state != State.FEATURE_DISABLED && state != State.UNDEFINED) {
-            log.error(errorMsg != null ? errorMsg : state.toString());
-        }
+        this.errorMsg = errorMsg;
+        log.error(errorMsg);
     }
 
 
@@ -107,34 +122,86 @@ public class XmrTxProofResult extends AssetTxProofResult {
 
     @Override
     public String getStatusAsDisplayString() {
+        String key = "portfolio.pending.autoConf.state." + state;
         switch (state) {
-            case TX_NOT_CONFIRMED:
-                return Res.get("portfolio.pending.autoConfirmPending")
-                        + " " + confirmCount
-                        + "/" + confirmsRequired;
-            case TX_NOT_FOUND:
-                return Res.get("portfolio.pending.autoConfirmTxNotFound");
+            // Invalid protobuf data
+            case UNDEFINED:
+                return state.toString();
+
+            // Feature disable cases
             case FEATURE_DISABLED:
-                return Res.get("portfolio.pending.autoConfirmDisabled");
-            case PROOF_OK:
-                return Res.get("portfolio.pending.autoConfirmSuccess");
+            case TRADE_LIMIT_EXCEEDED:
+
+                // Pending state
+            case REQUEST_STARTED:
+            case TX_NOT_FOUND: // Tx still not confirmed and not in mempool
+                return Res.get(key);
+            case PENDING_SERVICE_RESULTS:
+                return Res.get(key, pendingServiceResults, requiredServiceResults);
+            case PENDING_CONFIRMATIONS:
+                return Res.get(key, numConfirmations, requiredConfirmations);
+            case SINGLE_SERVICE_SUCCEEDED:
+
+                // Success state
+            case ALL_SERVICES_SUCCEEDED:
+                return Res.get(key);
+
+            // Error state
+            case CONNECTION_FAIL:
+            case API_FAILURE:
+            case API_INVALID:
+            case TX_KEY_REUSED:
+            case TX_HASH_INVALID:
+            case TX_KEY_INVALID:
+            case ADDRESS_INVALID:
+            case NO_MATCH_FOUND:
+            case AMOUNT_NOT_MATCHING:
+            case TRADE_DATE_NOT_MATCHING:
+                return getErrorMsg();
+
             default:
-                // any other statuses we display the enum name
-                return this.state.toString();
+                return state.toString();
         }
     }
 
     @Override
     public boolean isSuccessState() {
-        return (state == State.PROOF_OK);
+        return (state == State.ALL_SERVICES_SUCCEEDED);
     }
 
+    boolean isErrorState() {
+        switch (state) {
+            case CONNECTION_FAIL:
+            case API_FAILURE:
+            case API_INVALID:
+            case TX_KEY_REUSED:
+            case TX_HASH_INVALID:
+            case TX_KEY_INVALID:
+            case ADDRESS_INVALID:
+            case NO_MATCH_FOUND:
+            case AMOUNT_NOT_MATCHING:
+            case TRADE_DATE_NOT_MATCHING:
+                return true;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
+            default:
+                return false;
+        }
+    }
 
     boolean isPendingState() {
-        return (state == State.TX_NOT_FOUND || state == State.TX_NOT_CONFIRMED);
+        switch (state) {
+            case REQUEST_STARTED:
+            case TX_NOT_FOUND:
+            case PENDING_SERVICE_RESULTS:
+            case PENDING_CONFIRMATIONS:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    private String getErrorMsg() {
+        return errorMsg != null ? errorMsg : state.name();
     }
 }

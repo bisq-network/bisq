@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Manages the XMR transfers proof requests for multiple trades and multiple services.
+ * Handles the XMR tx proof requests for multiple trades and multiple services.
  */
 @Slf4j
 class XmrTxProofRequestService {
@@ -56,7 +56,7 @@ class XmrTxProofRequestService {
                 socks5ProxyProvider,
                 xmrTxProofModel,
                 result -> {
-                    if (result.isSuccessState()) {
+                    if (result.getState() == XmrTxProofResult.State.SINGLE_SERVICE_SUCCEEDED) {
                         cleanup(uid);
                     }
                     resultHandler.accept(result);
@@ -66,6 +66,7 @@ class XmrTxProofRequestService {
                     faultHandler.handleFault(errorMsg, throwable);
                 });
         map.put(uid, requester);
+
         requester.request();
     }
 

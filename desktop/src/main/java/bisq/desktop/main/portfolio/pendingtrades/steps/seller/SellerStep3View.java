@@ -151,9 +151,8 @@ public class SellerStep3View extends TradeStepView {
         });
 
         // we listen for updates on the trade autoConfirmResult field
-        if (autoConfirmStatusField != null) {
+        if (trade.getAssetTxProofResult() != null && autoConfirmStatusField != null) {
             trade.getAssetTxProofResultProperty().addListener(autoConfirmResultListener);
-            // display the initial value, or FEATURE_DISABLED if there is none
             autoConfirmStatusField.setText(trade.getAssetTxProofResult().getStatusAsDisplayString());
         }
     }
@@ -227,7 +226,7 @@ public class SellerStep3View extends TradeStepView {
 
         if (isBlockChain && trade.getOffer().getCurrencyCode().equals("XMR")) {
             autoConfirmStatusField = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
-                    Res.get("portfolio.pending.step3_seller.autoConfirmStatus"),
+                    Res.get("portfolio.pending.step3_seller.autoConf.status.label"),
                     "", Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         }
 
