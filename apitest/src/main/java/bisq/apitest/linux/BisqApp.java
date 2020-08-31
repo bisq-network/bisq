@@ -53,6 +53,7 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
     private final boolean useLocalhostForP2P;
     public final boolean useDevPrivilegeKeys;
     private final String findBisqPidScript;
+    private final String debugOpts;
 
     public BisqApp(BisqAppConfig bisqAppConfig, ApiTestConfig config) {
         super(bisqAppConfig.appName, config);
@@ -67,6 +68,9 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
         this.useDevPrivilegeKeys = true;
         this.findBisqPidScript = (config.isRunningTest ? "." : "./apitest")
                 + "/scripts/get-bisq-pid.sh";
+        this.debugOpts = config.enableBisqDebugging
+                ? " -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + bisqAppConfig.remoteDebugPort
+                : "";
     }
 
     @Override
@@ -112,7 +116,6 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
 
             if (isAlive(pid)) {
                 this.shutdownExceptions.add(new IllegalStateException(format("%s shutdown did not work", bisqAppConfig.appName)));
-                return;
             }
 
         } catch (Exception e) {
@@ -209,7 +212,7 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
     }
 
     private String getJavaOptsSpec() {
-        return "export JAVA_OPTS=" + bisqAppConfig.javaOpts + "; ";
+        return "export JAVA_OPTS=\"" + bisqAppConfig.javaOpts + debugOpts + "\"; ";
     }
 
     private List<String> getOptsList() {
