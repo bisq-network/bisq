@@ -51,7 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
-public class XmrAutoConfirmationManager {
+public class XmrTxProofService {
 
     private final FilterManager filterManager;
     private final Preferences preferences;
@@ -68,14 +68,14 @@ public class XmrAutoConfirmationManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private XmrAutoConfirmationManager(FilterManager filterManager,
-                                       Preferences preferences,
-                                       XmrTxProofRequestService xmrTxProofRequestService,
-                                       ClosedTradableManager closedTradableManager,
-                                       FailedTradesManager failedTradesManager,
-                                       P2PService p2PService,
-                                       WalletsSetup walletsSetup,
-                                       AccountAgeWitnessService accountAgeWitnessService
+    private XmrTxProofService(FilterManager filterManager,
+                              Preferences preferences,
+                              XmrTxProofRequestService xmrTxProofRequestService,
+                              ClosedTradableManager closedTradableManager,
+                              FailedTradesManager failedTradesManager,
+                              P2PService p2PService,
+                              WalletsSetup walletsSetup,
+                              AccountAgeWitnessService accountAgeWitnessService
     ) {
         this.filterManager = filterManager;
         this.preferences = preferences;

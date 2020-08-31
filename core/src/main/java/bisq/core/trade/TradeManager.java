@@ -38,7 +38,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.autoconf.xmr.XmrAutoConfirmationManager;
+import bisq.core.trade.autoconf.xmr.XmrTxProofService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -128,7 +128,7 @@ public class TradeManager implements PersistedDataHost {
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
-    private final XmrAutoConfirmationManager xmrAutoConfirmationManager;
+    private final XmrTxProofService xmrTxProofService;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
@@ -170,7 +170,7 @@ public class TradeManager implements PersistedDataHost {
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
                         AccountAgeWitnessService accountAgeWitnessService,
-                        XmrAutoConfirmationManager xmrAutoConfirmationManager,
+                        XmrTxProofService xmrTxProofService,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         RefundAgentManager refundAgentManager,
@@ -193,7 +193,7 @@ public class TradeManager implements PersistedDataHost {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.xmrAutoConfirmationManager = xmrAutoConfirmationManager;
+        this.xmrTxProofService = xmrTxProofService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
