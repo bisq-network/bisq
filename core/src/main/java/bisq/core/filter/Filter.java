@@ -77,6 +77,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
     private final long creationDate;
 
+    private final List<String> bannedPrivilegedDevPubKeys;
+
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
@@ -108,7 +110,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getCreationDate(),
                 filter.getExtraDataMap(),
                 signatureAsBase64,
-                filter.getSignerPubKeyAsHex());
+                filter.getSignerPubKeyAsHex(),
+                filter.getBannedPrivilegedDevPubKeys());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -134,7 +137,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getCreationDate(),
                 filter.getExtraDataMap(),
                 null,
-                filter.getSignerPubKeyAsHex());
+                filter.getSignerPubKeyAsHex(),
+                filter.getBannedPrivilegedDevPubKeys());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -155,7 +159,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> bannedSignerPubKeys,
                   List<String> btcFeeReceiverAddresses,
                   PublicKey ownerPubKey,
-                  String signerPubKeyAsHex) {
+                  String signerPubKeyAsHex,
+                  List<String> bannedPrivilegedDevPubKeys) {
         this(bannedOfferIds,
                 bannedNodeAddress,
                 bannedPaymentAccounts,
@@ -177,7 +182,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 System.currentTimeMillis(),
                 null,
                 null,
-                signerPubKeyAsHex);
+                signerPubKeyAsHex,
+                bannedPrivilegedDevPubKeys);
     }
 
 
@@ -207,7 +213,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   long creationDate,
                   @Nullable Map<String, String> extraDataMap,
                   @Nullable String signatureAsBase64,
-                  String signerPubKeyAsHex) {
+                  String signerPubKeyAsHex,
+                  List<String> bannedPrivilegedDevPubKeys) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -230,6 +237,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
         this.signatureAsBase64 = signatureAsBase64;
         this.signerPubKeyAsHex = signerPubKeyAsHex;
+        this.bannedPrivilegedDevPubKeys = bannedPrivilegedDevPubKeys;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -264,7 +272,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .addAllBtcFeeReceiverAddresses(btcFeeReceiverAddresses)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
-                .setCreationDate(creationDate);
+                .setCreationDate(creationDate)
+                .addAllBannedPrivilegedDevPubKeys(bannedPrivilegedDevPubKeys);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -299,7 +308,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getCreationDate(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
                 proto.getSignatureAsBase64(),
-                proto.getSignerPubKeyAsHex()
+                proto.getSignerPubKeyAsHex(),
+                ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList())
         );
     }
 
@@ -334,7 +344,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     disableTradeBelowVersion='" + disableTradeBelowVersion + '\'' +
                 ",\n     mediators=" + mediators +
                 ",\n     refundAgents=" + refundAgents +
-                ",\n     bannedSignerPubKeys=" + bannedSignerPubKeys +
+                ",\n     bannedAccountWitnessSignerPubKeys=" + bannedSignerPubKeys +
+                ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     creationDate=" + creationDate +
                 ",\n     extraDataMap=" + extraDataMap +

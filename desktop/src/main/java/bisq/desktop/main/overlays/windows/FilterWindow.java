@@ -113,8 +113,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
         gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
 
         InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10);
-        if (useDevPrivilegeKeys)
+        if (useDevPrivilegeKeys) {
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
+        }
 
         InputTextField offerIdsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers"));
         InputTextField nodesInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
@@ -125,8 +126,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField bannedCurrenciesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies"));
         InputTextField bannedPaymentMethodsInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
         bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
-        InputTextField bannedSignerPubKeysInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedSignerPubKeys")).second;
-        bannedSignerPubKeysInputTextField.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257"); // Do not translate
+        InputTextField bannedAccountWitnessSignerPubKeysInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedAccountWitnessSignerPubKeys")).second;
+        bannedAccountWitnessSignerPubKeysInputTextField.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257"); // Do not translate
         InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
         InputTextField mediatorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.mediators"));
         InputTextField refundAgentsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.refundAgents"));
@@ -138,6 +139,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.disableDao"));
         InputTextField disableDaoBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableDaoBelowVersion"));
         InputTextField disableTradeBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableTradeBelowVersion"));
+        InputTextField bannedPrivilegedDevPubKeysInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
@@ -146,7 +148,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromPaymentAccountFiltersList(paymentAccountFilterInputTextField, filter.getBannedPaymentAccounts());
             setupFieldFromList(bannedCurrenciesInputTextField, filter.getBannedCurrencies());
             setupFieldFromList(bannedPaymentMethodsInputTextField, filter.getBannedPaymentMethods());
-            setupFieldFromList(bannedSignerPubKeysInputTextField, filter.getBannedSignerPubKeys());
+            setupFieldFromList(bannedAccountWitnessSignerPubKeysInputTextField, filter.getBannedSignerPubKeys());
             setupFieldFromList(arbitratorsInputTextField, filter.getArbitrators());
             setupFieldFromList(mediatorsInputTextField, filter.getMediators());
             setupFieldFromList(refundAgentsInputTextField, filter.getRefundAgents());
@@ -154,6 +156,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(seedNodesInputTextField, filter.getSeedNodes());
             setupFieldFromList(priceRelayNodesInputTextField, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesInputTextField, filter.getBtcNodes());
+            setupFieldFromList(btcNodesInputTextField, filter.getBtcNodes());
+            setupFieldFromList(bannedPrivilegedDevPubKeysInputTextField, filter.getBannedPrivilegedDevPubKeys());
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
@@ -185,10 +189,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         disableTradeBelowVersionInputTextField.getText(),
                         readAsList(mediatorsInputTextField),
                         readAsList(refundAgentsInputTextField),
-                        readAsList(bannedSignerPubKeysInputTextField),
+                        readAsList(bannedAccountWitnessSignerPubKeysInputTextField),
                         readAsList(btcFeeReceiverAddressesInputTextField),
                         filterManager.getOwnerPubKey(),
-                        signerPubKeyAsHex
+                        signerPubKeyAsHex,
+                        readAsList(bannedPrivilegedDevPubKeysInputTextField)
                 );
 
                 filterManager.addDevFilter(newFilter, privKeyString);
