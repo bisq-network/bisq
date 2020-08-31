@@ -125,28 +125,19 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.D, event) && mediatorRegistrationTab == null) {
-                if (arbitratorRegistrationTab != null) {
-                    root.getTabs().remove(arbitratorRegistrationTab);
-                }
-                if (refundAgentRegistrationTab != null) {
-                    root.getTabs().remove(refundAgentRegistrationTab);
-                }
+                closeOtherExtraTabs(mediatorRegistrationTab);
                 mediatorRegistrationTab = new Tab(Res.get("account.tab.mediatorRegistration").toUpperCase());
                 mediatorRegistrationTab.setClosable(true);
                 root.getTabs().add(mediatorRegistrationTab);
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.N, event) && refundAgentRegistrationTab == null) {
-                if (arbitratorRegistrationTab != null) {
-                    root.getTabs().remove(arbitratorRegistrationTab);
-                }
-                if (mediatorRegistrationTab != null) {
-                    root.getTabs().remove(mediatorRegistrationTab);
-                }
+                closeOtherExtraTabs(refundAgentRegistrationTab);
                 refundAgentRegistrationTab = new Tab(Res.get("account.tab.refundAgentRegistration").toUpperCase());
                 refundAgentRegistrationTab.setClosable(true);
                 root.getTabs().add(refundAgentRegistrationTab);
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.I, event) && signingTab == null) {
+                closeOtherExtraTabs(signingTab);
                 signingTab = new Tab(Res.get("account.tab.signing").toUpperCase());
                 signingTab.setClosable(true);
                 root.getTabs().add(signingTab);
@@ -161,7 +152,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             } else if (refundAgentRegistrationTab != null && selectedTab != refundAgentRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
-            } else if (newValue == signingTab && selectedTab != signingTab) {
+            } else if (signingTab != null && selectedTab != signingTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, SigningView.class);
             } else if (newValue == fiatAccountsTab && selectedTab != fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
@@ -193,6 +184,21 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             if (removedTabs.size() == 1 && removedTabs.get(0).equals(signingTab))
                 onSigningTabRemoved();
         };
+    }
+
+    private void closeOtherExtraTabs(Tab newTab) {
+        if (arbitratorRegistrationTab != null && !arbitratorRegistrationTab.equals(newTab)) {
+            root.getTabs().remove(arbitratorRegistrationTab);
+        }
+        if (mediatorRegistrationTab != null && !mediatorRegistrationTab.equals(newTab)) {
+            root.getTabs().remove(mediatorRegistrationTab);
+        }
+        if (refundAgentRegistrationTab != null && !refundAgentRegistrationTab.equals(newTab)) {
+            root.getTabs().remove(refundAgentRegistrationTab);
+        }
+        if (signingTab != null && !signingTab.equals(newTab)) {
+            root.getTabs().remove(signingTab);
+        }
     }
 
     private void onArbitratorRegistrationTabRemoved() {
