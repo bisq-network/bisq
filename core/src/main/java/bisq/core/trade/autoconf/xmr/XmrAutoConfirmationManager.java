@@ -91,7 +91,7 @@ public class XmrAutoConfirmationManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void processCounterCurrencyExtraData(Trade trade, Stream<Trade> activeTrades) {
+    public void startRequestTxProofProcess(Trade trade, List<Trade> activeTrades) {
         String counterCurrencyExtraData = trade.getCounterCurrencyExtraData();
         if (counterCurrencyExtraData == null || counterCurrencyExtraData.isEmpty()) {
             return;
@@ -138,7 +138,7 @@ public class XmrAutoConfirmationManager {
             // We need to prevent that a user tries to scam by reusing a txKey and txHash of a previous XMR trade with
             // the same user (same address) and same amount. We check only for the txKey as a same txHash but different
             // txKey is not possible to get a valid result at proof.
-            Stream<Trade> failedAndOpenTrades = Stream.concat(activeTrades, failedTradesManager.getFailedTrades().stream());
+            Stream<Trade> failedAndOpenTrades = Stream.concat(activeTrades.stream(), failedTradesManager.getFailedTrades().stream());
             Stream<Trade> closedTrades = closedTradableManager.getClosedTradables().stream()
                     .filter(tradable -> tradable instanceof Trade)
                     .map(tradable -> (Trade) tradable);
@@ -235,7 +235,7 @@ public class XmrAutoConfirmationManager {
 
         if (result.isSuccessState()) {
             resultsCountdown -= 1;
-            log.info("Received a {} message, remaining proofs needed: {}, tradeId {}",
+            log.info("Received a {} result, remaining proofs needed: {}, tradeId {}",
                     result.getState(), resultsCountdown, trade.getShortId());
             if (resultsCountdown > 0) {
                 txProofResultsPending.put(trade.getId(), resultsCountdown);   // track proof result count
