@@ -1,11 +1,11 @@
 #!/usr/bin/env bats
 #
-# Integration tests for bisq-cli running against a live bisq-daemon
+# Smoke tests for bisq-cli running against a live bisq-daemon (on mainnet)
 #
 # Prerequisites:
 #
-#  - bats v0.4.0 must be installed (brew install bats on macOS)
-#    see https://github.com/sstephenson/bats/tree/v0.4.0
+#  - bats-core 1.2.0+ must be installed (brew install bats-core on macOS)
+#    see https://github.com/bats-core/bats-core
 #
 #  - Run `./bisq-daemon --apiPassword=xyz --appDataDir=$TESTDIR` where $TESTDIR
 #    is empty or otherwise contains an unencrypted wallet with a 0 BTC balance
@@ -48,14 +48,14 @@
   run ./bisq-cli --password="xyz" getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.5" ]
+  [ "$output" = "1.3.7" ]
 }
 
 @test "test getversion" {
   run ./bisq-cli --password=xyz getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.5" ]
+  [ "$output" = "1.3.7" ]
 }
 
 @test "test setwalletpassword \"a b c\"" {
@@ -190,8 +190,8 @@
   [ "$output" = "Error: incorrect parameter count, expecting direction (buy|sell), currency code" ]
 }
 
-@test "test getoffers buy eur check return status" {
-  run ./bisq-cli --password=xyz getoffers buy eur
+@test "test getoffers sell eur check return status" {
+  run ./bisq-cli --password=xyz getoffers sell eur
   [ "$status" -eq 0 ]
 }
 
