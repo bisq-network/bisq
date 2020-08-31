@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class XmrProofParser {
+class XmrTxProofParser {
     static XmrTxProofResult parse(XmrProofInfo xmrProofInfo, String jsonTxt) {
         String txHash = xmrProofInfo.getTxHash();
         try {
