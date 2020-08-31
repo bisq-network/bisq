@@ -47,8 +47,9 @@ class XmrTxProofParser {
             JsonObject jsonData = json.get("data").getAsJsonObject();
             String jsonStatus = json.get("status").getAsString();
             if (jsonStatus.matches("fail")) {
-                // the API returns "fail" until the transaction has successfully reached the mempool.
-                // we return TX_NOT_FOUND which will cause a retry later
+                // The API returns "fail" until the transaction has successfully reached the mempool or if request
+                // contained invalid data.
+                // We return TX_NOT_FOUND which will cause a retry later
                 return new XmrTxProofResult(XmrTxProofResult.State.TX_NOT_FOUND);
             } else if (!jsonStatus.matches("success")) {
                 return new XmrTxProofResult(XmrTxProofResult.State.API_FAILURE, "Unhandled status value");
