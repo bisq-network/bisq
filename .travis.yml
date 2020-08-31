@@ -14,3 +14,9 @@ install:
 
 before_install:
     grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+
+script:
+    - ./gradlew clean check codeCoverageReport
+
+after_success:
+    - bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r build/reports/jacoco/codeCoverageReport/jacocoCoverageReport.xml
