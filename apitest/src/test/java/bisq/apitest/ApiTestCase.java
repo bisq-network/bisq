@@ -28,6 +28,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import bisq.apitest.config.ApiTestConfig;
 import bisq.apitest.method.BitcoinCliHelper;
+import bisq.cli.GrpcStubs;
 
 /**
  * Base class for all test types:  'method', 'scenario' and 'e2e'.
@@ -65,19 +66,19 @@ public class ApiTestCase {
 
     public static void setUpScaffold(String supportingApps)
             throws InterruptedException, ExecutionException, IOException {
-        // The supportingApps argument is a comma delimited string of supporting app
-        // names, e.g. "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon"
         scaffold = new Scaffold(supportingApps).setUp();
         config = scaffold.config;
         bitcoinCli = new BitcoinCliHelper((config));
-        grpcStubs = new GrpcStubs(alicedaemon, config).init();
+        // For now, all grpc requests are sent to the alicedaemon, but this will need to
+        // be made configurable for new test cases that call arb or bob node daemons.
+        grpcStubs = new GrpcStubs("localhost", alicedaemon.apiPort, config.apiPassword);
     }
 
-    public static void setUpScaffold()
+    public static void setUpScaffold(String[] params)
             throws InterruptedException, ExecutionException, IOException {
-        scaffold = new Scaffold(new String[]{}).setUp();
+        scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
-        grpcStubs = new GrpcStubs(alicedaemon, config).init();
+        grpcStubs = new GrpcStubs("localhost", alicedaemon.apiPort, config.apiPassword);
     }
 
     public static void tearDownScaffold() {
