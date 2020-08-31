@@ -130,7 +130,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         if (DevEnv.isDevMode()) {
             return new ArrayList<>(Arrays.asList("78.47.61.90:8081"));
         } else {
-            // TODO we need at least 2 for relase
+            // TODO we need at least 2 for release
             return new ArrayList<>(Arrays.asList(
                     "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
         }
@@ -421,7 +421,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         if (prefPayload.getAutoConfirmSettingsList().size() == 0) {
             // default values for AutoConfirmSettings when persisted payload is empty:
             prefPayload.getAutoConfirmSettingsList().add(new AutoConfirmSettings(
-                    false, 5, Coin.valueOf(10000000).value, getDefaultXmrProofProviders(), "XMR"));
+                    false, 5, Coin.COIN.value, getDefaultXmrProofProviders(), "XMR"));
         }
         return prefPayload.getAutoConfirmSettingsList().get(0);
     }
@@ -781,7 +781,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
     }
 
-    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers() { return BSQ_MAIN_NET_EXPLORERS; }
+    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers() {
+        return BSQ_MAIN_NET_EXPLORERS;
+    }
 
     public boolean showAgain(String key) {
         return !prefPayload.getDontShowAgainMap().containsKey(key) || !prefPayload.getDontShowAgainMap().get(key);
@@ -879,8 +881,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     private boolean blockExplorerExists(ArrayList<BlockChainExplorer> explorers,
-                                              BlockChainExplorer explorer)
-    {
+                                        BlockChainExplorer explorer) {
         if (explorer != null && explorers != null && explorers.size() > 0)
             for (int i = 0; i < explorers.size(); i++)
                 if (explorers.get(i).name.equals(explorer.name))
