@@ -32,8 +32,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class XmrProofParser {
-    static public XmrAutoConfirmResult parse(XmrProofInfo xmrProofInfo, String jsonTxt) {
+class XmrProofParser {
+    static XmrAutoConfirmResult parse(XmrProofInfo xmrProofInfo, String jsonTxt) {
         String txHash = xmrProofInfo.getTxHash();
         try {
             JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);

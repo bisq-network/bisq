@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
-public class XmrProofInfo {
+class XmrProofInfo {
     private final String txHash;
     private final String txKey;
     private final String recipientAddress;
@@ -33,7 +33,7 @@ public class XmrProofInfo {
     private final int confirmsRequired;
     private final String serviceAddress;
 
-    public XmrProofInfo(
+    XmrProofInfo(
             String txHash,
             String txKey,
             String recipientAddress,
@@ -50,7 +50,7 @@ public class XmrProofInfo {
         this.serviceAddress = serviceAddress;
     }
 
-    public String getUID() {
+    String getUID() {
         return txHash + "|" + serviceAddress;
     }
 }

@@ -45,9 +45,9 @@ class XmrTransferProofService {
         socks5ProxyProvider = provider;
     }
 
-    public void requestProof(XmrProofInfo xmrProofInfo,
-                             Consumer<XmrAutoConfirmResult> resultHandler,
-                             FaultHandler faultHandler) {
+    void requestProof(XmrProofInfo xmrProofInfo,
+                      Consumer<XmrAutoConfirmResult> resultHandler,
+                      FaultHandler faultHandler) {
         String uid = xmrProofInfo.getUID();
         if (map.containsKey(uid)) {
             log.warn("We started a proof request for uid {} already", uid);
@@ -72,7 +72,7 @@ class XmrTransferProofService {
         requester.request();
     }
 
-    public void terminateRequest(XmrProofInfo xmrProofInfo) {
+    void terminateRequest(XmrProofInfo xmrProofInfo) {
         String uid = xmrProofInfo.getUID();
         XmrTransferProofRequester requester = map.getOrDefault(uid, null);
         if (requester != null) {

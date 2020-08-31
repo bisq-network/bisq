@@ -64,12 +64,12 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
         this(State.UNDEFINED, 0, 0);
     }
 
-    public XmrAutoConfirmResult(State state) {
+    XmrAutoConfirmResult(State state) {
         this(state, 0, 0);
     }
 
     // alternate constructor for showing confirmation progress information
-    public XmrAutoConfirmResult(State state, int confirmCount, int confirmsRequired) {
+    XmrAutoConfirmResult(State state, int confirmCount, int confirmsRequired) {
         super(state.name());
         this.state = state;
         this.confirmCount = confirmCount;
@@ -77,7 +77,7 @@ public class XmrAutoConfirmResult extends AutoConfirmResult {
     }
 
     // alternate constructor for error scenarios
-    public XmrAutoConfirmResult(State state, @Nullable String errorMsg) {
+    XmrAutoConfirmResult(State state, @Nullable String errorMsg) {
         this(state, 0, 0);
 
         if (!isPendingState() && !isSuccessState() && state != State.FEATURE_DISABLED && state != State.UNDEFINED) {

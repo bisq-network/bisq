@@ -81,11 +81,11 @@ class XmrTransferProofRequester {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // used by the service to abort further automatic retries
-    public void stop() {
+    void stop() {
         terminated = true;
     }
 
-    public void request() {
+    void request() {
         if (terminated) {
             // the XmrTransferProofService has asked us to terminate i.e. not make any further api calls
             // this scenario may happen if a re-request is scheduled from the callback below
