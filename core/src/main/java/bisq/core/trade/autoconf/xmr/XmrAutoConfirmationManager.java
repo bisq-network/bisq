@@ -55,7 +55,7 @@ public class XmrAutoConfirmationManager {
 
     private final FilterManager filterManager;
     private final Preferences preferences;
-    private final XmrTransferProofService xmrTransferProofService;
+    private final XmrTxProofRequestService xmrTxProofRequestService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
@@ -70,7 +70,7 @@ public class XmrAutoConfirmationManager {
     @Inject
     private XmrAutoConfirmationManager(FilterManager filterManager,
                                        Preferences preferences,
-                                       XmrTransferProofService xmrTransferProofService,
+                                       XmrTxProofRequestService xmrTxProofRequestService,
                                        ClosedTradableManager closedTradableManager,
                                        FailedTradesManager failedTradesManager,
                                        P2PService p2PService,
@@ -79,7 +79,7 @@ public class XmrAutoConfirmationManager {
     ) {
         this.filterManager = filterManager;
         this.preferences = preferences;
-        this.xmrTransferProofService = xmrTransferProofService;
+        this.xmrTxProofRequestService = xmrTxProofRequestService;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
@@ -195,10 +195,10 @@ public class XmrAutoConfirmationManager {
                         trade.getDate(),
                         confirmsRequired,
                         serviceAddress);
-                xmrTransferProofService.requestProof(xmrTxProofModel,
+                xmrTxProofRequestService.requestProof(xmrTxProofModel,
                         result -> {
                             if (!handleProofResult(result, trade))
-                                xmrTransferProofService.terminateRequest(xmrTxProofModel);
+                                xmrTxProofRequestService.terminateRequest(xmrTxProofModel);
                         },
                         (errorMsg, throwable) -> {
                             log.warn(errorMsg);

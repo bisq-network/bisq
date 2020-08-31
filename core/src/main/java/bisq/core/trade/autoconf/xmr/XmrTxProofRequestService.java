@@ -33,12 +33,12 @@ import lombok.extern.slf4j.Slf4j;
  * Manages the XMR transfers proof requests for multiple trades and multiple services.
  */
 @Slf4j
-class XmrTransferProofService {
+class XmrTxProofRequestService {
     private final Map<String, XmrTxProofRequest> map = new HashMap<>();
     private final Socks5ProxyProvider socks5ProxyProvider;
 
     @Inject
-    private XmrTransferProofService(Socks5ProxyProvider provider) {
+    private XmrTxProofRequestService(Socks5ProxyProvider provider) {
         socks5ProxyProvider = provider;
     }
 
