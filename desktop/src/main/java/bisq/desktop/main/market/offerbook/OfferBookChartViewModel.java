@@ -50,7 +50,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -127,14 +126,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             fillTradeCurrencies();
         };
 
-        currenciesUpdatedListener = new ChangeListener<>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                if (!isAnyPricePresent()) {
-                    offerBook.fillOfferBookListItems();
-                    updateChartData();
-                    priceFeedService.updateCounterProperty().removeListener(currenciesUpdatedListener);
-                }
+        currenciesUpdatedListener = (observable, oldValue, newValue) -> {
+            if (!isAnyPriceAbsent()) {
+                offerBook.fillOfferBookListItems();
+                updateChartData();
+                var self = this;
+                priceFeedService.updateCounterProperty().removeListener(self.currenciesUpdatedListener);
             }
         };
 
@@ -163,7 +160,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         fillTradeCurrencies();
         updateChartData();
 
-        if (isAnyPricePresent())
+        if (isAnyPriceAbsent())
             priceFeedService.updateCounterProperty().addListener(currenciesUpdatedListener);
 
         syncPriceFeedCurrency();
@@ -271,7 +268,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             priceFeedService.setCurrencyCode(getCurrencyCode());
     }
 
-    private boolean isAnyPricePresent() {
+    private boolean isAnyPriceAbsent() {
         return offerBookListItems.stream().anyMatch(item -> item.getOffer().getPrice() == null);
     }
 
@@ -291,11 +288,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         Comparator<Offer> offerAmountComparator = Comparator.comparing(Offer::getAmount).reversed();
 
         var buyOfferSortComparator =
-            offerPriceComparator.reversed() // Buy offers, as opposed to sell offers, are primarily sorted from high price to low.
-            .thenComparing(offerAmountComparator);
+                offerPriceComparator.reversed() // Buy offers, as opposed to sell offers, are primarily sorted from high price to low.
+                        .thenComparing(offerAmountComparator);
         var sellOfferSortComparator =
-            offerPriceComparator
-            .thenComparing(offerAmountComparator);
+                offerPriceComparator
+                        .thenComparing(offerAmountComparator);
 
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
