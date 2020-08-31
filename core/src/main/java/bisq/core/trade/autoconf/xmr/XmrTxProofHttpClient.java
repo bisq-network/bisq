@@ -20,13 +20,8 @@ package bisq.core.trade.autoconf.xmr;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.http.HttpClient;
 
-import javax.inject.Inject;
-
-import javax.annotation.Nullable;
-
 class XmrTxProofHttpClient extends HttpClient {
-    @Inject
-    public XmrTxProofHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
+    XmrTxProofHttpClient(Socks5ProxyProvider socks5ProxyProvider) {
         super(socks5ProxyProvider);
     }
 }

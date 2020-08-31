@@ -29,19 +29,16 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 /**
  * Manages the XMR transfers proof requests for multiple trades and multiple services.
  */
 @Slf4j
 class XmrTransferProofService {
     private final Map<String, XmrTransferProofRequester> map = new HashMap<>();
-    @Nullable
     private final Socks5ProxyProvider socks5ProxyProvider;
 
     @Inject
-    private XmrTransferProofService(@Nullable Socks5ProxyProvider provider) {
+    private XmrTransferProofService(Socks5ProxyProvider provider) {
         socks5ProxyProvider = provider;
     }
 

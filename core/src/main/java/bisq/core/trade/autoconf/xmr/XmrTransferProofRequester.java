@@ -36,8 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
-
 @Slf4j
 class XmrTransferProofRequester {
     // these settings are not likely to change and therefore not put into Config
@@ -59,7 +57,7 @@ class XmrTransferProofRequester {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTransferProofRequester(@Nullable Socks5ProxyProvider socks5ProxyProvider,
+    XmrTransferProofRequester(Socks5ProxyProvider socks5ProxyProvider,
                               XmrProofInfo xmrProofInfo,
                               Consumer<XmrAutoConfirmResult> resultHandler,
                               FaultHandler faultHandler) {
@@ -85,7 +83,7 @@ class XmrTransferProofRequester {
         terminated = true;
     }
 
-    void request() {
+    public void request() {
         if (terminated) {
             // the XmrTransferProofService has asked us to terminate i.e. not make any further api calls
             // this scenario may happen if a re-request is scheduled from the callback below
