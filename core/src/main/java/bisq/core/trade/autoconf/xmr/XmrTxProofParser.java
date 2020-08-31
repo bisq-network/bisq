@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class XmrTxProofParser {
-    static XmrTxProofResult parse(XmrProofInfo xmrProofInfo, String jsonTxt) {
-        String txHash = xmrProofInfo.getTxHash();
+    static XmrTxProofResult parse(XmrTxProofModel xmrTxProofModel, String jsonTxt) {
+        String txHash = xmrTxProofModel.getTxHash();
         try {
             JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
             if (json == null) {
@@ -59,7 +59,7 @@ class XmrTxProofParser {
             if (jsonAddress == null) {
                 return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing address field");
             } else {
-                String expectedAddressHex = CryptoNoteUtils.convertToRawHex(xmrProofInfo.getRecipientAddress());
+                String expectedAddressHex = CryptoNoteUtils.convertToRawHex(xmrTxProofModel.getRecipientAddress());
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
                     log.warn("address {}, expected: {}", jsonAddress.getAsString(), expectedAddressHex);
                     return new XmrTxProofResult(XmrTxProofResult.State.ADDRESS_INVALID, null);
@@ -82,8 +82,8 @@ class XmrTxProofParser {
             if (jsonViewkey == null) {
                 return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing viewkey field");
             } else {
-                if (!jsonViewkey.getAsString().equalsIgnoreCase(xmrProofInfo.getTxKey())) {
-                    log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), xmrProofInfo.getTxKey());
+                if (!jsonViewkey.getAsString().equalsIgnoreCase(xmrTxProofModel.getTxKey())) {
+                    log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), xmrTxProofModel.getTxKey());
                     return new XmrTxProofResult(XmrTxProofResult.State.TX_KEY_INVALID, null);
                 }
             }
@@ -94,7 +94,7 @@ class XmrTxProofParser {
             if (jsonTimestamp == null) {
                 return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing tx_timestamp field");
             } else {
-                long tradeDateSeconds = xmrProofInfo.getTradeDate().getTime() / 1000;
+                long tradeDateSeconds = xmrTxProofModel.getTradeDate().getTime() / 1000;
                 long difference = tradeDateSeconds - jsonTimestamp.getAsLong();
                 // Accept up to 2 hours difference. Some tolerance is needed if users clock is out of sync
                 if (difference > TimeUnit.HOURS.toSeconds(2) && !DevEnv.isDevMode()) {
@@ -124,8 +124,8 @@ class XmrTxProofParser {
                 if (out.get("match").getAsBoolean()) {
                     anyMatchFound = true;
                     long jsonAmount = out.get("amount").getAsLong();
-                    if (jsonAmount == xmrProofInfo.getAmount() || DevEnv.isDevMode()) {   // any amount ok in dev mode
-                        int confirmsRequired = xmrProofInfo.getConfirmsRequired();
+                    if (jsonAmount == xmrTxProofModel.getAmount() || DevEnv.isDevMode()) {   // any amount ok in dev mode
+                        int confirmsRequired = xmrTxProofModel.getConfirmsRequired();
                         if (confirmations < confirmsRequired)
                             // we return TX_NOT_CONFIRMED which will cause a retry later
                             return new XmrTxProofResult(XmrTxProofResult.State.TX_NOT_CONFIRMED, confirmations, confirmsRequired);

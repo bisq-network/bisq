@@ -42,10 +42,10 @@ class XmrTransferProofService {
         socks5ProxyProvider = provider;
     }
 
-    void requestProof(XmrProofInfo xmrProofInfo,
+    void requestProof(XmrTxProofModel xmrTxProofModel,
                       Consumer<XmrTxProofResult> resultHandler,
                       FaultHandler faultHandler) {
-        String uid = xmrProofInfo.getUID();
+        String uid = xmrTxProofModel.getUID();
         if (map.containsKey(uid)) {
             log.warn("We started a proof request for uid {} already", uid);
             return;
@@ -54,7 +54,7 @@ class XmrTransferProofService {
 
         XmrTransferProofRequest requester = new XmrTransferProofRequest(
                 socks5ProxyProvider,
-                xmrProofInfo,
+                xmrTxProofModel,
                 result -> {
                     if (result.isSuccessState()) {
                         cleanup(uid);
@@ -69,8 +69,8 @@ class XmrTransferProofService {
         requester.request();
     }
 
-    void terminateRequest(XmrProofInfo xmrProofInfo) {
-        String uid = xmrProofInfo.getUID();
+    void terminateRequest(XmrTxProofModel xmrTxProofModel) {
+        String uid = xmrTxProofModel.getUID();
         XmrTransferProofRequest requester = map.getOrDefault(uid, null);
         if (requester != null) {
             log.info("Terminating API request for request with uid {}", uid);

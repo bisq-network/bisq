@@ -45,7 +45,7 @@ class XmrTransferProofRequest {
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "XmrTransferProofRequester", 3, 5, 10 * 60);
     private final XmrTxProofHttpClient httpClient;
-    private final XmrProofInfo xmrProofInfo;
+    private final XmrTxProofModel xmrTxProofModel;
     private final Consumer<XmrTxProofResult> resultHandler;
     private final FaultHandler faultHandler;
 
@@ -58,16 +58,16 @@ class XmrTransferProofRequest {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     XmrTransferProofRequest(Socks5ProxyProvider socks5ProxyProvider,
-                            XmrProofInfo xmrProofInfo,
+                            XmrTxProofModel xmrTxProofModel,
                             Consumer<XmrTxProofResult> resultHandler,
                             FaultHandler faultHandler) {
         this.httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
-        this.httpClient.setBaseUrl("http://" + xmrProofInfo.getServiceAddress());
-        if (xmrProofInfo.getServiceAddress().matches("^192.*|^localhost.*")) {
-            log.info("Ignoring Socks5 proxy for local net address: {}", xmrProofInfo.getServiceAddress());
+        this.httpClient.setBaseUrl("http://" + xmrTxProofModel.getServiceAddress());
+        if (xmrTxProofModel.getServiceAddress().matches("^192.*|^localhost.*")) {
+            log.info("Ignoring Socks5 proxy for local net address: {}", xmrTxProofModel.getServiceAddress());
             this.httpClient.setIgnoreSocks5Proxy(true);
         }
-        this.xmrProofInfo = xmrProofInfo;
+        this.xmrTxProofModel = xmrTxProofModel;
         this.resultHandler = resultHandler;
         this.faultHandler = faultHandler;
         this.terminated = false;
@@ -91,14 +91,14 @@ class XmrTransferProofRequest {
             return;
         }
         ListenableFuture<XmrTxProofResult> future = executorService.submit(() -> {
-            Thread.currentThread().setName("XmrTransferProofRequest-" + xmrProofInfo.getUID());
-            String param = "/api/outputs?txhash=" + xmrProofInfo.getTxHash() +
-                    "&address=" + xmrProofInfo.getRecipientAddress() +
-                    "&viewkey=" + xmrProofInfo.getTxKey() +
+            Thread.currentThread().setName("XmrTransferProofRequest-" + xmrTxProofModel.getUID());
+            String param = "/api/outputs?txhash=" + xmrTxProofModel.getTxHash() +
+                    "&address=" + xmrTxProofModel.getRecipientAddress() +
+                    "&viewkey=" + xmrTxProofModel.getTxKey() +
                     "&txprove=1";
             log.info("Requesting from {} with param {}", httpClient.getBaseUrl(), param);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
-            XmrTxProofResult autoConfirmResult = XmrTxProofParser.parse(xmrProofInfo, json);
+            XmrTxProofResult autoConfirmResult = XmrTxProofParser.parse(xmrTxProofModel, json);
             log.info("Response json {} resulted in autoConfirmResult {}", json, autoConfirmResult);
             return autoConfirmResult;
         });

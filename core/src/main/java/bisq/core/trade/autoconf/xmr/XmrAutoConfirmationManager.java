@@ -187,7 +187,7 @@ public class XmrAutoConfirmationManager {
             List<String> serviceAddresses = preferences.getAutoConfirmSettings().serviceAddresses;
             txProofResultsPending.put(trade.getId(), serviceAddresses.size()); // need result from each service address
             for (String serviceAddress : serviceAddresses) {
-                XmrProofInfo xmrProofInfo = new XmrProofInfo(
+                XmrTxProofModel xmrTxProofModel = new XmrTxProofModel(
                         txHash,
                         txKey,
                         address,
@@ -195,10 +195,10 @@ public class XmrAutoConfirmationManager {
                         trade.getDate(),
                         confirmsRequired,
                         serviceAddress);
-                xmrTransferProofService.requestProof(xmrProofInfo,
+                xmrTransferProofService.requestProof(xmrTxProofModel,
                         result -> {
                             if (!handleProofResult(result, trade))
-                                xmrTransferProofService.terminateRequest(xmrProofInfo);
+                                xmrTransferProofService.terminateRequest(xmrTxProofModel);
                         },
                         (errorMsg, throwable) -> {
                             log.warn(errorMsg);
