@@ -100,7 +100,7 @@ class XmrTransferProofRequester {
                     "&txprove=1";
             log.info("Requesting from {} with param {}", httpClient.getBaseUrl(), param);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
-            XmrAutoConfirmResult autoConfirmResult = xmrProofInfo.checkApiResponse(json);
+            XmrAutoConfirmResult autoConfirmResult = XmrProofParser.parse(xmrProofInfo, json);
             log.info("Response json {} resulted in autoConfirmResult {}", json, autoConfirmResult);
             return autoConfirmResult;
         });
