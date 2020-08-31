@@ -419,7 +419,7 @@ public class FilterManager {
             log.warn("isFilterPublicKeyInList failed. Filter={}", newFilter);
             return;
         }
-        if (!verifySignature(newFilter)) {
+        if (!isSignatureValid(newFilter)) {
             log.warn("verifySignature failed. Filter={}", newFilter);
             return;
         }
@@ -473,7 +473,7 @@ public class FilterManager {
             log.warn("isFilterPublicKeyInList failed. Filter={}", filter);
             return;
         }
-        if (!verifySignature(filter)) {
+        if (!isSignatureValid(filter)) {
             log.warn("verifySignature failed. Filter={}", filter);
             return;
         }
@@ -548,7 +548,7 @@ public class FilterManager {
         return isPublicKeyInList;
     }
 
-    private boolean verifySignature(Filter filter) {
+    private boolean isSignatureValid(Filter filter) {
         try {
             Filter filterForSigVerification = Filter.cloneWithoutSig(filter);
             Sha256Hash hash = getSha256Hash(filterForSigVerification);
