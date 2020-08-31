@@ -29,6 +29,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.util.FormattingUtils;
 
 import bisq.common.config.Config;
@@ -88,18 +89,24 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
     private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final String appName;
+    private final boolean useDevPrivilegeKeys;
 
 
     @Inject
     public SignPaymentAccountsWindow(AccountAgeWitnessService accountAgeWitnessService,
                                      ArbitratorManager arbitratorManager,
                                      ArbitrationManager arbitrationManager,
-                                     @Named(Config.APP_NAME) String appName) {
+                                     MediationManager mediationManager,
+                                     @Named(Config.APP_NAME) String appName,
+                                     @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.appName = appName;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -193,7 +200,9 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                         ++rowIndex, Res.get("popup.accountSigning.confirmSelectedAccounts.headline"));
         GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 2);
         selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
-        ObservableList<Dispute> disputesAsObservableList = arbitrationManager.getDisputesAsObservableList();
+        ObservableList<Dispute> disputesAsObservableList = useDevPrivilegeKeys ?
+                mediationManager.getDisputesAsObservableList()
+                : arbitrationManager.getDisputesAsObservableList();
         long safeDate = datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
         List<TraderDataItem> traderDataItemList;
         StringBuilder sb = new StringBuilder("Summary for ").append(appName).append("\n");
