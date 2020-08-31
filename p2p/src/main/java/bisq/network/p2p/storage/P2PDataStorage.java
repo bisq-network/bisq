@@ -529,7 +529,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Broadcast the payload if requested by caller
         if (allowBroadcast)
-            broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null);
+            broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender);
 
         return true;
     }
@@ -675,7 +675,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
 
         // Always broadcast refreshes
-        broadcaster.broadcast(refreshTTLMessage, sender, null);
+        broadcaster.broadcast(refreshTTLMessage, sender);
 
         return true;
     }
@@ -725,9 +725,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after remove");
 
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-            broadcaster.broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null);
+            broadcaster.broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender);
         } else {
-            broadcaster.broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null);
+            broadcaster.broadcast(new RemoveDataMessage(protectedStorageEntry), sender);
         }
 
         return true;

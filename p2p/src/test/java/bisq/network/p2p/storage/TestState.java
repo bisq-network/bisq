@@ -19,7 +19,6 @@ package bisq.network.p2p.storage;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
@@ -51,9 +50,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
-
 import org.mockito.ArgumentCaptor;
+
+import org.junit.Assert;
 
 import static org.mockito.Mockito.*;
 
@@ -160,8 +159,7 @@ public class TestState {
     /**
      * Common test helpers that verify the correct events were signaled based on the test expectation and before/after states.
      */
-    private void verifySequenceNumberMapWriteContains(P2PDataStorage.ByteArray payloadHash,
-                                                             int sequenceNumber) {
+    private void verifySequenceNumberMapWriteContains(P2PDataStorage.ByteArray payloadHash, int sequenceNumber) {
         final ArgumentCaptor<SequenceNumberMap> captor = ArgumentCaptor.forClass(SequenceNumberMap.class);
         verify(this.mockSeqNrStorage).queueUpForSave(captor.capture(), anyLong());
 
@@ -187,10 +185,9 @@ public class TestState {
             verify(this.appendOnlyDataStoreListener, never()).onAdded(persistableNetworkPayload);
 
         if (expectedBroadcast)
-            verify(this.mockBroadcaster).broadcast(any(AddPersistableNetworkPayloadMessage.class),
-                    nullable(NodeAddress.class), isNull());
+            verify(this.mockBroadcaster).broadcast(any(AddPersistableNetworkPayloadMessage.class), nullable(NodeAddress.class));
         else
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
     }
 
     void verifyProtectedStorageAdd(SavedTestState beforeState,
@@ -219,13 +216,17 @@ public class TestState {
 
         if (expectedBroadcast) {
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
+            // If we remove the last argument (isNull()) tests fail. No idea why as the broadcast method has an
+            // overloaded method with nullable listener. Seems a testframework issue as it should not matter if the
+            // method with listener is called with null argument or the other method with no listener. We removed the
+            // null value from all other calls but here we can't as it breaks the test.
             verify(this.mockBroadcaster).broadcast(captor.capture(), nullable(NodeAddress.class), isNull());
 
             BroadcastMessage broadcastMessage = captor.getValue();
             Assert.assertTrue(broadcastMessage instanceof AddDataMessage);
             Assert.assertEquals(protectedStorageEntry, ((AddDataMessage) broadcastMessage).getProtectedStorageEntry());
         } else {
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
         }
 
         if (expectedSequenceNrMapWrite) {
@@ -275,7 +276,7 @@ public class TestState {
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
 
         if (!expectedBroadcast)
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
 
 
         protectedStorageEntries.forEach(protectedStorageEntry -> {
@@ -287,9 +288,9 @@ public class TestState {
 
             if (expectedBroadcast) {
                 if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-                    verify(this.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), nullable(NodeAddress.class), isNull());
+                    verify(this.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), nullable(NodeAddress.class));
                 else
-                    verify(this.mockBroadcaster).broadcast(any(RemoveDataMessage.class), nullable(NodeAddress.class), isNull());
+                    verify(this.mockBroadcaster).broadcast(any(RemoveDataMessage.class), nullable(NodeAddress.class));
             }
 
 
@@ -319,7 +320,7 @@ public class TestState {
             Assert.assertTrue(entryAfterRefresh.getCreationTimeStamp() > beforeState.creationTimestampBeforeUpdate);
 
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
-            verify(this.mockBroadcaster).broadcast(captor.capture(), nullable(NodeAddress.class), isNull());
+            verify(this.mockBroadcaster).broadcast(captor.capture(), nullable(NodeAddress.class));
 
             BroadcastMessage broadcastMessage = captor.getValue();
             Assert.assertTrue(broadcastMessage instanceof RefreshOfferMessage);
@@ -336,7 +337,7 @@ public class TestState {
                 Assert.assertEquals(beforeState.creationTimestampBeforeUpdate, entryAfterRefresh.getCreationTimeStamp());
             }
 
-            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class), nullable(BroadcastHandler.Listener.class));
+            verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
         }
     }
