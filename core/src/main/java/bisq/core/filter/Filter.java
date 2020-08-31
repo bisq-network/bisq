@@ -71,7 +71,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private final List<String> mediators;
     private final List<String> refundAgents;
 
-    private final List<String> bannedSignerPubKeys;
+    private final List<String> bannedAccountWitnessSignerPubKeys;
 
     private final List<String> btcFeeReceiverAddresses;
 
@@ -104,7 +104,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getDisableTradeBelowVersion(),
                 filter.getMediators(),
                 filter.getRefundAgents(),
-                filter.getBannedSignerPubKeys(),
+                filter.getBannedAccountWitnessSignerPubKeys(),
                 filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
@@ -131,7 +131,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getDisableTradeBelowVersion(),
                 filter.getMediators(),
                 filter.getRefundAgents(),
-                filter.getBannedSignerPubKeys(),
+                filter.getBannedAccountWitnessSignerPubKeys(),
                 filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
@@ -156,7 +156,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   String disableTradeBelowVersion,
                   List<String> mediators,
                   List<String> refundAgents,
-                  List<String> bannedSignerPubKeys,
+                  List<String> bannedAccountWitnessSignerPubKeys,
                   List<String> btcFeeReceiverAddresses,
                   PublicKey ownerPubKey,
                   String signerPubKeyAsHex,
@@ -176,7 +176,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 disableTradeBelowVersion,
                 mediators,
                 refundAgents,
-                bannedSignerPubKeys,
+                bannedAccountWitnessSignerPubKeys,
                 btcFeeReceiverAddresses,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 System.currentTimeMillis(),
@@ -207,7 +207,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   String disableTradeBelowVersion,
                   List<String> mediators,
                   List<String> refundAgents,
-                  List<String> bannedSignerPubKeys,
+                  List<String> bannedAccountWitnessSignerPubKeys,
                   List<String> btcFeeReceiverAddresses,
                   byte[] ownerPubKeyBytes,
                   long creationDate,
@@ -230,7 +230,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.disableTradeBelowVersion = disableTradeBelowVersion;
         this.mediators = mediators;
         this.refundAgents = refundAgents;
-        this.bannedSignerPubKeys = bannedSignerPubKeys;
+        this.bannedAccountWitnessSignerPubKeys = bannedAccountWitnessSignerPubKeys;
         this.btcFeeReceiverAddresses = btcFeeReceiverAddresses;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.creationDate = creationDate;
@@ -268,7 +268,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .setDisableTradeBelowVersion(disableTradeBelowVersion)
                 .addAllMediators(mediators)
                 .addAllRefundAgents(refundAgents)
-                .addAllBannedSignerPubKeys(bannedSignerPubKeys)
+                .addAllBannedSignerPubKeys(bannedAccountWitnessSignerPubKeys)
                 .addAllBtcFeeReceiverAddresses(btcFeeReceiverAddresses)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
@@ -344,7 +344,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     disableTradeBelowVersion='" + disableTradeBelowVersion + '\'' +
                 ",\n     mediators=" + mediators +
                 ",\n     refundAgents=" + refundAgents +
-                ",\n     bannedAccountWitnessSignerPubKeys=" + bannedSignerPubKeys +
+                ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     creationDate=" + creationDate +

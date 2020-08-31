@@ -386,8 +386,8 @@ public class FilterManager {
 
     public boolean isWitnessSignerPubKeyBanned(String witnessSignerPubKeyAsHex) {
         return getFilter() != null &&
-                getFilter().getBannedSignerPubKeys() != null &&
-                getFilter().getBannedSignerPubKeys().stream()
+                getFilter().getBannedAccountWitnessSignerPubKeys() != null &&
+                getFilter().getBannedAccountWitnessSignerPubKeys().stream()
                         .anyMatch(e -> e.equals(witnessSignerPubKeyAsHex));
     }
 
