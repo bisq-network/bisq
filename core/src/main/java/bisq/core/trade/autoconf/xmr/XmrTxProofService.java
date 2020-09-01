@@ -242,6 +242,8 @@ public class XmrTxProofService {
                 trade.setAssetTxProofResult(AssetTxProofResult.ERROR);
                 terminate(trade);
                 return;
+            default:
+                log.warn("Unexpected result {}", result);
         }
     }
 

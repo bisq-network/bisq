@@ -215,6 +215,8 @@ class XmrTxProofRequest {
                     case ERROR:
                         UserThread.execute(() -> resultHandler.accept(result));
                         break;
+                    default:
+                        log.warn("Unexpected result {}", result);
                 }
             }
 
