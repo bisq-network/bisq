@@ -43,12 +43,12 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
-import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 
+import bisq.common.BisqException;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
@@ -77,7 +77,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -442,13 +441,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         separator.setMaxHeight(22);
         separator.setMaxWidth(Double.MAX_VALUE);
         return separator;
-    }
-
-    @NotNull
-    private Region getNavigationSpacer() {
-        final Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        return spacer;
     }
 
     private Tuple2<Label, VBox> getBalanceBox(String text) {
