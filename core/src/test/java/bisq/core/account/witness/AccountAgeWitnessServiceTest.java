@@ -218,8 +218,8 @@ public class AccountAgeWitnessServiceTest {
         when(filterManager.isNodeAddressBanned(any())).thenReturn(false);
         when(filterManager.isCurrencyBanned(any())).thenReturn(false);
         when(filterManager.isPaymentMethodBanned(any())).thenReturn(false);
-        when(filterManager.isPeersPaymentAccountDataAreBanned(any(), any())).thenReturn(false);
-        when(filterManager.isSignerPubKeyBanned(any())).thenReturn(false);
+        when(filterManager.arePeersPaymentAccountDataBanned(any(), any())).thenReturn(false);
+        when(filterManager.isWitnessSignerPubKeyBanned(any())).thenReturn(false);
 
         when(chargeBackRisk.hasChargebackRisk(any(), any())).thenReturn(true);
 

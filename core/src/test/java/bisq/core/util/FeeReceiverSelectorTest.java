@@ -22,6 +22,7 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 
 import java.util.HashMap;
@@ -98,10 +99,28 @@ public class FeeReceiverSelectorTest {
     }
 
     private static Filter filterWithReceivers(List<String> btcFeeReceiverAddresses) {
-        return new Filter(null, null, null, null,
-                null, null, null, null,
-                false, null, false, null,
-                null, null, null, null,
-                btcFeeReceiverAddresses);
+        return new Filter(Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                false,
+                Lists.newArrayList(),
+                false,
+                null,
+                null,
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                btcFeeReceiverAddresses,
+                null,
+                0,
+                null,
+                null,
+                null,
+                null);
     }
 }

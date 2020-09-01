@@ -59,7 +59,7 @@ public class ApplyFilter extends TradeTask {
             } else if (filterManager.isPaymentMethodBanned(trade.getOffer().getPaymentMethod())) {
                 failed("Payment method is banned.\n" +
                         "Payment method=" + trade.getOffer().getPaymentMethod().getId());
-            } else if (filterManager.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
+            } else if (filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
                 failed("Other trader is banned by their trading account data.\n" +
                         "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
