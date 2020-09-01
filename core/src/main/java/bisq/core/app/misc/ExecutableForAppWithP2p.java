@@ -29,6 +29,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.setup.GracefulShutDownHandler;
@@ -116,6 +117,10 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     }
 
     public void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
+        if (DevEnv.isDevMode()) {
+            return;
+        }
+
         List<NodeAddress> seedNodeAddresses = new ArrayList<>(injector.getInstance(SeedNodeRepository.class).getSeedNodeAddresses());
         seedNodeAddresses.sort(Comparator.comparing(NodeAddress::getFullAddress));
 
