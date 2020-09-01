@@ -154,7 +154,7 @@ public class XmrTxProofService {
 
 
         for (String serviceAddress : serviceAddresses) {
-            XmrTxProofModel xmrTxProofModel = new XmrTxProofModel(
+            XmrTxProofModel xmrTxProofModel = new XmrTxProofModel(trade.getId(),
                     txHash,
                     txKey,
                     recipientAddress,

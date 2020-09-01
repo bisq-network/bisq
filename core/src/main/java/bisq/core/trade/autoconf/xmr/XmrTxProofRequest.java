@@ -50,6 +50,7 @@ import javax.annotation.Nullable;
  */
 @Slf4j
 class XmrTxProofRequest {
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -133,6 +134,8 @@ class XmrTxProofRequest {
     private final XmrTxProofHttpClient httpClient;
     private final XmrTxProofModel xmrTxProofModel;
     private final long firstRequest;
+    @Getter
+    private final String id;
 
     private boolean terminated;
     @Getter
@@ -148,15 +151,19 @@ class XmrTxProofRequest {
 
     XmrTxProofRequest(Socks5ProxyProvider socks5ProxyProvider,
                       XmrTxProofModel xmrTxProofModel) {
+        this.xmrTxProofModel = xmrTxProofModel;
+
         this.httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
         this.httpClient.setBaseUrl("http://" + xmrTxProofModel.getServiceAddress());
         if (xmrTxProofModel.getServiceAddress().matches("^192.*|^localhost.*")) {
             log.info("Ignoring Socks5 proxy for local net address: {}", xmrTxProofModel.getServiceAddress());
             this.httpClient.setIgnoreSocks5Proxy(true);
         }
-        this.xmrTxProofModel = xmrTxProofModel;
+
         this.terminated = false;
         firstRequest = System.currentTimeMillis();
+
+        id = xmrTxProofModel.getTradeId() + "@" + xmrTxProofModel.getServiceAddress();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +184,7 @@ class XmrTxProofRequest {
         }
 
         ListenableFuture<Result> future = executorService.submit(() -> {
-            Thread.currentThread().setName("XmrTransferProofRequest-" + xmrTxProofModel.getUID());
+            Thread.currentThread().setName("XmrTransferProofRequest-" + id);
             String param = "/api/outputs?txhash=" + xmrTxProofModel.getTxHash() +
                     "&address=" + xmrTxProofModel.getRecipientAddress() +
                     "&viewkey=" + xmrTxProofModel.getTxKey() +
@@ -229,9 +236,6 @@ class XmrTxProofRequest {
         });
     }
 
-    String getUID() {
-        return xmrTxProofModel.getUID();
-    }
 
     String getServiceAddress() {
         return xmrTxProofModel.getServiceAddress();

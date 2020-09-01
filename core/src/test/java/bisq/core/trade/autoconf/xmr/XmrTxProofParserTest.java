@@ -7,7 +7,6 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class XmrTxProofParserTest {
@@ -25,6 +24,7 @@ public class XmrTxProofParserTest {
         String serviceAddress = "127.0.0.1:8081";
 
         xmrTxProofModel = new XmrTxProofModel(
+                "dummyTest",
                 txHash,
                 txKey,
                 recipientAddress,
@@ -32,13 +32,6 @@ public class XmrTxProofParserTest {
                 tradeDate,
                 confirmsRequired,
                 serviceAddress);
-    }
-
-    @Test
-    public void testKey() {
-        assertTrue(xmrTxProofModel.getUID().contains(xmrTxProofModel.getTxHash()));
-        assertTrue(xmrTxProofModel.getUID().contains(xmrTxProofModel.getServiceAddress()));
-        assertFalse(xmrTxProofModel.getUID().contains(xmrTxProofModel.getRecipientAddress()));
     }
 
     @Test

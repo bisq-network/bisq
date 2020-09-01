@@ -44,7 +44,7 @@ class XmrTxProofRequestService {
     @Nullable
     XmrTxProofRequest getRequest(XmrTxProofModel model) {
         XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, model);
-        String uid = request.getUID();
+        String uid = request.getId();
         if (map.containsKey(uid)) {
             log.warn("We started a proof request for uid {} already", uid);
             return null;

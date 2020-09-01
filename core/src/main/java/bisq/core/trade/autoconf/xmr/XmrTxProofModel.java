@@ -31,6 +31,7 @@ public class XmrTxProofModel {
     public static final String DEV_TX_HASH = "5e665addf6d7c6300670e8a89564ed12b5c1a21c336408e2835668f9a6a0d802";
     public static final long DEV_AMOUNT = 8902597360000L;
 
+    private final String tradeId;
     private final String txHash;
     private final String txKey;
     private final String recipientAddress;
@@ -40,6 +41,7 @@ public class XmrTxProofModel {
     private final String serviceAddress;
 
     XmrTxProofModel(
+            String tradeId,
             String txHash,
             String txKey,
             String recipientAddress,
@@ -47,6 +49,7 @@ public class XmrTxProofModel {
             Date tradeDate,
             int confirmsRequired,
             String serviceAddress) {
+        this.tradeId = tradeId;
         this.txHash = txHash;
         this.txKey = txKey;
         this.recipientAddress = recipientAddress;
@@ -54,9 +57,5 @@ public class XmrTxProofModel {
         this.tradeDate = tradeDate;
         this.confirmsRequired = confirmsRequired;
         this.serviceAddress = serviceAddress;
-    }
-
-    String getUID() {
-        return txHash + "|" + serviceAddress;
     }
 }
