@@ -72,9 +72,9 @@ public class ProtoUtil {
 
         E result = Enums.getIfPresent(enumType, name).orNull();
         if (result == null) {
-            log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
+            log.debug("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
             result = Enums.getIfPresent(enumType, "UNDEFINED").orNull();
-            log.error("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
+            log.debug("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
                     "otherwise the enum is null. enum={}", result);
             return result;
         }
