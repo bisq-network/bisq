@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +84,9 @@ public class HttpClient {
         this.ignoreSocks5Proxy = ignoreSocks5Proxy;
     }
 
-    public String requestWithGET(String param, @Nullable String headerKey, @Nullable String headerValue) throws IOException {
+    public String requestWithGET(String param,
+                                 @Nullable String headerKey,
+                                 @Nullable String headerValue) throws IOException {
         checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
 
         Socks5Proxy socks5Proxy = null;
@@ -107,15 +110,17 @@ public class HttpClient {
     /**
      * Make an HTTP Get request directly (not routed over socks5 proxy).
      */
-    public String requestWithGETNoProxy(String param, @Nullable String headerKey, @Nullable String headerValue) throws IOException {
+    public String requestWithGETNoProxy(String param,
+                                        @Nullable String headerKey,
+                                        @Nullable String headerValue) throws IOException {
         HttpURLConnection connection = null;
         log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
         URL url = new URL(baseUrl + param);
         try {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10_000);
-            connection.setReadTimeout(10_000);
+            connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(30));
+            connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(30));
             connection.setRequestProperty("User-Agent", "bisq/" + Version.VERSION);
             if (headerKey != null && headerValue != null)
                 connection.setRequestProperty(headerKey, headerValue);
@@ -148,7 +153,10 @@ public class HttpClient {
     /**
      * Make an HTTP Get request routed over socks5 proxy.
      */
-    private String requestWithGETProxy(String param, Socks5Proxy socks5Proxy, @Nullable String headerKey, @Nullable String headerValue) throws IOException {
+    private String requestWithGETProxy(String param,
+                                       Socks5Proxy socks5Proxy,
+                                       @Nullable String headerKey,
+                                       @Nullable String headerValue) throws IOException {
         log.debug("requestWithGETProxy param=" + param);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
