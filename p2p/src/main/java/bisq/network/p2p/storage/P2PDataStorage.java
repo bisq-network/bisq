@@ -252,25 +252,31 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
         Set<byte[]> excludedKeys;
-        if (seedNodeRepository != null && seedNodeRepository.isSeedNode(networkNode.getNodeAddress())) {
-            excludedKeys = this.appendOnlyDataStoreService.getMap().keySet().stream()
-                    .map(e -> e.bytes)
-                    .collect(Collectors.toSet());
+        boolean weAreASeedNode = seedNodeRepository != null && seedNodeRepository.isSeedNode(networkNode.getNodeAddress());
+        if (weAreASeedNode) {
+            excludedKeys = getKeySetInBytes(this.appendOnlyDataStoreService.getMap());
         } else {
-            excludedKeys = this.appendOnlyDataStoreService.getMap("since " + Version.VERSION).keySet().stream()
-                    .map(e -> e.bytes)
-                    .collect(Collectors.toSet());
+            excludedKeys = getKeySetInBytes(this.appendOnlyDataStoreService.getMap("since " + Version.VERSION));
         }
 
-        Set<byte[]> excludedKeysFromPersistedEntryMap = this.map.keySet()
-                .stream()
-                .map(e -> e.bytes)
-                .collect(Collectors.toSet());
+        Set<byte[]> excludedKeysFromPersistedEntryMap = getKeySetInBytes(this.map);
 
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
         excludedKeys.add(getSpecialKey());
 
         return excludedKeys;
+    }
+
+    /**
+     * Helper for extracting hash bytes from a map of objects.
+     *
+     * @param input a map of objects
+     * @return a list of hash bytes of the objects in the input map
+     */
+    private Set<byte[]> getKeySetInBytes(Map<ByteArray, ?> input) {
+        return input.keySet().stream()
+                .map(e -> e.bytes)
+                .collect(Collectors.toSet());
     }
 
     /**
