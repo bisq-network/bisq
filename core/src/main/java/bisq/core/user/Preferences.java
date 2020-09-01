@@ -40,8 +40,6 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.Coin;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -62,6 +60,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -321,6 +320,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setUsePriceNotifications(true);
         }
 
+        if (prefPayload.getAutoConfirmSettingsList().isEmpty()) {
+            prefPayload.getAutoConfirmSettingsList().add(AutoConfirmSettings.getDefaultForXmr(getDefaultXmrProofProviders()));
+        }
+
         // We set the capability in CoreNetworkCapabilities if the program argument is set.
         // If we have set it in the preferences view we handle it here.
         CoreNetworkCapabilities.maybeApplyDaoFullMode(config);
@@ -410,33 +413,38 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    // AutoConfirmSettings is currently only used for XMR.  Although it could
-    // potentially in the future be used for others too.  In the interest of flexibility
-    // we store it as a list in the proto definition, but in practical terms the
-    // application is not coded to handle more than one entry.  For now this API
-    // to get/set AutoConfirmSettings is the gatekeeper.  If in the future we adapt
-    // the application to manage more than one altcoin AutoConfirmSettings then
-    // this API will need to incorporate lookup by coin.
-    public AutoConfirmSettings getAutoConfirmSettings() {
-        if (prefPayload.getAutoConfirmSettingsList().size() == 0) {
-            // default values for AutoConfirmSettings when persisted payload is empty:
-            prefPayload.getAutoConfirmSettingsList().add(new AutoConfirmSettings(
-                    false, 5, Coin.COIN.value, getDefaultXmrProofProviders(), "XMR"));
-        }
-        return prefPayload.getAutoConfirmSettingsList().get(0);
+    public Optional<AutoConfirmSettings> findAutoConfirmSettings(String currencyCode) {
+        return prefPayload.getAutoConfirmSettingsList().stream()
+                .filter(e -> e.getCurrencyCode().equals(currencyCode))
+                .findAny();
     }
 
-    public void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings) {
-        // see above comment regarding only one entry in this list currently
-        prefPayload.getAutoConfirmSettingsList().clear();
-        prefPayload.getAutoConfirmSettingsList().add(autoConfirmSettings);
-        persist();
+    public void setAutoConfServiceAddresses(String currencyCode, List<String> serviceAddresses) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setServiceAddresses(serviceAddresses);
+            persist();
+        });
     }
 
-    public void setAutoConfServiceAddresses(List<String> serviceAddresses) {
-        AutoConfirmSettings x = this.getAutoConfirmSettings();
-        this.setAutoConfirmSettings(new AutoConfirmSettings(
-                x.enabled, x.requiredConfirmations, x.tradeLimit, serviceAddresses, x.currencyCode));
+    public void setAutoConfEnabled(String currencyCode, boolean enabled) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setEnabled(enabled);
+            persist();
+        });
+    }
+
+    public void setAutoConfRequiredConfirmations(String currencyCode, int requiredConfirmations) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setRequiredConfirmations(requiredConfirmations);
+            persist();
+        });
+    }
+
+    public void setAutoConfTradeLimit(String currencyCode, long tradeLimit) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setTradeLimit(tradeLimit);
+            persist();
+        });
     }
 
     private void persist() {

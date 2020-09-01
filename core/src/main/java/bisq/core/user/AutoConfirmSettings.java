@@ -21,21 +21,37 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import com.google.protobuf.Message;
 
+import org.bitcoinj.core.Coin;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AutoConfirmSettings implements PersistablePayload {
-    public final boolean enabled;
-    public final int requiredConfirmations;
-    public final long tradeLimit;
-    public final List<String> serviceAddresses;
-    public final String currencyCode;
+import lombok.Getter;
+import lombok.Setter;
 
-    public AutoConfirmSettings(boolean enabled,
-                               int requiredConfirmations,
-                               long tradeLimit,
-                               List<String> serviceAddresses,
-                               String currencyCode) {
+@Getter
+@Setter
+public final class AutoConfirmSettings implements PersistablePayload {
+    private boolean enabled;
+    private int requiredConfirmations;
+    private long tradeLimit;
+    private List<String> serviceAddresses;
+    private String currencyCode;
+
+    public static AutoConfirmSettings getDefaultForXmr(List<String> serviceAddresses) {
+        return new AutoConfirmSettings(
+                false,
+                5,
+                Coin.COIN.value,
+                serviceAddresses,
+                "XMR");
+    }
+
+    AutoConfirmSettings(boolean enabled,
+                        int requiredConfirmations,
+                        long tradeLimit,
+                        List<String> serviceAddresses,
+                        String currencyCode) {
         this.enabled = enabled;
         this.requiredConfirmations = requiredConfirmations;
         this.tradeLimit = tradeLimit;

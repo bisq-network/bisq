@@ -1175,10 +1175,10 @@ public class GUIUtil {
             case INVALID_DATA:
                 return Res.get(key, result.getDetails());
             case PAYOUT_TX_ALREADY_PUBLISHED:
-            case REQUEST_STARTED:
+            case REQUESTS_STARTED:
                 return Res.get(key);
             case PENDING:
-                return Res.get(key, result.getNumSuccessResults(), result.getRequiredSuccessResults(), result.getDetails());
+                return Res.get(key, result.getNumSuccessResults(), result.getNumRequiredSuccessResults(), result.getDetails());
             case COMPLETED:
             case ERROR:
             case FAILED:

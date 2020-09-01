@@ -32,6 +32,11 @@ public class IntegerValidator extends InputValidator {
     public IntegerValidator() {
     }
 
+    public IntegerValidator(int minValue, int maxValue) {
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+    }
+
     public ValidationResult validate(String input) {
         ValidationResult validationResult = super.validate(input);
         if (!validationResult.isValid)
