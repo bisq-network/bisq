@@ -62,10 +62,14 @@ public abstract class SupportManager {
 
         // We get first the message handler called then the onBootstrapped
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderAddress) -> {
+            // As decryptedDirectMessageWithPubKeys is a CopyOnWriteArraySet we do not need to check if it was
+            // already stored
             decryptedDirectMessageWithPubKeys.add(decryptedMessageWithPubKey);
             tryApplyMessages();
         });
         p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
+            // As decryptedMailboxMessageWithPubKeys is a CopyOnWriteArraySet we do not need to check if it was
+            // already stored
             decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
             tryApplyMessages();
         });
