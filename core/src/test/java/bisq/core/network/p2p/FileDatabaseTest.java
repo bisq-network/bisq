@@ -18,33 +18,15 @@
 package bisq.core.network.p2p;
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.account.witness.AccountAgeWitnessStorageService;
-import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
-import bisq.common.app.Version;
-import bisq.common.storage.Storage;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import java.io.File;
-import java.io.IOException;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**

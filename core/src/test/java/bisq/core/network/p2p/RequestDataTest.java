@@ -30,7 +30,6 @@ import bisq.common.app.Version;
 import bisq.common.storage.Storage;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.HashSet;
