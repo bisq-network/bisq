@@ -1088,6 +1088,7 @@ message PopmoneyAccountPayload {
 
 message RevolutAccountPayload {
     string account_id = 1;
+    string user_name = 2;
 }
 
 message PerfectMoneyAccountPayload {

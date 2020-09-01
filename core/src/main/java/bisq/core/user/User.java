@@ -24,6 +24,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.RevolutAccount;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
@@ -50,6 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
@@ -125,6 +127,16 @@ public class User implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onAllServicesInitialized(@Nullable Consumer<List<RevolutAccount>> resultHandler) {
+        if (resultHandler != null) {
+            resultHandler.accept(paymentAccountsAsObservable.stream()
+                    .filter(paymentAccount -> paymentAccount instanceof RevolutAccount)
+                    .map(paymentAccount -> (RevolutAccount) paymentAccount)
+                    .filter(RevolutAccount::userNameNotSet)
+                    .collect(Collectors.toList()));
+        }
+    }
 
     @Nullable
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
