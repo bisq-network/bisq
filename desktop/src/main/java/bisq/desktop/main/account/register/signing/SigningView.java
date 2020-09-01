@@ -24,11 +24,9 @@ import bisq.desktop.main.overlays.windows.SignPaymentAccountsWindow;
 import bisq.desktop.main.overlays.windows.SignSpecificWitnessWindow;
 import bisq.desktop.main.overlays.windows.SignUnsignedPubKeysWindow;
 
-import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -49,8 +47,7 @@ public class SigningView extends ActivatableView<AnchorPane, Void> {
     @Inject
     public SigningView(SignPaymentAccountsWindow signPaymentAccountsWindow,
                        SignSpecificWitnessWindow signSpecificWitnessWindow,
-                       SignUnsignedPubKeysWindow signUnsignedPubKeysWindow,
-                       @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                       SignUnsignedPubKeysWindow signUnsignedPubKeysWindow) {
         this.signPaymentAccountsWindow = signPaymentAccountsWindow;
         this.signSpecificWitnessWindow = signSpecificWitnessWindow;
         this.signUnsignedPubKeysWindow = signUnsignedPubKeysWindow;

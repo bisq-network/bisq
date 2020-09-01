@@ -82,7 +82,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private ArbitratorRegistrationView arbitratorRegistrationView;
     private MediatorRegistrationView mediatorRegistrationView;
     private RefundAgentRegistrationView refundAgentRegistrationView;
-    private SigningView signingView;
     private Scene scene;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private ListChangeListener<Tab> tabListChangeListener;
@@ -152,7 +151,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             } else if (refundAgentRegistrationTab != null && selectedTab != refundAgentRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
-            } else if (signingTab != null && selectedTab != signingTab) {
+            } else if (signingTab != null && !selectedTab.equals(signingTab)) {
                 navigation.navigateTo(MainView.class, AccountView.class, SigningView.class);
             } else if (newValue == fiatAccountsTab && selectedTab != fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
@@ -305,7 +304,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         } else if (view instanceof SigningView) {
             if (signingTab != null) {
                 selectedTab = signingTab;
-                signingView = (SigningView) view;
             }
         } else if (view instanceof FiatAccountsView) {
             selectedTab = fiatAccountsTab;
