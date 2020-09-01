@@ -26,8 +26,6 @@ import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
-import bisq.common.app.Version;
-
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -39,6 +37,8 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.app.Version.VERSION;
+
 /**
  * Provides high level interface to functionality of core Bisq features.
  * E.g. useful for different APIs to access data of different domains of Bisq.
@@ -47,24 +47,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreApi {
 
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
+    private final CoreDisputeAgentService coreDisputeAgentService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public CoreApi(CoreOffersService coreOffersService,
+    public CoreApi(CoreDisputeAgentService coreDisputeAgentService,
+                   CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
+        this.coreDisputeAgentService = coreDisputeAgentService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
     }
 
+    @SuppressWarnings("SameReturnValue")
     public String getVersion() {
-        return Version.VERSION;
+        return VERSION;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

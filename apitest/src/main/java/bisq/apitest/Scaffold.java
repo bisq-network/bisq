@@ -311,7 +311,7 @@ public class Scaffold {
             bitcoinDaemon.verifyBitcoindRunning();
         }
 
-        // Start Bisq apps defined by the supportingApps option, in the in proper order.
+        // Start Bisq apps defined by the supportingApps option, in proper order.
 
         if (config.hasSupportingApp(seednode.name()))
             startBisqApp(seednode, executor, countdownLatch);

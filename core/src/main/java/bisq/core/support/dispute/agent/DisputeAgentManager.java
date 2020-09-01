@@ -226,7 +226,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
         observableMap.put(disputeAgent.getNodeAddress(), disputeAgent);
         disputeAgentService.addDisputeAgent(disputeAgent,
                 () -> {
-                    log.info("DisputeAgent successfully saved in P2P network");
+                    log.info("{} successfully saved in P2P network", disputeAgent.getClass().getSimpleName());
                     resultHandler.handleResult();
 
                     if (observableMap.size() > 0)
