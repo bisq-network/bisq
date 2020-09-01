@@ -135,18 +135,22 @@ class CoreDisputeAgentService {
 
             @Override
             public void onTorNodeReady() {
+                // empty
             }
 
             @Override
             public void onHiddenServicePublished() {
+                // empty
             }
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+                // empty
             }
 
             @Override
             public void onRequestCustomBridges() {
+                // empty
             }
 
             @Override
@@ -157,14 +161,17 @@ class CoreDisputeAgentService {
 
             @Override
             public void onNoSeedNodeAvailable() {
+                // empty
             }
 
             @Override
             public void onNoPeersAvailable() {
+                // empty
             }
 
             @Override
             public void onUpdatedDataReceived() {
+                // empty
             }
         });
     }
