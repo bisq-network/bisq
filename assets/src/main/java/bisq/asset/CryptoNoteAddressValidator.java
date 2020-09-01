@@ -46,7 +46,7 @@ public class CryptoNoteAddressValidator implements AddressValidator {
                 }
             }
             return AddressValidationResult.invalidAddress(String.format("invalid address prefix %x", prefix));
-        } catch (CryptoNoteUtils.CryptoNoteException e) {
+        } catch (Exception e) {
             return AddressValidationResult.invalidStructure();
         }
     }
