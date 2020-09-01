@@ -31,6 +31,7 @@ import bisq.common.app.Version;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * Provides high level interface to functionality of core Bisq features.
  * E.g. useful for different APIs to access data of different domains of Bisq.
  */
+@Singleton
 @Slf4j
 public class CoreApi {
 
