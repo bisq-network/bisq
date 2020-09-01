@@ -19,15 +19,14 @@ package bisq.core.trade.autoconf.xmr;
 
 import bisq.network.Socks5ProxyProvider;
 
-import bisq.common.handlers.FaultHandler;
-
 import javax.inject.Inject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Handles the XMR tx proof requests for multiple trades and multiple services.
@@ -38,49 +37,32 @@ class XmrTxProofRequestService {
     private final Socks5ProxyProvider socks5ProxyProvider;
 
     @Inject
-    private XmrTxProofRequestService(Socks5ProxyProvider provider) {
+    public XmrTxProofRequestService(Socks5ProxyProvider provider) {
         socks5ProxyProvider = provider;
     }
 
-    void requestProof(XmrTxProofModel xmrTxProofModel,
-                      Consumer<XmrTxProofResult> resultHandler,
-                      FaultHandler faultHandler) {
-        String uid = xmrTxProofModel.getUID();
+    @Nullable
+    XmrTxProofRequest getRequest(XmrTxProofModel model) {
+        XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, model);
+        String uid = request.getUID();
         if (map.containsKey(uid)) {
             log.warn("We started a proof request for uid {} already", uid);
-            return;
+            return null;
         }
-        log.info("requesting tx proof with uid {}", uid);
 
-        XmrTxProofRequest requester = new XmrTxProofRequest(
-                socks5ProxyProvider,
-                xmrTxProofModel,
-                result -> {
-                    if (result.getState() == XmrTxProofResult.State.SINGLE_SERVICE_SUCCEEDED) {
-                        cleanup(uid);
-                    }
-                    resultHandler.accept(result);
-                },
-                (errorMsg, throwable) -> {
-                    cleanup(uid);
-                    faultHandler.handleFault(errorMsg, throwable);
-                });
-        map.put(uid, requester);
-
-        requester.request();
+        map.put(uid, request);
+        return request;
     }
 
-    void terminateRequest(XmrTxProofModel xmrTxProofModel) {
-        String uid = xmrTxProofModel.getUID();
-        XmrTxProofRequest requester = map.getOrDefault(uid, null);
-        if (requester != null) {
-            log.info("Terminating API request for request with uid {}", uid);
-            requester.stop();
-            cleanup(uid);
-        }
+    // Get number of requests with at least 1 SUCCESS result
+    int numRequestsWithSuccessResult() {
+        return (int) map.values().stream()
+                .filter(request -> request.numSuccessResults() > 0)
+                .count();
     }
 
-    private void cleanup(String key) {
-        map.remove(key);
+    void stopAllRequest() {
+        map.values().forEach(XmrTxProofRequest::stop);
+        map.clear();
     }
 }

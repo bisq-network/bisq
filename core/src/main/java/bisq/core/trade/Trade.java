@@ -437,11 +437,12 @@ public abstract class Trade implements Tradable, Model {
     private String counterCurrencyExtraData;
 
     // Added at v1.3.8
+    // Generic tx proof result. We persist name if AssetTxProofResult enum. Other fields in the enum are not persisted
+    // as they are not very relevant as historical data (e.g. number of confirmations)
     @Nullable
-    private AssetTxProofResult assetTxProofResult;
-
     @Getter
-    // This observable property can be used for UI to show a notification to user of the XMR proof status
+    private AssetTxProofResult assetTxProofResult;
+    @Getter
     transient final private ObjectProperty<AssetTxProofResult> assetTxProofResultProperty = new SimpleObjectProperty<>();
 
 
@@ -556,7 +557,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
         Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
-        Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.toProtoMessage()));
+        Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.name()));
 
         return builder.build();
     }
@@ -591,7 +592,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
-        trade.setAssetTxProofResult(AssetTxProofResult.fromProto(proto.getAssetTxProofResult(), checkNotNull(trade.getOffer()).getCurrencyCode()));
+        trade.setAssetTxProofResult(ProtoUtil.enumFromProto(AssetTxProofResult.class, proto.getAssetTxProofResult()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -875,7 +876,7 @@ public abstract class Trade implements Tradable, Model {
         errorMessageProperty.set(errorMessage);
     }
 
-    public void setAssetTxProofResult(AssetTxProofResult assetTxProofResult) {
+    public void setAssetTxProofResult(@Nullable AssetTxProofResult assetTxProofResult) {
         this.assetTxProofResult = assetTxProofResult;
         assetTxProofResultProperty.setValue(assetTxProofResult);
     }
@@ -1091,12 +1092,6 @@ public abstract class Trade implements Tradable, Model {
     public String getErrorMessage() {
         return errorMessageProperty.get();
     }
-
-    @Nullable
-    public AssetTxProofResult getAssetTxProofResult() {
-        return assetTxProofResult != null ? assetTxProofResult : AssetTxProofResult.fromCurrencyCode(checkNotNull(offer).getCurrencyCode());
-    }
-
 
     public byte[] getArbitratorBtcPubKey() {
         // In case we are already in a trade the arbitrator can have been revoked and we still can complete the trade

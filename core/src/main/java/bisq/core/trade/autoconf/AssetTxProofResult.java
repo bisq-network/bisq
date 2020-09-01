@@ -17,62 +17,57 @@
 
 package bisq.core.trade.autoconf;
 
-import bisq.core.trade.autoconf.xmr.XmrTxProofResult;
-
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import javax.annotation.Nullable;
+public enum AssetTxProofResult {
+    UNDEFINED,
 
-/**
- * Base class for AutoConfirm implementations
- */
-@EqualsAndHashCode
-@Getter
-public abstract class AssetTxProofResult {
+    FEATURE_DISABLED,
+    TRADE_LIMIT_EXCEEDED,
+    INVALID_DATA,  // Peer provided invalid data. Might be a scam attempt (e.g. txKey reused)
+    PAYOUT_TX_ALREADY_PUBLISHED,
 
-    @Nullable
-    public static AssetTxProofResult fromCurrencyCode(String currencyCode) {
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (currencyCode) {
-            case "XMR":
-                return new XmrTxProofResult();
-            default:
-                return null;
-        }
+    REQUEST_STARTED,
+    PENDING,
+
+    // All services completed with a success state
+    COMPLETED,
+
+    // Any service had an error (network, API service)
+    ERROR,
+
+    // Any service failed. Might be that the tx is invalid.
+    FAILED;
+
+    @Getter
+    private transient int numSuccessResults;
+    @Getter
+    private transient int requiredSuccessResults;
+    @Getter
+    private transient String details = "";
+
+
+    public AssetTxProofResult numSuccessResults(int numSuccessResults) {
+        this.numSuccessResults = numSuccessResults;
+        return this;
     }
 
-    private final String stateName;
-
-    protected AssetTxProofResult(String stateName) {
-        this.stateName = stateName;
+    public AssetTxProofResult requiredSuccessResults(int requiredSuccessResults) {
+        this.requiredSuccessResults = requiredSuccessResults;
+        return this;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // We use fromProto as kind of factory method to get the specific AutoConfirmResult
-    @Nullable
-    public static AssetTxProofResult fromProto(protobuf.AutoConfirmResult proto, String currencyCode) {
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (currencyCode) {
-            case "XMR":
-                return XmrTxProofResult.fromProto(proto);
-            default:
-                return null;
-        }
+    public AssetTxProofResult details(String details) {
+        this.details = details;
+        return this;
     }
 
-    public abstract protobuf.AutoConfirmResult toProtoMessage();
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    abstract public boolean isSuccessState();
-
-    abstract public String getStatusAsDisplayString();
+    @Override
+    public String toString() {
+        return "AssetTxProofResult{" +
+                "\n     numSuccessResults=" + numSuccessResults +
+                ",\n     requiredSuccessResults=" + requiredSuccessResults +
+                ",\n     details='" + details + '\'' +
+                "\n} " + super.toString();
+    }
 }

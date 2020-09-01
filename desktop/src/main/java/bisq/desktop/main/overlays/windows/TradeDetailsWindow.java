@@ -22,6 +22,7 @@ import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -33,7 +34,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.autoconf.xmr.XmrTxProofResult;
+import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -236,12 +237,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         if (checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR") &&
                 trade.getAssetTxProofResult() != null &&
-                ((XmrTxProofResult) trade.getAssetTxProofResult()).getState() != XmrTxProofResult.State.UNDEFINED) {
+                trade.getAssetTxProofResult() != AssetTxProofResult.UNDEFINED) {
             // As the window is already overloaded we replace the tradingPeersPubKeyHash field with the auto-conf state
             // if XMR is the currency
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                     Res.get("portfolio.pending.step3_seller.autoConf.status.label"),
-                    trade.getAssetTxProofResult().getStatusAsDisplayString());
+                    GUIUtil.getProofResultAsString(trade.getAssetTxProofResult()));
         } else {
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                     Res.get("tradeDetailsWindow.tradingPeersPubKeyHash"),

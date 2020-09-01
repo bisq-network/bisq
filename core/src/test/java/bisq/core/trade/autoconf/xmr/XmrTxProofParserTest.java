@@ -45,13 +45,13 @@ public class XmrTxProofParserTest {
     public void testJsonRoot() {
         // checking what happens when bad input is provided
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "invalid json data").getState() == XmrTxProofResult.State.API_INVALID);
+                "invalid json data").getDetail() == XmrTxProofRequest.Detail.API_INVALID);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "").getState() == XmrTxProofResult.State.API_INVALID);
+                "").getDetail() == XmrTxProofRequest.Detail.API_INVALID);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "[]").getState() == XmrTxProofResult.State.API_INVALID);
+                "[]").getDetail() == XmrTxProofRequest.Detail.API_INVALID);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "{}").getState() == XmrTxProofResult.State.API_INVALID);
+                "{}").getDetail() == XmrTxProofRequest.Detail.API_INVALID);
     }
 
     @Test
@@ -59,48 +59,48 @@ public class XmrTxProofParserTest {
         // testing the top level fields: data and status
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
                 "{'data':{'title':''},'status':'fail'}" )
-                .getState() == XmrTxProofResult.State.TX_NOT_FOUND);
+                .getDetail() == XmrTxProofRequest.Detail.TX_NOT_FOUND);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
                 "{'data':{'title':''},'missingstatus':'success'}" )
-                .getState() == XmrTxProofResult.State.API_INVALID);
+                .getDetail() == XmrTxProofRequest.Detail.API_INVALID);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
                 "{'missingdata':{'title':''},'status':'success'}" )
-                .getState() == XmrTxProofResult.State.API_INVALID);
+                .getDetail() == XmrTxProofRequest.Detail.API_INVALID);
     }
 
     @Test
     public void testJsonAddress() {
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
                 "{'data':{'missingaddress':'irrelevant'},'status':'success'}" )
-                .getState() == XmrTxProofResult.State.API_INVALID);
+                .getDetail() == XmrTxProofRequest.Detail.API_INVALID);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
                 "{'data':{'address':'e957dac7'},'status':'success'}" )
-                .getState() == XmrTxProofResult.State.ADDRESS_INVALID);
+                .getDetail() == XmrTxProofRequest.Detail.ADDRESS_INVALID);
     }
 
     @Test
     public void testJsonTxHash() {
         String missing_tx_hash = "{'data':{'address':'" + recipientAddressHex + "'}, 'status':'success'}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, missing_tx_hash).getState()
-                == XmrTxProofResult.State.API_INVALID);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, missing_tx_hash).getDetail()
+                == XmrTxProofRequest.Detail.API_INVALID);
 
         String invalid_tx_hash = "{'data':{'address':'" + recipientAddressHex + "', 'tx_hash':'488e48'}, 'status':'success'}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, invalid_tx_hash).getState()
-                == XmrTxProofResult.State.TX_HASH_INVALID);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, invalid_tx_hash).getDetail()
+                == XmrTxProofRequest.Detail.TX_HASH_INVALID);
     }
 
     @Test
     public void testJsonTxKey() {
         String missing_tx_key = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "'}, 'status':'success'}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, missing_tx_key).getState()
-                == XmrTxProofResult.State.API_INVALID);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, missing_tx_key).getDetail()
+                == XmrTxProofRequest.Detail.API_INVALID);
 
         String invalid_tx_key = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "', " +
                 "'viewkey':'cdce04'}, 'status':'success'}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, invalid_tx_key).getState()
-                == XmrTxProofResult.State.TX_KEY_INVALID);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, invalid_tx_key).getDetail()
+                == XmrTxProofRequest.Detail.TX_KEY_INVALID);
     }
 
     @Test
@@ -108,15 +108,15 @@ public class XmrTxProofParserTest {
         String missing_tx_timestamp = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "'," +
                 "'viewkey':'" + txKey + "'}, 'status':'success'}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, missing_tx_timestamp).getState()
-                == XmrTxProofResult.State.API_INVALID);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, missing_tx_timestamp).getDetail()
+                == XmrTxProofRequest.Detail.API_INVALID);
 
         String invalid_tx_timestamp = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "', " +
                 "'viewkey':'" + txKey + "'," +
                 "'tx_timestamp':'12345'}, 'status':'success'}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, invalid_tx_timestamp).getState()
-                == XmrTxProofResult.State.TRADE_DATE_NOT_MATCHING);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, invalid_tx_timestamp).getDetail()
+                == XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
     }
 
     @Test
@@ -133,28 +133,28 @@ public class XmrTxProofParserTest {
                 "'viewkey':'" + txKey + "', " +
                 "'tx_timestamp':'" + Long.toString(epochDate) + "'}" +
                 "}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getState()
-                == XmrTxProofResult.State.SINGLE_SERVICE_SUCCEEDED);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json)
+                == XmrTxProofRequest.Result.SUCCESS);
         json = json.replaceFirst("777", "0");
 
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getState()
-                == XmrTxProofResult.State.PENDING_CONFIRMATIONS);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getDetail()
+                == XmrTxProofRequest.Detail.PENDING_CONFIRMATIONS);
 
         json = json.replaceFirst("100000000000", "100000000001");
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getState()
-                == XmrTxProofResult.State.AMOUNT_NOT_MATCHING);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getDetail()
+                == XmrTxProofRequest.Detail.AMOUNT_NOT_MATCHING);
 
         // Revert change of amount
         json = json.replaceFirst("100000000001", "100000000000");
         json = json.replaceFirst("'match':true", "'match':false");
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getState()
-                == XmrTxProofResult.State.NO_MATCH_FOUND);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, json).getDetail()
+                == XmrTxProofRequest.Detail.NO_MATCH_FOUND);
     }
 
     @Test
     public void testJsonFail() {
         String failedJson = "{\"data\":null,\"message\":\"Cant parse tx hash: a\",\"status\":\"error\"}";
-        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, failedJson).getState()
-                == XmrTxProofResult.State.API_INVALID);
+        assertTrue(XmrTxProofParser.parse(xmrTxProofModel, failedJson).getDetail()
+                == XmrTxProofRequest.Detail.API_INVALID);
     }
 }

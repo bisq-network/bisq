@@ -37,6 +37,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
+import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
@@ -117,9 +118,7 @@ public class BuyerStep4View extends TradeStepView {
         GridPane.setMargin(hBox2, new Insets(18, -10, -12, -10));
         gridPane.getChildren().add(hBox2);
         GridPane.setRowSpan(hBox2, 5);
-        if (trade.getAssetTxProofResult() != null && !trade.getAssetTxProofResult().isSuccessState()) {
-            autoConfBadge.setVisible(false);
-        }
+        autoConfBadge.setVisible(AssetTxProofResult.COMPLETED == trade.getAssetTxProofResult());
 
         addCompactTopLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.TWICE_FIRST_ROW_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());

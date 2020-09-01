@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -76,8 +77,9 @@ public class SellerStep3View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
-    private TextFieldWithCopyIcon autoConfirmStatusField;
-    private final ChangeListener<AssetTxProofResult> autoConfirmResultListener;
+    private TextFieldWithCopyIcon assetTxProofResultField;
+    private final ChangeListener<AssetTxProofResult> proofResultListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -86,9 +88,8 @@ public class SellerStep3View extends TradeStepView {
     public SellerStep3View(PendingTradesViewModel model) {
         super(model);
 
-        // we listen for updates on the trade autoConfirmResult field
-        autoConfirmResultListener = (observable, oldValue, newValue) -> {
-            autoConfirmStatusField.setText(newValue.getStatusAsDisplayString());
+        proofResultListener = (observable, oldValue, newValue) -> {
+            assetTxProofResultField.setText(GUIUtil.getProofResultAsString(newValue));
         };
     }
 
@@ -151,9 +152,9 @@ public class SellerStep3View extends TradeStepView {
         });
 
         // we listen for updates on the trade autoConfirmResult field
-        if (trade.getAssetTxProofResult() != null && autoConfirmStatusField != null) {
-            trade.getAssetTxProofResultProperty().addListener(autoConfirmResultListener);
-            autoConfirmStatusField.setText(trade.getAssetTxProofResult().getStatusAsDisplayString());
+        if (assetTxProofResultField != null) {
+            trade.getAssetTxProofResultProperty().addListener(proofResultListener);
+            assetTxProofResultField.setText(GUIUtil.getProofResultAsString(trade.getAssetTxProofResult()));
         }
     }
 
@@ -168,10 +169,13 @@ public class SellerStep3View extends TradeStepView {
 
         busyAnimation.stop();
 
-        if (timeoutTimer != null)
+        if (timeoutTimer != null) {
             timeoutTimer.stop();
+        }
 
-        trade.getAssetTxProofResultProperty().removeListener(autoConfirmResultListener);
+        if (assetTxProofResultField != null) {
+            trade.getAssetTxProofResultProperty().removeListener(proofResultListener);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +229,7 @@ public class SellerStep3View extends TradeStepView {
         }
 
         if (isBlockChain && trade.getOffer().getCurrencyCode().equals("XMR")) {
-            autoConfirmStatusField = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
+            assetTxProofResultField = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                     Res.get("portfolio.pending.step3_seller.autoConf.status.label"),
                     "", Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         }

@@ -17,6 +17,8 @@
 
 package bisq.core.trade.autoconf.xmr;
 
+import bisq.core.trade.autoconf.xmr.XmrTxProofRequest.Result;
+
 import bisq.asset.CryptoNoteUtils;
 
 import bisq.common.app.DevEnv;
@@ -31,18 +33,20 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.autoconf.xmr.XmrTxProofRequest.Detail;
+
 @Slf4j
 class XmrTxProofParser {
-    static XmrTxProofResult parse(XmrTxProofModel xmrTxProofModel, String jsonTxt) {
+    static Result parse(XmrTxProofModel xmrTxProofModel, String jsonTxt) {
         String txHash = xmrTxProofModel.getTxHash();
         try {
             JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
             if (json == null) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Empty json");
+                return Result.ERROR.with(Detail.API_INVALID.error("Empty json"));
             }
             // there should always be "data" and "status" at the top level
             if (json.get("data") == null || !json.get("data").isJsonObject() || json.get("status") == null) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing data / status fields");
+                return Result.ERROR.with(Detail.API_INVALID.error("Missing data / status fields"));
             }
             JsonObject jsonData = json.get("data").getAsJsonObject();
             String jsonStatus = json.get("status").getAsString();
@@ -50,42 +54,42 @@ class XmrTxProofParser {
                 // The API returns "fail" until the transaction has successfully reached the mempool or if request
                 // contained invalid data.
                 // We return TX_NOT_FOUND which will cause a retry later
-                return new XmrTxProofResult(XmrTxProofResult.State.TX_NOT_FOUND);
+                return Result.PENDING.with(Detail.TX_NOT_FOUND);
             } else if (!jsonStatus.matches("success")) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_FAILURE, "Unhandled status value");
+                return Result.ERROR.with(Detail.API_INVALID.error("Unhandled status value"));
             }
 
             // validate that the address matches
             JsonElement jsonAddress = jsonData.get("address");
             if (jsonAddress == null) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing address field");
+                return Result.ERROR.with(Detail.API_INVALID.error("Missing address field"));
             } else {
                 String expectedAddressHex = CryptoNoteUtils.convertToRawHex(xmrTxProofModel.getRecipientAddress());
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
                     log.warn("address {}, expected: {}", jsonAddress.getAsString(), expectedAddressHex);
-                    return new XmrTxProofResult(XmrTxProofResult.State.ADDRESS_INVALID);
+                    return Result.FAILED.with(Detail.ADDRESS_INVALID);
                 }
             }
 
             // validate that the txHash matches
             JsonElement jsonTxHash = jsonData.get("tx_hash");
             if (jsonTxHash == null) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing tx_hash field");
+                return Result.ERROR.with(Detail.API_INVALID.error("Missing tx_hash field"));
             } else {
                 if (!jsonTxHash.getAsString().equalsIgnoreCase(txHash)) {
                     log.warn("txHash {}, expected: {}", jsonTxHash.getAsString(), txHash);
-                    return new XmrTxProofResult(XmrTxProofResult.State.TX_HASH_INVALID);
+                    return Result.FAILED.with(Detail.TX_HASH_INVALID);
                 }
             }
 
             // validate that the txKey matches
             JsonElement jsonViewkey = jsonData.get("viewkey");
             if (jsonViewkey == null) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing viewkey field");
+                return Result.ERROR.with(Detail.API_INVALID.error("Missing viewkey field"));
             } else {
                 if (!jsonViewkey.getAsString().equalsIgnoreCase(xmrTxProofModel.getTxKey())) {
                     log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), xmrTxProofModel.getTxKey());
-                    return new XmrTxProofResult(XmrTxProofResult.State.TX_KEY_INVALID);
+                    return Result.FAILED.with(Detail.TX_KEY_INVALID);
                 }
             }
 
@@ -93,7 +97,7 @@ class XmrTxProofParser {
             // (except that in dev mode we let this check pass anyway)
             JsonElement jsonTimestamp = jsonData.get("tx_timestamp");
             if (jsonTimestamp == null) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing tx_timestamp field");
+                return Result.ERROR.with(Detail.API_INVALID.error("Missing tx_timestamp field"));
             } else {
                 long tradeDateSeconds = xmrTxProofModel.getTradeDate().getTime() / 1000;
                 long difference = tradeDateSeconds - jsonTimestamp.getAsLong();
@@ -101,7 +105,7 @@ class XmrTxProofParser {
                 if (difference > TimeUnit.HOURS.toSeconds(2) && !DevEnv.isDevMode()) {
                     log.warn("tx_timestamp {}, tradeDate: {}, difference {}",
                             jsonTimestamp.getAsLong(), tradeDateSeconds, difference);
-                    return new XmrTxProofResult(XmrTxProofResult.State.TRADE_DATE_NOT_MATCHING);
+                    return Result.FAILED.with(Detail.TRADE_DATE_NOT_MATCHING);
                 }
             }
 
@@ -109,7 +113,7 @@ class XmrTxProofParser {
             int confirmations;
             JsonElement jsonConfirmations = jsonData.get("tx_confirmations");
             if (jsonConfirmations == null) {
-                return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, "Missing tx_confirmations field");
+                return Result.ERROR.with(Detail.API_INVALID.error("Missing tx_confirmations field"));
             } else {
                 confirmations = jsonConfirmations.getAsInt();
                 log.info("Confirmations: {}, xmr txHash: {}", confirmations, txHash);
@@ -135,26 +139,23 @@ class XmrTxProofParser {
 
             // None of the outputs had a match entry
             if (!anyMatchFound) {
-                return new XmrTxProofResult(XmrTxProofResult.State.NO_MATCH_FOUND);
+                return Result.FAILED.with(Detail.NO_MATCH_FOUND);
             }
 
             // None of the outputs had a match entry
             if (!amountMatches) {
-                return new XmrTxProofResult(XmrTxProofResult.State.AMOUNT_NOT_MATCHING);
+                return Result.FAILED.with(Detail.AMOUNT_NOT_MATCHING);
             }
 
             int confirmsRequired = xmrTxProofModel.getConfirmsRequired();
             if (confirmations < confirmsRequired) {
-                XmrTxProofResult xmrTxProofResult = new XmrTxProofResult(XmrTxProofResult.State.PENDING_CONFIRMATIONS);
-                xmrTxProofResult.setNumConfirmations(confirmations);
-                xmrTxProofResult.setRequiredConfirmations(confirmsRequired);
-                return xmrTxProofResult;
+                return Result.PENDING.with(Detail.PENDING_CONFIRMATIONS.numConfirmations(confirmations));
             } else {
-                return new XmrTxProofResult(XmrTxProofResult.State.SINGLE_SERVICE_SUCCEEDED);
+                return Result.SUCCESS;
             }
 
         } catch (JsonParseException | NullPointerException e) {
-            return new XmrTxProofResult(XmrTxProofResult.State.API_INVALID, e.toString());
+            return Result.ERROR.with(Detail.API_INVALID.error(e.toString()));
         }
     }
 }

@@ -1393,7 +1393,7 @@ message Trade {
     RefundResultState refund_result_state = 35;
     int64 last_refresh_request_date = 36;
     string counter_currency_extra_data = 37;
-    AutoConfirmResult asset_tx_proof_result = 38;
+    string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
 }
 
 message BuyerAsMakerTrade {
@@ -1585,10 +1585,6 @@ message UserPayload {
     repeated MarketAlertFilter market_alert_filters = 13;
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
-}
-
-message AutoConfirmResult {
-    string stateName = 1; // name of state enum
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
