@@ -71,7 +71,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
         if (getMap().containsKey(hash))
             return null;
 
-        PersistableNetworkPayload previous = store.getMap().putIfAbsent(hash, payload);
+        PersistableNetworkPayload previous = store.getMap().put(hash, payload);
         persist();
         return previous;
     }

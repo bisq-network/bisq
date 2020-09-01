@@ -217,6 +217,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * Create the special key. <br><br>
      *
+     * <ul>
+     *      <li>A "key" is a 20 byte cryptographic hash code to identify a single p2p network message</li>
+     *      <li>A "special key" is the label to a bundle of p2p network messages, each having standard keys</li>
+     * </ul>
+     *
      * For example: "1.3.4" encoded into a 20 byte array.
      *
      * @return the special key
@@ -229,7 +234,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     /**
-     * See if the request contains a "special key".
+     * See if the request contains a "special key". A special key is a label of a bundle of messages.
+     * <ul>
+     *      <li>A "key" is a 20 byte cryptographic hash code to identify a single p2p network message</li>
+     *      <li>A "special key" is the label to a bundle of p2p network messages, each having standard keys</li>
+     * </ul>
      *
      * @param knownPayloadHashes
      * @return the "special key" or <code>null</code> if no special key has been found
