@@ -34,10 +34,16 @@ public class CryptoNoteUtils {
             // omit the type (1st byte) and checksum (last 4 byte)
             byte[] slice = Arrays.copyOfRange(decoded, 1, decoded.length - 4);
             return Utils.HEX.encode(slice);
-        } catch (Exception e) {
+        } catch (CryptoNoteException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static class CryptoNoteException extends Exception {
+        CryptoNoteException(String msg) {
+            super(msg);
+        }
     }
 
     static class Keccak {
@@ -155,7 +161,7 @@ public class CryptoNoteUtils {
                                         int inputLength,
                                         byte[] decoded,
                                         int decodedOffset,
-                                        int decodedLength) throws Exception {
+                                        int decodedLength) throws CryptoNoteException {
 
             BigInteger result = BigInteger.ZERO;
 
@@ -164,17 +170,17 @@ public class CryptoNoteUtils {
                 char character = input.charAt(--index);
                 int digit = ALPHABET.indexOf(character);
                 if (digit == -1) {
-                    throw new Exception("invalid character " + character);
+                    throw new CryptoNoteException("invalid character " + character);
                 }
                 result = result.add(order.multiply(BigInteger.valueOf(digit)));
                 if (result.compareTo(UINT64_MAX) > 0) {
-                    throw new Exception("64-bit unsigned integer overflow " + result.toString());
+                    throw new CryptoNoteException("64-bit unsigned integer overflow " + result.toString());
                 }
             }
 
             BigInteger maxCapacity = BigInteger.ONE.shiftLeft(8 * decodedLength);
             if (result.compareTo(maxCapacity) >= 0) {
-                throw new Exception("capacity overflow " + result.toString());
+                throw new CryptoNoteException("capacity overflow " + result.toString());
             }
 
             for (int index = decodedOffset + decodedLength; index != decodedOffset; result = result.shiftRight(8)) {
@@ -182,7 +188,7 @@ public class CryptoNoteUtils {
             }
         }
 
-        public static byte[] decode(String input) throws Exception {
+        public static byte[] decode(String input) throws CryptoNoteException {
             if (input.length() == 0) {
                 return new byte[0];
             }
@@ -218,12 +224,12 @@ public class CryptoNoteUtils {
             return result;
         }
 
-        static long decodeAddress(String address, boolean validateChecksum) throws Exception {
+        static long decodeAddress(String address, boolean validateChecksum) throws CryptoNoteException {
             byte[] decoded = decode(address);
 
             int checksumSize = 4;
             if (decoded.length < checksumSize) {
-                throw new Exception("invalid length");
+                throw new CryptoNoteException("invalid length");
             }
 
             ByteBuffer decodedAddress = ByteBuffer.wrap(decoded, 0, decoded.length - checksumSize);
@@ -237,7 +243,7 @@ public class CryptoNoteUtils {
             int checksum = fastHash.getInt();
             int expected = ByteBuffer.wrap(decoded, decoded.length - checksumSize, checksumSize).getInt();
             if (checksum != expected) {
-                throw new Exception(String.format("invalid checksum %08X, expected %08X", checksum, expected));
+                throw new CryptoNoteException(String.format("invalid checksum %08X, expected %08X", checksum, expected));
             }
 
             return prefix;
