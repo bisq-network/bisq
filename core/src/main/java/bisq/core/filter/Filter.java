@@ -240,13 +240,13 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.refundAgents = refundAgents;
         this.bannedAccountWitnessSignerPubKeys = bannedAccountWitnessSignerPubKeys;
         this.btcFeeReceiverAddresses = btcFeeReceiverAddresses;
-        this.disableAutoConf = disableAutoConf;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.creationDate = creationDate;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
         this.signatureAsBase64 = signatureAsBase64;
         this.signerPubKeyAsHex = signerPubKeyAsHex;
         this.bannedPrivilegedDevPubKeys = bannedPrivilegedDevPubKeys;
+        this.disableAutoConf = disableAutoConf;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -358,9 +358,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
-                ",\n     disableAutoConf=" + disableAutoConf +
                 ",\n     creationDate=" + creationDate +
                 ",\n     extraDataMap=" + extraDataMap +
+                ",\n     disableAutoConf=" + disableAutoConf +
                 "\n}";
     }
 }
