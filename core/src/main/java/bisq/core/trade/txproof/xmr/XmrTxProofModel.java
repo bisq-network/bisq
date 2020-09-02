@@ -21,6 +21,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
+import bisq.core.user.AutoConfirmSettings;
 
 import bisq.common.app.DevEnv;
 
@@ -45,18 +46,19 @@ public class XmrTxProofModel {
     public static final String DEV_TX_HASH = "5e665addf6d7c6300670e8a89564ed12b5c1a21c336408e2835668f9a6a0d802";
     public static final long DEV_AMOUNT = 8902597360000L;
 
+    private final String serviceAddress;
+    private final AutoConfirmSettings autoConfirmSettings;
     private final String tradeId;
     private final String txHash;
     private final String txKey;
     private final String recipientAddress;
     private final long amount;
     private final Date tradeDate;
-    private final int confirmsRequired;
-    private final String serviceAddress;
 
-    XmrTxProofModel(Trade trade, String serviceAddress, int confirmsRequired) {
+    XmrTxProofModel(Trade trade, String serviceAddress, AutoConfirmSettings autoConfirmSettings) {
         this.serviceAddress = serviceAddress;
-        this.confirmsRequired = confirmsRequired;
+        this.autoConfirmSettings = autoConfirmSettings;
+
         Coin tradeAmount = trade.getTradeAmount();
         Volume volume = checkNotNull(trade.getOffer()).getVolumeByAmount(tradeAmount);
         amount = DevEnv.isDevMode() ?
@@ -72,6 +74,12 @@ public class XmrTxProofModel {
         tradeId = trade.getId();
     }
 
+    // NumRequiredConfirmations is read just in time. If user changes autoConfirmSettings during requests it will
+    // be reflected at next result parsing.
+    int getNumRequiredConfirmations() {
+        return autoConfirmSettings.getRequiredConfirmations();
+    }
+
     // Used only for testing
     @VisibleForTesting
     XmrTxProofModel(String tradeId,
@@ -80,16 +88,14 @@ public class XmrTxProofModel {
                     String recipientAddress,
                     long amount,
                     Date tradeDate,
-                    int confirmsRequired,
-                    String serviceAddress) {
-
+                    AutoConfirmSettings autoConfirmSettings) {
         this.tradeId = tradeId;
         this.txHash = txHash;
         this.txKey = txKey;
         this.recipientAddress = recipientAddress;
         this.amount = amount;
         this.tradeDate = tradeDate;
-        this.confirmsRequired = confirmsRequired;
-        this.serviceAddress = serviceAddress;
+        this.autoConfirmSettings = autoConfirmSettings;
+        this.serviceAddress = autoConfirmSettings.getServiceAddresses().get(0);
     }
 }

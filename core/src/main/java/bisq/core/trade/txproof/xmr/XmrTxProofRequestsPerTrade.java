@@ -44,28 +44,30 @@ import lombok.extern.slf4j.Slf4j;
 class XmrTxProofRequestsPerTrade {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Trade trade;
-    private final List<String> serviceAddresses;
-    private final int numRequiredConfirmations;
-    private final long tradeLimit;
-    private final int numRequiredSuccessResults;
+    private final AutoConfirmSettings autoConfirmSettings;
+    private int numRequiredSuccessResults;
     private final Set<XmrTxProofRequest> requests = new HashSet<>();
 
     private int numSuccessResults;
     private ChangeListener<Trade.State> listener;
+    private List<String> serviceAddresses;
 
     XmrTxProofRequestsPerTrade(Socks5ProxyProvider socks5ProxyProvider,
                                Trade trade,
                                AutoConfirmSettings autoConfirmSettings) {
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.trade = trade;
-        serviceAddresses = autoConfirmSettings.getServiceAddresses();
-        numRequiredConfirmations = autoConfirmSettings.getRequiredConfirmations();
-        tradeLimit = autoConfirmSettings.getTradeLimit();
-
-        numRequiredSuccessResults = serviceAddresses.size();
+        this.autoConfirmSettings = autoConfirmSettings;
     }
 
     void requestFromAllServices(Consumer<AssetTxProofResult> resultHandler, FaultHandler faultHandler) {
+        // We set serviceAddresses at request time. If user changes AutoConfirmSettings after request has started
+        // it will have no impact on serviceAddresses and numRequiredSuccessResults.
+        // Thought numRequiredConfirmations can be changed during request process and will be read from
+        // autoConfirmSettings at result parsing.
+        serviceAddresses = autoConfirmSettings.getServiceAddresses();
+        numRequiredSuccessResults = serviceAddresses.size();
+
         listener = (observable, oldValue, newValue) -> {
             if (trade.isPayoutPublished()) {
                 callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
@@ -94,7 +96,7 @@ class XmrTxProofRequestsPerTrade {
         callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.REQUESTS_STARTED);
 
         for (String serviceAddress : serviceAddresses) {
-            XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, numRequiredSuccessResults);
+            XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, autoConfirmSettings);
             XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, model);
 
             log.info("{} created", request);
@@ -170,7 +172,7 @@ class XmrTxProofRequestsPerTrade {
         String detailString = "";
         if (XmrTxProofRequest.Detail.PENDING_CONFIRMATIONS == detail) {
             detailString = Res.get("portfolio.pending.autoConf.state.confirmations",
-                    numConfirmations, numRequiredConfirmations);
+                    numConfirmations, autoConfirmSettings.getRequiredConfirmations());
 
         } else if (XmrTxProofRequest.Detail.TX_NOT_FOUND == detail) {
             detailString = Res.get("portfolio.pending.autoConf.state.txNotFound");
@@ -204,7 +206,7 @@ class XmrTxProofRequestsPerTrade {
 
     private boolean isTradeAmountAboveLimit(Trade trade) {
         Coin tradeAmount = trade.getTradeAmount();
-        Coin tradeLimit = Coin.valueOf(this.tradeLimit);
+        Coin tradeLimit = Coin.valueOf(autoConfirmSettings.getTradeLimit());
         if (tradeAmount != null && tradeAmount.isGreaterThan(tradeLimit)) {
             log.warn("Trade amount {} is higher than limit from auto-conf setting {}.",
                     tradeAmount.toFriendlyString(), tradeLimit.toFriendlyString());

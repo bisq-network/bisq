@@ -1,7 +1,10 @@
 package bisq.core.trade.txproof.xmr;
 
+import bisq.core.user.AutoConfirmSettings;
+
 import java.time.Instant;
 
+import java.util.Collections;
 import java.util.Date;
 
 import org.junit.Before;
@@ -20,9 +23,14 @@ public class XmrTxProofParserTest {
     public void prepareMocksAndObjects() {
         long amount = 100000000000L;
         Date tradeDate = Date.from(Instant.now());
-        int confirmsRequired = 10;
         String serviceAddress = "127.0.0.1:8081";
+        AutoConfirmSettings autoConfirmSettings = new AutoConfirmSettings(true,
+                10,
+                1,
+                Collections.singletonList(serviceAddress),
+                "XMR");
 
+        // TODO using the mocking framework would be better...
         xmrTxProofModel = new XmrTxProofModel(
                 "dummyTest",
                 txHash,
@@ -30,8 +38,7 @@ public class XmrTxProofParserTest {
                 recipientAddress,
                 amount,
                 tradeDate,
-                confirmsRequired,
-                serviceAddress);
+                autoConfirmSettings);
     }
 
     @Test

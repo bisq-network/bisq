@@ -144,7 +144,7 @@ class XmrTxProofParser {
                 return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.AMOUNT_NOT_MATCHING);
             }
 
-            int confirmsRequired = xmrTxProofModel.getConfirmsRequired();
+            int confirmsRequired = xmrTxProofModel.getNumRequiredConfirmations();
             if (confirmations < confirmsRequired) {
                 return XmrTxProofRequest.Result.PENDING.with(XmrTxProofRequest.Detail.PENDING_CONFIRMATIONS.numConfirmations(confirmations));
             } else {

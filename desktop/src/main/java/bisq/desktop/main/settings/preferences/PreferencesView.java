@@ -122,7 +122,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private TitledGroupBg daoOptionsTitledGroupBg;
 
     private ChangeListener<Boolean> transactionFeeFocusedListener;
-    private ChangeListener<Boolean> autoConfFocusOutListener;
+    private ChangeListener<Boolean> autoConfServiceAddressFocusOutListener, autoConfRequiredConfirmationsFocusOutListener;
     private final Preferences preferences;
     private final FeeService feeService;
     //private final ReferralIdService referralIdService;
@@ -147,8 +147,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
     private ChangeListener<String> deviationListener, ignoreTradersListListener, ignoreDustThresholdListener,
-    /*referralIdListener,*/ rpcUserListener, rpcPwListener, blockNotifyPortListener,
-            autoConfRequiredConfirmationsListener, autoConfTradeLimitListener, autoConfServiceAddressListener;
+            rpcUserListener, rpcPwListener, blockNotifyPortListener,
+            autoConfTradeLimitListener, autoConfServiceAddressListener;
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
@@ -659,7 +659,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         autoConfirmXmrToggle = addSlideToggleButton(subGrid, localRowIndex, Res.get("setting.preferences.autoConfirmEnabled"), Layout.FIRST_ROW_DISTANCE);
 
         autoConfRequiredConfirmationsTf = addInputTextField(subGrid, ++localRowIndex, Res.get("setting.preferences.autoConfirmRequiredConfirmations"));
-        autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(0, 1000));
+        autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(0, DevEnv.isDevMode() ? 100000000 : 1000));
 
         autoConfTradeLimitTf = addInputTextField(subGrid, ++localRowIndex, Res.get("setting.preferences.autoConfirmMaxTradeSize"));
         autoConfTradeLimitTf.setValidator(new BtcValidator(formatter));
@@ -681,12 +681,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         };
 
-        autoConfRequiredConfirmationsListener = (observable, oldValue, newValue) -> {
-            if (!newValue.equals(oldValue) && autoConfRequiredConfirmationsTf.getValidator().validate(newValue).isValid) {
-                int requiredConfirmations = Integer.parseInt(newValue);
-                preferences.setAutoConfRequiredConfirmations("XMR", requiredConfirmations);
-            }
-        };
         autoConfTradeLimitListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue) && autoConfTradeLimitTf.getValidator().validate(newValue).isValid) {
                 Coin amountAsCoin = ParsingUtils.parseToCoin(newValue, formatter);
@@ -694,7 +688,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         };
 
-        autoConfFocusOutListener = (observable, oldValue, newValue) -> {
+        autoConfServiceAddressFocusOutListener = (observable, oldValue, newValue) -> {
             if (oldValue && !newValue) {
                 log.info("Service address focus out, check and re-display default option");
                 if (autoConfServiceAddressTf.getText().isEmpty()) {
@@ -702,6 +696,28 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                         List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses();
                         autoConfServiceAddressTf.setText(String.join(", ", serviceAddresses));
                     });
+                }
+            }
+        };
+
+        // We use a focus out handler to not update the data during entering text as that might lead to lower than
+        // intended numbers which could be lead in the worst case to auto completion as number of confirmations is
+        // reached. E.g. user had value 10 and wants to change it to 15 and deletes the 0, so current value would be 1.
+        // If the service result just comes in at that moment the service might be considered complete as 1 is at that
+        // moment used. We read the data just in time to make changes more flexible, otherwise user would need to
+        // restart to apply changes from the number of confirmations settings.
+        // Other fields like service addresses and limits are not affected and are taken at service start and cannot be
+        // changed for already started services.
+        autoConfRequiredConfirmationsFocusOutListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue) {
+                String txt = autoConfRequiredConfirmationsTf.getText();
+                if (autoConfRequiredConfirmationsTf.getValidator().validate(txt).isValid) {
+                    int requiredConfirmations = Integer.parseInt(txt);
+                    preferences.setAutoConfRequiredConfirmations("XMR", requiredConfirmations);
+                } else {
+                    preferences.findAutoConfirmSettings("XMR")
+                            .ifPresent(e -> autoConfRequiredConfirmationsTf
+                                    .setText(String.valueOf(e.getRequiredConfirmations())));
                 }
             }
         };
@@ -965,10 +981,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             autoConfTradeLimitTf.setText(formatter.formatCoin(Coin.valueOf(autoConfirmSettings.getTradeLimit())));
             autoConfServiceAddressTf.setText(String.join(", ", autoConfirmSettings.getServiceAddresses()));
 
-            autoConfRequiredConfirmationsTf.textProperty().addListener(autoConfRequiredConfirmationsListener);
+            autoConfRequiredConfirmationsTf.focusedProperty().addListener(autoConfRequiredConfirmationsFocusOutListener);
             autoConfTradeLimitTf.textProperty().addListener(autoConfTradeLimitListener);
             autoConfServiceAddressTf.textProperty().addListener(autoConfServiceAddressListener);
-            autoConfServiceAddressTf.focusedProperty().addListener(autoConfFocusOutListener);
+            autoConfServiceAddressTf.focusedProperty().addListener(autoConfServiceAddressFocusOutListener);
 
             autoConfirmXmrToggle.setOnAction(e -> {
                 preferences.setAutoConfEnabled(autoConfirmSettings.getCurrencyCode(), autoConfirmXmrToggle.isSelected());
@@ -1047,9 +1063,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void deactivateAutoConfirmPreferences() {
         autoConfirmXmrToggle.setOnAction(null);
-        autoConfRequiredConfirmationsTf.textProperty().removeListener(autoConfRequiredConfirmationsListener);
         autoConfTradeLimitTf.textProperty().removeListener(autoConfTradeLimitListener);
         autoConfServiceAddressTf.textProperty().removeListener(autoConfServiceAddressListener);
-        autoConfServiceAddressTf.focusedProperty().removeListener(autoConfFocusOutListener);
+        autoConfServiceAddressTf.focusedProperty().removeListener(autoConfServiceAddressFocusOutListener);
+        autoConfRequiredConfirmationsTf.focusedProperty().removeListener(autoConfRequiredConfirmationsFocusOutListener);
+
     }
 }

@@ -89,7 +89,7 @@ public class SellerStep3View extends TradeStepView {
         super(model);
 
         proofResultListener = (observable, oldValue, newValue) -> {
-            assetTxProofResultField.setText(GUIUtil.getProofResultAsString(newValue));
+            applyAssetTxProofResult(newValue);
         };
     }
 
@@ -154,7 +154,7 @@ public class SellerStep3View extends TradeStepView {
         // we listen for updates on the trade autoConfirmResult field
         if (assetTxProofResultField != null) {
             trade.getAssetTxProofResultProperty().addListener(proofResultListener);
-            assetTxProofResultField.setText(GUIUtil.getProofResultAsString(trade.getAssetTxProofResult()));
+            applyAssetTxProofResult(trade.getAssetTxProofResult());
         }
     }
 
@@ -440,6 +440,12 @@ public class SellerStep3View extends TradeStepView {
         } else {
             return Optional.empty();
         }
+    }
+
+    private void applyAssetTxProofResult(AssetTxProofResult result) {
+        String txt = GUIUtil.getProofResultAsString(result);
+        assetTxProofResultField.setText(txt);
+        assetTxProofResultField.setTooltip(new Tooltip(txt));
     }
 
     @Override
