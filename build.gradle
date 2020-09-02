@@ -681,7 +681,7 @@ task codeCoverageReport(type: JacocoReport) {
     reports {
         xml.enabled true
         xml.destination file("${rootProject.projectDir}/build/reports/jacoco/codeCoverageReport/jacocoCoverageReport.xml")
-        html.enabled false
+        html.enabled true
         csv.enabled false
     }
 }
