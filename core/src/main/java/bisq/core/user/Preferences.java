@@ -321,7 +321,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
 
         if (prefPayload.getAutoConfirmSettingsList().isEmpty()) {
-            prefPayload.getAutoConfirmSettingsList().add(AutoConfirmSettings.getDefaultForXmr(getDefaultXmrProofProviders()));
+            getAutoConfirmSettingsList().add(AutoConfirmSettings.getDefaultForXmr(getDefaultXmrProofProviders()));
         }
 
         // We set the capability in CoreNetworkCapabilities if the program argument is set.
