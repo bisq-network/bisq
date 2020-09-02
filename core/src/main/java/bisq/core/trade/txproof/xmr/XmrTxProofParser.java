@@ -30,13 +30,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
+public
 class XmrTxProofParser implements AssetTxProofParser<XmrTxProofModel, XmrTxProofRequest.Result> {
+
     @Inject
     public XmrTxProofParser() {
     }
