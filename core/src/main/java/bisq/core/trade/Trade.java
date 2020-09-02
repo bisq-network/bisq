@@ -67,9 +67,11 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -442,8 +444,11 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     @Getter
     private AssetTxProofResult assetTxProofResult;
+    // ObjectProperty with AssetTxProofResult does not notify changeListeners. Probably because AssetTxProofResult is
+    // an enum and enum does not support EqualsAndHashCode. Alternatively we could add a addListener and removeListener
+    // method and a listener interface, but the IntegerProperty seems to be less boilerplate.
     @Getter
-    transient final private ObjectProperty<AssetTxProofResult> assetTxProofResultProperty = new SimpleObjectProperty<>();
+    transient final private IntegerProperty assetTxProofResultUpdateProperty = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -878,7 +883,7 @@ public abstract class Trade implements Tradable, Model {
 
     public void setAssetTxProofResult(@Nullable AssetTxProofResult assetTxProofResult) {
         this.assetTxProofResult = assetTxProofResult;
-        assetTxProofResultProperty.setValue(assetTxProofResult);
+        assetTxProofResultUpdateProperty.set(assetTxProofResultUpdateProperty.get() + 1);
     }
 
 

@@ -78,7 +78,7 @@ public class SellerStep3View extends TradeStepView {
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
     private TextFieldWithCopyIcon assetTxProofResultField;
-    private final ChangeListener<AssetTxProofResult> proofResultListener;
+    private final ChangeListener<Number> proofResultListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ public class SellerStep3View extends TradeStepView {
         super(model);
 
         proofResultListener = (observable, oldValue, newValue) -> {
-            applyAssetTxProofResult(newValue);
+            applyAssetTxProofResult(trade.getAssetTxProofResult());
         };
     }
 
@@ -153,9 +153,11 @@ public class SellerStep3View extends TradeStepView {
 
         // we listen for updates on the trade autoConfirmResult field
         if (assetTxProofResultField != null) {
-            trade.getAssetTxProofResultProperty().addListener(proofResultListener);
+            trade.getAssetTxProofResultUpdateProperty().addListener(proofResultListener);
             applyAssetTxProofResult(trade.getAssetTxProofResult());
         }
+
+        applyAssetTxProofResult(trade.getAssetTxProofResult());
     }
 
     @Override
@@ -174,7 +176,7 @@ public class SellerStep3View extends TradeStepView {
         }
 
         if (assetTxProofResultField != null) {
-            trade.getAssetTxProofResultProperty().removeListener(proofResultListener);
+            trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
         }
     }
 
@@ -184,7 +186,6 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected void addContent() {
-
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.ALWAYS);
 
         addTradeInfoBlock();
