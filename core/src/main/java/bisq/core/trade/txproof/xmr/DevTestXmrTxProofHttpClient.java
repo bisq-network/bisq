@@ -94,8 +94,9 @@ public class DevTestXmrTxProofHttpClient extends HttpClientImpl implements Asset
                     case PENDING_CONFIRMATIONS:
                         return validJson().replace("201287",
                                 String.valueOf(detail.getNumConfirmations()));
+                    default:
+                        return null;
                 }
-                break;
             case SUCCESS:
                 return validJson();
             case FAILED:
@@ -169,8 +170,9 @@ public class DevTestXmrTxProofHttpClient extends HttpClientImpl implements Asset
                     default:
                         return null;
                 }
+            default:
+                return null;
         }
-        return validJson();
     }
 
     private String validJson() {
