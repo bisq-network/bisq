@@ -71,6 +71,7 @@ public class XmrTxProofService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public XmrTxProofService(FilterManager filterManager,
                              Preferences preferences,

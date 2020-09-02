@@ -50,7 +50,7 @@ public enum AssetTxProofResult {
     private final boolean isTerminal;
 
     AssetTxProofResult() {
-        this(false);
+        this(true);
     }
 
     AssetTxProofResult(boolean isTerminal) {

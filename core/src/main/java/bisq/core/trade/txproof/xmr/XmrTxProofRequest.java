@@ -164,6 +164,7 @@ class XmrTxProofRequest {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("SpellCheckingInspection")
     public void start(Consumer<Result> resultHandler, FaultHandler faultHandler) {
         if (terminated) {
             // the XmrTransferProofService has asked us to terminate i.e. not make any further api calls
@@ -237,10 +238,6 @@ class XmrTxProofRequest {
 
     void terminate() {
         terminated = true;
-    }
-
-    String getServiceAddress() {
-        return xmrTxProofModel.getServiceAddress();
     }
 
     // Convenient for logging

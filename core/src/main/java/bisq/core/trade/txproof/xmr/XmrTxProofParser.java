@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class XmrTxProofParser {
+    @SuppressWarnings("SpellCheckingInspection")
     static XmrTxProofRequest.Result parse(XmrTxProofModel xmrTxProofModel, String jsonTxt) {
         String txHash = xmrTxProofModel.getTxHash();
         try {
