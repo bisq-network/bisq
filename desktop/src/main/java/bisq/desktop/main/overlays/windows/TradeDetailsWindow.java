@@ -34,7 +34,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.autoconf.AssetTxProofResult;
+import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 

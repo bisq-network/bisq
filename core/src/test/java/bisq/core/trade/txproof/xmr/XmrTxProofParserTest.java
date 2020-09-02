@@ -1,4 +1,4 @@
-package bisq.core.trade.autoconf.xmr;
+package bisq.core.trade.txproof.xmr;
 
 import java.time.Instant;
 

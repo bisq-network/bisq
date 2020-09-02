@@ -38,8 +38,6 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.autoconf.AssetTxProofResult;
-import bisq.core.trade.autoconf.xmr.XmrTxProofService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -48,6 +46,8 @@ import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.trade.txproof.AssetTxProofResult;
+import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
 

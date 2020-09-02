@@ -38,11 +38,11 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.User;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;

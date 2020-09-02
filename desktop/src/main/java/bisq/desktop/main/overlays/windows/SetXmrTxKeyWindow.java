@@ -22,7 +22,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.autoconf.xmr.XmrTxProofModel;
+import bisq.core.trade.txproof.xmr.XmrTxProofModel;
 
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;

@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.autoconf.xmr;
+package bisq.core.trade.txproof.xmr;
 
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
-import bisq.core.trade.autoconf.AssetTxProofResult;
+import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.AutoConfirmSettings;
 
 import bisq.network.Socks5ProxyProvider;
@@ -36,8 +36,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static bisq.core.trade.autoconf.xmr.XmrTxProofRequest.Result;
 
 /**
  * Handles the XMR tx proof requests for multiple services per trade.
@@ -163,7 +161,7 @@ class XmrTxProofRequestsPerTrade {
         }
     }
 
-    private AssetTxProofResult getAssetTxProofResultForPending(Result result) {
+    private AssetTxProofResult getAssetTxProofResultForPending(XmrTxProofRequest.Result result) {
         XmrTxProofRequest.Detail detail = result.getDetail();
         int numConfirmations = detail != null ? detail.getNumConfirmations() : 0;
         log.info("{} returned with numConfirmations {}",

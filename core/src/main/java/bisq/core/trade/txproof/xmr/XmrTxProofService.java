@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.autoconf.xmr;
+package bisq.core.trade.txproof.xmr;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.FilterManager;
@@ -23,9 +23,9 @@ import bisq.core.locale.Res;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
-import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 

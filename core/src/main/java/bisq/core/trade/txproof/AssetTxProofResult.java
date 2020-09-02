@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.autoconf;
+package bisq.core.trade.txproof;
 
 import lombok.Getter;
 

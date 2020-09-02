@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.autoconf.xmr;
+package bisq.core.trade.txproof.xmr;
 
 import bisq.core.monetary.Volume;
 import bisq.core.payment.payload.AssetsAccountPayload;
