@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,6 +66,14 @@ class CoreDisputeAgentService {
         setupListeners();
     }
 
+    public Optional<Mediator> getMediator(NodeAddress nodeAddress) {
+        return mediatorManager.getDisputeAgentByNodeAddress(nodeAddress);
+    }
+
+    public Optional<RefundAgent> getRefundAgent(NodeAddress nodeAddress) {
+        return refundAgentManager.getDisputeAgentByNodeAddress(nodeAddress);
+    }
+
     private boolean shouldRegisterTestArbitrationDisputeAgents() {
         return p2PService.isBootstrapped()
                 && config.useDevPrivilegeKeys
@@ -74,7 +83,7 @@ class CoreDisputeAgentService {
     }
 
     private void registerTestArbitratorDisputeAgents() {
-        NodeAddress nodeAddress = new NodeAddress("localhost:" + config.nodePort);
+        NodeAddress nodeAddress = new NodeAddress("localhost", config.nodePort);
         if (!mediatorManager.getDisputeAgentByNodeAddress(nodeAddress).isPresent()
                 || !refundAgentManager.getDisputeAgentByNodeAddress(nodeAddress).isPresent()) {
             List<String> languageCodes = Arrays.asList("de", "en", "es", "fr");
@@ -104,8 +113,8 @@ class CoreDisputeAgentService {
         mediatorManager.addDisputeAgent(mediator, () -> {
         }, errorMessage -> {
         });
-        mediatorManager.getDisputeAgentByNodeAddress(nodeAddress)
-                .orElseThrow(() -> new IllegalStateException("Could not register test mediation agent"));
+        getMediator(nodeAddress).orElseThrow(() ->
+                new IllegalStateException("Could not register test mediation agent"));
     }
 
     private void registerTestRefundAgent(NodeAddress nodeAddress,
@@ -126,8 +135,8 @@ class CoreDisputeAgentService {
         refundAgentManager.addDisputeAgent(refundAgent, () -> {
         }, errorMessage -> {
         });
-        refundAgentManager.getDisputeAgentByNodeAddress(nodeAddress)
-                .orElseThrow(() -> new IllegalStateException("Could not register test refund agent"));
+        getRefundAgent(nodeAddress).orElseThrow(() ->
+                new IllegalStateException("Could not register test refund agent"));
     }
 
     private void setupListeners() {
