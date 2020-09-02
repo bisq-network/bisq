@@ -87,7 +87,6 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
 
         // Error states
         CONNECTION_FAILURE,
-        API_FAILURE,
         API_INVALID,
 
         // Failure states
@@ -194,8 +193,13 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
                     "&txprove=1";
             log.info("Param {} for {}", param, this);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
-            String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
-            log.info("Response json from {}\n{}", this, prettyJson);
+            try {
+                String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
+                log.info("Response json from {}\n{}", this, prettyJson);
+            } catch (Throwable error) {
+                log.error("Pretty rint caused a {}}: raw josn={}", error, json);
+            }
+
             Result result = parser.parse(model, json);
             log.info("Result from {}\n{}", this, result);
             return result;

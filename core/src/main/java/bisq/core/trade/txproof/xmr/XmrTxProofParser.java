@@ -35,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Result, XmrTxProofModel> {
+    public static final long MAX_DATE_TOLERANCE = TimeUnit.HOURS.toSeconds(2);
+
     XmrTxProofParser() {
     }
 
@@ -110,7 +112,7 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
                 long tradeDateSeconds = model.getTradeDate().getTime() / 1000;
                 long difference = tradeDateSeconds - jsonTimestamp.getAsLong();
                 // Accept up to 2 hours difference. Some tolerance is needed if users clock is out of sync
-                if (difference > TimeUnit.HOURS.toSeconds(2) && !DevEnv.isDevMode()) {
+                if (difference > MAX_DATE_TOLERANCE && !DevEnv.isDevMode()) {
                     log.warn("tx_timestamp {}, tradeDate: {}, difference {}",
                             jsonTimestamp.getAsLong(), tradeDateSeconds, difference);
                     return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);

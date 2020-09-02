@@ -597,7 +597,13 @@ public abstract class Trade implements Tradable, Model {
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
-        trade.setAssetTxProofResult(ProtoUtil.enumFromProto(AssetTxProofResult.class, proto.getAssetTxProofResult()));
+
+        AssetTxProofResult persistedAssetTxProofResult = ProtoUtil.enumFromProto(AssetTxProofResult.class, proto.getAssetTxProofResult());
+        // We do not want to show the user the last pending state when he starts up the app again, so we clear it.
+        if (persistedAssetTxProofResult == AssetTxProofResult.PENDING) {
+            persistedAssetTxProofResult = null;
+        }
+        trade.setAssetTxProofResult(persistedAssetTxProofResult);
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -884,6 +890,7 @@ public abstract class Trade implements Tradable, Model {
     public void setAssetTxProofResult(@Nullable AssetTxProofResult assetTxProofResult) {
         this.assetTxProofResult = assetTxProofResult;
         assetTxProofResultUpdateProperty.set(assetTxProofResultUpdateProperty.get() + 1);
+        persist();
     }
 
 
