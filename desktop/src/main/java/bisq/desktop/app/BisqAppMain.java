@@ -62,7 +62,6 @@ public class BisqAppMain extends BisqExecutable {
         log.debug("onSetupComplete");
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +85,6 @@ public class BisqAppMain extends BisqExecutable {
 
         Application.launch(BisqApp.class);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // As application is a JavaFX application we need to wait for onApplicationLaunched
@@ -123,21 +121,13 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected void startApplication() {
-        // We need to be in user thread! We mapped at launchApplication already...
-
-        // Once the UI is ready we get onApplicationStarted called and start the setup there
+        // We need to be in user thread! We mapped at launchApplication already.  Once
+        // the UI is ready we get onApplicationStarted called and start the setup there.
         application.startApplication(this::onApplicationStarted);
     }
 
     @Override
     protected void onApplicationStarted() {
         super.onApplicationStarted();
-
-        /*
-        if (runWithGrpcApi()) {
-            CoreApi coreApi = injector.getInstance(CoreApi.class);
-            bisqGrpcServer = new BisqGrpcServer(coreApi);
-        }
-        */
     }
 }
