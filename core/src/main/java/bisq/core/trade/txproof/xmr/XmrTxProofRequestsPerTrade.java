@@ -19,6 +19,7 @@ package bisq.core.trade.txproof.xmr;
 
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
+import bisq.core.trade.txproof.AssetTxProofRequestsPerTrade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.AutoConfirmSettings;
 
@@ -42,8 +43,9 @@ import lombok.extern.slf4j.Slf4j;
  * Handles the XMR tx proof requests for multiple services per trade.
  */
 @Slf4j
-class XmrTxProofRequestsPerTrade {
+class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     private final Socks5ProxyProvider socks5ProxyProvider;
+    private final XmrTxProofParser xmrTxProofParser;
     private final Trade trade;
     private final AutoConfirmSettings autoConfirmSettings;
 
@@ -54,15 +56,28 @@ class XmrTxProofRequestsPerTrade {
     private ChangeListener<Trade.State> tradeStateListener;
     private AutoConfirmSettings.Listener autoConfirmSettingsListener;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     XmrTxProofRequestsPerTrade(Socks5ProxyProvider socks5ProxyProvider,
+                               XmrTxProofParser xmrTxProofParser,
                                Trade trade,
                                AutoConfirmSettings autoConfirmSettings) {
         this.socks5ProxyProvider = socks5ProxyProvider;
+        this.xmrTxProofParser = xmrTxProofParser;
         this.trade = trade;
         this.autoConfirmSettings = autoConfirmSettings;
     }
 
-    void requestFromAllServices(Consumer<AssetTxProofResult> resultHandler, FaultHandler faultHandler) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void requestFromAllServices(Consumer<AssetTxProofResult> resultHandler, FaultHandler faultHandler) {
         // We set serviceAddresses at request time. If user changes AutoConfirmSettings after request has started
         // it will have no impact on serviceAddresses and numRequiredSuccessResults.
         // Thought numRequiredConfirmations can be changed during request process and will be read from
@@ -103,12 +118,12 @@ class XmrTxProofRequestsPerTrade {
 
         for (String serviceAddress : serviceAddresses) {
             XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, autoConfirmSettings);
-            XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, model);
+            XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, xmrTxProofParser, model);
 
             log.info("{} created", request);
             requests.add(request);
 
-            request.start(result -> {
+            request.requestFromService(result -> {
                         AssetTxProofResult assetTxProofResult;
                         if (trade.isPayoutPublished()) {
                             assetTxProofResult = AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED;
@@ -162,6 +177,23 @@ class XmrTxProofRequestsPerTrade {
         }
     }
 
+    @Override
+    public void terminate() {
+        requests.forEach(XmrTxProofRequest::terminate);
+        requests.clear();
+        if (tradeStateListener != null) {
+            UserThread.execute(() -> trade.stateProperty().removeListener(tradeStateListener));
+        }
+        if (autoConfirmSettingsListener != null) {
+            UserThread.execute(() -> autoConfirmSettings.removeListener(autoConfirmSettingsListener));
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void callResultHandlerAndMaybeTerminate(Consumer<AssetTxProofResult> resultHandler,
                                                     AssetTxProofResult assetTxProofResult) {
         resultHandler.accept(assetTxProofResult);
@@ -189,17 +221,6 @@ class XmrTxProofRequestsPerTrade {
                 .numSuccessResults(numSuccessResults)
                 .numRequiredSuccessResults(numRequiredSuccessResults)
                 .details(detailString);
-    }
-
-    void terminate() {
-        requests.forEach(XmrTxProofRequest::terminate);
-        requests.clear();
-        if (tradeStateListener != null) {
-            UserThread.execute(() -> trade.stateProperty().removeListener(tradeStateListener));
-        }
-        if (autoConfirmSettingsListener != null) {
-            UserThread.execute(() -> autoConfirmSettings.removeListener(autoConfirmSettingsListener));
-        }
     }
 
 

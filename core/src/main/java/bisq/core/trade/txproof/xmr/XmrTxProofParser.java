@@ -17,6 +17,8 @@
 
 package bisq.core.trade.txproof.xmr;
 
+import bisq.core.trade.txproof.AssetTxProofParser;
+
 import bisq.asset.CryptoNoteUtils;
 
 import bisq.common.app.DevEnv;
@@ -27,15 +29,27 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
+import javax.inject.Inject;
+
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class XmrTxProofParser {
+class XmrTxProofParser implements AssetTxProofParser<XmrTxProofModel, XmrTxProofRequest.Result> {
+    @Inject
+    public XmrTxProofParser() {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @SuppressWarnings("SpellCheckingInspection")
-    static XmrTxProofRequest.Result parse(XmrTxProofModel xmrTxProofModel, String jsonTxt) {
-        String txHash = xmrTxProofModel.getTxHash();
+    @Override
+    public XmrTxProofRequest.Result parse(XmrTxProofModel model, String jsonTxt) {
+        String txHash = model.getTxHash();
         try {
             JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
             if (json == null) {
@@ -61,7 +75,7 @@ class XmrTxProofParser {
             if (jsonAddress == null) {
                 return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.API_INVALID.error("Missing address field"));
             } else {
-                String expectedAddressHex = CryptoNoteUtils.convertToRawHex(xmrTxProofModel.getRecipientAddress());
+                String expectedAddressHex = CryptoNoteUtils.convertToRawHex(model.getRecipientAddress());
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
                     log.warn("address {}, expected: {}", jsonAddress.getAsString(), expectedAddressHex);
                     return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.ADDRESS_INVALID);
@@ -84,8 +98,8 @@ class XmrTxProofParser {
             if (jsonViewkey == null) {
                 return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.API_INVALID.error("Missing viewkey field"));
             } else {
-                if (!jsonViewkey.getAsString().equalsIgnoreCase(xmrTxProofModel.getTxKey())) {
-                    log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), xmrTxProofModel.getTxKey());
+                if (!jsonViewkey.getAsString().equalsIgnoreCase(model.getTxKey())) {
+                    log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), model.getTxKey());
                     return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.TX_KEY_INVALID);
                 }
             }
@@ -96,7 +110,7 @@ class XmrTxProofParser {
             if (jsonTimestamp == null) {
                 return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.API_INVALID.error("Missing tx_timestamp field"));
             } else {
-                long tradeDateSeconds = xmrTxProofModel.getTradeDate().getTime() / 1000;
+                long tradeDateSeconds = model.getTradeDate().getTime() / 1000;
                 long difference = tradeDateSeconds - jsonTimestamp.getAsLong();
                 // Accept up to 2 hours difference. Some tolerance is needed if users clock is out of sync
                 if (difference > TimeUnit.HOURS.toSeconds(2) && !DevEnv.isDevMode()) {
@@ -127,7 +141,7 @@ class XmrTxProofParser {
                 if (out.get("match").getAsBoolean()) {
                     anyMatchFound = true;
                     long jsonAmount = out.get("amount").getAsLong();
-                    amountMatches = jsonAmount == xmrTxProofModel.getAmount();
+                    amountMatches = jsonAmount == model.getAmount();
                     if (amountMatches) {
                         break;
                     }
@@ -144,7 +158,7 @@ class XmrTxProofParser {
                 return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.AMOUNT_NOT_MATCHING);
             }
 
-            int confirmsRequired = xmrTxProofModel.getNumRequiredConfirmations();
+            int confirmsRequired = model.getNumRequiredConfirmations();
             if (confirmations < confirmsRequired) {
                 return XmrTxProofRequest.Result.PENDING.with(XmrTxProofRequest.Detail.PENDING_CONFIRMATIONS.numConfirmations(confirmations));
             } else {

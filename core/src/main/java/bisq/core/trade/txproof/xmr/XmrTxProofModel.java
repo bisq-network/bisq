@@ -21,6 +21,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
+import bisq.core.trade.txproof.AssetTxProofModel;
 import bisq.core.user.AutoConfirmSettings;
 
 import bisq.common.app.DevEnv;
@@ -39,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 @Value
-public class XmrTxProofModel {
+public class XmrTxProofModel implements AssetTxProofModel {
     // Those are values from a valid tx which are set automatically if DevEnv.isDevMode is enabled
     public static final String DEV_ADDRESS = "85q13WDADXE26W6h7cStpPMkn8tWpvWgHbpGWWttFEafGXyjsBTXxxyQms4UErouTY5sdKpYHVjQm6SagiCqytseDkzfgub";
     public static final String DEV_TX_KEY = "f3ce66c9d395e5e460c8802b2c3c1fff04e508434f9738ee35558aac4678c906";
@@ -81,6 +82,7 @@ public class XmrTxProofModel {
     }
 
     // Used only for testing
+    // TODO Use mocking framework in testing to avoid that constructor...
     @VisibleForTesting
     XmrTxProofModel(String tradeId,
                     String txHash,

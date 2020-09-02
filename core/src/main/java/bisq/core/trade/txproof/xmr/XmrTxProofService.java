@@ -26,6 +26,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.txproof.AssetTxProofResult;
+import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 
@@ -55,9 +56,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 @Singleton
-public class XmrTxProofService {
+public class XmrTxProofService implements AssetTxProofService {
     private final FilterManager filterManager;
     private final Socks5ProxyProvider socks5ProxyProvider;
+    private final XmrTxProofParser xmrTxProofParser;
     private final Preferences preferences;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
@@ -79,7 +81,8 @@ public class XmrTxProofService {
                              FailedTradesManager failedTradesManager,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             Socks5ProxyProvider socks5ProxyProvider) {
+                             Socks5ProxyProvider socks5ProxyProvider,
+                             XmrTxProofParser xmrTxProofParser) {
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.closedTradableManager = closedTradableManager;
@@ -87,6 +90,7 @@ public class XmrTxProofService {
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
         this.socks5ProxyProvider = socks5ProxyProvider;
+        this.xmrTxProofParser = xmrTxProofParser;
     }
 
 
@@ -94,6 +98,7 @@ public class XmrTxProofService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void maybeStartRequests(Trade trade,
                                    List<Trade> activeTrades,
                                    Consumer<AssetTxProofResult> resultHandler,
@@ -134,6 +139,7 @@ public class XmrTxProofService {
         }
 
         XmrTxProofRequestsPerTrade service = new XmrTxProofRequestsPerTrade(socks5ProxyProvider,
+                xmrTxProofParser,
                 trade,
                 autoConfirmSettings);
         servicesByTradeId.put(trade.getId(), service);
@@ -142,7 +148,7 @@ public class XmrTxProofService {
                     trade.setAssetTxProofResult(assetTxProofResult);
 
                     if (assetTxProofResult.isTerminal()) {
-                        cleanUp(trade);
+                        servicesByTradeId.remove(trade.getId());
                     }
 
                     resultHandler.accept(assetTxProofResult);
@@ -150,13 +156,10 @@ public class XmrTxProofService {
                 faultHandler);
     }
 
+    @Override
     public void shutDown() {
         servicesByTradeId.values().forEach(XmrTxProofRequestsPerTrade::terminate);
         servicesByTradeId.clear();
-    }
-
-    private void cleanUp(Trade trade) {
-        servicesByTradeId.remove(trade.getId());
     }
 
 
