@@ -57,7 +57,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 // TODO close connection if failing
 @Slf4j
-public class HttpClient {
+public class HttpClient implements IHttpClient {
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
     @Getter
@@ -76,14 +76,17 @@ public class HttpClient {
         uid = UUID.randomUUID().toString();
     }
 
+    @Override
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
     }
 
+    @Override
     public void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy) {
         this.ignoreSocks5Proxy = ignoreSocks5Proxy;
     }
 
+    @Override
     public String requestWithGET(String param,
                                  @Nullable String headerKey,
                                  @Nullable String headerValue) throws IOException {
@@ -103,13 +106,14 @@ public class HttpClient {
             return requestWithGETNoProxy(param, headerKey, headerValue);
         } else {
             log.debug("Use socks5Proxy for HttpClient: " + socks5Proxy);
-            return requestWithGETProxy(param, socks5Proxy, headerKey, headerValue);
+            return doRequestWithGETProxy(param, socks5Proxy, headerKey, headerValue);
         }
     }
 
     /**
      * Make an HTTP Get request directly (not routed over socks5 proxy).
      */
+    @Override
     public String requestWithGETNoProxy(String param,
                                         @Nullable String headerKey,
                                         @Nullable String headerValue) throws IOException {
@@ -145,6 +149,7 @@ public class HttpClient {
         }
     }
 
+    @Override
     public String getUid() {
         return uid;
     }
@@ -153,10 +158,10 @@ public class HttpClient {
     /**
      * Make an HTTP Get request routed over socks5 proxy.
      */
-    private String requestWithGETProxy(String param,
-                                       Socks5Proxy socks5Proxy,
-                                       @Nullable String headerKey,
-                                       @Nullable String headerValue) throws IOException {
+    private String doRequestWithGETProxy(String param,
+                                         Socks5Proxy socks5Proxy,
+                                         @Nullable String headerKey,
+                                         @Nullable String headerValue) throws IOException {
         log.debug("requestWithGETProxy param=" + param);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248

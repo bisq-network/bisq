@@ -17,11 +17,19 @@
 
 package bisq.core.trade.txproof.xmr;
 
+import bisq.core.trade.txproof.AssetTxProofHttpClient;
+
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.http.HttpClient;
 
-class XmrTxProofHttpClient extends HttpClient {
-    XmrTxProofHttpClient(Socks5ProxyProvider socks5ProxyProvider) {
+import javax.inject.Inject;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class XmrTxProofHttpClient extends HttpClient implements AssetTxProofHttpClient {
+    @Inject
+    public XmrTxProofHttpClient(Socks5ProxyProvider socks5ProxyProvider) {
         super(socks5ProxyProvider);
     }
 }

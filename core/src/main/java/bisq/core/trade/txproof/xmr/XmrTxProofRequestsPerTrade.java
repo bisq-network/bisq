@@ -19,11 +19,10 @@ package bisq.core.trade.txproof.xmr;
 
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
+import bisq.core.trade.txproof.AssetTxProofHttpClient;
 import bisq.core.trade.txproof.AssetTxProofRequestsPerTrade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.AutoConfirmSettings;
-
-import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.handlers.FaultHandler;
 
@@ -43,10 +42,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
-    private final Socks5ProxyProvider socks5ProxyProvider;
-    private final XmrTxProofParser xmrTxProofParser;
     private final Trade trade;
     private final AutoConfirmSettings autoConfirmSettings;
+    private final AssetTxProofHttpClient httpClient;
 
     private int numRequiredSuccessResults;
     private final Set<XmrTxProofRequest> requests = new HashSet<>();
@@ -60,12 +58,10 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTxProofRequestsPerTrade(Socks5ProxyProvider socks5ProxyProvider,
-                               XmrTxProofParser xmrTxProofParser,
+    XmrTxProofRequestsPerTrade(AssetTxProofHttpClient httpClient,
                                Trade trade,
                                AutoConfirmSettings autoConfirmSettings) {
-        this.socks5ProxyProvider = socks5ProxyProvider;
-        this.xmrTxProofParser = xmrTxProofParser;
+        this.httpClient = httpClient;
         this.trade = trade;
         this.autoConfirmSettings = autoConfirmSettings;
     }
@@ -117,7 +113,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
 
         for (String serviceAddress : serviceAddresses) {
             XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, autoConfirmSettings);
-            XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, xmrTxProofParser, model);
+            XmrTxProofRequest request = new XmrTxProofRequest(httpClient, model);
 
             log.info("{} created", request);
             requests.add(request);

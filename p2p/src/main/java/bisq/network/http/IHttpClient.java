@@ -15,8 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.txproof;
+package bisq.network.http;
 
-public interface AssetTxProofParser<R extends AssetTxProofRequest.Result, T extends AssetTxProofModel> {
-    R parse(T model, String jsonTxt);
+import java.io.IOException;
+
+import javax.annotation.Nullable;
+
+public interface IHttpClient {
+    void setBaseUrl(String baseUrl);
+
+    void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy);
+
+    String requestWithGET(String param,
+                          @Nullable String headerKey,
+                          @Nullable String headerValue) throws IOException;
+
+    String requestWithGETNoProxy(String param,
+                                 @Nullable String headerKey,
+                                 @Nullable String headerValue) throws IOException;
+
+    String getUid();
+
+    String getBaseUrl();
 }

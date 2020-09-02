@@ -25,12 +25,12 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.txproof.AssetTxProofHttpClient;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 
-import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
@@ -58,14 +58,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class XmrTxProofService implements AssetTxProofService {
     private final FilterManager filterManager;
-    private final Socks5ProxyProvider socks5ProxyProvider;
-    private final XmrTxProofParser xmrTxProofParser;
     private final Preferences preferences;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-
+    private final AssetTxProofHttpClient httpClient;
     private final Map<String, XmrTxProofRequestsPerTrade> servicesByTradeId = new HashMap<>();
 
 
@@ -81,16 +79,14 @@ public class XmrTxProofService implements AssetTxProofService {
                              FailedTradesManager failedTradesManager,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             Socks5ProxyProvider socks5ProxyProvider,
-                             XmrTxProofParser xmrTxProofParser) {
+                             AssetTxProofHttpClient httpClient) {
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
-        this.socks5ProxyProvider = socks5ProxyProvider;
-        this.xmrTxProofParser = xmrTxProofParser;
+        this.httpClient = httpClient;
     }
 
 
@@ -138,8 +134,7 @@ public class XmrTxProofService implements AssetTxProofService {
             return;
         }
 
-        XmrTxProofRequestsPerTrade service = new XmrTxProofRequestsPerTrade(socks5ProxyProvider,
-                xmrTxProofParser,
+        XmrTxProofRequestsPerTrade service = new XmrTxProofRequestsPerTrade(httpClient,
                 trade,
                 autoConfirmSettings);
         servicesByTradeId.put(trade.getId(), service);

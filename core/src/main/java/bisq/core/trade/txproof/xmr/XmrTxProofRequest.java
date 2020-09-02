@@ -17,9 +17,9 @@
 
 package bisq.core.trade.txproof.xmr;
 
+import bisq.core.trade.txproof.AssetTxProofHttpClient;
+import bisq.core.trade.txproof.AssetTxProofParser;
 import bisq.core.trade.txproof.AssetTxProofRequest;
-
-import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
@@ -138,9 +138,10 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
 
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "XmrTransferProofRequester", 3, 5, 10 * 60);
-    private final XmrTxProofHttpClient httpClient;
-    private final XmrTxProofParser xmrTxProofParser;
-    private final XmrTxProofModel xmrTxProofModel;
+
+    private final AssetTxProofHttpClient httpClient;
+    private final AssetTxProofParser<XmrTxProofRequest.Result, XmrTxProofModel> parser;
+    private final XmrTxProofModel model;
     private final long firstRequest;
 
     private boolean terminated;
@@ -153,16 +154,15 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTxProofRequest(Socks5ProxyProvider socks5ProxyProvider,
-                      XmrTxProofParser xmrTxProofParser,
-                      XmrTxProofModel xmrTxProofModel) {
-        this.xmrTxProofParser = xmrTxProofParser;
-        this.xmrTxProofModel = xmrTxProofModel;
+    XmrTxProofRequest(AssetTxProofHttpClient httpClient,
+                      XmrTxProofModel model) {
+        this.httpClient = httpClient;
+        this.parser = new XmrTxProofParser();
+        this.model = model;
 
-        httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
-        httpClient.setBaseUrl("http://" + xmrTxProofModel.getServiceAddress());
-        if (xmrTxProofModel.getServiceAddress().matches("^192.*|^localhost.*")) {
-            log.info("Ignoring Socks5 proxy for local net address: {}", xmrTxProofModel.getServiceAddress());
+        httpClient.setBaseUrl("http://" + model.getServiceAddress());
+        if (model.getServiceAddress().matches("^192.*|^localhost.*")) {
+            log.info("Ignoring Socks5 proxy for local net address: {}", model.getServiceAddress());
             httpClient.setIgnoreSocks5Proxy(true);
         }
 
@@ -188,15 +188,15 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
 
         ListenableFuture<Result> future = executorService.submit(() -> {
             Thread.currentThread().setName("XmrTransferProofRequest-" + this.getShortId());
-            String param = "/api/outputs?txhash=" + xmrTxProofModel.getTxHash() +
-                    "&address=" + xmrTxProofModel.getRecipientAddress() +
-                    "&viewkey=" + xmrTxProofModel.getTxKey() +
+            String param = "/api/outputs?txhash=" + model.getTxHash() +
+                    "&address=" + model.getRecipientAddress() +
+                    "&viewkey=" + model.getTxKey() +
                     "&txprove=1";
             log.info("Param {} for {}", param, this);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
             String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
             log.info("Response json from {}\n{}", this, prettyJson);
-            Result result = xmrTxProofParser.parse(xmrTxProofModel, json);
+            Result result = parser.parse(model, json);
             log.info("Result from {}\n{}", this, result);
             return result;
         });
@@ -256,7 +256,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     // Convenient for logging
     @Override
     public String toString() {
-        return "Request at: " + xmrTxProofModel.getServiceAddress() + " for trade: " + xmrTxProofModel.getTradeId();
+        return "Request at: " + model.getServiceAddress() + " for trade: " + model.getTradeId();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -264,8 +264,8 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private String getShortId() {
-        return Utilities.getShortId(xmrTxProofModel.getTradeId()) + " @ " +
-                xmrTxProofModel.getServiceAddress().substring(0, 6);
+        return Utilities.getShortId(model.getTradeId()) + " @ " +
+                model.getServiceAddress().substring(0, 6);
     }
 
     private boolean isTimeOutReached() {
