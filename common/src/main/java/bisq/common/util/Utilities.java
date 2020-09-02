@@ -197,6 +197,18 @@ public class Utilities {
         }
     }
 
+    public static int getMajorVersion() throws InvalidVersionException {
+        String version = getOSVersion();
+        String[] tokens = version.split("\\.");
+        try {
+            checkArgument(tokens.length > 0);
+            return Integer.parseInt(tokens[0]);
+        } catch (IllegalArgumentException e) {
+            printSysInfo();
+            throw new InvalidVersionException("Version is not in expected format. Version=" + version);
+        }
+    }
+
     public static String getOSArchitecture() {
         String osArch = System.getProperty("os.arch");
         if (isWindows()) {

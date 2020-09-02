@@ -664,7 +664,7 @@ public class BisqSetup {
         if (Utilities.isOSX() && osxKeyLoggerWarningHandler != null) {
             try {
                 // Seems it was introduced at 10.14: https://github.com/wesnoth/wesnoth/issues/4109
-                if (Utilities.getMinorVersion() >= 14) {
+                if (Utilities.getMajorVersion() >= 10 && Utilities.getMinorVersion() >= 14) {
                     osxKeyLoggerWarningHandler.run();
                 }
             } catch (InvalidVersionException | NumberFormatException e) {
