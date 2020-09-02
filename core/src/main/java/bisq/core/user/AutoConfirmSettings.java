@@ -38,7 +38,7 @@ public final class AutoConfirmSettings implements PersistablePayload {
     private List<String> serviceAddresses;
     private String currencyCode;
 
-    public static AutoConfirmSettings getDefaultForXmr(List<String> serviceAddresses) {
+    static AutoConfirmSettings getDefaultForXmr(List<String> serviceAddresses) {
         return new AutoConfirmSettings(
                 false,
                 5,
@@ -47,11 +47,11 @@ public final class AutoConfirmSettings implements PersistablePayload {
                 "XMR");
     }
 
-    AutoConfirmSettings(boolean enabled,
-                        int requiredConfirmations,
-                        long tradeLimit,
-                        List<String> serviceAddresses,
-                        String currencyCode) {
+    private AutoConfirmSettings(boolean enabled,
+                                int requiredConfirmations,
+                                long tradeLimit,
+                                List<String> serviceAddresses,
+                                String currencyCode) {
         this.enabled = enabled;
         this.requiredConfirmations = requiredConfirmations;
         this.tradeLimit = tradeLimit;
