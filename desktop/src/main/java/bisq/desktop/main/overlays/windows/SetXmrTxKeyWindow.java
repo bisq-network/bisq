@@ -60,7 +60,7 @@ public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
         addButtons();
 
         regexValidator = new RegexValidator();
-        regexValidator.setPattern("[a-fA-F0-9]{64}");
+        regexValidator.setPattern("[a-fA-F0-9]{64}|^$");
         regexValidator.setErrorMessage(Res.get("portfolio.pending.step2_buyer.confirmStart.proof.invalidInput"));
         txHashInputTextField.setValidator(regexValidator);
         txKeyInputTextField.setValidator(regexValidator);

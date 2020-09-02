@@ -121,11 +121,15 @@ public class XmrTxProofService {
         }
         AutoConfirmSettings autoConfirmSettings = optionalAutoConfirmSettings.get();
 
-        if (!isFeatureEnabled(trade, autoConfirmSettings)) {
+        if (isAutoConfDisabledByFilter()) {
+            trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
+                    .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature")));
             return;
         }
 
         if (wasTxKeyReUsed(trade, activeTrades)) {
+            trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA
+                    .details(Res.get("portfolio.pending.autoConf.state.xmr.txKeyReused")));
             return;
         }
 
@@ -187,14 +191,6 @@ public class XmrTxProofService {
                 walletsSetup.hasSufficientPeersForBroadcast();
     }
 
-    private boolean isFeatureEnabled(Trade trade, AutoConfirmSettings autoConfirmSettings) {
-        boolean isEnabled = checkNotNull(autoConfirmSettings).isEnabled() && !isAutoConfDisabledByFilter();
-        if (!isEnabled) {
-            trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED);
-        }
-        return isEnabled;
-    }
-
     private boolean isAutoConfDisabledByFilter() {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().isDisableAutoConf();
@@ -227,7 +223,6 @@ public class XmrTxProofService {
                     if (alreadyUsed) {
                         log.warn("Peer used the XMR tx key already at another trade with trade ID {}. " +
                                 "This might be a scam attempt.", t.getId());
-                        trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.xmr.txKeyReused")));
                     }
                     return alreadyUsed;
                 });

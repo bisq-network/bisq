@@ -24,6 +24,7 @@ import bisq.core.user.AutoConfirmSettings;
 
 import bisq.network.Socks5ProxyProvider;
 
+import bisq.common.UserThread;
 import bisq.common.handlers.FaultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -45,12 +46,14 @@ class XmrTxProofRequestsPerTrade {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Trade trade;
     private final AutoConfirmSettings autoConfirmSettings;
+
     private int numRequiredSuccessResults;
     private final Set<XmrTxProofRequest> requests = new HashSet<>();
 
     private int numSuccessResults;
-    private ChangeListener<Trade.State> listener;
+    private ChangeListener<Trade.State> tradeStateListener;
     private List<String> serviceAddresses;
+    private AutoConfirmSettings.Listener autoConfirmSettingsListener;
 
     XmrTxProofRequestsPerTrade(Socks5ProxyProvider socks5ProxyProvider,
                                Trade trade,
@@ -68,12 +71,6 @@ class XmrTxProofRequestsPerTrade {
         serviceAddresses = autoConfirmSettings.getServiceAddresses();
         numRequiredSuccessResults = serviceAddresses.size();
 
-        listener = (observable, oldValue, newValue) -> {
-            if (trade.isPayoutPublished()) {
-                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
-            }
-        };
-
         if (isTradeAmountAboveLimit(trade)) {
             callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.TRADE_LIMIT_EXCEEDED);
             return;
@@ -84,7 +81,24 @@ class XmrTxProofRequestsPerTrade {
             return;
         }
 
-        trade.stateProperty().addListener(listener);
+        // We will stop all our services if the user changes the enable state in the AutoConfirmSettings
+        autoConfirmSettingsListener = () -> {
+            if (!autoConfirmSettings.isEnabled()) {
+                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FEATURE_DISABLED);
+            }
+        };
+        autoConfirmSettings.addListener(autoConfirmSettingsListener);
+        if (!autoConfirmSettings.isEnabled()) {
+            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FEATURE_DISABLED);
+            return;
+        }
+
+        tradeStateListener = (observable, oldValue, newValue) -> {
+            if (trade.isPayoutPublished()) {
+                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
+            }
+        };
+        trade.stateProperty().addListener(tradeStateListener);
 
         callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.REQUESTS_STARTED);
 
@@ -180,7 +194,12 @@ class XmrTxProofRequestsPerTrade {
     void terminate() {
         requests.forEach(XmrTxProofRequest::terminate);
         requests.clear();
-        trade.stateProperty().removeListener(listener);
+        if (tradeStateListener != null) {
+            UserThread.execute(() -> trade.stateProperty().removeListener(tradeStateListener));
+        }
+        if (autoConfirmSettingsListener != null) {
+            UserThread.execute(() -> autoConfirmSettings.removeListener(autoConfirmSettingsListener));
+        }
     }
 
 

@@ -1170,6 +1170,7 @@ public class GUIUtil {
             case UNDEFINED:
                 return "";
             case FEATURE_DISABLED:
+                return Res.get(key, result.getDetails());
             case TRADE_LIMIT_EXCEEDED:
                 return Res.get(key);
             case INVALID_DATA:

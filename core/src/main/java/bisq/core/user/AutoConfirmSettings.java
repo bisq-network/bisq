@@ -25,20 +25,24 @@ import org.bitcoinj.core.Coin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public final class AutoConfirmSettings implements PersistablePayload {
+    public interface Listener {
+        void onChange();
+    }
+
     private boolean enabled;
     private int requiredConfirmations;
     private long tradeLimit;
     private List<String> serviceAddresses;
     private String currencyCode;
+    private List<Listener> listeners = new CopyOnWriteArrayList<>();
 
-    public static AutoConfirmSettings getDefaultForXmr(List<String> serviceAddresses) {
+    static AutoConfirmSettings getDefaultForXmr(List<String> serviceAddresses) {
         return new AutoConfirmSettings(
                 false,
                 5,
@@ -84,5 +88,42 @@ public final class AutoConfirmSettings implements PersistablePayload {
                 proto.getTradeLimit(),
                 serviceAddresses,
                 proto.getCurrencyCode());
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        listeners.forEach(Listener::onChange);
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        notifyListeners();
+    }
+
+    public void setRequiredConfirmations(int requiredConfirmations) {
+        this.requiredConfirmations = requiredConfirmations;
+        notifyListeners();
+    }
+
+    public void setTradeLimit(long tradeLimit) {
+        this.tradeLimit = tradeLimit;
+        notifyListeners();
+    }
+
+    public void setServiceAddresses(List<String> serviceAddresses) {
+        this.serviceAddresses = serviceAddresses;
+        notifyListeners();
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
+        notifyListeners();
     }
 }
