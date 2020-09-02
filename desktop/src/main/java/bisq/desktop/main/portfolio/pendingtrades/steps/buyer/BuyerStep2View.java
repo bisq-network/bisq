@@ -74,7 +74,6 @@ import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.Trade;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.util.validation.InputValidator;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -467,20 +466,6 @@ public class BuyerStep2View extends TradeStepView {
                         String txHash = setXmrTxKeyWindow.getTxHash();
                         if (txKey == null || txHash == null || txKey.isEmpty() || txHash.isEmpty()) {
                             UserThread.runAfter(this::showProofWarningPopup, Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
-                            return;
-                        }
-
-                        InputValidator.ValidationResult validateTxKey = setXmrTxKeyWindow.getRegexValidator().validate(txKey);
-                        if (!validateTxKey.isValid) {
-                            UserThread.runAfter(() -> new Popup().warning(validateTxKey.errorMessage).show(),
-                                    Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
-                            return;
-                        }
-
-                        InputValidator.ValidationResult validateTxHash = setXmrTxKeyWindow.getRegexValidator().validate(txHash);
-                        if (!validateTxHash.isValid) {
-                            UserThread.runAfter(() -> new Popup().warning(validateTxHash.errorMessage).show(),
-                                    Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
                             return;
                         }
 

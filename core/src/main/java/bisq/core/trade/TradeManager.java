@@ -330,8 +330,8 @@ public class TradeManager implements PersistedDataHost {
                         }
                     }
 
-            if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG &&
-                    trade.getCounterCurrencyExtraData() != null) {
+            if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
+                // This state can be only appear at a SellerTrade
                 checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
                 // We delay a bit as at startup lots of stuff is happening
                 UserThread.runAfter(() -> maybeStartXmrTxProofServices((SellerTrade) trade), 1);

@@ -98,22 +98,30 @@ public class XmrTxProofService {
                                    List<Trade> activeTrades,
                                    Consumer<AssetTxProofResult> resultHandler,
                                    FaultHandler faultHandler) {
+        if (!isXmrBuyer(trade)) {
+            return;
+        }
+
+        String txId = trade.getCounterCurrencyTxId();
+        String txHash = trade.getCounterCurrencyExtraData();
+        if (is32BitHexStringInValid(txId) || is32BitHexStringInValid(txHash)) {
+            trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.txKeyOrTxIdInvalid")));
+            return;
+        }
+
+        if (!networkAndWalletReady()) {
+            return;
+        }
+
         Optional<AutoConfirmSettings> optionalAutoConfirmSettings = preferences.findAutoConfirmSettings("XMR");
         if (!optionalAutoConfirmSettings.isPresent()) {
+            // Not expected
             log.error("autoConfirmSettings is not present");
             return;
         }
         AutoConfirmSettings autoConfirmSettings = optionalAutoConfirmSettings.get();
 
-        if (!isXmrBuyer(trade)) {
-            return;
-        }
-
         if (!isFeatureEnabled(trade, autoConfirmSettings)) {
-            return;
-        }
-
-        if (!networkAndWalletReady()) {
             return;
         }
 
@@ -162,6 +170,15 @@ public class XmrTxProofService {
         }
 
         return checkNotNull(trade.getContract()).getSellerPaymentAccountPayload() instanceof AssetsAccountPayload;
+    }
+
+    private boolean is32BitHexStringInValid(String hexString) {
+        if (hexString == null || hexString.isEmpty() || !hexString.matches("[a-fA-F0-9]{64}")) {
+            log.warn("Invalid hexString: {}", hexString);
+            return true;
+        }
+
+        return false;
     }
 
     private boolean networkAndWalletReady() {

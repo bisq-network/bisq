@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 
 import static bisq.common.app.DevEnv.isDevMode;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
 
@@ -68,6 +69,21 @@ public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
             txHashInputTextField.setText(XmrTxProofModel.DEV_TX_HASH);
             txKeyInputTextField.setText(XmrTxProofModel.DEV_TX_KEY);
         }
+
+        actionButton.disableProperty().bind(createBooleanBinding(() -> {
+                    String txHash = txHashInputTextField.getText();
+                    String txKey = txKeyInputTextField.getText();
+
+                    // If a field is empty we allow to continue. We do not enforce that users send the data.
+                    if (txHash.isEmpty() || txKey.isEmpty()) {
+                        return false;
+                    }
+
+                    // Otherwise we require that input is valid
+                    return !txHashInputTextField.getValidator().validate(txHash).isValid ||
+                            !txKeyInputTextField.getValidator().validate(txKey).isValid;
+                },
+                txHashInputTextField.textProperty(), txKeyInputTextField.textProperty()));
 
         applyStyles();
         display();

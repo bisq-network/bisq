@@ -58,12 +58,14 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
             }
 
             String counterCurrencyExtraData = message.getCounterCurrencyExtraData();
-            if (counterCurrencyExtraData != null &&
-                    counterCurrencyExtraData.length() < 100) {
+            if (counterCurrencyExtraData != null && counterCurrencyExtraData.length() < 100) {
                 trade.setCounterCurrencyExtraData(counterCurrencyExtraData);
-                checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
-                processModel.getTradeManager().maybeStartXmrTxProofServices((SellerTrade) trade);
             }
+
+            checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
+            // We return early in the service if its not XMR. We prefer to not have additional checks outside...
+            processModel.getTradeManager().maybeStartXmrTxProofServices((SellerTrade) trade);
+
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);

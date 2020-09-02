@@ -73,13 +73,6 @@ class XmrTxProofRequestsPerTrade {
                 callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
             }
         };
-        String txId = trade.getCounterCurrencyTxId();
-        String txHash = trade.getCounterCurrencyExtraData();
-        if (is32BitHexStringInValid(txId) || is32BitHexStringInValid(txHash)) {
-
-            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.INVALID_DATA);
-            return;
-        }
 
         if (isTradeAmountAboveLimit(trade)) {
             callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.TRADE_LIMIT_EXCEEDED);
@@ -194,15 +187,6 @@ class XmrTxProofRequestsPerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean is32BitHexStringInValid(String hexString) {
-        if (hexString == null || hexString.isEmpty() || !hexString.matches("[a-fA-F0-9]{64}")) {
-            log.warn("Invalid hexString: {}", hexString);
-            return true;
-        }
-
-        return false;
-    }
 
     private boolean isTradeAmountAboveLimit(Trade trade) {
         Coin tradeAmount = trade.getTradeAmount();
