@@ -10,6 +10,8 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 
+import static bisq.core.trade.txproof.xmr.XmrTxProofParser.MAX_DATE_TOLERANCE;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class XmrTxProofParserTest {
@@ -19,11 +21,12 @@ public class XmrTxProofParserTest {
     private String txKey = "6c336e52ed537676968ee319af6983c80b869ca6a732b5962c02748b486f8f0f";
     private String recipientAddress = "4ATyxmFGU7h3EWu5kYR6gy6iCNFCftbsjATfbuBBjsRHJM4KTwEyeiyVNNUmsfpK1kdRxs8QoPLsZanGqe1Mby43LeyWNMF";
     private XmrTxProofParser parser;
+    private Date tradeDate;
 
     @Before
     public void prepareMocksAndObjects() {
         long amount = 100000000000L;
-        Date tradeDate = Date.from(Instant.now());
+        tradeDate = new Date(1574922644000L);
         String serviceAddress = "127.0.0.1:8081";
         AutoConfirmSettings autoConfirmSettings = new AutoConfirmSettings(true,
                 10,
@@ -119,6 +122,32 @@ public class XmrTxProofParserTest {
                 "'viewkey':'" + txKey + "'," +
                 "'tx_timestamp':'12345'}, 'status':'success'}";
         assertTrue(parser.parse(xmrTxProofModel, invalid_tx_timestamp).getDetail()
+                == XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
+
+        long tradeTimeSec = tradeDate.getTime() / 1000;
+        String ts = String.valueOf(tradeTimeSec - MAX_DATE_TOLERANCE - 1);
+        String invalid_tx_timestamp_1ms_too_old = "{'data':{'address':'" + recipientAddressHex + "', " +
+                "'tx_hash':'" + txHash + "', " +
+                "'viewkey':'" + txKey + "'," +
+                "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
+        assertTrue(parser.parse(xmrTxProofModel, invalid_tx_timestamp_1ms_too_old).getDetail()
+                == XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
+
+        ts = String.valueOf(tradeTimeSec - MAX_DATE_TOLERANCE);
+        String valid_tx_timestamp_exact_MAX_DATE_TOLERANCE = "{'data':{'address':'" + recipientAddressHex + "', " +
+                "'tx_hash':'" + txHash + "', " +
+                "'viewkey':'" + txKey + "'," +
+                "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
+        XmrTxProofRequest.Result parse = parser.parse(xmrTxProofModel, valid_tx_timestamp_exact_MAX_DATE_TOLERANCE);
+        assertFalse(parser.parse(xmrTxProofModel, valid_tx_timestamp_exact_MAX_DATE_TOLERANCE).getDetail()
+                == XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
+
+        ts = String.valueOf(tradeTimeSec - MAX_DATE_TOLERANCE + 1);
+        String valid_tx_timestamp_less_than_MAX_DATE_TOLERANCE = "{'data':{'address':'" + recipientAddressHex + "', " +
+                "'tx_hash':'" + txHash + "', " +
+                "'viewkey':'" + txKey + "'," +
+                "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
+        assertFalse(parser.parse(xmrTxProofModel, valid_tx_timestamp_less_than_MAX_DATE_TOLERANCE).getDetail()
                 == XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
     }
 
