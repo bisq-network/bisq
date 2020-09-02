@@ -117,7 +117,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     }
 
     public void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
-        if (DevEnv.isDevMode()) {
+        if (DevEnv.isDevMode() || injector.getInstance(Config.class).useLocalhostForP2P) {
             return;
         }
 
