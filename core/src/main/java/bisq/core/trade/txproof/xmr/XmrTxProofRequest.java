@@ -224,6 +224,7 @@ class XmrTxProofRequest {
                         break;
                     default:
                         log.warn("Unexpected result {}", result);
+                        break;
                 }
             }
 

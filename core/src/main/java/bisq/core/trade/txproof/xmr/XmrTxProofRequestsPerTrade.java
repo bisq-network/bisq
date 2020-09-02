@@ -52,7 +52,6 @@ class XmrTxProofRequestsPerTrade {
 
     private int numSuccessResults;
     private ChangeListener<Trade.State> tradeStateListener;
-    private List<String> serviceAddresses;
     private AutoConfirmSettings.Listener autoConfirmSettingsListener;
 
     XmrTxProofRequestsPerTrade(Socks5ProxyProvider socks5ProxyProvider,
@@ -68,7 +67,7 @@ class XmrTxProofRequestsPerTrade {
         // it will have no impact on serviceAddresses and numRequiredSuccessResults.
         // Thought numRequiredConfirmations can be changed during request process and will be read from
         // autoConfirmSettings at result parsing.
-        serviceAddresses = autoConfirmSettings.getServiceAddresses();
+        List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses();
         numRequiredSuccessResults = serviceAddresses.size();
 
         if (isTradeAmountAboveLimit(trade)) {
@@ -154,6 +153,7 @@ class XmrTxProofRequestsPerTrade {
                                         request, result);
 
                                 assetTxProofResult = AssetTxProofResult.ERROR;
+                                break;
                         }
 
                         callResultHandlerAndMaybeTerminate(resultHandler, assetTxProofResult);
