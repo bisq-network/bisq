@@ -38,6 +38,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.trade.autoconf.xmr.XmrTxProofService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
@@ -58,6 +59,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.ClockWatcher;
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -108,6 +110,8 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
@@ -282,6 +286,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public void shutDown() {
+        xmrTxProofService.shutDown();
     }
 
     private void initPendingTrades() {
@@ -327,7 +332,9 @@ public class TradeManager implements PersistedDataHost {
 
             if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG &&
                     trade.getCounterCurrencyExtraData() != null) {
-                xmrTxProofService.maybeStartRequestTxProofProcess(trade, tradableList.getList());
+                checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
+                // We delay a bit as at startup lots of stuff is happening
+                UserThread.runAfter(() -> maybeStartXmrTxProofServices((SellerTrade) trade), 1);
             }
                 }
         );
@@ -351,6 +358,37 @@ public class TradeManager implements PersistedDataHost {
         cleanUpAddressEntries();
 
         pendingTradesInitialized.set(true);
+    }
+
+    public void maybeStartXmrTxProofServices(SellerTrade sellerTrade) {
+        xmrTxProofService.maybeStartRequests(sellerTrade, tradableList.getList(),
+                assetTxProofResult -> {
+                    if (assetTxProofResult == AssetTxProofResult.COMPLETED) {
+                        log.info("###########################################################################################");
+                        log.info("We auto-confirm trade {} as our all our services for the tx proof completed successfully", sellerTrade.getShortId());
+                        log.info("###########################################################################################");
+                        autoConfirmFiatPaymentReceived(sellerTrade);
+                    }
+                },
+                (errorMessage, throwable) -> {
+                    log.error(errorMessage);
+                });
+    }
+
+    private void autoConfirmFiatPaymentReceived(SellerTrade sellerTrade) {
+        onFiatPaymentReceived(sellerTrade,
+                () -> {
+                }, errorMessage -> {
+                });
+    }
+
+    public void onFiatPaymentReceived(SellerTrade sellerTrade,
+                                      ResultHandler resultHandler,
+                                      ErrorMessageHandler errorMessageHandler) {
+        sellerTrade.onFiatPaymentReceived(resultHandler, errorMessageHandler);
+
+        //TODO move to trade protocol task
+        accountAgeWitnessService.maybeSignWitness(sellerTrade);
     }
 
     private void initPendingTrade(Trade trade) {

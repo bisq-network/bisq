@@ -17,40 +17,36 @@
 
 package bisq.core.trade.autoconf.xmr;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Volume;
 import bisq.core.payment.payload.AssetsAccountPayload;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.autoconf.AssetTxProofResult;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 
+import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
-
-import org.bitcoinj.core.Coin;
+import bisq.common.handlers.FaultHandler;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import javafx.beans.value.ChangeListener;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.autoconf.xmr.XmrTxProofRequest.Result;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -61,16 +57,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class XmrTxProofService {
     private final FilterManager filterManager;
+    private final Socks5ProxyProvider socks5ProxyProvider;
     private final Preferences preferences;
-    private final XmrTxProofRequestService xmrTxProofRequestService;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final Map<String, ChangeListener<Trade.State>> listenerByTxId = new HashMap<>();
-    @Getter
-    private int requiredSuccessResults;
+
+    private final Map<String, XmrTxProofRequestsPerTrade> servicesByTradeId = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,20 +74,18 @@ public class XmrTxProofService {
     @Inject
     public XmrTxProofService(FilterManager filterManager,
                              Preferences preferences,
-                             XmrTxProofRequestService xmrTxProofRequestService,
                              ClosedTradableManager closedTradableManager,
                              FailedTradesManager failedTradesManager,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             AccountAgeWitnessService accountAgeWitnessService) {
+                             Socks5ProxyProvider socks5ProxyProvider) {
         this.filterManager = filterManager;
         this.preferences = preferences;
-        this.xmrTxProofRequestService = xmrTxProofRequestService;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
-        this.accountAgeWitnessService = accountAgeWitnessService;
+        this.socks5ProxyProvider = socks5ProxyProvider;
     }
 
 
@@ -101,16 +93,22 @@ public class XmrTxProofService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeStartRequestTxProofProcess(Trade trade, List<Trade> activeTrades) {
-        if (!dataValid(trade)) {
+    public void maybeStartRequests(Trade trade,
+                                   List<Trade> activeTrades,
+                                   Consumer<AssetTxProofResult> resultHandler,
+                                   FaultHandler faultHandler) {
+        Optional<AutoConfirmSettings> optionalAutoConfirmSettings = preferences.findAutoConfirmSettings("XMR");
+        if (!optionalAutoConfirmSettings.isPresent()) {
+            log.error("autoConfirmSettings is not present");
             return;
         }
+        AutoConfirmSettings autoConfirmSettings = optionalAutoConfirmSettings.get();
 
         if (!isXmrBuyer(trade)) {
             return;
         }
 
-        if (!isFeatureEnabled(trade)) {
+        if (!isFeatureEnabled(trade, autoConfirmSettings)) {
             return;
         }
 
@@ -118,207 +116,40 @@ public class XmrTxProofService {
             return;
         }
 
-        if (isTradeAmountAboveLimit(trade)) {
-            return;
-        }
-
         if (wasTxKeyReUsed(trade, activeTrades)) {
             return;
         }
 
-        if (isPayoutPublished(trade)) {
-            return;
-        }
+        XmrTxProofRequestsPerTrade service = new XmrTxProofRequestsPerTrade(socks5ProxyProvider,
+                trade,
+                autoConfirmSettings);
+        servicesByTradeId.put(trade.getId(), service);
+        service.requestFromAllServices(
+                assetTxProofResult -> {
+                    trade.setAssetTxProofResult(assetTxProofResult);
 
-        Coin tradeAmount = trade.getTradeAmount();
-        Volume volume = checkNotNull(trade.getOffer()).getVolumeByAmount(tradeAmount);
-        // XMR satoshis have 12 decimal places vs. bitcoin's 8
-        long amountXmr = volume != null ? volume.getValue() * 10000L : 0L;
+                    if (assetTxProofResult.isTerminal()) {
+                        cleanUp(trade);
+                    }
 
-        PaymentAccountPayload sellersPaymentAccountPayload = checkNotNull(trade.getContract()).getSellerPaymentAccountPayload();
-        String recipientAddress = ((AssetsAccountPayload) sellersPaymentAccountPayload).getAddress();
-        if (DevEnv.isDevMode()) {
-            // For dev testing we need to add the matching address to the dev tx key and dev view key
-            recipientAddress = XmrTxProofModel.DEV_ADDRESS;
-            amountXmr = XmrTxProofModel.DEV_AMOUNT;
-        }
-        String txHash = trade.getCounterCurrencyTxId();
-        String txKey = trade.getCounterCurrencyExtraData();
-
-        List<String> serviceAddresses = preferences.getAutoConfirmSettings().serviceAddresses;
-        requiredSuccessResults = serviceAddresses.size();
-
-        ChangeListener<Trade.State> listener = (observable, oldValue, newValue) -> isPayoutPublished(trade);
-        trade.stateProperty().addListener(listener);
-        listenerByTxId.put(trade.getId(), listener);
-
-
-        for (String serviceAddress : serviceAddresses) {
-            XmrTxProofModel xmrTxProofModel = new XmrTxProofModel(trade.getId(),
-                    txHash,
-                    txKey,
-                    recipientAddress,
-                    amountXmr,
-                    trade.getDate(),
-                    getRequiredConfirmations(),
-                    serviceAddress);
-            XmrTxProofRequest request = xmrTxProofRequestService.getRequest(xmrTxProofModel);
-            if (request != null) {
-                request.start(result -> handleResult(request, trade, result),
-                        (errorMsg, throwable) -> log.warn(errorMsg));
-                trade.setAssetTxProofResult(AssetTxProofResult.REQUEST_STARTED);
-            }
-        }
+                    resultHandler.accept(assetTxProofResult);
+                },
+                faultHandler);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handleResult(XmrTxProofRequest request,
-                              Trade trade,
-                              Result result) {
-        if (isPayoutPublished(trade)) {
-            return;
-        }
-
-
-        // If one service fails we consider all failed as we require that all of our defined services result
-        // successfully. For now we keep it that way as it reduces complexity but it might be useful to
-        // support a min number of services which need to succeed from a larger set of services.
-        // E.g. 2 out of 3 services need to succeed.
-
-        int numRequestsWithSuccessResult = xmrTxProofRequestService.numRequestsWithSuccessResult();
-        switch (result) {
-            case PENDING:
-                applyPending(trade, result);
-
-                // Repeating the requests is handled in XmrTransferProofRequester
-                return;
-            case SUCCESS:
-                if (numRequestsWithSuccessResult < requiredSuccessResults) {
-                    log.info("Tx proof request to service {} for trade {} succeeded. We have {} remaining request(s) to other service(s).",
-                            request.getServiceAddress(), trade.getShortId(), numRequestsWithSuccessResult);
-
-                    applyPending(trade, result);
-                    return; // not all APIs have confirmed yet
-                }
-
-                // All our services have returned a SUCCESS result so we have completed.
-                trade.setAssetTxProofResult(AssetTxProofResult.COMPLETED);
-                log.info("All {} tx proof requests for trade {} have been successful.",
-                        requiredSuccessResults, trade.getShortId());
-                removeListener(trade);
-
-                if (!isPayoutPublished(trade)) {
-                    log.info("We auto-confirm XMR receipt to complete trade {}.", trade.getShortId());
-                    // Trade state update is handled in the trade protocol method triggered by the onFiatPaymentReceived call
-                    // This triggers the completion of the trade with signing and publishing the payout tx
-                    ((SellerTrade) trade).onFiatPaymentReceived(() -> {
-                            },
-                            errorMessage -> {
-                            });
-                    accountAgeWitnessService.maybeSignWitness(trade);
-                } else {
-                    log.info("Trade {} have been completed in the meantime.", trade.getShortId());
-                }
-                terminate(trade);
-                return;
-            case FAILED:
-                log.warn("Tx proof request to service {} for trade {} failed. " +
-                                "This might not mean that the XMR transfer was invalid but you have to check yourself " +
-                                "if the XMR transfer was correct. Result={}",
-                        request.getServiceAddress(), trade.getShortId(), result);
-                trade.setAssetTxProofResult(AssetTxProofResult.FAILED);
-                terminate(trade);
-                return;
-            case ERROR:
-                log.warn("Tx proof request to service {} for trade {} resulted in an error. " +
-                                "This might not mean that the XMR transfer was invalid but can be a network or " +
-                                "service problem. Result={}",
-                        request.getServiceAddress(), trade.getShortId(), result);
-
-                trade.setAssetTxProofResult(AssetTxProofResult.ERROR);
-                terminate(trade);
-                return;
-            default:
-                log.warn("Unexpected result {}", result);
-        }
+    public void shutDown() {
+        servicesByTradeId.values().forEach(XmrTxProofRequestsPerTrade::terminate);
+        servicesByTradeId.clear();
     }
 
-    private void applyPending(Trade trade, Result result) {
-        int numRequestsWithSuccessResult = xmrTxProofRequestService.numRequestsWithSuccessResult();
-        XmrTxProofRequest.Detail detail = result.getDetail();
-        int numConfirmations = detail != null ? detail.getNumConfirmations() : 0;
-        log.info("Tx proof service received a {} result for trade {}. numConfirmations={}",
-                result, trade.getShortId(), numConfirmations);
-
-        String details = "";
-        if (XmrTxProofRequest.Detail.PENDING_CONFIRMATIONS == detail) {
-            details = Res.get("portfolio.pending.autoConf.state.confirmations", numConfirmations, getRequiredConfirmations());
-
-        } else if (XmrTxProofRequest.Detail.TX_NOT_FOUND == detail) {
-            details = Res.get("portfolio.pending.autoConf.state.txNotFound");
-        }
-        trade.setAssetTxProofResult(AssetTxProofResult.PENDING
-                .numSuccessResults(numRequestsWithSuccessResult)
-                .requiredSuccessResults(requiredSuccessResults)
-                .details(details));
-    }
-
-    private void terminate(Trade trade) {
-        xmrTxProofRequestService.stopAllRequest();
-        removeListener(trade);
-    }
-
-    private void removeListener(Trade trade) {
-        ChangeListener<Trade.State> listener = listenerByTxId.get(trade.getId());
-        if (listener != null) {
-            trade.stateProperty().removeListener(listener);
-            listenerByTxId.remove(trade.getId());
-        }
-    }
-
-    private int getRequiredConfirmations() {
-        return preferences.getAutoConfirmSettings().requiredConfirmations;
+    private void cleanUp(Trade trade) {
+        servicesByTradeId.remove(trade.getId());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean isPayoutPublished(Trade trade) {
-        if (trade.isPayoutPublished()) {
-            log.warn("Trade payout already published, shutting down all open API requests for trade {}",
-                    trade.getShortId());
-            trade.setAssetTxProofResult(AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
-            terminate(trade);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean dataValid(Trade trade) {
-        String txKey = trade.getCounterCurrencyExtraData();
-        String txHash = trade.getCounterCurrencyTxId();
-
-        if (txKey == null || txKey.isEmpty()) {
-            return false;
-        }
-
-        if (txHash == null || txHash.isEmpty()) {
-            return false;
-        }
-
-        if (!txHash.matches("[a-fA-F0-9]{64}") || !txKey.matches("[a-fA-F0-9]{64}")) {
-            log.error("Validation failed: txHash {} txKey {}", txHash, txKey);
-            return false;
-        }
-
-        return true;
-    }
 
     private boolean isXmrBuyer(Trade trade) {
         if (!checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR")) {
@@ -338,8 +169,8 @@ public class XmrTxProofService {
                 walletsSetup.hasSufficientPeersForBroadcast();
     }
 
-    private boolean isFeatureEnabled(Trade trade) {
-        boolean isEnabled = preferences.getAutoConfirmSettings().enabled && !isAutoConfDisabledByFilter();
+    private boolean isFeatureEnabled(Trade trade, AutoConfirmSettings autoConfirmSettings) {
+        boolean isEnabled = checkNotNull(autoConfirmSettings).isEnabled() && !isAutoConfDisabledByFilter();
         if (!isEnabled) {
             trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED);
         }
@@ -351,20 +182,8 @@ public class XmrTxProofService {
                 filterManager.getFilter().isDisableAutoConf();
     }
 
-    private boolean isTradeAmountAboveLimit(Trade trade) {
-        Coin tradeAmount = trade.getTradeAmount();
-        Coin tradeLimit = Coin.valueOf(preferences.getAutoConfirmSettings().tradeLimit);
-        if (tradeAmount != null && tradeAmount.isGreaterThan(tradeLimit)) {
-            log.warn("Trade amount {} is higher than settings limit {}, will not attempt auto-confirm",
-                    tradeAmount.toFriendlyString(), tradeLimit.toFriendlyString());
-
-            trade.setAssetTxProofResult(AssetTxProofResult.TRADE_LIMIT_EXCEEDED);
-            return true;
-        }
-        return false;
-    }
-
     private boolean wasTxKeyReUsed(Trade trade, List<Trade> activeTrades) {
+        // For dev testing we reuse test data so we ignore that check
         if (DevEnv.isDevMode()) {
             return false;
         }

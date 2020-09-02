@@ -27,8 +27,8 @@ public enum AssetTxProofResult {
     INVALID_DATA,  // Peer provided invalid data. Might be a scam attempt (e.g. txKey reused)
     PAYOUT_TX_ALREADY_PUBLISHED,
 
-    REQUEST_STARTED,
-    PENDING,
+    REQUESTS_STARTED(false),
+    PENDING(false),
 
     // All services completed with a success state
     COMPLETED,
@@ -40,11 +40,22 @@ public enum AssetTxProofResult {
     FAILED;
 
     @Getter
-    private transient int numSuccessResults;
+    private int numSuccessResults;
     @Getter
-    private transient int requiredSuccessResults;
+    private int numRequiredSuccessResults;
     @Getter
-    private transient String details = "";
+    private String details = "";
+    // If isTerminal is set it means that we stop the service
+    @Getter
+    private final boolean isTerminal;
+
+    AssetTxProofResult() {
+        this(false);
+    }
+
+    AssetTxProofResult(boolean isTerminal) {
+        this.isTerminal = isTerminal;
+    }
 
 
     public AssetTxProofResult numSuccessResults(int numSuccessResults) {
@@ -52,8 +63,8 @@ public enum AssetTxProofResult {
         return this;
     }
 
-    public AssetTxProofResult requiredSuccessResults(int requiredSuccessResults) {
-        this.requiredSuccessResults = requiredSuccessResults;
+    public AssetTxProofResult numRequiredSuccessResults(int numRequiredSuccessResults) {
+        this.numRequiredSuccessResults = numRequiredSuccessResults;
         return this;
     }
 
@@ -66,7 +77,7 @@ public enum AssetTxProofResult {
     public String toString() {
         return "AssetTxProofResult{" +
                 "\n     numSuccessResults=" + numSuccessResults +
-                ",\n     requiredSuccessResults=" + requiredSuccessResults +
+                ",\n     requiredSuccessResults=" + numRequiredSuccessResults +
                 ",\n     details='" + details + '\'' +
                 "\n} " + super.toString();
     }

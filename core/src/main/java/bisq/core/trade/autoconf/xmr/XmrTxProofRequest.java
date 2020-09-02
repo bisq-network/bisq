@@ -32,11 +32,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,10 +44,11 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 /**
- * Requests for the XMR tx proof for a particular trade and one service.
- * Repeats requests if tx is not confirmed yet.
+ * Requests for the XMR tx proof for a particular trade from a particular service.
+ * Repeats every 90 sec requests if tx is not confirmed or found yet until MAX_REQUEST_PERIOD of 12 hours is reached.
  */
 @Slf4j
+@EqualsAndHashCode
 class XmrTxProofRequest {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,8 @@ class XmrTxProofRequest {
         ADDRESS_INVALID,
         NO_MATCH_FOUND,
         AMOUNT_NOT_MATCHING,
-        TRADE_DATE_NOT_MATCHING;
+        TRADE_DATE_NOT_MATCHING,
+        NO_RESULTS_TIMEOUT;
 
         @Getter
         private int numConfirmations;
@@ -134,12 +135,8 @@ class XmrTxProofRequest {
     private final XmrTxProofHttpClient httpClient;
     private final XmrTxProofModel xmrTxProofModel;
     private final long firstRequest;
-    @Getter
-    private final String id;
 
     private boolean terminated;
-    @Getter
-    private List<Result> results = new ArrayList<>();
     @Getter
     @Nullable
     private Result result;
@@ -149,52 +146,46 @@ class XmrTxProofRequest {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTxProofRequest(Socks5ProxyProvider socks5ProxyProvider,
-                      XmrTxProofModel xmrTxProofModel) {
+    XmrTxProofRequest(Socks5ProxyProvider socks5ProxyProvider, XmrTxProofModel xmrTxProofModel) {
         this.xmrTxProofModel = xmrTxProofModel;
 
-        this.httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
-        this.httpClient.setBaseUrl("http://" + xmrTxProofModel.getServiceAddress());
+        httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
+        httpClient.setBaseUrl("http://" + xmrTxProofModel.getServiceAddress());
         if (xmrTxProofModel.getServiceAddress().matches("^192.*|^localhost.*")) {
             log.info("Ignoring Socks5 proxy for local net address: {}", xmrTxProofModel.getServiceAddress());
-            this.httpClient.setIgnoreSocks5Proxy(true);
+            httpClient.setIgnoreSocks5Proxy(true);
         }
 
-        this.terminated = false;
+        terminated = false;
         firstRequest = System.currentTimeMillis();
-
-        id = xmrTxProofModel.getTradeId() + "@" + xmrTxProofModel.getServiceAddress();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // used by the service to abort further automatic retries
-    void stop() {
-        terminated = true;
-    }
-
     public void start(Consumer<Result> resultHandler, FaultHandler faultHandler) {
         if (terminated) {
             // the XmrTransferProofService has asked us to terminate i.e. not make any further api calls
             // this scenario may happen if a re-request is scheduled from the callback below
-            log.info("Request() aborted, this object has been terminated. Service: {}", httpClient.getBaseUrl());
+            log.warn("Not starting {} as we have already terminated.", this);
             return;
         }
 
+        // Timeout handing is delegated to the connection timeout handling in httpClient.
+
         ListenableFuture<Result> future = executorService.submit(() -> {
-            Thread.currentThread().setName("XmrTransferProofRequest-" + id);
+            Thread.currentThread().setName("XmrTransferProofRequest-" + this.getShortId());
             String param = "/api/outputs?txhash=" + xmrTxProofModel.getTxHash() +
                     "&address=" + xmrTxProofModel.getRecipientAddress() +
                     "&viewkey=" + xmrTxProofModel.getTxKey() +
                     "&txprove=1";
-            log.info("Requesting from {} with param {}", httpClient.getBaseUrl(), param);
+            log.info("Param {} for {}", param, this);
             String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
             String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
-            log.info("Response json\n{}", prettyJson);
+            log.info("Response json from {}\n{}", this, prettyJson);
             Result result = XmrTxProofParser.parse(xmrTxProofModel, json);
-            log.info("xmrTxProofResult {}", result);
+            log.info("Result from {}\n{}", this, result);
             return result;
         });
 
@@ -203,24 +194,32 @@ class XmrTxProofRequest {
                 XmrTxProofRequest.this.result = result;
 
                 if (terminated) {
-                    log.info("We received result {} but request to {} was terminated already.", result, httpClient.getBaseUrl());
+                    log.warn("We received {} but {} was terminated already. We do not process result.", result, this);
                     return;
                 }
-                results.add(result);
+
                 switch (result) {
                     case PENDING:
-                        if (System.currentTimeMillis() - firstRequest > MAX_REQUEST_PERIOD) {
-                            log.warn("We have tried requesting from {} for too long, giving up.", httpClient.getBaseUrl());
-                            return;
+                        if (isTimeOutReached()) {
+                            log.warn("{} took too long without a success or failure/error result We give up. " +
+                                    "Might be that the transaction was never published.", this);
+                            // If we reached out timeout we return with an error.
+                            UserThread.execute(() -> resultHandler.accept(Result.ERROR.with(Detail.NO_RESULTS_TIMEOUT)));
                         } else {
                             UserThread.runAfter(() -> start(resultHandler, faultHandler), REPEAT_REQUEST_PERIOD, TimeUnit.MILLISECONDS);
+                            // We update our listeners
+                            UserThread.execute(() -> resultHandler.accept(result));
                         }
-                        UserThread.execute(() -> resultHandler.accept(result));
                         break;
                     case SUCCESS:
+                        log.info("{} succeeded", result);
+                        UserThread.execute(() -> resultHandler.accept(result));
+                        terminate();
+                        break;
                     case FAILED:
                     case ERROR:
                         UserThread.execute(() -> resultHandler.accept(result));
+                        terminate();
                         break;
                     default:
                         log.warn("Unexpected result {}", result);
@@ -228,7 +227,7 @@ class XmrTxProofRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = "Request to " + httpClient.getBaseUrl() + " failed";
+                String errorMessage = this + " failed with error " + throwable.toString();
                 faultHandler.handleFault(errorMessage, throwable);
                 UserThread.execute(() ->
                         resultHandler.accept(Result.ERROR.with(Detail.CONNECTION_FAILURE.error(errorMessage))));
@@ -236,23 +235,27 @@ class XmrTxProofRequest {
         });
     }
 
+    void terminate() {
+        terminated = true;
+    }
 
     String getServiceAddress() {
         return xmrTxProofModel.getServiceAddress();
     }
 
-    int numSuccessResults() {
-        return (int) results.stream().filter(e -> e == XmrTxProofRequest.Result.SUCCESS).count();
-    }
-
+    // Convenient for logging
     @Override
     public String toString() {
-        return "XmrTxProofRequest{" +
-                ",\n     httpClient=" + httpClient +
-                ",\n     xmrTxProofModel=" + xmrTxProofModel +
-                ",\n     firstRequest=" + firstRequest +
-                ",\n     terminated=" + terminated +
-                ",\n     result=" + result +
-                "\n}";
+        return "Request at: " + xmrTxProofModel.getServiceAddress() + " for trade: " + xmrTxProofModel.getTradeId();
     }
+
+    private String getShortId() {
+        return Utilities.getShortId(xmrTxProofModel.getTradeId()) + " @ " +
+                xmrTxProofModel.getServiceAddress().substring(0, 6);
+    }
+
+    private boolean isTimeOutReached() {
+        return System.currentTimeMillis() - firstRequest > MAX_REQUEST_PERIOD;
+    }
+
 }

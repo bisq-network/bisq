@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
+import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -26,6 +27,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -56,10 +58,11 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
             }
 
             String counterCurrencyExtraData = message.getCounterCurrencyExtraData();
-            if (counterCurrencyExtraData != null && counterCurrencyExtraData.length() < 100) {
+            if (counterCurrencyExtraData != null &&
+                    counterCurrencyExtraData.length() < 100) {
                 trade.setCounterCurrencyExtraData(counterCurrencyExtraData);
-                processModel.getTradeManager().getXmrTxProofService().maybeStartRequestTxProofProcess(
-                        trade, processModel.getTradeManager().getTradableList());
+                checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
+                processModel.getTradeManager().maybeStartXmrTxProofServices((SellerTrade) trade);
             }
             processModel.removeMailboxMessageAfterProcessing(trade);
 
