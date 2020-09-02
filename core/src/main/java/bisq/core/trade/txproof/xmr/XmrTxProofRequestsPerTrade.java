@@ -25,7 +25,6 @@ import bisq.core.user.AutoConfirmSettings;
 
 import bisq.network.Socks5ProxyProvider;
 
-import bisq.common.UserThread;
 import bisq.common.handlers.FaultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -182,10 +181,10 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         requests.forEach(XmrTxProofRequest::terminate);
         requests.clear();
         if (tradeStateListener != null) {
-            UserThread.execute(() -> trade.stateProperty().removeListener(tradeStateListener));
+            trade.stateProperty().removeListener(tradeStateListener);
         }
         if (autoConfirmSettingsListener != null) {
-            UserThread.execute(() -> autoConfirmSettings.removeListener(autoConfirmSettingsListener));
+            autoConfirmSettings.removeListener(autoConfirmSettingsListener);
         }
     }
 
