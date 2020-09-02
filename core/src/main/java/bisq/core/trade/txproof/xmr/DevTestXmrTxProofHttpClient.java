@@ -26,8 +26,6 @@ import bisq.common.app.DevEnv;
 
 import javax.inject.Inject;
 
-import java.io.IOException;
-
 import java.util.Date;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,12 +63,12 @@ public class DevTestXmrTxProofHttpClient extends HttpClientImpl implements Asset
         super(socks5ProxyProvider);
     }
 
-    static int counter;
+    private static int counter;
 
     @Override
     public String requestWithGET(String param,
                                  @Nullable String headerKey,
-                                 @Nullable String headerValue) throws IOException {
+                                 @Nullable String headerValue) {
 
         XmrTxProofRequest.Result result = XmrTxProofRequest.Result.PENDING;
         XmrTxProofRequest.Detail detail = XmrTxProofRequest.Detail.TX_NOT_FOUND;
@@ -109,7 +107,7 @@ public class DevTestXmrTxProofHttpClient extends HttpClientImpl implements Asset
                         return validJson().replace("f3ce66c9d395e5e460c8802b2c3c1fff04e508434f9738ee35558aac4678c906",
                                 "-");
                     case ADDRESS_INVALID:
-                        return validJson().replace("5e665addf6d7c6300670e8a89564ed12b5c1a21c336408e2835668f9a6a0d802",
+                        return validJson().replace("590f7263428051068bb45cdfcf93407c15b6e291d20c92d0251fcfbf53cc745cdf53319f7d6d7a8e21ea39041aabf31d220a32a875e3ca2087a777f1201c0571",
                                 "-");
                     case NO_MATCH_FOUND:
                         return validJson().replace("match\": true",
@@ -120,14 +118,16 @@ public class DevTestXmrTxProofHttpClient extends HttpClientImpl implements Asset
                     case TRADE_DATE_NOT_MATCHING:
                         DevEnv.setDevMode(false);
                         long date = (new Date(1574922644 * 1000L).getTime() - (MAX_DATE_TOLERANCE * 1000L + 1)) / 1000;
-                        String replace = validJson().replace("1574922644",
+                        return validJson().replace("1574922644",
                                 String.valueOf(date));
-                        return replace;
+                    default:
+                        return null;
                 }
             case ERROR:
                 switch (detail) {
-                   /* case CONNECTION_FAILURE:
-                        break;*/
+                    case CONNECTION_FAILURE:
+                        // Not part of parser level testing
+                        return null;
                     case API_INVALID:
                         switch (apiInvalidDetails) {
                             case EMPTY_JSON:
@@ -159,10 +159,15 @@ public class DevTestXmrTxProofHttpClient extends HttpClientImpl implements Asset
                             case EXCEPTION:
                                 return validJson().replace("} ",
                                         "");
+                            default:
+                                return null;
                         }
-                        break;
-                   /* case NO_RESULTS_TIMEOUT:
-                        break;*/
+
+                    case NO_RESULTS_TIMEOUT:
+                        // Not part of parser level testing
+                        return null;
+                    default:
+                        return null;
                 }
         }
         return validJson();

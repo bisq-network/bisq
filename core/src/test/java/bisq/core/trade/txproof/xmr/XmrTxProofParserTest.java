@@ -131,7 +131,7 @@ public class XmrTxProofParserTest {
                 "'tx_hash':'" + txHash + "', " +
                 "'viewkey':'" + txKey + "'," +
                 "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
-        XmrTxProofRequest.Result parse = parser.parse(xmrTxProofModel, valid_tx_timestamp_exact_MAX_DATE_TOLERANCE);
+        parser.parse(xmrTxProofModel, valid_tx_timestamp_exact_MAX_DATE_TOLERANCE);
         assertNotSame(parser.parse(xmrTxProofModel, valid_tx_timestamp_exact_MAX_DATE_TOLERANCE).getDetail(), XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
 
         ts = String.valueOf(tradeTimeSec - MAX_DATE_TOLERANCE + 1);
