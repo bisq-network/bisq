@@ -17,7 +17,7 @@
 
 package bisq.core.trade.txproof;
 
-import bisq.network.http.IHttpClient;
+import bisq.network.http.HttpClient;
 
-public interface AssetTxProofHttpClient extends IHttpClient {
+public interface AssetTxProofHttpClient extends HttpClient {
 }

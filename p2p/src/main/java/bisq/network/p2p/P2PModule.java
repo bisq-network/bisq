@@ -18,6 +18,8 @@
 package bisq.network.p2p;
 
 import bisq.network.Socks5ProxyProvider;
+import bisq.network.http.HttpClient;
+import bisq.network.http.HttpClientImpl;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BanList;
@@ -69,6 +71,7 @@ public class P2PModule extends AppModule {
         bind(BanList.class).in(Singleton.class);
         bind(NetworkNode.class).toProvider(NetworkNodeProvider.class).in(Singleton.class);
         bind(Socks5ProxyProvider.class).in(Singleton.class);
+        bind(HttpClient.class).to(HttpClientImpl.class);
 
         requestStaticInjection(Connection.class);
 
