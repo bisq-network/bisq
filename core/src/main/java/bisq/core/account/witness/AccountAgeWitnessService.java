@@ -718,13 +718,13 @@ public class AccountAgeWitnessService {
                 filterManager.isCurrencyBanned(dispute.getContract().getOfferPayload().getCurrencyCode()) ||
                 filterManager.isPaymentMethodBanned(
                         PaymentMethod.getPaymentMethodById(dispute.getContract().getPaymentMethodId())) ||
-                filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getBuyerPaymentAccountPayload(),
+                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getBuyerPaymentAccountPayload(),
                         new PaymentAccountFilter[1]) ||
-                filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getSellerPaymentAccountPayload(),
+                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getSellerPaymentAccountPayload(),
                         new PaymentAccountFilter[1]) ||
-                filterManager.isSignerPubKeyBanned(
+                filterManager.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(dispute.getContract().getBuyerPubKeyRing().getSignaturePubKeyBytes())) ||
-                filterManager.isSignerPubKeyBanned(
+                filterManager.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(dispute.getContract().getSellerPubKeyRing().getSignaturePubKeyBytes()));
         return !isFiltered;
     }

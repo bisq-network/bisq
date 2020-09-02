@@ -36,11 +36,15 @@ public final class RevolutAccount extends PaymentAccount {
         return new RevolutAccountPayload(paymentMethod.getId(), id);
     }
 
-    public void setAccountId(String accountId) {
-        ((RevolutAccountPayload) paymentAccountPayload).setAccountId(accountId);
+    public void setUserName(String userName) {
+        ((RevolutAccountPayload) paymentAccountPayload).setUserName(userName);
     }
 
-    public String getAccountId() {
-        return ((RevolutAccountPayload) paymentAccountPayload).getAccountId();
+    public String getUserName() {
+        return ((RevolutAccountPayload) paymentAccountPayload).getUserName();
+    }
+
+    public boolean userNameNotSet() {
+        return ((RevolutAccountPayload) paymentAccountPayload).userNameNotSet();
     }
 }

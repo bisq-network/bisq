@@ -23,17 +23,12 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
-import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
-import bisq.proto.grpc.OffersGrpc;
-import bisq.proto.grpc.PaymentAccountsGrpc;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
-import bisq.proto.grpc.WalletsGrpc;
 
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 import joptsimple.OptionParser;
@@ -43,7 +38,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -133,21 +127,11 @@ public class CliMain {
         if (password == null)
             throw new IllegalArgumentException("missing required 'password' option");
 
-        var credentials = new PasswordCallCredentials(password);
-
-        var channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-        }));
-
-        var versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var offersService = OffersGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
-        var walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
+        var versionService = grpcStubs.versionService;
+        var offersService = grpcStubs.offersService;
+        var paymentAccountsService = grpcStubs.paymentAccountsService;
+        var walletsService = grpcStubs.walletsService;
 
         try {
             switch (method) {

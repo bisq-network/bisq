@@ -26,6 +26,8 @@ import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Date;
 
 import lombok.Value;
@@ -51,7 +53,7 @@ public class XmrTxProofModel {
     private final int confirmsRequired;
     private final String serviceAddress;
 
-    public XmrTxProofModel(Trade trade, String serviceAddress, int confirmsRequired) {
+    XmrTxProofModel(Trade trade, String serviceAddress, int confirmsRequired) {
         this.serviceAddress = serviceAddress;
         this.confirmsRequired = confirmsRequired;
         Coin tradeAmount = trade.getTradeAmount();
@@ -67,5 +69,26 @@ public class XmrTxProofModel {
         txKey = trade.getCounterCurrencyExtraData();
         tradeDate = trade.getDate();
         tradeId = trade.getId();
+    }
+
+    // Used only for testing
+    @VisibleForTesting
+    XmrTxProofModel(String tradeId,
+                    String txHash,
+                    String txKey,
+                    String recipientAddress,
+                    long amount,
+                    Date tradeDate,
+                    int confirmsRequired,
+                    String serviceAddress) {
+
+        this.tradeId = tradeId;
+        this.txHash = txHash;
+        this.txKey = txKey;
+        this.recipientAddress = recipientAddress;
+        this.amount = amount;
+        this.tradeDate = tradeDate;
+        this.confirmsRequired = confirmsRequired;
+        this.serviceAddress = serviceAddress;
     }
 }

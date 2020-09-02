@@ -164,11 +164,13 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         UserThread.runAfter(() -> {
             // We check every hour if we are in the target hour.
             UserThread.runPeriodically(() -> {
-                int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("GMT0")).getHour();
+                int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).getHour();
                 if (currentHour == target) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                            "Shut down node at hour {}" +
-                            "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n", target);
+                                    "Shut down node at hour {} (UTC time is {})" +
+                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                            target,
+                            ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).toString());
                     shutDown(gracefulShutDownHandler);
                 }
             }, TimeUnit.MINUTES.toSeconds(10));

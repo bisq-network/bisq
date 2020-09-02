@@ -71,7 +71,6 @@ import javax.inject.Named;
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -731,6 +730,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
+    private ObservableValue<OfferBookListItem> asPriceDependentObservable(OfferBookListItem item) {
+        return item.getOffer().isUseMarketBasedPrice()
+                ? EasyBind.map(model.priceFeedService.updateCounterProperty(), n -> item)
+                : new ReadOnlyObjectWrapper<>(item);
+    }
+
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>("") {
             {
@@ -738,59 +743,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
         };
         column.getStyleClass().add("number-column");
-        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellValueFactory(offer -> asPriceDependentObservable(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<>() {
-                            private OfferBookListItem offerBookListItem;
-                            private ChangeListener<Number> priceChangedListener;
-                            ChangeListener<Scene> sceneChangeListener;
-
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (getTableView().getScene() != null && sceneChangeListener == null) {
-                                        sceneChangeListener = (observable, oldValue, newValue) -> {
-                                            if (newValue == null) {
-                                                if (priceChangedListener != null) {
-                                                    model.priceFeedService.updateCounterProperty().removeListener(priceChangedListener);
-                                                    priceChangedListener = null;
-                                                }
-                                                offerBookListItem = null;
-                                                setGraphic(null);
-                                                getTableView().sceneProperty().removeListener(sceneChangeListener);
-                                                sceneChangeListener = null;
-                                            }
-                                        };
-                                        getTableView().sceneProperty().addListener(sceneChangeListener);
-                                    }
-
-                                    this.offerBookListItem = item;
-
-                                    if (priceChangedListener == null) {
-                                        priceChangedListener = (observable, oldValue, newValue) -> {
-                                            if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
-                                                setGraphic(getPriceLabel(model.getPrice(offerBookListItem), offerBookListItem));
-                                            }
-                                        };
-                                        model.priceFeedService.updateCounterProperty().addListener(priceChangedListener);
-                                    }
-                                    setGraphic(getPriceLabel(item.getOffer().getPrice() == null ? Res.get("shared.na") : model.getPrice(item), item));
+                                    setGraphic(getPriceLabel(model.getPrice(item), item));
                                 } else {
-                                    if (priceChangedListener != null) {
-                                        model.priceFeedService.updateCounterProperty().removeListener(priceChangedListener);
-                                        priceChangedListener = null;
-                                    }
-                                    if (sceneChangeListener != null) {
-                                        getTableView().sceneProperty().removeListener(sceneChangeListener);
-                                        sceneChangeListener = null;
-                                    }
-                                    this.offerBookListItem = null;
                                     setGraphic(null);
                                 }
                             }
@@ -845,35 +811,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
         };
         column.getStyleClass().add("number-column");
-        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellValueFactory(offer -> asPriceDependentObservable(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<>() {
-                            private OfferBookListItem offerBookListItem;
-                            final ChangeListener<Number> listener = new ChangeListener<>() {
-                                @Override
-                                public void changed(ObservableValue<? extends Number> observable,
-                                                    Number oldValue,
-                                                    Number newValue) {
-                                    if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
-                                        setText("");
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),
-                                                model.getNumberOfDecimalsForVolume(offerBookListItem)));
-                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
-                                    }
-                                }
-                            };
-
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 if (item != null && !empty) {
                                     if (item.getOffer().getPrice() == null) {
-                                        this.offerBookListItem = item;
-                                        model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                         setGraphic(null);
                                     } else {
@@ -882,8 +832,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 model.getNumberOfDecimalsForVolume(item)));
                                     }
                                 } else {
-                                    model.priceFeedService.updateCounterProperty().removeListener(listener);
-                                    this.offerBookListItem = null;
                                     setText("");
                                     setGraphic(null);
                                 }
@@ -1015,7 +963,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
 
-                                TableRow tableRow = getTableRow();
+                                TableRow<OfferBookListItem> tableRow = getTableRow();
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);

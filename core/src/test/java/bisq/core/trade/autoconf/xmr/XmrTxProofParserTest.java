@@ -51,23 +51,23 @@ public class XmrTxProofParserTest {
     public void testJsonTopLevel() {
         // testing the top level fields: data and status
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "{'data':{'title':''},'status':'fail'}" )
+                "{'data':{'title':''},'status':'fail'}")
                 .getDetail() == XmrTxProofRequest.Detail.TX_NOT_FOUND);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "{'data':{'title':''},'missingstatus':'success'}" )
+                "{'data':{'title':''},'missingstatus':'success'}")
                 .getDetail() == XmrTxProofRequest.Detail.API_INVALID);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "{'missingdata':{'title':''},'status':'success'}" )
+                "{'missingdata':{'title':''},'status':'success'}")
                 .getDetail() == XmrTxProofRequest.Detail.API_INVALID);
     }
 
     @Test
     public void testJsonAddress() {
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "{'data':{'missingaddress':'irrelevant'},'status':'success'}" )
+                "{'data':{'missingaddress':'irrelevant'},'status':'success'}")
                 .getDetail() == XmrTxProofRequest.Detail.API_INVALID);
         assertTrue(XmrTxProofParser.parse(xmrTxProofModel,
-                "{'data':{'address':'e957dac7'},'status':'success'}" )
+                "{'data':{'address':'e957dac7'},'status':'success'}")
                 .getDetail() == XmrTxProofRequest.Detail.ADDRESS_INVALID);
     }
 

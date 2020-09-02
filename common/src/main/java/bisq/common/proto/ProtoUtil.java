@@ -18,12 +18,15 @@
 package bisq.common.proto;
 
 import bisq.common.Proto;
+import bisq.common.util.CollectionUtils;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
+import com.google.protobuf.ProtocolStringList;
 
 import com.google.common.base.Enums;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -101,4 +104,9 @@ public class ProtoUtil {
                                                     Function<? super Message, T> extra) {
         return collection.stream().map(o -> extra.apply(o.toProtoMessage())).collect(Collectors.toList());
     }
+
+    public static List<String> protocolStringListToList(ProtocolStringList protocolStringList) {
+        return CollectionUtils.isEmpty(protocolStringList) ? new ArrayList<>() : new ArrayList<>(protocolStringList);
+    }
+
 }

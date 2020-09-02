@@ -28,12 +28,13 @@ import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.NewTradeProtocolLaunchWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
+import bisq.desktop.main.overlays.windows.UpdateRevolutAccountWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.presentation.AccountPresentation;
-import bisq.desktop.main.presentation.SettingsPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
+import bisq.desktop.main.presentation.SettingsPresentation;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -50,6 +51,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.RevolutAccount;
 import bisq.core.presentation.BalancePresentation;
 import bisq.core.presentation.SupportTicketsPresentation;
 import bisq.core.presentation.TradePresentation;
@@ -88,12 +90,15 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -306,10 +311,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .useReportBugButton()
                         .show()));
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
-            if (show)
+            if (show) {
                 torNetworkSettingsWindow.show();
-            else
+            } else if (torNetworkSettingsWindow.isDisplayed()) {
                 torNetworkSettingsWindow.hide();
+            }
         });
         bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup().warning(msg)
                 .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
@@ -380,6 +386,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         bisqSetup.setShowPopupIfInvalidBtcConfigHandler(this::showPopupIfInvalidBtcConfig);
 
+        bisqSetup.setRevolutAccountsUpdateHandler(revolutAccountList -> {
+            // We copy the array as we will mutate it later
+            showRevolutAccountUpdateWindow(new ArrayList<>(revolutAccountList));
+        });
+
+
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()
@@ -407,6 +419,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
 
         bisqSetup.setFilterWarningHandler(warning -> new Popup().warning(warning).show());
+    }
+
+    private void showRevolutAccountUpdateWindow(List<RevolutAccount> revolutAccountList) {
+        if (!revolutAccountList.isEmpty()) {
+            RevolutAccount revolutAccount = revolutAccountList.get(0);
+            revolutAccountList.remove(0);
+            new UpdateRevolutAccountWindow(revolutAccount, user).onClose(() -> {
+                // We delay a bit in case we have multiple account for better UX
+                UserThread.runAfter(() -> showRevolutAccountUpdateWindow(revolutAccountList), 300, TimeUnit.MILLISECONDS);
+            }).show();
+        }
     }
 
     private void setupP2PNumPeersWatcher() {

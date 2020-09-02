@@ -30,58 +30,64 @@ import bisq.daemon.app.BisqDaemonMain;
  @see <a href="https://github.com/bisq-network/bisq/blob/master/docs/dev-setup.md">dev-setup.md</a>
  @see <a href="https://github.com/bisq-network/bisq/blob/master/docs/dao-setup.md">dao-setup.md</a>
  */
-@SuppressWarnings("unused")
 public enum BisqAppConfig {
 
     seednode("bisq-BTC_REGTEST_Seed_2002",
             "bisq-seednode",
-            "\"-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
+            "-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml",
             SeedNodeMain.class.getName(),
             2002,
             5120,
-            -1),
+            -1,
+            49996),
     arbdaemon("bisq-BTC_REGTEST_Arb_dao",
             "bisq-daemon",
-            "\"-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
+            "-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml",
             BisqDaemonMain.class.getName(),
             4444,
             5121,
-            9997),
+            9997,
+            49997),
     arbdesktop("bisq-BTC_REGTEST_Arb_dao",
             "bisq-desktop",
-            "\"-XX:MaxRAM=3g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
+            "-XX:MaxRAM=3g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml",
             BisqAppMain.class.getName(),
             4444,
             5121,
-            -1),
+            -1,
+            49997),
     alicedaemon("bisq-BTC_REGTEST_Alice_dao",
             "bisq-daemon",
-            "\"-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
+            "-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml",
             BisqDaemonMain.class.getName(),
             7777,
             5122,
-            9998),
+            9998,
+            49998),
     alicedesktop("bisq-BTC_REGTEST_Alice_dao",
             "bisq-desktop",
-            "\"-XX:MaxRAM=4g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
+            "-XX:MaxRAM=4g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml",
             BisqAppMain.class.getName(),
             7777,
             5122,
-            -1),
+            -1,
+            49998),
     bobdaemon("bisq-BTC_REGTEST_Bob_dao",
             "bisq-daemon",
-            "\"-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
+            "-XX:MaxRAM=2g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml",
             BisqDaemonMain.class.getName(),
             8888,
             5123,
-            9999),
+            9999,
+            49999),
     bobdesktop("bisq-BTC_REGTEST_Bob_dao",
             "bisq-desktop",
-            "\"-XX:MaxRAM=4g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml\"",
+            "-XX:MaxRAM=4g -Dlogback.configurationFile=apitest/build/resources/main/logback.xml",
             BisqAppMain.class.getName(),
             8888,
             5123,
-            -1);
+            -1,
+            49999);
 
     public final String appName;
     public final String startupScript;
@@ -91,6 +97,7 @@ public enum BisqAppConfig {
     public final int rpcBlockNotificationPort;
     // Daemons can use a global gRPC password, but each needs a unique apiPort.
     public final int apiPort;
+    public final int remoteDebugPort;
 
     BisqAppConfig(String appName,
                   String startupScript,
@@ -98,7 +105,8 @@ public enum BisqAppConfig {
                   String mainClassName,
                   int nodePort,
                   int rpcBlockNotificationPort,
-                  int apiPort) {
+                  int apiPort,
+                  int remoteDebugPort) {
         this.appName = appName;
         this.startupScript = startupScript;
         this.javaOpts = javaOpts;
@@ -106,6 +114,7 @@ public enum BisqAppConfig {
         this.nodePort = nodePort;
         this.rpcBlockNotificationPort = rpcBlockNotificationPort;
         this.apiPort = apiPort;
+        this.remoteDebugPort = remoteDebugPort;
     }
 
     @Override
@@ -118,6 +127,7 @@ public enum BisqAppConfig {
                 ", nodePort=" + nodePort + "\n" +
                 ", rpcBlockNotificationPort=" + rpcBlockNotificationPort + "\n" +
                 ", apiPort=" + apiPort + "\n" +
+                ", remoteDebugPort=" + remoteDebugPort + "\n" +
                 '}';
     }
 }

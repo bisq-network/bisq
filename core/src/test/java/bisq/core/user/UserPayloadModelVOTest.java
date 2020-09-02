@@ -53,14 +53,18 @@ public class UserPayloadModelVOTest {
                 false,
                 null,
                 null,
-                "string",
-                new byte[]{10, 0, 0},
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
                 null,
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
+                0,
+                null,
+                null,
+                null,
+                null,
                 false));
+
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
         vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));

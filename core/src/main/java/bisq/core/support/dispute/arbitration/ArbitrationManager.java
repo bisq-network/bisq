@@ -28,6 +28,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
@@ -88,9 +89,10 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                               ClosedTradableManager closedTradableManager,
                               OpenOfferManager openOfferManager,
                               PubKeyRing pubKeyRing,
-                              ArbitrationDisputeListService arbitrationDisputeListService) {
+                              ArbitrationDisputeListService arbitrationDisputeListService,
+                              PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, arbitrationDisputeListService);
+                openOfferManager, pubKeyRing, arbitrationDisputeListService, priceFeedService);
     }
 
 
@@ -161,6 +163,11 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     @Override
     protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
         return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
+    }
+
+    @Override
+    protected void addPriceInfoMessage(Dispute dispute, int counter) {
+        // Arbitrator is not used anymore.
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

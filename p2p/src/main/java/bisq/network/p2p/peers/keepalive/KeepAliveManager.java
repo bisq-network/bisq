@@ -49,8 +49,8 @@ import org.jetbrains.annotations.NotNull;
 public class KeepAliveManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
-    private static final int INTERVAL_SEC = new Random().nextInt(5) + 30;
-    private static final long LAST_ACTIVITY_AGE_MS = INTERVAL_SEC / 2;
+    private static final int INTERVAL_SEC = new Random().nextInt(30) + 30;
+    private static final long LAST_ACTIVITY_AGE_MS = INTERVAL_SEC * 1000 / 2;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;

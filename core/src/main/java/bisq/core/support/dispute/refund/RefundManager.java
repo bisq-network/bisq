@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
@@ -74,9 +75,10 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          ClosedTradableManager closedTradableManager,
                          OpenOfferManager openOfferManager,
                          PubKeyRing pubKeyRing,
-                         RefundDisputeListService refundDisputeListService) {
+                         RefundDisputeListService refundDisputeListService,
+                         PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, refundDisputeListService);
+                openOfferManager, pubKeyRing, refundDisputeListService, priceFeedService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +141,14 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
         return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
     }
+
+    @Override
+    protected void addPriceInfoMessage(Dispute dispute, int counter) {
+        // At refund agent we do not add the option trade price check as the time for dispute opening is not correct.
+        // In case of an option trade the mediator adds to the result summary message automatically the system message
+        // with the option trade detection info so the refund agent can see that as well.
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
