@@ -76,7 +76,8 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
             } else {
                 String expectedAddressHex = CryptoNoteUtils.convertToRawHex(model.getRecipientAddress());
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
-                    log.warn("address {}, expected: {}", jsonAddress.getAsString(), expectedAddressHex);
+                    log.warn("Address from json result (convertToRawHex):\n{}\nExpected (convertToRawHex):\n{}\nRecipient address:\n{}",
+                            jsonAddress.getAsString(), expectedAddressHex, model.getRecipientAddress());
                     return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.ADDRESS_INVALID);
                 }
             }
