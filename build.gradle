@@ -674,7 +674,8 @@ task codeCoverageReport(type: JacocoReport) {
     // Add all relevant sourcesets from the subprojects
     subprojects.each {
         if (!it.path.contains(":proto")) // but skip proto, as it will never receive any test
-            sourceSets it.sourceSets.main
+            if (!project.hasProperty("only") || it.path.contains("$only"))
+                sourceSets it.sourceSets.main
     }
 
     reports {
