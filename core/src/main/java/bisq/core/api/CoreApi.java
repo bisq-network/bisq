@@ -22,13 +22,9 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.support.dispute.mediation.mediator.Mediator;
-import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
-
-import bisq.network.p2p.NodeAddress;
 
 import org.bitcoinj.core.Coin;
 
@@ -37,7 +33,6 @@ import javax.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
@@ -52,19 +47,19 @@ import static bisq.common.app.Version.VERSION;
 @Slf4j
 public class CoreApi {
 
-    private final CoreDisputeAgentService coreDisputeAgentService;
+    private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public CoreApi(CoreDisputeAgentService coreDisputeAgentService,
+    public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
-        this.coreDisputeAgentService = coreDisputeAgentService;
+        this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
         this.walletsService = walletsService;
@@ -80,14 +75,8 @@ public class CoreApi {
     // Dispute Agents
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("unused")
-    public Optional<Mediator> getMediator(NodeAddress nodeAddress) {
-        return coreDisputeAgentService.getMediator(nodeAddress);
-    }
-
-    @SuppressWarnings("unused")
-    public Optional<RefundAgent> getRefundAgent(NodeAddress nodeAddress) {
-        return coreDisputeAgentService.getRefundAgent(nodeAddress);
+    public void registerDisputeAgent(String disputeAgentType, String registrationKey) {
+        coreDisputeAgentsService.registerDisputeAgent(disputeAgentType, registrationKey);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
