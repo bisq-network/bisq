@@ -102,7 +102,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
-    private final boolean useDevModeHeader;
+    private final boolean useDevMode;
     private final Preferences preferences;
     @FXML
     TableView<PendingTradesListItem> tableView;
@@ -143,14 +143,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
                              @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
-                             @Named(Config.USE_DEV_MODE_HEADER) boolean useDevModeHeader) {
+                             @Named(Config.USE_DEV_MODE) boolean useDevMode) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.preferences = preferences;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        this.useDevModeHeader = useDevModeHeader;
+        this.useDevMode = useDevMode;
     }
 
     @Override
@@ -415,7 +415,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         });
 
         Scene scene = new Scene(pane);
-        CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), useDevModeHeader);
+        CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), useDevMode);
         scene.addEventHandler(KeyEvent.KEY_RELEASED, ev -> {
             if (ev.getCode() == KeyCode.ESCAPE) {
                 ev.consume();

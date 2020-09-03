@@ -223,9 +223,9 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         Preferences preferences = injector.getInstance(Preferences.class);
         var config = injector.getInstance(Config.class);
         preferences.getCssThemeProperty().addListener((ov) -> {
-            CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), config.useDevModeHeader);
+            CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), config.useDevMode);
         });
-        CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), config.useDevModeHeader);
+        CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), config.useDevMode);
 
         return scene;
     }
