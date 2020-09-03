@@ -33,14 +33,19 @@ import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 
+import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ListChangeListener;
@@ -75,6 +80,9 @@ public class XmrTxProofService implements AssetTxProofService {
     private final Map<String, XmrTxProofRequestsPerTrade> servicesByTradeId = new HashMap<>();
     private AutoConfirmSettings autoConfirmSettings;
     private Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
+    private ChangeListener<Number> btcPeersListener, btcBlockListener;
+    private BootstrapListener bootstrapListener;
+    private MonadicBinding<Boolean> p2pNetworkAndWalletReady;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,30 +120,21 @@ public class XmrTxProofService implements AssetTxProofService {
 
     @Override
     public void onAllServicesInitialized() {
-        if (!preferences.findAutoConfirmSettings("XMR").isPresent()) {
-            log.error("AutoConfirmSettings is not present");
-        }
-        autoConfirmSettings = preferences.findAutoConfirmSettings("XMR").get();
+        // As we might trigger the payout tx we want to be sure that we are well connected to the Bitcoin network.
+        // onAllServicesInitialized is called once we have received the initial data but we want to have our
+        // hidden service published and upDatedDataResponse received before we start.
+        p2pNetworkAndWalletReady = EasyBind.combine(isP2pBootstrapped(), hasSufficientBtcPeers(), isBtcBlockDownloadComplete(),
+                (isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete) -> {
+                    log.info("isP2pBootstrapped={}, hasSufficientBtcPeers={} isBtcBlockDownloadComplete={}",
+                            isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete);
+                    return isP2pBootstrapped && hasSufficientBtcPeers && isBtcBlockDownloadComplete;
+                });
 
-        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> {
-            if (isAutoConfDisabledByFilter()) {
-                servicesByTradeId.values().stream().map(XmrTxProofRequestsPerTrade::getTrade).forEach(trade ->
-                        trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
-                                .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature"))));
-                shutDown();
+        p2pNetworkAndWalletReady.subscribe((observable, oldValue, newValue) -> {
+            if (newValue) {
+                onP2pNetworkAndWalletReady();
             }
         });
-
-        ObservableList<Trade> tradableList = tradeManager.getTradableList();
-        tradableList.addListener((ListChangeListener<Trade>) c -> {
-            c.next();
-            if (c.wasAdded()) {
-                processTrades(c.getAddedSubList());
-            }
-        });
-        // Network is usually not ready at onAllServicesInitialized
-        //TODO we need to add listeners
-        UserThread.runAfter(() -> processTrades(tradableList), 1);
     }
 
     @Override
@@ -149,25 +148,59 @@ public class XmrTxProofService implements AssetTxProofService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void onP2pNetworkAndWalletReady() {
+        if (!preferences.findAutoConfirmSettings("XMR").isPresent()) {
+            log.error("AutoConfirmSettings is not present");
+        }
+        autoConfirmSettings = preferences.findAutoConfirmSettings("XMR").get();
+
+        // We register a listener to stop running services. For new trades we check anyway in the trade validation
+        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> {
+            if (isAutoConfDisabledByFilter()) {
+                servicesByTradeId.values().stream().map(XmrTxProofRequestsPerTrade::getTrade).forEach(trade ->
+                        trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
+                                .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature"))));
+                shutDown();
+            }
+        });
+
+        // We listen on new trades
+        ObservableList<Trade> tradableList = tradeManager.getTradableList();
+        tradableList.addListener((ListChangeListener<Trade>) c -> {
+            c.next();
+            if (c.wasAdded()) {
+                processTrades(c.getAddedSubList());
+            }
+        });
+
+        // Process existing trades
+        processTrades(tradableList);
+    }
+
     private void processTrades(List<? extends Trade> trades) {
         trades.stream()
                 .filter(trade -> trade instanceof SellerTrade)
                 .map(trade -> (SellerTrade) trade)
                 .filter(this::isXmrTrade)
-                .filter(trade -> !trade.isFiatReceived())
-                .forEach(this::processOrAddListener);
+                .filter(trade -> !trade.isFiatReceived()) // Phase name is from the time when it was fiat only. Means counter currency (XMR) received.
+                .forEach(this::processTradeOrAddListener);
     }
 
     // Basic requirements are fulfilled.
-    // We might register a state listener to process further if expected state appears
-    private void processOrAddListener(SellerTrade trade) {
-        if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
-            processTrade(trade);
+    // We process further if we are in the expected state or register a listener
+    private void processTradeOrAddListener(SellerTrade trade) {
+        if (isExpectedTradeState(trade.getState())) {
+            startRequestsIfValid(trade);
         } else {
-            // We are expecting SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG in the future, so listen to changes
+            // We are expecting SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG in the future, so listen on changes
             ChangeListener<Trade.State> tradeStateListener = (observable, oldValue, newValue) -> {
-                if (newValue == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
-                    processTrade(trade);
+                if (isExpectedTradeState(newValue)) {
+                    ChangeListener<Trade.State> listener = tradeStateListenerMap.remove(trade.getId());
+                    if (listener != null) {
+                        trade.stateProperty().removeListener(listener);
+                    }
+
+                    startRequestsIfValid(trade);
                 }
             };
             tradeStateListenerMap.put(trade.getId(), tradeStateListener);
@@ -175,14 +208,7 @@ public class XmrTxProofService implements AssetTxProofService {
         }
     }
 
-    private void processTrade(SellerTrade trade) {
-        tradeStateListenerMap.remove(trade.getId());
-
-        if (!networkAndWalletReady()) {
-            //TODO handle listeners
-            return;
-        }
-
+    private void startRequestsIfValid(SellerTrade trade) {
         String txId = trade.getCounterCurrencyTxId();
         String txHash = trade.getCounterCurrencyExtraData();
         if (is32BitHexStringInValid(txId) || is32BitHexStringInValid(txHash)) {
@@ -202,6 +228,10 @@ public class XmrTxProofService implements AssetTxProofService {
             return;
         }
 
+        startRequests(trade);
+    }
+
+    private void startRequests(SellerTrade trade) {
         XmrTxProofRequestsPerTrade service = new XmrTxProofRequestsPerTrade(httpClient,
                 trade,
                 autoConfirmSettings,
@@ -233,6 +263,60 @@ public class XmrTxProofService implements AssetTxProofService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Startup checks
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private BooleanProperty isBtcBlockDownloadComplete() {
+        BooleanProperty result = new SimpleBooleanProperty();
+        if (walletsSetup.isDownloadComplete()) {
+            result.set(true);
+        } else {
+            btcBlockListener = (observable, oldValue, newValue) -> {
+                if (walletsSetup.isDownloadComplete()) {
+                    walletsSetup.downloadPercentageProperty().removeListener(btcBlockListener);
+                    result.set(true);
+                }
+            };
+            walletsSetup.downloadPercentageProperty().addListener(btcBlockListener);
+        }
+        return result;
+    }
+
+    private BooleanProperty hasSufficientBtcPeers() {
+        BooleanProperty result = new SimpleBooleanProperty();
+        if (walletsSetup.hasSufficientPeersForBroadcast()) {
+            result.set(true);
+        } else {
+            btcPeersListener = (observable, oldValue, newValue) -> {
+                if (walletsSetup.hasSufficientPeersForBroadcast()) {
+                    walletsSetup.numPeersProperty().removeListener(btcPeersListener);
+                    result.set(true);
+                }
+            };
+            walletsSetup.numPeersProperty().addListener(btcPeersListener);
+        }
+        return result;
+    }
+
+    private BooleanProperty isP2pBootstrapped() {
+        BooleanProperty result = new SimpleBooleanProperty();
+        if (p2PService.isBootstrapped()) {
+            result.set(true);
+        } else {
+            bootstrapListener = new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    p2PService.removeP2PServiceListener(bootstrapListener);
+                    result.set(true);
+                }
+            };
+            p2PService.addP2PServiceListener(bootstrapListener);
+        }
+        return result;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -240,12 +324,8 @@ public class XmrTxProofService implements AssetTxProofService {
         return (checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR"));
     }
 
-    private boolean networkAndWalletReady() {
-        //TODO We need to check if false and add listeners
-        boolean bootstrapped = p2PService.isBootstrapped();
-        boolean downloadComplete = walletsSetup.isDownloadComplete();
-        boolean hasSufficientPeersForBroadcast = walletsSetup.hasSufficientPeersForBroadcast();
-        return bootstrapped && downloadComplete && hasSufficientPeersForBroadcast;
+    private boolean isExpectedTradeState(Trade.State newValue) {
+        return newValue == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
     }
 
     private boolean is32BitHexStringInValid(String hexString) {
