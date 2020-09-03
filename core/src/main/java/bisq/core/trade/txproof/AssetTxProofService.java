@@ -17,18 +17,8 @@
 
 package bisq.core.trade.txproof;
 
-import bisq.core.trade.Trade;
-
-import bisq.common.handlers.FaultHandler;
-
-import java.util.List;
-import java.util.function.Consumer;
-
 public interface AssetTxProofService {
-    void maybeStartRequests(Trade trade,
-                            List<Trade> activeTrades,
-                            Consumer<AssetTxProofResult> resultHandler,
-                            FaultHandler faultHandler);
+    void onAllServicesInitialized();
 
     void shutDown();
 }
