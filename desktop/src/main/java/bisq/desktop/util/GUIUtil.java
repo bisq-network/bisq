@@ -1176,6 +1176,7 @@ public class GUIUtil {
             case INVALID_DATA:
                 return Res.get(key, result.getDetails());
             case PAYOUT_TX_ALREADY_PUBLISHED:
+            case DISPUTE_OPENED:
             case REQUESTS_STARTED:
                 return Res.get(key);
             case PENDING:
