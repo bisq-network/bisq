@@ -82,7 +82,6 @@ public class XmrTxProofService implements AssetTxProofService {
     private Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
     private ChangeListener<Number> btcPeersListener, btcBlockListener;
     private BootstrapListener bootstrapListener;
-    private MonadicBinding<Boolean> p2pNetworkAndWalletReady;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +122,7 @@ public class XmrTxProofService implements AssetTxProofService {
         // As we might trigger the payout tx we want to be sure that we are well connected to the Bitcoin network.
         // onAllServicesInitialized is called once we have received the initial data but we want to have our
         // hidden service published and upDatedDataResponse received before we start.
-        p2pNetworkAndWalletReady = EasyBind.combine(isP2pBootstrapped(), hasSufficientBtcPeers(), isBtcBlockDownloadComplete(),
+        MonadicBinding<Boolean> p2pNetworkAndWalletReady = EasyBind.combine(isP2pBootstrapped(), hasSufficientBtcPeers(), isBtcBlockDownloadComplete(),
                 (isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete) -> {
                     log.info("isP2pBootstrapped={}, hasSufficientBtcPeers={} isBtcBlockDownloadComplete={}",
                             isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete);
