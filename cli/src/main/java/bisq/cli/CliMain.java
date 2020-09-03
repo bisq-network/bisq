@@ -23,27 +23,24 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
-import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
-import bisq.proto.grpc.OffersGrpc;
-import bisq.proto.grpc.PaymentAccountsGrpc;
+import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
-import bisq.proto.grpc.WalletsGrpc;
 
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
+import java.net.InetAddress;
+
 import java.io.IOException;
 import java.io.PrintStream;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,7 +72,8 @@ public class CliMain {
         lockwallet,
         unlockwallet,
         removewalletpassword,
-        setwalletpassword
+        setwalletpassword,
+        registerdisputeagent
     }
 
     public static void main(String[] args) {
@@ -95,7 +93,7 @@ public class CliMain {
 
         var hostOpt = parser.accepts("host", "rpc server hostname or IP")
                 .withRequiredArg()
-                .defaultsTo("localhost");
+                .defaultsTo(InetAddress.getLoopbackAddress().getHostAddress());
 
         var portOpt = parser.accepts("port", "rpc server port")
                 .withRequiredArg()
@@ -134,9 +132,10 @@ public class CliMain {
             throw new IllegalArgumentException("missing required 'password' option");
 
         GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
+        var disputeAgentsService = grpcStubs.disputeAgentsService;
         var versionService = grpcStubs.versionService;
         var offersService = grpcStubs.offersService;
-        var paymentAccountsService =  grpcStubs.paymentAccountsService;
+        var paymentAccountsService = grpcStubs.paymentAccountsService;
         var walletsService = grpcStubs.walletsService;
 
         try {
@@ -172,7 +171,8 @@ public class CliMain {
                 }
                 case getoffers: {
                     if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("incorrect parameter count, expecting direction (buy|sell), currency code");
+                        throw new IllegalArgumentException("incorrect parameter count, "
+                                + " expecting direction (buy|sell), currency code");
 
                     var direction = nonOptionArgs.get(1);
                     var fiatCurrency = nonOptionArgs.get(2);
@@ -199,7 +199,7 @@ public class CliMain {
                             .setAccountNumber(accountNumber)
                             .setFiatCurrencyCode(fiatCurrencyCode).build();
                     paymentAccountsService.createPaymentAccount(request);
-                    out.println(format("payment account %s saved", accountName));
+                    out.printf("payment account %s saved%n", accountName);
                     return;
                 }
                 case getpaymentaccts: {
@@ -238,7 +238,8 @@ public class CliMain {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("no password specified");
 
-                    var request = RemoveWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
+                    var request = RemoveWalletPasswordRequest.newBuilder()
+                            .setPassword(nonOptionArgs.get(1)).build();
                     walletsService.removeWalletPassword(request);
                     out.println("wallet decrypted");
                     return;
@@ -247,12 +248,26 @@ public class CliMain {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("no password specified");
 
-                    var requestBuilder = SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1));
+                    var requestBuilder = SetWalletPasswordRequest.newBuilder()
+                            .setPassword(nonOptionArgs.get(1));
                     var hasNewPassword = nonOptionArgs.size() == 3;
                     if (hasNewPassword)
                         requestBuilder.setNewPassword(nonOptionArgs.get(2));
                     walletsService.setWalletPassword(requestBuilder.build());
                     out.println("wallet encrypted" + (hasNewPassword ? " with new password" : ""));
+                    return;
+                }
+                case registerdisputeagent: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException(
+                                "incorrect parameter count, expecting dispute agent type, registration key");
+
+                    var disputeAgentType = nonOptionArgs.get(1);
+                    var registrationKey = nonOptionArgs.get(2);
+                    var requestBuilder = RegisterDisputeAgentRequest.newBuilder()
+                            .setDisputeAgentType(disputeAgentType).setRegistrationKey(registrationKey);
+                    disputeAgentsService.registerDisputeAgent(requestBuilder.build());
+                    out.println(disputeAgentType + " registered");
                     return;
                 }
                 default: {
@@ -281,7 +296,10 @@ public class CliMain {
             stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
             stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format("%-22s%-50s%s%n", "getoffers", "buy | sell, fiat currency code", "Get current offers");
-            stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
+            stream.format("%-22s%-50s%s%n",
+                    "createpaymentacct",
+                    "account name, account number, currency code",
+                    "Create PerfectMoney dummy account");
             stream.format("%-22s%-50s%s%n", "getpaymentaccts", "", "Get user payment accounts");
             stream.format("%-22s%-50s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
             stream.format("%-22s%-50s%s%n", "unlockwallet", "password timeout",
