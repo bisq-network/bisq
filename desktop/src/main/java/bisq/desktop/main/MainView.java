@@ -77,6 +77,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -190,10 +191,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
-        JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
-        daoButtonWithBadge.getStyleClass().add("new");
-        JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
-        accountButtonWithBadge.getStyleClass().add("new");
         JFXBadge settingsButtonWithBadge = new JFXBadge(settingsButton);
         settingsButtonWithBadge.getStyleClass().add("new");
 
@@ -326,9 +323,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSeparator(),
-                settingsButtonWithBadge, getNavigationSeparator(), accountButtonWithBadge,
-                getNavigationSeparator(), daoButtonWithBadge);
+        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButtonWithBadge,
+                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -371,8 +367,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
-        setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
-        setupBadge(accountButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowAccountUpdatesNotification());
         setupBadge(settingsButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowSettingsUpdatesNotification());
 
         navigation.addListener(viewPath -> {
@@ -441,6 +435,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         separator.setMaxHeight(22);
         separator.setMaxWidth(Double.MAX_VALUE);
         return separator;
+    }
+
+    @NotNull
+    private Region getNavigationSpacer() {
+        final Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
     }
 
     private Tuple2<Label, VBox> getBalanceBox(String text) {

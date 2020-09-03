@@ -25,7 +25,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
-import bisq.desktop.main.overlays.windows.NewTradeProtocolLaunchWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.UpdateRevolutAccountWindow;
@@ -282,7 +281,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
 
-        maybeAddNewTradeProtocolLaunchWindowToQueue();
         maybeShowPopupsFromQueue();
     }
 
@@ -390,7 +388,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             // We copy the array as we will mutate it later
             showRevolutAccountUpdateWindow(new ArrayList<>(revolutAccountList));
         });
-
+        bisqSetup.setOsxKeyLoggerWarningHandler(() -> {
+            new Popup().warning(Res.get("popup.warning.osxKeyLoggerWarning"))
+                    .closeButtonText(Res.get("shared.iUnderstand"))
+                    .show();
+        });
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
@@ -683,24 +685,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return daoPresentation.getShowDaoUpdatesNotification();
     }
 
-    public BooleanProperty getShowAccountUpdatesNotification() {
-        return accountPresentation.getShowAccountUpdatesNotification();
-    }
-
     public BooleanProperty getShowSettingsUpdatesNotification() {
         return settingsPresentation.getShowSettingsUpdatesNotification();
-    }
-
-    private void maybeAddNewTradeProtocolLaunchWindowToQueue() {
-        String newTradeProtocolWithAccountSigningLaunchPopupKey = "newTradeProtocolWithAccountSigningLaunchPopup";
-        if (DontShowAgainLookup.showAgain(newTradeProtocolWithAccountSigningLaunchPopupKey)) {
-            NewTradeProtocolLaunchWindow newTradeProtocolLaunchWindow = new NewTradeProtocolLaunchWindow()
-                    .headLine(Res.get("popup.news.launch.headline"));
-            newTradeProtocolLaunchWindow.setDisplayOrderPriority(1);
-            popupQueue.add(newTradeProtocolLaunchWindow);
-
-            DontShowAgainLookup.dontShowAgain(newTradeProtocolWithAccountSigningLaunchPopupKey, true);
-        }
     }
 
     private void maybeShowPopupsFromQueue() {

@@ -68,6 +68,7 @@ public class Config {
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
     public static final String USE_DEV_MODE = "useDevMode";
+    public static final String USE_DEV_MODE_HEADER = "useDevModeHeader";
     public static final String TOR_DIR = "torDir";
     public static final String STORAGE_DIR = "storageDir";
     public static final String KEY_STORAGE_DIR = "keyStorageDir";
@@ -159,6 +160,7 @@ public class Config {
     public final boolean daoActivated;
     public final String referralId;
     public final boolean useDevMode;
+    public final boolean useDevModeHeader;
     public final boolean useDevPrivilegeKeys;
     public final boolean dumpStatistics;
     public final boolean ignoreDevMsg;
@@ -352,6 +354,13 @@ public class Config {
         ArgumentAcceptingOptionSpec<Boolean> useDevModeOpt =
                 parser.accepts(USE_DEV_MODE,
                         "Enables dev mode which is used for convenience for developer testing")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> useDevModeHeaderOpt =
+                parser.accepts(USE_DEV_MODE_HEADER,
+                        "Use dev mode css scheme to distinguish dev instances.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -706,6 +715,7 @@ public class Config {
             this.torStreamIsolation = options.has(torStreamIsolationOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
+            this.useDevModeHeader = options.valueOf(useDevModeHeaderOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
             this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);
