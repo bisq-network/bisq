@@ -17,6 +17,8 @@
 
 package bisq.apitest.linux;
 
+import java.net.InetAddress;
+
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -61,7 +63,7 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
         this.baseCurrencyNetwork = "BTC_REGTEST";
         this.genesisTxId = "30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf";
         this.genesisBlockHeight = 111;
-        this.seedNodes = "localhost:2002";
+        this.seedNodes = InetAddress.getLoopbackAddress().getHostAddress() + ":2002";
         this.daoActivated = true;
         this.fullDaoNode = true;
         this.useLocalhostForP2P = true;
