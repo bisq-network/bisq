@@ -154,26 +154,13 @@ public class XmrTxProofService implements AssetTxProofService {
                 .filter(trade -> trade instanceof SellerTrade)
                 .map(trade -> (SellerTrade) trade)
                 .filter(this::isXmrTrade)
-                .forEach(this::processCandidate);
-
-      /*  trades.stream()
-                .filter(trade -> trade instanceof SellerTrade)
-                .map(trade -> (SellerTrade) trade)
-                .filter(this::isXmrBuyer)
-                .filter(this::isExpectedTradeState)
-                .filter(trade -> networkAndWalletReady())
-                .forEach(this::processTrade);
-        */
+                .filter(trade -> !trade.isFiatReceived())
+                .forEach(this::processOrAddListener);
     }
 
     // Basic requirements are fulfilled.
     // We might register a state listener to process further if expected state appears
-    private void processCandidate(SellerTrade trade) {
-        if (trade.isFiatReceived()) {
-            // We are done already.
-            return;
-        }
-
+    private void processOrAddListener(SellerTrade trade) {
         if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
             processTrade(trade);
         } else {
@@ -230,9 +217,9 @@ public class XmrTxProofService implements AssetTxProofService {
                         log.info("We auto-confirm trade {} as our all our services for the tx proof completed successfully", trade.getShortId());
                         log.info("###########################################################################################");
 
-                       /* trade.onFiatPaymentReceived(() -> {
+                        trade.onFiatPaymentReceived(() -> {
                         }, errorMessage -> {
-                        });*/
+                        });
                     }
 
                     if (assetTxProofResult.isTerminal()) {
