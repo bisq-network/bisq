@@ -26,6 +26,7 @@ public enum AssetTxProofResult {
     TRADE_LIMIT_EXCEEDED,
     INVALID_DATA,  // Peer provided invalid data. Might be a scam attempt (e.g. txKey reused)
     PAYOUT_TX_ALREADY_PUBLISHED,
+    DISPUTE_OPENED,
 
     REQUESTS_STARTED(false),
     PENDING(false),
