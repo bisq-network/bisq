@@ -28,21 +28,37 @@ import java.util.Arrays;
 import java.util.Map;
 
 public class CryptoNoteUtils {
-    public static String convertToRawHex(String address) {
+    public static String getRawSpendKeyAndViewKey(String address) throws CryptoNoteUtils.CryptoNoteException {
         try {
-            byte[] decoded = MoneroBase58.decode(address);
-            // omit the type (1st byte) and checksum (last 4 byte)
-            byte[] slice = Arrays.copyOfRange(decoded, 1, decoded.length - 4);
+            // See https://monerodocs.org/public-address/standard-address/
+            byte[] decoded = CryptoNoteUtils.MoneroBase58.decode(address);
+            // Standard addresses are of length 69 and addresses with integrated payment ID of length 77.
+
+            if (decoded.length <= 65) {
+                throw new CryptoNoteUtils.CryptoNoteException("The address we received is too short. address=" + address);
+            }
+
+            // If the length is not as expected but still can be truncated we log an error and continue.
+            if (decoded.length != 69 && decoded.length != 77) {
+                System.out.println("The address we received is not in the expected format. address=" + address);
+            }
+
+            // We remove the network type byte, the checksum (4 bytes) and optionally the payment ID (8 bytes if present)
+            // So extract the 64 bytes after the first byte, which are the 32 byte public spend key + the 32 byte public view key
+            byte[] slice = Arrays.copyOfRange(decoded, 1, 65);
             return Utils.HEX.encode(slice);
-        } catch (CryptoNoteException e) {
-            e.printStackTrace();
+        } catch (CryptoNoteUtils.CryptoNoteException e) {
+            throw new CryptoNoteUtils.CryptoNoteException(e);
         }
-        return null;
     }
 
     public static class CryptoNoteException extends Exception {
         CryptoNoteException(String msg) {
             super(msg);
+        }
+
+        public CryptoNoteException(CryptoNoteException exception) {
+            super(exception);
         }
     }
 

@@ -74,7 +74,7 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
             if (jsonAddress == null) {
                 return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.API_INVALID.error("Missing address field"));
             } else {
-                String expectedAddressHex = CryptoNoteUtils.convertToRawHex(model.getRecipientAddress());
+                String expectedAddressHex = CryptoNoteUtils.getRawSpendKeyAndViewKey(model.getRecipientAddress());
                 if (!jsonAddress.getAsString().equalsIgnoreCase(expectedAddressHex)) {
                     log.warn("Address from json result (convertToRawHex):\n{}\nExpected (convertToRawHex):\n{}\nRecipient address:\n{}",
                             jsonAddress.getAsString(), expectedAddressHex, model.getRecipientAddress());
@@ -167,6 +167,8 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
 
         } catch (JsonParseException | NullPointerException e) {
             return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.API_INVALID.error(e.toString()));
+        } catch (CryptoNoteUtils.CryptoNoteException e) {
+            return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.ADDRESS_INVALID.error(e.toString()));
         }
     }
 }
