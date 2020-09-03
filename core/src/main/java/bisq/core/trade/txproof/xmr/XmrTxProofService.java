@@ -23,6 +23,7 @@ import bisq.core.locale.Res;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.txproof.AssetTxProofHttpClient;
@@ -34,16 +35,16 @@ import bisq.core.user.Preferences;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
-import bisq.common.handlers.FaultHandler;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,12 +60,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class XmrTxProofService implements AssetTxProofService {
     private final FilterManager filterManager;
     private final Preferences preferences;
+    private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     private final AssetTxProofHttpClient httpClient;
     private final Map<String, XmrTxProofRequestsPerTrade> servicesByTradeId = new HashMap<>();
+    private AutoConfirmSettings autoConfirmSettings;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +78,7 @@ public class XmrTxProofService implements AssetTxProofService {
     @Inject
     public XmrTxProofService(FilterManager filterManager,
                              Preferences preferences,
+                             TradeManager tradeManager,
                              ClosedTradableManager closedTradableManager,
                              FailedTradesManager failedTradesManager,
                              P2PService p2PService,
@@ -82,11 +86,25 @@ public class XmrTxProofService implements AssetTxProofService {
                              AssetTxProofHttpClient httpClient) {
         this.filterManager = filterManager;
         this.preferences = preferences;
+        this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
         this.httpClient = httpClient;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAllServicesInitialized() {
+        if (!preferences.findAutoConfirmSettings("XMR").isPresent()) {
+            log.error("AutoConfirmSettings is not present");
+        }
+        autoConfirmSettings = preferences.findAutoConfirmSettings("XMR").get();
 
         filterManager.filterProperty().addListener((observable, oldValue, newValue) -> {
             if (isAutoConfDisabledByFilter()) {
@@ -96,22 +114,39 @@ public class XmrTxProofService implements AssetTxProofService {
                 shutDown();
             }
         });
+
+        ObservableList<Trade> tradableList = tradeManager.getTradableList();
+        tradableList.addListener((ListChangeListener<Trade>) c -> {
+            c.next();
+            if (c.wasAdded()) {
+                processTrades(c.getAddedSubList());
+            }
+        });
+        processTrades(tradableList);
+    }
+
+    @Override
+    public void shutDown() {
+        servicesByTradeId.values().forEach(XmrTxProofRequestsPerTrade::terminate);
+        servicesByTradeId.clear();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void maybeStartRequests(Trade trade,
-                                   List<Trade> activeTrades,
-                                   Consumer<AssetTxProofResult> resultHandler,
-                                   FaultHandler faultHandler) {
-        if (!isXmrBuyer(trade)) {
-            return;
-        }
+    private void processTrades(List<? extends Trade> trades) {
+        trades.stream()
+                .filter(trade -> trade instanceof SellerTrade)
+                .map(trade -> (SellerTrade) trade)
+                .filter(this::isExpectedTradeState)
+                .filter(this::isXmrBuyer)
+                .filter(trade -> networkAndWalletReady())
+                .forEach(this::processTrade);
+    }
 
+    private void processTrade(SellerTrade trade) {
         String txId = trade.getCounterCurrencyTxId();
         String txHash = trade.getCounterCurrencyExtraData();
         if (is32BitHexStringInValid(txId) || is32BitHexStringInValid(txHash)) {
@@ -119,25 +154,13 @@ public class XmrTxProofService implements AssetTxProofService {
             return;
         }
 
-        if (!networkAndWalletReady()) {
-            return;
-        }
-
-        Optional<AutoConfirmSettings> optionalAutoConfirmSettings = preferences.findAutoConfirmSettings("XMR");
-        if (!optionalAutoConfirmSettings.isPresent()) {
-            // Not expected
-            log.error("autoConfirmSettings is not present");
-            return;
-        }
-        AutoConfirmSettings autoConfirmSettings = optionalAutoConfirmSettings.get();
-
         if (isAutoConfDisabledByFilter()) {
             trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
                     .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature")));
             return;
         }
 
-        if (wasTxKeyReUsed(trade, activeTrades)) {
+        if (wasTxKeyReUsed(trade, tradeManager.getTradableList())) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA
                     .details(Res.get("portfolio.pending.autoConf.state.xmr.txKeyReused")));
             return;
@@ -151,25 +174,32 @@ public class XmrTxProofService implements AssetTxProofService {
                 assetTxProofResult -> {
                     trade.setAssetTxProofResult(assetTxProofResult);
 
+                    if (assetTxProofResult == AssetTxProofResult.COMPLETED) {
+                        log.info("###########################################################################################");
+                        log.info("We auto-confirm trade {} as our all our services for the tx proof completed successfully", trade.getShortId());
+                        log.info("###########################################################################################");
+                        trade.onFiatPaymentReceived(() -> {
+                        }, errorMessage -> {
+                        });
+                    }
+
                     if (assetTxProofResult.isTerminal()) {
                         servicesByTradeId.remove(trade.getId());
                     }
-
-                    resultHandler.accept(assetTxProofResult);
                 },
-                faultHandler);
-    }
-
-    @Override
-    public void shutDown() {
-        servicesByTradeId.values().forEach(XmrTxProofRequestsPerTrade::terminate);
-        servicesByTradeId.clear();
+                (errorMessage, throwable) -> {
+                    log.error(errorMessage);
+                });
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isExpectedTradeState(SellerTrade sellerTrade) {
+        return sellerTrade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
+    }
 
     private boolean isXmrBuyer(Trade trade) {
         if (!checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR")) {
@@ -183,6 +213,12 @@ public class XmrTxProofService implements AssetTxProofService {
         return checkNotNull(trade.getContract()).getSellerPaymentAccountPayload() instanceof AssetsAccountPayload;
     }
 
+    private boolean networkAndWalletReady() {
+        return p2PService.isBootstrapped() &&
+                walletsSetup.isDownloadComplete() &&
+                walletsSetup.hasSufficientPeersForBroadcast();
+    }
+
     private boolean is32BitHexStringInValid(String hexString) {
         if (hexString == null || hexString.isEmpty() || !hexString.matches("[a-fA-F0-9]{64}")) {
             log.warn("Invalid hexString: {}", hexString);
@@ -190,12 +226,6 @@ public class XmrTxProofService implements AssetTxProofService {
         }
 
         return false;
-    }
-
-    private boolean networkAndWalletReady() {
-        return p2PService.isBootstrapped() &&
-                walletsSetup.isDownloadComplete() &&
-                walletsSetup.hasSufficientPeersForBroadcast();
     }
 
     private boolean isAutoConfDisabledByFilter() {
