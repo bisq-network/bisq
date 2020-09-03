@@ -389,9 +389,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             showRevolutAccountUpdateWindow(new ArrayList<>(revolutAccountList));
         });
         bisqSetup.setOsxKeyLoggerWarningHandler(() -> {
-            new Popup().warning(Res.get("popup.warning.osxKeyLoggerWarning"))
-                    .closeButtonText(Res.get("shared.iUnderstand"))
-                    .show();
+            String key = "osxKeyLoggerWarning";
+            if (preferences.showAgain(key)) {
+                new Popup().warning(Res.get("popup.warning.osxKeyLoggerWarning"))
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .dontShowAgainId(key)
+                        .show();
+            }
         });
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
