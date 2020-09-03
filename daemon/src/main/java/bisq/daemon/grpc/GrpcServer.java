@@ -51,11 +51,13 @@ public class GrpcServer {
     @Inject
     public GrpcServer(Config config,
                       CoreApi coreApi,
+                      GrpcDisputeAgentsService disputeAgentsService,
                       GrpcOffersService offersService,
                       GrpcPaymentAccountsService paymentAccountsService,
                       GrpcWalletsService walletsService) {
         this.coreApi = coreApi;
         this.server = ServerBuilder.forPort(config.apiPort)
+                .addService(disputeAgentsService)
                 .addService(new GetVersionService())
                 .addService(new GetTradeStatisticsService())
                 .addService(offersService)
