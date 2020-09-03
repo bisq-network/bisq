@@ -93,7 +93,7 @@ public class AboutView extends ActivatableView<GridPane, Void> {
                         Version.LOCAL_DB_VERSION,
                         Version.TRADE_PROTOCOL_VERSION));
 
-        addTitledGroupBg(root, ++gridRow, 20, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 18, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
 
         // basics
         addCompactTopLabelTextField(root, gridRow, Res.get("setting.about.shortcuts.menuNav"),
@@ -122,10 +122,6 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.openEmergencyBsqWalletTool"),
                 Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "b"));
 
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.showDisputeStatistics"),
-                Res.get("setting.about.shortcuts.showDisputeStatistics.value",
-                        Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "l")));
-
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.showTorLogs"),
                 Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "t"));
 
@@ -148,10 +144,6 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.registerMediator"),
                 Res.get("setting.about.shortcuts.registerMediator.value",
                         Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "d")));
-
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.reOpenDispute"),
-                Res.get("setting.about.shortcuts.reOpenDispute.value",
-                        Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "u")));
 
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.openSignPaymentAccountsWindow"),
                 Res.get("setting.about.shortcuts.openSignPaymentAccountsWindow.value",
