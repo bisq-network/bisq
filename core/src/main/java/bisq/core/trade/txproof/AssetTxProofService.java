@@ -15,26 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http;
+package bisq.core.trade.txproof;
 
-import java.io.IOException;
+import bisq.core.trade.Trade;
 
-import javax.annotation.Nullable;
+import bisq.common.handlers.FaultHandler;
 
-public interface HttpClient {
-    void setBaseUrl(String baseUrl);
+import java.util.List;
+import java.util.function.Consumer;
 
-    void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy);
+public interface AssetTxProofService {
+    void maybeStartRequests(Trade trade,
+                            List<Trade> activeTrades,
+                            Consumer<AssetTxProofResult> resultHandler,
+                            FaultHandler faultHandler);
 
-    String requestWithGET(String param,
-                          @Nullable String headerKey,
-                          @Nullable String headerValue) throws IOException;
-
-    String requestWithGETNoProxy(String param,
-                                 @Nullable String headerKey,
-                                 @Nullable String headerValue) throws IOException;
-
-    String getUid();
-
-    String getBaseUrl();
+    void shutDown();
 }

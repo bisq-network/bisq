@@ -69,18 +69,23 @@ public class ProtoUtil {
      */
     @Nullable
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
+        if (name == null) {
+            return null;
+        }
+
         E result = Enums.getIfPresent(enumType, name).orNull();
         if (result == null) {
-            log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
+            log.debug("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
             result = Enums.getIfPresent(enumType, "UNDEFINED").orNull();
-            log.error("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
+            log.debug("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
                     "otherwise the enum is null. enum={}", result);
             return result;
         }
         return result;
     }
 
-    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Proto> collection, Class<T> messageType) {
+    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Proto> collection,
+                                                                    Class<T> messageType) {
         return collection.stream()
                 .map(e -> {
                     final Message message = e.toProtoMessage();
@@ -95,7 +100,8 @@ public class ProtoUtil {
                 .collect(Collectors.toList());
     }
 
-    public static <T> Iterable<T> collectionToProto(Collection<? extends Proto> collection, Function<? super Message, T> extra) {
+    public static <T> Iterable<T> collectionToProto(Collection<? extends Proto> collection,
+                                                    Function<? super Message, T> extra) {
         return collection.stream().map(o -> extra.apply(o.toProtoMessage())).collect(Collectors.toList());
     }
 

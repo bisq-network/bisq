@@ -15,26 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http;
+package bisq.core.trade.txproof.xmr;
 
-import java.io.IOException;
+import bisq.core.trade.txproof.AssetTxProofHttpClient;
 
-import javax.annotation.Nullable;
+import bisq.network.Socks5ProxyProvider;
+import bisq.network.http.HttpClientImpl;
 
-public interface HttpClient {
-    void setBaseUrl(String baseUrl);
+import javax.inject.Inject;
 
-    void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy);
+import lombok.extern.slf4j.Slf4j;
 
-    String requestWithGET(String param,
-                          @Nullable String headerKey,
-                          @Nullable String headerValue) throws IOException;
-
-    String requestWithGETNoProxy(String param,
-                                 @Nullable String headerKey,
-                                 @Nullable String headerValue) throws IOException;
-
-    String getUid();
-
-    String getBaseUrl();
+@Slf4j
+public class XmrTxProofHttpClient extends HttpClientImpl implements AssetTxProofHttpClient {
+    @Inject
+    public XmrTxProofHttpClient(Socks5ProxyProvider socks5ProxyProvider) {
+        super(socks5ProxyProvider);
+    }
 }

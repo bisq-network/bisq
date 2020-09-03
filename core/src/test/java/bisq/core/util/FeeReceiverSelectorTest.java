@@ -121,6 +121,7 @@ public class FeeReceiverSelectorTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                false);
     }
 }

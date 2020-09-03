@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
+import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -26,6 +27,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -49,7 +51,21 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            trade.setCounterCurrencyTxId(message.getCounterCurrencyTxId());
+
+            String counterCurrencyTxId = message.getCounterCurrencyTxId();
+            if (counterCurrencyTxId != null && counterCurrencyTxId.length() < 100) {
+                trade.setCounterCurrencyTxId(counterCurrencyTxId);
+            }
+
+            String counterCurrencyExtraData = message.getCounterCurrencyExtraData();
+            if (counterCurrencyExtraData != null && counterCurrencyExtraData.length() < 100) {
+                trade.setCounterCurrencyExtraData(counterCurrencyExtraData);
+            }
+
+            checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
+            // We return early in the service if its not XMR. We prefer to not have additional checks outside...
+            processModel.getTradeManager().maybeStartXmrTxProofServices((SellerTrade) trade);
+
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);

@@ -42,6 +42,7 @@ import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.User;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;
@@ -66,9 +67,11 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -158,6 +161,7 @@ public abstract class Trade implements Tradable, Model {
         SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
 
         // #################### Phase FIAT_RECEIVED
+        // note that this state can also be triggered by auto confirmation feature
         SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
 
         // #################### Phase PAYOUT_PAID
@@ -428,6 +432,25 @@ public abstract class Trade implements Tradable, Model {
     private long refreshInterval;
     private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
 
+    // Added at v1.3.8
+    // We use that for the XMR txKey but want to keep it generic to be flexible for other payment methods or assets.
+    @Getter
+    @Setter
+    private String counterCurrencyExtraData;
+
+    // Added at v1.3.8
+    // Generic tx proof result. We persist name if AssetTxProofResult enum. Other fields in the enum are not persisted
+    // as they are not very relevant as historical data (e.g. number of confirmations)
+    @Nullable
+    @Getter
+    private AssetTxProofResult assetTxProofResult;
+    // ObjectProperty with AssetTxProofResult does not notify changeListeners. Probably because AssetTxProofResult is
+    // an enum and enum does not support EqualsAndHashCode. Alternatively we could add a addListener and removeListener
+    // method and a listener interface, but the IntegerProperty seems to be less boilerplate.
+    @Getter
+    transient final private IntegerProperty assetTxProofResultUpdateProperty = new SimpleIntegerProperty();
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -538,6 +561,9 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
         Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
+        Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
+        Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.name()));
+
         return builder.build();
     }
 
@@ -570,6 +596,14 @@ public abstract class Trade implements Tradable, Model {
         trade.setDelayedPayoutTxBytes(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxBytes()));
         trade.setLockTime(proto.getLockTime());
         trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
+        trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
+
+        AssetTxProofResult persistedAssetTxProofResult = ProtoUtil.enumFromProto(AssetTxProofResult.class, proto.getAssetTxProofResult());
+        // We do not want to show the user the last pending state when he starts up the app again, so we clear it.
+        if (persistedAssetTxProofResult == AssetTxProofResult.PENDING) {
+            persistedAssetTxProofResult = null;
+        }
+        trade.setAssetTxProofResult(persistedAssetTxProofResult);
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -731,6 +765,20 @@ public abstract class Trade implements Tradable, Model {
         errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
     }
 
+    public boolean allowedRefresh() {
+        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
+        if (!allowRefresh) {
+            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
+        }
+        return allowRefresh;
+    }
+
+    public void logRefresh() {
+        var time = new Date().getTime();
+        log.debug("Log refresh at {}", time);
+        lastRefreshRequestDate = time;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -837,6 +885,12 @@ public abstract class Trade implements Tradable, Model {
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
         errorMessageProperty.set(errorMessage);
+    }
+
+    public void setAssetTxProofResult(@Nullable AssetTxProofResult assetTxProofResult) {
+        this.assetTxProofResult = assetTxProofResult;
+        assetTxProofResultUpdateProperty.set(assetTxProofResultUpdateProperty.get() + 1);
+        persist();
     }
 
 
@@ -1064,19 +1118,6 @@ public abstract class Trade implements Tradable, Model {
         return arbitratorBtcPubKey;
     }
 
-    public boolean allowedRefresh() {
-        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
-        if (!allowRefresh) {
-            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
-        }
-        return allowRefresh;
-    }
-
-    public void logRefresh() {
-        var time = new Date().getTime();
-        log.debug("Log refresh at {}", time);
-        lastRefreshRequestDate = time;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -1160,6 +1201,8 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     counterCurrencyTxId='" + counterCurrencyTxId + '\'' +
+                ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
+                ",\n     assetTxProofResult='" + assetTxProofResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     txFee=" + txFee +
                 ",\n     takerFee=" + takerFee +

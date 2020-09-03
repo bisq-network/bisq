@@ -89,6 +89,7 @@ import javafx.geometry.Pos;
 
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
@@ -190,6 +191,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
+        JFXBadge settingsButtonWithBadge = new JFXBadge(settingsButton);
+        settingsButtonWithBadge.getStyleClass().add("new");
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -320,8 +323,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), getNavigationSpacer());
+        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButtonWithBadge,
+                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -364,6 +367,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
+        setupBadge(settingsButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowSettingsUpdatesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)

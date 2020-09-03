@@ -436,6 +436,10 @@ tree-table-view:focused {
     -fx-pref-width: 30;
 }
 
+.jfx-badge.autoconf .badge-pane {
+    -fx-pref-width: 100;
+}
+
 .jfx-badge .badge-pane .label {
     -fx-font-weight: bold;
     -fx-font-size: 0.692em;

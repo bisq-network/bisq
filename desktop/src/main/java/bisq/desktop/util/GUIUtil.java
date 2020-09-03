@@ -46,6 +46,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -142,6 +143,8 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelComboBoxComboBox;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -1156,5 +1159,33 @@ public class GUIUtil {
         regexValidator.setPattern(String.format("^(?:(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)|(?:%5$s)),\\s*)*(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)|(?:%5$s))*$",
                 onionV2RegexPattern, onionV3RegexPattern, ipv4RegexPattern, ipv6RegexPattern, fqdnRegexPattern));
         return regexValidator;
+    }
+
+    public static String getProofResultAsString(@Nullable AssetTxProofResult result) {
+        if (result == null) {
+            return "";
+        }
+        String key = "portfolio.pending.autoConf.state." + result.name();
+        switch (result) {
+            case UNDEFINED:
+                return "";
+            case FEATURE_DISABLED:
+                return Res.get(key, result.getDetails());
+            case TRADE_LIMIT_EXCEEDED:
+                return Res.get(key);
+            case INVALID_DATA:
+                return Res.get(key, result.getDetails());
+            case PAYOUT_TX_ALREADY_PUBLISHED:
+            case REQUESTS_STARTED:
+                return Res.get(key);
+            case PENDING:
+                return Res.get(key, result.getNumSuccessResults(), result.getNumRequiredSuccessResults(), result.getDetails());
+            case COMPLETED:
+            case ERROR:
+            case FAILED:
+                return Res.get(key);
+            default:
+                return result.name();
+        }
     }
 }

@@ -23,17 +23,12 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
-import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
-import bisq.proto.grpc.OffersGrpc;
-import bisq.proto.grpc.PaymentAccountsGrpc;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
-import bisq.proto.grpc.WalletsGrpc;
 
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 import joptsimple.OptionParser;
@@ -43,7 +38,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -136,7 +130,7 @@ public class CliMain {
         GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
         var versionService = grpcStubs.versionService;
         var offersService = grpcStubs.offersService;
-        var paymentAccountsService =  grpcStubs.paymentAccountsService;
+        var paymentAccountsService = grpcStubs.paymentAccountsService;
         var walletsService = grpcStubs.walletsService;
 
         try {

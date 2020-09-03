@@ -17,8 +17,8 @@
 
 package bisq.core.user;
 
-import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -33,6 +33,7 @@ import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
+import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -59,6 +60,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -121,6 +123,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("bsq.emzy.de (@emzy)", "https://bsq.emzy.de/tx.html?tx=", "https://bsq.emzy.de/Address.html?addr="),
             new BlockChainExplorer("bsq.bisq.cc (@m52go)", "https://bsq.bisq.cc/tx.html?tx=", "https://bsq.bisq.cc/Address.html?addr=")
     ));
+
+    // list of XMR proof providers : this list will be used if no preference has been set
+    public static final List<String> getDefaultXmrProofProviders() {
+        if (DevEnv.isDevMode()) {
+            return new ArrayList<>(Arrays.asList("78.47.61.90:8081"));
+        } else {
+            // TODO we need at least 2 for release
+            return new ArrayList<>(Arrays.asList(
+                    "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
+        }
+    }
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
 
@@ -307,6 +320,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setUsePriceNotifications(true);
         }
 
+        if (prefPayload.getAutoConfirmSettingsList().isEmpty()) {
+            getAutoConfirmSettingsList().add(AutoConfirmSettings.getDefaultForXmr(getDefaultXmrProofProviders()));
+        }
+
         // We set the capability in CoreNetworkCapabilities if the program argument is set.
         // If we have set it in the preferences view we handle it here.
         CoreNetworkCapabilities.maybeApplyDaoFullMode(config);
@@ -394,6 +411,40 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void setTacAcceptedV120(boolean tacAccepted) {
         prefPayload.setTacAcceptedV120(tacAccepted);
         persist();
+    }
+
+    public Optional<AutoConfirmSettings> findAutoConfirmSettings(String currencyCode) {
+        return prefPayload.getAutoConfirmSettingsList().stream()
+                .filter(e -> e.getCurrencyCode().equals(currencyCode))
+                .findAny();
+    }
+
+    public void setAutoConfServiceAddresses(String currencyCode, List<String> serviceAddresses) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setServiceAddresses(serviceAddresses);
+            persist();
+        });
+    }
+
+    public void setAutoConfEnabled(String currencyCode, boolean enabled) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setEnabled(enabled);
+            persist();
+        });
+    }
+
+    public void setAutoConfRequiredConfirmations(String currencyCode, int requiredConfirmations) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setRequiredConfirmations(requiredConfirmations);
+            persist();
+        });
+    }
+
+    public void setAutoConfTradeLimit(String currencyCode, long tradeLimit) {
+        findAutoConfirmSettings(currencyCode).ifPresent(e -> {
+            e.setTradeLimit(tradeLimit);
+            persist();
+        });
     }
 
     private void persist() {
@@ -738,7 +789,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
     }
 
-    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers() { return BSQ_MAIN_NET_EXPLORERS; }
+    public ArrayList<BlockChainExplorer> getBsqBlockChainExplorers() {
+        return BSQ_MAIN_NET_EXPLORERS;
+    }
 
     public boolean showAgain(String key) {
         return !prefPayload.getDontShowAgainMap().containsKey(key) || !prefPayload.getDontShowAgainMap().get(key);
@@ -836,8 +889,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     private boolean blockExplorerExists(ArrayList<BlockChainExplorer> explorers,
-                                              BlockChainExplorer explorer)
-    {
+                                        BlockChainExplorer explorer) {
         if (explorer != null && explorers != null && explorers.size() > 0)
             for (int i = 0; i < explorers.size(); i++)
                 if (explorers.get(i).name.equals(explorer.name))
@@ -967,5 +1019,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         int getBlockNotifyPort();
 
         void setTacAcceptedV120(boolean tacAccepted);
+
+        void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
     }
 }

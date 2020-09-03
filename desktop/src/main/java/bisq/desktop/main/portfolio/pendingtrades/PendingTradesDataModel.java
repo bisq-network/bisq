@@ -188,15 +188,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         final Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
-        // TODO UI not impl yet
-        trade.setCounterCurrencyTxId("");
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(getTrade(), "trade must not be null");
-        checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
-        ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
+        checkArgument(getTrade() instanceof SellerTrade, "Trade must be instance of SellerTrade");
+        tradeManager.onFiatPaymentReceived((SellerTrade) getTrade(), resultHandler, errorMessageHandler);
     }
 
     public void onWithdrawRequest(String toAddress,
@@ -702,6 +700,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public void addTradeToFailedTrades() {
         tradeManager.addTradeToFailedTrades(selectedTrade);
+    }
+
+    public boolean isSignWitnessTrade() {
+        return accountAgeWitnessService.isSignWitnessTrade(selectedTrade);
     }
 }
 

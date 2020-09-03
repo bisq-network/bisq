@@ -293,6 +293,7 @@ message CounterCurrencyTransferStartedMessage {
     bytes buyer_signature = 4;
     string counter_currency_tx_id = 5;
     string uid = 6;
+    string counter_currency_extra_data = 7;
 }
 
 message FinalizePayoutTxRequest {
@@ -641,6 +642,7 @@ message Filter {
     int64 creation_date = 21;
     string signer_pub_key_as_hex = 22;
     repeated string bannedPrivilegedDevPubKeys = 23;
+    bool disable_auto_conf = 24;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
@@ -1394,6 +1396,8 @@ message Trade {
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;
     int64 last_refresh_request_date = 36;
+    string counter_currency_extra_data = 37;
+    string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
 }
 
 message BuyerAsMakerTrade {
@@ -1554,6 +1558,15 @@ message PreferencesPayload {
     int32 block_notify_port = 53;
     int32 css_theme = 54;
     bool tac_accepted_v120 = 55;
+    repeated AutoConfirmSettings auto_confirm_settings = 56;
+}
+
+message AutoConfirmSettings {
+    bool enabled = 1;
+    int32 required_confirmations = 2;
+    int64 trade_limit = 3;
+    repeated string service_addresses = 4;
+    string currency_code = 5;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
