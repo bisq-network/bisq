@@ -61,7 +61,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.UnknownHostException;
 
 import java.nio.channels.FileLock;
 
@@ -482,14 +481,7 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     void setPeerNodesForLocalHost() {
-        try {
-            setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
-        } catch (UnknownHostException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-            // Borked machine with no loopback adapter configured properly.
-            throw new RuntimeException(e);
-        }
+        setPeerNodes(new PeerAddress(InetAddress.getLoopbackAddress(), params.getPort()));
     }
 
     private Wallet createOrLoadWallet(File walletFile,
