@@ -80,6 +80,7 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
 import bisq.common.proto.ProtobufferException;
+import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -225,6 +226,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler;
+    @Setter
+    @Nullable
+    private Runnable osxKeyLoggerWarningHandler;
 
     @Getter
     final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
@@ -347,6 +351,7 @@ public class BisqSetup {
         readMapsFromResources(this::step3);
         checkCryptoSetup();
         checkForCorrectOSArchitecture();
+        checkOSXVersion();
     }
 
     private void step3() {
@@ -652,6 +657,19 @@ public class BisqSetup {
                     osArchitecture,
                     Utilities.getJVMArchitecture(),
                     osArchitecture));
+        }
+    }
+
+    private void checkOSXVersion() {
+        if (Utilities.isOSX() && osxKeyLoggerWarningHandler != null) {
+            try {
+                // Seems it was introduced at 10.14: https://github.com/wesnoth/wesnoth/issues/4109
+                if (Utilities.getMajorVersion() >= 10 && Utilities.getMinorVersion() >= 14) {
+                    osxKeyLoggerWarningHandler.run();
+                }
+            } catch (InvalidVersionException | NumberFormatException e) {
+                log.warn(e.getMessage());
+            }
         }
     }
 

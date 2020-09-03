@@ -17,8 +17,6 @@
 
 package bisq.common.util;
 
-import bisq.common.crypto.LimitedKeyStrengthException;
-
 import org.bitcoinj.core.Utils;
 
 import com.google.gson.ExclusionStrategy;
@@ -71,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.awt.Desktop.Action;
 import static java.awt.Desktop.getDesktop;
@@ -180,6 +179,34 @@ public class Utilities {
 
     private static String getOSName() {
         return System.getProperty("os.name").toLowerCase(Locale.US);
+    }
+
+    public static String getOSVersion() {
+        return System.getProperty("os.version").toLowerCase(Locale.US);
+    }
+
+    public static int getMinorVersion() throws InvalidVersionException {
+        String version = getOSVersion();
+        String[] tokens = version.split("\\.");
+        try {
+            checkArgument(tokens.length > 1);
+            return Integer.parseInt(tokens[1]);
+        } catch (IllegalArgumentException e) {
+            printSysInfo();
+            throw new InvalidVersionException("Version is not in expected format. Version=" + version);
+        }
+    }
+
+    public static int getMajorVersion() throws InvalidVersionException {
+        String version = getOSVersion();
+        String[] tokens = version.split("\\.");
+        try {
+            checkArgument(tokens.length > 0);
+            return Integer.parseInt(tokens[0]);
+        } catch (IllegalArgumentException e) {
+            printSysInfo();
+            throw new InvalidVersionException("Version is not in expected format. Version=" + version);
+        }
     }
 
     public static String getOSArchitecture() {
@@ -462,4 +489,5 @@ public class Utilities {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
+
 }

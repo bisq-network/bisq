@@ -382,7 +382,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             // We copy the array as we will mutate it later
             showRevolutAccountUpdateWindow(new ArrayList<>(revolutAccountList));
         });
-
+        bisqSetup.setOsxKeyLoggerWarningHandler(() -> {
+            new Popup().warning(Res.get("popup.warning.osxKeyLoggerWarning"))
+                    .closeButtonText(Res.get("shared.iUnderstand"))
+                    .show();
+        });
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
