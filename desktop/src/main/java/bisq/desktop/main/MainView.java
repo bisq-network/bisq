@@ -89,7 +89,6 @@ import javafx.geometry.Pos;
 
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
@@ -191,10 +190,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
-        JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
-        daoButtonWithBadge.getStyleClass().add("new");
-        JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
-        accountButtonWithBadge.getStyleClass().add("new");
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -326,7 +321,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButtonWithBadge, getNavigationSpacer(), daoButtonWithBadge);
+                getNavigationSpacer(), getNavigationSpacer());
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -369,8 +364,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
-        setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
-        setupBadge(accountButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowAccountUpdatesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)

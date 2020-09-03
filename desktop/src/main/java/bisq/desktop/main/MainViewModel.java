@@ -25,7 +25,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
-import bisq.desktop.main.overlays.windows.NewTradeProtocolLaunchWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.UpdateRevolutAccountWindow;
@@ -276,7 +275,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
 
-        maybeAddNewTradeProtocolLaunchWindowToQueue();
         maybeShowPopupsFromQueue();
     }
 
@@ -679,18 +677,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     public BooleanProperty getShowAccountUpdatesNotification() {
         return accountPresentation.getShowAccountUpdatesNotification();
-    }
-
-    private void maybeAddNewTradeProtocolLaunchWindowToQueue() {
-        String newTradeProtocolWithAccountSigningLaunchPopupKey = "newTradeProtocolWithAccountSigningLaunchPopup";
-        if (DontShowAgainLookup.showAgain(newTradeProtocolWithAccountSigningLaunchPopupKey)) {
-            NewTradeProtocolLaunchWindow newTradeProtocolLaunchWindow = new NewTradeProtocolLaunchWindow()
-                    .headLine(Res.get("popup.news.launch.headline"));
-            newTradeProtocolLaunchWindow.setDisplayOrderPriority(1);
-            popupQueue.add(newTradeProtocolLaunchWindow);
-
-            DontShowAgainLookup.dontShowAgain(newTradeProtocolWithAccountSigningLaunchPopupKey, true);
-        }
     }
 
     private void maybeShowPopupsFromQueue() {
