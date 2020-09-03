@@ -27,15 +27,11 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.*;
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-
-
-
-import bisq.apitest.config.BisqAppConfig;
 
 
 @Slf4j
