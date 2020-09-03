@@ -87,6 +87,15 @@ public class XmrTxProofService implements AssetTxProofService {
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
         this.httpClient = httpClient;
+
+        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> {
+            if (isAutoConfDisabledByFilter()) {
+                servicesByTradeId.values().stream().map(XmrTxProofRequestsPerTrade::getTrade).forEach(trade ->
+                        trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
+                                .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature"))));
+                shutDown();
+            }
+        });
     }
 
 

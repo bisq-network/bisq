@@ -35,6 +35,7 @@ import bisq.desktop.util.validation.RegexValidator;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -154,6 +155,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoOptionsSet;
     private final boolean displayStandbyModeFeature;
+    private ChangeListener<Filter> filterChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -207,7 +210,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         initializeSeparator();
         initializeAutoConfirmOptions();
         initializeDisplayCurrencies();
-
     }
 
 
@@ -651,20 +653,20 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeAutoConfirmOptions() {
-        GridPane subGrid = new GridPane();
-        GridPane.setHgrow(subGrid, Priority.ALWAYS);
-        root.add(subGrid, 2, displayCurrenciesGridRowIndex, 2, 10);
-        addTitledGroupBg(subGrid, 0, 4, Res.get("setting.preferences.autoConfirmXMR"), 0);
+        GridPane autoConfirmGridPane = new GridPane();
+        GridPane.setHgrow(autoConfirmGridPane, Priority.ALWAYS);
+        root.add(autoConfirmGridPane, 2, displayCurrenciesGridRowIndex, 2, 10);
+        addTitledGroupBg(autoConfirmGridPane, 0, 4, Res.get("setting.preferences.autoConfirmXMR"), 0);
         int localRowIndex = 0;
-        autoConfirmXmrToggle = addSlideToggleButton(subGrid, localRowIndex, Res.get("setting.preferences.autoConfirmEnabled"), Layout.FIRST_ROW_DISTANCE);
+        autoConfirmXmrToggle = addSlideToggleButton(autoConfirmGridPane, localRowIndex, Res.get("setting.preferences.autoConfirmEnabled"), Layout.FIRST_ROW_DISTANCE);
 
-        autoConfRequiredConfirmationsTf = addInputTextField(subGrid, ++localRowIndex, Res.get("setting.preferences.autoConfirmRequiredConfirmations"));
+        autoConfRequiredConfirmationsTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmRequiredConfirmations"));
         autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(0, DevEnv.isDevMode() ? 100000000 : 1000));
 
-        autoConfTradeLimitTf = addInputTextField(subGrid, ++localRowIndex, Res.get("setting.preferences.autoConfirmMaxTradeSize"));
+        autoConfTradeLimitTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmMaxTradeSize"));
         autoConfTradeLimitTf.setValidator(new BtcValidator(formatter));
 
-        autoConfServiceAddressTf = addInputTextField(subGrid, ++localRowIndex, Res.get("setting.preferences.autoConfirmServiceAddresses"));
+        autoConfServiceAddressTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmServiceAddresses"));
         autoConfServiceAddressTf.setValidator(GUIUtil.addressRegexValidator());
         autoConfServiceAddressTf.setErrorMessage(Res.get("validation.invalidAddressList"));
         GridPane.setHgrow(autoConfServiceAddressTf, Priority.ALWAYS);
@@ -721,7 +723,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 }
             }
         };
+
+        filterChangeListener = (observable, oldValue, newValue) -> {
+            autoConfirmGridPane.setDisable(newValue != null && newValue.isDisableAutoConf());
+        };
+        autoConfirmGridPane.setDisable(filterManager.getFilter() != null && filterManager.getFilter().isDisableAutoConf());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
@@ -980,15 +988,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             autoConfRequiredConfirmationsTf.setText(String.valueOf(autoConfirmSettings.getRequiredConfirmations()));
             autoConfTradeLimitTf.setText(formatter.formatCoin(Coin.valueOf(autoConfirmSettings.getTradeLimit())));
             autoConfServiceAddressTf.setText(String.join(", ", autoConfirmSettings.getServiceAddresses()));
-
             autoConfRequiredConfirmationsTf.focusedProperty().addListener(autoConfRequiredConfirmationsFocusOutListener);
             autoConfTradeLimitTf.textProperty().addListener(autoConfTradeLimitListener);
             autoConfServiceAddressTf.textProperty().addListener(autoConfServiceAddressListener);
             autoConfServiceAddressTf.focusedProperty().addListener(autoConfServiceAddressFocusOutListener);
-
             autoConfirmXmrToggle.setOnAction(e -> {
                 preferences.setAutoConfEnabled(autoConfirmSettings.getCurrencyCode(), autoConfirmXmrToggle.isSelected());
             });
+            filterManager.filterProperty().addListener(filterChangeListener);
         });
     }
 
@@ -1062,11 +1069,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateAutoConfirmPreferences() {
-        autoConfirmXmrToggle.setOnAction(null);
-        autoConfTradeLimitTf.textProperty().removeListener(autoConfTradeLimitListener);
-        autoConfServiceAddressTf.textProperty().removeListener(autoConfServiceAddressListener);
-        autoConfServiceAddressTf.focusedProperty().removeListener(autoConfServiceAddressFocusOutListener);
-        autoConfRequiredConfirmationsTf.focusedProperty().removeListener(autoConfRequiredConfirmationsFocusOutListener);
-
+        preferences.findAutoConfirmSettings("XMR").ifPresent(autoConfirmSettings -> {
+            autoConfirmXmrToggle.setOnAction(null);
+            autoConfTradeLimitTf.textProperty().removeListener(autoConfTradeLimitListener);
+            autoConfServiceAddressTf.textProperty().removeListener(autoConfServiceAddressListener);
+            autoConfServiceAddressTf.focusedProperty().removeListener(autoConfServiceAddressFocusOutListener);
+            autoConfRequiredConfirmationsTf.focusedProperty().removeListener(autoConfRequiredConfirmationsFocusOutListener);
+            filterManager.filterProperty().removeListener(filterChangeListener);
+        });
     }
 }

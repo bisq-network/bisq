@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
+    @Getter
     private final Trade trade;
     private final AutoConfirmSettings autoConfirmSettings;
     private final AssetTxProofHttpClient httpClient;
