@@ -268,12 +268,10 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private String getShortId() {
-        return Utilities.getShortId(model.getTradeId()) + " @ " +
-                model.getServiceAddress().substring(0, 6);
+        return Utilities.getShortId(model.getTradeId()) + " @ " + model.getServiceAddress().substring(0, 6);
     }
 
     private boolean isTimeOutReached() {
         return System.currentTimeMillis() - firstRequest > MAX_REQUEST_PERIOD;
     }
-
 }

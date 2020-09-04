@@ -25,10 +25,13 @@ import org.bitcoinj.core.Coin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public final class AutoConfirmSettings implements PersistablePayload {
     public interface Listener {
@@ -42,13 +45,21 @@ public final class AutoConfirmSettings implements PersistablePayload {
     private String currencyCode;
     private List<Listener> listeners = new CopyOnWriteArrayList<>();
 
-    static AutoConfirmSettings getDefaultForXmr(List<String> serviceAddresses) {
-        return new AutoConfirmSettings(
-                false,
-                5,
-                Coin.COIN.value,
-                serviceAddresses,
-                "XMR");
+    @SuppressWarnings("SameParameterValue")
+    static Optional<AutoConfirmSettings> getDefault(List<String> serviceAddresses, String currencyCode) {
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (currencyCode) {
+            case "XMR":
+                return Optional.of(new AutoConfirmSettings(
+                        false,
+                        5,
+                        Coin.COIN.value,
+                        serviceAddresses,
+                        "XMR"));
+            default:
+                log.error("No AutoConfirmSettings supported yet for currency {}", currencyCode);
+                return Optional.empty();
+        }
     }
 
     public AutoConfirmSettings(boolean enabled,
