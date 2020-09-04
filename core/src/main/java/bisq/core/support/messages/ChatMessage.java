@@ -351,8 +351,7 @@ public final class ChatMessage extends SupportMessage {
     @Override
     public String toString() {
         return "ChatMessage{" +
-                "\n     type='" + supportType + '\'' +
-                ",\n     tradeId='" + tradeId + '\'' +
+                "\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     senderIsTrader=" + senderIsTrader +
                 ",\n     message='" + message + '\'' +
@@ -360,10 +359,9 @@ public final class ChatMessage extends SupportMessage {
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     date=" + date +
                 ",\n     isSystemMessage=" + isSystemMessage +
+                ",\n     wasDisplayed=" + wasDisplayed +
                 ",\n     arrivedProperty=" + arrivedProperty +
                 ",\n     storedInMailboxProperty=" + storedInMailboxProperty +
-                ",\n     ChatMessage.uid='" + uid + '\'' +
-                ",\n     messageVersion=" + messageVersion +
                 ",\n     acknowledgedProperty=" + acknowledgedProperty +
                 ",\n     sendMessageErrorProperty=" + sendMessageErrorProperty +
                 ",\n     ackErrorProperty=" + ackErrorProperty +
