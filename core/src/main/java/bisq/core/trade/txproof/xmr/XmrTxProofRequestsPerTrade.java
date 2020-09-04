@@ -171,7 +171,12 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
                                     // have completed on the service level.
                                     log.info("All {} tx proof requests for trade {} have been successful.",
                                             numRequiredSuccessResults, trade.getShortId());
-                                    assetTxProofResult = AssetTxProofResult.COMPLETED;
+                                    XmrTxProofRequest.Detail detail = result.getDetail();
+                                    assetTxProofResult = AssetTxProofResult.COMPLETED
+                                            .numSuccessResults(numSuccessResults)
+                                            .numRequiredSuccessResults(numRequiredSuccessResults)
+                                            .numConfirmations(detail != null ? detail.getNumConfirmations() : 0)
+                                            .numRequiredConfirmations(autoConfirmSettings.getRequiredConfirmations());
                                 }
                                 break;
                             case FAILED:
@@ -292,6 +297,8 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         return AssetTxProofResult.PENDING
                 .numSuccessResults(numSuccessResults)
                 .numRequiredSuccessResults(numRequiredSuccessResults)
+                .numConfirmations(detail != null ? detail.getNumConfirmations() : 0)
+                .numRequiredConfirmations(autoConfirmSettings.getRequiredConfirmations())
                 .details(detailString);
     }
 

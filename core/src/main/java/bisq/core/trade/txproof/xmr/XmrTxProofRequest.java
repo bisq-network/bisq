@@ -85,6 +85,8 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         TX_NOT_FOUND, // Tx not visible in network yet. Could be also other error
         PENDING_CONFIRMATIONS,
 
+        SUCCESS,
+
         // Error states
         CONNECTION_FAILURE,
         API_INVALID,

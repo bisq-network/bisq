@@ -162,7 +162,7 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
             if (confirmations < confirmsRequired) {
                 return XmrTxProofRequest.Result.PENDING.with(XmrTxProofRequest.Detail.PENDING_CONFIRMATIONS.numConfirmations(confirmations));
             } else {
-                return XmrTxProofRequest.Result.SUCCESS;
+                return XmrTxProofRequest.Result.SUCCESS.with(XmrTxProofRequest.Detail.SUCCESS.numConfirmations(confirmations));
             }
 
         } catch (JsonParseException | NullPointerException e) {
