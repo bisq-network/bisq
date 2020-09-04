@@ -436,8 +436,10 @@ tree-table-view:focused {
     -fx-pref-width: 30;
 }
 
-.jfx-badge.autoconf .badge-pane {
-    -fx-pref-width: 100;
+.jfx-badge.auto-conf .badge-pane {
+    -fx-background-color: -xmr-orange;
+    -fx-pref-width: -1;
+    -fx-padding: -1 10 0 10;
 }
 
 .jfx-badge .badge-pane .label {

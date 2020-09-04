@@ -112,7 +112,7 @@ public class BuyerStep4View extends TradeStepView {
 
         JFXBadge autoConfBadge = new JFXBadge(new Label(""), Pos.BASELINE_RIGHT);
         autoConfBadge.setText(Res.get("portfolio.pending.autoConf"));
-        autoConfBadge.getStyleClass().add("autoconf");
+        autoConfBadge.getStyleClass().add("auto-conf");
 
         HBox hBox2 = new HBox(1, completedTradeLabel, autoConfBadge);
         GridPane.setMargin(hBox2, new Insets(18, -10, -12, -10));
