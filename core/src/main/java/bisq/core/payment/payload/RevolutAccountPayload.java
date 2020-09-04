@@ -20,6 +20,7 @@ package bisq.core.payment.payload;
 import bisq.core.locale.Res;
 
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.JsonExclude;
 
 import com.google.protobuf.Message;
 
@@ -48,6 +49,10 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
     // left unchanged. Newly created accounts fill accountId with the value of userName.
     // In the UI we only use userName.
     @Nullable
+    // For backward compatibility we need to exclude the new field for the contract json.
+    // We can remove that after a while when risk that users with pre 1.3.8 version trade with updated
+    // users is very low.
+    @JsonExclude
     private String userName = null;
 
     public RevolutAccountPayload(String paymentMethod, String id) {
