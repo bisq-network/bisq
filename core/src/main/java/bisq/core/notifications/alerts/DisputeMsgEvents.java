@@ -73,10 +73,20 @@ public class DisputeMsgEvents {
             }
         });
         mediationManager.getDisputesAsObservableList().forEach(this::setDisputeListener);
+
+        // We do not need a handling for unread messages as mailbox messages arrive later and will trigger the
+        // event listeners. But the existing messages are not causing a notification.
+    }
+
+    public static MobileMessage getTestMsg() {
+        String shortId = UUID.randomUUID().toString().substring(0, 8);
+        return new MobileMessage(Res.get("account.notifications.dispute.message.title"),
+                Res.get("account.notifications.dispute.message.msg", shortId),
+                shortId,
+                MobileMessageType.DISPUTE);
     }
 
     private void setDisputeListener(Dispute dispute) {
-        //TODO use weak ref or remove listener
         log.debug("We got a dispute added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
         dispute.getChatMessages().addListener((ListChangeListener<ChatMessage>) c -> {
             log.debug("We got a ChatMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
@@ -85,31 +95,24 @@ public class DisputeMsgEvents {
                 c.getAddedSubList().forEach(chatMessage -> onChatMessage(chatMessage, dispute));
             }
         });
-
-        //TODO test
-        if (!dispute.getChatMessages().isEmpty())
-            onChatMessage(dispute.getChatMessages().get(0), dispute);
     }
 
     private void onChatMessage(ChatMessage chatMessage, Dispute dispute) {
-        // TODO we need to prevent to send msg for old dispute messages again at restart
-        // Maybe we need a new property in ChatMessage
-        // As key is not set in initial iterations it seems we don't need an extra handling.
-        // the mailbox msg is set a bit later so that triggers a notification, but not the old messages.
+        if (chatMessage.getSenderNodeAddress().equals(p2PService.getAddress())) {
+            return;
+        }
 
         // We only send msg in case we are not the sender
-        if (!chatMessage.getSenderNodeAddress().equals(p2PService.getAddress())) {
-            String shortId = chatMessage.getShortId();
-            MobileMessage message = new MobileMessage(Res.get("account.notifications.dispute.message.title"),
-                    Res.get("account.notifications.dispute.message.msg", shortId),
-                    shortId,
-                    MobileMessageType.DISPUTE);
-            try {
-                mobileNotificationService.sendMessage(message);
-            } catch (Exception e) {
-                log.error(e.toString());
-                e.printStackTrace();
-            }
+        String shortId = chatMessage.getShortId();
+        MobileMessage message = new MobileMessage(Res.get("account.notifications.dispute.message.title"),
+                Res.get("account.notifications.dispute.message.msg", shortId),
+                shortId,
+                MobileMessageType.DISPUTE);
+        try {
+            mobileNotificationService.sendMessage(message);
+        } catch (Exception e) {
+            log.error(e.toString());
+            e.printStackTrace();
         }
 
         // We check at every new message if it might be a message sent after the dispute had been closed. If that is the
@@ -121,13 +124,5 @@ public class DisputeMsgEvents {
         if (dispute.isClosed() && !chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
             dispute.setIsClosed(false);
         }
-    }
-
-    public static MobileMessage getTestMsg() {
-        String shortId = UUID.randomUUID().toString().substring(0, 8);
-        return new MobileMessage(Res.get("account.notifications.dispute.message.title"),
-                Res.get("account.notifications.dispute.message.msg", shortId),
-                shortId,
-                MobileMessageType.DISPUTE);
     }
 }
