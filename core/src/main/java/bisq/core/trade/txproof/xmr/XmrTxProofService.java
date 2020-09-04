@@ -82,6 +82,8 @@ public class XmrTxProofService implements AssetTxProofService {
     private Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
     private ChangeListener<Number> btcPeersListener, btcBlockListener;
     private BootstrapListener bootstrapListener;
+    private MonadicBinding<Boolean> p2pNetworkAndWalletReady;
+    private ChangeListener<Boolean> p2pNetworkAndWalletReadyListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -122,22 +124,34 @@ public class XmrTxProofService implements AssetTxProofService {
         // As we might trigger the payout tx we want to be sure that we are well connected to the Bitcoin network.
         // onAllServicesInitialized is called once we have received the initial data but we want to have our
         // hidden service published and upDatedDataResponse received before we start.
-        MonadicBinding<Boolean> p2pNetworkAndWalletReady = EasyBind.combine(isP2pBootstrapped(), hasSufficientBtcPeers(), isBtcBlockDownloadComplete(),
-                (isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete) -> {
-                    log.info("isP2pBootstrapped={}, hasSufficientBtcPeers={} isBtcBlockDownloadComplete={}",
-                            isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete);
-                    return isP2pBootstrapped && hasSufficientBtcPeers && isBtcBlockDownloadComplete;
-                });
+        BooleanProperty isP2pBootstrapped = isP2pBootstrapped();
+        BooleanProperty hasSufficientBtcPeers = hasSufficientBtcPeers();
+        BooleanProperty isBtcBlockDownloadComplete = isBtcBlockDownloadComplete();
+        if (isP2pBootstrapped.get() && hasSufficientBtcPeers.get() && isBtcBlockDownloadComplete.get()) {
+            onP2pNetworkAndWalletReady();
+        } else {
+            p2pNetworkAndWalletReady = EasyBind.combine(isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete,
+                    (bootstrapped, sufficientPeers, downloadComplete) -> {
+                        log.info("isP2pBootstrapped={}, hasSufficientBtcPeers={} isBtcBlockDownloadComplete={}",
+                                bootstrapped, sufficientPeers, downloadComplete);
+                        return bootstrapped && sufficientPeers && downloadComplete;
+                    });
 
-        p2pNetworkAndWalletReady.subscribe((observable, oldValue, newValue) -> {
-            if (newValue) {
-                onP2pNetworkAndWalletReady();
-            }
-        });
+            p2pNetworkAndWalletReadyListener = (observable, oldValue, newValue) -> {
+                if (newValue) {
+                    onP2pNetworkAndWalletReady();
+                }
+            };
+            p2pNetworkAndWalletReady.subscribe(p2pNetworkAndWalletReadyListener);
+        }
     }
 
     @Override
     public void shutDown() {
+        if (p2pNetworkAndWalletReady != null) {
+            p2pNetworkAndWalletReady.removeListener(p2pNetworkAndWalletReadyListener);
+        }
+
         servicesByTradeId.values().forEach(XmrTxProofRequestsPerTrade::terminate);
         servicesByTradeId.clear();
     }
