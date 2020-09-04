@@ -77,7 +77,6 @@ import static bisq.desktop.util.FormBuilder.*;
 
 public class SellerStep3View extends TradeStepView {
 
-    private final ChangeListener<Number> proofResultListener;
     private Button confirmButton;
     private Label statusLabel;
     private BusyAnimation busyAnimation;
@@ -85,6 +84,8 @@ public class SellerStep3View extends TradeStepView {
     private Timer timeoutTimer;
     private InfoTextField assetTxProofResultField;
     private TxConfidenceIndicator assetTxConfidenceIndicator;
+    private ChangeListener<Number> proofResultListener;
+    private boolean useXmrTxProof;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,10 +94,6 @@ public class SellerStep3View extends TradeStepView {
 
     public SellerStep3View(PendingTradesViewModel model) {
         super(model);
-
-        proofResultListener = (observable, oldValue, newValue) -> {
-            applyAssetTxProofResult(trade.getAssetTxProofResult());
-        };
     }
 
     @Override
@@ -157,13 +154,19 @@ public class SellerStep3View extends TradeStepView {
             }
         });
 
-        // we listen for updates on the trade autoConfirmResult field
-        if (assetTxProofResultField != null) {
-            trade.getAssetTxProofResultUpdateProperty().addListener(proofResultListener);
+        if (useXmrTxProof) {
+            proofResultListener = (observable, oldValue, newValue) -> {
+                applyAssetTxProofResult(trade.getAssetTxProofResult());
+            };
+
+            // we listen for updates on the trade autoConfirmResult field
+            if (assetTxProofResultField != null) {
+                trade.getAssetTxProofResultUpdateProperty().addListener(proofResultListener);
+                applyAssetTxProofResult(trade.getAssetTxProofResult());
+            }
+
             applyAssetTxProofResult(trade.getAssetTxProofResult());
         }
-
-        applyAssetTxProofResult(trade.getAssetTxProofResult());
     }
 
     @Override
@@ -181,7 +184,7 @@ public class SellerStep3View extends TradeStepView {
             timeoutTimer.stop();
         }
 
-        if (assetTxProofResultField != null) {
+        if (useXmrTxProof && assetTxProofResultField != null) {
             trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
         }
     }
@@ -235,7 +238,8 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        if (isBlockChain && trade.getOffer().getCurrencyCode().equals("XMR")) {
+        useXmrTxProof = isBlockChain && trade.getOffer().getCurrencyCode().equals("XMR");
+        if (useXmrTxProof) {
             assetTxProofResultField = new InfoTextField();
 
             Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(Res.get("portfolio.pending.step3_seller.autoConf.status.label"), assetTxProofResultField);
