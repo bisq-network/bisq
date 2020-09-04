@@ -44,7 +44,15 @@ public final class RevolutAccount extends PaymentAccount {
         return ((RevolutAccountPayload) paymentAccountPayload).getUserName();
     }
 
+    public String getAccountId() {
+        return ((RevolutAccountPayload) paymentAccountPayload).getAccountId();
+    }
+
     public boolean userNameNotSet() {
         return ((RevolutAccountPayload) paymentAccountPayload).userNameNotSet();
+    }
+
+    public boolean hasOldAccountId() {
+        return ((RevolutAccountPayload) paymentAccountPayload).hasOldAccountId();
     }
 }

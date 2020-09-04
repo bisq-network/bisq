@@ -20,7 +20,9 @@ package bisq.core.payment;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.user.User;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -134,6 +136,13 @@ public class PaymentAccountUtil {
     public static boolean isCryptoCurrencyAccount(PaymentAccount paymentAccount) {
         return (paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS) ||
                 paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS_INSTANT));
+    }
+
+    public static Optional<PaymentAccount> findPaymentAccount(PaymentAccountPayload paymentAccountPayload,
+                                                              User user) {
+        return user.getPaymentAccountsAsObservable().stream().
+                filter(e -> e.getPaymentAccountPayload().equals(paymentAccountPayload))
+                .findAny();
     }
 
     // TODO no code duplication found in UI code (added for API)
