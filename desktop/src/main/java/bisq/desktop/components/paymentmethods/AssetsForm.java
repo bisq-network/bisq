@@ -38,6 +38,7 @@ import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
 
 import org.apache.commons.lang3.StringUtils;
@@ -123,6 +124,13 @@ public class AssetsForm extends PaymentMethodForm {
         addressInputTextField.setValidator(altCoinAddressValidator);
 
         addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            if (newValue.startsWith("monero:")) {
+                UserThread.execute(() -> {
+                    String addressWithoutPrefix = newValue.replace("monero:", "");
+                    addressInputTextField.setText(addressWithoutPrefix);
+                });
+                return;
+            }
             assetAccount.setAddress(newValue);
             updateFromInputs();
         });
