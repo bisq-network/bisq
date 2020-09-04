@@ -148,10 +148,6 @@ public class XmrTxProofService implements AssetTxProofService {
 
     @Override
     public void shutDown() {
-        if (p2pNetworkAndWalletReady != null) {
-            p2pNetworkAndWalletReady.removeListener(p2pNetworkAndWalletReadyListener);
-        }
-
         servicesByTradeId.values().forEach(XmrTxProofRequestsPerTrade::terminate);
         servicesByTradeId.clear();
     }
@@ -162,6 +158,12 @@ public class XmrTxProofService implements AssetTxProofService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onP2pNetworkAndWalletReady() {
+        if (p2pNetworkAndWalletReady != null) {
+            p2pNetworkAndWalletReady.removeListener(p2pNetworkAndWalletReadyListener);
+            p2pNetworkAndWalletReady = null;
+            p2pNetworkAndWalletReadyListener = null;
+        }
+
         if (!preferences.findAutoConfirmSettings("XMR").isPresent()) {
             log.error("AutoConfirmSettings is not present");
         }
