@@ -661,7 +661,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         autoConfirmXmrToggle = addSlideToggleButton(autoConfirmGridPane, localRowIndex, Res.get("setting.preferences.autoConfirmEnabled"), Layout.FIRST_ROW_DISTANCE);
 
         autoConfRequiredConfirmationsTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmRequiredConfirmations"));
-        autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(0, DevEnv.isDevMode() ? 100000000 : 1000));
+        autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(1, DevEnv.isDevMode() ? 100000000 : 1000));
 
         autoConfTradeLimitTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmMaxTradeSize"));
         autoConfTradeLimitTf.setValidator(new BtcValidator(formatter));
