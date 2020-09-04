@@ -165,7 +165,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(config.useDevMode);
-        DevEnv.setDevMode(config.useDevModeHeader);
         DevEnv.setDaoActivated(config.daoActivated);
     }
 
