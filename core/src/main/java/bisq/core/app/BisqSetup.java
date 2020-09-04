@@ -114,6 +114,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import ch.qos.logback.classic.Level;
 
@@ -851,7 +852,13 @@ public class BisqSetup {
         priceAlert.onAllServicesInitialized();
         marketAlerts.onAllServicesInitialized();
 
-        user.onAllServicesInitialized(revolutAccountsUpdateHandler);
+        if (revolutAccountsUpdateHandler != null) {
+            revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()
+                    .filter(paymentAccount -> paymentAccount instanceof RevolutAccount)
+                    .map(paymentAccount -> (RevolutAccount) paymentAccount)
+                    .filter(RevolutAccount::userNameNotSet)
+                    .collect(Collectors.toList()));
+        }
 
         allBasicServicesInitialized = true;
     }
