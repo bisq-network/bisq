@@ -52,9 +52,7 @@ import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAs
 public final class PreferencesPayload implements UserThreadMappedPersistableEnvelope {
     private String userLanguage;
     private Country userCountry;
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private List<FiatCurrency> fiatCurrencies = new ArrayList<>();
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private List<CryptoCurrency> cryptoCurrencies = new ArrayList<>();
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
