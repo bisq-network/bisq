@@ -71,6 +71,8 @@ import javafx.beans.value.ChangeListener;
 
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.*;
 
 public class SellerStep3View extends TradeStepView {
@@ -465,9 +467,14 @@ public class SellerStep3View extends TradeStepView {
         }
     }
 
-    private void applyAssetTxProofResult(AssetTxProofResult result) {
+    private void applyAssetTxProofResult(@Nullable AssetTxProofResult result) {
         String txt = GUIUtil.getProofResultAsString(result);
         assetTxProofResultField.setText(txt);
+        if (result == null) {
+            assetTxConfidenceIndicator.setProgress(0);
+            return;
+        }
+
         switch (result) {
             case PENDING:
             case COMPLETED:
