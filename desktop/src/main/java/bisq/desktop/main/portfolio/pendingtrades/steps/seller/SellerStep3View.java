@@ -18,8 +18,10 @@
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -49,6 +51,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 
 import javafx.scene.control.Button;
@@ -57,6 +60,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -65,20 +71,20 @@ import javafx.beans.value.ChangeListener;
 
 import java.util.Optional;
 
-import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
-import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import javax.annotation.Nullable;
+
+import static bisq.desktop.util.FormBuilder.*;
 
 public class SellerStep3View extends TradeStepView {
 
+    private final ChangeListener<Number> proofResultListener;
     private Button confirmButton;
     private Label statusLabel;
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
-    private TextFieldWithCopyIcon assetTxProofResultField;
-    private final ChangeListener<Number> proofResultListener;
+    private InfoTextField assetTxProofResultField;
+    private TxConfidenceIndicator assetTxConfidenceIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -230,9 +236,28 @@ public class SellerStep3View extends TradeStepView {
         }
 
         if (isBlockChain && trade.getOffer().getCurrencyCode().equals("XMR")) {
-            assetTxProofResultField = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
-                    Res.get("portfolio.pending.step3_seller.autoConf.status.label"),
-                    "", Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
+            assetTxProofResultField = new InfoTextField();
+
+            Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(Res.get("portfolio.pending.step3_seller.autoConf.status.label"), assetTxProofResultField);
+            VBox vBox = topLabelWithVBox.second;
+
+            assetTxConfidenceIndicator = new TxConfidenceIndicator();
+            assetTxConfidenceIndicator.setId("xmr-confidence");
+            assetTxConfidenceIndicator.setProgress(0);
+            assetTxConfidenceIndicator.setTooltip(new Tooltip());
+            assetTxProofResultField.setContentForInfoPopOver(createPopoverLabel(Res.get("setting.info.msg")));
+
+            HBox.setMargin(assetTxConfidenceIndicator, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+
+            HBox hBox = new HBox();
+            HBox.setHgrow(vBox, Priority.ALWAYS);
+            hBox.setSpacing(10);
+            hBox.getChildren().addAll(vBox, assetTxConfidenceIndicator);
+
+            GridPane.setRowIndex(hBox, gridRow);
+            GridPane.setColumnIndex(hBox, 1);
+            GridPane.setMargin(hBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+            gridPane.getChildren().add(hBox);
         }
 
         TextFieldWithCopyIcon myPaymentDetailsTextField = addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
@@ -273,7 +298,6 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     @Override
     protected String getInfoText() {
@@ -443,10 +467,44 @@ public class SellerStep3View extends TradeStepView {
         }
     }
 
-    private void applyAssetTxProofResult(AssetTxProofResult result) {
+    private void applyAssetTxProofResult(@Nullable AssetTxProofResult result) {
         String txt = GUIUtil.getProofResultAsString(result);
         assetTxProofResultField.setText(txt);
-        assetTxProofResultField.setTooltip(new Tooltip(txt));
+        if (result == null) {
+            assetTxConfidenceIndicator.setProgress(0);
+            return;
+        }
+
+        switch (result) {
+            case PENDING:
+            case COMPLETED:
+                if (result.getNumRequiredConfirmations() > 0) {
+                    int numRequiredConfirmations = result.getNumRequiredConfirmations();
+                    int numConfirmations = result.getNumConfirmations();
+                    if (numConfirmations == 0) {
+                        assetTxConfidenceIndicator.setProgress(-1);
+                    } else {
+                        double progress = Math.min(1, (double) numConfirmations / (double) numRequiredConfirmations);
+                        assetTxConfidenceIndicator.setProgress(progress);
+                        assetTxConfidenceIndicator.getTooltip().setText(
+                                Res.get("portfolio.pending.autoConf.blocks",
+                                        numConfirmations, numRequiredConfirmations));
+                    }
+                }
+                break;
+            default:
+                // Set invisible by default
+                assetTxConfidenceIndicator.setProgress(0);
+                break;
+        }
+    }
+
+    private Label createPopoverLabel(String text) {
+        Label label = new Label(text);
+        label.setPrefWidth(600);
+        label.setWrapText(true);
+        label.setPadding(new Insets(10));
+        return label;
     }
 
     @Override

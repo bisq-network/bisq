@@ -85,6 +85,8 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         TX_NOT_FOUND, // Tx not visible in network yet. Could be also other error
         PENDING_CONFIRMATIONS,
 
+        SUCCESS,
+
         // Error states
         CONNECTION_FAILURE,
         API_INVALID,
@@ -268,12 +270,10 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private String getShortId() {
-        return Utilities.getShortId(model.getTradeId()) + " @ " +
-                model.getServiceAddress().substring(0, 6);
+        return Utilities.getShortId(model.getTradeId()) + " @ " + model.getServiceAddress().substring(0, 6);
     }
 
     private boolean isTimeOutReached() {
         return System.currentTimeMillis() - firstRequest > MAX_REQUEST_PERIOD;
     }
-
 }

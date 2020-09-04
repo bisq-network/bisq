@@ -59,6 +59,7 @@ import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeTxException;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -167,6 +168,7 @@ public class BisqSetup {
     private final PrivateNotificationManager privateNotificationManager;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final XmrTxProofService xmrTxProofService;
     private final ClockWatcher clockWatcher;
     private final FeeService feeService;
     private final DaoSetup daoSetup;
@@ -263,6 +265,7 @@ public class BisqSetup {
                      PrivateNotificationManager privateNotificationManager,
                      FilterManager filterManager,
                      TradeStatisticsManager tradeStatisticsManager,
+                     XmrTxProofService xmrTxProofService,
                      ClockWatcher clockWatcher,
                      FeeService feeService,
                      DaoSetup daoSetup,
@@ -308,6 +311,7 @@ public class BisqSetup {
         this.privateNotificationManager = privateNotificationManager;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.xmrTxProofService = xmrTxProofService;
         this.clockWatcher = clockWatcher;
         this.feeService = feeService;
         this.daoSetup = daoSetup;
@@ -686,6 +690,7 @@ public class BisqSetup {
         traderChatManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
+        xmrTxProofService.onAllServicesInitialized();
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();

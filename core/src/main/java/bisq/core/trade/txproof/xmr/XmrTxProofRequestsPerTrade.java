@@ -18,6 +18,9 @@
 package bisq.core.trade.txproof.xmr;
 
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Trade;
 import bisq.core.trade.txproof.AssetTxProofHttpClient;
 import bisq.core.trade.txproof.AssetTxProofRequestsPerTrade;
@@ -29,6 +32,9 @@ import bisq.common.handlers.FaultHandler;
 import org.bitcoinj.core.Coin;
 
 import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +52,8 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     @Getter
     private final Trade trade;
     private final AutoConfirmSettings autoConfirmSettings;
+    private final MediationManager mediationManager;
+    private final RefundManager refundManager;
     private final AssetTxProofHttpClient httpClient;
 
     private int numRequiredSuccessResults;
@@ -54,6 +62,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     private int numSuccessResults;
     private ChangeListener<Trade.State> tradeStateListener;
     private AutoConfirmSettings.Listener autoConfirmSettingsListener;
+    private ListChangeListener<Dispute> mediationListener, refundListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,10 +71,14 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
 
     XmrTxProofRequestsPerTrade(AssetTxProofHttpClient httpClient,
                                Trade trade,
-                               AutoConfirmSettings autoConfirmSettings) {
+                               AutoConfirmSettings autoConfirmSettings,
+                               MediationManager mediationManager,
+                               RefundManager refundManager) {
         this.httpClient = httpClient;
         this.trade = trade;
         this.autoConfirmSettings = autoConfirmSettings;
+        this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
     }
 
 
@@ -75,43 +88,55 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
 
     @Override
     public void requestFromAllServices(Consumer<AssetTxProofResult> resultHandler, FaultHandler faultHandler) {
+        // isTradeAmountAboveLimit
+        if (isTradeAmountAboveLimit(trade)) {
+            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.TRADE_LIMIT_EXCEEDED);
+            return;
+        }
+
+        // isPayoutPublished
+        if (trade.isPayoutPublished()) {
+            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
+            return;
+        }
+
+        // IsEnabled()
+        // We will stop all our services if the user changes the enable state in the AutoConfirmSettings
+        if (!autoConfirmSettings.isEnabled()) {
+            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FEATURE_DISABLED);
+            return;
+        }
+        addSettingsListener(resultHandler);
+
+        // TradeState
+        setupTradeStateListener(resultHandler);
+        // We checked initially for current trade state so no need to check again here
+
+        // Check if mediation dispute and add listener
+        ObservableList<Dispute> mediationDisputes = mediationManager.getDisputesAsObservableList();
+        if (isDisputed(mediationDisputes)) {
+            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.DISPUTE_OPENED);
+            return;
+        }
+        setupMediationListener(resultHandler, mediationDisputes);
+
+        // Check if arbitration dispute and add listener
+        ObservableList<Dispute> refundDisputes = refundManager.getDisputesAsObservableList();
+        if (isDisputed(refundDisputes)) {
+            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.DISPUTE_OPENED);
+            return;
+        }
+        setupArbitrationListener(resultHandler, refundDisputes);
+
+        // All good so we start
+        callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.REQUESTS_STARTED);
+
         // We set serviceAddresses at request time. If user changes AutoConfirmSettings after request has started
         // it will have no impact on serviceAddresses and numRequiredSuccessResults.
         // Thought numRequiredConfirmations can be changed during request process and will be read from
         // autoConfirmSettings at result parsing.
         List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses();
         numRequiredSuccessResults = serviceAddresses.size();
-
-        if (isTradeAmountAboveLimit(trade)) {
-            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.TRADE_LIMIT_EXCEEDED);
-            return;
-        }
-
-        if (trade.isPayoutPublished()) {
-            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
-            return;
-        }
-
-        // We will stop all our services if the user changes the enable state in the AutoConfirmSettings
-        autoConfirmSettingsListener = () -> {
-            if (!autoConfirmSettings.isEnabled()) {
-                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FEATURE_DISABLED);
-            }
-        };
-        autoConfirmSettings.addListener(autoConfirmSettingsListener);
-        if (!autoConfirmSettings.isEnabled()) {
-            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FEATURE_DISABLED);
-            return;
-        }
-
-        tradeStateListener = (observable, oldValue, newValue) -> {
-            if (trade.isPayoutPublished()) {
-                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
-            }
-        };
-        trade.stateProperty().addListener(tradeStateListener);
-
-        callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.REQUESTS_STARTED);
 
         for (String serviceAddress : serviceAddresses) {
             XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, autoConfirmSettings);
@@ -146,7 +171,12 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
                                     // have completed on the service level.
                                     log.info("All {} tx proof requests for trade {} have been successful.",
                                             numRequiredSuccessResults, trade.getShortId());
-                                    assetTxProofResult = AssetTxProofResult.COMPLETED;
+                                    XmrTxProofRequest.Detail detail = result.getDetail();
+                                    assetTxProofResult = AssetTxProofResult.COMPLETED
+                                            .numSuccessResults(numSuccessResults)
+                                            .numRequiredSuccessResults(numRequiredSuccessResults)
+                                            .numConfirmations(detail != null ? detail.getNumConfirmations() : 0)
+                                            .numRequiredConfirmations(autoConfirmSettings.getRequiredConfirmations());
                                 }
                                 break;
                             case FAILED:
@@ -174,15 +204,65 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         }
     }
 
+    protected void addSettingsListener(Consumer<AssetTxProofResult> resultHandler) {
+        autoConfirmSettingsListener = () -> {
+            if (!autoConfirmSettings.isEnabled()) {
+                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FEATURE_DISABLED);
+            }
+        };
+        autoConfirmSettings.addListener(autoConfirmSettingsListener);
+    }
+
+    protected void setupTradeStateListener(Consumer<AssetTxProofResult> resultHandler) {
+        tradeStateListener = (observable, oldValue, newValue) -> {
+            if (trade.isPayoutPublished()) {
+                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
+            }
+        };
+        trade.stateProperty().addListener(tradeStateListener);
+    }
+
+    protected void setupArbitrationListener(Consumer<AssetTxProofResult> resultHandler,
+                                            ObservableList<Dispute> refundDisputes) {
+        refundListener = c -> {
+            c.next();
+            if (c.wasAdded() && isDisputed(c.getAddedSubList())) {
+                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.DISPUTE_OPENED);
+            }
+        };
+        refundDisputes.addListener(refundListener);
+    }
+
+    protected void setupMediationListener(Consumer<AssetTxProofResult> resultHandler,
+                                          ObservableList<Dispute> mediationDisputes) {
+        mediationListener = c -> {
+            c.next();
+            if (c.wasAdded() && isDisputed(c.getAddedSubList())) {
+                callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.DISPUTE_OPENED);
+            }
+        };
+        mediationDisputes.addListener(mediationListener);
+    }
+
     @Override
     public void terminate() {
         requests.forEach(XmrTxProofRequest::terminate);
         requests.clear();
+
         if (tradeStateListener != null) {
             trade.stateProperty().removeListener(tradeStateListener);
         }
+
         if (autoConfirmSettingsListener != null) {
             autoConfirmSettings.removeListener(autoConfirmSettingsListener);
+        }
+
+        if (mediationListener != null) {
+            mediationManager.getDisputesAsObservableList().removeListener(mediationListener);
+        }
+
+        if (refundListener != null) {
+            refundManager.getDisputesAsObservableList().removeListener(refundListener);
         }
     }
 
@@ -217,6 +297,8 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         return AssetTxProofResult.PENDING
                 .numSuccessResults(numSuccessResults)
                 .numRequiredSuccessResults(numRequiredSuccessResults)
+                .numConfirmations(detail != null ? detail.getNumConfirmations() : 0)
+                .numRequiredConfirmations(autoConfirmSettings.getRequiredConfirmations())
                 .details(detailString);
     }
 
@@ -234,5 +316,9 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
             return true;
         }
         return false;
+    }
+
+    private boolean isDisputed(List<? extends Dispute> disputes) {
+        return disputes.stream().anyMatch(e -> e.getTradeId().equals(trade.getId()));
     }
 }

@@ -46,8 +46,6 @@ import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.trade.txproof.AssetTxProofResult;
-import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
 
@@ -59,7 +57,6 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.ClockWatcher;
-import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -111,8 +108,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
@@ -132,7 +127,6 @@ public class TradeManager implements PersistedDataHost {
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
-    private final XmrTxProofService xmrTxProofService;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
@@ -174,7 +168,6 @@ public class TradeManager implements PersistedDataHost {
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
                         AccountAgeWitnessService accountAgeWitnessService,
-                        XmrTxProofService xmrTxProofService,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         RefundAgentManager refundAgentManager,
@@ -197,7 +190,6 @@ public class TradeManager implements PersistedDataHost {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.xmrTxProofService = xmrTxProofService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
@@ -286,7 +278,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public void shutDown() {
-        xmrTxProofService.shutDown();
+        // Do nothing here
     }
 
     private void initPendingTrades() {
@@ -329,13 +321,6 @@ public class TradeManager implements PersistedDataHost {
                             addTradeToFailedTradesList.add(trade);
                         }
                     }
-
-            if (trade.getState() == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
-                // This state can be only appear at a SellerTrade
-                checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
-                // We delay a bit as at startup lots of stuff is happening
-                UserThread.runAfter(() -> maybeStartXmrTxProofServices((SellerTrade) trade), 1);
-            }
                 }
         );
 
@@ -360,31 +345,10 @@ public class TradeManager implements PersistedDataHost {
         pendingTradesInitialized.set(true);
     }
 
-    public void maybeStartXmrTxProofServices(SellerTrade sellerTrade) {
-        xmrTxProofService.maybeStartRequests(sellerTrade, tradableList.getList(),
-                assetTxProofResult -> {
-                    if (assetTxProofResult == AssetTxProofResult.COMPLETED) {
-                        log.info("###########################################################################################");
-                        log.info("We auto-confirm trade {} as our all our services for the tx proof completed successfully", sellerTrade.getShortId());
-                        log.info("###########################################################################################");
-                        autoConfirmFiatPaymentReceived(sellerTrade);
-                    }
-                },
-                (errorMessage, throwable) -> {
-                    log.error(errorMessage);
-                });
-    }
 
-    private void autoConfirmFiatPaymentReceived(SellerTrade sellerTrade) {
-        onFiatPaymentReceived(sellerTrade,
-                () -> {
-                }, errorMessage -> {
-                });
-    }
-
-    public void onFiatPaymentReceived(SellerTrade sellerTrade,
-                                      ResultHandler resultHandler,
-                                      ErrorMessageHandler errorMessageHandler) {
+    public void onUserConfirmedFiatPaymentReceived(SellerTrade sellerTrade,
+                                                   ResultHandler resultHandler,
+                                                   ErrorMessageHandler errorMessageHandler) {
         sellerTrade.onFiatPaymentReceived(resultHandler, errorMessageHandler);
 
         //TODO move to trade protocol task

@@ -661,7 +661,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         autoConfirmXmrToggle = addSlideToggleButton(autoConfirmGridPane, localRowIndex, Res.get("setting.preferences.autoConfirmEnabled"), Layout.FIRST_ROW_DISTANCE);
 
         autoConfRequiredConfirmationsTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmRequiredConfirmations"));
-        autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(0, DevEnv.isDevMode() ? 100000000 : 1000));
+        autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(1, DevEnv.isDevMode() ? 100000000 : 1000));
 
         autoConfTradeLimitTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmMaxTradeSize"));
         autoConfTradeLimitTf.setValidator(new BtcValidator(formatter));
@@ -677,7 +677,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 List<String> serviceAddresses = Arrays.asList(StringUtils.deleteWhitespace(newValue).split(","));
                 // revert to default service providers when user empties the list
                 if (serviceAddresses.size() == 1 && serviceAddresses.get(0).isEmpty()) {
-                    serviceAddresses = Preferences.getDefaultXmrProofProviders();
+                    serviceAddresses = preferences.getDefaultXmrTxProofServices();
                 }
                 preferences.setAutoConfServiceAddresses("XMR", serviceAddresses);
             }

@@ -26,6 +26,7 @@ public enum AssetTxProofResult {
     TRADE_LIMIT_EXCEEDED,
     INVALID_DATA,  // Peer provided invalid data. Might be a scam attempt (e.g. txKey reused)
     PAYOUT_TX_ALREADY_PUBLISHED,
+    DISPUTE_OPENED,
 
     REQUESTS_STARTED(false),
     PENDING(false),
@@ -43,6 +44,10 @@ public enum AssetTxProofResult {
     private int numSuccessResults;
     @Getter
     private int numRequiredSuccessResults;
+    @Getter
+    private int numConfirmations;
+    @Getter
+    private int numRequiredConfirmations;
     @Getter
     private String details = "";
     // If isTerminal is set it means that we stop the service
@@ -68,6 +73,16 @@ public enum AssetTxProofResult {
         return this;
     }
 
+    public AssetTxProofResult numConfirmations(int numConfirmations) {
+        this.numConfirmations = numConfirmations;
+        return this;
+    }
+
+    public AssetTxProofResult numRequiredConfirmations(int numRequiredConfirmations) {
+        this.numRequiredConfirmations = numRequiredConfirmations;
+        return this;
+    }
+
     public AssetTxProofResult details(String details) {
         this.details = details;
         return this;
@@ -78,6 +93,8 @@ public enum AssetTxProofResult {
         return "AssetTxProofResult{" +
                 "\n     numSuccessResults=" + numSuccessResults +
                 ",\n     requiredSuccessResults=" + numRequiredSuccessResults +
+                ",\n     numConfirmations=" + numConfirmations +
+                ",\n     numRequiredConfirmations=" + numRequiredConfirmations +
                 ",\n     details='" + details + '\'' +
                 "\n} " + super.toString();
     }

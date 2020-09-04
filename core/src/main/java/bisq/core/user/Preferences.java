@@ -33,7 +33,6 @@ import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
-import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -124,16 +123,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("bsq.bisq.cc (@m52go)", "https://bsq.bisq.cc/tx.html?tx=", "https://bsq.bisq.cc/Address.html?addr=")
     ));
 
-    // list of XMR proof providers : this list will be used if no preference has been set
-    public static final List<String> getDefaultXmrProofProviders() {
-        if (DevEnv.isDevMode()) {
-            return new ArrayList<>(Arrays.asList("78.47.61.90:8081"));
-        } else {
-            // TODO we need at least 2 for release
-            return new ArrayList<>(Arrays.asList(
-                    "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
-        }
-    }
+    //TODO add a second before release
+    private static final ArrayList<String> XMR_TX_PROOF_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
+            "78.47.61.90:8081"));
+    //TODO add a second before release
+    private static final ArrayList<String> XMR_TX_PROOF_SERVICES = new ArrayList<>(Arrays.asList(
+            "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion"));
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
 
@@ -321,7 +316,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
 
         if (prefPayload.getAutoConfirmSettingsList().isEmpty()) {
-            getAutoConfirmSettingsList().add(AutoConfirmSettings.getDefaultForXmr(getDefaultXmrProofProviders()));
+            List<String> defaultXmrTxProofServices = getDefaultXmrTxProofServices();
+            AutoConfirmSettings.getDefault(defaultXmrTxProofServices, "XMR")
+                    .ifPresent(xmrAutoConfirmSettings -> {
+                        getAutoConfirmSettingsList().add(xmrAutoConfirmSettings);
+                    });
         }
 
         // We set the capability in CoreNetworkCapabilities if the program argument is set.
@@ -331,7 +330,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         initialReadDone = true;
         persist();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -872,6 +870,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         } else {
             return prefPayload.getBlockNotifyPort();
+        }
+    }
+
+    public List<String> getDefaultXmrTxProofServices() {
+        if (config.useLocalhostForP2P) {
+            return XMR_TX_PROOF_SERVICES_CLEAR_NET;
+        } else {
+            return XMR_TX_PROOF_SERVICES;
         }
     }
 
