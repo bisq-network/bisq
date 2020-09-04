@@ -856,6 +856,12 @@ textfield */
     -fx-max-height: 20;
 }
 
+#xmr-confidence {
+    -fx-progress-color: -xmr-orange;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
+}
+
 .hyperlink,
 .hyperlink.force-underline .text,
 .hyperlink:hover,

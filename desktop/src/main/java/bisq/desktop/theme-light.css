@@ -106,6 +106,9 @@
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-green-3;
     -bs-chart-dao-line2: -bs-color-blue-5;
+
+    /* Monero orange color code */
+    -xmr-orange: #F26822;
 }
 
 .warning-box {
