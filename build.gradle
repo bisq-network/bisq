@@ -51,7 +51,7 @@ configure(subprojects) {
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
-        jfoenixVersion = '9.0.10'
+        jfoenixVersion = '9.0.6'
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
@@ -497,7 +497,7 @@ configure(project(':pricenode')) {
 
     test {
         useJUnitPlatform()
-        
+
         // Disabled by default, since spot provider tests include connections to external API endpoints
         // Can be enabled by adding -Dtest.pricenode.includeSpotProviderTests=true to the gradle command:
         // ./gradlew test -Dtest.pricenode.includeSpotProviderTests=true
