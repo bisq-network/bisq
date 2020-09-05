@@ -18,6 +18,7 @@
 package bisq.desktop.main.support.dispute.agent;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -30,14 +31,19 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.agent.FraudDetection;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.Utilities;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 
-public abstract class DisputeAgentView extends DisputeView {
+public abstract class DisputeAgentView extends DisputeView implements FraudDetection.Listener {
+
+    private final FraudDetection fraudDetection;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                             KeyRing keyRing,
@@ -59,6 +65,8 @@ public abstract class DisputeAgentView extends DisputeView {
                 tradeDetailsWindow,
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
+
+        fraudDetection = new FraudDetection(disputeManager);
     }
 
     @Override
@@ -75,6 +83,25 @@ public abstract class DisputeAgentView extends DisputeView {
 
         fullReportButton.setVisible(true);
         fullReportButton.setManaged(true);
+
+        fraudDetection.checkForMultipleHolderNames();
+    }
+
+    @Override
+    protected void activate() {
+        super.activate();
+
+        fraudDetection.addListener(this);
+        if (fraudDetection.hasSuspiciousDisputeDetected()) {
+            showAlertIcon();
+        }
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+
+        fraudDetection.removeListener(this);
     }
 
     @Override
@@ -100,6 +127,37 @@ public abstract class DisputeAgentView extends DisputeView {
         }
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
         chatView.display(chatSession, closeDisputeButton, root.widthProperty());
+    }
+
+    @Override
+    public void onSuspiciousDisputeDetected() {
+        showAlertIcon();
+    }
+
+    private void showAlertIcon() {
+        String accountsUsingMultipleNamesList = fraudDetection.getAccountsUsingMultipleNamesAsString();
+        alertIconLabel.setVisible(true);
+        alertIconLabel.setManaged(true);
+        alertIconLabel.setTooltip(new Tooltip("You have disputes where user used different " +
+                "real life names from the same application. Click for more details."));
+        // Text below is for arbitrators only so no need to translate it
+        alertIconLabel.setOnMouseClicked(e -> new Popup()
+                .width(1100)
+                .warning("You have dispute cases where traders used different account holder names.\n\n" +
+                        "This might be not critical in case of small variations of the same name " +
+                        "(e.g. first name and last name are swapped), " +
+                        "but if the name is different you should request information from the trader why they " +
+                        "used a different name and request proof that the person with the real name is aware " +
+                        "of the trade. " +
+                        "It can be that the trader uses the account of their wife/husband, but it also could " +
+                        "be a case of a stolen bank account or money laundering.\n\n" +
+                        "Please check below the list of the names which got detected. Search with the trade ID for " +
+                        "the dispute case for evaluating if it might be a fraudulent account. If so, please notify the " +
+                        "developers and provide the contract json data to them so they can ban those traders.\n\n" +
+                        accountsUsingMultipleNamesList)
+                .actionButtonText(Res.get("shared.copyToClipboard"))
+                .onAction(() -> Utilities.copyToClipboard(accountsUsingMultipleNamesList))
+                .show());
     }
 }
 

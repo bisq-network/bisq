@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayload {
+public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     private String holderName;
     private String city;
     private String state = ""; // is optional. we don't use @Nullable because it would makes UI code more complex.

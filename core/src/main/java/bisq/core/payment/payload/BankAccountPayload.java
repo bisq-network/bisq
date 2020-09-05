@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
 @Getter
 @ToString
 @Slf4j
-public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload {
+public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     protected String holderName = "";
     @Nullable
     protected String bankName;

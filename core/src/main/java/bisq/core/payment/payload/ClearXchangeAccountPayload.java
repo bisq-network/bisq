@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
+public final class ClearXchangeAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     private String emailOrMobileNr = "";
     private String holderName = "";
 
