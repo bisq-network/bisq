@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 /* Message for direct communication between two nodes. Originally built for trader to
- * arbitrator communication as no other direct communication was allowed. Aribtrator is
+ * arbitrator communication as no other direct communication was allowed. Arbitrator is
  * considered as the server and trader as the client in arbitration chats
  *
  * For trader to trader communication the maker is considered to be the server

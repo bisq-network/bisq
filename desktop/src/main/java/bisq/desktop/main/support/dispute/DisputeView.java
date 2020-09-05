@@ -127,7 +127,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final boolean useDevPrivilegeKeys;
 
-    private TableView<Dispute> tableView;
+    protected TableView<Dispute> tableView;
     private SortedList<Dispute> sortedList;
 
     @Getter
@@ -142,12 +142,12 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected FilteredList<Dispute> filteredList;
     protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
-    private HBox filterBox;
     protected AutoTooltipButton reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
     private Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
     @Nullable
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
     protected Label alertIconLabel;
+    protected TableColumn<Dispute, Dispute> stateColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +231,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        filterBox = new HBox();
+        HBox filterBox = new HBox();
         filterBox.setSpacing(5);
         filterBox.getChildren().addAll(label,
                 filterTextField,
@@ -419,7 +419,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    protected void handleKeyPressed(KeyEvent event) {
+    private void handleKeyPressed(KeyEvent event) {
     }
 
     protected void reOpenDispute() {
@@ -733,7 +733,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupTable() {
+    protected void setupTable() {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
         placeholder.setWrapText(true);
@@ -764,7 +764,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
         tableView.getColumns().add(roleColumn);
 
-        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
+        stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
 
         tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
@@ -1120,7 +1120,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 });
         return column;
     }
-
 }
 
 
