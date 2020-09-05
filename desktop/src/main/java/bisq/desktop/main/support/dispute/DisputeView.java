@@ -62,14 +62,12 @@ import com.google.common.collect.Lists;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -84,8 +82,6 @@ import org.fxmisc.easybind.Subscription;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
-
-import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -137,8 +133,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
-    private EventHandler<KeyEvent> keyEventEventHandler;
-    private Scene scene;
     protected FilteredList<Dispute> filteredList;
     protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
@@ -253,8 +247,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> chatView.setInputBoxVisible(!newValue);
 
-        keyEventEventHandler = this::handleKeyPressed;
-
         chatView = new ChatView(disputeManager, formatter);
         chatView.initialize();
     }
@@ -284,9 +276,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             chatView.scrollToBottom();
         }
 
-        scene = root.getScene();
-        if (scene != null)
-            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         // If doPrint=true we print out a html page which opens tabs with all deposit txs
         // (firefox needs about:config change to allow > 20 tabs)
@@ -344,9 +333,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
         removeListenersOnSelectDispute();
-
-        if (scene != null)
-            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         if (chatView != null)
             chatView.deactivate();
@@ -417,9 +403,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         } else {
             new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
         }
-    }
-
-    private void handleKeyPressed(KeyEvent event) {
     }
 
     protected void reOpenDispute() {
