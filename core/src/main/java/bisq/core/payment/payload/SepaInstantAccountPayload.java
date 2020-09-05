@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Getter
 @Slf4j
-public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountPayload {
+public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     @Setter
     private String holderName = "";
     @Setter

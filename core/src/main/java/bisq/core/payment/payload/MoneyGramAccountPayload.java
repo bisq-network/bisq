@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public class MoneyGramAccountPayload extends PaymentAccountPayload {
+public class MoneyGramAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     private String holderName;
     private String countryCode = "";
     private String state = ""; // is optional. we don't use @Nullable because it would makes UI code more complex.

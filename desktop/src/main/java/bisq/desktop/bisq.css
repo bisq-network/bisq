@@ -816,6 +816,11 @@ tree-table-view:focused {
     -fx-padding: 27 2 0 2;
 }
 
+.alert-icon {
+    -fx-fill: -bs-rd-error-red;
+    -fx-cursor: hand;
+}
+
 .close-icon {
     -fx-fill: -bs-text-color;
 }

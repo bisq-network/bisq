@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class JapanBankAccountPayload extends PaymentAccountPayload {
+public final class JapanBankAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     // bank
     private String bankName = "";
     private String bankCode = "";
@@ -136,5 +136,10 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload {
     public byte[] getAgeWitnessInputData() {
         String all = this.bankName + this.bankBranchName + this.bankAccountType + this.bankAccountNumber + this.bankAccountName;
         return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getHolderName() {
+        return bankAccountName;
     }
 }

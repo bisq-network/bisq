@@ -60,6 +60,8 @@ import org.bitcoinj.core.Coin;
 
 import com.google.common.collect.Lists;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -72,6 +74,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 
@@ -108,6 +111,8 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.desktop.util.FormBuilder.getIconForLabel;
+
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     protected final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
@@ -142,6 +147,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
     @Nullable
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
+    protected Label alertIconLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,6 +185,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         filterTextField = new InputTextField();
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
         HBox.setHgrow(filterTextField, Priority.NEVER);
+
+        alertIconLabel = new Label();
+        Text icon = getIconForLabel(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, "2em", alertIconLabel);
+        icon.getStyleClass().add("alert-icon");
+        HBox.setMargin(alertIconLabel, new Insets(4, 0, 0, 10));
+        alertIconLabel.setMouseTransparent(false);
+        alertIconLabel.setVisible(false);
+        alertIconLabel.setManaged(false);
 
         reOpenButton = new AutoTooltipButton(Res.get("support.reOpenButton.label"));
         reOpenButton.setDisable(true);
@@ -219,7 +233,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         filterBox = new HBox();
         filterBox.setSpacing(5);
-        filterBox.getChildren().addAll(label, filterTextField, spacer, reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton);
+        filterBox.getChildren().addAll(label,
+                filterTextField,
+                alertIconLabel,
+                spacer,
+                reOpenButton,
+                sendPrivateNotificationButton,
+                reportButton,
+                fullReportButton);
         VBox.setVgrow(filterBox, Priority.NEVER);
 
         tableView = new TableView<>();
