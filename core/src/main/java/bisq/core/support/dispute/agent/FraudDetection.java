@@ -91,7 +91,6 @@ public class FraudDetection {
     public String getAccountsUsingMultipleNamesAsString() {
         return accountsUsingMultipleNames.entrySet().stream()
                 .map(entry -> {
-                    String pubKeyHash = entry.getKey();
                     String accountInfo = entry.getValue().stream()
                             .map(info -> {
                                 String tradeId = info.getDispute().getShortTradeId();
