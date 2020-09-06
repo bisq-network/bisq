@@ -19,6 +19,7 @@ package bisq.desktop.main.offer.takeoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.OfferDataModel;
+import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
@@ -81,6 +82,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class TakeOfferDataModel extends OfferDataModel {
     private final TradeManager tradeManager;
+    private final OfferBook offerBook;
     private final BsqWalletService bsqWalletService;
     private final User user;
     private final FeeService feeService;
@@ -120,6 +122,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
     @Inject
     TakeOfferDataModel(TradeManager tradeManager,
+                       OfferBook offerBook,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        User user, FeeService feeService,
@@ -134,6 +137,7 @@ class TakeOfferDataModel extends OfferDataModel {
         super(btcWalletService);
 
         this.tradeManager = tradeManager;
+        this.offerBook = offerBook;
         this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
@@ -291,6 +295,7 @@ class TakeOfferDataModel extends OfferDataModel {
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -325,7 +330,17 @@ class TakeOfferDataModel extends OfferDataModel {
                     offer,
                     paymentAccount.getId(),
                     useSavingsWallet,
-                    tradeResultHandler,
+                    trade -> {
+                        // We do not wait until the offer got removed by a network remove message but remove it
+                        // directly from the offer book. The broadcast gets now bundled and has 2 sec. delay so the
+                        // removal from the network is a bit slower as it has been before. To avoid that the taker gets
+                        // confused to see the same offer still in the offerbook we remove it manually. This removal has
+                        // only local effect. Other trader might see the offer for a few seconds
+                        // still (but cannot take it).
+                        offerBook.removeOffer(checkNotNull(trade.getOffer()), tradeManager);
+
+                        tradeResultHandler.handleResult(trade);
+                    },
                     errorMessage -> {
                         log.warn(errorMessage);
                         new Popup().warning(errorMessage).show();
