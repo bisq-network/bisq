@@ -164,6 +164,8 @@ public class SellerStep3View extends TradeStepView {
         }
 
         applyAssetTxProofResult(trade.getAssetTxProofResult());
+
+        confirmButton.setDisable(isDisputed());
     }
 
     @Override
@@ -341,40 +343,45 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentReceived() {
+        if (isDisputed()) {
+            return;
+        }
+
         // The confirmPaymentReceived call will trigger the trade protocol to do the payout tx. We want to be sure that we
         // are well connected to the Bitcoin network before triggering the broadcast.
-        if (model.dataModel.isReadyForTxBroadcast()) {
-            String key = "confirmPaymentReceived";
-            if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-                PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
-                if (!(paymentAccountPayload instanceof AssetsAccountPayload)) {
-                    if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
-                            !(paymentAccountPayload instanceof HalCashAccountPayload) &&
-                            !(paymentAccountPayload instanceof F2FAccountPayload)) {
-                        message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
-                    }
+        if (!model.dataModel.isReadyForTxBroadcast()) {
+            return;
+        }
+        String key = "confirmPaymentReceived";
+        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
+            PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+            String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
+            if (!(paymentAccountPayload instanceof AssetsAccountPayload)) {
+                if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
+                        !(paymentAccountPayload instanceof HalCashAccountPayload) &&
+                        !(paymentAccountPayload instanceof F2FAccountPayload)) {
+                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
+                }
 
-                    Optional<String> optionalHolderName = getOptionalHolderName();
-                    if (optionalHolderName.isPresent()) {
-                        message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.name", optionalHolderName.get());
-                    }
+                Optional<String> optionalHolderName = getOptionalHolderName();
+                if (optionalHolderName.isPresent()) {
+                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.name", optionalHolderName.get());
                 }
-                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                if (model.dataModel.isSignWitnessTrade()) {
-                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
-                }
-                new Popup()
-                        .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
-                        .confirmation(message)
-                        .width(700)
-                        .actionButtonText(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.yes"))
-                        .onAction(this::confirmPaymentReceived)
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-            } else {
-                confirmPaymentReceived();
             }
+            message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
+            if (model.dataModel.isSignWitnessTrade()) {
+                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
+            }
+            new Popup()
+                    .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
+                    .confirmation(message)
+                    .width(700)
+                    .actionButtonText(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.yes"))
+                    .onAction(this::confirmPaymentReceived)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        } else {
+            confirmPaymentReceived();
         }
     }
 
