@@ -420,4 +420,14 @@ public abstract class TradeProtocol {
             }
         }
     }
+
+    protected boolean wasDisputed(ErrorMessageHandler errorMessageHandler) {
+        if (trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE) {
+            String msg = "Dispute have been opened once. We do not allow anymore to confirm payment by button click.";
+            log.error(msg);
+            errorMessageHandler.handleErrorMessage(msg);
+            return true;
+        }
+        return false;
+    }
 }

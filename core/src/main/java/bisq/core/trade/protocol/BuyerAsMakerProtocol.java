@@ -212,6 +212,10 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (wasDisputed(errorMessageHandler)) {
+            return;
+        }
+
         if (trade.isDepositConfirmed() && !trade.isFiatSent()) {
             buyerAsMakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
             TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
