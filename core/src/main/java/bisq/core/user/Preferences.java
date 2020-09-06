@@ -129,7 +129,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     ));
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES = new ArrayList<>(Arrays.asList(
             "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion", // @emzy
-            "wizxmr4hbdxdszqm5rfyqvceyca5jq62ppvtuznasnk66wvhhvgm3uyd.onion", // @wiz
+            "wizxmr4hbdxdszqm5rfyqvceyca5jq62ppvtuznasnk66wvhhvgm3uyd.onion" // @wiz
     ));
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
