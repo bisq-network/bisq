@@ -463,7 +463,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
         }
 
-        deactivatePaymentButtons(isDisputed());
+        updateConfirmButtonDisableState(isDisputed());
     }
 
     private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
@@ -603,7 +603,7 @@ public abstract class TradeStepView extends AnchorPane {
         acceptMediationResultPopup.show();
     }
 
-    protected void deactivatePaymentButtons(boolean isDisabled) {
+    protected void updateConfirmButtonDisableState(boolean isDisabled) {
     }
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {
