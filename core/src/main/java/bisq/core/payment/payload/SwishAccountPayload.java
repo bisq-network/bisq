@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class SwishAccountPayload extends PaymentAccountPayload {
+public final class SwishAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     private String mobileNr = "";
     private String holderName = "";
 

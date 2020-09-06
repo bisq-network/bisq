@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Getter
 @Slf4j
-public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload {
+public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     @Setter
     private String holderName = "";
     @Setter
@@ -158,6 +158,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
         // slight changes in holder name (e.g. add or remove middle name)
         return super.getAgeWitnessInputData(ArrayUtils.addAll(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
     }
+
     @Override
     public String getOwnerId() {
         return holderName;
