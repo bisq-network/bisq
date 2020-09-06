@@ -85,8 +85,11 @@ public class SellerStep3View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
+    @Nullable
     private InfoTextField assetTxProofResultField;
+    @Nullable
     private TxConfidenceIndicator assetTxConfidenceIndicator;
+    @Nullable
     private ChangeListener<Number> proofResultListener;
     private boolean useXmrTxProof;
 
@@ -157,16 +160,12 @@ public class SellerStep3View extends TradeStepView {
             }
         });
 
+        useXmrTxProof = getCurrencyCode(trade).equals("XMR");
         if (useXmrTxProof) {
             proofResultListener = (observable, oldValue, newValue) -> {
                 applyAssetTxProofResult(trade.getAssetTxProofResult());
             };
-
-            // we listen for updates on the trade autoConfirmResult field
-            if (assetTxProofResultField != null) {
-                trade.getAssetTxProofResultUpdateProperty().addListener(proofResultListener);
-                applyAssetTxProofResult(trade.getAssetTxProofResult());
-            }
+            trade.getAssetTxProofResultUpdateProperty().addListener(proofResultListener);
 
             applyAssetTxProofResult(trade.getAssetTxProofResult());
         }
@@ -187,7 +186,7 @@ public class SellerStep3View extends TradeStepView {
             timeoutTimer.stop();
         }
 
-        if (useXmrTxProof && assetTxProofResultField != null) {
+        if (useXmrTxProof) {
             trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
         }
     }
@@ -253,7 +252,6 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        useXmrTxProof = isBlockChain && getCurrencyCode(trade).equals("XMR");
         if (useXmrTxProof) {
             assetTxProofResultField = new InfoTextField();
 
@@ -493,8 +491,12 @@ public class SellerStep3View extends TradeStepView {
     }
 
     private void applyAssetTxProofResult(@Nullable AssetTxProofResult result) {
+        checkNotNull(assetTxProofResultField);
+        checkNotNull(assetTxConfidenceIndicator);
+
         String txt = GUIUtil.getProofResultAsString(result);
         assetTxProofResultField.setText(txt);
+
         if (result == null) {
             assetTxConfidenceIndicator.setProgress(0);
             return;
