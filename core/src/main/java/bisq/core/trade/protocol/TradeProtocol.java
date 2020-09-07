@@ -345,14 +345,8 @@ public abstract class TradeProtocol {
         cleanup();
     }
 
-    protected boolean wasDisputed(ErrorMessageHandler errorMessageHandler) {
-        if (trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE) {
-            String msg = "Dispute have been opened once. We do not allow anymore to confirm payment by button click.";
-            log.error(msg);
-            errorMessageHandler.handleErrorMessage(msg);
-            return true;
-        }
-        return false;
+    protected boolean wasDisputed() {
+        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
     }
 
     private void sendAckMessage(@Nullable TradeMessage tradeMessage, boolean result, @Nullable String errorMessage) {
