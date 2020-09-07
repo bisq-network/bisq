@@ -204,6 +204,10 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for payout
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (wasDisputed(errorMessageHandler)) {
+            return;
+        }
+
         if (trade.getPayoutTx() == null) {
             sellerAsMakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
             TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,

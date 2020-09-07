@@ -345,6 +345,16 @@ public abstract class TradeProtocol {
         cleanup();
     }
 
+    protected boolean wasDisputed(ErrorMessageHandler errorMessageHandler) {
+        if (trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE) {
+            String msg = "Dispute have been opened once. We do not allow anymore to confirm payment by button click.";
+            log.error(msg);
+            errorMessageHandler.handleErrorMessage(msg);
+            return true;
+        }
+        return false;
+    }
+
     private void sendAckMessage(@Nullable TradeMessage tradeMessage, boolean result, @Nullable String errorMessage) {
         // We complete at initial protocol setup with the setup listener tasks.
         // Other cases are if we start from an UI event the task runner (payment started, confirmed).
