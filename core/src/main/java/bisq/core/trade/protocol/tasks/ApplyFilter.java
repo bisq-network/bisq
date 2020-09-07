@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.tasks;
 
 import bisq.core.filter.FilterManager;
-import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
 
@@ -42,9 +41,8 @@ public class ApplyFilter extends TradeTask {
         try {
             runInterceptHook();
 
-            final NodeAddress nodeAddress = processModel.getTempTradingPeerNodeAddress();
+            NodeAddress nodeAddress = processModel.getTempTradingPeerNodeAddress();
             PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload());
-            final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
 
             FilterManager filterManager = processModel.getFilterManager();
             if (nodeAddress != null && filterManager.isNodeAddressBanned(nodeAddress)) {
@@ -56,13 +54,12 @@ public class ApplyFilter extends TradeTask {
             } else if (trade.getOffer() != null && filterManager.isCurrencyBanned(trade.getOffer().getCurrencyCode())) {
                 failed("Currency is banned.\n" +
                         "Currency code=" + trade.getOffer().getCurrencyCode());
-            } else if (filterManager.isPaymentMethodBanned(trade.getOffer().getPaymentMethod())) {
+            } else if (filterManager.isPaymentMethodBanned(checkNotNull(trade.getOffer()).getPaymentMethod())) {
                 failed("Payment method is banned.\n" +
                         "Payment method=" + trade.getOffer().getPaymentMethod().getId());
-            } else if (filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
+            } else if (filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload)) {
                 failed("Other trader is banned by their trading account data.\n" +
-                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
-                        "banFilter=" + appliedPaymentAccountFilter[0].toString());
+                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails());
             } else if (filterManager.requireUpdateToNewVersionForTrading()) {
                 failed("Your version of Bisq is not compatible for trading anymore. " +
                         "Please update to the latest Bisq version at https://bisq.network/downloads.");
