@@ -381,7 +381,7 @@ public class FilterManager {
                                 Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
                                 // We invoke getter methods (no args), e.g. getHolderName
                                 String valueFromInvoke = (String) method.invoke(paymentAccountPayload);
-                                return valueFromInvoke.toLowerCase().equals(paymentAccountFilter.getValue().toLowerCase());
+                                return valueFromInvoke.equalsIgnoreCase(paymentAccountFilter.getValue());
                             } catch (Throwable e) {
                                 log.error(e.getMessage());
                                 return false;
