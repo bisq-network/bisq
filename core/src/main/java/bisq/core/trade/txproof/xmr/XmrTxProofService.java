@@ -27,12 +27,12 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
-import bisq.core.trade.txproof.AssetTxProofHttpClient;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 
+import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 
@@ -76,7 +76,7 @@ public class XmrTxProofService implements AssetTxProofService {
     private final RefundManager refundManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final AssetTxProofHttpClient httpClient;
+    private final Socks5ProxyProvider socks5ProxyProvider;
     private final Map<String, XmrTxProofRequestsPerTrade> servicesByTradeId = new HashMap<>();
     private AutoConfirmSettings autoConfirmSettings;
     private Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
@@ -101,7 +101,7 @@ public class XmrTxProofService implements AssetTxProofService {
                              RefundManager refundManager,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             AssetTxProofHttpClient httpClient) {
+                             Socks5ProxyProvider socks5ProxyProvider) {
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.tradeManager = tradeManager;
@@ -111,7 +111,7 @@ public class XmrTxProofService implements AssetTxProofService {
         this.refundManager = refundManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
-        this.httpClient = httpClient;
+        this.socks5ProxyProvider = socks5ProxyProvider;
     }
 
 
@@ -247,7 +247,7 @@ public class XmrTxProofService implements AssetTxProofService {
     }
 
     private void startRequests(SellerTrade trade) {
-        XmrTxProofRequestsPerTrade service = new XmrTxProofRequestsPerTrade(httpClient,
+        XmrTxProofRequestsPerTrade service = new XmrTxProofRequestsPerTrade(socks5ProxyProvider,
                 trade,
                 autoConfirmSettings,
                 mediationManager,

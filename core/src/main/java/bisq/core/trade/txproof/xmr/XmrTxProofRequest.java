@@ -21,6 +21,8 @@ import bisq.core.trade.txproof.AssetTxProofHttpClient;
 import bisq.core.trade.txproof.AssetTxProofParser;
 import bisq.core.trade.txproof.AssetTxProofRequest;
 
+import bisq.network.Socks5ProxyProvider;
+
 import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.handlers.FaultHandler;
@@ -140,9 +142,9 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "XmrTransferProofRequester", 3, 5, 10 * 60);
 
-    private final AssetTxProofHttpClient httpClient;
     private final AssetTxProofParser<XmrTxProofRequest.Result, XmrTxProofModel> parser;
     private final XmrTxProofModel model;
+    private final AssetTxProofHttpClient httpClient;
     private final long firstRequest;
 
     private boolean terminated;
@@ -155,12 +157,12 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTxProofRequest(AssetTxProofHttpClient httpClient,
+    XmrTxProofRequest(Socks5ProxyProvider socks5ProxyProvider,
                       XmrTxProofModel model) {
-        this.httpClient = httpClient;
         this.parser = new XmrTxProofParser();
         this.model = model;
 
+        httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
         httpClient.setBaseUrl("http://" + model.getServiceAddress());
         if (model.getServiceAddress().matches("^192.*|^localhost.*")) {
             log.info("Ignoring Socks5 proxy for local net address: {}", model.getServiceAddress());
