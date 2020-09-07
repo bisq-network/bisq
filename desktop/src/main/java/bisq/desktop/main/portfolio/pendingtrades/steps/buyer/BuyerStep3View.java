@@ -87,7 +87,7 @@ public class BuyerStep3View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
-        return Res.get("portfolio.pending.step3_buyer.wait.info", model.dataModel.getCurrencyCode());
+        return Res.get("portfolio.pending.step3_buyer.wait.info", getCurrencyCode(trade));
     }
 
     private void updateMessageStateInfo() {
@@ -130,7 +130,7 @@ public class BuyerStep3View extends TradeStepView {
     @Override
     protected String getFirstHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
-                Res.get("portfolio.pending.step3_buyer.warn.part1a", model.dataModel.getCurrencyCode()) :
+                Res.get("portfolio.pending.step3_buyer.warn.part1a", getCurrencyCode(trade)) :
                 Res.get("portfolio.pending.step3_buyer.warn.part1b");
         return Res.get("portfolio.pending.step3_buyer.warn.part2", substitute);
     }

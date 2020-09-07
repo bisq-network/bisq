@@ -26,6 +26,7 @@ import bisq.desktop.main.portfolio.pendingtrades.TradeStepInfo;
 import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
@@ -605,6 +606,18 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void deactivatePaymentButtons(boolean isDisabled) {
+    }
+
+    protected String getCurrencyName(Trade trade) {
+        return CurrencyUtil.getNameByCode(getCurrencyCode(trade));
+    }
+
+    protected String getCurrencyCode(Trade trade) {
+        return checkNotNull(trade.getOffer()).getCurrencyCode();
+    }
+
+    protected boolean isXmrTrade() {
+        return getCurrencyCode(trade).equals("XMR");
     }
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {
