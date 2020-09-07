@@ -29,7 +29,6 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -91,7 +90,6 @@ public class SellerStep3View extends TradeStepView {
     private TxConfidenceIndicator assetTxConfidenceIndicator;
     @Nullable
     private ChangeListener<Number> proofResultListener;
-    private boolean useXmrTxProof;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -160,8 +158,7 @@ public class SellerStep3View extends TradeStepView {
             }
         });
 
-        useXmrTxProof = getCurrencyCode(trade).equals("XMR");
-        if (useXmrTxProof) {
+        if (isXmrTrade()) {
             proofResultListener = (observable, oldValue, newValue) -> {
                 applyAssetTxProofResult(trade.getAssetTxProofResult());
             };
@@ -186,7 +183,7 @@ public class SellerStep3View extends TradeStepView {
             timeoutTimer.stop();
         }
 
-        if (useXmrTxProof) {
+        if (isXmrTrade()) {
             trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
         }
     }
@@ -215,7 +212,7 @@ public class SellerStep3View extends TradeStepView {
         String myTitle = "";
         String peersTitle = "";
         boolean isBlockChain = false;
-        String nameByCode = CurrencyUtil.getNameByCode(getCurrencyCode(trade));
+        String currencyName = getCurrencyName(trade);
         Contract contract = trade.getContract();
         if (contract != null) {
             PaymentAccountPayload myPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
@@ -231,8 +228,8 @@ public class SellerStep3View extends TradeStepView {
                     myPaymentDetails = ((AssetsAccountPayload) myPaymentAccountPayload).getAddress();
                 }
                 peersPaymentDetails = ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress();
-                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", nameByCode);
-                peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", nameByCode);
+                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", currencyName);
+                peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", currencyName);
                 isBlockChain = true;
             } else {
                 if (myPaymentDetails.isEmpty()) {
@@ -252,7 +249,7 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        if (useXmrTxProof) {
+        if (isXmrTrade()) {
             assetTxProofResultField = new InfoTextField();
 
             Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(Res.get("portfolio.pending.step3_seller.autoConf.status.label"), assetTxProofResultField);
@@ -324,11 +321,11 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
-        String currencyCode = getCurrencyCode(trade);
+        String currencyName = getCurrencyName(trade);
         if (model.isBlockChainMethod()) {
-            return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.altcoin", currencyCode));
+            return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.altcoin", currencyName));
         } else {
-            return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.fiat", currencyCode));
+            return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.fiat", currencyName));
         }
     }
 
@@ -339,7 +336,7 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected String getFirstHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
-                Res.get("portfolio.pending.step3_seller.warn.part1a", getCurrencyCode(trade)) :
+                Res.get("portfolio.pending.step3_seller.warn.part1a", getCurrencyName(trade)) :
                 Res.get("portfolio.pending.step3_seller.warn.part1b");
         return Res.get("portfolio.pending.step3_seller.warn.part2", substitute);
 
@@ -370,7 +367,7 @@ public class SellerStep3View extends TradeStepView {
             String key = "confirmPaymentReceived";
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(getCurrencyCode(trade)));
+                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", getCurrencyName(trade));
                 if (!(paymentAccountPayload instanceof AssetsAccountPayload)) {
                     if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                             !(paymentAccountPayload instanceof HalCashAccountPayload) &&
@@ -406,12 +403,12 @@ public class SellerStep3View extends TradeStepView {
         String key = "confirmPayment" + trade.getId();
         String message = "";
         String tradeVolumeWithCode = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
-        String currencyName = CurrencyUtil.getNameByCode(getCurrencyCode(trade));
+        String currencyName = getCurrencyName(trade);
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         String id = trade.getShortId();
         if (paymentAccountPayload instanceof AssetsAccountPayload) {
             String address = ((AssetsAccountPayload) paymentAccountPayload).getAddress();
-            String explorerOrWalletString = getCurrencyCode(trade).equals("XMR") ?
+            String explorerOrWalletString = isXmrTrade() ?
                     Res.get("portfolio.pending.step3_seller.altcoin.wallet", currencyName) :
                     Res.get("portfolio.pending.step3_seller.altcoin.explorer", currencyName);
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
@@ -532,9 +529,5 @@ public class SellerStep3View extends TradeStepView {
         label.setWrapText(true);
         label.setPadding(new Insets(10));
         return label;
-    }
-
-    private String getCurrencyCode(Trade trade) {
-        return CurrencyUtil.getNameByCode(checkNotNull(trade.getOffer()).getCurrencyCode());
     }
 }

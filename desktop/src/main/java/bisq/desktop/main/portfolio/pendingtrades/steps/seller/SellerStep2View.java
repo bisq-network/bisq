@@ -134,7 +134,7 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
-        return Res.get("portfolio.pending.step2_seller.waitPayment.msg", model.dataModel.getCurrencyCode());
+        return Res.get("portfolio.pending.step2_seller.waitPayment.msg", getCurrencyCode(trade));
     }
 
 
@@ -145,7 +145,7 @@ public class SellerStep2View extends TradeStepView {
     @Override
     protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_seller.warn",
-                model.dataModel.getCurrencyCode(),
+                getCurrencyCode(trade),
                 model.getDateForOpenDispute());
     }
 
