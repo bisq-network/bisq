@@ -95,6 +95,7 @@ import javafx.util.StringConverter;
 import java.io.File;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -672,12 +673,41 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         autoConfServiceAddressListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue)) {
-                List<String> serviceAddresses = Arrays.asList(StringUtils.deleteWhitespace(newValue).split(","));
+
+                RegexValidator onionRegex = GUIUtil.onionAddressRegexValidator();
+                RegexValidator localhostRegex = GUIUtil.localhostAddressRegexValidator();
+                RegexValidator localnetRegex = GUIUtil.localnetAddressRegexValidator();
+
+                List<String> serviceAddressesRaw = Arrays.asList(StringUtils.deleteWhitespace(newValue).split(","));
+
                 // revert to default service providers when user empties the list
-                if (serviceAddresses.size() == 1 && serviceAddresses.get(0).isEmpty()) {
-                    serviceAddresses = preferences.getDefaultXmrTxProofServices();
+                if (serviceAddressesRaw.size() == 1 && serviceAddressesRaw.get(0).isEmpty()) {
+                    serviceAddressesRaw = preferences.getDefaultXmrTxProofServices();
                 }
-                preferences.setAutoConfServiceAddresses("XMR", serviceAddresses);
+
+                // we must always communicate with XMR explorer API securely
+                // if *.onion hostname, we use Tor normally
+                // if localhost, LAN address, or *.local FQDN we use HTTP without Tor
+                // otherwise we enforce https:// for any clearnet FQDN hostname
+                List<String> serviceAddressesParsed = new ArrayList<String>();
+                serviceAddressesRaw.forEach((addr) -> {
+                    addr = addr.replaceAll("http://", "").replaceAll("https://", "");
+                    if (onionRegex.validate(addr).isValid) {
+                        log.info("Using Tor for onion hostname: {}", addr);
+                        serviceAddressesParsed.add(addr);
+                    } else if (localhostRegex.validate(addr).isValid) {
+                        log.info("Using HTTP without Tor for Loopback address: {}", addr);
+                        serviceAddressesParsed.add("http://" + addr);
+                    } else if (localnetRegex.validate(addr).isValid) {
+                        log.info("Using HTTP without Tor for LAN address: {}", addr);
+                        serviceAddressesParsed.add("http://" + addr);
+                    } else {
+                        log.info("Using HTTPS with Tor for Clearnet address: {}", addr);
+                        serviceAddressesParsed.add("https://" + addr);
+                    }
+                });
+
+                preferences.setAutoConfServiceAddresses("XMR", serviceAddressesParsed);
             }
         };
 
