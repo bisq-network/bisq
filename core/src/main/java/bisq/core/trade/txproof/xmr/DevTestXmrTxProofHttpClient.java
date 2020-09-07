@@ -24,8 +24,6 @@ import bisq.network.http.HttpClientImpl;
 
 import bisq.common.app.DevEnv;
 
-import javax.inject.Inject;
-
 import java.util.Date;
 
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +56,6 @@ public class DevTestXmrTxProofHttpClient extends HttpClientImpl implements Asset
         EXCEPTION
     }
 
-    @Inject
     public DevTestXmrTxProofHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
         super(socks5ProxyProvider);
     }

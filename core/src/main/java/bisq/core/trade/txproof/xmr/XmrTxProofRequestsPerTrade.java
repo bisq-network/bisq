@@ -22,10 +22,11 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Trade;
-import bisq.core.trade.txproof.AssetTxProofHttpClient;
 import bisq.core.trade.txproof.AssetTxProofRequestsPerTrade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.AutoConfirmSettings;
+
+import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.handlers.FaultHandler;
 
@@ -54,7 +55,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     private final AutoConfirmSettings autoConfirmSettings;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
-    private final AssetTxProofHttpClient httpClient;
+    private final Socks5ProxyProvider socks5ProxyProvider;
 
     private int numRequiredSuccessResults;
     private final Set<XmrTxProofRequest> requests = new HashSet<>();
@@ -69,12 +70,12 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    XmrTxProofRequestsPerTrade(AssetTxProofHttpClient httpClient,
+    XmrTxProofRequestsPerTrade(Socks5ProxyProvider socks5ProxyProvider,
                                Trade trade,
                                AutoConfirmSettings autoConfirmSettings,
                                MediationManager mediationManager,
                                RefundManager refundManager) {
-        this.httpClient = httpClient;
+        this.socks5ProxyProvider = socks5ProxyProvider;
         this.trade = trade;
         this.autoConfirmSettings = autoConfirmSettings;
         this.mediationManager = mediationManager;
@@ -140,7 +141,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
 
         for (String serviceAddress : serviceAddresses) {
             XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, autoConfirmSettings);
-            XmrTxProofRequest request = new XmrTxProofRequest(httpClient, model);
+            XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, model);
 
             log.info("{} created", request);
             requests.add(request);

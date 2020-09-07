@@ -22,14 +22,11 @@ import bisq.core.trade.txproof.AssetTxProofHttpClient;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.http.HttpClientImpl;
 
-import javax.inject.Inject;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class XmrTxProofHttpClient extends HttpClientImpl implements AssetTxProofHttpClient {
-    @Inject
-    public XmrTxProofHttpClient(Socks5ProxyProvider socks5ProxyProvider) {
+class XmrTxProofHttpClient extends HttpClientImpl implements AssetTxProofHttpClient {
+    XmrTxProofHttpClient(Socks5ProxyProvider socks5ProxyProvider) {
         super(socks5ProxyProvider);
     }
 }
