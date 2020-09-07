@@ -36,6 +36,7 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 import static bisq.common.app.DevEnv.isDevMode;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
@@ -114,6 +115,7 @@ public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {
     }
 
     private void addContent() {
+        addMultilineLabel(gridPane, ++rowIndex, Res.get("setXMRTxKeyWindow.note"), 0);
         txHashInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("setXMRTxKeyWindow.txHash"), 10);
         txKeyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("setXMRTxKeyWindow.txKey"));
     }
