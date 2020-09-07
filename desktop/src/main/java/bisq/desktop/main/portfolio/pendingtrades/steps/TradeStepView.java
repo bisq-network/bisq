@@ -605,6 +605,7 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void updateConfirmButtonDisableState(boolean isDisabled) {
+        // By default do nothing. Only overwritten in certain trade steps
     }
 
     protected String getCurrencyName(Trade trade) {
