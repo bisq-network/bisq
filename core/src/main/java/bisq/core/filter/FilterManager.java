@@ -371,24 +371,19 @@ public class FilterManager {
         return requireUpdateToNewVersion;
     }
 
-    public boolean arePeersPaymentAccountDataBanned(PaymentAccountPayload paymentAccountPayload,
-                                                    PaymentAccountFilter[] appliedPaymentAccountFilter) {
+    public boolean arePeersPaymentAccountDataBanned(PaymentAccountPayload paymentAccountPayload) {
         return getFilter() != null &&
                 getFilter().getBannedPaymentAccounts().stream()
+                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(
+                                paymentAccountPayload.getPaymentMethodId()))
                         .anyMatch(paymentAccountFilter -> {
-                            final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
-                                    paymentAccountPayload.getPaymentMethodId());
-                            if (samePaymentMethodId) {
-                                try {
-                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
-                                    String result = (String) method.invoke(paymentAccountPayload);
-                                    appliedPaymentAccountFilter[0] = paymentAccountFilter;
-                                    return result.toLowerCase().equals(paymentAccountFilter.getValue().toLowerCase());
-                                } catch (Throwable e) {
-                                    log.error(e.getMessage());
-                                    return false;
-                                }
-                            } else {
+                            try {
+                                Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
+                                // We invoke getter methods (no args), e.g. getHolderName
+                                String valueFromInvoke = (String) method.invoke(paymentAccountPayload);
+                                return valueFromInvoke.equalsIgnoreCase(paymentAccountFilter.getValue());
+                            } catch (Throwable e) {
+                                log.error(e.getMessage());
                                 return false;
                             }
                         });

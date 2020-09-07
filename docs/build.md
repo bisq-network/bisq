@@ -7,7 +7,7 @@ Bisq uses Git LFS to track certain large binary files. Follow the instructions a
 
     $ git lfs version
     git-lfs/2.10.0 (GitHub; darwin amd64; go 1.13.6)
-
+    
 
 ## Clone
 
@@ -17,8 +17,9 @@ Bisq uses Git LFS to track certain large binary files. Follow the instructions a
 
 ## Build
 
-You do _not_ need to install Gradle to complete the following command. The `gradlew` shell script will install it for you if necessary.
+You do _not_ need to install Gradle to complete the following command. The `gradlew` shell script will install it for you if necessary. Pull the lfs data first.
 
+    git lfs pull
     ./gradlew build
 
 If on Windows run `gradlew.bat build` instead.
