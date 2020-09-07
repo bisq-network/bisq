@@ -18,6 +18,8 @@
 package bisq.desktop.main.support.dispute.agent;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -30,14 +32,35 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.Utilities;
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 
-public abstract class DisputeAgentView extends DisputeView {
+import javafx.geometry.Insets;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import java.util.List;
+
+import static bisq.desktop.util.FormBuilder.getIconForLabel;
+
+public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
+
+    private final MultipleHolderNameDetection multipleHolderNameDetection;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                             KeyRing keyRing,
@@ -59,7 +82,14 @@ public abstract class DisputeAgentView extends DisputeView {
                 tradeDetailsWindow,
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
+
+        multipleHolderNameDetection = new MultipleHolderNameDetection(disputeManager);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Life cycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize() {
@@ -75,7 +105,41 @@ public abstract class DisputeAgentView extends DisputeView {
 
         fullReportButton.setVisible(true);
         fullReportButton.setManaged(true);
+
+        multipleHolderNameDetection.detectMultipleHolderNames();
     }
+
+    @Override
+    protected void activate() {
+        super.activate();
+
+        multipleHolderNameDetection.addListener(this);
+        if (multipleHolderNameDetection.hasSuspiciousDisputesDetected()) {
+            suspiciousDisputeDetected();
+        }
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+
+        multipleHolderNameDetection.removeListener(this);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MultipleHolderNamesDetection.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onSuspiciousDisputeDetected() {
+        suspiciousDisputeDetected();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DisputeView
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void applyFilteredListPredicate(String filterString) {
@@ -100,6 +164,131 @@ public abstract class DisputeAgentView extends DisputeView {
         }
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
         chatView.display(chatSession, closeDisputeButton, root.widthProperty());
+    }
+
+    @Override
+    protected void setupTable() {
+        super.setupTable();
+
+        stateColumn.getStyleClass().remove("last-column");
+        tableView.getColumns().add(getAlertColumn());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void suspiciousDisputeDetected() {
+        alertIconLabel.setVisible(true);
+        alertIconLabel.setManaged(true);
+        alertIconLabel.setTooltip(new Tooltip("You have suspicious disputes where the same trader used different " +
+                "account holder names.\nClick for more information."));
+        // Text below is for arbitrators only so no need to translate it
+        alertIconLabel.setOnMouseClicked(e -> {
+            String reportForAllDisputes = multipleHolderNameDetection.getReportForAllDisputes();
+            new Popup()
+                    .width(1100)
+                    .warning(getReportMessage(reportForAllDisputes, "traders"))
+                    .actionButtonText(Res.get("shared.copyToClipboard"))
+                    .onAction(() -> Utilities.copyToClipboard(reportForAllDisputes))
+                    .show();
+        });
+    }
+
+
+    private TableColumn<Dispute, Dispute> getAlertColumn() {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>("Alert") {
+            {
+                setMinWidth(50);
+            }
+        };
+        column.getStyleClass().add("last-column");
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                c -> new TableCell<>() {
+                    Label alertIconLabel;
+
+                    @Override
+                    public void updateItem(Dispute dispute, boolean empty) {
+                        if (dispute != null && !empty) {
+                            if (!showAlertAtDispute(dispute)) {
+                                setGraphic(null);
+                                if (alertIconLabel != null) {
+                                    alertIconLabel.setOnMouseClicked(null);
+                                }
+                                return;
+                            }
+
+                            if (alertIconLabel != null) {
+                                alertIconLabel.setOnMouseClicked(null);
+                            }
+
+                            alertIconLabel = new Label();
+                            Text icon = getIconForLabel(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, "1.5em", alertIconLabel);
+                            icon.getStyleClass().add("alert-icon");
+                            HBox.setMargin(alertIconLabel, new Insets(4, 0, 0, 10));
+                            alertIconLabel.setMouseTransparent(false);
+                            setGraphic(alertIconLabel);
+
+                            alertIconLabel.setOnMouseClicked(e -> {
+                                List<Dispute> realNameAccountInfoList = multipleHolderNameDetection.getDisputesForTrader(dispute);
+                                String reportForDisputeOfTrader = multipleHolderNameDetection.getReportForDisputeOfTrader(realNameAccountInfoList);
+                                String key = MultipleHolderNameDetection.getAckKey(dispute);
+                                new Popup()
+                                        .width(1100)
+                                        .warning(getReportMessage(reportForDisputeOfTrader, "this trader"))
+                                        .actionButtonText(Res.get("shared.copyToClipboard"))
+                                        .onAction(() -> {
+                                            Utilities.copyToClipboard(reportForDisputeOfTrader);
+                                            if (!DontShowAgainLookup.showAgain(key)) {
+                                                setGraphic(null);
+                                            }
+                                        })
+                                        .dontShowAgainId(key)
+                                        .dontShowAgainText("Is not suspicious")
+                                        .onClose(() -> {
+                                            if (!DontShowAgainLookup.showAgain(key)) {
+                                                setGraphic(null);
+                                            }
+                                        })
+                                        .show();
+                            });
+                        } else {
+                            setGraphic(null);
+                            if (alertIconLabel != null) {
+                                alertIconLabel.setOnMouseClicked(null);
+                            }
+                        }
+                    }
+                });
+
+        column.setComparator((o1, o2) -> Boolean.compare(showAlertAtDispute(o1), showAlertAtDispute(o2)));
+        column.setSortable(true);
+        return column;
+    }
+
+    private boolean showAlertAtDispute(Dispute dispute) {
+        return DontShowAgainLookup.showAgain(MultipleHolderNameDetection.getAckKey(dispute)) &&
+                !multipleHolderNameDetection.getDisputesForTrader(dispute).isEmpty();
+    }
+
+    private String getReportMessage(String report, String subString) {
+        return "You have dispute cases where " + subString + " used different account holder names.\n\n" +
+                "This might be not critical in case of small variations of the same name " +
+                "(e.g. first name and last name are swapped), " +
+                "but if the name is completely different you should request information from the trader why they " +
+                "used a different name and request proof that the person with the real name is aware " +
+                "of the trade. " +
+                "It can be that the trader uses the account of their wife/husband, but it also could " +
+                "be a case of a stolen bank account or money laundering.\n\n" +
+                "Please check below the list of the names which have been detected. " +
+                "Search with the trade ID for the dispute case or check out the alert icon at each dispute in " +
+                "the list (you might need to remove the 'open' filter) and evaluate " +
+                "if it might be a fraudulent account (buyer role is more likely to be fraudulent). " +
+                "If you find suspicious disputes, please notify the developers and provide the contract json data " +
+                "to them so they can ban those traders.\n\n" +
+                Utilities.toTruncatedString(report, 700, false);
     }
 }
 

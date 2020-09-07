@@ -60,18 +60,19 @@ import org.bitcoinj.core.Coin;
 
 import com.google.common.collect.Lists;
 
-import javafx.scene.Scene;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 
@@ -81,8 +82,6 @@ import org.fxmisc.easybind.Subscription;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
-
-import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -108,6 +107,8 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.desktop.util.FormBuilder.getIconForLabel;
+
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     protected final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
@@ -122,7 +123,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final boolean useDevPrivilegeKeys;
 
-    private TableView<Dispute> tableView;
+    protected TableView<Dispute> tableView;
     private SortedList<Dispute> sortedList;
 
     @Getter
@@ -132,16 +133,15 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
-    private EventHandler<KeyEvent> keyEventEventHandler;
-    private Scene scene;
     protected FilteredList<Dispute> filteredList;
     protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
-    private HBox filterBox;
     protected AutoTooltipButton reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
     private Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
     @Nullable
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
+    protected Label alertIconLabel;
+    protected TableColumn<Dispute, Dispute> stateColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +180,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
         HBox.setHgrow(filterTextField, Priority.NEVER);
 
+        alertIconLabel = new Label();
+        Text icon = getIconForLabel(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, "2em", alertIconLabel);
+        icon.getStyleClass().add("alert-icon");
+        HBox.setMargin(alertIconLabel, new Insets(4, 0, 0, 10));
+        alertIconLabel.setMouseTransparent(false);
+        alertIconLabel.setVisible(false);
+        alertIconLabel.setManaged(false);
+
         reOpenButton = new AutoTooltipButton(Res.get("support.reOpenButton.label"));
         reOpenButton.setDisable(true);
         reOpenButton.setVisible(false);
@@ -217,9 +225,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        filterBox = new HBox();
+        HBox filterBox = new HBox();
         filterBox.setSpacing(5);
-        filterBox.getChildren().addAll(label, filterTextField, spacer, reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton);
+        filterBox.getChildren().addAll(label,
+                filterTextField,
+                alertIconLabel,
+                spacer,
+                reOpenButton,
+                sendPrivateNotificationButton,
+                reportButton,
+                fullReportButton);
         VBox.setVgrow(filterBox, Priority.NEVER);
 
         tableView = new TableView<>();
@@ -231,8 +246,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         setupTable();
 
         selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> chatView.setInputBoxVisible(!newValue);
-
-        keyEventEventHandler = this::handleKeyPressed;
 
         chatView = new ChatView(disputeManager, formatter);
         chatView.initialize();
@@ -263,9 +276,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             chatView.scrollToBottom();
         }
 
-        scene = root.getScene();
-        if (scene != null)
-            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         // If doPrint=true we print out a html page which opens tabs with all deposit txs
         // (firefox needs about:config change to allow > 20 tabs)
@@ -323,9 +333,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
         removeListenersOnSelectDispute();
-
-        if (scene != null)
-            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         if (chatView != null)
             chatView.deactivate();
@@ -396,9 +403,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         } else {
             new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
         }
-    }
-
-    protected void handleKeyPressed(KeyEvent event) {
     }
 
     protected void reOpenDispute() {
@@ -712,7 +716,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupTable() {
+    protected void setupTable() {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
         placeholder.setWrapText(true);
@@ -743,7 +747,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
         tableView.getColumns().add(roleColumn);
 
-        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
+        stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
 
         tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
@@ -1099,7 +1103,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 });
         return column;
     }
-
 }
 
 

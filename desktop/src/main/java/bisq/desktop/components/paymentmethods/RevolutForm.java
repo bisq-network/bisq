@@ -32,15 +32,20 @@ import bisq.core.payment.payload.RevolutAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.util.Tuple2;
+
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
+@Slf4j
 public class RevolutForm extends PaymentMethodForm {
     private final RevolutAccount account;
     private RevolutValidator validator;
@@ -48,9 +53,8 @@ public class RevolutForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        String userName = ((RevolutAccountPayload) paymentAccountPayload).getUserName();
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.userName"), userName);
-
+        Tuple2<String, String> tuple = ((RevolutAccountPayload) paymentAccountPayload).getRecipientsAccountData();
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, tuple.first, tuple.second);
         return gridRow;
     }
 
@@ -104,9 +108,17 @@ public class RevolutForm extends PaymentMethodForm {
                 account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
+
         String userName = account.getUserName();
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.userName"), userName).second;
-        field.setMouseTransparent(false);
+        TextField userNameTf = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.userName"), userName).second;
+        userNameTf.setMouseTransparent(false);
+
+        if (account.hasOldAccountId()) {
+            String accountId = account.getAccountId();
+            TextField accountIdTf = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.phoneNr"), accountId).second;
+            accountIdTf.setMouseTransparent(false);
+        }
+
         addLimitations(true);
         addCurrenciesGrid(false);
     }
