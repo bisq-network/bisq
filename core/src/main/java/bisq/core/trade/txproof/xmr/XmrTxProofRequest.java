@@ -199,7 +199,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
                 String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
                 log.info("Response json from {}\n{}", this, prettyJson);
             } catch (Throwable error) {
-                log.error("Pretty rint caused a {}}: raw josn={}", error, json);
+                log.error("Pretty print caused a {}: raw json={}", error, json);
             }
 
             Result result = parser.parse(model, json);
