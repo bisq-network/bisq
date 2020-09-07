@@ -309,6 +309,12 @@ public class SellerStep3View extends TradeStepView {
         statusLabel = tuple.third;
     }
 
+    @Override
+    protected void updateConfirmButtonDisableState(boolean isDisabled) {
+        confirmButton.setDisable(isDisabled);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -527,10 +533,5 @@ public class SellerStep3View extends TradeStepView {
         label.setWrapText(true);
         label.setPadding(new Insets(10));
         return label;
-    }
-
-    @Override
-    protected void updateConfirmButtonDisableState(boolean isDisabled) {
-        confirmButton.setDisable(isDisabled);
     }
 }
