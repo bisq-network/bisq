@@ -268,7 +268,7 @@ public class TorNetworkNode extends NetworkNode {
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
                         log.info("\n################################################################\n" +
-                                        "Tor hidden service published after {} ms. Socked={}\n" +
+                                        "Tor hidden service published after {} ms. Socket={}\n" +
                                         "################################################################",
                                 (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
                         new Thread() {

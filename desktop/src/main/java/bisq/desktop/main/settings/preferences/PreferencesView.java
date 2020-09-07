@@ -667,13 +667,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         autoConfTradeLimitTf.setValidator(new BtcValidator(formatter));
 
         autoConfServiceAddressTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmServiceAddresses"));
-        autoConfServiceAddressTf.setValidator(GUIUtil.addressRegexValidator());
-        autoConfServiceAddressTf.setErrorMessage(Res.get("validation.invalidAddressList"));
         GridPane.setHgrow(autoConfServiceAddressTf, Priority.ALWAYS);
         displayCurrenciesGridRowIndex += 4;
 
         autoConfServiceAddressListener = (observable, oldValue, newValue) -> {
-            if (!newValue.equals(oldValue) && autoConfServiceAddressTf.getValidator().validate(newValue).isValid) {
+            if (!newValue.equals(oldValue)) {
                 List<String> serviceAddresses = Arrays.asList(StringUtils.deleteWhitespace(newValue).split(","));
                 // revert to default service providers when user empties the list
                 if (serviceAddresses.size() == 1 && serviceAddresses.get(0).isEmpty()) {
