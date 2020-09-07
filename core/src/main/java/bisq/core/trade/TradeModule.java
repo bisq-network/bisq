@@ -26,8 +26,6 @@ import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatistics2StorageService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.trade.txproof.AssetTxProofHttpClient;
-import bisq.core.trade.txproof.xmr.XmrTxProofHttpClient;
 
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
@@ -57,8 +55,6 @@ public class TradeModule extends AppModule {
         bind(SignedWitnessService.class).in(Singleton.class);
         bind(SignedWitnessStorageService.class).in(Singleton.class);
         bind(ReferralIdService.class).in(Singleton.class);
-
-        bind(AssetTxProofHttpClient.class).to(XmrTxProofHttpClient.class);
 
         bindConstant().annotatedWith(named(DUMP_STATISTICS)).to(config.dumpStatistics);
         bindConstant().annotatedWith(named(DUMP_DELAYED_PAYOUT_TXS)).to(config.dumpDelayedPayoutTxs);
