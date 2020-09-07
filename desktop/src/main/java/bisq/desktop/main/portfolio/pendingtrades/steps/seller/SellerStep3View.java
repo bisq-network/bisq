@@ -313,7 +313,7 @@ public class SellerStep3View extends TradeStepView {
     }
 
     @Override
-    protected void deactivatePaymentButtons(boolean isDisabled) {
+    protected void updateConfirmButtonDisableState(boolean isDisabled) {
         confirmButton.setDisable(isDisabled);
     }
 
