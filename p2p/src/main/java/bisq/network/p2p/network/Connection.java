@@ -283,12 +283,20 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     bundleSender.schedule(() -> {
                                         if (!stopped) {
                                             synchronized (lock) {
-                                                BundleOfEnvelopes current = queueOfBundles.poll();
-                                                if (current != null && !stopped) {
-                                                    if (current.getEnvelopes().size() == 1) {
-                                                        protoOutputStream.writeEnvelope(current.getEnvelopes().get(0));
-                                                    } else {
-                                                        protoOutputStream.writeEnvelope(current);
+                                                BundleOfEnvelopes bundle = queueOfBundles.poll();
+                                                if (bundle != null && !stopped) {
+                                                    NetworkEnvelope envelope = bundle.getEnvelopes().size() == 1 ?
+                                                            bundle.getEnvelopes().get(0) :
+                                                            bundle;
+                                                    try {
+                                                        protoOutputStream.writeEnvelope(envelope);
+                                                    } catch (Throwable t) {
+                                                        log.error("Sending envelope of class {} to address {} " +
+                                                                        "failed due {}",
+                                                                envelope.getClass().getSimpleName(),
+                                                                this.getPeersNodeAddressOptional(),
+                                                                t.toString());
+                                                        log.error("envelope: {}", envelope);
                                                     }
                                                 }
                                             }
