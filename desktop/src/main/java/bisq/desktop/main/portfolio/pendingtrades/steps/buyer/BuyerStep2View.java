@@ -55,7 +55,6 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -315,8 +314,7 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
-                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
-                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
+                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", getCurrencyName(trade));
                 gridRow = AssetsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             case PaymentMethod.PROMPT_PAY_ID:
@@ -367,7 +365,7 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_buyer.warn",
-                model.dataModel.getCurrencyCode(),
+                getCurrencyCode(trade),
                 model.getDateForOpenDispute());
     }
 
@@ -462,8 +460,7 @@ public class BuyerStep2View extends TradeStepView {
             } else {
                 showConfirmPaymentStartedPopup();
             }
-        } else if (sellersPaymentAccountPayload instanceof AssetsAccountPayload &&
-                checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR")) {
+        } else if (sellersPaymentAccountPayload instanceof AssetsAccountPayload && isXmrTrade()) {
             SetXmrTxKeyWindow setXmrTxKeyWindow = new SetXmrTxKeyWindow();
             setXmrTxKeyWindow
                     .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
@@ -504,8 +501,7 @@ public class BuyerStep2View extends TradeStepView {
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             Popup popup = new Popup();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
-                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
-                            CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
+                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", getCurrencyName(trade)))
                     .width(700)
                     .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
                     .onAction(this::confirmPaymentStarted)
@@ -554,7 +550,7 @@ public class BuyerStep2View extends TradeStepView {
             String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
-                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
+                        getCurrencyName(trade),
                         amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + "\n\n" +
