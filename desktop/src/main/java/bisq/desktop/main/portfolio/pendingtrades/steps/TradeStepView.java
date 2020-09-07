@@ -390,7 +390,6 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private void updateDisputeState(Trade.DisputeState disputeState) {
-        deactivatePaymentButtons(false);
         Optional<Dispute> ownDispute;
         switch (disputeState) {
             case NO_DISPUTE:
@@ -406,7 +405,6 @@ public abstract class TradeStepView extends AnchorPane {
                     if (tradeStepInfo != null)
                         tradeStepInfo.setState(TradeStepInfo.State.IN_MEDIATION_SELF_REQUESTED);
                 });
-
                 break;
             case MEDIATION_STARTED_BY_PEER:
                 if (tradeStepInfo != null) {
@@ -435,7 +433,6 @@ public abstract class TradeStepView extends AnchorPane {
                 updateMediationResultState(true);
                 break;
             case REFUND_REQUESTED:
-                deactivatePaymentButtons(true);
                 if (tradeStepInfo != null) {
                     tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
@@ -449,7 +446,6 @@ public abstract class TradeStepView extends AnchorPane {
 
                 break;
             case REFUND_REQUEST_STARTED_BY_PEER:
-                deactivatePaymentButtons(true);
                 if (tradeStepInfo != null) {
                     tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
@@ -462,9 +458,12 @@ public abstract class TradeStepView extends AnchorPane {
                 });
                 break;
             case REFUND_REQUEST_CLOSED:
-                deactivatePaymentButtons(true);
+                break;
+            default:
                 break;
         }
+
+        updateConfirmButtonDisableState(isDisputed());
     }
 
     private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
@@ -604,7 +603,8 @@ public abstract class TradeStepView extends AnchorPane {
         acceptMediationResultPopup.show();
     }
 
-    protected void deactivatePaymentButtons(boolean isDisabled) {
+    protected void updateConfirmButtonDisableState(boolean isDisabled) {
+        // By default do nothing. Only overwritten in certain trade steps
     }
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {
@@ -638,6 +638,11 @@ public abstract class TradeStepView extends AnchorPane {
             }
         }
     }
+
+    protected boolean isDisputed() {
+        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TradeDurationLimitInfo

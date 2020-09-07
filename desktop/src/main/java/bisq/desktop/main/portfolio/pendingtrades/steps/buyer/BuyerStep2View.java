@@ -193,6 +193,8 @@ public class BuyerStep2View extends TradeStepView {
                 }
             });
         }
+
+        confirmButton.setDisable(isDisputed());
     }
 
     @Override
@@ -387,6 +389,10 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted() {
+        if (isDisputed()) {
+            return;
+        }
+
         if (!model.dataModel.isBootstrappedOrShowPopup()) {
             return;
         }
@@ -631,7 +637,7 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     @Override
-    protected void deactivatePaymentButtons(boolean isDisabled) {
+    protected void updateConfirmButtonDisableState(boolean isDisabled) {
         confirmButton.setDisable(isDisabled);
     }
 }
