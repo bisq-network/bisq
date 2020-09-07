@@ -48,6 +48,8 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import javax.inject.Inject;
 
 import com.google.common.util.concurrent.MoreExecutors;
@@ -884,7 +886,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     log.error(e.getMessage());
                     e.printStackTrace();
                     reportInvalidRequest(RuleViolation.INVALID_CLASS);
-                } catch (ProtobufferException | NoClassDefFoundError e) {
+                } catch (ProtobufferException | NoClassDefFoundError | InvalidProtocolBufferException e) {
                     log.error(e.getMessage());
                     e.printStackTrace();
                     reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
