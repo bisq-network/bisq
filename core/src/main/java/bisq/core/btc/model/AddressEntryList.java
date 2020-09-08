@@ -30,8 +30,10 @@ import org.bitcoinj.wallet.Wallet;
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +50,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter
-    private List<AddressEntry> list;
+    private Set<AddressEntry> entrySet;
 
     @Inject
     public AddressEntryList(Storage<AddressEntryList> storage) {
@@ -59,7 +61,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     public void readPersisted() {
         AddressEntryList persisted = storage.initAndGetPersisted(this, 50);
         if (persisted != null)
-            list = new ArrayList<>(persisted.getList());
+            entrySet = new HashSet<>(persisted.getEntrySet());
     }
 
 
@@ -67,18 +69,18 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AddressEntryList(List<AddressEntry> list) {
-        this.list = list;
+    private AddressEntryList(Set<AddressEntry> entrySet) {
+        this.entrySet = entrySet;
     }
 
     public static AddressEntryList fromProto(protobuf.AddressEntryList proto) {
-        return new AddressEntryList(new ArrayList<>(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList())));
+        return new AddressEntryList(new HashSet<>(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList())));
     }
 
     @Override
     public Message toProtoMessage() {
         // We clone list as we got ConcurrentModificationExceptions
-        List<AddressEntry> clone = new ArrayList<>(list);
+        List<AddressEntry> clone = new ArrayList<>(entrySet);
         List<protobuf.AddressEntry> addressEntries = clone.stream()
                 .map(AddressEntry::toProtoMessage)
                 .collect(Collectors.toList());
@@ -97,8 +99,8 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     public void onWalletReady(Wallet wallet) {
         this.wallet = wallet;
 
-        if (list != null) {
-            list.forEach(addressEntry -> {
+        if (entrySet != null) {
+            entrySet.forEach(addressEntry -> {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
@@ -107,7 +109,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                 }
             });
         } else {
-            list = new ArrayList<>();
+            entrySet = new HashSet<>();
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
 
             // In case we restore from seed words and have balance we need to add the relevant addresses to our list.
@@ -144,19 +146,19 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                 .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
-                .forEach(addressEntry -> list.add(addressEntry));
+                .forEach(this::add);
     }
 
     private boolean listContainsEntryWithAddress(String addressString) {
-        return list.stream().anyMatch(addressEntry -> Objects.equals(addressEntry.getAddressString(), addressString));
+        return entrySet.stream().anyMatch(addressEntry -> Objects.equals(addressEntry.getAddressString(), addressString));
     }
 
     private boolean add(AddressEntry addressEntry) {
-        return list.add(addressEntry);
+        return entrySet.add(addressEntry);
     }
 
     private boolean remove(AddressEntry addressEntry) {
-        return list.remove(addressEntry);
+        return entrySet.remove(addressEntry);
     }
 
     public AddressEntry addAddressEntry(AddressEntry addressEntry) {
@@ -167,7 +169,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     }
 
     public void swapTradeToSavings(String offerId) {
-        list.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId()))
+        entrySet.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId()))
                 .findAny().ifPresent(this::swapToAvailable);
     }
 
@@ -193,6 +195,6 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     }
 
     public Stream<AddressEntry> stream() {
-        return list.stream();
+        return entrySet.stream();
     }
 }
