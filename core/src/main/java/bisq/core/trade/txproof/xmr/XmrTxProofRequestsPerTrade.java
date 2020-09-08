@@ -147,6 +147,12 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
             requests.add(request);
 
             request.requestFromService(result -> {
+                        // If we ever received an error or failed result we terminate and do not process any
+                        // future result anymore to avoid that we overwrite out state with success.
+                        if (wasTerminated()) {
+                            return;
+                        }
+
                         AssetTxProofResult assetTxProofResult;
                         if (trade.isPayoutPublished()) {
                             assetTxProofResult = AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED;
@@ -205,7 +211,11 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         }
     }
 
-    protected void addSettingsListener(Consumer<AssetTxProofResult> resultHandler) {
+    private boolean wasTerminated() {
+        return requests.isEmpty();
+    }
+
+    private void addSettingsListener(Consumer<AssetTxProofResult> resultHandler) {
         autoConfirmSettingsListener = () -> {
             if (!autoConfirmSettings.isEnabled()) {
                 callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FEATURE_DISABLED);
@@ -214,7 +224,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         autoConfirmSettings.addListener(autoConfirmSettingsListener);
     }
 
-    protected void setupTradeStateListener(Consumer<AssetTxProofResult> resultHandler) {
+    private void setupTradeStateListener(Consumer<AssetTxProofResult> resultHandler) {
         tradeStateListener = (observable, oldValue, newValue) -> {
             if (trade.isPayoutPublished()) {
                 callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.PAYOUT_TX_ALREADY_PUBLISHED);
@@ -223,8 +233,8 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         trade.stateProperty().addListener(tradeStateListener);
     }
 
-    protected void setupArbitrationListener(Consumer<AssetTxProofResult> resultHandler,
-                                            ObservableList<Dispute> refundDisputes) {
+    private void setupArbitrationListener(Consumer<AssetTxProofResult> resultHandler,
+                                          ObservableList<Dispute> refundDisputes) {
         refundListener = c -> {
             c.next();
             if (c.wasAdded() && isDisputed(c.getAddedSubList())) {
@@ -234,8 +244,8 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         refundDisputes.addListener(refundListener);
     }
 
-    protected void setupMediationListener(Consumer<AssetTxProofResult> resultHandler,
-                                          ObservableList<Dispute> mediationDisputes) {
+    private void setupMediationListener(Consumer<AssetTxProofResult> resultHandler,
+                                        ObservableList<Dispute> mediationDisputes) {
         mediationListener = c -> {
             c.next();
             if (c.wasAdded() && isDisputed(c.getAddedSubList())) {
