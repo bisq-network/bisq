@@ -163,10 +163,19 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         this.model = model;
 
         httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
-        httpClient.setBaseUrl("http://" + model.getServiceAddress());
-        if (model.getServiceAddress().matches("^192.*|^localhost.*")) {
-            log.info("Ignoring Socks5 proxy for local net address: {}", model.getServiceAddress());
+
+        // localhost, LAN address, or *.local FQDN starts with http://, don't use Tor
+        if (model.getServiceAddress().regionMatches(0, "http:", 0, 5)) {
+            httpClient.setBaseUrl(model.getServiceAddress());
             httpClient.setIgnoreSocks5Proxy(true);
+        // any non-onion FQDN starts with https://, use Tor
+        } else if (model.getServiceAddress().regionMatches(0, "https:", 0, 6)) {
+            httpClient.setBaseUrl(model.getServiceAddress());
+            httpClient.setIgnoreSocks5Proxy(false);
+        // it's a raw onion so add http:// and use Tor proxy
+        } else {
+            httpClient.setBaseUrl("http://" + model.getServiceAddress());
+            httpClient.setIgnoreSocks5Proxy(false);
         }
 
         terminated = false;
