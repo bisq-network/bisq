@@ -1256,7 +1256,7 @@ public class GUIUtil {
                 ")";
 
         // match fe80::/10 (fe80:: ~ febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff)
-        String autolocalIpv6RegexPattern = "("+
+        String autolocalIpv6RegexPattern = "(" +
                 "([fF][eE][8-9a-bA-B][0-9a-fA-F]:)([0-9a-fA-F]{1,4}:){6}[0-9a-fA-F]{1,4}|" +            // fe80:2:3:4:5:6:7:8
                 "([fF][eE][8-9a-bA-B][0-9a-fA-F]:)([0-9a-fA-F]{1,4}:){0,7}:|" +                         // fe80::                                 fe80:2:3:4:5:6:7::
                 "([fF][eE][8-9a-bA-B][0-9a-fA-F]:)([0-9a-fA-F]{1,4}:){0,6}:[0-9a-fA-F]{1,4}|" +         // fe80::8             fe80:2:3:4:5:6::8  fe80:2:3:4:5:6::8
