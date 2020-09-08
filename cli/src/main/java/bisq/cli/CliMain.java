@@ -25,6 +25,7 @@ import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.PingRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
@@ -62,6 +63,7 @@ import static java.util.Collections.singletonList;
 public class CliMain {
 
     private enum Method {
+        ping,
         getoffers,
         createpaymentacct,
         getpaymentaccts,
@@ -136,10 +138,25 @@ public class CliMain {
         var versionService = grpcStubs.versionService;
         var offersService = grpcStubs.offersService;
         var paymentAccountsService = grpcStubs.paymentAccountsService;
+        var pingService = grpcStubs.pingService;
         var walletsService = grpcStubs.walletsService;
 
         try {
             switch (method) {
+                case ping: {
+                    var request = PingRequest.newBuilder().build();
+                    var reply = pingService.ping(request);
+
+                    // The user sent an explicit ping request, and we print a service
+                    // available msg to the console.  If the ping failed (no pong),
+                    // a gRPC StatusRuntimeException will be thrown and a not available
+                    // error msg will be printed to stderr, so we do not print a
+                    // duplicate error msg here.
+                    if (reply.getPong() == 1)
+                        out.println("api service is available");
+
+                    return;
+                }
                 case getversion: {
                     var request = GetVersionRequest.newBuilder().build();
                     var version = versionService.getVersion(request).getVersion();
@@ -291,6 +308,7 @@ public class CliMain {
             stream.println();
             stream.format("%-22s%-50s%s%n", "Method", "Params", "Description");
             stream.format("%-22s%-50s%s%n", "------", "------", "------------");
+            stream.format("%-22s%-50s%s%n", "ping", "", "Verify server is available");
             stream.format("%-22s%-50s%s%n", "getversion", "", "Get server version");
             stream.format("%-22s%-50s%s%n", "getbalance", "", "Get server wallet balance");
             stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");

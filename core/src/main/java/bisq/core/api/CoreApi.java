@@ -190,4 +190,15 @@ public class CoreApi {
     public int getNumConfirmationsForMostRecentTransaction(String addressString) {
         return walletsService.getNumConfirmationsForMostRecentTransaction(addressString);
     }
+
+    @SuppressWarnings("SameReturnValue")
+    public int ping() {
+        // Clients should ping the server and verify it received a pong (1) before
+        // attempting any operation.  Many operations require an available, non-null
+        // wallet balance, and it is assumed the service is ready to accept any request
+        // if the wallet balance is available.  If the balance is not available for any
+        // reason, an IllegalStateException will be thrown by the wallets service.
+        walletsService.getAvailableBalance();
+        return 1;
+    }
 }
