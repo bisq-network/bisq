@@ -59,7 +59,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Service;
 
 import org.apache.commons.lang3.StringUtils;
@@ -498,7 +497,7 @@ public class WalletsSetup {
     }
 
     public Set<Address> getAddressesByContext(@SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
-        return ImmutableList.copyOf(addressEntryList.getList()).stream()
+        return addressEntryList.getAddressEntriesAsListImmutable().stream()
                 .filter(addressEntry -> addressEntry.getContext() == context)
                 .map(AddressEntry::getAddress)
                 .collect(Collectors.toSet());
