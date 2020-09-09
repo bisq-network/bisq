@@ -499,10 +499,10 @@ public abstract class WalletService {
     // Empty complete Wallet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void emptyWallet(String toAddress,
-                            KeyParameter aesKey,
-                            ResultHandler resultHandler,
-                            ErrorMessageHandler errorMessageHandler)
+    public void emptyBtcWallet(String toAddress,
+                               KeyParameter aesKey,
+                               ResultHandler resultHandler,
+                               ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
         SendRequest sendRequest = SendRequest.emptyWallet(LegacyAddress.fromBase58(params, toAddress));
         sendRequest.fee = Coin.ZERO;
