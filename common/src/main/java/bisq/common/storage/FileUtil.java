@@ -102,7 +102,9 @@ public class FileUtil {
         deleteDirectory(file, null, true);
     }
 
-    public static void deleteDirectory(File file, @Nullable File exclude, boolean ignoreLockedFiles) throws IOException {
+    public static void deleteDirectory(File file,
+                                       @Nullable File exclude,
+                                       boolean ignoreLockedFiles) throws IOException {
         boolean excludeFileFound = false;
         if (file.isDirectory()) {
             File[] files = file.listFiles();
@@ -156,7 +158,8 @@ public class FileUtil {
         return !file.canWrite();
     }
 
-    public static void resourceToFile(String resourcePath, File destinationFile) throws ResourceNotFoundException, IOException {
+    public static void resourceToFile(String resourcePath,
+                                      File destinationFile) throws ResourceNotFoundException, IOException {
         try (InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(resourcePath)) {
             if (inputStream == null) {
                 throw new ResourceNotFoundException(resourcePath);
@@ -180,6 +183,20 @@ public class FileUtil {
         } else if (!oldFile.renameTo(newFile)) {
             throw new IOException("Failed to rename " + oldFile + " to " + newFile);
         }
+    }
+
+    public static void copyFile(File origin, File target) throws IOException {
+        if (!origin.exists()) {
+            return;
+        }
+
+        try {
+            Files.copy(origin, target);
+        } catch (IOException e) {
+            log.error("Copy file failed", e);
+            throw new IOException("Failed to copy " + origin + " to " + target);
+        }
+
     }
 
     public static void copyDirectory(File source, File destination) throws IOException {

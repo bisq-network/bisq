@@ -41,10 +41,12 @@ import lombok.extern.slf4j.Slf4j;
 public class SharedPresentation {
     public static void restoreSeedWords(DeterministicSeed seed, WalletsManager walletsManager, File storageDir) {
         try {
-            FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
+            File backup = new File(storageDir, "AddressEntryList_backup_pre_wallet_restore_" + System.currentTimeMillis());
+            FileUtil.copyFile(new File(storageDir, "AddressEntryList"), backup);
         } catch (Throwable t) {
             new Popup().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
         }
+
         walletsManager.restoreSeedWords(
                 seed,
                 () -> UserThread.execute(() -> {
