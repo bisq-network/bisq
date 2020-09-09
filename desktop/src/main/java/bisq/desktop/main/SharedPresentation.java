@@ -22,6 +22,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.OpenOfferManager;
 
 import bisq.common.UserThread;
 import bisq.common.storage.FileUtil;
@@ -29,6 +30,8 @@ import bisq.common.storage.FileUtil;
 import org.bitcoinj.wallet.DeterministicSeed;
 
 import java.io.File;
+
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +42,28 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SharedPresentation {
-    public static void restoreSeedWords(DeterministicSeed seed, WalletsManager walletsManager, File storageDir) {
+    public static void restoreSeedWords(WalletsManager walletsManager,
+                                        OpenOfferManager openOfferManager,
+                                        DeterministicSeed seed,
+                                        File storageDir) {
+        if (!openOfferManager.getObservableList().isEmpty()) {
+            UserThread.runAfter(() ->
+                    new Popup().warning(Res.get("seed.restore.openOffers.warn"))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> {
+                                openOfferManager.removeAllOpenOffers(() -> {
+                                    doRestoreSeedWords(walletsManager, seed, storageDir);
+                                });
+                            })
+                            .show(), 100, TimeUnit.MILLISECONDS);
+        } else {
+            doRestoreSeedWords(walletsManager, seed, storageDir);
+        }
+    }
+
+    private static void doRestoreSeedWords(WalletsManager walletsManager,
+                                           DeterministicSeed seed,
+                                           File storageDir) {
         try {
             File backup = new File(storageDir, "AddressEntryList_backup_pre_wallet_restore_" + System.currentTimeMillis());
             FileUtil.copyFile(new File(storageDir, "AddressEntryList"), backup);
