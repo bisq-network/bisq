@@ -118,7 +118,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
         return Coin.valueOf(requestedBsq);
     }
 
-    public Address getAddress() throws AddressFormatException {
+    public LegacyAddress getAddress() throws AddressFormatException {
         // Remove leading 'B'
         String underlyingBtcAddress = bsqAddress.substring(1, bsqAddress.length());
         return LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), underlyingBtcAddress);

@@ -106,7 +106,7 @@ public class BsqFormatter implements CoinFormatter {
 
     }
 
-    public Address getAddressFromBsqAddress(String encoded) {
+    public LegacyAddress getAddressFromBsqAddress(String encoded) {
         if (useBsqAddressFormat)
             encoded = encoded.substring(prefix.length(), encoded.length());
 
