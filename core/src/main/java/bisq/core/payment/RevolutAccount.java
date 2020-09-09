@@ -37,22 +37,34 @@ public final class RevolutAccount extends PaymentAccount {
     }
 
     public void setUserName(String userName) {
-        ((RevolutAccountPayload) paymentAccountPayload).setUserName(userName);
+        revolutAccountPayload().setUserName(userName);
     }
 
     public String getUserName() {
-        return ((RevolutAccountPayload) paymentAccountPayload).getUserName();
+        return (revolutAccountPayload()).getUserName();
     }
 
     public String getAccountId() {
-        return ((RevolutAccountPayload) paymentAccountPayload).getAccountId();
+        return (revolutAccountPayload()).getAccountId();
     }
 
     public boolean userNameNotSet() {
-        return ((RevolutAccountPayload) paymentAccountPayload).userNameNotSet();
+        return (revolutAccountPayload()).userNameNotSet();
     }
 
     public boolean hasOldAccountId() {
-        return ((RevolutAccountPayload) paymentAccountPayload).hasOldAccountId();
+        return (revolutAccountPayload()).hasOldAccountId();
+    }
+
+    private RevolutAccountPayload revolutAccountPayload() {
+        return (RevolutAccountPayload) paymentAccountPayload;
+    }
+
+    @Override
+    public void onAddToUser() {
+        super.onAddToUser();
+
+        // At save we apply the userName to accountId in case it is empty for backward compatibility
+        revolutAccountPayload().maybeApplyUserNameToAccountId();
     }
 }

@@ -173,4 +173,9 @@ public abstract class PaymentAccount implements PersistablePayload {
     public String getOwnerId() {
         return paymentAccountPayload.getOwnerId();
     }
+
+    public void onAddToUser() {
+        // We are in the process to get added to the user. This is called just before saving the account and the
+        // last moment we could apply some special handling if needed (e.g. as it happens for Revolut)
+    }
 }

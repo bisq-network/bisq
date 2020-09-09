@@ -190,6 +190,8 @@ public class User implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addPaymentAccount(PaymentAccount paymentAccount) {
+        paymentAccount.onAddToUser();
+
         boolean changed = paymentAccountsAsObservable.add(paymentAccount);
         setCurrentPaymentAccount(paymentAccount);
         if (changed)
