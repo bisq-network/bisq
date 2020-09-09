@@ -739,7 +739,8 @@ public abstract class WalletService {
 
     public static boolean isOutputScriptConvertibleToAddress(TransactionOutput output) {
         return ScriptPattern.isP2PKH(output.getScriptPubKey()) ||
-                ScriptPattern.isP2SH(output.getScriptPubKey());
+                ScriptPattern.isP2SH(output.getScriptPubKey()) ||
+                ScriptPattern.isP2WH(output.getScriptPubKey());
     }
 
     @Nullable
