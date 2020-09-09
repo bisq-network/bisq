@@ -18,6 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.Base58AddressValidator;
+import bisq.asset.BitcoinAddressValidator;
 import bisq.asset.Coin;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -28,7 +29,7 @@ import org.bitcoinj.params.TestNet3Params;
 public abstract class Bitcoin extends Coin {
 
     public Bitcoin(Network network, NetworkParameters networkParameters) {
-        super("Bitcoin", "BTC", new Base58AddressValidator(networkParameters), network);
+        super("Bitcoin", "BTC", new BitcoinAddressValidator(networkParameters), network);
     }
 
 
