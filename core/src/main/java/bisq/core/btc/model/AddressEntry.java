@@ -197,9 +197,10 @@ public final class AddressEntry implements PersistablePayload {
     @Override
     public String toString() {
         return "AddressEntry{" +
-                "offerId='" + getOfferId() + '\'' +
+                "address=" + address +
                 ", context=" + context +
-                ", address=" + getAddressString() +
-                '}';
+                ", offerId='" + offerId + '\'' +
+                ", coinLockedInMultiSig=" + coinLockedInMultiSig +
+                "}";
     }
 }
