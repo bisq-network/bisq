@@ -171,6 +171,7 @@ public class WalletsSetup {
 
         btcWalletFileName = "bisq_" + config.baseCurrencyNetwork.getCurrencyCode() + ".wallet";
         params = Config.baseCurrencyNetworkParameters();
+        PeerGroup.setIgnoreHttpSeeds(true);
     }
 
 
