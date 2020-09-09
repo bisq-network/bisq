@@ -107,11 +107,12 @@ public class BsqFormatter implements CoinFormatter {
     }
 
     public LegacyAddress getAddressFromBsqAddress(String encoded) {
+        String maybeUpdatedEncoded = encoded;
         if (useBsqAddressFormat)
-            encoded = encoded.substring(prefix.length(), encoded.length());
+            maybeUpdatedEncoded = encoded.substring(prefix.length(), encoded.length());
 
         try {
-            return LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), encoded);
+            return LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), maybeUpdatedEncoded);
         } catch (AddressFormatException e) {
             throw new RuntimeException(e);
         }

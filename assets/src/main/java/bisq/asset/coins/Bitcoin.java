@@ -17,7 +17,6 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58AddressValidator;
 import bisq.asset.BitcoinAddressValidator;
 import bisq.asset.Coin;
 
