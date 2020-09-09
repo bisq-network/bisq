@@ -80,7 +80,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-import java.util.List;
 
 import javax.annotation.Nullable;
 

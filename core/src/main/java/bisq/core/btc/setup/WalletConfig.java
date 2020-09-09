@@ -523,18 +523,18 @@ public class WalletConfig extends AbstractIdleService {
      * As soon as the transaction broadcaster han been created we will pass it to the
      * payment channel extensions
      */
-//    private void completeExtensionInitiations(TransactionBroadcaster transactionBroadcaster) {
-//        StoredPaymentChannelClientStates clientStoredChannels = (StoredPaymentChannelClientStates)
-//                vWallet.getExtensions().get(StoredPaymentChannelClientStates.class.getName());
-//        if(clientStoredChannels != null) {
-//            clientStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
-//        }
-//        StoredPaymentChannelServerStates serverStoredChannels = (StoredPaymentChannelServerStates)
-//                vWallet.getExtensions().get(StoredPaymentChannelServerStates.class.getName());
-//        if(serverStoredChannels != null) {
-//            serverStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
-//        }
-//    }
+    // private void completeExtensionInitiations(TransactionBroadcaster transactionBroadcaster) {
+    //     StoredPaymentChannelClientStates clientStoredChannels = (StoredPaymentChannelClientStates)
+    //             vWallet.getExtensions().get(StoredPaymentChannelClientStates.class.getName());
+    //     if(clientStoredChannels != null) {
+    //         clientStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
+    //     }
+    //     StoredPaymentChannelServerStates serverStoredChannels = (StoredPaymentChannelServerStates)
+    //             vWallet.getExtensions().get(StoredPaymentChannelServerStates.class.getName());
+    //     if(serverStoredChannels != null) {
+    //         serverStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
+    //     }
+    // }
 
     private PeerGroup createPeerGroup() {
         PeerGroup peerGroup;

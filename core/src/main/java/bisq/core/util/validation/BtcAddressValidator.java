@@ -21,7 +21,6 @@ import bisq.core.locale.Res;
 
 import bisq.common.config.Config;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.LegacyAddress;
 
