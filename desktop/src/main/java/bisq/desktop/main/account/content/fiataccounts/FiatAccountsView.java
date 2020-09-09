@@ -382,7 +382,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 gridRow = paymentMethodForm.getGridRow();
                 Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
                 saveNewAccountButton = tuple2.first;
-                saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
+                saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccountForAccountCreation()));
                 saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
                 Button cancelButton = tuple2.second;
                 cancelButton.setOnAction(event -> onCancelNewAccount());

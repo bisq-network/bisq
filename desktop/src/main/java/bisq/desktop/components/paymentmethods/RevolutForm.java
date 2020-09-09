@@ -40,6 +40,8 @@ import javafx.scene.layout.GridPane;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
@@ -73,7 +75,6 @@ public class RevolutForm extends PaymentMethodForm {
         userNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.userName"));
         userNameInputTextField.setValidator(validator);
         userNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setUserName(newValue.trim());
             updateFromInputs();
         });
 
@@ -125,8 +126,23 @@ public class RevolutForm extends PaymentMethodForm {
 
     @Override
     public void updateAllInputsValid() {
-        allInputsValid.set(isAccountNameValid()
-                && validator.validate(account.getUserName()).isValid
+        String userName = getUserName();
+        allInputsValid.set(inputValidator.validate(userName).isValid
+                && validator.validate(userName).isValid
                 && account.getTradeCurrencies().size() > 0);
+    }
+
+    @Override
+    public PaymentAccount getPaymentAccountForAccountCreation() {
+        String userName = getUserName();
+        if (!userName.isEmpty()) {
+            account.setUserName(userName);
+        }
+        return super.getPaymentAccount();
+    }
+
+    @NotNull
+    private String getUserName() {
+        return userNameInputTextField.getText().trim();
     }
 }

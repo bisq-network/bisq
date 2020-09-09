@@ -359,6 +359,10 @@ public abstract class PaymentMethodForm {
         return gridRow - gridRowFrom + 2;
     }
 
+    public PaymentAccount getPaymentAccountForAccountCreation() {
+        return getPaymentAccount();
+    }
+
     public PaymentAccount getPaymentAccount() {
         return paymentAccount;
     }
