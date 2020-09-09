@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class LBRYCredits extends Coin {
 
     public LBRYCredits() {
-        super("LBRY Credits", "LBC", new Base58BitcoinAddressValidator(new LBRYCreditsMainNetParams()), Network.MAINNET);
+        super("LBRY Credits", "LBC", new Base58AddressValidator(new LBRYCreditsMainNetParams()), Network.MAINNET);
     }
 
     public static class LBRYCreditsMainNetParams extends NetworkParametersAdapter {

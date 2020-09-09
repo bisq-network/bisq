@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -28,7 +28,7 @@ public class SixEleven extends Coin {
         super("SixEleven", "SIL", new SixElevenAddressValidator());
     }
 
-    public static class SixElevenAddressValidator extends Base58BitcoinAddressValidator {
+    public static class SixElevenAddressValidator extends Base58AddressValidator {
 
         public SixElevenAddressValidator() {
             super(new SixEleven.SixElevenChainParams());

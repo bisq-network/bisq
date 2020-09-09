@@ -18,8 +18,6 @@
 package bisq.asset.coins;
 
 import bisq.asset.*;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
 
 public class Veil extends Coin {
 
@@ -27,7 +25,7 @@ public class Veil extends Coin {
         super("Veil", "VEIL", new VeilAddressValidator());
     }
 
-    public static class VeilAddressValidator extends Base58BitcoinAddressValidator {
+    public static class VeilAddressValidator extends Base58AddressValidator {
 
         public VeilAddressValidator() {
             super(new VeilParams());
