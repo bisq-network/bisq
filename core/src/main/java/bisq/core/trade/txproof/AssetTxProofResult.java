@@ -40,6 +40,11 @@ public enum AssetTxProofResult {
     // Any service failed. Might be that the tx is invalid.
     FAILED;
 
+    // If isTerminal is set it means that we stop the service
+    @Getter
+    private final boolean isTerminal;
+    @Getter
+    private String details = "";
     @Getter
     private int numSuccessResults;
     @Getter
@@ -48,11 +53,7 @@ public enum AssetTxProofResult {
     private int numConfirmations;
     @Getter
     private int numRequiredConfirmations;
-    @Getter
-    private String details = "";
-    // If isTerminal is set it means that we stop the service
-    @Getter
-    private final boolean isTerminal;
+
 
     AssetTxProofResult() {
         this(true);
@@ -91,11 +92,12 @@ public enum AssetTxProofResult {
     @Override
     public String toString() {
         return "AssetTxProofResult{" +
-                "\n     numSuccessResults=" + numSuccessResults +
-                ",\n     requiredSuccessResults=" + numRequiredSuccessResults +
+                "\n     details='" + details + '\'' +
+                ",\n     isTerminal=" + isTerminal +
+                ",\n     numSuccessResults=" + numSuccessResults +
+                ",\n     numRequiredSuccessResults=" + numRequiredSuccessResults +
                 ",\n     numConfirmations=" + numConfirmations +
                 ",\n     numRequiredConfirmations=" + numRequiredConfirmations +
-                ",\n     details='" + details + '\'' +
                 "\n} " + super.toString();
     }
 }

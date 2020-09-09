@@ -81,7 +81,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
                 excludeFromJsonDataMap);
 
         this.accountId = accountId;
-        setUserName(userName);
+        this.userName = userName;
     }
 
     @Override
@@ -169,7 +169,11 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     public void setUserName(String userName) {
         this.userName = userName;
-        // We need to set accountId as pre v1.3.8 clients expect the accountId field
+    }
+
+    // In case it is a new account we need to fill the accountId field to support not-updated traders who are not
+    // aware of the new userName field
+    public void maybeApplyUserNameToAccountId() {
         if (accountId.isEmpty()) {
             accountId = userName;
         }
