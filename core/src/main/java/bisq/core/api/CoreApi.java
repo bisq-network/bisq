@@ -50,6 +50,7 @@ public class CoreApi {
     private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
+    private final CorePingService corePingService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
@@ -57,11 +58,13 @@ public class CoreApi {
     public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
+                   CorePingService corePingService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
+        this.corePingService = corePingService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
     }
@@ -77,6 +80,14 @@ public class CoreApi {
 
     public void registerDisputeAgent(String disputeAgentType, String registrationKey) {
         coreDisputeAgentsService.registerDisputeAgent(disputeAgentType, registrationKey);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Ping
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public int ping() {
+        return corePingService.ping();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -189,15 +200,5 @@ public class CoreApi {
 
     public int getNumConfirmationsForMostRecentTransaction(String addressString) {
         return walletsService.getNumConfirmationsForMostRecentTransaction(addressString);
-    }
-
-    @SuppressWarnings("SameReturnValue")
-    public int ping() {
-        // Many operations require an available, non-null wallet balance, and it is
-        // assumed the service is ready to accept any request if the wallet balance is
-        // available.  If the balance is not available for any reason, an
-        // IllegalStateException will be thrown by the wallets service.
-        walletsService.getAvailableBalance();
-        return 1;
     }
 }

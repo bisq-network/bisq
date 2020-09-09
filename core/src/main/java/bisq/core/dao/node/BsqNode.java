@@ -147,6 +147,10 @@ public abstract class BsqNode implements DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean isP2pNetworkReady() {
+        return this.p2pNetworkReady;
+    }
+
     public void setErrorMessageHandler(@SuppressWarnings("NullableProblems") Consumer<String> errorMessageHandler) {
         this.errorMessageHandler = errorMessageHandler;
     }
@@ -158,7 +162,6 @@ public abstract class BsqNode implements DaoSetupService {
     public void shutDown() {
         exportJsonFilesService.shutDown();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
