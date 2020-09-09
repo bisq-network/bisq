@@ -19,9 +19,9 @@ package bisq.desktop.main.account.content.seedwords;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.SharedPresentation;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BtcWalletService;
@@ -305,6 +305,6 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         long date = localDateTime.toEpochSecond(ZoneOffset.UTC);
 
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
-        GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
+        SharedPresentation.restoreSeedWords(seed, walletsManager, storageDir);
     }
 }

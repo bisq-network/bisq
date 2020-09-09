@@ -21,9 +21,9 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.PasswordTextField;
+import bisq.desktop.main.SharedPresentation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
@@ -356,6 +356,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         //TODO Is ZoneOffset correct?
         long date = value != null ? value.atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
-        GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
+        SharedPresentation.restoreSeedWords(seed, walletsManager, storageDir);
     }
 }
