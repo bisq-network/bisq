@@ -21,6 +21,7 @@ import bisq.core.locale.Res;
 
 import bisq.common.config.Config;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.LegacyAddress;
 
@@ -44,7 +45,7 @@ public final class BtcAddressValidator extends InputValidator {
 
     private ValidationResult validateBtcAddress(String input) {
         try {
-            LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), input);
+            Address.fromString(Config.baseCurrencyNetworkParameters(), input);
             return new ValidationResult(true);
         } catch (AddressFormatException e) {
             return new ValidationResult(false, Res.get("validation.btc.invalidFormat"));
