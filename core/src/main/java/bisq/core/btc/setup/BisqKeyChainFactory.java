@@ -53,13 +53,14 @@ public class BisqKeyChainFactory extends DefaultKeyChainFactory {
 
     @Override
     public DeterministicKeyChain makeKeyChain(Protos.Key key, Protos.Key firstSubKey, DeterministicSeed seed, KeyCrypter crypter, boolean isMarried, Script.ScriptType outputScriptType, ImmutableList<ChildNumber> accountPath) {
+        ImmutableList<ChildNumber> maybeUpdatedAccountPath = accountPath;
         if (DeterministicKeyChain.ACCOUNT_ZERO_PATH.equals(accountPath)) {
             // This is a bitcoinj 0.14 wallet that has no account path in the serialized mnemonic
             KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
-            accountPath = structure.accountPathFor(outputScriptType);
+            maybeUpdatedAccountPath = structure.accountPathFor(outputScriptType);
         }
 
-        return super.makeKeyChain(key, firstSubKey, seed, crypter, isMarried, outputScriptType, accountPath);
+        return super.makeKeyChain(key, firstSubKey, seed, crypter, isMarried, outputScriptType, maybeUpdatedAccountPath);
     }
 
     @Override

@@ -115,12 +115,12 @@ public class BisqRiskAnalysis implements RiskAnalysis {
         if (tx.getConfidence().getSource() == TransactionConfidence.Source.SELF)
             return Result.OK;
 
-// Commented out to accept replace-by-fee txs.
-//        // We consider transactions that opt into replace-by-fee at risk of double spending.
-//        if (tx.isOptInFullRBF()) {
-//            nonFinal = tx;
-//            return Result.NON_FINAL;
-//        }
+        // Commented out to accept replace-by-fee txs.
+        // // We consider transactions that opt into replace-by-fee at risk of double spending.
+        // if (tx.isOptInFullRBF()) {
+        //     nonFinal = tx;
+        //     return Result.NON_FINAL;
+        // }
 
         // Relative time-locked transactions are risky too. We can't check the locks because usually we don't know the
         // spent outputs (to know when they were created).

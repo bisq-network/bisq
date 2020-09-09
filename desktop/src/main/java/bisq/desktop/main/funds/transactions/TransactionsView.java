@@ -41,14 +41,8 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
-import org.bitcoinj.script.Script;
-import org.bitcoinj.utils.Threading;
-import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.KeyChainEventListener;
 import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;

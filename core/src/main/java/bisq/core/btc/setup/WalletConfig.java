@@ -283,7 +283,9 @@ public class WalletConfig extends AbstractIdleService {
      * This method is invoked on a background thread after all objects are initialised, but before the peer group
      * or block chain download is started. You can tweak the objects configuration here.
      */
-    protected void onSetupCompleted() { }
+    protected void onSetupCompleted() {
+        // Meant to be overridden by subclasses
+    }
 
     /**
      * Tests to see if the spvchain file has an operating system file lock on it. Useful for checking if your app
@@ -314,13 +316,13 @@ public class WalletConfig extends AbstractIdleService {
     protected void startUp() throws Exception {
         // Runs in a separate thread.
         Context.propagate(context);
-//        bitcoinj's WalletAppKit creates the wallet directory if it was not created already,
-//        but WalletConfig should not do that.
-//        if (!directory.exists()) {
-//            if (!directory.mkdirs()) {
-//                throw new IOException("Could not create directory " + directory.getAbsolutePath());
-//            }
-//        }
+        // bitcoinj's WalletAppKit creates the wallet directory if it was not created already,
+        // but WalletConfig should not do that.
+        // if (!directory.exists()) {
+        //     if (!directory.mkdirs()) {
+        //         throw new IOException("Could not create directory " + directory.getAbsolutePath());
+        //     }
+        // }
         log.info("Starting up with directory = {}", directory);
         try {
             File chainFile = new File(directory, filePrefix + ".spvchain");
@@ -359,9 +361,7 @@ public class WalletConfig extends AbstractIdleService {
                             log.info("Clearing the chain file in preparation for restore.");
                             vStore.clear();
                         }
-                    }
-                    else
-                    {
+                    } else {
                         time = vBtcWallet.getEarliestKeyCreationTime();
                     }
                     if (time > 0)
