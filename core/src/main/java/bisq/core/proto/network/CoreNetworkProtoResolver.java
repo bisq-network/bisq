@@ -60,8 +60,8 @@ import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.messages.cancel.CancelTradeRequestAcceptedMessage;
 import bisq.core.trade.messages.cancel.CancelTradeRequestRejectedMessage;
 import bisq.core.trade.messages.cancel.RequestCancelTradeMessage;
-import bisq.core.trade.messages.dispute.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.dispute.MediatedPayoutTxSignatureMessage;
+import bisq.core.trade.messages.mediation.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.mediation.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
