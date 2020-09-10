@@ -34,9 +34,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTask {
+    private final SellerTrade sellerTrade;
+
     @SuppressWarnings({"unused"})
     public SendCancelTradeRequestRejectedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
+
+        checkArgument(trade instanceof SellerTrade);
+        sellerTrade = ((SellerTrade) trade);
     }
 
     @Override
@@ -50,22 +55,22 @@ public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTas
 
     @Override
     protected void setStateSent() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_SENT);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_ARRIVED);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_IN_MAILBOX);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_SEND_FAILED);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_REJECTED_MSG_SEND_FAILED);
     }
 
     @Override
@@ -73,7 +78,7 @@ public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTas
         try {
             runInterceptHook();
 
-            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+            checkArgument(!trade.isDisputed(), "A dispute has already started.");
 
             super.run();
         } catch (Throwable t) {

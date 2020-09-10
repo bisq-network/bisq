@@ -39,9 +39,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SendRequestCancelTradeMessage extends SendMailboxMessageTask {
+    private final BuyerTrade buyerTrade;
+
     @SuppressWarnings({"unused"})
     public SendRequestCancelTradeMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
+
+        checkArgument(trade instanceof BuyerTrade);
+        buyerTrade = ((BuyerTrade) trade);
     }
 
     @Override
@@ -62,22 +67,22 @@ public class SendRequestCancelTradeMessage extends SendMailboxMessageTask {
 
     @Override
     protected void setStateSent() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SENT);
+        buyerTrade.setCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_ARRIVED);
+        buyerTrade.setCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_IN_MAILBOX);
+        buyerTrade.setCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SEND_FAILED);
+        buyerTrade.setCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SEND_FAILED);
     }
 
     @Override
@@ -85,7 +90,7 @@ public class SendRequestCancelTradeMessage extends SendMailboxMessageTask {
         try {
             runInterceptHook();
 
-            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+            checkArgument(!trade.isDisputed(), "A dispute has already started.");
 
             super.run();
         } catch (Throwable t) {

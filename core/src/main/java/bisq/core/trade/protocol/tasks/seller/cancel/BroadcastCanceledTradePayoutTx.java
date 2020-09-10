@@ -25,6 +25,8 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
     @SuppressWarnings({"unused"})
@@ -45,7 +47,8 @@ public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
 
     @Override
     protected void setState() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
+        checkArgument(trade instanceof SellerTrade);
+        ((SellerTrade) trade).setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
         trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
     }
 }

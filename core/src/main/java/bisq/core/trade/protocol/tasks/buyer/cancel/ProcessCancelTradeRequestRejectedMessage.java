@@ -41,15 +41,17 @@ public class ProcessCancelTradeRequestRejectedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
+            checkArgument(!trade.isDisputed(), "A dispute has already started.");
+
             CancelTradeRequestRejectedMessage message = (CancelTradeRequestRejectedMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
-
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.RECEIVED_REJECTED_MSG);
+            checkArgument(trade instanceof BuyerTrade);
+            (((BuyerTrade) trade)).setCancelTradeState(BuyerTrade.CancelTradeState.RECEIVED_REJECTED_MSG);
             processModel.removeMailboxMessageAfterProcessing(trade);
             complete();
         } catch (Throwable t) {

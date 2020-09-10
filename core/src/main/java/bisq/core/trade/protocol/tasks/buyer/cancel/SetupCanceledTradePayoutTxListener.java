@@ -26,6 +26,8 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
     @SuppressWarnings({"unused"})
@@ -47,7 +49,8 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
+        checkArgument(trade instanceof BuyerTrade);
+        (((BuyerTrade) trade)).setCancelTradeState(BuyerTrade.CancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
         if (trade.getPayoutTx() != null) {
             trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
 

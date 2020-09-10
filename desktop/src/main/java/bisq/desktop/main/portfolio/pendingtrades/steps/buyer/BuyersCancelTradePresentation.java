@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class BuyersCancelTradePresentation {
-    private final Trade trade;
+    private final BuyerTrade trade;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
     private Button cancelTradeButton;
@@ -58,7 +58,7 @@ public class BuyersCancelTradePresentation {
     BuyersCancelTradePresentation(Trade trade,
                                   TradeCancellationManager manager,
                                   CoinFormatter formatter) {
-        this.trade = trade;
+        this.trade = (BuyerTrade) trade;
         this.manager = manager;
         this.formatter = formatter;
     }
@@ -87,8 +87,8 @@ public class BuyersCancelTradePresentation {
 
 
     public void activate() {
-        trade.getBuyersCancelTradeStateProperty().addListener(cancelTradeStateListener);
-        onStateChanged(trade.getBuyersCancelTradeStateProperty().get());
+        trade.getCancelTradeStateProperty().addListener(cancelTradeStateListener);
+        onStateChanged(trade.getCancelTradeStateProperty().get());
 
         trade.disputeStateProperty().addListener(disputeStateListener);
         onDisputeStateChanged();
@@ -96,7 +96,7 @@ public class BuyersCancelTradePresentation {
 
     public void deactivate() {
         if (cancelTradeStateListener != null) {
-            trade.getBuyersCancelTradeStateProperty().removeListener(cancelTradeStateListener);
+            trade.getCancelTradeStateProperty().removeListener(cancelTradeStateListener);
         }
         if (disputeStateListener != null) {
             trade.disputeStateProperty().removeListener(disputeStateListener);
@@ -135,7 +135,13 @@ public class BuyersCancelTradePresentation {
 
     private void onDisputeStateChanged() {
         if (trade.isDisputed()) {
-            disableButton();
+            cancelTradeButton.setVisible(false);
+            cancelTradeButton.setManaged(false);
+            msgSentStatusLabel.setVisible(false);
+            msgSentStatusLabel.setManaged(false);
+            msgSentBusyAnimation.stop();
+            msgSentBusyAnimation.setVisible(false);
+            msgSentBusyAnimation.setManaged(false);
         }
     }
 

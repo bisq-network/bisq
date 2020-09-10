@@ -94,7 +94,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
         trade.setTradePrice(proto.getTradePrice());
         trade.setTradingPeerNodeAddress(proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null);
 
-        return fromProto(trade,
+        return BuyerTrade.fromProto(trade,
                 proto,
                 coreProtoResolver);
     }
@@ -114,5 +114,11 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                                        NodeAddress taker,
                                        ErrorMessageHandler errorMessageHandler) {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker, errorMessageHandler);
+    }
+
+
+    @Override
+    public String toString() {
+        return "BuyerAsMakerTrade{} " + super.toString();
     }
 }

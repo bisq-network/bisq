@@ -57,7 +57,6 @@ import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -449,17 +448,17 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     transient final private IntegerProperty assetTxProofResultUpdateProperty = new SimpleIntegerProperty();
 
-    @Getter
+   /* @Getter
     // Added at v1.3.9
     public SellerTrade.CancelTradeState sellersCancelTradeState;
     @Getter
     transient final private ObjectProperty<SellerTrade.CancelTradeState> sellersCancelTradeStateProperty = new SimpleObjectProperty<>();
-
-    @Getter
+*/
+    /*@Getter
     public BuyerTrade.CancelTradeState buyersCancelTradeState;
     @Getter
     transient final private ObjectProperty<BuyerTrade.CancelTradeState> buyersCancelTradeStateProperty = new SimpleObjectProperty<>();
-
+*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -529,9 +528,9 @@ public abstract class Trade implements Tradable, Model {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
+   /* @Override
     public Message toProtoMessage() {
-        final protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
+        protobuf.Trade.Builder builder = getBuilder()
                 .setOffer(checkNotNull(offer).toProtoMessage())
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTxFeeAsLong(txFeeAsLong)
@@ -573,10 +572,56 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
         Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
         Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.name()));
-        Optional.ofNullable(sellersCancelTradeState).ifPresent(e -> builder.setSellersCancelTradeState(sellersCancelTradeState.name()));
-        Optional.ofNullable(buyersCancelTradeState).ifPresent(e -> builder.setBuyersCancelTradeState(buyersCancelTradeState.name()));
+        Optional.ofNullable(sellersCancelTradeState).ifPresent(e -> builder.setCancelTradeState(sellersCancelTradeState.name()));
+        Optional.ofNullable(buyersCancelTradeState).ifPresent(e -> builder.setCancelTradeState(buyersCancelTradeState.name()));
 
         return builder.build();
+    }*/
+
+    protected protobuf.Trade.Builder getBuilder() {
+        protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
+                .setOffer(checkNotNull(offer).toProtoMessage())
+                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
+                .setTxFeeAsLong(txFeeAsLong)
+                .setTakerFeeAsLong(takerFeeAsLong)
+                .setTakeOfferDate(takeOfferDate)
+                .setProcessModel(processModel.toProtoMessage())
+                .setTradeAmountAsLong(tradeAmountAsLong)
+                .setTradePrice(tradePrice)
+                .setState(Trade.State.toProtoMessage(state))
+                .setDisputeState(Trade.DisputeState.toProtoMessage(disputeState))
+                .setTradePeriodState(Trade.TradePeriodState.toProtoMessage(tradePeriodState))
+                .addAllChatMessage(chatMessages.stream()
+                        .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
+                        .collect(Collectors.toList()))
+                .setLockTime(lockTime)
+                .setLastRefreshRequestDate(lastRefreshRequestDate);
+
+        Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
+        Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
+        Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
+        Optional.ofNullable(tradingPeerNodeAddress).ifPresent(e -> builder.setTradingPeerNodeAddress(tradingPeerNodeAddress.toProtoMessage()));
+        Optional.ofNullable(contract).ifPresent(e -> builder.setContract(contract.toProtoMessage()));
+        Optional.ofNullable(contractAsJson).ifPresent(builder::setContractAsJson);
+        Optional.ofNullable(contractHash).ifPresent(e -> builder.setContractHash(ByteString.copyFrom(contractHash)));
+        Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
+        Optional.ofNullable(makerContractSignature).ifPresent(builder::setMakerContractSignature);
+        Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
+        Optional.ofNullable(mediatorNodeAddress).ifPresent(e -> builder.setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage()));
+        Optional.ofNullable(refundAgentNodeAddress).ifPresent(e -> builder.setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage()));
+        Optional.ofNullable(arbitratorBtcPubKey).ifPresent(e -> builder.setArbitratorBtcPubKey(ByteString.copyFrom(arbitratorBtcPubKey)));
+        Optional.ofNullable(takerPaymentAccountId).ifPresent(builder::setTakerPaymentAccountId);
+        Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
+        Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
+        Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
+        Optional.ofNullable(refundAgentPubKeyRing).ifPresent(e -> builder.setRefundAgentPubKeyRing(refundAgentPubKeyRing.toProtoMessage()));
+        Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
+        Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
+        Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
+        Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
+        Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
+        Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.name()));
+        return builder;
     }
 
     public static Trade fromProto(Trade trade, protobuf.Trade proto, CoreProtoResolver coreProtoResolver) {
@@ -616,9 +661,6 @@ public abstract class Trade implements Tradable, Model {
             persistedAssetTxProofResult = null;
         }
         trade.setAssetTxProofResult(persistedAssetTxProofResult);
-
-        trade.setSellersCancelTradeState(ProtoUtil.enumFromProto(SellerTrade.CancelTradeState.class, proto.getSellersCancelTradeState()));
-        trade.setBuyersCancelTradeState(ProtoUtil.enumFromProto(BuyerTrade.CancelTradeState.class, proto.getBuyersCancelTradeState()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -910,17 +952,6 @@ public abstract class Trade implements Tradable, Model {
         persist();
     }
 
-    public void setSellersCancelTradeState(SellerTrade.CancelTradeState cancelTradeState) {
-        this.sellersCancelTradeState = cancelTradeState;
-        sellersCancelTradeStateProperty.set(cancelTradeState);
-        persist();
-    }
-
-    public void setBuyersCancelTradeState(BuyerTrade.CancelTradeState cancelTradeState) {
-        this.buyersCancelTradeState = cancelTradeState;
-        buyersCancelTradeStateProperty.set(cancelTradeState);
-        persist();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1262,8 +1293,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
                 ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
-                ",\n     sellersCancelTradeState=" + sellersCancelTradeState +
-                ",\n     buyersCancelTradeState=" + buyersCancelTradeState +
                 "\n}";
     }
 }

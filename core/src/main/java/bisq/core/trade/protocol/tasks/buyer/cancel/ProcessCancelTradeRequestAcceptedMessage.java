@@ -46,12 +46,13 @@ public class ProcessCancelTradeRequestAcceptedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
+            checkArgument(!trade.isDisputed(), "A dispute has already started.");
+
             CancelTradeRequestAcceptedMessage message = (CancelTradeRequestAcceptedMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
             checkArgument(message.getPayoutTx() != null);
-
-            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
@@ -61,7 +62,8 @@ public class ProcessCancelTradeRequestAcceptedMessage extends TradeTask {
                 trade.setPayoutTx(committedCanceledTradePayoutTx);
                 BtcWalletService.printTx("CanceledTradePayoutTx received from peer", committedCanceledTradePayoutTx);
 
-                trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.RECEIVED_ACCEPTED_MSG);
+                checkArgument(trade instanceof BuyerTrade);
+                (((BuyerTrade) trade)).setCancelTradeState(BuyerTrade.CancelTradeState.RECEIVED_ACCEPTED_MSG);
                 trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
 
                 // We need to delay that call as we might get executed at startup after mailbox messages are

@@ -42,11 +42,11 @@ public class ProcessRequestCancelTradeMessage extends TradeTask {
         try {
             runInterceptHook();
 
+            checkArgument(!trade.isDisputed(), "A dispute has already started.");
+
             RequestCancelTradeMessage message = (RequestCancelTradeMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
-
-            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
             processModel.getTradingPeer().setCanceledTradePayoutTxSignature(checkNotNull(message.getTxSignature()));
 
@@ -54,7 +54,8 @@ public class ProcessRequestCancelTradeMessage extends TradeTask {
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
             processModel.removeMailboxMessageAfterProcessing(trade);
 
-            trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.RECEIVED_REQUEST);
+            checkArgument(trade instanceof SellerTrade);
+            ((SellerTrade) trade).setCancelTradeState(SellerTrade.CancelTradeState.RECEIVED_REQUEST);
 
             complete();
         } catch (Throwable t) {

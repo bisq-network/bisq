@@ -37,9 +37,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SendCancelTradeRequestAcceptedMessage extends SendMailboxMessageTask {
+    private final SellerTrade sellerTrade;
+
     @SuppressWarnings({"unused"})
     public SendCancelTradeRequestAcceptedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
+
+        checkArgument(trade instanceof SellerTrade);
+        sellerTrade = (SellerTrade) trade;
     }
 
     @Override
@@ -55,25 +60,26 @@ public class SendCancelTradeRequestAcceptedMessage extends SendMailboxMessageTas
 
     @Override
     protected void setStateSent() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SENT);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SENT);
         trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
     }
 
+
     @Override
     protected void setStateArrived() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_ARRIVED);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_ARRIVED);
         trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_IN_MAILBOX);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_IN_MAILBOX);
         trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SEND_FAILED);
+        sellerTrade.setCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SEND_FAILED);
         trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
     }
 
@@ -82,7 +88,7 @@ public class SendCancelTradeRequestAcceptedMessage extends SendMailboxMessageTas
         try {
             runInterceptHook();
 
-            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+            checkArgument(!trade.isDisputed(), "A dispute has already started.");
 
             if (trade.getPayoutTx() == null) {
                 log.error("trade.getPayoutTx() = " + trade.getPayoutTx());

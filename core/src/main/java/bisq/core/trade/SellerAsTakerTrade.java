@@ -86,7 +86,7 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         protobuf.Trade proto = sellerAsTakerTradeProto.getTrade();
-        return fromProto(new SellerAsTakerTrade(
+        return SellerTrade.fromProto(new SellerAsTakerTrade(
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),
                         Coin.valueOf(proto.getTxFeeAsLong()),
@@ -117,5 +117,11 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     public void takeAvailableOffer() {
         checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
         ((TakerProtocol) tradeProtocol).takeAvailableOffer();
+    }
+
+
+    @Override
+    public String toString() {
+        return "SellerAsTakerTrade{} " + super.toString();
     }
 }

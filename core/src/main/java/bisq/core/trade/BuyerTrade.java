@@ -19,16 +19,26 @@ package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.BuyerProtocol;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.storage.Storage;
+
+import com.google.protobuf.Message;
 
 import org.bitcoinj.core.Coin;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
+import java.util.Optional;
+
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -49,6 +59,18 @@ public abstract class BuyerTrade extends Trade {
         PAYOUT_TX_SEEN_IN_NETWORK,
         RECEIVED_REJECTED_MSG
     }
+
+    // Added at v1.3.9
+    @Getter
+    @Nullable
+    public BuyerTrade.CancelTradeState cancelTradeState;
+    @Getter
+    transient final private ObjectProperty<CancelTradeState> cancelTradeStateProperty = new SimpleObjectProperty<>();
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     BuyerTrade(Offer offer,
                Coin tradeAmount,
@@ -96,6 +118,35 @@ public abstract class BuyerTrade extends Trade {
                 btcWalletService);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public Message toProtoMessage() {
+        protobuf.Trade.Builder builder = getBuilder();
+        Optional.ofNullable(cancelTradeState).ifPresent(e -> builder.setCancelTradeState(cancelTradeState.name()));
+        return builder.build();
+    }
+
+    public static Tradable fromProto(BuyerTrade trade, protobuf.Trade proto, CoreProtoResolver coreProtoResolver) {
+        trade.setCancelTradeState(ProtoUtil.enumFromProto(BuyerTrade.CancelTradeState.class, proto.getCancelTradeState()));
+        return Trade.fromProto(trade,
+                proto,
+                coreProtoResolver);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setCancelTradeState(BuyerTrade.CancelTradeState cancelTradeState) {
+        this.cancelTradeState = cancelTradeState;
+        cancelTradeStateProperty.set(cancelTradeState);
+        persist();
+    }
+
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkArgument(tradeProtocol instanceof BuyerProtocol, "Check failed:  tradeProtocol instanceof BuyerProtocol");
         ((BuyerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorMessageHandler);
@@ -110,12 +161,25 @@ public abstract class BuyerTrade extends Trade {
 
     @Override
     public boolean wasCanceledTrade() {
-        switch (buyersCancelTradeState) {
+        if (cancelTradeState == null) {
+            return false;
+        }
+
+        switch (cancelTradeState) {
             case RECEIVED_ACCEPTED_MSG:
             case PAYOUT_TX_SEEN_IN_NETWORK:
                 return true;
             default:
                 return false;
         }
+    }
+
+
+    @Override
+    public String toString() {
+        return "BuyerTrade{" +
+                "\n     buyersCancelTradeState=" + cancelTradeState +
+                ",\n     buyersCancelTradeStateProperty=" + cancelTradeStateProperty +
+                "\n} " + super.toString();
     }
 }

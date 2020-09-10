@@ -33,6 +33,9 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BuyersCancelTradeProtocol extends CancelTradeProtocol {
 
     BuyersCancelTradeProtocol(Trade trade) {
@@ -45,6 +48,11 @@ public class BuyersCancelTradeProtocol extends CancelTradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onRequestCancelTrade(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (trade.isDisputed()) {
+            log.info("We got onRequestCancelTrade called but the trade have been disputed already. We ignore the call.");
+            return;
+        }
+
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> {
                     resultHandler.handleResult();
@@ -72,6 +80,12 @@ public class BuyersCancelTradeProtocol extends CancelTradeProtocol {
         trade.getProcessModel().setTradeMessage(tradeMessage);
         trade.getProcessModel().setTempTradingPeerNodeAddress(sender);
 
+        if (trade.isDisputed()) {
+            log.info("We received a CancelTradeRequestAcceptedMessage but the trade have been disputed already. We ignore the message.");
+            trade.getProcessModel().removeMailboxMessageAfterProcessing(trade);
+            return;
+        }
+
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> handleTaskRunnerSuccess(tradeMessage, "handle CancelTradeRequestAcceptedMessage"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
@@ -82,10 +96,15 @@ public class BuyersCancelTradeProtocol extends CancelTradeProtocol {
         taskRunner.run();
     }
 
-
     protected void handle(CancelTradeRequestRejectedMessage tradeMessage, NodeAddress sender) {
         trade.getProcessModel().setTradeMessage(tradeMessage);
         trade.getProcessModel().setTempTradingPeerNodeAddress(sender);
+
+        if (trade.isDisputed()) {
+            log.info("We received a CancelTradeRequestRejectedMessage but the trade have been disputed already. We ignore the request.");
+            trade.getProcessModel().removeMailboxMessageAfterProcessing(trade);
+            return;
+        }
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> handleTaskRunnerSuccess(tradeMessage, "handle CancelTradeRequestRejectedMessage"),

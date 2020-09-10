@@ -33,6 +33,9 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class SellersCancelTradeProtocol extends CancelTradeProtocol {
 
     SellersCancelTradeProtocol(Trade trade) {
@@ -47,6 +50,11 @@ public class SellersCancelTradeProtocol extends CancelTradeProtocol {
     public void onAcceptRequest(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         if (trade.getPayoutTx() != null) {
             errorMessageHandler.handleErrorMessage("Payout tx is already published.");
+            return;
+        }
+
+        if (trade.isDisputed()) {
+            log.info("We got onAcceptRequest called but the trade have been disputed already. We ignore the call.");
             return;
         }
 
@@ -75,6 +83,11 @@ public class SellersCancelTradeProtocol extends CancelTradeProtocol {
             return;
         }
 
+        if (trade.isDisputed()) {
+            log.info("We got onRejectRequest called but the trade have been disputed already. We ignore the call.");
+            return;
+        }
+
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> {
                     resultHandler.handleResult();
@@ -99,6 +112,12 @@ public class SellersCancelTradeProtocol extends CancelTradeProtocol {
     protected void handle(RequestCancelTradeMessage tradeMessage, NodeAddress sender) {
         trade.getProcessModel().setTradeMessage(tradeMessage);
         trade.getProcessModel().setTempTradingPeerNodeAddress(sender);
+
+        if (trade.isDisputed()) {
+            log.info("We received a RequestCancelTradeMessage but the trade have been disputed already. We ignore the message.");
+            trade.getProcessModel().removeMailboxMessageAfterProcessing(trade);
+            return;
+        }
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> handleTaskRunnerSuccess(tradeMessage, "handle RequestCancelTradeMessage"),

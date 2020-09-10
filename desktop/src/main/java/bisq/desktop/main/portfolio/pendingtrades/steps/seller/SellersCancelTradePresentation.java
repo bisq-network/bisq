@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SellersCancelTradePresentation {
-    private final Trade trade;
+    private final SellerTrade trade;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
     private TitledGroupBg cancelRequestTitledGroupBg;
@@ -56,7 +56,7 @@ public class SellersCancelTradePresentation {
     SellersCancelTradePresentation(Trade trade,
                                    TradeCancellationManager manager,
                                    CoinFormatter formatter) {
-        this.trade = trade;
+        this.trade = (SellerTrade) trade;
         this.manager = manager;
         this.formatter = formatter;
     }
@@ -83,8 +83,8 @@ public class SellersCancelTradePresentation {
     public void activate() {
         cancelRequestButton.setOnAction(e -> showPopup());
 
-        trade.getSellersCancelTradeStateProperty().addListener(cancelTradeStateListener);
-        onStateChanged(trade.getSellersCancelTradeStateProperty().get());
+        trade.getCancelTradeStateProperty().addListener(cancelTradeStateListener);
+        onStateChanged(trade.getCancelTradeStateProperty().get());
 
         trade.disputeStateProperty().addListener(disputeStateListener);
         onDisputeStateChanged();
@@ -94,7 +94,7 @@ public class SellersCancelTradePresentation {
         cancelRequestButton.setOnAction(null);
 
         if (cancelTradeStateListener != null) {
-            trade.getSellersCancelTradeStateProperty().removeListener(cancelTradeStateListener);
+            trade.getCancelTradeStateProperty().removeListener(cancelTradeStateListener);
         }
 
         if (disputeStateListener != null) {
