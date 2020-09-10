@@ -21,7 +21,7 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.protocol.tasks.SendPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @Slf4j
-public class SendMediatedPayoutTxPublishedMessage extends SendPayoutTxPublishedMessage {
+public class SendMediatedPayoutTxPublishedMessage extends SendMailboxMessageTask {
     @SuppressWarnings({"unused"})
     public SendMediatedPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

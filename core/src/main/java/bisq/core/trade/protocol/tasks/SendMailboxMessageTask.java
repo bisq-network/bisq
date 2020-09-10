@@ -28,9 +28,9 @@ import bisq.common.taskrunner.TaskRunner;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class SendPayoutTxPublishedMessage extends TradeTask {
+public abstract class SendMailboxMessageTask extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public SendMailboxMessageTask(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

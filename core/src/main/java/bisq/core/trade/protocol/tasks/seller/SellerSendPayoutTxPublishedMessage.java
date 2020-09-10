@@ -20,7 +20,7 @@ package bisq.core.trade.protocol.tasks.seller;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.protocol.tasks.SendPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerSendPayoutTxPublishedMessage extends SendPayoutTxPublishedMessage {
+public class SellerSendPayoutTxPublishedMessage extends SendMailboxMessageTask {
     @SuppressWarnings({"unused"})
     public SellerSendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
