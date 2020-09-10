@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * todo: handle dispute
  */
 @Slf4j
-public class RequestCancelTradePresentation {
+public class BuyerRequestCancelTradePresentation {
     private final Trade trade;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
@@ -54,9 +54,9 @@ public class RequestCancelTradePresentation {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestCancelTradePresentation(Trade trade,
-                                          TradeCancellationManager manager,
-                                          CoinFormatter formatter) {
+    public BuyerRequestCancelTradePresentation(Trade trade,
+                                               TradeCancellationManager manager,
+                                               CoinFormatter formatter) {
         this.trade = trade;
         this.manager = manager;
         this.formatter = formatter;

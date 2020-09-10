@@ -19,7 +19,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
-import bisq.desktop.main.portfolio.pendingtrades.steps.HandleCancelTradeRequestPresentation;
+import bisq.desktop.main.portfolio.pendingtrades.steps.SellerHandleCancelTradeRequestPresentation;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.Layout;
 
@@ -45,7 +45,7 @@ public class SellerStep2View extends TradeStepView {
 
     private GridPane refreshButtonPane;
     private Timer timer;
-    private HandleCancelTradeRequestPresentation handleCancelTradeRequestPresentation;
+    private SellerHandleCancelTradeRequestPresentation sellerHandleCancelTradeRequestPresentation;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -54,7 +54,7 @@ public class SellerStep2View extends TradeStepView {
     public SellerStep2View(PendingTradesViewModel model) {
         super(model);
 
-        handleCancelTradeRequestPresentation = new HandleCancelTradeRequestPresentation(trade,
+        sellerHandleCancelTradeRequestPresentation = new SellerHandleCancelTradeRequestPresentation(trade,
                 model.dataModel.getTradeCancellationManager(),
                 model.getBtcFormatter());
     }
@@ -79,7 +79,7 @@ public class SellerStep2View extends TradeStepView {
 
         addRefreshBlock();
 
-        handleCancelTradeRequestPresentation.initialize();
+        sellerHandleCancelTradeRequestPresentation.initialize();
     }
 
     @Override
@@ -88,7 +88,7 @@ public class SellerStep2View extends TradeStepView {
 
         activateRefreshButton();
 
-        handleCancelTradeRequestPresentation.activate();
+        sellerHandleCancelTradeRequestPresentation.activate();
     }
 
     @Override
@@ -97,7 +97,7 @@ public class SellerStep2View extends TradeStepView {
 
         deActivateRefreshButtonTimer();
 
-        handleCancelTradeRequestPresentation.deactivate();
+        sellerHandleCancelTradeRequestPresentation.deactivate();
     }
 
 

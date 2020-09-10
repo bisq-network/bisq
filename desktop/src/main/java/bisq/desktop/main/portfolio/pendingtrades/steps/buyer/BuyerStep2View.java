@@ -50,7 +50,7 @@ import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SetXmrTxKeyWindow;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
-import bisq.desktop.main.portfolio.pendingtrades.steps.RequestCancelTradePresentation;
+import bisq.desktop.main.portfolio.pendingtrades.steps.BuyerRequestCancelTradePresentation;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
@@ -105,7 +105,7 @@ public class BuyerStep2View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
-    private RequestCancelTradePresentation requestCancelTradePresentation;
+    private BuyerRequestCancelTradePresentation buyerRequestCancelTradePresentation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ public class BuyerStep2View extends TradeStepView {
     public BuyerStep2View(PendingTradesViewModel model) {
         super(model);
 
-        requestCancelTradePresentation = new RequestCancelTradePresentation(trade,
+        buyerRequestCancelTradePresentation = new BuyerRequestCancelTradePresentation(trade,
                 model.dataModel.getTradeCancellationManager(),
                 model.getBtcFormatter());
     }
@@ -267,7 +267,7 @@ public class BuyerStep2View extends TradeStepView {
         statusLabel = tuple3.third;
         HBox hBox = tuple3.fourth;
 
-        requestCancelTradePresentation.initialize(hBox, busyAnimation, statusLabel);
+        buyerRequestCancelTradePresentation.initialize(hBox, busyAnimation, statusLabel);
     }
 
     @Override
@@ -352,7 +352,7 @@ public class BuyerStep2View extends TradeStepView {
 
         confirmButton.setDisable(isDisputed());
 
-        requestCancelTradePresentation.activate();
+        buyerRequestCancelTradePresentation.activate();
     }
 
     @Override
@@ -369,7 +369,7 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = null;
         }
 
-        requestCancelTradePresentation.deactivate();
+        buyerRequestCancelTradePresentation.deactivate();
     }
 
 
@@ -530,7 +530,7 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        requestCancelTradePresentation.hideCancelButton();
+        buyerRequestCancelTradePresentation.hideCancelButton();
 
         // confirmButton.setDisable(true);
         busyAnimation.play();
@@ -654,6 +654,6 @@ public class BuyerStep2View extends TradeStepView {
         confirmButton.setDisable(isDisabled);
 
         //TODO
-        requestCancelTradePresentation.setDisable(isDisabled);
+        buyerRequestCancelTradePresentation.setDisable(isDisabled);
     }
 }
