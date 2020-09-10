@@ -58,6 +58,8 @@ public class ProcessPeerPublishedDelayedPayoutTxMessage extends TradeTask {
 
             complete();
         } catch (Throwable t) {
+            processModel.removeMailboxMessageAfterProcessing(trade);
+
             failed(t);
         }
     }

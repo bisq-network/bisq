@@ -66,6 +66,8 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
 
             complete();
         } catch (Throwable t) {
+            processModel.removeMailboxMessageAfterProcessing(trade);
+
             failed(t);
         }
     }

@@ -59,6 +59,7 @@ public class ProcessRequestCancelTradeMessage extends TradeTask {
 
             complete();
         } catch (Throwable t) {
+            processModel.removeMailboxMessageAfterProcessing(trade);
             failed(t);
         }
     }
