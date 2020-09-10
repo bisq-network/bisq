@@ -76,7 +76,6 @@ public class BuyerRequestCancelTradePresentation {
         this.msgSentStatusLabel = msgSentStatusLabel;
 
         cancelTradeButton = new AutoTooltipButton(Res.get("portfolio.pending.cancelTrade"));
-        cancelTradeButton.getStyleClass().add("action-button");
         cancelTradeButton.setOnAction(e -> onRequestCancelTrade());
         hBox.getChildren().add(1, cancelTradeButton);
     }

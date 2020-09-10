@@ -118,7 +118,7 @@ public class SellerHandleCancelTradeRequestPresentation {
                         .onAction(this::onAcceptRequest)
                         .secondaryActionButtonText(Res.get("shared.reject"))
                         .onSecondaryAction(this::onRejectRequest)
-                        .closeButtonText(Res.get("portfolio.pending.doNotDecideYet"))
+                        .closeButtonText(Res.get("portfolio.pending.decideLater"))
                         .show();
                 break;
             case REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED:
