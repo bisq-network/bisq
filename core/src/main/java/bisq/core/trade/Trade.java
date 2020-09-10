@@ -79,12 +79,11 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.time.temporal.ChronoUnit;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -103,7 +102,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Trade implements Tradable, Model {
-    private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
+    private static final long MAX_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(4);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
