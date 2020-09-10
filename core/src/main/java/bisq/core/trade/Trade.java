@@ -103,6 +103,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Trade implements Tradable, Model {
+    private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -429,8 +430,7 @@ public abstract class Trade implements Tradable, Model {
     @Setter
     private long lastRefreshRequestDate;
     @Getter
-    private long refreshInterval;
-    private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
+    transient private long refreshInterval;
 
     // Added at v1.3.8
     // We use that for the XMR txKey but want to keep it generic to be flexible for other payment methods or assets.
