@@ -70,24 +70,7 @@ public class PriceProvider extends HttpClientProvider {
                 final double price = (Double) treeMap.get("price");
                 // json uses double for our timestampSec long value...
                 final long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
-
-                // We do not have support for the case of multiChain assets where a common price ticker used for
-                // different flavours of the asset. It would be quite a bit of effort to add generic support to the
-                // asset and tradeCurrency classes and to handle it correctly from their many client classes.
-                // So we decided to hack in the sub-assets as copies of the price and accept the annoyance to see
-                // 3 different prices for the same master asset. But who knows, maybe prices will differ over time for
-                // the sub assets so then we are better prepared that way...
-                if (currencyCode.equals("USDT")) {
-                    addPrice(marketPriceMap, "USDT-O", price, timestampSec);
-                    addPrice(marketPriceMap, "USDT-E", price, timestampSec);
-                    addPrice(marketPriceMap, "L-USDT", price, timestampSec);
-                } else {
-                    // NON_EXISTING_SYMBOL is returned from service for nto found items
-                    // Sometimes it has post fixes as well so we use a 'contains' check.
-                    if (!currencyCode.contains("NON_EXISTING_SYMBOL")) {
-                        addPrice(marketPriceMap, currencyCode, price, timestampSec);
-                    }
-                }
+                marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
@@ -95,13 +78,6 @@ public class PriceProvider extends HttpClientProvider {
 
         });
         return new Tuple2<>(tsMap, marketPriceMap);
-    }
-
-    private void addPrice(Map<String, MarketPrice> marketPriceMap,
-                          String currencyCode,
-                          double price,
-                          long timestampSec) {
-        marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
     }
 
     public String getBaseUrl() {
