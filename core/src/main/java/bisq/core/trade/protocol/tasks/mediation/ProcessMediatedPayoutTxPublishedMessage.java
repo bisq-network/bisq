@@ -22,7 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.dispute.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 

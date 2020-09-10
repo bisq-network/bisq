@@ -15,32 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages;
+package bisq.core.trade.messages.dispute;
+
+import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
-import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode(callSuper = true)
+@Slf4j
 @Value
-public final class MediatedPayoutTxPublishedMessage extends TradeMessage implements MailboxMessage {
-    private final byte[] payoutTx;
+@EqualsAndHashCode(callSuper = true)
+public class MediatedPayoutTxSignatureMessage extends TradeMessage implements MailboxMessage {
+    private final byte[] txSignature;
     private final NodeAddress senderNodeAddress;
 
-    public MediatedPayoutTxPublishedMessage(String tradeId,
-                                            byte[] payoutTx,
+    public MediatedPayoutTxSignatureMessage(byte[] txSignature,
+                                            String tradeId,
                                             NodeAddress senderNodeAddress,
                                             String uid) {
-        this(tradeId,
-                payoutTx,
+        this(txSignature,
+                tradeId,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -51,41 +54,48 @@ public final class MediatedPayoutTxPublishedMessage extends TradeMessage impleme
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private MediatedPayoutTxPublishedMessage(String tradeId,
-                                             byte[] payoutTx,
+    private MediatedPayoutTxSignatureMessage(byte[] txSignature,
+                                             String tradeId,
                                              NodeAddress senderNodeAddress,
                                              String uid,
                                              int messageVersion) {
         super(messageVersion, tradeId, uid);
-        this.payoutTx = payoutTx;
+        this.txSignature = txSignature;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setMediatedPayoutTxPublishedMessage(protobuf.MediatedPayoutTxPublishedMessage.newBuilder()
+                .setMediatedPayoutTxSignatureMessage(protobuf.MediatedPayoutTxSignatureMessage.newBuilder()
+                        .setTxSignature(ByteString.copyFrom(txSignature))
                         .setTradeId(tradeId)
-                        .setPayoutTx(ByteString.copyFrom(payoutTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(protobuf.MediatedPayoutTxPublishedMessage proto, int messageVersion) {
-        return new MediatedPayoutTxPublishedMessage(proto.getTradeId(),
-                proto.getPayoutTx().toByteArray(),
+    public static MediatedPayoutTxSignatureMessage fromProto(protobuf.MediatedPayoutTxSignatureMessage proto,
+                                                             int messageVersion) {
+        return new MediatedPayoutTxSignatureMessage(proto.getTxSignature().toByteArray(),
+                proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
     }
 
     @Override
+    public String getTradeId() {
+        return tradeId;
+    }
+
+
+    @Override
     public String toString() {
-        return "MediatedPayoutTxPublishedMessage{" +
-                "\n     payoutTx=" + Utilities.bytesAsHexString(payoutTx) +
+        return "MediatedPayoutSignatureMessage{" +
+                "\n     txSignature=" + Utilities.bytesAsHexString(txSignature) +
+                ",\n     tradeId='" + tradeId + '\'' +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     uid='" + uid + '\'' +
                 "\n} " + super.toString();
     }
 }

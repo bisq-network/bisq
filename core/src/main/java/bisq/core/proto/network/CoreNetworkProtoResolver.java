@@ -53,8 +53,6 @@ import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.DepositTxMessage;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
-import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
@@ -62,6 +60,8 @@ import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.messages.cancel.CancelTradeRequestAcceptedMessage;
 import bisq.core.trade.messages.cancel.CancelTradeRequestRejectedMessage;
 import bisq.core.trade.messages.cancel.RequestCancelTradeMessage;
+import bisq.core.trade.messages.dispute.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.dispute.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
