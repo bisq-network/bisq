@@ -75,6 +75,12 @@ public class SellerSendPayoutTxPublishedMessage extends SendPayoutTxPublishedMes
         try {
             runInterceptHook();
 
+            if (trade.getPayoutTx() == null) {
+                log.error("PayoutTx is null");
+                failed("PayoutTx is null");
+                return;
+            }
+
             super.run();
         } catch (Throwable t) {
             failed(t);

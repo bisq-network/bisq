@@ -49,12 +49,6 @@ public abstract class SendPayoutTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
 
-            if (trade.getPayoutTx() == null) {
-                log.error("PayoutTx is null");
-                failed("PayoutTx is null");
-                return;
-            }
-
             String id = processModel.getOfferId();
             TradeMessage message = getMessage(id);
             setStateSent();
