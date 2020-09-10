@@ -57,7 +57,7 @@ public class BuyerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void initialize() {
+    public void initialize() {
         super.initialize();
     }
 

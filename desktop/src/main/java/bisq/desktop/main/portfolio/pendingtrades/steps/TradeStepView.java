@@ -165,7 +165,7 @@ public abstract class TradeStepView extends AnchorPane {
     // Life cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void initialize() {
+    public void initialize() {
         addTradeInfoBlock();
         addInfoBlock();
     }

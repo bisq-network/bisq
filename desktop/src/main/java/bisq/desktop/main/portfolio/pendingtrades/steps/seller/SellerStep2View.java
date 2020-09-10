@@ -59,7 +59,7 @@ public class SellerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void initialize() {
+    public void initialize() {
         addTradeInfoBlock();
         addInfoBlock();
         checkNotNull(model.dataModel.getTrade(), "No trade found");

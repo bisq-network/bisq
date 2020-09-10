@@ -91,7 +91,7 @@ public class BuyerStep4View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void initialize() {
+    public void initialize() {
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.SOMETIMES);
 
         TitledGroupBg completedTradeLabel = new TitledGroupBg();
