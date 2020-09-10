@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.portfolio.pendingtrades.steps;
+package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
 import bisq.desktop.main.overlays.popups.Popup;
 

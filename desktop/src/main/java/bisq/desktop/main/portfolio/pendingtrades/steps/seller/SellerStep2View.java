@@ -19,7 +19,6 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
-import bisq.desktop.main.portfolio.pendingtrades.steps.SellerHandleCancelTradeRequestPresentation;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.Layout;
 
