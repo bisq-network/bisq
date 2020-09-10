@@ -454,7 +454,12 @@ public abstract class Trade implements Tradable, Model {
     // Added at v1.3.9
     public HandleCancelTradeRequestState handleCancelTradeRequestState;
     @Getter
-    transient final private ObjectProperty<HandleCancelTradeRequestState> canceledTradeStateProperty = new SimpleObjectProperty<>();
+    transient final private ObjectProperty<HandleCancelTradeRequestState> handleCancelTradeRequestStateProperty = new SimpleObjectProperty<>();
+
+    @Getter
+    public RequestCancelTradeState requestCancelTradeState;
+    @Getter
+    transient final private ObjectProperty<RequestCancelTradeState> requestCancelTradeStateProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -570,6 +575,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
         Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.name()));
         Optional.ofNullable(handleCancelTradeRequestState).ifPresent(e -> builder.setHandleCancelTradeRequestState(handleCancelTradeRequestState.name()));
+        Optional.ofNullable(requestCancelTradeState).ifPresent(e -> builder.setRequestCancelTradeState(requestCancelTradeState.name()));
 
         return builder.build();
     }
@@ -613,6 +619,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setAssetTxProofResult(persistedAssetTxProofResult);
 
         trade.setHandleCancelTradeRequestState(ProtoUtil.enumFromProto(HandleCancelTradeRequestState.class, proto.getHandleCancelTradeRequestState()));
+        trade.setRequestCancelTradeState(ProtoUtil.enumFromProto(RequestCancelTradeState.class, proto.getRequestCancelTradeState()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -904,7 +911,13 @@ public abstract class Trade implements Tradable, Model {
 
     public void setHandleCancelTradeRequestState(HandleCancelTradeRequestState handleCancelTradeRequestState) {
         this.handleCancelTradeRequestState = handleCancelTradeRequestState;
-        canceledTradeStateProperty.set(handleCancelTradeRequestState);
+        handleCancelTradeRequestStateProperty.set(handleCancelTradeRequestState);
+        persist();
+    }
+
+    public void setRequestCancelTradeState(RequestCancelTradeState requestCancelTradeState) {
+        this.requestCancelTradeState = requestCancelTradeState;
+        requestCancelTradeStateProperty.set(requestCancelTradeState);
         persist();
     }
 
@@ -1244,7 +1257,8 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
                 ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
-                ",\n     canceledTradeState=" + handleCancelTradeRequestState +
+                ",\n     handleCancelTradeRequestState=" + handleCancelTradeRequestState +
+                ",\n     requestCancelTradeState=" + requestCancelTradeState +
                 "\n}";
     }
 }

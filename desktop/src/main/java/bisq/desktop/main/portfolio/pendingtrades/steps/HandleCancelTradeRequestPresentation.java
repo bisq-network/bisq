@@ -68,13 +68,13 @@ public class HandleCancelTradeRequestPresentation {
     }
 
     public void activate() {
-        trade.getCanceledTradeStateProperty().addListener(canceledTradeStateListener);
-        onCanceledTradeStateChanged(trade.getCanceledTradeStateProperty().get());
+        trade.getHandleCancelTradeRequestStateProperty().addListener(canceledTradeStateListener);
+        onCanceledTradeStateChanged(trade.getHandleCancelTradeRequestStateProperty().get());
     }
 
     public void deactivate() {
         if (canceledTradeStateListener != null) {
-            trade.getCanceledTradeStateProperty().removeListener(canceledTradeStateListener);
+            trade.getHandleCancelTradeRequestStateProperty().removeListener(canceledTradeStateListener);
         }
     }
 
