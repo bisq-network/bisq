@@ -91,6 +91,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         STEP4
     }
 
+    @Getter
     public final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     public final BtcAddressValidator btcAddressValidator;

@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
+import bisq.desktop.main.portfolio.pendingtrades.steps.HandleCancelTradeRequestPresentation;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.Layout;
 
@@ -44,6 +45,7 @@ public class SellerStep2View extends TradeStepView {
 
     private GridPane refreshButtonPane;
     private Timer timer;
+    private HandleCancelTradeRequestPresentation handleCancelTradeRequestPresentation;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -51,6 +53,10 @@ public class SellerStep2View extends TradeStepView {
 
     public SellerStep2View(PendingTradesViewModel model) {
         super(model);
+
+        handleCancelTradeRequestPresentation = new HandleCancelTradeRequestPresentation(trade,
+                model.dataModel.getTradeCancellationManager(),
+                model.getBtcFormatter());
     }
 
 
@@ -72,18 +78,26 @@ public class SellerStep2View extends TradeStepView {
         }
 
         addRefreshBlock();
+
+        handleCancelTradeRequestPresentation.initialize();
     }
 
     @Override
     public void activate() {
         super.activate();
+
         activateRefreshButton();
+
+        handleCancelTradeRequestPresentation.activate();
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
+
         deActivateRefreshButtonTimer();
+
+        handleCancelTradeRequestPresentation.deactivate();
     }
 
 

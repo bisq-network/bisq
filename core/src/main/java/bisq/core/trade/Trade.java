@@ -450,6 +450,12 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     transient final private IntegerProperty assetTxProofResultUpdateProperty = new SimpleIntegerProperty();
 
+    @Getter
+    // Added at v1.3.9
+    public CanceledTradeState canceledTradeState;
+    @Getter
+    transient final private ObjectProperty<CanceledTradeState> canceledTradeStateProperty = new SimpleObjectProperty<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -563,6 +569,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
         Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
         Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.name()));
+        Optional.ofNullable(canceledTradeState).ifPresent(e -> builder.setCanceledTradeState(canceledTradeState.name()));
 
         return builder.build();
     }
@@ -604,6 +611,8 @@ public abstract class Trade implements Tradable, Model {
             persistedAssetTxProofResult = null;
         }
         trade.setAssetTxProofResult(persistedAssetTxProofResult);
+
+        trade.setCanceledTradeState(ProtoUtil.enumFromProto(CanceledTradeState.class, proto.getCanceledTradeState()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -893,6 +902,11 @@ public abstract class Trade implements Tradable, Model {
         persist();
     }
 
+    public void setCanceledTradeState(CanceledTradeState canceledTradeState) {
+        this.canceledTradeState = canceledTradeState;
+        canceledTradeStateProperty.set(canceledTradeState);
+        persist();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1230,6 +1244,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
                 ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
+                ",\n     canceledTradeState=" + canceledTradeState +
                 "\n}";
     }
 }

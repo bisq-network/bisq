@@ -185,7 +185,6 @@ public class BuyerStep4View extends TradeStepView {
                 reviewWithdrawal();
             }
         });
-
     }
 
     private void reviewWithdrawal() {

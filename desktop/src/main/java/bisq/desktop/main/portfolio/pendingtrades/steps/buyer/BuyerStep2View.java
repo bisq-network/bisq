@@ -50,6 +50,7 @@ import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SetXmrTxKeyWindow;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
+import bisq.desktop.main.portfolio.pendingtrades.steps.RequestCancelTradePresentation;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
@@ -104,6 +105,7 @@ public class BuyerStep2View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
+    private RequestCancelTradePresentation requestCancelTradePresentation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,6 +114,10 @@ public class BuyerStep2View extends TradeStepView {
 
     public BuyerStep2View(PendingTradesViewModel model) {
         super(model);
+
+        requestCancelTradePresentation = new RequestCancelTradePresentation(trade,
+                model.dataModel.getTradeCancellationManager(),
+                model.getBtcFormatter());
     }
 
 
@@ -142,6 +148,7 @@ public class BuyerStep2View extends TradeStepView {
                     Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
                     Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
+        Offer offer = getOffer();
         switch (paymentMethodId) {
             case PaymentMethod.UPHOLD_ID:
                 gridRow = UpholdForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
@@ -213,8 +220,7 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = HalCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.F2F_ID:
-                checkNotNull(model.dataModel.getTrade().getOffer(), "model.dataModel.getTrade().getOffer() must not be null");
-                gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer(), 0);
+                gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, offer, 0);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
@@ -233,7 +239,6 @@ public class BuyerStep2View extends TradeStepView {
 
         Trade trade = model.getTrade();
         if (trade != null && model.getUser().getPaymentAccounts() != null) {
-            Offer offer = trade.getOffer();
             List<PaymentAccount> possiblePaymentAccounts = PaymentAccountUtil.getPossiblePaymentAccounts(offer,
                     model.getUser().getPaymentAccounts(), model.dataModel.getAccountAgeWitnessService());
             PaymentAccountPayload buyersPaymentAccountPayload = model.dataModel.getBuyersPaymentAccountPayload();
@@ -260,6 +265,9 @@ public class BuyerStep2View extends TradeStepView {
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
+        HBox hBox = tuple3.fourth;
+
+        requestCancelTradePresentation.initialize(hBox, busyAnimation, statusLabel);
     }
 
     @Override
@@ -343,6 +351,8 @@ public class BuyerStep2View extends TradeStepView {
         }
 
         confirmButton.setDisable(isDisputed());
+
+        requestCancelTradePresentation.activate();
     }
 
     @Override
@@ -358,6 +368,8 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription.unsubscribe();
             tradeStatePropertySubscription = null;
         }
+
+        requestCancelTradePresentation.deactivate();
     }
 
 
@@ -518,6 +530,8 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
+        requestCancelTradePresentation.hideCancelButton();
+
         // confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
@@ -638,5 +652,8 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected void updateConfirmButtonDisableState(boolean isDisabled) {
         confirmButton.setDisable(isDisabled);
+
+        //TODO
+        requestCancelTradePresentation.setDisable(isDisabled);
     }
 }

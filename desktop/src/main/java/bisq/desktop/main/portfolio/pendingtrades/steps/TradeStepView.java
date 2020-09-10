@@ -28,6 +28,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.trade.Contract;
@@ -214,8 +215,9 @@ public abstract class TradeStepView extends AnchorPane {
 
         model.clockWatcher.addListener(clockListener);
 
-        if (infoLabel != null)
+        if (infoLabel != null) {
             infoLabel.setText(getInfoText());
+        }
     }
 
     public void deactivate() {
@@ -656,8 +658,17 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Util
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     protected boolean isDisputed() {
         return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
+    }
+
+    protected Offer getOffer() {
+        return checkNotNull(trade.getOffer());
     }
 
 

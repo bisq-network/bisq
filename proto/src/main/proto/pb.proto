@@ -78,6 +78,10 @@ message NetworkEnvelope {
 
         RefreshTradeStateRequest refresh_trade_state_request = 50;
         TraderSignedWitnessMessage trader_signed_witness_message = 51;
+
+        RequestCancelTradeMessage request_cancel_trade_message = 52;
+        CancelTradeRequestAcceptedMessage cancel_trade_accepted_message = 53;
+        CancelTradeRequestRejectedMessage cancel_trade_rejected_message = 54;
     }
 }
 
@@ -323,6 +327,25 @@ message MediatedPayoutTxSignatureMessage {
     string trade_id = 3;
     bytes tx_signature = 2;
     NodeAddress sender_node_address = 4;
+}
+
+message RequestCancelTradeMessage {
+    string uid = 1;
+    string trade_id = 3;
+    bytes tx_signature = 2;
+    NodeAddress sender_node_address = 4;
+}
+
+message CancelTradeRequestAcceptedMessage {
+    string trade_id = 1;
+    bytes payout_tx = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+message CancelTradeRequestRejectedMessage {
+    string trade_id = 1;
+    NodeAddress sender_node_address = 2;
+    string uid = 3;
 }
 
 message RefreshTradeStateRequest {
@@ -1398,6 +1421,7 @@ message Trade {
     int64 last_refresh_request_date = 36;
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
+    string canceled_trade_state = 39;
 }
 
 message BuyerAsMakerTrade {
@@ -1437,6 +1461,9 @@ message ProcessModel {
     bytes mediated_payout_tx_signature = 18;
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
+    bytes canceled_trade_payout_tx_signature = 21;
+    int64 buyer_payout_amount_from_canceled_trade = 22;
+    int64 seller_payout_amount_from_canceled_trade = 23;
 }
 
 message TradingPeer {
@@ -1455,6 +1482,7 @@ message TradingPeer {
     bytes account_age_witness_signature = 13;
     int64 current_date = 14;
     bytes mediated_payout_tx_signature = 15;
+    bytes canceled_trade_payout_tx_signature = 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

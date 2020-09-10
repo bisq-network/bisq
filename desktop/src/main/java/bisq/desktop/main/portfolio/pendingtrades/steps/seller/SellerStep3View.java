@@ -24,6 +24,7 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
+import bisq.desktop.main.portfolio.pendingtrades.steps.RequestCancelTradePresentation;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -90,6 +91,7 @@ public class SellerStep3View extends TradeStepView {
     private TxConfidenceIndicator assetTxConfidenceIndicator;
     @Nullable
     private ChangeListener<Number> proofResultListener;
+    private RequestCancelTradePresentation requestCancelTradePresentation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +100,10 @@ public class SellerStep3View extends TradeStepView {
 
     public SellerStep3View(PendingTradesViewModel model) {
         super(model);
+
+        requestCancelTradePresentation = new RequestCancelTradePresentation(trade,
+                model.dataModel.getTradeCancellationManager(),
+                model.getBtcFormatter());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +224,9 @@ public class SellerStep3View extends TradeStepView {
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;
         statusLabel = tuple.third;
+        HBox hBox = tuple.fourth;
+
+        requestCancelTradePresentation.initialize(hBox, busyAnimation, statusLabel);
     }
 
     @Override
@@ -286,6 +295,8 @@ public class SellerStep3View extends TradeStepView {
 
             applyAssetTxProofResult(trade.getAssetTxProofResult());
         }
+
+        requestCancelTradePresentation.activate();
     }
 
     @Override
@@ -306,6 +317,8 @@ public class SellerStep3View extends TradeStepView {
         if (isXmrTrade()) {
             trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
         }
+
+        requestCancelTradePresentation.deactivate();
     }
 
 
@@ -316,6 +329,9 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected void updateConfirmButtonDisableState(boolean isDisabled) {
         confirmButton.setDisable(isDisabled);
+
+        //TODO
+        requestCancelTradePresentation.setDisable(isDisabled);
     }
 
 
@@ -459,6 +475,8 @@ public class SellerStep3View extends TradeStepView {
     }
 
     private void confirmPaymentReceived() {
+        requestCancelTradePresentation.hideCancelButton();
+
         log.info("User pressed the [Confirm payment receipt] button for Trade {}", trade.getShortId());
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));

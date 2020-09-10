@@ -88,6 +88,9 @@ public final class TradingPeer implements PersistablePayload {
     @Nullable
     private byte[] mediatedPayoutTxSignature;
 
+    // Added in v.1.3.9
+    @Nullable
+    private byte[] canceledTradePayoutTxSignature;
 
     public TradingPeer() {
     }
@@ -110,6 +113,7 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignature).ifPresent(e -> builder.setAccountAgeWitnessSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
+        Optional.ofNullable(canceledTradePayoutTxSignature).ifPresent(e -> builder.setCanceledTradePayoutTxSignature(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
         return builder.build();
     }
@@ -139,6 +143,7 @@ public final class TradingPeer implements PersistablePayload {
             tradingPeer.setAccountAgeWitnessSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignature()));
             tradingPeer.setCurrentDate(proto.getCurrentDate());
             tradingPeer.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
+            tradingPeer.setCanceledTradePayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getCanceledTradePayoutTxSignature()));
             return tradingPeer;
         }
     }

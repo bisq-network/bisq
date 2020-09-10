@@ -46,6 +46,8 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.trade.messages.CancelTradeRequestAcceptedMessage;
+import bisq.core.trade.messages.CancelTradeRequestRejectedMessage;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
@@ -58,6 +60,7 @@ import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
+import bisq.core.trade.messages.RequestCancelTradeMessage;
 import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.statistics.TradeStatistics;
 
@@ -173,6 +176,13 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return MediatedPayoutTxSignatureMessage.fromProto(proto.getMediatedPayoutTxSignatureMessage(), messageVersion);
                 case MEDIATED_PAYOUT_TX_PUBLISHED_MESSAGE:
                     return MediatedPayoutTxPublishedMessage.fromProto(proto.getMediatedPayoutTxPublishedMessage(), messageVersion);
+
+                case REQUEST_CANCEL_TRADE_MESSAGE:
+                    return RequestCancelTradeMessage.fromProto(proto.getRequestCancelTradeMessage(), messageVersion);
+                case CANCEL_TRADE_ACCEPTED_MESSAGE:
+                    return CancelTradeRequestAcceptedMessage.fromProto(proto.getCancelTradeAcceptedMessage(), messageVersion);
+                case CANCEL_TRADE_REJECTED_MESSAGE:
+                    return CancelTradeRequestRejectedMessage.fromProto(proto.getCancelTradeRejectedMessage(), messageVersion);
 
                 case OPEN_NEW_DISPUTE_MESSAGE:
                     return OpenNewDisputeMessage.fromProto(proto.getOpenNewDisputeMessage(), this, messageVersion);

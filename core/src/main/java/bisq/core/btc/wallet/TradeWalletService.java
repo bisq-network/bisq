@@ -58,7 +58,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -825,6 +824,67 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
         WalletService.printTx("payoutTx", payoutTx);
+        WalletService.verifyTransaction(payoutTx);
+        WalletService.checkWalletConsistency(wallet);
+        WalletService.checkScriptSig(payoutTx, input, 0);
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        input.verify(input.getConnectedOutput());
+        return payoutTx;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canceled trade payoutTx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public byte[] signCanceledTradePayoutTx(Transaction depositTx,
+                                            Coin buyerPayoutAmount,
+                                            Coin sellerPayoutAmount,
+                                            String buyerPayoutAddressString,
+                                            String sellerPayoutAddressString,
+                                            DeterministicKey myMultiSigKeyPair,
+                                            byte[] buyerPubKey,
+                                            byte[] sellerPubKey)
+            throws AddressFormatException, TransactionVerificationException {
+        Transaction preparedPayoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
+        // MS redeemScript
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
+        // MS output from prev. tx is index 0
+        Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
+        checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
+        if (myMultiSigKeyPair.isEncrypted()) {
+            checkNotNull(aesKey);
+        }
+        ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        WalletService.printTx("prepared canceled trade payoutTx for sig creation", preparedPayoutTx);
+        WalletService.verifyTransaction(preparedPayoutTx);
+        return mySignature.encodeToDER();
+    }
+
+    public Transaction finalizeCanceledTradePayoutTx(Transaction depositTx,
+                                                     byte[] buyerSignature,
+                                                     byte[] sellerSignature,
+                                                     Coin buyerPayoutAmount,
+                                                     Coin sellerPayoutAmount,
+                                                     String buyerPayoutAddressString,
+                                                     String sellerPayoutAddressString,
+                                                     DeterministicKey multiSigKeyPair,
+                                                     byte[] buyerPubKey,
+                                                     byte[] sellerPubKey)
+            throws AddressFormatException, TransactionVerificationException, WalletException {
+        Transaction payoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
+        // MS redeemScript
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
+        // MS output from prev. tx is index 0
+        checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
+        TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
+                Transaction.SigHash.ALL, false);
+        TransactionSignature sellerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(sellerSignature),
+                Transaction.SigHash.ALL, false);
+        // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (seller, buyer)
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
+        TransactionInput input = payoutTx.getInput(0);
+        input.setScriptSig(inputScript);
+        WalletService.printTx("canceled trade payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
         WalletService.checkScriptSig(payoutTx, input, 0);

@@ -49,6 +49,7 @@ import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeCancellationManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.user.Preferences;
@@ -111,7 +112,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     final ObjectProperty<PendingTradesListItem> selectedItemProperty = new SimpleObjectProperty<>();
     public final StringProperty txId = new SimpleStringProperty();
-
+    @Getter
+    private final TradeCancellationManager tradeCancellationManager;
     @Getter
     private final TraderChatManager traderChatManager;
     public final Preferences preferences;
@@ -131,6 +133,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   PubKeyRing pubKeyRing,
                                   MediationManager mediationManager,
                                   RefundManager refundManager,
+                                  TradeCancellationManager tradeCancellationManager,
                                   TraderChatManager traderChatManager,
                                   Preferences preferences,
                                   P2PService p2PService,
@@ -145,6 +148,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.pubKeyRing = pubKeyRing;
         this.mediationManager = mediationManager;
         this.refundManager = refundManager;
+        this.tradeCancellationManager = tradeCancellationManager;
         this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
