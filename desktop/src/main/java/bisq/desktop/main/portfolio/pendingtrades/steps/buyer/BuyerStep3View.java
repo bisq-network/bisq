@@ -19,7 +19,6 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
-import bisq.desktop.main.portfolio.pendingtrades.steps.HandleCancelTradeRequestPresentation;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.Layout;
 
@@ -38,7 +37,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithIcon;
 
 public class BuyerStep3View extends TradeStepView {
     private final ChangeListener<MessageState> messageStateChangeListener;
-    private final HandleCancelTradeRequestPresentation handleCancelTradeRequestPresentation;
     private TextFieldWithIcon textFieldWithIcon;
 
 
@@ -52,10 +50,6 @@ public class BuyerStep3View extends TradeStepView {
         messageStateChangeListener = (observable, oldValue, newValue) -> {
             updateMessageStateInfo();
         };
-
-        handleCancelTradeRequestPresentation = new HandleCancelTradeRequestPresentation(trade,
-                model.dataModel.getTradeCancellationManager(),
-                model.getBtcFormatter());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +59,6 @@ public class BuyerStep3View extends TradeStepView {
     @Override
     public void initialize() {
         super.initialize();
-
-        handleCancelTradeRequestPresentation.initialize();
     }
 
     @Override
@@ -76,16 +68,12 @@ public class BuyerStep3View extends TradeStepView {
         model.getMessageStateProperty().addListener(messageStateChangeListener);
 
         updateMessageStateInfo();
-
-        handleCancelTradeRequestPresentation.activate();
     }
 
     public void deactivate() {
         super.deactivate();
 
         model.getMessageStateProperty().removeListener(messageStateChangeListener);
-
-        handleCancelTradeRequestPresentation.deactivate();
     }
 
 
