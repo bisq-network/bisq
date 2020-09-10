@@ -49,10 +49,9 @@ public final class TradeCancellationManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
+    // Buyers User intent
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Buyer
     public void onRequestCancelTrade(Trade trade,
                                      ResultHandler resultHandler,
                                      ErrorMessageHandler errorMessageHandler) {
@@ -69,12 +68,18 @@ public final class TradeCancellationManager {
             processModel.setBuyerPayoutAmountFromCanceledTrade(secDepositForForPeer.value);
             processModel.setSellerPayoutAmountFromCanceledTrade(tradeAmount.add(secDepositOfRequester).value);
         }
+
+        // We could apply generics to trade and trade protocol classes to get correct type by default,
+        // but we leave that for a maybe later refactoring
         BuyersCancelTradeProtocol buyersCancelTradeProtocol = (BuyersCancelTradeProtocol) (trade.getTradeProtocol().getCancelTradeProtocol());
         buyersCancelTradeProtocol.onRequestCancelTrade(resultHandler, errorMessageHandler);
     }
 
 
-    // Seller
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Sellers User intent
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void onAcceptRequest(Trade trade,
                                 ResultHandler resultHandler,
                                 ErrorMessageHandler errorMessageHandler) {
@@ -91,6 +96,9 @@ public final class TradeCancellationManager {
             processModel.setBuyerPayoutAmountFromCanceledTrade(secDepositOfRequester.value);
             processModel.setSellerPayoutAmountFromCanceledTrade(tradeAmount.add(secDepositOfAcceptingTrader).value);
         }
+
+        // We could apply generics to trade and trade protocol classes to get correct type by default,
+        // but we leave that for a maybe later refactoring
         SellersCancelTradeProtocol sellersCancelTradeProtocol = (SellersCancelTradeProtocol) (trade.getTradeProtocol().getCancelTradeProtocol());
         sellersCancelTradeProtocol.onAcceptRequest(resultHandler, errorMessageHandler);
     }
@@ -98,6 +106,9 @@ public final class TradeCancellationManager {
     public void onRejectRequest(Trade trade,
                                 ResultHandler resultHandler,
                                 ErrorMessageHandler errorMessageHandler) {
+
+        // We could apply generics to trade and trade protocol classes to get correct type by default,
+        // but we leave that for a maybe later refactoring
         SellersCancelTradeProtocol sellersCancelTradeProtocol = (SellersCancelTradeProtocol) (trade.getTradeProtocol().getCancelTradeProtocol());
         sellersCancelTradeProtocol.onRejectRequest(resultHandler, errorMessageHandler);
     }
@@ -111,11 +122,6 @@ public final class TradeCancellationManager {
         return Restrictions.getMinRefundAtMediatedDispute();
     }
 
-    private Coin getTotalSecDepositForAcceptingTrader(Offer offer) {
-        Coin totalSecDeposit = offer.getSellerSecurityDeposit().add(offer.getBuyerSecurityDeposit());
-        return totalSecDeposit.subtract(getSecurityDepositForRequester());
-    }
-
     public Coin getDefaultSecDepositOfAcceptingTrader(Trade trade) {
         Offer offer = checkNotNull(trade.getOffer());
         return trade instanceof BuyerTrade ?
@@ -126,5 +132,10 @@ public final class TradeCancellationManager {
     public Coin getLostSecDepositOfRequestingTrader(Trade trade) {
         Offer offer = checkNotNull(trade.getOffer());
         return getTotalSecDepositForAcceptingTrader(offer).subtract(getDefaultSecDepositOfAcceptingTrader(trade));
+    }
+
+    private Coin getTotalSecDepositForAcceptingTrader(Offer offer) {
+        Coin totalSecDeposit = offer.getSellerSecurityDeposit().add(offer.getBuyerSecurityDeposit());
+        return totalSecDeposit.subtract(getSecurityDepositForRequester());
     }
 }
