@@ -22,7 +22,6 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.trade.CanceledTradeState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeCancellationManager;
@@ -36,8 +35,6 @@ import javafx.beans.value.ChangeListener;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Handles the UI aspects of cancelling a trade
  *
@@ -46,7 +43,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class RequestCancelTradePresentation {
     private final Trade trade;
-    private final Offer offer;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
     private Button cancelTradeButton;
@@ -62,7 +58,6 @@ public class RequestCancelTradePresentation {
                                           TradeCancellationManager manager,
                                           CoinFormatter formatter) {
         this.trade = trade;
-        offer = checkNotNull(trade.getOffer());
         this.manager = manager;
         this.formatter = formatter;
     }
