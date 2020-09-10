@@ -48,49 +48,51 @@ public abstract class SendPayoutTxPublishedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (trade.getPayoutTx() != null) {
-                String id = processModel.getOfferId();
-                TradeMessage message = getMessage(id);
-                setStateSent();
-                NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
-                log.info("Send {} to peer {}. tradeId={}, uid={}",
-                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
-                processModel.getP2PService().sendEncryptedMailboxMessage(
-                        peersNodeAddress,
-                        processModel.getTradingPeer().getPubKeyRing(),
-                        message,
-                        new SendMailboxMessageListener() {
-                            @Override
-                            public void onArrived() {
-                                log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                setStateArrived();
-                                complete();
-                            }
-
-                            @Override
-                            public void onStoredInMailbox() {
-                                log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                setStateStoredInMailbox();
-                                complete();
-                            }
-
-                            @Override
-                            public void onFault(String errorMessage) {
-                                log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                                setStateFault();
-                                appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                                failed(errorMessage);
-                            }
-                        }
-                );
-            } else {
-                log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
+            if (trade.getPayoutTx() == null) {
+                log.error("PayoutTx is null");
                 failed("PayoutTx is null");
+                return;
             }
+
+            String id = processModel.getOfferId();
+            TradeMessage message = getMessage(id);
+            setStateSent();
+            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
+            log.info("Send {} to peer {}. tradeId={}, uid={}",
+                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+
+            processModel.getP2PService().sendEncryptedMailboxMessage(
+                    peersNodeAddress,
+                    processModel.getTradingPeer().getPubKeyRing(),
+                    message,
+                    new SendMailboxMessageListener() {
+                        @Override
+                        public void onArrived() {
+                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                            setStateArrived();
+                            complete();
+                        }
+
+                        @Override
+                        public void onStoredInMailbox() {
+                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                            setStateStoredInMailbox();
+                            complete();
+                        }
+
+                        @Override
+                        public void onFault(String errorMessage) {
+                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
+                            setStateFault();
+                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+                            failed(errorMessage);
+                        }
+                    }
+            );
         } catch (Throwable t) {
             failed(t);
         }
