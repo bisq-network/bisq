@@ -51,6 +51,8 @@ public class FinalizeCanceledTradePayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+
             Transaction depositTx = checkNotNull(trade.getDepositTx());
             String tradeId = trade.getId();
             TradingPeer tradingPeer = processModel.getTradingPeer();
@@ -107,8 +109,6 @@ public class FinalizeCanceledTradePayoutTx extends TradeTask {
             );
 
             trade.setPayoutTx(transaction);
-            processModel.getTradeManager().closeCanceledTrade(trade);
-            walletService.swapTradeEntryToAvailableEntry(tradeId, AddressEntry.Context.MULTI_SIG);
 
             complete();
         } catch (Throwable t) {

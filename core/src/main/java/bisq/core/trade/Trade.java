@@ -165,16 +165,16 @@ public abstract class Trade implements Tradable, Model {
         SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
 
         // #################### Phase PAYOUT_PAID
-        SELLER_PUBLISHED_PAYOUT_TX(Phase.PAYOUT_PUBLISHED),
+        SELLER_PUBLISHED_PAYOUT_TX(Phase.PAYOUT_PUBLISHED), // Also used in cancelTrade case
 
-        SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
-        SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
-        SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
-        SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
+        SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED), // Also used in cancelTrade case
+        SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED), // Also used in cancelTrade case
+        SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED), // Also used in cancelTrade case
+        SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED), // Also used in cancelTrade case
 
-        BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
+        BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED), // Also used in cancelTrade case
         // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG
-        BUYER_SAW_PAYOUT_TX_IN_NETWORK(Phase.PAYOUT_PUBLISHED),
+        BUYER_SAW_PAYOUT_TX_IN_NETWORK(Phase.PAYOUT_PUBLISHED), // Also used in cancelTrade case
 
 
         // #################### Phase WITHDRAWN
@@ -821,6 +821,8 @@ public abstract class Trade implements Tradable, Model {
 
     public abstract Coin getPayoutAmount();
 
+    public abstract boolean wasCanceledTrade();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
@@ -1143,6 +1145,10 @@ public abstract class Trade implements Tradable, Model {
 
         checkNotNull(arbitratorBtcPubKey, "ArbitratorPubKey must not be null");
         return arbitratorBtcPubKey;
+    }
+
+    public boolean isDisputed() {
+        return disputeState != Trade.DisputeState.NO_DISPUTE;
     }
 
 

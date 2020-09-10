@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -30,6 +31,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 import java.util.Date;
@@ -45,6 +47,9 @@ public class SellerStep2View extends TradeStepView {
     private GridPane refreshButtonPane;
     private Timer timer;
     private SellersCancelTradePresentation sellersCancelTradePresentation;
+    private Button cancelRequestButton;
+    private Label cancelRequestInfoLabel;
+    private TitledGroupBg cancelRequestTitledGroupBg;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -76,9 +81,10 @@ public class SellerStep2View extends TradeStepView {
                     model.dataModel.getTrade().getOffer(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
         }
 
+        addCancelRequestBlock();
         addRefreshBlock();
 
-        sellersCancelTradePresentation.initialize();
+        sellersCancelTradePresentation.initialize(cancelRequestTitledGroupBg, cancelRequestInfoLabel, cancelRequestButton);
     }
 
     @Override
@@ -104,14 +110,29 @@ public class SellerStep2View extends TradeStepView {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void addCancelRequestBlock() {
+        cancelRequestTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2,
+                Res.get("portfolio.pending.seller.cancelRequest.header"), Layout.COMPACT_GROUP_DISTANCE);
+        cancelRequestInfoLabel = addMultilineLabel(gridPane, gridRow, Res.get("portfolio.pending.seller.cancelRequest.info"),
+                Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
+        GridPane.setColumnSpan(cancelRequestInfoLabel, 2);
+        cancelRequestTitledGroupBg.getStyleClass().add("last");
+        titledGroupBg.getStyleClass().remove("last");
+        cancelRequestButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.seller.cancelRequest.button"));
+    }
+
     private void addRefreshBlock() {
         refreshButtonPane = new GridPane();
-        addTitledGroupBg(refreshButtonPane, 0, 1,
+        TitledGroupBg refreshTitledGroupBg = addTitledGroupBg(refreshButtonPane, 0, 1,
                 Res.get("portfolio.pending.step2_seller.refresh"), Layout.COMPACT_GROUP_DISTANCE);
         addMultilineLabel(refreshButtonPane, 1, Res.get("portfolio.pending.step2_seller.refreshInfo"),
-                Layout.COMPACT_FIRST_ROW_DISTANCE);
+                Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
         Button refreshButton = addButtonAfterGroup(refreshButtonPane, 2, Res.get("portfolio.pending.step2_seller.refresh"));
         refreshButton.setOnAction(event -> onRefreshButton());
+
+        refreshTitledGroupBg.getStyleClass().add("last");
+        cancelRequestTitledGroupBg.getStyleClass().remove("last");
+        titledGroupBg.getStyleClass().remove("last");
 
         GridPane.setRowIndex(refreshButtonPane, ++gridRow);
         GridPane.setColumnIndex(refreshButtonPane, 0);
@@ -127,8 +148,10 @@ public class SellerStep2View extends TradeStepView {
                 trade.getLastRefreshRequestDate() + trade.getRefreshInterval() - new Date().getTime();
         if (timeToNextRefresh <= 0) {
             refreshButtonPane.setVisible(true);
+            refreshButtonPane.setManaged(true);
         } else {
             refreshButtonPane.setVisible(false);
+            refreshButtonPane.setManaged(false);
             timer = UserThread.runAfter(this::activateRefreshButton, timeToNextRefresh, TimeUnit.MILLISECONDS);
         }
     }

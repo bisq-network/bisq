@@ -108,5 +108,19 @@ public abstract class SellerTrade extends Trade {
     public Coin getPayoutAmount() {
         return getOffer().getSellerSecurityDeposit();
     }
+
+    @Override
+    public boolean wasCanceledTrade() {
+        switch (sellersCancelTradeState) {
+            case REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED:
+            case REQUEST_ACCEPTED_MSG_SENT:
+            case REQUEST_ACCEPTED_MSG_ARRIVED:
+            case REQUEST_ACCEPTED_MSG_IN_MAILBOX:
+            case REQUEST_ACCEPTED_MSG_SEND_FAILED:
+                return true;
+            default:
+                return false;
+        }
+    }
 }
 

@@ -29,6 +29,8 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 
 @Slf4j
 public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTask {
@@ -70,6 +72,8 @@ public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTas
     protected void run() {
         try {
             runInterceptHook();
+
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
             super.run();
         } catch (Throwable t) {

@@ -33,6 +33,7 @@ import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -55,6 +56,8 @@ public final class TradeCancellationManager {
     public void onRequestCancelTrade(Trade trade,
                                      ResultHandler resultHandler,
                                      ErrorMessageHandler errorMessageHandler) {
+        checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+
         ProcessModel processModel = trade.getProcessModel();
         Offer offer = checkNotNull(trade.getOffer());
         Coin secDepositOfRequester = getSecurityDepositForRequester();
@@ -83,6 +86,8 @@ public final class TradeCancellationManager {
     public void onAcceptRequest(Trade trade,
                                 ResultHandler resultHandler,
                                 ErrorMessageHandler errorMessageHandler) {
+        checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+
         ProcessModel processModel = trade.getProcessModel();
         Offer offer = checkNotNull(trade.getOffer());
         Coin secDepositOfRequester = getSecurityDepositForRequester();
@@ -106,6 +111,7 @@ public final class TradeCancellationManager {
     public void onRejectRequest(Trade trade,
                                 ResultHandler resultHandler,
                                 ErrorMessageHandler errorMessageHandler) {
+        checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
         // We could apply generics to trade and trade protocol classes to get correct type by default,
         // but we leave that for a maybe later refactoring

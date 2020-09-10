@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
@@ -24,6 +25,9 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeCancellationManager;
 import bisq.core.util.coin.CoinFormatter;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 
 import javafx.beans.value.ChangeListener;
 
@@ -39,7 +43,11 @@ public class SellersCancelTradePresentation {
     private final Trade trade;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
-    private ChangeListener<SellerTrade.CancelTradeState> listener;
+    private TitledGroupBg cancelRequestTitledGroupBg;
+    private Label cancelRequestInfoLabel;
+    private Button cancelRequestButton;
+    private ChangeListener<SellerTrade.CancelTradeState> cancelTradeStateListener;
+    private ChangeListener<Trade.DisputeState> disputeStateListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -58,25 +66,41 @@ public class SellersCancelTradePresentation {
     // Life cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize() {
-        listener = (observable, oldValue, newValue) -> onStateChanged(newValue);
+    public void initialize(TitledGroupBg cancelRequestTitledGroupBg,
+                           Label cancelRequestInfoLabel,
+                           Button cancelRequestButton) {
+        this.cancelRequestTitledGroupBg = cancelRequestTitledGroupBg;
+        this.cancelRequestInfoLabel = cancelRequestInfoLabel;
+        this.cancelRequestButton = cancelRequestButton;
+
+        cancelTradeStateListener = (observable, oldValue, newValue) -> onStateChanged(newValue);
+
+        disputeStateListener = (observable, oldValue, newValue) -> {
+            onDisputeStateChanged();
+        };
     }
 
     public void activate() {
-        trade.getSellersCancelTradeStateProperty().addListener(listener);
+        cancelRequestButton.setOnAction(e -> showPopup());
+
+        trade.getSellersCancelTradeStateProperty().addListener(cancelTradeStateListener);
         onStateChanged(trade.getSellersCancelTradeStateProperty().get());
+
+        trade.disputeStateProperty().addListener(disputeStateListener);
+        onDisputeStateChanged();
     }
 
     public void deactivate() {
-        if (listener != null) {
-            trade.getSellersCancelTradeStateProperty().removeListener(listener);
+        cancelRequestButton.setOnAction(null);
+
+        if (cancelTradeStateListener != null) {
+            trade.getSellersCancelTradeStateProperty().removeListener(cancelTradeStateListener);
+        }
+
+        if (disputeStateListener != null) {
+            trade.disputeStateProperty().removeListener(disputeStateListener);
         }
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,43 +108,53 @@ public class SellersCancelTradePresentation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onAcceptRequest() {
+        hideButton();
         manager.onAcceptRequest(trade,
                 () -> {
+                    new Popup().information(Res.get("portfolio.pending.seller.accepted")).show();
                 }, errorMessage -> {
                 });
     }
 
     private void onRejectRequest() {
+        hideButton();
         manager.onRejectRequest(trade,
                 () -> {
                 }, errorMessage -> {
                 });
     }
 
+    private void onDecideLater() {
+        showButton();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // State change handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onStateChanged(SellerTrade.CancelTradeState newValue) {
-        log.error("onRequestCancelTradeStateChanged {} {}", newValue, trade.getId());
-        if (newValue == null) {
+    private void onDisputeStateChanged() {
+        if (trade.isDisputed()) {
+            hideButton();
+        }
+    }
+
+    private void onStateChanged(SellerTrade.CancelTradeState state) {
+        log.error("onStateChanged {} for trade {}", state, trade.getShortId());
+        if (state == null) {
+            hideAll();
+            hideButton();
             return;
         }
-        switch (newValue) {
+
+        showHeaderAndInfoLabel();
+        hideButton();
+
+        switch (state) {
             case RECEIVED_REQUEST:
-                new Popup().width(850)
-                        .attention(Res.get("portfolio.pending.receivedCancelTradeRequestPopup",
-                                formatter.formatCoinWithCode(trade.getTradeAmount()),
-                                formatter.formatCoinWithCode(manager.getDefaultSecDepositOfAcceptingTrader(trade)),
-                                formatter.formatCoinWithCode(manager.getLostSecDepositOfRequestingTrader(trade))))
-                        .actionButtonText(Res.get("shared.accept"))
-                        .onAction(this::onAcceptRequest)
-                        .secondaryActionButtonText(Res.get("shared.reject"))
-                        .onSecondaryAction(this::onRejectRequest)
-                        .closeButtonText(Res.get("portfolio.pending.decideLater"))
-                        .show();
+                showPopup();
                 break;
+
             case REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED:
                 break;
 
@@ -134,13 +168,67 @@ public class SellersCancelTradePresentation {
                 break;
 
             case REQUEST_REJECTED_MSG_SENT:
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.sent"));
                 break;
             case REQUEST_REJECTED_MSG_ARRIVED:
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.arrived"));
                 break;
             case REQUEST_REJECTED_MSG_IN_MAILBOX:
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.inMailbox"));
                 break;
             case REQUEST_REJECTED_MSG_SEND_FAILED:
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.failed"));
                 break;
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void showPopup() {
+        if (!trade.isDisputed()) {
+            new Popup().width(850)
+                    .attention(Res.get("portfolio.pending.seller.receivedCancelTradeRequest.msg",
+                            formatter.formatCoinWithCode(trade.getTradeAmount()),
+                            formatter.formatCoinWithCode(manager.getDefaultSecDepositOfAcceptingTrader(trade)),
+                            formatter.formatCoinWithCode(manager.getLostSecDepositOfRequestingTrader(trade))))
+                    .actionButtonText(Res.get("shared.accept"))
+                    .onAction(this::onAcceptRequest)
+                    .secondaryActionButtonText(Res.get("shared.reject"))
+                    .onSecondaryAction(this::onRejectRequest)
+                    .closeButtonText(Res.get("portfolio.pending.seller.decideLater"))
+                    .onClose(this::onDecideLater)
+                    .show();
+        }
+    }
+
+    private void showHeaderAndInfoLabel() {
+        cancelRequestTitledGroupBg.setVisible(true);
+        cancelRequestTitledGroupBg.setManaged(true);
+        cancelRequestInfoLabel.setVisible(true);
+        cancelRequestInfoLabel.setManaged(true);
+    }
+
+    private void hideAll() {
+        cancelRequestTitledGroupBg.setVisible(false);
+        cancelRequestTitledGroupBg.setManaged(false);
+        cancelRequestInfoLabel.setVisible(false);
+        cancelRequestInfoLabel.setManaged(false);
+        cancelRequestButton.setVisible(false);
+        cancelRequestButton.setManaged(false);
+    }
+
+    private void hideButton() {
+        cancelRequestButton.setVisible(false);
+        cancelRequestButton.setManaged(false);
+    }
+
+    private void showButton() {
+        if (!trade.isDisputed()) {
+            cancelRequestButton.setVisible(true);
+            cancelRequestButton.setManaged(true);
         }
     }
 }

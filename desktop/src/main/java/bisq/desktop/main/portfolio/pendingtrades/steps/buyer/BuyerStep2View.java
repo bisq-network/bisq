@@ -349,7 +349,7 @@ public class BuyerStep2View extends TradeStepView {
             });
         }
 
-        confirmButton.setDisable(isDisputed());
+        confirmButton.setDisable(trade.isDisputed());
 
         buyersCancelTradePresentation.activate();
     }
@@ -401,7 +401,7 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted() {
-        if (isDisputed()) {
+        if (trade.isDisputed()) {
             return;
         }
 
@@ -529,8 +529,6 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        buyersCancelTradePresentation.hideCancelButton();
-
         // confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
@@ -651,8 +649,5 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected void updateConfirmButtonDisableState(boolean isDisabled) {
         confirmButton.setDisable(isDisabled);
-
-        //TODO
-        buyersCancelTradePresentation.setDisable(isDisabled);
     }
 }

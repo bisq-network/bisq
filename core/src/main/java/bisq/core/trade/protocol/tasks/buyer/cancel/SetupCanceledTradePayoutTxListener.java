@@ -49,6 +49,8 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
     protected void setState() {
         trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
         if (trade.getPayoutTx() != null) {
+            trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
+
             // We need to delay that call as we might get executed at startup after mailbox messages are
             // applied where we iterate over our pending trades. The closeCanceledTrade method would remove
             // that trade from the list causing a ConcurrentModificationException.

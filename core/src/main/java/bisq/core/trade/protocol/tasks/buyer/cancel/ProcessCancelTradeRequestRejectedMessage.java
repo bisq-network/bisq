@@ -27,6 +27,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -43,6 +44,8 @@ public class ProcessCancelTradeRequestRejectedMessage extends TradeTask {
             CancelTradeRequestRejectedMessage message = (CancelTradeRequestRejectedMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
+
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

@@ -51,6 +51,8 @@ public class ProcessCancelTradeRequestAcceptedMessage extends TradeTask {
             checkNotNull(message);
             checkArgument(message.getPayoutTx() != null);
 
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
@@ -60,6 +62,7 @@ public class ProcessCancelTradeRequestAcceptedMessage extends TradeTask {
                 BtcWalletService.printTx("CanceledTradePayoutTx received from peer", committedCanceledTradePayoutTx);
 
                 trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.RECEIVED_ACCEPTED_MSG);
+                trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
 
                 // We need to delay that call as we might get executed at startup after mailbox messages are
                 // applied where we iterate over our pending trades. The closeCanceledTrade method would remove

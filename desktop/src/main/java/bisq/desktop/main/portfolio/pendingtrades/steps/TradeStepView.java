@@ -98,6 +98,7 @@ public abstract class TradeStepView extends AnchorPane {
     private Popup acceptMediationResultPopup;
     private BootstrapListener bootstrapListener;
     private TradeSubView.ChatCallback chatCallback;
+    protected TitledGroupBg titledGroupBg;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -326,7 +327,7 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addInfoBlock() {
-        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(),
+        titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(),
                 Layout.COMPACT_GROUP_DISTANCE);
         titledGroupBg.getStyleClass().add("last");
         GridPane.setColumnSpan(titledGroupBg, 2);
@@ -470,7 +471,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
         }
 
-        updateConfirmButtonDisableState(isDisputed());
+        updateConfirmButtonDisableState(trade.isDisputed());
     }
 
     private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
@@ -662,10 +663,6 @@ public abstract class TradeStepView extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Util
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected boolean isDisputed() {
-        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
-    }
 
     protected Offer getOffer() {
         return checkNotNull(trade.getOffer());

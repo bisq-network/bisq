@@ -107,4 +107,15 @@ public abstract class BuyerTrade extends Trade {
 
         return getOffer().getBuyerSecurityDeposit().add(getTradeAmount());
     }
+
+    @Override
+    public boolean wasCanceledTrade() {
+        switch (buyersCancelTradeState) {
+            case RECEIVED_ACCEPTED_MSG:
+            case PAYOUT_TX_SEEN_IN_NETWORK:
+                return true;
+            default:
+                return false;
+        }
+    }
 }

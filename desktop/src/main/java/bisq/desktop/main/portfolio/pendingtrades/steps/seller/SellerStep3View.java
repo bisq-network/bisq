@@ -365,7 +365,7 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentReceived() {
-        if (isDisputed()) {
+        if (trade.isDisputed()) {
             return;
         }
 

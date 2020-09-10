@@ -27,6 +27,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -40,9 +41,12 @@ public class ProcessRequestCancelTradeMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             RequestCancelTradeMessage message = (RequestCancelTradeMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
+
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
             processModel.getTradingPeer().setCanceledTradePayoutTxSignature(checkNotNull(message.getTxSignature()));
 

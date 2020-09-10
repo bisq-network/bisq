@@ -34,6 +34,7 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -83,6 +84,8 @@ public class SendRequestCancelTradeMessage extends SendMailboxMessageTask {
     protected void run() {
         try {
             runInterceptHook();
+
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
             super.run();
         } catch (Throwable t) {

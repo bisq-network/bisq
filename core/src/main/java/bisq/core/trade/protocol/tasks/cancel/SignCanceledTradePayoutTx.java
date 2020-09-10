@@ -51,6 +51,8 @@ public class SignCanceledTradePayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
+
             TradingPeer tradingPeer = processModel.getTradingPeer();
             String tradeId = trade.getId();
             BtcWalletService walletService = processModel.getBtcWalletService();

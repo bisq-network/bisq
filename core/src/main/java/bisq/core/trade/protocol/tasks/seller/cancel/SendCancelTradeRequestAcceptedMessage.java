@@ -31,6 +31,7 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
@@ -55,27 +56,33 @@ public class SendCancelTradeRequestAcceptedMessage extends SendMailboxMessageTas
     @Override
     protected void setStateSent() {
         trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SENT);
+        trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
     }
 
     @Override
     protected void setStateArrived() {
         trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_ARRIVED);
+        trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
         trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_IN_MAILBOX);
+        trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
     }
 
     @Override
     protected void setStateFault() {
         trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SEND_FAILED);
+        trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
     }
 
     @Override
     protected void run() {
         try {
             runInterceptHook();
+
+            checkArgument(!trade.isDisputed(), "onRejectRequest must not be called once a dispute has started.");
 
             if (trade.getPayoutTx() == null) {
                 log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
@@ -84,6 +91,8 @@ public class SendCancelTradeRequestAcceptedMessage extends SendMailboxMessageTas
             }
 
             super.run();
+
+            processModel.getTradeManager().closeCanceledTrade(trade);
         } catch (Throwable t) {
             failed(t);
         }
