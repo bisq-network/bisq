@@ -86,7 +86,10 @@ public class DelayedPayoutTxValidation {
         String errorMsg;
         if (delayedPayoutTx == null) {
             errorMsg = "DelayedPayoutTx must not be null";
-            log.error(errorMsg);
+            if (trade.getDepositTx() != null) {
+                // For failed trades without deposit tx it is expected that the DelayedPayoutTx is null as well.
+                log.error(errorMsg);
+            }
             throw new MissingDelayedPayoutTxException("DelayedPayoutTx must not be null");
         }
 
