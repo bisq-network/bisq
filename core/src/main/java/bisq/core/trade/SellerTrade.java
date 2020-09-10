@@ -37,6 +37,22 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class SellerTrade extends Trade {
+
+    public enum SellersCancelTradeState {
+        RECEIVED_REQUEST,
+
+        REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED,
+        REQUEST_ACCEPTED_MSG_SENT,
+        REQUEST_ACCEPTED_MSG_ARRIVED,
+        REQUEST_ACCEPTED_MSG_IN_MAILBOX,
+        REQUEST_ACCEPTED_MSG_SEND_FAILED,
+
+        REQUEST_REJECTED_MSG_SENT,
+        REQUEST_REJECTED_MSG_ARRIVED,
+        REQUEST_REJECTED_MSG_IN_MAILBOX,
+        REQUEST_REJECTED_MSG_SEND_FAILED
+    }
+
     SellerTrade(Offer offer,
                 Coin tradeAmount,
                 Coin txFee,

@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.cancel;
 
-import bisq.core.trade.SellersCancelTradeState;
+import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CancelTradeRequestRejectedMessage;
 import bisq.core.trade.messages.TradeMessage;
@@ -48,22 +48,22 @@ public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTas
 
     @Override
     protected void setStateSent() {
-        trade.setSellersCancelTradeState(SellersCancelTradeState.REQUEST_REJECTED_MSG_SENT);
+        trade.setSellersCancelTradeState(SellerTrade.SellersCancelTradeState.REQUEST_REJECTED_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setSellersCancelTradeState(SellersCancelTradeState.REQUEST_REJECTED_MSG_ARRIVED);
+        trade.setSellersCancelTradeState(SellerTrade.SellersCancelTradeState.REQUEST_REJECTED_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setSellersCancelTradeState(SellersCancelTradeState.REQUEST_REJECTED_MSG_IN_MAILBOX);
+        trade.setSellersCancelTradeState(SellerTrade.SellersCancelTradeState.REQUEST_REJECTED_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setSellersCancelTradeState(SellersCancelTradeState.REQUEST_REJECTED_MSG_SEND_FAILED);
+        trade.setSellersCancelTradeState(SellerTrade.SellersCancelTradeState.REQUEST_REJECTED_MSG_SEND_FAILED);
     }
 
     @Override

@@ -38,6 +38,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class BuyerTrade extends Trade {
+
+    public enum BuyersCancelTradeState {
+        REQUEST_MSG_SENT,
+        REQUEST_MSG_ARRIVED,
+        REQUEST_MSG_IN_MAILBOX,
+        REQUEST_MSG_SEND_FAILED,
+
+        RECEIVED_ACCEPTED_MSG,
+        PAYOUT_TX_SEEN_IN_NETWORK,
+        RECEIVED_REJECTED_MSG
+    }
+
     BuyerTrade(Offer offer,
                Coin tradeAmount,
                Coin txFee,
@@ -95,5 +107,4 @@ public abstract class BuyerTrade extends Trade {
 
         return getOffer().getBuyerSecurityDeposit().add(getTradeAmount());
     }
-
 }

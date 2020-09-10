@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.cancel;
 
-import bisq.core.trade.SellersCancelTradeState;
+import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.BroadcastPayoutTx;
 
@@ -45,6 +45,6 @@ public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
 
     @Override
     protected void setState() {
-        trade.setSellersCancelTradeState(SellersCancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
+        trade.setSellersCancelTradeState(SellerTrade.SellersCancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
     }
 }

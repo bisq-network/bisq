@@ -452,14 +452,14 @@ public abstract class Trade implements Tradable, Model {
 
     @Getter
     // Added at v1.3.9
-    public SellersCancelTradeState sellersCancelTradeState;
+    public SellerTrade.SellersCancelTradeState sellersCancelTradeState;
     @Getter
-    transient final private ObjectProperty<SellersCancelTradeState> handleCancelTradeRequestStateProperty = new SimpleObjectProperty<>();
+    transient final private ObjectProperty<SellerTrade.SellersCancelTradeState> handleCancelTradeRequestStateProperty = new SimpleObjectProperty<>();
 
     @Getter
-    public BuyersCancelTradeState buyersCancelTradeState;
+    public BuyerTrade.BuyersCancelTradeState buyersCancelTradeState;
     @Getter
-    transient final private ObjectProperty<BuyersCancelTradeState> requestCancelTradeStateProperty = new SimpleObjectProperty<>();
+    transient final private ObjectProperty<BuyerTrade.BuyersCancelTradeState> requestCancelTradeStateProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -618,8 +618,8 @@ public abstract class Trade implements Tradable, Model {
         }
         trade.setAssetTxProofResult(persistedAssetTxProofResult);
 
-        trade.setSellersCancelTradeState(ProtoUtil.enumFromProto(SellersCancelTradeState.class, proto.getHandleCancelTradeRequestState()));
-        trade.setBuyersCancelTradeState(ProtoUtil.enumFromProto(BuyersCancelTradeState.class, proto.getRequestCancelTradeState()));
+        trade.setSellersCancelTradeState(ProtoUtil.enumFromProto(SellerTrade.SellersCancelTradeState.class, proto.getHandleCancelTradeRequestState()));
+        trade.setBuyersCancelTradeState(ProtoUtil.enumFromProto(BuyerTrade.BuyersCancelTradeState.class, proto.getRequestCancelTradeState()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -909,13 +909,13 @@ public abstract class Trade implements Tradable, Model {
         persist();
     }
 
-    public void setSellersCancelTradeState(SellersCancelTradeState sellersCancelTradeState) {
+    public void setSellersCancelTradeState(SellerTrade.SellersCancelTradeState sellersCancelTradeState) {
         this.sellersCancelTradeState = sellersCancelTradeState;
         handleCancelTradeRequestStateProperty.set(sellersCancelTradeState);
         persist();
     }
 
-    public void setBuyersCancelTradeState(BuyersCancelTradeState buyersCancelTradeState) {
+    public void setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState buyersCancelTradeState) {
         this.buyersCancelTradeState = buyersCancelTradeState;
         requestCancelTradeStateProperty.set(buyersCancelTradeState);
         persist();

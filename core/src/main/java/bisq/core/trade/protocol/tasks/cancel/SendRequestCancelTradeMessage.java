@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.cancel;
 
-import bisq.core.trade.BuyersCancelTradeState;
+import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.RequestCancelTradeMessage;
@@ -61,22 +61,22 @@ public class SendRequestCancelTradeMessage extends SendMailboxMessageTask {
 
     @Override
     protected void setStateSent() {
-        trade.setBuyersCancelTradeState(BuyersCancelTradeState.REQUEST_MSG_SENT);
+        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setBuyersCancelTradeState(BuyersCancelTradeState.REQUEST_MSG_ARRIVED);
+        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setBuyersCancelTradeState(BuyersCancelTradeState.REQUEST_MSG_IN_MAILBOX);
+        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setBuyersCancelTradeState(BuyersCancelTradeState.REQUEST_MSG_SEND_FAILED);
+        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_SEND_FAILED);
     }
 
     @Override
