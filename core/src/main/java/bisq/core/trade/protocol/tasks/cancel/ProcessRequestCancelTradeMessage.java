@@ -50,7 +50,7 @@ public class ProcessRequestCancelTradeMessage extends TradeTask {
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
             processModel.removeMailboxMessageAfterProcessing(trade);
 
-            trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.RECEIVED_CANCEL_REQUEST);
+            trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.RECEIVED_REQUEST);
 
             complete();
         } catch (Throwable t) {

@@ -17,10 +17,11 @@
 
 package bisq.core.trade.protocol.tasks.cancel;
 
-import bisq.core.trade.HandleCancelTradeRequestState;
+import bisq.core.trade.RequestCancelTradeState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
 
+import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,9 +47,13 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
-        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.PAYOUT_TX_SEEN_IN_NETWORK);
+        trade.setRequestCancelTradeState(RequestCancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
         if (trade.getPayoutTx() != null) {
-            processModel.getTradeManager().closeCanceledTrade(trade);
+            // We need to delay that call as we might get executed at startup after mailbox messages are
+            // applied where we iterate over our pending trades. The closeCanceledTrade method would remove
+            // that trade from the list causing a ConcurrentModificationException.
+            // To avoid that we delay for one render frame.
+            UserThread.execute(() -> processModel.getTradeManager().closeCanceledTrade(trade));
         }
     }
 }

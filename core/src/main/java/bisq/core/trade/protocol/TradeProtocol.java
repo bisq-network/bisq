@@ -442,6 +442,12 @@ public abstract class TradeProtocol {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
             handle((TraderSignedWitnessMessage) tradeMessage);
+        } else if (tradeMessage instanceof RequestCancelTradeMessage) {
+            handle((RequestCancelTradeMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof CancelTradeRequestAcceptedMessage) {
+            handle((CancelTradeRequestAcceptedMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof CancelTradeRequestRejectedMessage) {
+            handle((CancelTradeRequestRejectedMessage) tradeMessage, peerNodeAddress);
         }
     }
 

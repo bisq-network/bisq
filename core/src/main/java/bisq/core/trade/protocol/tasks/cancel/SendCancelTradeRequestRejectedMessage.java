@@ -48,22 +48,22 @@ public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTas
 
     @Override
     protected void setStateSent() {
-        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_CANCELED_MSG_SENT);
+        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_REJECTED_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_CANCELED_MSG_ARRIVED);
+        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_REJECTED_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_CANCELED_MSG_IN_MAILBOX);
+        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_REJECTED_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_CANCELED_MSG_SEND_FAILED);
+        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.REQUEST_REJECTED_MSG_SEND_FAILED);
     }
 
     @Override

@@ -22,7 +22,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.HandleCancelTradeRequestState;
+import bisq.core.trade.RequestCancelTradeState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeCancellationManager;
 import bisq.core.util.coin.CoinFormatter;
@@ -48,7 +48,7 @@ public class RequestCancelTradePresentation {
     private Button cancelTradeButton;
     private Label msgSentStatusLabel;
     private BusyAnimation msgSentBusyAnimation;
-    private ChangeListener<HandleCancelTradeRequestState> canceledTradeStateListener;
+    private ChangeListener<RequestCancelTradeState> listener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,25 +70,25 @@ public class RequestCancelTradePresentation {
     public void initialize(HBox hBox,
                            BusyAnimation msgSentBusyAnimation,
                            Label msgSentStatusLabel) {
-        canceledTradeStateListener = (observable, oldValue, newValue) -> onCanceledTradeStateChanged(newValue);
+        listener = (observable, oldValue, newValue) -> onStateChanged(newValue);
 
         this.msgSentBusyAnimation = msgSentBusyAnimation;
         this.msgSentStatusLabel = msgSentStatusLabel;
 
         cancelTradeButton = new AutoTooltipButton(Res.get("portfolio.pending.cancelTrade"));
         cancelTradeButton.getStyleClass().add("action-button");
-        cancelTradeButton.setOnAction(e -> showRequestCancelTradePopup());
+        cancelTradeButton.setOnAction(e -> onRequestCancelTrade());
         hBox.getChildren().add(1, cancelTradeButton);
     }
 
     public void activate() {
-        trade.getHandleCancelTradeRequestStateProperty().addListener(canceledTradeStateListener);
-        onCanceledTradeStateChanged(trade.getHandleCancelTradeRequestStateProperty().get());
+        trade.getRequestCancelTradeStateProperty().addListener(listener);
+        onStateChanged(trade.getRequestCancelTradeStateProperty().get());
     }
 
     public void deactivate() {
-        if (canceledTradeStateListener != null) {
-            trade.getHandleCancelTradeRequestStateProperty().removeListener(canceledTradeStateListener);
+        if (listener != null) {
+            trade.getRequestCancelTradeStateProperty().removeListener(listener);
         }
     }
 
@@ -107,41 +107,47 @@ public class RequestCancelTradePresentation {
         // cancelTradeButton.setDisable(isDisabled);
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // UI handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void requestCancelTrade() {
-        manager.requestCancelTrade(trade,
-                () -> {
-                }, errorMessage -> {
-                });
-    }
-
-    private void showRequestCancelTradePopup() {
+    private void onRequestCancelTrade() {
         new Popup().width(850)
                 .attention(Res.get("portfolio.pending.requestCancelTradePopup",
                         formatter.formatCoinWithCode(manager.getSecurityDepositForRequester())))
-                .onAction(this::requestCancelTrade)
+                .onAction(this::doRequestCancelTrade)
                 .actionButtonText(Res.get("shared.yes"))
                 .closeButtonText(Res.get("shared.no"))
                 .show();
     }
 
-    private void onCanceledTradeStateChanged(HandleCancelTradeRequestState newValue) {
-        log.error("onCanceledTradeStateChanged {} {}", newValue, trade.getId());
-        if (newValue == null) {
-            cancelTradeButton.setDisable(false);
 
-            return;
-        }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void doRequestCancelTrade() {
+        manager.requestCancelTrade(trade,
+                () -> {
+                    log.info("Request cancel trade protocol completed.");
+                }, errorMessage -> {
+                    msgSentStatusLabel.setText(errorMessage);
+                });
+    }
+
+
+    private void onStateChanged(RequestCancelTradeState state) {
+        log.error("onCanceledTradeStateChanged {} {}", state, trade.getId());
         msgSentBusyAnimation.stop();
         msgSentStatusLabel.setText("");
 
+        if (state == null) {
+            cancelTradeButton.setDisable(false);
+            return;
+        }
+
         cancelTradeButton.setDisable(true);
-        switch (newValue) {
+        switch (state) {
             case REQUEST_MSG_SENT:
                 msgSentBusyAnimation.play();
                 msgSentStatusLabel.setText(Res.get("portfolio.pending.requestSent"));
@@ -155,32 +161,16 @@ public class RequestCancelTradePresentation {
             case REQUEST_MSG_SEND_FAILED:
                 msgSentStatusLabel.setText(Res.get("portfolio.pending.requestFailed"));
                 break;
-            case RECEIVED_CANCEL_REQUEST:
-                break;
+
             case RECEIVED_ACCEPTED_MSG:
-                break;
-            case PAYOUT_TX_PUBLISHED:
-                break;
-            case PAYOUT_TX_PUBLISHED_MSG_SENT:
-                break;
-            case PAYOUT_TX_PUBLISHED_MSG_ARRIVED:
-                break;
-            case PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX:
-                break;
-            case PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED:
-                break;
             case PAYOUT_TX_SEEN_IN_NETWORK:
-                break;
-            case REQUEST_CANCELED_MSG_SENT:
-                break;
-            case REQUEST_CANCELED_MSG_ARRIVED:
-                break;
-            case REQUEST_CANCELED_MSG_IN_MAILBOX:
-                break;
-            case REQUEST_CANCELED_MSG_SEND_FAILED:
+                new Popup().information(Res.get("portfolio.pending.requestGotAccepted")).show();
                 break;
             case RECEIVED_REJECTED_MSG:
                 msgSentStatusLabel.setText(Res.get("portfolio.pending.requestGotRejected"));
+                break;
+
+            default:
                 break;
         }
     }

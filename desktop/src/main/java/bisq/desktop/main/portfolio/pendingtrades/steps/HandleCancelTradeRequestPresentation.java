@@ -20,7 +20,6 @@ package bisq.desktop.main.portfolio.pendingtrades.steps;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.trade.HandleCancelTradeRequestState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeCancellationManager;
@@ -30,8 +29,6 @@ import javafx.beans.value.ChangeListener;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Handles the UI aspects of cancelling a trade
  *
@@ -40,10 +37,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class HandleCancelTradeRequestPresentation {
     private final Trade trade;
-    private final Offer offer;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
-    private ChangeListener<HandleCancelTradeRequestState> canceledTradeStateListener;
+    private ChangeListener<HandleCancelTradeRequestState> listener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -53,7 +49,6 @@ public class HandleCancelTradeRequestPresentation {
                                                 TradeCancellationManager manager,
                                                 CoinFormatter formatter) {
         this.trade = trade;
-        offer = checkNotNull(trade.getOffer());
         this.manager = manager;
         this.formatter = formatter;
     }
@@ -64,17 +59,17 @@ public class HandleCancelTradeRequestPresentation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize() {
-        canceledTradeStateListener = (observable, oldValue, newValue) -> onCanceledTradeStateChanged(newValue);
+        listener = (observable, oldValue, newValue) -> onStateChanged(newValue);
     }
 
     public void activate() {
-        trade.getHandleCancelTradeRequestStateProperty().addListener(canceledTradeStateListener);
-        onCanceledTradeStateChanged(trade.getHandleCancelTradeRequestStateProperty().get());
+        trade.getHandleCancelTradeRequestStateProperty().addListener(listener);
+        onStateChanged(trade.getHandleCancelTradeRequestStateProperty().get());
     }
 
     public void deactivate() {
-        if (canceledTradeStateListener != null) {
-            trade.getHandleCancelTradeRequestStateProperty().removeListener(canceledTradeStateListener);
+        if (listener != null) {
+            trade.getHandleCancelTradeRequestStateProperty().removeListener(listener);
         }
     }
 
@@ -85,74 +80,66 @@ public class HandleCancelTradeRequestPresentation {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI handler
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onAcceptRequest() {
+        manager.acceptRequest(trade,
+                () -> {
+                }, errorMessage -> {
+                });
+    }
+
+    private void onRejectRequest() {
+        manager.rejectRequest(trade,
+                () -> {
+                }, errorMessage -> {
+                });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void acceptCancelTradeRequest() {
-        manager.acceptCancelTradeRequest(trade,
-                () -> {
-                }, errorMessage -> {
-                });
-    }
-
-    private void rejectCancelTradeRequest() {
-        manager.rejectCancelTradeRequest(trade,
-                () -> {
-                }, errorMessage -> {
-                });
-    }
-
-
-    private void onCanceledTradeStateChanged(HandleCancelTradeRequestState newValue) {
-        log.error("onCanceledTradeStateChanged {} {}", newValue, trade.getId());
+    private void onStateChanged(HandleCancelTradeRequestState newValue) {
+        log.error("onRequestCancelTradeStateChanged {} {}", newValue, trade.getId());
         if (newValue == null) {
             return;
         }
         switch (newValue) {
-            case REQUEST_MSG_SENT:
-                break;
-            case REQUEST_MSG_ARRIVED:
-                break;
-            case REQUEST_MSG_IN_MAILBOX:
-                break;
-            case REQUEST_MSG_SEND_FAILED:
-                break;
-            case RECEIVED_CANCEL_REQUEST:
+            case RECEIVED_REQUEST:
                 new Popup().width(850)
                         .attention(Res.get("portfolio.pending.receivedCancelTradeRequestPopup",
                                 formatter.formatCoinWithCode(trade.getTradeAmount()),
                                 formatter.formatCoinWithCode(manager.getDefaultSecDepositOfAcceptingTrader(trade)),
                                 formatter.formatCoinWithCode(manager.getLostSecDepositOfRequestingTrader(trade))))
                         .actionButtonText(Res.get("shared.accept"))
-                        .onAction(this::acceptCancelTradeRequest)
+                        .onAction(this::onAcceptRequest)
                         .secondaryActionButtonText(Res.get("shared.reject"))
-                        .onSecondaryAction(this::rejectCancelTradeRequest)
+                        .onSecondaryAction(this::onRejectRequest)
                         .closeButtonText(Res.get("portfolio.pending.doNotDecideYet"))
                         .show();
                 break;
-            case RECEIVED_ACCEPTED_MSG:
+            case REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED:
                 break;
-            case PAYOUT_TX_PUBLISHED:
+
+            case REQUEST_ACCEPTED_MSG_SENT:
                 break;
-            case PAYOUT_TX_PUBLISHED_MSG_SENT:
+            case REQUEST_ACCEPTED_MSG_ARRIVED:
                 break;
-            case PAYOUT_TX_PUBLISHED_MSG_ARRIVED:
+            case REQUEST_ACCEPTED_MSG_IN_MAILBOX:
                 break;
-            case PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX:
+            case REQUEST_ACCEPTED_MSG_SEND_FAILED:
                 break;
-            case PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED:
+
+            case REQUEST_REJECTED_MSG_SENT:
                 break;
-            case PAYOUT_TX_SEEN_IN_NETWORK:
+            case REQUEST_REJECTED_MSG_ARRIVED:
                 break;
-            case REQUEST_CANCELED_MSG_SENT:
+            case REQUEST_REJECTED_MSG_IN_MAILBOX:
                 break;
-            case REQUEST_CANCELED_MSG_ARRIVED:
-                break;
-            case REQUEST_CANCELED_MSG_IN_MAILBOX:
-                break;
-            case REQUEST_CANCELED_MSG_SEND_FAILED:
-                break;
-            case RECEIVED_REJECTED_MSG:
+            case REQUEST_REJECTED_MSG_SEND_FAILED:
                 break;
         }
     }

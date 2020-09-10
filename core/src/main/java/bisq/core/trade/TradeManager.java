@@ -679,6 +679,8 @@ public class TradeManager implements PersistedDataHost {
 
     public void closeCanceledTrade(Trade trade) {
         addTradeToClosedTrades(trade);
+
+        btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
         btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
     }
 

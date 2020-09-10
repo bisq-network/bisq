@@ -18,36 +18,12 @@
 package bisq.core.trade;
 
 public enum RequestCancelTradeState {
-
-
-    // Requester
     REQUEST_MSG_SENT,
     REQUEST_MSG_ARRIVED,
     REQUEST_MSG_IN_MAILBOX,
     REQUEST_MSG_SEND_FAILED,
 
-    // Peer received request
-    RECEIVED_CANCEL_REQUEST,
-
-    // Requester received reject msg
     RECEIVED_ACCEPTED_MSG,
-
-    // Peer accepted
-    PAYOUT_TX_PUBLISHED,
-    PAYOUT_TX_PUBLISHED_MSG_SENT,
-    PAYOUT_TX_PUBLISHED_MSG_ARRIVED,
-    PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX,
-    PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED,
-
-    // Request sees tx
     PAYOUT_TX_SEEN_IN_NETWORK,
-
-    // Peer rejected
-    REQUEST_CANCELED_MSG_SENT,
-    REQUEST_CANCELED_MSG_ARRIVED,
-    REQUEST_CANCELED_MSG_IN_MAILBOX,
-    REQUEST_CANCELED_MSG_SEND_FAILED,
-
-    // Requester received reject msg
-    RECEIVED_REJECTED_MSG;
+    RECEIVED_REJECTED_MSG
 }

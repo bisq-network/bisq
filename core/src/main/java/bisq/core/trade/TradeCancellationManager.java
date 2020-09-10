@@ -90,9 +90,9 @@ public final class TradeCancellationManager {
         return getTotalSecDepositForAcceptingTrader(offer).subtract(getDefaultSecDepositOfAcceptingTrader(trade));
     }
 
-    public void acceptCancelTradeRequest(Trade trade,
-                                         ResultHandler resultHandler,
-                                         ErrorMessageHandler errorMessageHandler) {
+    public void acceptRequest(Trade trade,
+                              ResultHandler resultHandler,
+                              ErrorMessageHandler errorMessageHandler) {
         ProcessModel processModel = trade.getProcessModel();
         Offer offer = checkNotNull(trade.getOffer());
         Coin secDepositOfRequester = getSecurityDepositForRequester();
@@ -109,9 +109,9 @@ public final class TradeCancellationManager {
         trade.getTradeProtocol().onAcceptCancelTradeRequest(resultHandler, errorMessageHandler);
     }
 
-    public void rejectCancelTradeRequest(Trade trade,
-                                         ResultHandler resultHandler,
-                                         ErrorMessageHandler errorMessageHandler) {
+    public void rejectRequest(Trade trade,
+                              ResultHandler resultHandler,
+                              ErrorMessageHandler errorMessageHandler) {
         trade.getTradeProtocol().onRejectCancelTradeRequest(resultHandler, errorMessageHandler);
     }
 }
