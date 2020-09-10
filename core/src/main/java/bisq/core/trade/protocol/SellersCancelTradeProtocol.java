@@ -54,7 +54,7 @@ public class SellersCancelTradeProtocol extends CancelTradeProtocol {
         }
 
         if (trade.isDisputed()) {
-            log.info("We got onAcceptRequest called but the trade have been disputed already. We ignore the call.");
+            errorMessageHandler.handleErrorMessage("We got onAcceptRequest called but the trade have been disputed already.");
             return;
         }
 
@@ -84,7 +84,7 @@ public class SellersCancelTradeProtocol extends CancelTradeProtocol {
         }
 
         if (trade.isDisputed()) {
-            log.info("We got onRejectRequest called but the trade have been disputed already. We ignore the call.");
+            errorMessageHandler.handleErrorMessage("We got onRejectRequest called but the trade have been disputed already.");
             return;
         }
 

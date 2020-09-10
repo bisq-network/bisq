@@ -36,9 +36,11 @@ import javafx.beans.value.ChangeListener;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Handles the UI aspects of cancelling a trade
+ * Handles the UI aspects of cancelling a trade.
  *
- * todo: handle dispute
+ * We do not show the state of the ACK messages but if desired it would need a listener to
+ * trade.getProcessModel().getPaymentStartedMessageStateProperty() and apply the icons. See BuyerStep3View for an
+ * implementation.
  */
 @Slf4j
 public class BuyersCancelTradePresentation {

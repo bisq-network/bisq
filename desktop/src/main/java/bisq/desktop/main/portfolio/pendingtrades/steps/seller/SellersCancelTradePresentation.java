@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Handles the UI aspects of cancelling a trade
  *
- * todo: handle dispute
  */
 @Slf4j
 public class SellersCancelTradePresentation {

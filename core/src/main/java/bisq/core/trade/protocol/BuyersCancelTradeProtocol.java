@@ -49,7 +49,7 @@ public class BuyersCancelTradeProtocol extends CancelTradeProtocol {
 
     public void onRequestCancelTrade(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         if (trade.isDisputed()) {
-            log.info("We got onRequestCancelTrade called but the trade have been disputed already. We ignore the call.");
+            errorMessageHandler.handleErrorMessage("We got onRequestCancelTrade called but the trade have been disputed already.");
             return;
         }
 
