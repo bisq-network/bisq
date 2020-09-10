@@ -111,10 +111,13 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean add(T tradable) {
-        boolean changed = list.add(tradable);
-        if (changed)
+        if (!list.contains(tradable)) {
+            list.add(tradable);
             storage.queueUpForSave();
-        return changed;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean remove(T tradable) {
