@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.cancel;
 
-import bisq.core.trade.RequestCancelTradeState;
+import bisq.core.trade.BuyersCancelTradeState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
 
@@ -47,7 +47,7 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
-        trade.setRequestCancelTradeState(RequestCancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
+        trade.setBuyersCancelTradeState(BuyersCancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
         if (trade.getPayoutTx() != null) {
             // We need to delay that call as we might get executed at startup after mailbox messages are
             // applied where we iterate over our pending trades. The closeCanceledTrade method would remove

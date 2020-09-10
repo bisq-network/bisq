@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.tasks.cancel;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.trade.RequestCancelTradeState;
+import bisq.core.trade.BuyersCancelTradeState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CancelTradeRequestAcceptedMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -59,7 +59,7 @@ public class ProcessCancelTradeRequestAcceptedMessage extends TradeTask {
                 trade.setPayoutTx(committedCanceledTradePayoutTx);
                 BtcWalletService.printTx("CanceledTradePayoutTx received from peer", committedCanceledTradePayoutTx);
 
-                trade.setRequestCancelTradeState(RequestCancelTradeState.RECEIVED_ACCEPTED_MSG);
+                trade.setBuyersCancelTradeState(BuyersCancelTradeState.RECEIVED_ACCEPTED_MSG);
 
                 // We need to delay that call as we might get executed at startup after mailbox messages are
                 // applied where we iterate over our pending trades. The closeCanceledTrade method would remove
