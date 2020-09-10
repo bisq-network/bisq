@@ -93,104 +93,15 @@ public class SellerStep3View extends TradeStepView {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, Initialisation
+    // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public SellerStep3View(PendingTradesViewModel model) {
         super(model);
     }
 
-    @Override
-    public void activate() {
-        super.activate();
-
-        if (timeoutTimer != null)
-            timeoutTimer.stop();
-
-        tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-            if (timeoutTimer != null)
-                timeoutTimer.stop();
-
-            if (trade.isFiatSent() && !trade.isFiatReceived()) {
-                showPopup();
-            } else if (trade.isFiatReceived()) {
-                if (!trade.hasFailed()) {
-                    switch (state) {
-                        case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
-                        case SELLER_PUBLISHED_PAYOUT_TX:
-                        case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
-                            busyAnimation.play();
-                            // confirmButton.setDisable(true);
-                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
-
-                            timeoutTimer = UserThread.runAfter(() -> {
-                                busyAnimation.stop();
-                                // confirmButton.setDisable(false);
-                                statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                            }, 10);
-                            break;
-                        case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
-                            busyAnimation.stop();
-                            statusLabel.setText(Res.get("shared.messageArrived"));
-                            break;
-                        case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
-                            busyAnimation.stop();
-                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
-                            break;
-                        case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
-                            // We get a popup and the trade closed, so we dont need to show anything here
-                            busyAnimation.stop();
-                            // confirmButton.setDisable(false);
-                            statusLabel.setText("");
-                            break;
-                        default:
-                            log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
-                            busyAnimation.stop();
-                            // confirmButton.setDisable(false);
-                            statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                            break;
-                    }
-                } else {
-                    log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
-                    // confirmButton.setDisable(true);
-                    statusLabel.setText("");
-                }
-            }
-        });
-
-        if (isXmrTrade()) {
-            proofResultListener = (observable, oldValue, newValue) -> {
-                applyAssetTxProofResult(trade.getAssetTxProofResult());
-            };
-            trade.getAssetTxProofResultUpdateProperty().addListener(proofResultListener);
-
-            applyAssetTxProofResult(trade.getAssetTxProofResult());
-        }
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-
-        if (tradeStatePropertySubscription != null) {
-            tradeStatePropertySubscription.unsubscribe();
-            tradeStatePropertySubscription = null;
-        }
-
-        busyAnimation.stop();
-
-        if (timeoutTimer != null) {
-            timeoutTimer.stop();
-        }
-
-        if (isXmrTrade()) {
-            trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
-        }
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Content
+    // Life cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -308,6 +219,95 @@ public class SellerStep3View extends TradeStepView {
         busyAnimation = tuple.second;
         statusLabel = tuple.third;
     }
+
+    @Override
+    public void activate() {
+        super.activate();
+
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
+
+        tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
+            if (timeoutTimer != null)
+                timeoutTimer.stop();
+
+            if (trade.isFiatSent() && !trade.isFiatReceived()) {
+                showPopup();
+            } else if (trade.isFiatReceived()) {
+                if (!trade.hasFailed()) {
+                    switch (state) {
+                        case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
+                        case SELLER_PUBLISHED_PAYOUT_TX:
+                        case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
+                            busyAnimation.play();
+                            // confirmButton.setDisable(true);
+                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
+
+                            timeoutTimer = UserThread.runAfter(() -> {
+                                busyAnimation.stop();
+                                // confirmButton.setDisable(false);
+                                statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                            }, 10);
+                            break;
+                        case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
+                            busyAnimation.stop();
+                            statusLabel.setText(Res.get("shared.messageArrived"));
+                            break;
+                        case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
+                            busyAnimation.stop();
+                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                            break;
+                        case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
+                            // We get a popup and the trade closed, so we dont need to show anything here
+                            busyAnimation.stop();
+                            // confirmButton.setDisable(false);
+                            statusLabel.setText("");
+                            break;
+                        default:
+                            log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
+                            busyAnimation.stop();
+                            // confirmButton.setDisable(false);
+                            statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                            break;
+                    }
+                } else {
+                    log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
+                    // confirmButton.setDisable(true);
+                    statusLabel.setText("");
+                }
+            }
+        });
+
+        if (isXmrTrade()) {
+            proofResultListener = (observable, oldValue, newValue) -> {
+                applyAssetTxProofResult(trade.getAssetTxProofResult());
+            };
+            trade.getAssetTxProofResultUpdateProperty().addListener(proofResultListener);
+
+            applyAssetTxProofResult(trade.getAssetTxProofResult());
+        }
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+
+        if (tradeStatePropertySubscription != null) {
+            tradeStatePropertySubscription.unsubscribe();
+            tradeStatePropertySubscription = null;
+        }
+
+        busyAnimation.stop();
+
+        if (timeoutTimer != null) {
+            timeoutTimer.stop();
+        }
+
+        if (isXmrTrade()) {
+            trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
+        }
+    }
+
 
     @Override
     protected void updateConfirmButtonDisableState(boolean isDisabled) {

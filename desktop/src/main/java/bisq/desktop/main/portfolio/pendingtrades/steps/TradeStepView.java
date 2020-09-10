@@ -100,7 +100,7 @@ public abstract class TradeStepView extends AnchorPane {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, Initialisation
+    // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected TradeStepView(PendingTradesViewModel model) {
@@ -158,6 +158,16 @@ public abstract class TradeStepView extends AnchorPane {
                 updateTimeLeft();
             }
         };
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Life cycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void initialize() {
+        addTradeInfoBlock();
+        addInfoBlock();
     }
 
     public void activate() {
@@ -262,15 +272,6 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (tradeStepInfo != null)
             tradeStepInfo.setOnAction(null);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Content
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void initialize() {
-        addTradeInfoBlock();
-        addInfoBlock();
     }
 
     protected void addTradeInfoBlock() {

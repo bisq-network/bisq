@@ -105,114 +105,18 @@ public class BuyerStep2View extends TradeStepView {
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, Initialisation
+    // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerStep2View(PendingTradesViewModel model) {
         super(model);
     }
 
-    @Override
-    public void activate() {
-        super.activate();
-
-        try {
-            DelayedPayoutTxValidation.validatePayoutTx(trade,
-                    trade.getDelayedPayoutTx(),
-                    model.dataModel.daoFacade,
-                    model.dataModel.btcWalletService);
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
-                DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.AmountMismatchException |
-                DelayedPayoutTxValidation.InvalidLockTimeException e) {
-            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
-                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
-            }
-        } catch (DelayedPayoutTxValidation.MissingDelayedPayoutTxException ignore) {
-            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
-            // trade manager after initPendingTrades which happens after activate might be called.
-        }
-
-        if (timeoutTimer != null)
-            timeoutTimer.stop();
-
-        //TODO we get called twice, check why
-        if (tradeStatePropertySubscription == null) {
-            tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-                if (timeoutTimer != null)
-                    timeoutTimer.stop();
-
-                if (trade.isDepositConfirmed() && !trade.isFiatSent()) {
-                    showPopup();
-                } else if (state.ordinal() <= Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
-                    if (!trade.hasFailed()) {
-                        switch (state) {
-                            case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
-                            case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
-                                busyAnimation.play();
-                                // confirmButton.setDisable(true);
-                                statusLabel.setText(Res.get("shared.sendingConfirmation"));
-                                model.setMessageStateProperty(MessageState.SENT);
-                                timeoutTimer = UserThread.runAfter(() -> {
-                                    busyAnimation.stop();
-                                    // confirmButton.setDisable(false);
-                                    statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                                }, 10);
-                                break;
-                            case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
-                                busyAnimation.stop();
-                                statusLabel.setText(Res.get("shared.messageArrived"));
-                                model.setMessageStateProperty(MessageState.ARRIVED);
-                                break;
-                            case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
-                                busyAnimation.stop();
-                                statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
-                                model.setMessageStateProperty(MessageState.STORED_IN_MAILBOX);
-                                break;
-                            case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
-                                // We get a popup and the trade closed, so we dont need to show anything here
-                                busyAnimation.stop();
-                                // confirmButton.setDisable(false);
-                                statusLabel.setText("");
-                                model.setMessageStateProperty(MessageState.FAILED);
-                                break;
-                            default:
-                                log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
-                                busyAnimation.stop();
-                                // confirmButton.setDisable(false);
-                                statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                                break;
-                        }
-                    } else {
-                        log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
-                        // confirmButton.setDisable(true);
-                        statusLabel.setText("");
-                    }
-                }
-            });
-        }
-
-        confirmButton.setDisable(isDisputed());
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-
-        busyAnimation.stop();
-
-        if (timeoutTimer != null)
-            timeoutTimer.stop();
-
-        if (tradeStatePropertySubscription != null) {
-            tradeStatePropertySubscription.unsubscribe();
-            tradeStatePropertySubscription = null;
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Content
+    // Life cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -357,6 +261,105 @@ public class BuyerStep2View extends TradeStepView {
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
     }
+
+    @Override
+    public void activate() {
+        super.activate();
+
+        try {
+            DelayedPayoutTxValidation.validatePayoutTx(trade,
+                    trade.getDelayedPayoutTx(),
+                    model.dataModel.daoFacade,
+                    model.dataModel.btcWalletService);
+        } catch (DelayedPayoutTxValidation.DonationAddressException |
+                DelayedPayoutTxValidation.InvalidTxException |
+                DelayedPayoutTxValidation.AmountMismatchException |
+                DelayedPayoutTxValidation.InvalidLockTimeException e) {
+            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+            }
+        } catch (DelayedPayoutTxValidation.MissingDelayedPayoutTxException ignore) {
+            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
+            // trade manager after initPendingTrades which happens after activate might be called.
+        }
+
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
+
+        //TODO we get called twice, check why
+        if (tradeStatePropertySubscription == null) {
+            tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
+                if (timeoutTimer != null)
+                    timeoutTimer.stop();
+
+                if (trade.isDepositConfirmed() && !trade.isFiatSent()) {
+                    showPopup();
+                } else if (state.ordinal() <= Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
+                    if (!trade.hasFailed()) {
+                        switch (state) {
+                            case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
+                            case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
+                                busyAnimation.play();
+                                // confirmButton.setDisable(true);
+                                statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                                model.setMessageStateProperty(MessageState.SENT);
+                                timeoutTimer = UserThread.runAfter(() -> {
+                                    busyAnimation.stop();
+                                    // confirmButton.setDisable(false);
+                                    statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                                }, 10);
+                                break;
+                            case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
+                                busyAnimation.stop();
+                                statusLabel.setText(Res.get("shared.messageArrived"));
+                                model.setMessageStateProperty(MessageState.ARRIVED);
+                                break;
+                            case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
+                                busyAnimation.stop();
+                                statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                                model.setMessageStateProperty(MessageState.STORED_IN_MAILBOX);
+                                break;
+                            case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
+                                // We get a popup and the trade closed, so we dont need to show anything here
+                                busyAnimation.stop();
+                                // confirmButton.setDisable(false);
+                                statusLabel.setText("");
+                                model.setMessageStateProperty(MessageState.FAILED);
+                                break;
+                            default:
+                                log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
+                                busyAnimation.stop();
+                                // confirmButton.setDisable(false);
+                                statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                                break;
+                        }
+                    } else {
+                        log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
+                        // confirmButton.setDisable(true);
+                        statusLabel.setText("");
+                    }
+                }
+            });
+        }
+
+        confirmButton.setDisable(isDisputed());
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+
+        busyAnimation.stop();
+
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
+
+        if (tradeStatePropertySubscription != null) {
+            tradeStatePropertySubscription.unsubscribe();
+            tradeStatePropertySubscription = null;
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning

@@ -79,28 +79,15 @@ public class BuyerStep4View extends TradeStepView {
     private TitledGroupBg withdrawTitledGroupBg;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, Initialisation
+    // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerStep4View(PendingTradesViewModel model) {
         super(model);
     }
 
-    @Override
-    public void activate() {
-        super.activate();
-        // Don't display any trade step info when trade is complete
-        hideTradeStepInfo();
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Content
+    // Life cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -166,6 +153,23 @@ public class BuyerStep4View extends TradeStepView {
                     .show();
         }
     }
+
+    @Override
+    public void activate() {
+        super.activate();
+        // Don't display any trade step info when trade is complete
+        hideTradeStepInfo();
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onWithdrawal() {
         withdrawAddressTextField.setManaged(true);
