@@ -240,6 +240,9 @@ public abstract class TradeProtocol {
     // Peer has sent a SignedWitness
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO this should not be in the trade protocol. The sending is done in the domain, so should be the handling of
+    //  the msg. If it is part of the normal trade protocol we should add the sending and handling to the steps where
+    //  it happen.
     private void handle(TraderSignedWitnessMessage tradeMessage) {
         // Publish signed witness, if it is valid and ours
         processModel.getAccountAgeWitnessService().publishOwnSignedWitness(tradeMessage.getSignedWitness());

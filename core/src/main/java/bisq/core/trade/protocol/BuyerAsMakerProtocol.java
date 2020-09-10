@@ -108,7 +108,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle();
+            handle((RefreshTradeStateRequest) tradeMessage, peerNodeAddress);
         }
     }
 
@@ -199,15 +199,21 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
-    private void handle() {
-        log.debug("handle RefreshTradeStateRequest called");
+    // TODO we do not remove the RefreshTradeStateRequest!
+    // A better approach IMO would be to automatically resend from the buyer side, so the seller does not need to do
+    // anything. The msg must be the same otherwise we end up with multiple msg and only one get removed once the
+    // peer processes it.
+    private void handle(RefreshTradeStateRequest tradeMessage, NodeAddress peerNodeAddress) {
+        log.debug("handle RefreshTradeStateRequest called with {} from {}", tradeMessage, peerNodeAddress);
         // Resend CounterCurrencyTransferStartedMessage if it hasn't been acked yet and counterparty asked for a refresh
         if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT &&
                 trade.getState().ordinal() >= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                    () -> handleTaskRunnerSuccess("onFiatPaymentStarted"),
+                    () -> handleTaskRunnerSuccess("onRefreshTradeStateRequest"),
                     this::handleTaskRunnerFault);
-            taskRunner.addTasks(BuyerSendCounterCurrencyTransferStartedMessage.class);
+            taskRunner.addTasks(
+                    BuyerSendCounterCurrencyTransferStartedMessage.class
+            );
             taskRunner.run();
         }
     }
@@ -266,7 +272,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle();
+            handle((RefreshTradeStateRequest) tradeMessage, sender);
         }
     }
 }
