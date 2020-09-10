@@ -89,6 +89,11 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         }
     }
 
+    @Override
+    protected BuyersCancelTradeProtocol createCancelTradeProtocol() {
+        return new BuyersCancelTradeProtocol(trade);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Mailbox

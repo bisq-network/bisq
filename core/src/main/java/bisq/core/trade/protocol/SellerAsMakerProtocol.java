@@ -83,6 +83,11 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         }
     }
 
+    @Override
+    protected SellersCancelTradeProtocol createCancelTradeProtocol() {
+        return new SellersCancelTradeProtocol(trade);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Mailbox

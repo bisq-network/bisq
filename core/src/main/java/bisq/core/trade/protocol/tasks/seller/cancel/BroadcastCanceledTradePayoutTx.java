@@ -15,21 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.cancel;
+package bisq.core.trade.protocol.tasks.seller.cancel;
 
-import bisq.core.trade.BuyerTrade;
+import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
+import bisq.core.trade.protocol.tasks.BroadcastPayoutTx;
 
-import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
+public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
     @SuppressWarnings({"unused"})
-    public SetupCanceledTradePayoutTxListener(TaskRunner taskHandler, Trade trade) {
+    public BroadcastCanceledTradePayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -39,7 +38,6 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
             runInterceptHook();
 
             super.run();
-
         } catch (Throwable t) {
             failed(t);
         }
@@ -47,13 +45,6 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
-        if (trade.getPayoutTx() != null) {
-            // We need to delay that call as we might get executed at startup after mailbox messages are
-            // applied where we iterate over our pending trades. The closeCanceledTrade method would remove
-            // that trade from the list causing a ConcurrentModificationException.
-            // To avoid that we delay for one render frame.
-            UserThread.execute(() -> processModel.getTradeManager().closeCanceledTrade(trade));
-        }
+        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
     }
 }

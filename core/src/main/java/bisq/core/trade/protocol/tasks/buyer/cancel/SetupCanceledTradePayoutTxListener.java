@@ -15,20 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.cancel;
+package bisq.core.trade.protocol.tasks.buyer.cancel;
 
-import bisq.core.trade.SellerTrade;
+import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.tasks.BroadcastPayoutTx;
+import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
 
+import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
+public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
     @SuppressWarnings({"unused"})
-    public BroadcastCanceledTradePayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SetupCanceledTradePayoutTxListener(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -38,6 +39,7 @@ public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
             runInterceptHook();
 
             super.run();
+
         } catch (Throwable t) {
             failed(t);
         }
@@ -45,6 +47,13 @@ public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
 
     @Override
     protected void setState() {
-        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
+        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
+        if (trade.getPayoutTx() != null) {
+            // We need to delay that call as we might get executed at startup after mailbox messages are
+            // applied where we iterate over our pending trades. The closeCanceledTrade method would remove
+            // that trade from the list causing a ConcurrentModificationException.
+            // To avoid that we delay for one render frame.
+            UserThread.execute(() -> processModel.getTradeManager().closeCanceledTrade(trade));
+        }
     }
 }

@@ -77,6 +77,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
     }
 
+    @Override
+    protected SellersCancelTradeProtocol createCancelTradeProtocol() {
+        return new SellersCancelTradeProtocol(trade);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Mailbox

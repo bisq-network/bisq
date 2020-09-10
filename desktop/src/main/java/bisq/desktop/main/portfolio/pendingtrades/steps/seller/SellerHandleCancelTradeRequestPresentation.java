@@ -84,14 +84,14 @@ public class SellerHandleCancelTradeRequestPresentation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onAcceptRequest() {
-        manager.acceptRequest(trade,
+        manager.onAcceptRequest(trade,
                 () -> {
                 }, errorMessage -> {
                 });
     }
 
     private void onRejectRequest() {
-        manager.rejectRequest(trade,
+        manager.onRejectRequest(trade,
                 () -> {
                 }, errorMessage -> {
                 });

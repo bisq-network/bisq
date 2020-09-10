@@ -20,28 +20,15 @@ package bisq.core.trade.protocol;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.messages.CancelTradeRequestAcceptedMessage;
-import bisq.core.trade.messages.CancelTradeRequestRejectedMessage;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.messages.RequestCancelTradeMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.tasks.cancel.BroadcastCanceledTradePayoutTx;
-import bisq.core.trade.protocol.tasks.cancel.FinalizeCanceledTradePayoutTx;
-import bisq.core.trade.protocol.tasks.cancel.ProcessCancelTradeRequestAcceptedMessage;
-import bisq.core.trade.protocol.tasks.cancel.ProcessCancelTradeRequestRejectedMessage;
-import bisq.core.trade.protocol.tasks.cancel.ProcessRequestCancelTradeMessage;
-import bisq.core.trade.protocol.tasks.cancel.SendCancelTradeRequestAcceptedMessage;
-import bisq.core.trade.protocol.tasks.cancel.SendCancelTradeRequestRejectedMessage;
-import bisq.core.trade.protocol.tasks.cancel.SendRequestCancelTradeMessage;
-import bisq.core.trade.protocol.tasks.cancel.SetupCanceledTradePayoutTxListener;
-import bisq.core.trade.protocol.tasks.cancel.SignCanceledTradePayoutTx;
 import bisq.core.trade.protocol.tasks.mediation.BroadcastMediatedPayoutTx;
 import bisq.core.trade.protocol.tasks.mediation.FinalizeMediatedPayoutTx;
 import bisq.core.trade.protocol.tasks.mediation.ProcessMediatedPayoutSignatureMessage;
@@ -70,6 +57,7 @@ import javafx.beans.value.ChangeListener;
 
 import java.security.PublicKey;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -86,10 +74,14 @@ public abstract class TradeProtocol {
     private final ChangeListener<Trade.State> stateChangeListener;
     protected Trade trade;
     private Timer timeoutTimer;
+    @Getter
+    private final CancelTradeProtocol cancelTradeProtocol;
+
 
     public TradeProtocol(Trade trade) {
         this.trade = trade;
         this.processModel = trade.getProcessModel();
+        cancelTradeProtocol = createCancelTradeProtocol();
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We check the sig only as soon we have stored the peers pubKeyRing.
@@ -131,6 +123,8 @@ public abstract class TradeProtocol {
         };
         trade.stateProperty().addListener(stateChangeListener);
     }
+
+    protected abstract CancelTradeProtocol createCancelTradeProtocol();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -224,128 +218,6 @@ public abstract class TradeProtocol {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Cancel trade: Called from UI if trader requests cancellation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Trader request a cancellation and sends signature
-    public void onRequestCancelTrade(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onRequestCancelTrade");
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
-                });
-        taskRunner.addTasks(
-                ApplyFilter.class,
-                SignCanceledTradePayoutTx.class,
-                SendRequestCancelTradeMessage.class,
-                SetupCanceledTradePayoutTxListener.class
-        );
-        taskRunner.run();
-    }
-
-
-    // Peer has received a cancel request and accept the request and creates the payout tx.
-    public void onAcceptCancelTradeRequest(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.getPayoutTx() != null) {
-            errorMessageHandler.handleErrorMessage("Payout tx is already published.");
-            return;
-        }
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onAcceptCancelTradeRequest");
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
-                });
-        taskRunner.addTasks(
-                ApplyFilter.class,
-                SignCanceledTradePayoutTx.class,
-                FinalizeCanceledTradePayoutTx.class,
-                BroadcastCanceledTradePayoutTx.class,
-                SendCancelTradeRequestAcceptedMessage.class
-        );
-        taskRunner.run();
-    }
-
-    // Trader has rejected the request.
-    public void onRejectCancelTradeRequest(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.getPayoutTx() != null) {
-            errorMessageHandler.handleErrorMessage("Payout tx is already published.");
-            return;
-        }
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onRejectCancelTradeRequest");
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
-                });
-        taskRunner.addTasks(
-                ApplyFilter.class,
-                SendCancelTradeRequestRejectedMessage.class
-        );
-        taskRunner.run();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Cancel trade: incoming message
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void handle(RequestCancelTradeMessage tradeMessage, NodeAddress sender) {
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle RequestCancelTradeMessage"),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessRequestCancelTradeMessage.class
-        );
-        taskRunner.run();
-    }
-
-    protected void handle(CancelTradeRequestAcceptedMessage tradeMessage, NodeAddress sender) {
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle CancelTradeRequestAcceptedMessage"),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessCancelTradeRequestAcceptedMessage.class
-        );
-        taskRunner.run();
-    }
-
-    protected void handle(CancelTradeRequestRejectedMessage tradeMessage, NodeAddress sender) {
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle CancelTradeRequestRejectedMessage"),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessCancelTradeRequestRejectedMessage.class
-        );
-        taskRunner.run();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Peer has published the delayed payout tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -383,17 +255,13 @@ public abstract class TradeProtocol {
             handle((MediatedPayoutTxSignatureMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof MediatedPayoutTxPublishedMessage) {
             handle((MediatedPayoutTxPublishedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof RequestCancelTradeMessage) {
-            handle((RequestCancelTradeMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof CancelTradeRequestAcceptedMessage) {
-            handle((CancelTradeRequestAcceptedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof CancelTradeRequestRejectedMessage) {
-            handle((CancelTradeRequestRejectedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
             handle((TraderSignedWitnessMessage) tradeMessage);
         }
+
+        cancelTradeProtocol.doHandleDecryptedMessage(tradeMessage, sender);
     }
 
 
@@ -442,13 +310,9 @@ public abstract class TradeProtocol {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
             handle((TraderSignedWitnessMessage) tradeMessage);
-        } else if (tradeMessage instanceof RequestCancelTradeMessage) {
-            handle((RequestCancelTradeMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof CancelTradeRequestAcceptedMessage) {
-            handle((CancelTradeRequestAcceptedMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof CancelTradeRequestRejectedMessage) {
-            handle((CancelTradeRequestRejectedMessage) tradeMessage, peerNodeAddress);
         }
+
+        cancelTradeProtocol.doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);
     }
 
     protected void startTimeout() {
@@ -469,11 +333,11 @@ public abstract class TradeProtocol {
         }
     }
 
-    protected void handleTaskRunnerSuccess(String info) {
+    void handleTaskRunnerSuccess(String info) {
         handleTaskRunnerSuccess(null, info);
     }
 
-    protected void handleTaskRunnerSuccess(@Nullable TradeMessage tradeMessage, String info) {
+    void handleTaskRunnerSuccess(@Nullable TradeMessage tradeMessage, String info) {
         log.debug("handleTaskRunnerSuccess {}", info);
 
         sendAckMessage(tradeMessage, true, null);
@@ -522,7 +386,7 @@ public abstract class TradeProtocol {
                 errorMessage);
         // If there was an error during offer verification, the tradingPeerNodeAddress of the trade might not be set yet.
         // We can find the peer's node address in the processModel's tempTradingPeerNodeAddress in that case.
-        final NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress() : processModel.getTempTradingPeerNodeAddress();
+        NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress() : processModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
                 ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
         String finalSourceUid = sourceUid;
@@ -553,7 +417,7 @@ public abstract class TradeProtocol {
     }
 
     private void cleanupTradableOnFault() {
-        final Trade.State state = trade.getState();
+        Trade.State state = trade.getState();
         log.warn("cleanupTradableOnFault tradeState={}", state);
         TradeManager tradeManager = processModel.getTradeManager();
         if (trade.isInPreparation()) {

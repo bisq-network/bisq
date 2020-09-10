@@ -15,20 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.cancel;
+package bisq.core.trade.protocol.tasks.seller.cancel;
 
-import bisq.core.trade.BuyerTrade;
-import bisq.core.trade.Contract;
+import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.RequestCancelTradeMessage;
+import bisq.core.trade.messages.CancelTradeRequestAcceptedMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.P2PService;
-
-import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
+
+import org.bitcoinj.core.Transaction;
 
 import java.util.UUID;
 
@@ -36,53 +33,55 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+
 @Slf4j
-public class SendRequestCancelTradeMessage extends SendMailboxMessageTask {
+public class SendCancelTradeRequestAcceptedMessage extends SendMailboxMessageTask {
     @SuppressWarnings({"unused"})
-    public SendRequestCancelTradeMessage(TaskRunner taskHandler, Trade trade) {
+    public SendCancelTradeRequestAcceptedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected TradeMessage getMessage(String id) {
-        PubKeyRing pubKeyRing = processModel.getPubKeyRing();
-        Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
-        NodeAddress peersNodeAddress = contract.getPeersNodeAddress(pubKeyRing);
-        P2PService p2PService = processModel.getP2PService();
-        RequestCancelTradeMessage message = new RequestCancelTradeMessage(processModel.getCanceledTradePayoutTxSignature(),
-                trade.getId(),
-                p2PService.getAddress(),
-                UUID.randomUUID().toString());
-        log.info("Send {} to peer {}. tradeId={}, uid={}",
-                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-
-        return message;
+        Transaction payoutTx = checkNotNull(trade.getPayoutTx(), "trade.getPayoutTx() must not be null");
+        return new CancelTradeRequestAcceptedMessage(
+                id,
+                payoutTx.bitcoinSerialize(),
+                processModel.getMyNodeAddress(),
+                UUID.randomUUID().toString()
+        );
     }
 
     @Override
     protected void setStateSent() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SENT);
+        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_ARRIVED);
+        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_IN_MAILBOX);
+        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SEND_FAILED);
+        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_MSG_SEND_FAILED);
     }
 
     @Override
     protected void run() {
         try {
             runInterceptHook();
+
+            if (trade.getPayoutTx() == null) {
+                log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
+                failed("PayoutTx is null");
+                return;
+            }
 
             super.run();
         } catch (Throwable t) {

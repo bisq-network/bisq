@@ -19,7 +19,9 @@ package bisq.core.trade;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.offer.Offer;
+import bisq.core.trade.protocol.BuyersCancelTradeProtocol;
 import bisq.core.trade.protocol.ProcessModel;
+import bisq.core.trade.protocol.SellersCancelTradeProtocol;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -47,12 +49,13 @@ public final class TradeCancellationManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestCancelTrade(Trade trade,
-                                   ResultHandler resultHandler,
-                                   ErrorMessageHandler errorMessageHandler) {
+    // Buyer
+    public void onRequestCancelTrade(Trade trade,
+                                     ResultHandler resultHandler,
+                                     ErrorMessageHandler errorMessageHandler) {
         ProcessModel processModel = trade.getProcessModel();
         Offer offer = checkNotNull(trade.getOffer());
         Coin secDepositOfRequester = getSecurityDepositForRequester();
@@ -66,8 +69,43 @@ public final class TradeCancellationManager {
             processModel.setBuyerPayoutAmountFromCanceledTrade(secDepositForForPeer.value);
             processModel.setSellerPayoutAmountFromCanceledTrade(tradeAmount.add(secDepositOfRequester).value);
         }
-        trade.getTradeProtocol().onRequestCancelTrade(resultHandler, errorMessageHandler);
+        BuyersCancelTradeProtocol buyersCancelTradeProtocol = (BuyersCancelTradeProtocol) (trade.getTradeProtocol().getCancelTradeProtocol());
+        buyersCancelTradeProtocol.onRequestCancelTrade(resultHandler, errorMessageHandler);
     }
+
+
+    // Seller
+    public void onAcceptRequest(Trade trade,
+                                ResultHandler resultHandler,
+                                ErrorMessageHandler errorMessageHandler) {
+        ProcessModel processModel = trade.getProcessModel();
+        Offer offer = checkNotNull(trade.getOffer());
+        Coin secDepositOfRequester = getSecurityDepositForRequester();
+        Coin totalSecDeposit = offer.getSellerSecurityDeposit().add(offer.getBuyerSecurityDeposit());
+        Coin secDepositOfAcceptingTrader = totalSecDeposit.subtract(secDepositOfRequester);
+        Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "tradeAmount must not be null");
+        if (trade instanceof BuyerTrade) {
+            processModel.setBuyerPayoutAmountFromCanceledTrade(secDepositOfAcceptingTrader.value);
+            processModel.setSellerPayoutAmountFromCanceledTrade(tradeAmount.add(secDepositOfRequester).value);
+        } else {
+            processModel.setBuyerPayoutAmountFromCanceledTrade(secDepositOfRequester.value);
+            processModel.setSellerPayoutAmountFromCanceledTrade(tradeAmount.add(secDepositOfAcceptingTrader).value);
+        }
+        SellersCancelTradeProtocol sellersCancelTradeProtocol = (SellersCancelTradeProtocol) (trade.getTradeProtocol().getCancelTradeProtocol());
+        sellersCancelTradeProtocol.onAcceptRequest(resultHandler, errorMessageHandler);
+    }
+
+    public void onRejectRequest(Trade trade,
+                                ResultHandler resultHandler,
+                                ErrorMessageHandler errorMessageHandler) {
+        SellersCancelTradeProtocol sellersCancelTradeProtocol = (SellersCancelTradeProtocol) (trade.getTradeProtocol().getCancelTradeProtocol());
+        sellersCancelTradeProtocol.onRejectRequest(resultHandler, errorMessageHandler);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Coin getSecurityDepositForRequester() {
         return Restrictions.getMinRefundAtMediatedDispute();
@@ -88,30 +126,5 @@ public final class TradeCancellationManager {
     public Coin getLostSecDepositOfRequestingTrader(Trade trade) {
         Offer offer = checkNotNull(trade.getOffer());
         return getTotalSecDepositForAcceptingTrader(offer).subtract(getDefaultSecDepositOfAcceptingTrader(trade));
-    }
-
-    public void acceptRequest(Trade trade,
-                              ResultHandler resultHandler,
-                              ErrorMessageHandler errorMessageHandler) {
-        ProcessModel processModel = trade.getProcessModel();
-        Offer offer = checkNotNull(trade.getOffer());
-        Coin secDepositOfRequester = getSecurityDepositForRequester();
-        Coin totalSecDeposit = offer.getSellerSecurityDeposit().add(offer.getBuyerSecurityDeposit());
-        Coin secDepositOfAcceptingTrader = totalSecDeposit.subtract(secDepositOfRequester);
-        Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "tradeAmount must not be null");
-        if (trade instanceof BuyerTrade) {
-            processModel.setBuyerPayoutAmountFromCanceledTrade(secDepositOfAcceptingTrader.value);
-            processModel.setSellerPayoutAmountFromCanceledTrade(tradeAmount.add(secDepositOfRequester).value);
-        } else {
-            processModel.setBuyerPayoutAmountFromCanceledTrade(secDepositOfRequester.value);
-            processModel.setSellerPayoutAmountFromCanceledTrade(tradeAmount.add(secDepositOfAcceptingTrader).value);
-        }
-        trade.getTradeProtocol().onAcceptCancelTradeRequest(resultHandler, errorMessageHandler);
-    }
-
-    public void rejectRequest(Trade trade,
-                              ResultHandler resultHandler,
-                              ErrorMessageHandler errorMessageHandler) {
-        trade.getTradeProtocol().onRejectCancelTradeRequest(resultHandler, errorMessageHandler);
     }
 }

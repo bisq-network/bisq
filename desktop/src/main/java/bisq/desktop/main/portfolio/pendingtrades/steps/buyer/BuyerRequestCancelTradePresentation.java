@@ -127,7 +127,7 @@ public class BuyerRequestCancelTradePresentation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void doRequestCancelTrade() {
-        manager.requestCancelTrade(trade,
+        manager.onRequestCancelTrade(trade,
                 () -> {
                     log.info("Request cancel trade protocol completed.");
                 }, errorMessage -> {
