@@ -22,7 +22,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.CanceledTradeState;
+import bisq.core.trade.HandleCancelTradeRequestState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeCancellationManager;
 import bisq.core.util.coin.CoinFormatter;
@@ -48,7 +48,7 @@ public class RequestCancelTradePresentation {
     private Button cancelTradeButton;
     private Label msgSentStatusLabel;
     private BusyAnimation msgSentBusyAnimation;
-    private ChangeListener<CanceledTradeState> canceledTradeStateListener;
+    private ChangeListener<HandleCancelTradeRequestState> canceledTradeStateListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -129,7 +129,7 @@ public class RequestCancelTradePresentation {
                 .show();
     }
 
-    private void onCanceledTradeStateChanged(CanceledTradeState newValue) {
+    private void onCanceledTradeStateChanged(HandleCancelTradeRequestState newValue) {
         log.error("onCanceledTradeStateChanged {} {}", newValue, trade.getId());
         if (newValue == null) {
             cancelTradeButton.setDisable(false);

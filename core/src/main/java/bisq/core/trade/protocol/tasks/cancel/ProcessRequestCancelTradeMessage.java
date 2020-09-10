@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.cancel;
 
-import bisq.core.trade.CanceledTradeState;
+import bisq.core.trade.HandleCancelTradeRequestState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.RequestCancelTradeMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -50,7 +50,7 @@ public class ProcessRequestCancelTradeMessage extends TradeTask {
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
             processModel.removeMailboxMessageAfterProcessing(trade);
 
-            trade.setCanceledTradeState(CanceledTradeState.RECEIVED_CANCEL_REQUEST);
+            trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.RECEIVED_CANCEL_REQUEST);
 
             complete();
         } catch (Throwable t) {

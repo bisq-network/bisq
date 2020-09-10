@@ -17,7 +17,9 @@
 
 package bisq.core.trade;
 
-public enum CanceledTradeState {
+public enum HandleCancelTradeRequestState {
+
+    // Requester
     REQUEST_MSG_SENT,
     REQUEST_MSG_ARRIVED,
     REQUEST_MSG_IN_MAILBOX,
@@ -46,5 +48,5 @@ public enum CanceledTradeState {
     REQUEST_CANCELED_MSG_SEND_FAILED,
 
     // Requester received reject msg
-    RECEIVED_REJECTED_MSG,
+    RECEIVED_REJECTED_MSG;
 }

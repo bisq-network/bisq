@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.cancel;
 
-import bisq.core.trade.CanceledTradeState;
+import bisq.core.trade.HandleCancelTradeRequestState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
 
@@ -46,7 +46,7 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
-        trade.setCanceledTradeState(CanceledTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
+        trade.setHandleCancelTradeRequestState(HandleCancelTradeRequestState.PAYOUT_TX_SEEN_IN_NETWORK);
         if (trade.getPayoutTx() != null) {
             processModel.getTradeManager().closeCanceledTrade(trade);
         }

@@ -21,7 +21,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.CanceledTradeState;
+import bisq.core.trade.HandleCancelTradeRequestState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeCancellationManager;
 import bisq.core.util.coin.CoinFormatter;
@@ -43,7 +43,7 @@ public class HandleCancelTradeRequestPresentation {
     private final Offer offer;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
-    private ChangeListener<CanceledTradeState> canceledTradeStateListener;
+    private ChangeListener<HandleCancelTradeRequestState> canceledTradeStateListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -103,7 +103,7 @@ public class HandleCancelTradeRequestPresentation {
     }
 
 
-    private void onCanceledTradeStateChanged(CanceledTradeState newValue) {
+    private void onCanceledTradeStateChanged(HandleCancelTradeRequestState newValue) {
         log.error("onCanceledTradeStateChanged {} {}", newValue, trade.getId());
         if (newValue == null) {
             return;
