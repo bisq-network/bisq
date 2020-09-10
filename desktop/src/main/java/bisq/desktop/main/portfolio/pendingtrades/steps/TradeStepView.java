@@ -141,7 +141,7 @@ public abstract class TradeStepView extends AnchorPane {
         AnchorPane.setTopAnchor(this, -10d);
         AnchorPane.setBottomAnchor(this, 0d);
 
-        addContent();
+        initialize();
 
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
@@ -268,7 +268,7 @@ public abstract class TradeStepView extends AnchorPane {
     // Content
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void addContent() {
+    protected void initialize() {
         addTradeInfoBlock();
         addInfoBlock();
     }

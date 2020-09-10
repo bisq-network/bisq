@@ -194,7 +194,7 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void addContent() {
+    protected void initialize() {
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.ALWAYS);
 
         addTradeInfoBlock();
