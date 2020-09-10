@@ -44,7 +44,7 @@ public class SellerStep2View extends TradeStepView {
 
     private GridPane refreshButtonPane;
     private Timer timer;
-    private SellerHandleCancelTradeRequestPresentation sellerHandleCancelTradeRequestPresentation;
+    private SellersCancelTradePresentation sellersCancelTradePresentation;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -53,7 +53,7 @@ public class SellerStep2View extends TradeStepView {
     public SellerStep2View(PendingTradesViewModel model) {
         super(model);
 
-        sellerHandleCancelTradeRequestPresentation = new SellerHandleCancelTradeRequestPresentation(trade,
+        sellersCancelTradePresentation = new SellersCancelTradePresentation(trade,
                 model.dataModel.getTradeCancellationManager(),
                 model.getBtcFormatter());
     }
@@ -78,7 +78,7 @@ public class SellerStep2View extends TradeStepView {
 
         addRefreshBlock();
 
-        sellerHandleCancelTradeRequestPresentation.initialize();
+        sellersCancelTradePresentation.initialize();
     }
 
     @Override
@@ -87,7 +87,7 @@ public class SellerStep2View extends TradeStepView {
 
         activateRefreshButton();
 
-        sellerHandleCancelTradeRequestPresentation.activate();
+        sellersCancelTradePresentation.activate();
     }
 
     @Override
@@ -96,7 +96,7 @@ public class SellerStep2View extends TradeStepView {
 
         deActivateRefreshButtonTimer();
 
-        sellerHandleCancelTradeRequestPresentation.deactivate();
+        sellersCancelTradePresentation.deactivate();
     }
 
 

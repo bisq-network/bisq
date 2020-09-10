@@ -104,7 +104,7 @@ public class BuyerStep2View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
-    private BuyerRequestCancelTradePresentation buyerRequestCancelTradePresentation;
+    private BuyersCancelTradePresentation buyersCancelTradePresentation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +114,7 @@ public class BuyerStep2View extends TradeStepView {
     public BuyerStep2View(PendingTradesViewModel model) {
         super(model);
 
-        buyerRequestCancelTradePresentation = new BuyerRequestCancelTradePresentation(trade,
+        buyersCancelTradePresentation = new BuyersCancelTradePresentation(trade,
                 model.dataModel.getTradeCancellationManager(),
                 model.getBtcFormatter());
     }
@@ -266,7 +266,7 @@ public class BuyerStep2View extends TradeStepView {
         statusLabel = tuple3.third;
         HBox hBox = tuple3.fourth;
 
-        buyerRequestCancelTradePresentation.initialize(hBox, busyAnimation, statusLabel);
+        buyersCancelTradePresentation.initialize(hBox, busyAnimation, statusLabel);
     }
 
     @Override
@@ -351,7 +351,7 @@ public class BuyerStep2View extends TradeStepView {
 
         confirmButton.setDisable(isDisputed());
 
-        buyerRequestCancelTradePresentation.activate();
+        buyersCancelTradePresentation.activate();
     }
 
     @Override
@@ -368,7 +368,7 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = null;
         }
 
-        buyerRequestCancelTradePresentation.deactivate();
+        buyersCancelTradePresentation.deactivate();
     }
 
 
@@ -529,7 +529,7 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        buyerRequestCancelTradePresentation.hideCancelButton();
+        buyersCancelTradePresentation.hideCancelButton();
 
         // confirmButton.setDisable(true);
         busyAnimation.play();
@@ -653,6 +653,6 @@ public class BuyerStep2View extends TradeStepView {
         confirmButton.setDisable(isDisabled);
 
         //TODO
-        buyerRequestCancelTradePresentation.setDisable(isDisabled);
+        buyersCancelTradePresentation.setDisable(isDisabled);
     }
 }
