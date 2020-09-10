@@ -104,8 +104,6 @@ bisq.asset.coins.Spectrecoin
 bisq.asset.coins.Starwels
 bisq.asset.coins.SUB1X
 bisq.asset.coins.TEO
-bisq.asset.coins.TetherUSDLiquid
-bisq.asset.coins.TetherUSDOmni
 bisq.asset.coins.TurtleCoin
 bisq.asset.coins.UnitedCommunityCoin
 bisq.asset.coins.Unobtanium
@@ -125,7 +123,6 @@ bisq.asset.coins.ZeroClassic
 bisq.asset.tokens.AugmintEuro
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.EtherStone
-bisq.asset.tokens.TetherUSDERC20
 bisq.asset.tokens.TrueUSD
 bisq.asset.tokens.USDCoin
 bisq.asset.tokens.VectorspaceAI
