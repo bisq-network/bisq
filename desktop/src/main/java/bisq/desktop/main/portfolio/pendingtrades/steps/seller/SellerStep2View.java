@@ -53,6 +53,7 @@ public class SellerStep2View extends TradeStepView {
         super(model);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Life cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,23 @@ public class SellerStep2View extends TradeStepView {
         addRefreshBlock();
     }
 
+    @Override
+    public void activate() {
+        super.activate();
+        activateRefreshButton();
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+        deActivateRefreshButtonTimer();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void addRefreshBlock() {
         refreshButtonPane = new GridPane();
         addTitledGroupBg(refreshButtonPane, 0, 1,
@@ -86,19 +104,6 @@ public class SellerStep2View extends TradeStepView {
         GridPane.setColumnIndex(refreshButtonPane, 0);
         GridPane.setColumnSpan(refreshButtonPane, 2);
         gridPane.getChildren().add(refreshButtonPane);
-    }
-
-
-    @Override
-    public void activate() {
-        super.activate();
-        activateRefreshButton();
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-        deActivateRefreshButtonTimer();
     }
 
     private void activateRefreshButton() {

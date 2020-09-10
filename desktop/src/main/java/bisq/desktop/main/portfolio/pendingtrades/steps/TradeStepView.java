@@ -220,6 +220,37 @@ public abstract class TradeStepView extends AnchorPane {
             infoLabel.setText(getInfoText());
     }
 
+    public void deactivate() {
+        if (txIdSubscription != null)
+            txIdSubscription.unsubscribe();
+
+        if (txIdTextField != null)
+            txIdTextField.cleanup();
+
+        if (errorMessageListener != null)
+            trade.errorMessageProperty().removeListener(errorMessageListener);
+
+        if (disputeStateSubscription != null)
+            disputeStateSubscription.unsubscribe();
+
+        if (mediationResultStateSubscription != null)
+            mediationResultStateSubscription.unsubscribe();
+
+        if (tradePeriodStateSubscription != null)
+            tradePeriodStateSubscription.unsubscribe();
+
+        if (clockListener != null)
+            model.clockWatcher.removeListener(clockListener);
+
+        if (tradeStepInfo != null)
+            tradeStepInfo.setOnAction(null);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void registerSubscriptions() {
         disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), newValue -> {
             if (newValue != null) {
@@ -246,32 +277,6 @@ public abstract class TradeStepView extends AnchorPane {
         if (this.chatCallback != null) {
             this.chatCallback.onOpenChat(this.trade);
         }
-    }
-
-    public void deactivate() {
-        if (txIdSubscription != null)
-            txIdSubscription.unsubscribe();
-
-        if (txIdTextField != null)
-            txIdTextField.cleanup();
-
-        if (errorMessageListener != null)
-            trade.errorMessageProperty().removeListener(errorMessageListener);
-
-        if (disputeStateSubscription != null)
-            disputeStateSubscription.unsubscribe();
-
-        if (mediationResultStateSubscription != null)
-            mediationResultStateSubscription.unsubscribe();
-
-        if (tradePeriodStateSubscription != null)
-            tradePeriodStateSubscription.unsubscribe();
-
-        if (clockListener != null)
-            model.clockWatcher.removeListener(clockListener);
-
-        if (tradeStepInfo != null)
-            tradeStepInfo.setOnAction(null);
     }
 
     protected void addTradeInfoBlock() {
