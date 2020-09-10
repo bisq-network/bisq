@@ -39,7 +39,7 @@ public class SellerHandleCancelTradeRequestPresentation {
     private final Trade trade;
     private final TradeCancellationManager manager;
     private final CoinFormatter formatter;
-    private ChangeListener<SellerTrade.SellersCancelTradeState> listener;
+    private ChangeListener<SellerTrade.CancelTradeState> listener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -63,13 +63,13 @@ public class SellerHandleCancelTradeRequestPresentation {
     }
 
     public void activate() {
-        trade.getHandleCancelTradeRequestStateProperty().addListener(listener);
-        onStateChanged(trade.getHandleCancelTradeRequestStateProperty().get());
+        trade.getSellersCancelTradeStateProperty().addListener(listener);
+        onStateChanged(trade.getSellersCancelTradeStateProperty().get());
     }
 
     public void deactivate() {
         if (listener != null) {
-            trade.getHandleCancelTradeRequestStateProperty().removeListener(listener);
+            trade.getSellersCancelTradeStateProperty().removeListener(listener);
         }
     }
 
@@ -102,7 +102,7 @@ public class SellerHandleCancelTradeRequestPresentation {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onStateChanged(SellerTrade.SellersCancelTradeState newValue) {
+    private void onStateChanged(SellerTrade.CancelTradeState newValue) {
         log.error("onRequestCancelTradeStateChanged {} {}", newValue, trade.getId());
         if (newValue == null) {
             return;

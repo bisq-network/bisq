@@ -61,22 +61,22 @@ public class SendRequestCancelTradeMessage extends SendMailboxMessageTask {
 
     @Override
     protected void setStateSent() {
-        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_SENT);
+        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_ARRIVED);
+        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_IN_MAILBOX);
+        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
-        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.REQUEST_MSG_SEND_FAILED);
+        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.REQUEST_MSG_SEND_FAILED);
     }
 
     @Override

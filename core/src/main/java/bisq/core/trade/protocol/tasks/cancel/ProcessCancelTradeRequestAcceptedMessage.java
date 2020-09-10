@@ -59,7 +59,7 @@ public class ProcessCancelTradeRequestAcceptedMessage extends TradeTask {
                 trade.setPayoutTx(committedCanceledTradePayoutTx);
                 BtcWalletService.printTx("CanceledTradePayoutTx received from peer", committedCanceledTradePayoutTx);
 
-                trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.RECEIVED_ACCEPTED_MSG);
+                trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.RECEIVED_ACCEPTED_MSG);
 
                 // We need to delay that call as we might get executed at startup after mailbox messages are
                 // applied where we iterate over our pending trades. The closeCanceledTrade method would remove

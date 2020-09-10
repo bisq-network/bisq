@@ -48,7 +48,7 @@ public class BuyerRequestCancelTradePresentation {
     private Button cancelTradeButton;
     private Label msgSentStatusLabel;
     private BusyAnimation msgSentBusyAnimation;
-    private ChangeListener<BuyerTrade.BuyersCancelTradeState> listener;
+    private ChangeListener<BuyerTrade.CancelTradeState> listener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -82,13 +82,13 @@ public class BuyerRequestCancelTradePresentation {
     }
 
     public void activate() {
-        trade.getRequestCancelTradeStateProperty().addListener(listener);
-        onStateChanged(trade.getRequestCancelTradeStateProperty().get());
+        trade.getBuyersCancelTradeStateProperty().addListener(listener);
+        onStateChanged(trade.getBuyersCancelTradeStateProperty().get());
     }
 
     public void deactivate() {
         if (listener != null) {
-            trade.getRequestCancelTradeStateProperty().removeListener(listener);
+            trade.getBuyersCancelTradeStateProperty().removeListener(listener);
         }
     }
 
@@ -136,7 +136,7 @@ public class BuyerRequestCancelTradePresentation {
     }
 
 
-    private void onStateChanged(BuyerTrade.BuyersCancelTradeState state) {
+    private void onStateChanged(BuyerTrade.CancelTradeState state) {
         log.error("onCanceledTradeStateChanged {} {}", state, trade.getId());
         msgSentBusyAnimation.stop();
         msgSentStatusLabel.setText("");

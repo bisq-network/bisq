@@ -1421,8 +1421,8 @@ message Trade {
     int64 last_refresh_request_date = 36;
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
-    string handle_cancel_trade_request_state = 39;
-    string request_cancel_trade_state = 40;
+    string sellers_cancel_trade_state = 39;
+    string buyers_cancel_trade_state = 40;
 }
 
 message BuyerAsMakerTrade {

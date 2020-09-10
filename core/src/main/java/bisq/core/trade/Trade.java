@@ -452,14 +452,14 @@ public abstract class Trade implements Tradable, Model {
 
     @Getter
     // Added at v1.3.9
-    public SellerTrade.SellersCancelTradeState sellersCancelTradeState;
+    public SellerTrade.CancelTradeState sellersCancelTradeState;
     @Getter
-    transient final private ObjectProperty<SellerTrade.SellersCancelTradeState> handleCancelTradeRequestStateProperty = new SimpleObjectProperty<>();
+    transient final private ObjectProperty<SellerTrade.CancelTradeState> sellersCancelTradeStateProperty = new SimpleObjectProperty<>();
 
     @Getter
-    public BuyerTrade.BuyersCancelTradeState buyersCancelTradeState;
+    public BuyerTrade.CancelTradeState buyersCancelTradeState;
     @Getter
-    transient final private ObjectProperty<BuyerTrade.BuyersCancelTradeState> requestCancelTradeStateProperty = new SimpleObjectProperty<>();
+    transient final private ObjectProperty<BuyerTrade.CancelTradeState> buyersCancelTradeStateProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -574,8 +574,8 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
         Optional.ofNullable(counterCurrencyExtraData).ifPresent(e -> builder.setCounterCurrencyExtraData(counterCurrencyExtraData));
         Optional.ofNullable(assetTxProofResult).ifPresent(e -> builder.setAssetTxProofResult(assetTxProofResult.name()));
-        Optional.ofNullable(sellersCancelTradeState).ifPresent(e -> builder.setHandleCancelTradeRequestState(sellersCancelTradeState.name()));
-        Optional.ofNullable(buyersCancelTradeState).ifPresent(e -> builder.setRequestCancelTradeState(buyersCancelTradeState.name()));
+        Optional.ofNullable(sellersCancelTradeState).ifPresent(e -> builder.setSellersCancelTradeState(sellersCancelTradeState.name()));
+        Optional.ofNullable(buyersCancelTradeState).ifPresent(e -> builder.setBuyersCancelTradeState(buyersCancelTradeState.name()));
 
         return builder.build();
     }
@@ -618,8 +618,8 @@ public abstract class Trade implements Tradable, Model {
         }
         trade.setAssetTxProofResult(persistedAssetTxProofResult);
 
-        trade.setSellersCancelTradeState(ProtoUtil.enumFromProto(SellerTrade.SellersCancelTradeState.class, proto.getHandleCancelTradeRequestState()));
-        trade.setBuyersCancelTradeState(ProtoUtil.enumFromProto(BuyerTrade.BuyersCancelTradeState.class, proto.getRequestCancelTradeState()));
+        trade.setSellersCancelTradeState(ProtoUtil.enumFromProto(SellerTrade.CancelTradeState.class, proto.getSellersCancelTradeState()));
+        trade.setBuyersCancelTradeState(ProtoUtil.enumFromProto(BuyerTrade.CancelTradeState.class, proto.getBuyersCancelTradeState()));
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -909,15 +909,15 @@ public abstract class Trade implements Tradable, Model {
         persist();
     }
 
-    public void setSellersCancelTradeState(SellerTrade.SellersCancelTradeState sellersCancelTradeState) {
-        this.sellersCancelTradeState = sellersCancelTradeState;
-        handleCancelTradeRequestStateProperty.set(sellersCancelTradeState);
+    public void setSellersCancelTradeState(SellerTrade.CancelTradeState cancelTradeState) {
+        this.sellersCancelTradeState = cancelTradeState;
+        sellersCancelTradeStateProperty.set(cancelTradeState);
         persist();
     }
 
-    public void setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState buyersCancelTradeState) {
-        this.buyersCancelTradeState = buyersCancelTradeState;
-        requestCancelTradeStateProperty.set(buyersCancelTradeState);
+    public void setBuyersCancelTradeState(BuyerTrade.CancelTradeState cancelTradeState) {
+        this.buyersCancelTradeState = cancelTradeState;
+        buyersCancelTradeStateProperty.set(cancelTradeState);
         persist();
     }
 
@@ -1257,8 +1257,8 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
                 ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
-                ",\n     handleCancelTradeRequestState=" + sellersCancelTradeState +
-                ",\n     requestCancelTradeState=" + buyersCancelTradeState +
+                ",\n     sellersCancelTradeState=" + sellersCancelTradeState +
+                ",\n     buyersCancelTradeState=" + buyersCancelTradeState +
                 "\n}";
     }
 }

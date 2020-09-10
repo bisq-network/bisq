@@ -38,7 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public abstract class SellerTrade extends Trade {
 
-    public enum SellersCancelTradeState {
+    public enum CancelTradeState {
         RECEIVED_REQUEST,
 
         REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED,

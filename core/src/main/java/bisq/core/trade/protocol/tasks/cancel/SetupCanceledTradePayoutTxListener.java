@@ -47,7 +47,7 @@ public class SetupCanceledTradePayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
-        trade.setBuyersCancelTradeState(BuyerTrade.BuyersCancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
+        trade.setBuyersCancelTradeState(BuyerTrade.CancelTradeState.PAYOUT_TX_SEEN_IN_NETWORK);
         if (trade.getPayoutTx() != null) {
             // We need to delay that call as we might get executed at startup after mailbox messages are
             // applied where we iterate over our pending trades. The closeCanceledTrade method would remove

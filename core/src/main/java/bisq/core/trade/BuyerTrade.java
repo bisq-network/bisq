@@ -39,7 +39,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public abstract class BuyerTrade extends Trade {
 
-    public enum BuyersCancelTradeState {
+    public enum CancelTradeState {
         REQUEST_MSG_SENT,
         REQUEST_MSG_ARRIVED,
         REQUEST_MSG_IN_MAILBOX,

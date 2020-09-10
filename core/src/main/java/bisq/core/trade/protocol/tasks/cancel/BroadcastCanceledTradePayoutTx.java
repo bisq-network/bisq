@@ -45,6 +45,6 @@ public class BroadcastCanceledTradePayoutTx extends BroadcastPayoutTx {
 
     @Override
     protected void setState() {
-        trade.setSellersCancelTradeState(SellerTrade.SellersCancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
+        trade.setSellersCancelTradeState(SellerTrade.CancelTradeState.REQUEST_ACCEPTED_PAYOUT_TX_PUBLISHED);
     }
 }
