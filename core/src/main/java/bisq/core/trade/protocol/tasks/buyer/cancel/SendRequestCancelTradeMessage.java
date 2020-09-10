@@ -20,8 +20,8 @@ package bisq.core.trade.protocol.tasks.buyer.cancel;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.RequestCancelTradeMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.cancel.RequestCancelTradeMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.network.p2p.NodeAddress;

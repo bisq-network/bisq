@@ -15,32 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages;
+package bisq.core.trade.messages.cancel;
+
+import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
-import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode(callSuper = true)
+@Slf4j
 @Value
-public final class CancelTradeRequestAcceptedMessage extends TradeMessage implements MailboxMessage {
-    private final byte[] payoutTx;
+@EqualsAndHashCode(callSuper = true)
+public class RequestCancelTradeMessage extends TradeMessage implements MailboxMessage {
+    private final byte[] txSignature;
     private final NodeAddress senderNodeAddress;
 
-    public CancelTradeRequestAcceptedMessage(String tradeId,
-                                             byte[] payoutTx,
-                                             NodeAddress senderNodeAddress,
-                                             String uid) {
-        this(tradeId,
-                payoutTx,
+    public RequestCancelTradeMessage(byte[] txSignature,
+                                     String tradeId,
+                                     NodeAddress senderNodeAddress,
+                                     String uid) {
+        this(txSignature,
+                tradeId,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -51,41 +54,48 @@ public final class CancelTradeRequestAcceptedMessage extends TradeMessage implem
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CancelTradeRequestAcceptedMessage(String tradeId,
-                                              byte[] payoutTx,
-                                              NodeAddress senderNodeAddress,
-                                              String uid,
-                                              int messageVersion) {
+    private RequestCancelTradeMessage(byte[] txSignature,
+                                      String tradeId,
+                                      NodeAddress senderNodeAddress,
+                                      String uid,
+                                      int messageVersion) {
         super(messageVersion, tradeId, uid);
-        this.payoutTx = payoutTx;
+        this.txSignature = txSignature;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setCancelTradeAcceptedMessage(protobuf.CancelTradeRequestAcceptedMessage.newBuilder()
+                .setRequestCancelTradeMessage(protobuf.RequestCancelTradeMessage.newBuilder()
+                        .setTxSignature(ByteString.copyFrom(txSignature))
                         .setTradeId(tradeId)
-                        .setPayoutTx(ByteString.copyFrom(payoutTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(protobuf.CancelTradeRequestAcceptedMessage proto, int messageVersion) {
-        return new CancelTradeRequestAcceptedMessage(proto.getTradeId(),
-                proto.getPayoutTx().toByteArray(),
+    public static RequestCancelTradeMessage fromProto(protobuf.RequestCancelTradeMessage proto,
+                                                      int messageVersion) {
+        return new RequestCancelTradeMessage(proto.getTxSignature().toByteArray(),
+                proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
     }
 
     @Override
+    public String getTradeId() {
+        return tradeId;
+    }
+
+
+    @Override
     public String toString() {
-        return "CancelTradeRequestAcceptedMessage{" +
-                "\n     payoutTx=" + Utilities.bytesAsHexString(payoutTx) +
+        return "CanceledTradePayoutSignatureMessage{" +
+                "\n     txSignature=" + Utilities.bytesAsHexString(txSignature) +
+                ",\n     tradeId='" + tradeId + '\'' +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     uid='" + uid + '\'' +
                 "\n} " + super.toString();
     }
 }

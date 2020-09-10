@@ -15,33 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages;
+package bisq.core.trade.messages.cancel;
+
+import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
-import bisq.common.util.Utilities;
-
-import com.google.protobuf.ByteString;
+import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Value
 @EqualsAndHashCode(callSuper = true)
-public class RequestCancelTradeMessage extends TradeMessage implements MailboxMessage {
-    private final byte[] txSignature;
+@Value
+public final class CancelTradeRequestRejectedMessage extends TradeMessage implements MailboxMessage {
     private final NodeAddress senderNodeAddress;
 
-    public RequestCancelTradeMessage(byte[] txSignature,
-                                     String tradeId,
-                                     NodeAddress senderNodeAddress,
-                                     String uid) {
-        this(txSignature,
-                tradeId,
+    public CancelTradeRequestRejectedMessage(String tradeId,
+                                             NodeAddress senderNodeAddress,
+                                             String uid) {
+        this(tradeId,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -52,48 +47,36 @@ public class RequestCancelTradeMessage extends TradeMessage implements MailboxMe
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RequestCancelTradeMessage(byte[] txSignature,
-                                      String tradeId,
-                                      NodeAddress senderNodeAddress,
-                                      String uid,
-                                      int messageVersion) {
+    private CancelTradeRequestRejectedMessage(String tradeId,
+                                              NodeAddress senderNodeAddress,
+                                              String uid,
+                                              int messageVersion) {
         super(messageVersion, tradeId, uid);
-        this.txSignature = txSignature;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setRequestCancelTradeMessage(protobuf.RequestCancelTradeMessage.newBuilder()
-                        .setTxSignature(ByteString.copyFrom(txSignature))
+                .setCancelTradeRejectedMessage(protobuf.CancelTradeRequestRejectedMessage.newBuilder()
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static RequestCancelTradeMessage fromProto(protobuf.RequestCancelTradeMessage proto,
-                                                      int messageVersion) {
-        return new RequestCancelTradeMessage(proto.getTxSignature().toByteArray(),
-                proto.getTradeId(),
+    public static NetworkEnvelope fromProto(protobuf.CancelTradeRequestRejectedMessage proto, int messageVersion) {
+        return new CancelTradeRequestRejectedMessage(proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
     }
 
     @Override
-    public String getTradeId() {
-        return tradeId;
-    }
-
-
-    @Override
     public String toString() {
-        return "CanceledTradePayoutSignatureMessage{" +
-                "\n     txSignature=" + Utilities.bytesAsHexString(txSignature) +
-                ",\n     tradeId='" + tradeId + '\'' +
+        return "CancelTradeRequestRejectedMessage{" +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     uid='" + uid + '\'' +
                 "\n} " + super.toString();
     }
 }

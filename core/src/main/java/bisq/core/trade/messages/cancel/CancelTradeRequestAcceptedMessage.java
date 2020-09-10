@@ -15,26 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages;
+package bisq.core.trade.messages.cancel;
+
+import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.util.Utilities;
+
+import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class CancelTradeRequestRejectedMessage extends TradeMessage implements MailboxMessage {
+public final class CancelTradeRequestAcceptedMessage extends TradeMessage implements MailboxMessage {
+    private final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
 
-    public CancelTradeRequestRejectedMessage(String tradeId,
+    public CancelTradeRequestAcceptedMessage(String tradeId,
+                                             byte[] payoutTx,
                                              NodeAddress senderNodeAddress,
                                              String uid) {
         this(tradeId,
+                payoutTx,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -45,26 +53,30 @@ public final class CancelTradeRequestRejectedMessage extends TradeMessage implem
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CancelTradeRequestRejectedMessage(String tradeId,
+    private CancelTradeRequestAcceptedMessage(String tradeId,
+                                              byte[] payoutTx,
                                               NodeAddress senderNodeAddress,
                                               String uid,
                                               int messageVersion) {
         super(messageVersion, tradeId, uid);
+        this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setCancelTradeRejectedMessage(protobuf.CancelTradeRequestRejectedMessage.newBuilder()
+                .setCancelTradeAcceptedMessage(protobuf.CancelTradeRequestAcceptedMessage.newBuilder()
                         .setTradeId(tradeId)
+                        .setPayoutTx(ByteString.copyFrom(payoutTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(protobuf.CancelTradeRequestRejectedMessage proto, int messageVersion) {
-        return new CancelTradeRequestRejectedMessage(proto.getTradeId(),
+    public static NetworkEnvelope fromProto(protobuf.CancelTradeRequestAcceptedMessage proto, int messageVersion) {
+        return new CancelTradeRequestAcceptedMessage(proto.getTradeId(),
+                proto.getPayoutTx().toByteArray(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -72,7 +84,8 @@ public final class CancelTradeRequestRejectedMessage extends TradeMessage implem
 
     @Override
     public String toString() {
-        return "CancelTradeRequestRejectedMessage{" +
+        return "CancelTradeRequestAcceptedMessage{" +
+                "\n     payoutTx=" + Utilities.bytesAsHexString(payoutTx) +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     uid='" + uid + '\'' +
                 "\n} " + super.toString();

@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.tasks.buyer.cancel;
 
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.CancelTradeRequestRejectedMessage;
+import bisq.core.trade.messages.cancel.CancelTradeRequestRejectedMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 

@@ -19,8 +19,8 @@ package bisq.core.trade.protocol.tasks.seller.cancel;
 
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.CancelTradeRequestAcceptedMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.cancel.CancelTradeRequestAcceptedMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;

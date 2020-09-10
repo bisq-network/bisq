@@ -18,8 +18,8 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.RequestCancelTradeMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.cancel.RequestCancelTradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.cancel.SignCanceledTradePayoutTx;
 import bisq.core.trade.protocol.tasks.seller.cancel.BroadcastCanceledTradePayoutTx;
