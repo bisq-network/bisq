@@ -144,6 +144,7 @@ public abstract class TradeSubView extends HBox {
             tradeStepView.deactivate();
         try {
             tradeStepView = viewClass.getDeclaredConstructor(PendingTradesViewModel.class).newInstance(model);
+            tradeStepView.initialize();
             contentPane.getChildren().setAll(tradeStepView);
             tradeStepView.setTradeStepInfo(tradeStepInfo);
             ChatCallback chatCallback = trade -> {

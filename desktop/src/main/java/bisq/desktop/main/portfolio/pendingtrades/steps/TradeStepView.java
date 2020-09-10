@@ -141,8 +141,6 @@ public abstract class TradeStepView extends AnchorPane {
         AnchorPane.setTopAnchor(this, -10d);
         AnchorPane.setBottomAnchor(this, 0d);
 
-        initialize();
-
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
                 new Popup().error(newValue).show();
