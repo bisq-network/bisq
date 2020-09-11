@@ -301,7 +301,7 @@ public class AccountAgeWitnessServiceTest {
         signAccountAgeWitness(aew2, pubKeyRing2.getSignaturePubKey(), aew2.getDate(), user1KeyRing);
         // user2 signs user3
         signAccountAgeWitness(aew3, pubKeyRing3.getSignaturePubKey(), aew3.getDate(), user2KeyRing);
-        signedWitnessService.signAccountAgeWitness(SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING, aew2,
+        signedWitnessService.signAndPublishAccountAgeWitness(SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING, aew2,
                 pubKeyRing2.getSignaturePubKey());
         assertTrue(service.accountIsSigner(aew1));
         assertTrue(service.accountIsSigner(aew2));

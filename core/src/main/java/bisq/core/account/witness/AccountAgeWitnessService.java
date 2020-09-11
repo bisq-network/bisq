@@ -198,7 +198,7 @@ public class AccountAgeWitnessService {
 
     private void onBootStrapped() {
         republishAllFiatAccounts();
-        signSameNameAccounts();
+        signAndPublishSameNameAccounts();
     }
 
 
@@ -668,7 +668,7 @@ public class AccountAgeWitnessService {
         signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, tradersPubKey, time);
     }
 
-    public Optional<SignedWitness> traderSignPeersAccountAgeWitness(Trade trade) {
+    public Optional<SignedWitness> traderSignAndPublishPeersAccountAgeWitness(Trade trade) {
         AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
         Coin tradeAmount = trade.getTradeAmount();
         checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
@@ -678,7 +678,7 @@ public class AccountAgeWitnessService {
         checkNotNull(peersPubKey, "Peers pub key must not be null");
 
         try {
-            return signedWitnessService.signAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
+            return signedWitnessService.signAndPublishAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
         } catch (CryptoException e) {
             log.warn("Trader failed to sign witness, exception {}", e.toString());
         }
@@ -823,7 +823,7 @@ public class AccountAgeWitnessService {
                 .collect(Collectors.toSet());
     }
 
-    public void signSameNameAccounts() {
+    public void signAndPublishSameNameAccounts() {
         // Collect accounts that have ownerId to sign unsigned accounts with the same ownderId
         var signerAccounts = Objects.requireNonNull(user.getPaymentAccounts()).stream()
                 .filter(account -> account.getOwnerId() != null &&
@@ -838,7 +838,7 @@ public class AccountAgeWitnessService {
         signerAccounts.forEach(signer -> unsignedAccounts.forEach(unsigned -> {
             if (signer.getOwnerId().equals(unsigned.getOwnerId())) {
                 try {
-                    signedWitnessService.selfSignAccountAgeWitness(
+                    signedWitnessService.signAndPublishAccountAgeWitness(
                             getMyWitness(unsigned.getPaymentAccountPayload()));
                 } catch (CryptoException e) {
                     log.warn("Self signing failed, exception {}", e.toString());

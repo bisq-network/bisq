@@ -80,7 +80,7 @@ public class SellerMaybeSignWitnessAndSendWitnessMessage extends SendMailboxMess
                 return;
             }
 
-            Optional<SignedWitness> signedWitnessOptional = accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
+            Optional<SignedWitness> signedWitnessOptional = accountAgeWitnessService.traderSignAndPublishPeersAccountAgeWitness(trade);
             if (!signedWitnessOptional.isPresent()) {
                 log.warn("signedWitnessOptional is not present");
                 // TODO not sure if that is a failure case or a valid case, but this follows existing impl logic

@@ -272,16 +272,16 @@ public class SignedWitnessService {
         return "";
     }
 
-    public void selfSignAccountAgeWitness(AccountAgeWitness accountAgeWitness) throws CryptoException {
+    public void signAndPublishAccountAgeWitness(AccountAgeWitness accountAgeWitness) throws CryptoException {
         log.info("Sign own accountAgeWitness {}", accountAgeWitness);
-        signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness,
+        signAndPublishAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness,
                 keyRing.getSignatureKeyPair().getPublic());
     }
 
     // Any peer can sign with DSA key
-    public Optional<SignedWitness> signAccountAgeWitness(Coin tradeAmount,
-                                                         AccountAgeWitness accountAgeWitness,
-                                                         PublicKey peersPubKey) throws CryptoException {
+    public Optional<SignedWitness> signAndPublishAccountAgeWitness(Coin tradeAmount,
+                                                                   AccountAgeWitness accountAgeWitness,
+                                                                   PublicKey peersPubKey) throws CryptoException {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
             return Optional.empty();
@@ -494,9 +494,7 @@ public class SignedWitnessService {
     private void publishSignedWitness(SignedWitness signedWitness) {
         if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
             log.info("broadcast signed witness {}", signedWitness.toString());
-            // We set reBroadcast to true. The signer has broadcast the signedWitness as
-            // well, so it might be that we have received the data already, but we prefer to re-broadcast
-            // to achieve better resilience.
+            // We set reBroadcast to true to achieve better resilience.
             p2PService.addPersistableNetworkPayload(signedWitness, true);
             addToMap(signedWitness);
         }
