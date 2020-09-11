@@ -44,9 +44,9 @@ public final class TradeCancellationManager {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
-    public TradeCancellationManager() {
-    }
+    @Inject                                 // eslint-disable-line no-eval
+    public TradeCancellationManager() {     // eslint-disable-line no-eval
+    }                                       // eslint-disable-line no-eval
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
