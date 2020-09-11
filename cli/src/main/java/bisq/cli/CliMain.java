@@ -25,10 +25,10 @@ import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
-import bisq.proto.grpc.PingRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.StatusRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 
 import io.grpc.StatusRuntimeException;
@@ -63,7 +63,7 @@ import static java.util.Collections.singletonList;
 public class CliMain {
 
     private enum Method {
-        ping,
+        getstatus,
         getoffers,
         createpaymentacct,
         getpaymentaccts,
@@ -138,23 +138,18 @@ public class CliMain {
         var versionService = grpcStubs.versionService;
         var offersService = grpcStubs.offersService;
         var paymentAccountsService = grpcStubs.paymentAccountsService;
-        var pingService = grpcStubs.pingService;
+        var statusService = grpcStubs.statusService;
         var walletsService = grpcStubs.walletsService;
 
         try {
             switch (method) {
-                case ping: {
-                    var request = PingRequest.newBuilder().build();
-                    var reply = pingService.ping(request);
-
-                    // The user sent an explicit ping request, and we print a service
-                    // available msg to the console.  If the ping failed (no pong),
-                    // a gRPC StatusRuntimeException will be thrown and a not available
-                    // error msg will be printed to stderr, so we do not print a
-                    // duplicate error msg here.
-                    if (reply.getPong() == 1)
+                case getstatus: {
+                    var request = StatusRequest.newBuilder().build();
+                    var reply = statusService.getStatus(request);
+                    if (reply.getIsReady())
                         out.println("api service is available");
-
+                    else
+                        out.println("api service is not yet available");
                     return;
                 }
                 case getversion: {
@@ -188,7 +183,7 @@ public class CliMain {
                 }
                 case getoffers: {
                     if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("incorrect parameter count, "
+                        throw new IllegalArgumentException("incorrect parameter count,"
                                 + " expecting direction (buy|sell), currency code");
 
                     var direction = nonOptionArgs.get(1);

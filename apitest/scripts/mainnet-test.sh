@@ -44,8 +44,8 @@
   [ "$output" = "Error: incorrect 'password' rpc header value" ]
 }
 
-@test "test ping" {
-  run ./bisq-cli --password=xyz ping
+@test "test getstatus" {
+  run ./bisq-cli --password=xyz getstatus
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
   [ "$output" = "api service is available" ]

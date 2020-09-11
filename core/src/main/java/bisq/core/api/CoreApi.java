@@ -50,7 +50,7 @@ public class CoreApi {
     private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
-    private final CorePingService corePingService;
+    private final CoreStatusService coreStatusService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
@@ -58,13 +58,13 @@ public class CoreApi {
     public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
-                   CorePingService corePingService,
+                   CoreStatusService coreStatusService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
-        this.corePingService = corePingService;
+        this.coreStatusService = coreStatusService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
     }
@@ -83,11 +83,11 @@ public class CoreApi {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Ping
+    // Status
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public int ping() {
-        return corePingService.ping();
+    public boolean getStatus() {
+        return coreStatusService.getStatus();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

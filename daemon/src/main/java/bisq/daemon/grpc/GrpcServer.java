@@ -28,14 +28,12 @@ import bisq.proto.grpc.GetTradeStatisticsRequest;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionReply;
 import bisq.proto.grpc.GetVersionRequest;
-import bisq.proto.grpc.PingReply;
-import bisq.proto.grpc.PingRequest;
-import bisq.proto.grpc.PingServerGrpc;
+import bisq.proto.grpc.StatusGrpc;
+import bisq.proto.grpc.StatusReply;
+import bisq.proto.grpc.StatusRequest;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -67,7 +65,7 @@ public class GrpcServer {
                 .addService(new GetTradeStatisticsService())
                 .addService(offersService)
                 .addService(paymentAccountsService)
-                .addService(new PingServerService())
+                .addService(new StatusService())
                 .addService(walletsService)
                 .intercept(new PasswordAuthInterceptor(config.apiPassword))
                 .build();
@@ -86,19 +84,12 @@ public class GrpcServer {
         }
     }
 
-    class PingServerService extends PingServerGrpc.PingServerImplBase {
+    class StatusService extends StatusGrpc.StatusImplBase {
         @Override
-        public void ping(PingRequest req, StreamObserver<PingReply> responseObserver) {
-            try {
-                var reply = PingReply.newBuilder().setPong(coreApi.ping()).build();
-                responseObserver.onNext(reply);
-                responseObserver.onCompleted();
-            } catch (IllegalStateException cause) {
-                log.error("API service unavailable reason:  ", cause);
-                var ex = new StatusRuntimeException(Status.UNAVAILABLE.withDescription("api service is not available"));
-                responseObserver.onError(ex);
-                throw ex;
-            }
+        public void getStatus(StatusRequest req, StreamObserver<StatusReply> responseObserver) {
+            var reply = StatusReply.newBuilder().setIsReady(coreApi.getStatus()).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         }
     }
 
