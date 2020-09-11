@@ -20,24 +20,18 @@ package bisq.core.trade.messages;
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.app.Version;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+/**
+ * Not used anymore since v1.3.9
+ * We do the re-sending of the payment sent message via the BuyerSendCounterCurrencyTransferStartedMessage task on the
+ * buyer side, so seller do not need to do anything interactively.
+ */
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class RefreshTradeStateRequest extends TradeMessage implements MailboxMessage {
     private final NodeAddress senderNodeAddress;
-
-    public RefreshTradeStateRequest(String uid,
-                                    String tradeId,
-                                    NodeAddress senderNodeAddress) {
-        this(Version.getP2PMessageVersion(),
-                uid,
-                tradeId,
-                senderNodeAddress);
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,12 +61,4 @@ public class RefreshTradeStateRequest extends TradeMessage implements MailboxMes
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()));
     }
-
-    @Override
-    public String toString() {
-        return "RefreshTradeStateRequest{" +
-                "\n     senderNodeAddress=" + senderNodeAddress +
-                "\n} " + super.toString();
-    }
-
 }

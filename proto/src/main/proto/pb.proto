@@ -76,7 +76,7 @@ message NetworkEnvelope {
         DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
         PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
 
-        RefreshTradeStateRequest refresh_trade_state_request = 50;
+        RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true];
         TraderSignedWitnessMessage trader_signed_witness_message = 51 [deprecated = true];
 
         RequestCancelTradeMessage request_cancel_trade_message = 52;
@@ -349,10 +349,11 @@ message CancelTradeRequestRejectedMessage {
     string uid = 3;
 }
 
+// Deprecated since v1.3.9
 message RefreshTradeStateRequest {
-    string uid = 1;
-    string trade_id = 2;
-    NodeAddress sender_node_address = 3;
+    string uid = 1 [deprecated = true];
+    string trade_id = 2 [deprecated = true];
+    NodeAddress sender_node_address = 3 [deprecated = true];
 }
 
 // Deprecated since v1.3.9

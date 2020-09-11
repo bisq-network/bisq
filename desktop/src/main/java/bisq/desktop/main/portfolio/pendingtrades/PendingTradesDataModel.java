@@ -51,13 +51,10 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeCancellationManager;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 
-import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -82,7 +79,6 @@ import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -241,43 +237,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         tradeManager.addTradeToFailedTrades(getTrade());
     }
 
-    // Ask counterparty to resend last action (in case message was lost)
-    public void refreshTradeState() {
-        Trade trade = getTrade();
-        if (trade == null || !trade.allowedRefresh()) return;
-
-        trade.logRefresh();
-        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-
-        RefreshTradeStateRequest refreshReq = new RefreshTradeStateRequest(UUID.randomUUID().toString(),
-                trade.getId(),
-                tradingPeerNodeAddress);
-        p2PService.sendEncryptedMailboxMessage(
-                tradingPeerNodeAddress,
-                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
-                refreshReq,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {}",
-                                trade.getId(), tradingPeerNodeAddress);
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {}",
-                                trade.getId(), tradingPeerNodeAddress);
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {}",
-                                trade.getId(), tradingPeerNodeAddress);
-                    }
-                }
-        );
-        tradeManager.persistTrades();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

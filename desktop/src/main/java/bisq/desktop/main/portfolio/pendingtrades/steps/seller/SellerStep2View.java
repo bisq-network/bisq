@@ -25,17 +25,10 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.F2FAccountPayload;
-import bisq.core.trade.Trade;
-
-import bisq.common.Timer;
-import bisq.common.UserThread;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
@@ -44,8 +37,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SellerStep2View extends TradeStepView {
 
-    private GridPane refreshButtonPane;
-    private Timer timer;
     private SellersCancelTradePresentation sellersCancelTradePresentation;
     private Button cancelRequestButton;
     private Label cancelRequestInfoLabel;
@@ -82,7 +73,6 @@ public class SellerStep2View extends TradeStepView {
         }
 
         addCancelRequestBlock();
-        addRefreshBlock();
 
         sellersCancelTradePresentation.initialize(cancelRequestTitledGroupBg, cancelRequestInfoLabel, cancelRequestButton);
     }
@@ -91,16 +81,12 @@ public class SellerStep2View extends TradeStepView {
     public void activate() {
         super.activate();
 
-        activateRefreshButton();
-
         sellersCancelTradePresentation.activate();
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
-
-        deActivateRefreshButtonTimer();
 
         sellersCancelTradePresentation.deactivate();
     }
@@ -119,52 +105,6 @@ public class SellerStep2View extends TradeStepView {
         cancelRequestTitledGroupBg.getStyleClass().add("last");
         titledGroupBg.getStyleClass().remove("last");
         cancelRequestButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.seller.cancelRequest.button"));
-    }
-
-    private void addRefreshBlock() {
-        refreshButtonPane = new GridPane();
-        TitledGroupBg refreshTitledGroupBg = addTitledGroupBg(refreshButtonPane, 0, 1,
-                Res.get("portfolio.pending.step2_seller.refresh"), Layout.COMPACT_GROUP_DISTANCE);
-        addMultilineLabel(refreshButtonPane, 1, Res.get("portfolio.pending.step2_seller.refreshInfo"),
-                Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
-        Button refreshButton = addButtonAfterGroup(refreshButtonPane, 2, Res.get("portfolio.pending.step2_seller.refresh"));
-        refreshButton.setOnAction(event -> onRefreshButton());
-
-        refreshTitledGroupBg.getStyleClass().add("last");
-        cancelRequestTitledGroupBg.getStyleClass().remove("last");
-        titledGroupBg.getStyleClass().remove("last");
-
-        GridPane.setRowIndex(refreshButtonPane, ++gridRow);
-        GridPane.setColumnIndex(refreshButtonPane, 0);
-        GridPane.setColumnSpan(refreshButtonPane, 2);
-        gridPane.getChildren().add(refreshButtonPane);
-    }
-
-    private void activateRefreshButton() {
-        checkNotNull(model.dataModel.getTrade(), "No trade found");
-
-        Trade trade = model.dataModel.getTrade();
-        var timeToNextRefresh =
-                trade.getLastRefreshRequestDate() + trade.getRefreshInterval() - new Date().getTime();
-        if (timeToNextRefresh <= 0) {
-            refreshButtonPane.setVisible(true);
-            refreshButtonPane.setManaged(true);
-        } else {
-            refreshButtonPane.setVisible(false);
-            refreshButtonPane.setManaged(false);
-            timer = UserThread.runAfter(this::activateRefreshButton, timeToNextRefresh, TimeUnit.MILLISECONDS);
-        }
-    }
-
-    private void deActivateRefreshButtonTimer() {
-        if (timer != null) {
-            timer.stop();
-        }
-    }
-
-    private void onRefreshButton() {
-        model.dataModel.refreshTradeState();
-        activateRefreshButton();
     }
 
 

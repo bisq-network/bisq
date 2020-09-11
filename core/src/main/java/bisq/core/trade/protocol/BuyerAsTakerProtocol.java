@@ -25,7 +25,6 @@ import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
@@ -127,8 +126,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle((RefreshTradeStateRequest) tradeMessage, peerNodeAddress);
         }
     }
 
@@ -235,24 +232,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
-    // TODO we do not remove the RefreshTradeStateRequest!
-    // A better approach IMO would be to automatically resend from the buyer side, so the seller does not need to do
-    // anything. The msg must be the same otherwise we end up with multiple msg and only one get removed once the
-    // peer processes it.
-    private void handle(RefreshTradeStateRequest tradeMessage, NodeAddress peerNodeAddress) {
-        log.debug("handle RefreshTradeStateRequest called with {} from {}", tradeMessage, peerNodeAddress);
-        // Resend CounterCurrencyTransferStartedMessage if it hasn't been acked yet and counterparty asked for a refresh
-        if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT &&
-                trade.getState().ordinal() >= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
-            TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                    () -> handleTaskRunnerSuccess("onRefreshTradeStateRequest"),
-                    this::handleTaskRunnerFault);
-            taskRunner.addTasks(
-                    BuyerSendCounterCurrencyTransferStartedMessage.class
-            );
-            taskRunner.run();
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Called from UI
@@ -308,8 +287,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle((RefreshTradeStateRequest) tradeMessage, sender);
         }
     }
 }
