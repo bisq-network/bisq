@@ -240,9 +240,13 @@ public abstract class TradeProtocol {
     // Peer has sent a SignedWitness
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO this should not be in the trade protocol. The sending is done in the domain, so should be the handling of
-    //  the msg. If it is part of the normal trade protocol we should add the sending and handling to the steps where
-    //  it happen.
+    // It would be unsafe to use the TradeTaskRunner framework here as we expect the PeerPublishedDelayedPayoutTxMessage
+    // around the same time. The ProcessPeerPublishedDelayedPayoutTxMessage task is synchronous so there would not be
+    // an issue if we start another task runner and set the trade message to the process model, but if the code in
+    // ProcessPeerPublishedDelayedPayoutTxMessage would become async in future it would introduce inconsistent model
+    // data. The TradeTaskRunner framework does not support parallel/concurrent execution. The 2 messages should have been
+    // packed into one and the problem would have been avoided. Now it seems to be the best approach to leave the
+    // protocol framework and process the message in the AccountAgeWitness domain.
     private void handle(TraderSignedWitnessMessage tradeMessage) {
         // Publish signed witness, if it is valid and ours
         processModel.getAccountAgeWitnessService().publishOwnSignedWitness(tradeMessage.getSignedWitness());

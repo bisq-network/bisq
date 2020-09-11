@@ -227,6 +227,9 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         handleTaskRunnerFault(errorMessage);
                     });
 
+            // SellerSendPayoutTxPublishedMessage and SellerMaybeSignWitnessAndSendWitnessMessage are sending both a
+            // msg which should have been consolidated in 1 message to avoid that the peer has to process 2 messages
+            // arriving around the same time. This breaks the concept of a strict sequential task execution.
             taskRunner.addTasks(
                     ApplyFilter.class,
                     MakerVerifyTakerAccount.class,
