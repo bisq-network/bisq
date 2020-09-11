@@ -554,7 +554,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.
-            log.error("Donation address invalid. {}", e.toString());
+            log.error("DelayedPayoutTxValidation failed. {}", e.toString());
+
+            if (useRefundAgent) {
+                // We don't allow to continue and publish payout tx and open refund agent case.
+                // In case it was caused by some bug we want to prevent a wrong payout. In case its a scam attempt we
+                // want to protect the refund agent.
+                return;
+            }
         }
 
         ResultHandler resultHandler;
