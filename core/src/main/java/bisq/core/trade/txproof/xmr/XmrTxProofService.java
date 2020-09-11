@@ -166,6 +166,7 @@ public class XmrTxProofService implements AssetTxProofService {
 
         if (!preferences.findAutoConfirmSettings("XMR").isPresent()) {
             log.error("AutoConfirmSettings is not present");
+            return;
         }
         autoConfirmSettings = preferences.findAutoConfirmSettings("XMR").get();
 
