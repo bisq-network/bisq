@@ -124,7 +124,6 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
         PaymentMethod paymentMethod = checkNotNull(trade.getOffer()).getPaymentMethod();
         // For instant trades with 1 hour we want a short interval, otherwise a few hours should be ok.
         long interval = Math.min(paymentMethod.getMaxTradePeriod() / 5, MAX_REFRESH_INTERVAL);
-        interval = 1000;
         timer = UserThread.runPeriodically(() -> super.run(), interval, TimeUnit.MILLISECONDS);
 
         listener = (observable, oldValue, newValue) -> {
