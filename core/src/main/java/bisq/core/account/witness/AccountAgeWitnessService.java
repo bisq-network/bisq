@@ -35,14 +35,11 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
-import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
@@ -76,7 +73,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -867,45 +863,5 @@ public class AccountAgeWitnessService {
         return accountIsSigner(myWitness) &&
                 !peerHasSignedWitness(trade) &&
                 tradeAmountIsSufficient(trade.getTradeAmount());
-    }
-
-    public void maybeSignWitness(Trade trade) {
-        if (isSignWitnessTrade(trade)) {
-            var signedWitnessOptional = traderSignPeersAccountAgeWitness(trade);
-            signedWitnessOptional.ifPresent(signedWitness -> sendSignedWitnessToPeer(signedWitness, trade));
-        }
-    }
-
-    private void sendSignedWitnessToPeer(SignedWitness signedWitness, Trade trade) {
-        if (trade == null) return;
-
-        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-        var traderSignedWitnessMessage = new TraderSignedWitnessMessage(UUID.randomUUID().toString(), trade.getId(),
-                tradingPeerNodeAddress, signedWitness);
-
-        p2PService.sendEncryptedMailboxMessage(
-                tradingPeerNodeAddress,
-                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
-                traderSignedWitnessMessage,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-                }
-        );
     }
 }

@@ -24,6 +24,8 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
 
+import java.util.UUID;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -33,12 +35,11 @@ public class TraderSignedWitnessMessage extends TradeMessage implements MailboxM
     private final NodeAddress senderNodeAddress;
     private final SignedWitness signedWitness;
 
-    public TraderSignedWitnessMessage(String uid,
-                                      String tradeId,
+    public TraderSignedWitnessMessage(String tradeId,
                                       NodeAddress senderNodeAddress,
                                       SignedWitness signedWitness) {
         this(Version.getP2PMessageVersion(),
-                uid,
+                UUID.randomUUID().toString(),
                 tradeId,
                 senderNodeAddress,
                 signedWitness);

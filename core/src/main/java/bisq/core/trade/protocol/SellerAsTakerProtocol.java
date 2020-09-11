@@ -31,6 +31,7 @@ import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerCreatesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerFinalizesDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerMaybeSignWitnessAndSendWitnessMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.seller.SellerPublishesDepositTx;
@@ -223,7 +224,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     TakerVerifyMakerFeePayment.class,
                     SellerSignAndFinalizePayoutTx.class,
                     SellerBroadcastPayoutTx.class,
-                    SellerSendPayoutTxPublishedMessage.class
+                    SellerSendPayoutTxPublishedMessage.class,
+                    SellerMaybeSignWitnessAndSendWitnessMessage.class
             );
             taskRunner.run();
         } else {
