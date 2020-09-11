@@ -25,6 +25,7 @@ import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
@@ -37,9 +38,8 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class RefundAgentView extends DisputeAgentView {
@@ -54,6 +54,7 @@ public class RefundAgentView extends DisputeAgentView {
                            ContractWindow contractWindow,
                            TradeDetailsWindow tradeDetailsWindow,
                            AccountAgeWitnessService accountAgeWitnessService,
+                           DaoFacade daoFacade,
                            @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(refundManager,
                 keyRing,
@@ -64,6 +65,7 @@ public class RefundAgentView extends DisputeAgentView {
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                daoFacade,
                 useDevPrivilegeKeys);
     }
 

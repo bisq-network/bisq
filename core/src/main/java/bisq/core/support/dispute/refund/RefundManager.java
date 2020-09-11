@@ -20,6 +20,7 @@ package bisq.core.support.dispute.refund;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -74,11 +75,12 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          TradeManager tradeManager,
                          ClosedTradableManager closedTradableManager,
                          OpenOfferManager openOfferManager,
+                         DaoFacade daoFacade,
                          PubKeyRing pubKeyRing,
                          RefundDisputeListService refundDisputeListService,
                          PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, refundDisputeListService, priceFeedService);
+                openOfferManager, daoFacade, pubKeyRing, refundDisputeListService, priceFeedService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +113,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     }
 
     @Override
-    protected Trade.DisputeState getDisputeState_StartedByPeer() {
+    protected Trade.DisputeState getDisputeStateStartedByPeer() {
         return Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER;
     }
 

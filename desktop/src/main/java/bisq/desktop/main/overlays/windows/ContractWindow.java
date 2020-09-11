@@ -141,6 +141,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
             rows++;
         if (dispute.getDelayedPayoutTxId() != null)
             rows++;
+        if (dispute.getDonationAddressOfDelayedPayoutTx() != null)
+            rows++;
         if (showAcceptedCountryCodes)
             rows++;
         if (showAcceptedBanks)
@@ -247,6 +249,11 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         if (dispute.getDelayedPayoutTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), dispute.getDelayedPayoutTxId());
+
+        if (dispute.getDonationAddressOfDelayedPayoutTx() != null) {
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxReceiverAddress"),
+                    dispute.getDonationAddressOfDelayedPayoutTx());
+        }
 
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());

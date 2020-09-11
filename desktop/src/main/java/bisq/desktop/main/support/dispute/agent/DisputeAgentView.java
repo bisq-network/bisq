@@ -27,6 +27,8 @@ import bisq.desktop.main.support.dispute.DisputeView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
@@ -54,13 +56,18 @@ import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
+import javafx.collections.ListChangeListener;
+
 import java.util.List;
+import java.util.Set;
 
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
 
     private final MultipleHolderNameDetection multipleHolderNameDetection;
+    private final DaoFacade daoFacade;
+    private ListChangeListener<Dispute> disputesWithInvalidDonationAddressListener;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                             KeyRing keyRing,
@@ -71,6 +78,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                             ContractWindow contractWindow,
                             TradeDetailsWindow tradeDetailsWindow,
                             AccountAgeWitnessService accountAgeWitnessService,
+                            DaoFacade daoFacade,
                             boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
@@ -84,6 +92,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                 useDevPrivilegeKeys);
 
         multipleHolderNameDetection = new MultipleHolderNameDetection(disputeManager);
+        this.daoFacade = daoFacade;
     }
 
 
@@ -107,6 +116,23 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         fullReportButton.setManaged(true);
 
         multipleHolderNameDetection.detectMultipleHolderNames();
+
+        disputesWithInvalidDonationAddressListener = c -> {
+            c.next();
+            if (c.wasAdded()) {
+                showWarningForInvalidDonationAddress(c.getAddedSubList());
+            }
+        };
+    }
+
+    protected void showWarningForInvalidDonationAddress(List<? extends Dispute> disputes) {
+        disputes.forEach(dispute -> {
+            String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
+            Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
+            new Popup().warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                    addressAsString, allPastParamValues, dispute.getTradeId()))
+                    .show();
+        });
     }
 
     @Override
@@ -117,6 +143,9 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         if (multipleHolderNameDetection.hasSuspiciousDisputesDetected()) {
             suspiciousDisputeDetected();
         }
+
+        disputeManager.getDisputesWithInvalidDonationAddress().addListener(disputesWithInvalidDonationAddressListener);
+        showWarningForInvalidDonationAddress(disputeManager.getDisputesWithInvalidDonationAddress());
     }
 
     @Override
@@ -124,6 +153,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         super.deactivate();
 
         multipleHolderNameDetection.removeListener(this);
+
+        disputeManager.getDisputesWithInvalidDonationAddress().removeListener(disputesWithInvalidDonationAddressListener);
     }
 
 

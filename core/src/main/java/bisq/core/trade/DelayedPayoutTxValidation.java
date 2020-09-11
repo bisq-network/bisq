@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.offer.Offer;
+import bisq.core.support.dispute.Dispute;
 
 import bisq.common.config.Config;
 
@@ -33,9 +34,14 @@ import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -77,10 +83,78 @@ public class DelayedPayoutTxValidation {
         }
     }
 
+    public static boolean isValidDonationAddress(Dispute dispute, DaoFacade daoFacade) {
+        String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
+
+        // Old clients don't have it set yet. Can be removed after a forced update
+        if (addressAsString == null) {
+            return true;
+        }
+
+        // We use all past addresses from DAO param changes as the dispute case might have been opened later and the
+        // DAO param changed in the meantime.
+        Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
+
+        if (allPastParamValues.contains(addressAsString)) {
+            return true;
+        }
+
+        log.warn("Donation address is not a valid DAO donation address." +
+                "\nAddress used in the dispute: " + addressAsString +
+                "\nAll DAO param donation addresses:" + allPastParamValues);
+        return false;
+    }
+
     public static void validatePayoutTx(Trade trade,
                                         Transaction delayedPayoutTx,
                                         DaoFacade daoFacade,
                                         BtcWalletService btcWalletService)
+            throws DonationAddressException, MissingDelayedPayoutTxException,
+            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
+        validatePayoutTx(trade,
+                delayedPayoutTx,
+                null,
+                daoFacade,
+                btcWalletService,
+                null);
+    }
+
+    public static void validatePayoutTx(Trade trade,
+                                        Transaction delayedPayoutTx,
+                                        @Nullable Dispute dispute,
+                                        DaoFacade daoFacade,
+                                        BtcWalletService btcWalletService)
+            throws DonationAddressException, MissingDelayedPayoutTxException,
+            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
+        validatePayoutTx(trade,
+                delayedPayoutTx,
+                dispute,
+                daoFacade,
+                btcWalletService,
+                null);
+    }
+
+    public static void validatePayoutTx(Trade trade,
+                                        Transaction delayedPayoutTx,
+                                        DaoFacade daoFacade,
+                                        BtcWalletService btcWalletService,
+                                        @Nullable Consumer<String> addressConsumer)
+            throws DonationAddressException, MissingDelayedPayoutTxException,
+            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
+        validatePayoutTx(trade,
+                delayedPayoutTx,
+                null,
+                daoFacade,
+                btcWalletService,
+                addressConsumer);
+    }
+
+    public static void validatePayoutTx(Trade trade,
+                                        Transaction delayedPayoutTx,
+                                        @Nullable Dispute dispute,
+                                        DaoFacade daoFacade,
+                                        BtcWalletService btcWalletService,
+                                        @Nullable Consumer<String> addressConsumer)
             throws DonationAddressException, MissingDelayedPayoutTxException,
             InvalidTxException, InvalidLockTimeException, AmountMismatchException {
         String errorMsg;
@@ -144,7 +218,6 @@ public class DelayedPayoutTxValidation {
         // We do not support past DAO param addresses to avoid that those receive funds (no bond set up anymore).
         // Users who have not synced the DAO cannot trade.
 
-
         NetworkParameters params = btcWalletService.getParams();
         Address address = output.getAddressFromP2PKHScript(params);
         if (address == null) {
@@ -159,6 +232,9 @@ public class DelayedPayoutTxValidation {
         }
 
         String addressAsString = address.toString();
+        if (addressConsumer != null) {
+            addressConsumer.accept(addressAsString);
+        }
 
         // In case the seller has deactivated the DAO the default address will be used.
         String defaultDonationAddressString = Param.RECIPIENT_BTC_ADDRESS.getDefaultValue();
@@ -189,6 +265,16 @@ public class DelayedPayoutTxValidation {
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new DonationAddressException(errorMsg);
+        }
+
+        if (dispute != null) {
+            // Verify that address in the dispute matches the one in the trade.
+            String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
+            // Old clients don't have it set yet. Can be removed after a forced update
+            if (donationAddressOfDelayedPayoutTx != null) {
+                checkArgument(addressAsString.equals(donationAddressOfDelayedPayoutTx),
+                        "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
+            }
         }
     }
 

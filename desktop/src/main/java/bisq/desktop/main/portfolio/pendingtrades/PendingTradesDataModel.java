@@ -47,6 +47,7 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.BuyerTrade;
+import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -82,6 +83,7 @@ import javafx.collections.ObservableList;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -536,6 +538,25 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         // In case we re-open a dispute we allow Trade.DisputeState.REFUND_REQUESTED
         useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.REFUND_REQUESTED;
 
+        AtomicReference<String> donationAddressString = new AtomicReference<>("");
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        try {
+            DelayedPayoutTxValidation.validatePayoutTx(trade,
+                    delayedPayoutTx,
+                    daoFacade,
+                    btcWalletService,
+                    donationAddressString::set);
+        } catch (DelayedPayoutTxValidation.DonationAddressException |
+                DelayedPayoutTxValidation.InvalidTxException |
+                DelayedPayoutTxValidation.InvalidLockTimeException |
+                DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
+                DelayedPayoutTxValidation.AmountMismatchException e) {
+            // The peer sent us an invalid donation address. We do not return here as we don't want to break
+            // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
+            // a popup displayed to react.
+            log.error("Donation address invalid. {}", e.toString());
+        }
+
         ResultHandler resultHandler;
         if (useMediation) {
             // If no dispute state set we start with mediation
@@ -564,6 +585,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isSupportTicket,
                     SupportType.MEDIATION);
 
+            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
+            if (delayedPayoutTx != null) {
+                dispute.setDelayedPayoutTxId(delayedPayoutTx.getHashAsString());
+            }
+
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             disputeManager.sendOpenNewDisputeMessage(dispute,
                     false,
@@ -588,7 +614,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else if (useRefundAgent) {
             resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
 
-            if (trade.getDelayedPayoutTx() == null) {
+            if (delayedPayoutTx == null) {
                 log.error("Delayed payout tx is missing");
                 return;
             }
@@ -603,13 +629,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 return;
             }
 
-            long lockTime = trade.getDelayedPayoutTx().getLockTime();
+            long lockTime = delayedPayoutTx.getLockTime();
             int bestChainHeight = btcWalletService.getBestChainHeight();
             long remaining = lockTime - bestChainHeight;
             if (remaining > 0) {
-                new Popup()
-                        .instruction(Res.get("portfolio.pending.timeLockNotOver",
-                                FormattingUtils.getDateFromBlockHeight(remaining), remaining))
+                new Popup().instruction(Res.get("portfolio.pending.timeLockNotOver",
+                        FormattingUtils.getDateFromBlockHeight(remaining), remaining))
                         .show();
                 return;
             }
@@ -639,6 +664,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isSupportTicket,
                     SupportType.REFUND);
 
+            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
+            dispute.setDelayedPayoutTxId(delayedPayoutTx.getHashAsString());
+
             String tradeId = dispute.getTradeId();
             mediationManager.findDispute(tradeId)
                     .ifPresent(mediatorsDispute -> {
@@ -651,9 +679,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                             dispute.setMediatorsDisputeResult(message);
                         }
                     });
-
-            dispute.setDelayedPayoutTxId(trade.getDelayedPayoutTx().getHashAsString());
-
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
             //todo add UI spinner as it can take a bit if peer is offline

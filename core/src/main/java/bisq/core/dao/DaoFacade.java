@@ -95,6 +95,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -749,5 +750,13 @@ public class DaoFacade implements DaoSetupService {
         long requiredBondUnit = bondedRoleType.getRequiredBondUnit();
         long baseFactor = daoStateService.getParamValueAsCoin(Param.BONDED_ROLE_FACTOR, height).value;
         return requiredBondUnit * baseFactor;
+    }
+
+    public Set<String> getAllPastParamValues(Param param) {
+        Set<String> set = new HashSet<>();
+        periodService.getCycles().forEach(cycle -> {
+            set.add(getParamValue(param, cycle.getHeightOfFirstBlock()));
+        });
+        return set;
     }
 }
