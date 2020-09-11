@@ -28,8 +28,6 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -48,6 +46,11 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
             final String id = processModel.getOfferId();
             AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,
                     AddressEntry.Context.TRADE_PAYOUT);
+            // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
+            // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox
+            // messages where only the one which gets processed by the peer would be removed we use the same uid. All
+            // other data stays the same when we re-send the message at any time later.
+            String deterministicId = trade.getId() + processModel.getMyNodeAddress().getFullAddress();
             final CounterCurrencyTransferStartedMessage message = new CounterCurrencyTransferStartedMessage(
                     id,
                     payoutAddressEntry.getAddressString(),
@@ -55,7 +58,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
                     processModel.getPayoutTxSignature(),
                     trade.getCounterCurrencyTxId(),
                     trade.getCounterCurrencyExtraData(),
-                    UUID.randomUUID().toString()
+                    deterministicId
             );
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
