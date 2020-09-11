@@ -77,7 +77,7 @@ message NetworkEnvelope {
         PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
 
         RefreshTradeStateRequest refresh_trade_state_request = 50;
-        TraderSignedWitnessMessage trader_signed_witness_message = 51;
+        TraderSignedWitnessMessage trader_signed_witness_message = 51 [deprecated = true];
 
         RequestCancelTradeMessage request_cancel_trade_message = 52;
         CancelTradeRequestAcceptedMessage cancel_trade_accepted_message = 53;
@@ -313,6 +313,7 @@ message PayoutTxPublishedMessage {
     bytes payout_tx = 2;
     NodeAddress sender_node_address = 3;
     string uid = 4;
+    SignedWitness signed_witness = 5; // Added in v1.3.9
 }
 
 message MediatedPayoutTxPublishedMessage {
@@ -354,11 +355,12 @@ message RefreshTradeStateRequest {
     NodeAddress sender_node_address = 3;
 }
 
+// Deprecated since v1.3.9
 message TraderSignedWitnessMessage {
-    string uid = 1;
-    string trade_id = 2;
-    NodeAddress sender_node_address = 3;
-    SignedWitness signed_witness = 4;
+    string uid = 1 [deprecated = true];
+    string trade_id = 2 [deprecated = true];
+    NodeAddress sender_node_address = 3 [deprecated = true];
+    SignedWitness signed_witness = 4 [deprecated = true];
 }
 
 // dispute

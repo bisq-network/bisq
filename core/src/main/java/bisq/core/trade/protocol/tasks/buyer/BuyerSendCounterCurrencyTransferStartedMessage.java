@@ -33,10 +33,12 @@ import javafx.beans.value.ChangeListener;
 
 import java.util.concurrent.TimeUnit;
 
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
 public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxMessageTask {
     private static final long MAX_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(4);

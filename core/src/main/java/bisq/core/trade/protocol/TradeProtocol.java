@@ -24,7 +24,6 @@ import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.messages.mediation.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.mediation.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
@@ -236,22 +235,6 @@ public abstract class TradeProtocol {
         taskRunner.run();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Peer has sent a SignedWitness
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // It would be unsafe to use the TradeTaskRunner framework here as we expect the PeerPublishedDelayedPayoutTxMessage
-    // around the same time. The ProcessPeerPublishedDelayedPayoutTxMessage task is synchronous so there would not be
-    // an issue if we start another task runner and set the trade message to the process model, but if the code in
-    // ProcessPeerPublishedDelayedPayoutTxMessage would become async in future it would introduce inconsistent model
-    // data. The TradeTaskRunner framework does not support parallel/concurrent execution. The 2 messages should have been
-    // packed into one and the problem would have been avoided. Now it seems to be the best approach to leave the
-    // protocol framework and process the message in the AccountAgeWitness domain.
-    private void handle(TraderSignedWitnessMessage tradeMessage) {
-        // Publish signed witness, if it is valid and ours
-        processModel.getAccountAgeWitnessService().publishOwnSignedWitness(tradeMessage.getSignedWitness());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispatcher
@@ -264,8 +247,6 @@ public abstract class TradeProtocol {
             handle((MediatedPayoutTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
-            handle((TraderSignedWitnessMessage) tradeMessage);
         }
 
         cancelTradeProtocol.doHandleDecryptedMessage(tradeMessage, sender);
@@ -315,8 +296,6 @@ public abstract class TradeProtocol {
             handle((MediatedPayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
             handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof TraderSignedWitnessMessage) {
-            handle((TraderSignedWitnessMessage) tradeMessage);
         }
 
         cancelTradeProtocol.doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);

@@ -29,12 +29,13 @@ import org.bitcoinj.core.Transaction;
 
 import java.util.UUID;
 
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
 public class SendCancelTradeRequestAcceptedMessage extends SendMailboxMessageTask {
     private final SellerTrade sellerTrade;

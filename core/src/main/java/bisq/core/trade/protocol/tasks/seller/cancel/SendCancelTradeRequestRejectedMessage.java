@@ -27,11 +27,12 @@ import bisq.common.taskrunner.TaskRunner;
 
 import java.util.UUID;
 
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
 public class SendCancelTradeRequestRejectedMessage extends SendMailboxMessageTask {
     private final SellerTrade sellerTrade;

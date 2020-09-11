@@ -22,28 +22,19 @@ import bisq.core.account.sign.SignedWitness;
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.app.Version;
-
-import java.util.UUID;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+// Not used anymore from v.1.3.9 on. We need to keep it for backward compatibility.
+// Now we send the signedWitness as part of the PayoutTxPublishedMessage to avoid that we send 2 messages and need to
+// process 2 messages at the receiver. Parallel/concurrent handling of multiple messages per trade is not supported by
+// the design of the trade protocol and should be avoided.
+@Deprecated
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class TraderSignedWitnessMessage extends TradeMessage implements MailboxMessage {
     private final NodeAddress senderNodeAddress;
     private final SignedWitness signedWitness;
-
-    public TraderSignedWitnessMessage(String tradeId,
-                                      NodeAddress senderNodeAddress,
-                                      SignedWitness signedWitness) {
-        this(Version.getP2PMessageVersion(),
-                UUID.randomUUID().toString(),
-                tradeId,
-                senderNodeAddress,
-                signedWitness);
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,13 +68,4 @@ public class TraderSignedWitnessMessage extends TradeMessage implements MailboxM
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 SignedWitness.fromProto(proto.getSignedWitness()));
     }
-
-    @Override
-    public String toString() {
-        return "TraderSignedWitnessMessage{" +
-                "\n     senderNodeAddress=" + senderNodeAddress +
-                "\n     signedWitness=" + signedWitness +
-                "\n} " + super.toString();
-    }
-
 }

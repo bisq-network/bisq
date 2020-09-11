@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.buyer;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -64,6 +65,15 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             } else {
                 log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
             }
+
+            SignedWitness signedWitness = message.getSignedWitness();
+            if (signedWitness != null) {
+                // We received the signedWitness from the seller and publish the data to the network.
+                // The signer has published it as well but we prefer to re-do it on our side as well to achieve higher
+                // resilience.
+                processModel.getAccountAgeWitnessService().publishOwnSignedWitness(signedWitness);
+            }
+
             processModel.removeMailboxMessageAfterProcessing(trade);
             complete();
         } catch (Throwable t) {
