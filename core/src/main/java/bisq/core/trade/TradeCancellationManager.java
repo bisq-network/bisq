@@ -28,7 +28,6 @@ import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,15 +38,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class TradeCancellationManager {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Inject                                 // eslint-disable-line no-eval
-    public TradeCancellationManager() {     // eslint-disable-line no-eval
-    }                                       // eslint-disable-line no-eval
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Buyers User intent
