@@ -110,7 +110,7 @@ public class SellersCancelTradePresentation {
         hideButton();
         manager.onAcceptRequest(trade,
                 () -> {
-                    new Popup().information(Res.get("portfolio.pending.seller.accepted")).show();
+                    new Popup().information(Res.get("portfolio.pending.step2_seller.accepted")).show();
                 }, errorMessage -> {
                 });
     }
@@ -167,16 +167,16 @@ public class SellersCancelTradePresentation {
                 break;
 
             case REQUEST_REJECTED_MSG_SENT:
-                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.sent"));
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.step2_seller.rejectResponse.sent"));
                 break;
             case REQUEST_REJECTED_MSG_ARRIVED:
-                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.arrived"));
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.step2_seller.rejectResponse.arrived"));
                 break;
             case REQUEST_REJECTED_MSG_IN_MAILBOX:
-                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.inMailbox"));
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.step2_seller.rejectResponse.inMailbox"));
                 break;
             case REQUEST_REJECTED_MSG_SEND_FAILED:
-                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.failed"));
+                cancelRequestInfoLabel.setText(Res.get("portfolio.pending.step2_seller.rejectResponse.failed"));
                 break;
             default:
                 log.error("Unexpected state {}", state);
@@ -192,7 +192,7 @@ public class SellersCancelTradePresentation {
     private void showPopup() {
         if (!trade.isDisputed()) {
             new Popup().width(850)
-                    .attention(Res.get("portfolio.pending.seller.receivedCancelTradeRequest.msg",
+                    .attention(Res.get("portfolio.pending.step2_seller.receivedCancelTradeRequest.msg",
                             formatter.formatCoinWithCode(trade.getTradeAmount()),
                             formatter.formatCoinWithCode(manager.getDefaultSecDepositOfAcceptingTrader(trade)),
                             formatter.formatCoinWithCode(manager.getLostSecDepositOfRequestingTrader(trade))))
@@ -200,7 +200,7 @@ public class SellersCancelTradePresentation {
                     .onAction(this::onAcceptRequest)
                     .secondaryActionButtonText(Res.get("shared.reject"))
                     .onSecondaryAction(this::onRejectRequest)
-                    .closeButtonText(Res.get("portfolio.pending.seller.decideLater"))
+                    .closeButtonText(Res.get("portfolio.pending.step2_seller.decideLater"))
                     .onClose(this::onDecideLater)
                     .show();
         }

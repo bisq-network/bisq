@@ -78,7 +78,7 @@ public class BuyersCancelTradePresentation {
         this.msgSentBusyAnimation = msgSentBusyAnimation;
         this.msgSentStatusLabel = msgSentStatusLabel;
 
-        cancelTradeButton = new AutoTooltipButton(Res.get("portfolio.pending.buyer.requestCancelTrade"));
+        cancelTradeButton = new AutoTooltipButton(Res.get("portfolio.pending.step2_buyer.requestCancelTrade"));
         cancelTradeButton.setOnAction(e -> onRequestCancelTrade());
         hBox.getChildren().add(1, cancelTradeButton);
 
@@ -112,8 +112,8 @@ public class BuyersCancelTradePresentation {
 
     private void onRequestCancelTrade() {
         new Popup().width(850)
-                .headLine(Res.get("portfolio.pending.buyer.requestCancelTrade"))
-                .attention(Res.get("portfolio.pending.buyer.requestCancelTrade.msg",
+                .headLine(Res.get("portfolio.pending.step2_buyer.requestCancelTrade"))
+                .attention(Res.get("portfolio.pending.step2_buyer.requestCancelTrade.msg",
                         formatter.formatCoinWithCode(manager.getSecurityDepositForRequester())))
                 .onAction(this::doRequestCancelTrade)
                 .actionButtonText(Res.get("shared.yes"))
@@ -161,24 +161,24 @@ public class BuyersCancelTradePresentation {
         switch (state) {
             case REQUEST_MSG_SENT:
                 msgSentBusyAnimation.play();
-                msgSentStatusLabel.setText(Res.get("portfolio.pending.buyer.request.sent"));
+                msgSentStatusLabel.setText(Res.get("portfolio.pending.step2_buyer.request.sent"));
                 break;
             case REQUEST_MSG_ARRIVED:
-                msgSentStatusLabel.setText(Res.get("portfolio.pending.buyer.request.arrived"));
+                msgSentStatusLabel.setText(Res.get("portfolio.pending.step2_buyer.request.arrived"));
                 break;
             case REQUEST_MSG_IN_MAILBOX:
-                msgSentStatusLabel.setText(Res.get("portfolio.pending.buyer.request.inMailbox"));
+                msgSentStatusLabel.setText(Res.get("portfolio.pending.step2_buyer.request.inMailbox"));
                 break;
             case REQUEST_MSG_SEND_FAILED:
-                msgSentStatusLabel.setText(Res.get("portfolio.pending.buyer.request.failed"));
+                msgSentStatusLabel.setText(Res.get("portfolio.pending.step2_buyer.request.failed"));
                 break;
 
             case RECEIVED_ACCEPTED_MSG:
             case PAYOUT_TX_SEEN_IN_NETWORK:
-                new Popup().information(Res.get("portfolio.pending.buyer.response.accepted")).show();
+                new Popup().information(Res.get("portfolio.pending.step2_buyer.response.accepted")).show();
                 break;
             case RECEIVED_REJECTED_MSG:
-                msgSentStatusLabel.setText(Res.get("portfolio.pending.buyer.response.rejected"));
+                msgSentStatusLabel.setText(Res.get("portfolio.pending.step2_buyer.response.rejected"));
                 break;
 
             default:

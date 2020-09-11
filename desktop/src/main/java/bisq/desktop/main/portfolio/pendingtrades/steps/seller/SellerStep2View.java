@@ -98,13 +98,13 @@ public class SellerStep2View extends TradeStepView {
 
     private void addCancelRequestBlock() {
         cancelRequestTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2,
-                Res.get("portfolio.pending.seller.cancelRequest.header"), Layout.COMPACT_GROUP_DISTANCE);
-        cancelRequestInfoLabel = addMultilineLabel(gridPane, gridRow, Res.get("portfolio.pending.seller.cancelRequest.info"),
+                Res.get("portfolio.pending.step2_seller.cancelRequest.header"), Layout.COMPACT_GROUP_DISTANCE);
+        cancelRequestInfoLabel = addMultilineLabel(gridPane, gridRow, Res.get("portfolio.pending.step2_seller.cancelRequest.info"),
                 Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
         GridPane.setColumnSpan(cancelRequestInfoLabel, 2);
         cancelRequestTitledGroupBg.getStyleClass().add("last");
         titledGroupBg.getStyleClass().remove("last");
-        cancelRequestButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.seller.cancelRequest.button"));
+        cancelRequestButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.step2_seller.cancelRequest.button"));
     }
 
 
