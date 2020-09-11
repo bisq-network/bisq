@@ -290,7 +290,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         Contract contract = dispute.getContract();
         addPriceInfoMessage(dispute, 0);
 
-        if (!DelayedPayoutTxValidation.isValidDonationAddress(dispute, daoFacade)) {
+        try {
+            DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+        } catch (DelayedPayoutTxValidation.DonationAddressException e) {
             disputesWithInvalidDonationAddress.add(dispute);
         }
 

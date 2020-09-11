@@ -650,17 +650,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 return;
             }
 
-            if (!DelayedPayoutTxValidation.isValidDonationAddress(dispute, daoFacade)) {
+            try {
+                DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+
+                if (dispute.getSupportType() == SupportType.REFUND &&
+                        peersDisputeOptional.isPresent() &&
+                        !peersDisputeOptional.get().isClosed()) {
+                    showPayoutTxConfirmation(contract, disputeResult, () -> doClose(closeTicketButton));
+                } else {
+                    doClose(closeTicketButton);
+                }
+            } catch (DelayedPayoutTxValidation.DonationAddressException exception) {
                 showInValidDonationAddressPopup();
-            } else if (dispute.getSupportType() == SupportType.REFUND &&
-                    peersDisputeOptional.isPresent() &&
-                    !peersDisputeOptional.get().isClosed()) {
-                showPayoutTxConfirmation(contract, disputeResult,
-                        () -> {
-                            doClose(closeTicketButton);
-                        });
-            } else {
-                doClose(closeTicketButton);
             }
         });
 
@@ -752,7 +753,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void doClose(Button closeTicketButton) {
         var disputeManager = checkNotNull(getDisputeManager(dispute));
-        if (!DelayedPayoutTxValidation.isValidDonationAddress(dispute, daoFacade)) {
+        try {
+            DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+        } catch (DelayedPayoutTxValidation.DonationAddressException exception) {
             showInValidDonationAddressPopup();
 
             // For mediators we do not enforce that the case cannot be closed to stay flexible,

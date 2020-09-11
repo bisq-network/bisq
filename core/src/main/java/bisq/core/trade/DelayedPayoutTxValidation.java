@@ -23,8 +23,6 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 
-import bisq.common.config.Config;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
@@ -33,7 +31,6 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -83,26 +80,33 @@ public class DelayedPayoutTxValidation {
         }
     }
 
-    public static boolean isValidDonationAddress(Dispute dispute, DaoFacade daoFacade) {
-        String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
+    public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
+            throws DonationAddressException {
 
-        // Old clients don't have it set yet. Can be removed after a forced update
         if (addressAsString == null) {
-            return true;
+            return;
         }
 
-        // We use all past addresses from DAO param changes as the dispute case might have been opened later and the
-        // DAO param changed in the meantime.
+        // We support any of the past addresses as well as in case the peer has not enabled the DAO or is out of sync we
+        // do not want to break validation.
         Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
 
-        if (allPastParamValues.contains(addressAsString)) {
-            return true;
-        }
+        // If Dao is deactivated we need to add the default address as getAllPastParamValues will not return us any.
+        allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
 
-        log.warn("Donation address is not a valid DAO donation address." +
-                "\nAddress used in the dispute: " + addressAsString +
-                "\nAll DAO param donation addresses:" + allPastParamValues);
-        return false;
+        // If Dao is deactivated we need to add the past addresses used as well.
+        // This list need to be updated once a new address gets defined.
+        allPastParamValues.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"); // burning man 2019
+        allPastParamValues.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV"); // burningman2
+
+
+        if (!allPastParamValues.contains(addressAsString)) {
+            String errorMsg = "Donation address is not a valid DAO donation address." +
+                    "\nAddress used in the dispute: " + addressAsString +
+                    "\nAll DAO param donation addresses:" + allPastParamValues;
+            log.error(errorMsg);
+            throw new DonationAddressException(errorMsg);
+        }
     }
 
     public static void validatePayoutTx(Trade trade,
@@ -212,16 +216,10 @@ public class DelayedPayoutTxValidation {
             throw new AmountMismatchException(errorMsg);
         }
 
-
-        // Validate donation address
-        // Get most recent donation address.
-        // We do not support past DAO param addresses to avoid that those receive funds (no bond set up anymore).
-        // Users who have not synced the DAO cannot trade.
-
         NetworkParameters params = btcWalletService.getParams();
         Address address = output.getAddressFromP2PKHScript(params);
         if (address == null) {
-            // The donation address can be as well be a multisig address.
+            // The donation address can be a multisig address as well.
             address = output.getAddressFromP2SH(params);
             if (address == null) {
                 errorMsg = "Donation address cannot be resolved (not of type P2PKHScript or P2SH). Output: " + output;
@@ -236,36 +234,7 @@ public class DelayedPayoutTxValidation {
             addressConsumer.accept(addressAsString);
         }
 
-        // In case the seller has deactivated the DAO the default address will be used.
-        String defaultDonationAddressString = Param.RECIPIENT_BTC_ADDRESS.getDefaultValue();
-        boolean defaultNotMatching = !defaultDonationAddressString.equals(addressAsString);
-        String recentDonationAddressString = daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS);
-        boolean recentFromDaoNotMatching = !recentDonationAddressString.equals(addressAsString);
-
-        // If buyer has DAO deactivated or not synced he will not be able to see recent address used by the seller, so
-        // we add it hard coded here. We need to support also the default one as
-        // FIXME This is a quick fix and should be improved in future.
-        // We use the default addresses for non mainnet networks. For dev testing it need to be changed here.
-        // We use a list to gain more flexibility at updates of DAO param, but still might fail if buyer has not updated
-        // software. Needs a better solution....
-        List<String> hardCodedAddresses = Config.baseCurrencyNetwork().isMainnet() ?
-                List.of("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp", "3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV") :  // mainnet
-                Config.baseCurrencyNetwork().isDaoBetaNet() ? List.of("1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7") :  // daoBetaNet
-                        Config.baseCurrencyNetwork().isTestnet() ? List.of("2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV") : // testnet
-                                List.of("2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w"); // regtest or DAO testnet (regtest)
-
-        boolean noneOfHardCodedMatching = hardCodedAddresses.stream().noneMatch(e -> e.equals(addressAsString));
-
-        // If seller has DAO deactivated as well we get default address
-        if (recentFromDaoNotMatching && defaultNotMatching && noneOfHardCodedMatching) {
-            errorMsg = "Donation address is invalid." +
-                    "\nAddress used by BTC seller: " + addressAsString +
-                    "\nRecent donation address:" + recentDonationAddressString +
-                    "\nDefault donation address: " + defaultDonationAddressString;
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new DonationAddressException(errorMsg);
-        }
+        validateDonationAddress(addressAsString, daoFacade);
 
         if (dispute != null) {
             // Verify that address in the dispute matches the one in the trade.
