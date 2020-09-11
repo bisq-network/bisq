@@ -90,7 +90,13 @@ public class SellerMaybeSignWitnessAndSendWitnessMessage extends SendMailboxMess
 
             signedWitness = signedWitnessOptional.get();
 
-            // Message sending is handled in base class.
+            // The signer broadcasts as well the signedWitness. In case the receiver will not get the message we have
+            // better resilience that the data is in the network. We set reBroadcast to true but do not expect that the
+            // signedWitness exists already as we just created it.
+            // TODO check with @sqrrm
+            processModel.getP2PService().addPersistableNetworkPayload(signedWitness, true);
+
+            // Message sending is handled in base class (SendMailboxMessageTask).
             super.run();
         } catch (Throwable t) {
             failed(t);

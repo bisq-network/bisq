@@ -494,7 +494,10 @@ public class SignedWitnessService {
     private void publishSignedWitness(SignedWitness signedWitness) {
         if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
             log.info("broadcast signed witness {}", signedWitness.toString());
-            p2PService.addPersistableNetworkPayload(signedWitness, false);
+            // We set reBroadcast to true. The signer has broadcast the signedWitness as
+            // well, so it might be that we have received the data already, but we prefer to re-broadcast
+            // to achieve better resilience.
+            p2PService.addPersistableNetworkPayload(signedWitness, true);
             addToMap(signedWitness);
         }
     }
