@@ -32,7 +32,6 @@ import bisq.desktop.util.validation.RegexValidator;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
@@ -63,7 +62,6 @@ import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
@@ -75,7 +73,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.wallet.DeterministicSeed;
 
 import com.googlecode.jcsv.CSVStrategy;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
@@ -801,26 +798,6 @@ public class GUIUtil {
         } catch (Throwable t) {
             new Popup().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
         }
-    }
-
-    public static void restoreSeedWords(DeterministicSeed seed, WalletsManager walletsManager, File storageDir) {
-        try {
-            FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
-        } catch (Throwable t) {
-            new Popup().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
-        }
-        walletsManager.restoreSeedWords(
-                seed,
-                () -> UserThread.execute(() -> {
-                    log.info("Wallets restored with seed words");
-                    new Popup().feedback(Res.get("seed.restore.success")).hideCloseButton().show();
-                    BisqApp.getShutDownHandler().run();
-                }),
-                throwable -> UserThread.execute(() -> {
-                    log.error(throwable.toString());
-                    new Popup().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
-                            .show();
-                }));
     }
 
     public static void showSelectableTextModal(String title, String text) {
