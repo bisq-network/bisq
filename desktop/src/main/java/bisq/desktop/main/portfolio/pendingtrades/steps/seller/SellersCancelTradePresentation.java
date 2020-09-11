@@ -178,6 +178,9 @@ public class SellersCancelTradePresentation {
             case REQUEST_REJECTED_MSG_SEND_FAILED:
                 cancelRequestInfoLabel.setText(Res.get("portfolio.pending.seller.rejectResponse.failed"));
                 break;
+            default:
+                log.error("Unexpected state {}", state);
+                break;
         }
     }
 
