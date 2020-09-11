@@ -27,7 +27,6 @@ import bisq.common.taskrunner.TaskRunner;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTask {
     @SuppressWarnings({"unused"})

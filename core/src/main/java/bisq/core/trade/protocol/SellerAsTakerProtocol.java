@@ -179,6 +179,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // After peer has started Fiat tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // It might be that this get called repeated if peer re-sent the message as he did not receive an ACK
     private void handle(CounterCurrencyTransferStartedMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
