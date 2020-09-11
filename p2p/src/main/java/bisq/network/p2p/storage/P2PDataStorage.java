@@ -479,16 +479,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * be broadcast to the P2P network.
      * @param payload PersistableNetworkPayload to add to the network
      * @param sender local NodeAddress, if available
-     * @param allowReBroadcast <code>true</code> if the PersistableNetworkPayload should be rebroadcast even if it
+     * @param reBroadcast <code>true</code> if the PersistableNetworkPayload should be rebroadcast even if it
      *                         already exists locally
      * @return <code>true</code> if the PersistableNetworkPayload passes all validation and exists in the P2PDataStore
      *         on completion
      */
     public boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
                                                 @Nullable NodeAddress sender,
-                                                boolean allowReBroadcast) {
+                                                boolean reBroadcast) {
         return addPersistableNetworkPayload(
-                payload, sender, true, allowReBroadcast, false);
+                payload, sender, true, reBroadcast, false);
     }
 
     private boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
