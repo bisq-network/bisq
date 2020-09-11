@@ -174,7 +174,6 @@ public abstract class BuyerTrade extends Trade {
         }
     }
 
-
     @Override
     public String toString() {
         return "BuyerTrade{" +

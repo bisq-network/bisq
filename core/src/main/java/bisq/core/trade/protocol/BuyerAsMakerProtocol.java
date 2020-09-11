@@ -87,6 +87,19 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             taskRunner.addTasks(BuyerSetupPayoutTxListener.class);
             taskRunner.run();
         }
+
+        // We might have 2 taskRunners as BuyerSetupPayoutTxListener might have been started as well
+        if (trade.getState() == Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG ||
+                trade.getState() == Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG) {
+            // In case we have not received an ACK from the CounterCurrencyTransferStartedMessage we re-send it
+            // periodically in BuyerSendCounterCurrencyTransferStartedMessage
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> handleTaskRunnerSuccess("BuyerSendCounterCurrencyTransferStartedMessage"),
+                    this::handleTaskRunnerFault);
+
+            taskRunner.addTasks(BuyerSendCounterCurrencyTransferStartedMessage.class);
+            taskRunner.run();
+        }
     }
 
     @Override
