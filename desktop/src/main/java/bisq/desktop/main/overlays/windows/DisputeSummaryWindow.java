@@ -803,8 +803,33 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         dispute.setIsClosed(true);
         DisputeResult.Reason reason = disputeResult.getReason();
 
+       /* disputeSummaryWindow.close.msg=Ticket for trade {0} closed on {1}\n\n\
+        {2} node address: {3}\n\
+        Summary:\n\
+        Payout amount for BTC buyer: {4}\n\
+        Payout amount for BTC seller: {5}\n\n\
+        Reason for dispute: {6}\n\n\
+        Summary notes:\n{7}
+         .append("Currency: ")
+                        .append(CurrencyUtil.getNameAndCode(contract.getOfferPayload().getCurrencyCode()))
+                        .append("\n")
+                        .append("Trade amount: ")
+                        .append(contract.getTradeAmount().toFriendlyString())
+
+
+        */
+        String role = isRefundAgent ? Res.get("shared.refundAgent") : Res.get("shared.mediator");
+        String agentNodeAddress = checkNotNull(disputeManager.getAgentNodeAddress(dispute)).getFullAddress();
+        Contract contract = dispute.getContract();
+        String currencyCode = contract.getOfferPayload().getCurrencyCode();
+        String amount = formatter.formatCoinWithCode(contract.getTradeAmount());
         String textToSign = Res.get("disputeSummaryWindow.close.msg",
+                dispute.getShortTradeId(),
                 DisplayUtils.formatDateTime(disputeResult.getCloseDate()),
+                role,
+                agentNodeAddress,
+                currencyCode,
+                amount,
                 formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                 formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                 Res.get("disputeSummaryWindow.reason." + reason.name()),
