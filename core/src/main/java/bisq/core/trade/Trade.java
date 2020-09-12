@@ -725,9 +725,19 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     public Transaction getDelayedPayoutTx() {
         if (delayedPayoutTx == null) {
-            delayedPayoutTx = delayedPayoutTxBytes != null && processModel.getBtcWalletService() != null ?
-                    processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxBytes) :
-                    null;
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            if (btcWalletService == null) {
+                log.warn("btcWalletService is null. You might call that method before the tradeManager has " +
+                        "initialized all trades");
+                return null;
+            }
+
+            if (delayedPayoutTxBytes == null) {
+                log.warn("delayedPayoutTxBytes are null");
+                return null;
+            }
+
+            delayedPayoutTx = btcWalletService.getTxFromSerializedTx(delayedPayoutTxBytes);
         }
         return delayedPayoutTx;
     }

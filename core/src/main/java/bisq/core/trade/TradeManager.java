@@ -135,6 +135,7 @@ public class TradeManager implements PersistedDataHost {
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private TradableList<Trade> tradableList;
+    @Getter
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
     private List<Trade> tradesForStatistics;
     @Setter
