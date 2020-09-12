@@ -24,7 +24,6 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.ColumnConstraints;
@@ -89,7 +88,7 @@ public class VerifyDisputeResultSignatureWindow extends Overlay<VerifyDisputeRes
     }
 
     private void addContent() {
-        Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("support.sigCheck.popup.info"), 0, width);
+        addMultilineLabel(gridPane, ++rowIndex, Res.get("support.sigCheck.popup.info"), 0, width);
         textArea = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("support.sigCheck.popup.msg.label"),
                 Res.get("support.sigCheck.popup.msg.prompt")).second;
         resultTextField = addTopLabelTextField(gridPane, ++rowIndex, Res.get("support.sigCheck.popup.result")).second;
