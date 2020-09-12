@@ -120,7 +120,7 @@ public class FileDatabaseTestUtils {
      * @return version string relative to v1.3.7
      */
     public String getVersion(int offset) throws Exception {
-        String result = new StringBuilder().append(Integer.valueOf("1.3.7".replace(".", "")) + offset).insert(2, ".").insert(1, ".").toString();
+        String result = new StringBuilder().append(Integer.valueOf(Version.VERSION.replace(".", "")) + offset).insert(2, ".").insert(1, ".").toString();
 
         assert result.equals(Version.VERSION) | Version.history.contains(result) : "A test in FileDatabaseTest requested a version which is not included in the test environment.";
 
