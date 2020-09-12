@@ -54,6 +54,7 @@ import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -90,11 +91,11 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                               ClosedTradableManager closedTradableManager,
                               OpenOfferManager openOfferManager,
                               DaoFacade daoFacade,
-                              PubKeyRing pubKeyRing,
+                              KeyRing keyRing,
                               ArbitrationDisputeListService arbitrationDisputeListService,
                               PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, daoFacade, pubKeyRing, arbitrationDisputeListService, priceFeedService);
+                openOfferManager, daoFacade, keyRing, arbitrationDisputeListService, priceFeedService);
     }
 
 

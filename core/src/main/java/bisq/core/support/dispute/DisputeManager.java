@@ -48,6 +48,7 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
@@ -62,6 +63,8 @@ import javafx.beans.property.IntegerProperty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import java.security.KeyPair;
 
 import java.util.List;
 import java.util.Optional;
@@ -90,6 +93,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     @Getter
     protected final ObservableList<Dispute> disputesWithInvalidDonationAddress = FXCollections.observableArrayList();
+    @Getter
+    private final KeyPair signatureKeyPair;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +109,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           DaoFacade daoFacade,
-                          PubKeyRing pubKeyRing,
+                          KeyRing keyRing,
                           DisputeListService<T> disputeListService,
                           PriceFeedService priceFeedService) {
         super(p2PService, walletsSetup);
@@ -115,7 +120,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
         this.daoFacade = daoFacade;
-        this.pubKeyRing = pubKeyRing;
+        this.pubKeyRing = keyRing.getPubKeyRing();
+        signatureKeyPair = keyRing.getSignatureKeyPair();
         this.disputeListService = disputeListService;
         this.priceFeedService = priceFeedService;
     }
@@ -266,7 +272,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
@@ -646,7 +651,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     // dispute agent send result to trader
-    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
+    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String summaryText) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
@@ -658,7 +663,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
-                text,
+                summaryText,
                 p2PService.getAddress());
 
         disputeResult.setChatMessage(chatMessage);

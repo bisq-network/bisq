@@ -28,6 +28,8 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -43,9 +45,12 @@ public abstract class DisputeClientView extends DisputeView {
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
                              AccountAgeWitnessService accountAgeWitnessService,
+                             MediatorManager mediatorManager,
+                             RefundAgentManager refundAgentManager,
                              boolean useDevPrivilegeKeys) {
         super(DisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow, privateNotificationManager,
-                contractWindow, tradeDetailsWindow, accountAgeWitnessService, useDevPrivilegeKeys);
+                contractWindow, tradeDetailsWindow, accountAgeWitnessService,
+                mediatorManager, refundAgentManager, useDevPrivilegeKeys);
     }
 
     @Override

@@ -23,6 +23,7 @@ import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.support.dispute.DisputeSummaryVerification;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
@@ -88,8 +89,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsWithBox;
 import static bisq.desktop.util.FormBuilder.addConfirmationLabelLabel;
@@ -97,8 +97,9 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
-    private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
+
 
     private final CoinFormatter formatter;
     private final MediationManager mediationManager;
@@ -790,12 +791,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void doClose(Button closeTicketButton) {
+        DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager = getDisputeManager(dispute);
+        if (disputeManager == null) {
+            return;
+        }
+
+        boolean isRefundAgent = disputeManager instanceof RefundManager;
         disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
         dispute.setIsClosed(true);
         DisputeResult.Reason reason = disputeResult.getReason();
-        String text = Res.get("disputeSummaryWindow.close.msg",
+
+        String textToSign = Res.get("disputeSummaryWindow.close.msg",
                 DisplayUtils.formatDateTime(disputeResult.getCloseDate()),
                 formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                 formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
@@ -805,16 +813,20 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (reason == DisputeResult.Reason.OPTION_TRADE &&
                 dispute.getChatMessages().size() > 1 &&
                 dispute.getChatMessages().get(1).isSystemMessage()) {
-            text += "\n\n" + dispute.getChatMessages().get(1).getMessage();
+            textToSign += "\n\n" + dispute.getChatMessages().get(1).getMessage();
         }
 
-        if (dispute.getSupportType() == SupportType.MEDIATION) {
-            text += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
-        } else if (dispute.getSupportType() == SupportType.REFUND) {
-            text += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
+        summaryNotesTextArea.textProperty().unbindBidirectional(disputeResult.summaryNotesProperty());
+
+        String summaryText = DisputeSummaryVerification.signAndApply(disputeManager, dispute, disputeResult, textToSign);
+
+        if (isRefundAgent) {
+            summaryText += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
+        } else {
+            summaryText += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
         }
 
-        checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
+        disputeManager.sendDisputeResultMessage(disputeResult, dispute, summaryText);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
             UserThread.runAfter(() -> new Popup()
@@ -824,7 +836,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
 
         finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
-
         closeTicketButton.disableProperty().unbind();
 
         hide();
