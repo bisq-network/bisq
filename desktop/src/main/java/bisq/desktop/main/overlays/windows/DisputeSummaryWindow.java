@@ -387,14 +387,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount);
 
-        if (!totalAmount.isPositive()) {
-            return false;
-        }
-
-        if (getDisputeManager(dispute) instanceof RefundManager) {
-            // We allow to spend less in case of RefundAgent
+        boolean isRefundAgent = getDisputeManager(dispute) instanceof RefundManager;
+        if (isRefundAgent) {
+            // We allow to spend less in case of RefundAgent or even zero to both, so in that case no payout tx will
+            // be made
             return totalAmount.compareTo(available) <= 0;
         } else {
+            if (!totalAmount.isPositive()) {
+                return false;
+            }
             return totalAmount.compareTo(available) == 0;
         }
     }
@@ -651,7 +652,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             if (dispute.getSupportType() == SupportType.REFUND &&
                     peersDisputeOptional.isPresent() &&
                     !peersDisputeOptional.get().isClosed()) {
-                showPayoutTxConfirmation(contract, disputeResult, () -> doCloseIfValid(closeTicketButton));
+                showPayoutTxConfirmation(contract,
+                        disputeResult,
+                        () -> doCloseIfValid(closeTicketButton));
             } else {
                 doCloseIfValid(closeTicketButton);
             }
@@ -687,28 +690,36 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     formatter.formatCoinWithCode(sellerPayoutAmount),
                     sellerPayoutAddressString);
         }
-        new Popup().width(900)
-                .headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
-                .confirmation(Res.get("disputeSummaryWindow.close.txDetails",
-                        formatter.formatCoinWithCode(inputAmount),
-                        buyerDetails,
-                        sellerDetails,
-                        formatter.formatCoinWithCode(fee),
-                        feePerByte,
-                        kb))
-                .actionButtonText(Res.get("shared.yes"))
-                .onAction(() -> {
-                    doPayout(buyerPayoutAmount,
-                            sellerPayoutAmount,
-                            fee,
-                            buyerPayoutAddressString,
-                            sellerPayoutAddressString,
-                            resultHandler);
-                })
-                .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> {
-                })
-                .show();
+        if (outputAmount.isPositive()) {
+            new Popup().width(900)
+                    .headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
+                    .confirmation(Res.get("disputeSummaryWindow.close.txDetails",
+                            formatter.formatCoinWithCode(inputAmount),
+                            buyerDetails,
+                            sellerDetails,
+                            formatter.formatCoinWithCode(fee),
+                            feePerByte,
+                            kb))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(() -> {
+                        doPayout(buyerPayoutAmount,
+                                sellerPayoutAmount,
+                                fee,
+                                buyerPayoutAddressString,
+                                sellerPayoutAddressString,
+                                resultHandler);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        } else {
+            // No payout will be made
+            new Popup().headLine(Res.get("disputeSummaryWindow.close.noPayout.headline"))
+                    .confirmation(Res.get("disputeSummaryWindow.close.noPayout.text"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(resultHandler::handleResult)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        }
     }
 
     private void doPayout(Coin buyerPayoutAmount,
