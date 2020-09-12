@@ -43,11 +43,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
                     processModel.getBtcWalletService());
 
             complete();
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
-                DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.InvalidLockTimeException |
-                DelayedPayoutTxValidation.AmountMismatchException e) {
+        } catch (DelayedPayoutTxValidation.ValidationException e) {
             failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);

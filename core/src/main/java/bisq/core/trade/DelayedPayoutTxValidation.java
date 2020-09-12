@@ -19,7 +19,6 @@ package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 
@@ -44,68 +43,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class DelayedPayoutTxValidation {
 
-    public static class DonationAddressException extends Exception {
-        DonationAddressException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class MissingDelayedPayoutTxException extends Exception {
-        MissingDelayedPayoutTxException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class InvalidTxException extends Exception {
-        InvalidTxException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class AmountMismatchException extends Exception {
-        AmountMismatchException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class InvalidLockTimeException extends Exception {
-        InvalidLockTimeException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class InvalidInputException extends Exception {
-        InvalidInputException(String msg) {
-            super(msg);
-        }
-    }
-
     public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
-            throws DonationAddressException {
+            throws AddressException {
 
         if (addressAsString == null) {
+            log.warn("address is null at validateDonationAddress. This is expected in case of an not updated trader.");
             return;
         }
 
-        // We support any of the past addresses as well as in case the peer has not enabled the DAO or is out of sync we
-        // do not want to break validation.
-        Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
-
-        // If Dao is deactivated we need to add the default address as getAllPastParamValues will not return us any.
-        allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
-
-        // If Dao is deactivated we need to add the past addresses used as well.
-        // This list need to be updated once a new address gets defined.
-        allPastParamValues.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"); // burning man 2019
-        allPastParamValues.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV"); // burningman2
-
-
+        Set<String> allPastParamValues = daoFacade.getAllDonationAddresses();
         if (!allPastParamValues.contains(addressAsString)) {
             String errorMsg = "Donation address is not a valid DAO donation address." +
                     "\nAddress used in the dispute: " + addressAsString +
                     "\nAll DAO param donation addresses:" + allPastParamValues;
             log.error(errorMsg);
-            throw new DonationAddressException(errorMsg);
+            throw new AddressException(errorMsg);
         }
     }
 
@@ -113,8 +65,8 @@ public class DelayedPayoutTxValidation {
                                         Transaction delayedPayoutTx,
                                         DaoFacade daoFacade,
                                         BtcWalletService btcWalletService)
-            throws DonationAddressException, MissingDelayedPayoutTxException,
-            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
+            throws AddressException, MissingTxException,
+            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validatePayoutTx(trade,
                 delayedPayoutTx,
                 null,
@@ -128,8 +80,8 @@ public class DelayedPayoutTxValidation {
                                         @Nullable Dispute dispute,
                                         DaoFacade daoFacade,
                                         BtcWalletService btcWalletService)
-            throws DonationAddressException, MissingDelayedPayoutTxException,
-            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
+            throws AddressException, MissingTxException,
+            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validatePayoutTx(trade,
                 delayedPayoutTx,
                 dispute,
@@ -143,8 +95,8 @@ public class DelayedPayoutTxValidation {
                                         DaoFacade daoFacade,
                                         BtcWalletService btcWalletService,
                                         @Nullable Consumer<String> addressConsumer)
-            throws DonationAddressException, MissingDelayedPayoutTxException,
-            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
+            throws AddressException, MissingTxException,
+            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validatePayoutTx(trade,
                 delayedPayoutTx,
                 null,
@@ -159,13 +111,13 @@ public class DelayedPayoutTxValidation {
                                         DaoFacade daoFacade,
                                         BtcWalletService btcWalletService,
                                         @Nullable Consumer<String> addressConsumer)
-            throws DonationAddressException, MissingDelayedPayoutTxException,
-            InvalidTxException, InvalidLockTimeException, AmountMismatchException {
+            throws AddressException, MissingTxException,
+            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         String errorMsg;
         if (delayedPayoutTx == null) {
             errorMsg = "DelayedPayoutTx must not be null";
             log.error(errorMsg);
-            throw new MissingDelayedPayoutTxException("DelayedPayoutTx must not be null");
+            throw new MissingTxException("DelayedPayoutTx must not be null");
         }
 
         // Validate tx structure
@@ -213,7 +165,7 @@ public class DelayedPayoutTxValidation {
             errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
-            throw new AmountMismatchException(errorMsg);
+            throw new InvalidAmountException(errorMsg);
         }
 
         NetworkParameters params = btcWalletService.getParams();
@@ -225,7 +177,7 @@ public class DelayedPayoutTxValidation {
                 errorMsg = "Donation address cannot be resolved (not of type P2PKHScript or P2SH). Output: " + output;
                 log.error(errorMsg);
                 log.error(delayedPayoutTx.toString());
-                throw new DonationAddressException(errorMsg);
+                throw new AddressException(errorMsg);
             }
         }
 
@@ -259,6 +211,53 @@ public class DelayedPayoutTxValidation {
             throw new InvalidInputException("Input of delayed payout transaction does not point to output of deposit tx.\n" +
                     "Delayed payout tx=" + delayedPayoutTx + "\n" +
                     "Deposit tx=" + depositTx);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Exceptions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static class ValidationException extends Exception {
+        ValidationException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class AddressException extends ValidationException {
+        AddressException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class MissingTxException extends ValidationException {
+        MissingTxException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class InvalidTxException extends ValidationException {
+        InvalidTxException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class InvalidAmountException extends ValidationException {
+        InvalidAmountException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class InvalidLockTimeException extends ValidationException {
+        InvalidLockTimeException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class InvalidInputException extends ValidationException {
+        InvalidInputException(String msg) {
+            super(msg);
         }
     }
 }

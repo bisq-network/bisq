@@ -546,11 +546,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     daoFacade,
                     btcWalletService,
                     donationAddressString::set);
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
-                DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.InvalidLockTimeException |
-                DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                DelayedPayoutTxValidation.AmountMismatchException e) {
+        } catch (DelayedPayoutTxValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.

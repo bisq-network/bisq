@@ -28,7 +28,6 @@ import bisq.desktop.main.support.dispute.DisputeView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
@@ -59,7 +58,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 
 import java.util.List;
-import java.util.Set;
 
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
@@ -126,13 +124,16 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     }
 
     protected void showWarningForInvalidDonationAddress(List<? extends Dispute> disputes) {
-        disputes.forEach(dispute -> {
-            String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
-            Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
-            new Popup().warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
-                    addressAsString, allPastParamValues, dispute.getTradeId()))
-                    .show();
-        });
+        disputes.stream()
+                .filter(dispute -> !dispute.isClosed())
+                .forEach(dispute -> {
+                    new Popup().warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                            dispute.getDonationAddressOfDelayedPayoutTx(),
+                            daoFacade.getAllDonationAddresses(),
+                            dispute.getTradeId(),
+                            ""))
+                            .show();
+                });
     }
 
     @Override

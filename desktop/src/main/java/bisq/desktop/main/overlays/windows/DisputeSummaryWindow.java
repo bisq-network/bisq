@@ -35,7 +35,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
@@ -87,7 +86,6 @@ import javafx.beans.value.ChangeListener;
 
 import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -650,18 +648,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 return;
             }
 
-            try {
-                DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-
-                if (dispute.getSupportType() == SupportType.REFUND &&
-                        peersDisputeOptional.isPresent() &&
-                        !peersDisputeOptional.get().isClosed()) {
-                    showPayoutTxConfirmation(contract, disputeResult, () -> doClose(closeTicketButton));
-                } else {
-                    doClose(closeTicketButton);
-                }
-            } catch (DelayedPayoutTxValidation.DonationAddressException exception) {
-                showInValidDonationAddressPopup();
+            if (dispute.getSupportType() == SupportType.REFUND &&
+                    peersDisputeOptional.isPresent() &&
+                    !peersDisputeOptional.get().isClosed()) {
+                showPayoutTxConfirmation(contract, disputeResult, () -> doCloseIfValid(closeTicketButton));
+            } else {
+                doCloseIfValid(closeTicketButton);
             }
         });
 
@@ -742,7 +734,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 public void onFailure(TxBroadcastException exception) {
                     log.error("TxBroadcastException at doPayout", exception);
                     new Popup().error(exception.toString()).show();
-                    ;
                 }
             });
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
@@ -751,20 +742,43 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
-    private void doClose(Button closeTicketButton) {
+    private void doCloseIfValid(Button closeTicketButton) {
         var disputeManager = checkNotNull(getDisputeManager(dispute));
         try {
             DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-        } catch (DelayedPayoutTxValidation.DonationAddressException exception) {
-            showInValidDonationAddressPopup();
+            doClose(closeTicketButton);
+        } catch (DelayedPayoutTxValidation.AddressException exception) {
+            String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
+            String tradeId = dispute.getTradeId();
 
             // For mediators we do not enforce that the case cannot be closed to stay flexible,
             // but for refund agents we do.
-            if (disputeManager instanceof RefundManager) {
-                return;
+            if (disputeManager instanceof MediationManager) {
+                new Popup().width(900)
+                        .warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                                addressAsString,
+                                daoFacade.getAllDonationAddresses(),
+                                tradeId,
+                                Res.get("support.warning.disputesWithInvalidDonationAddress.mediator")))
+                        .onAction(() -> {
+                            doClose(closeTicketButton);
+                        })
+                        .actionButtonText(Res.get("shared.yes"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .show();
+            } else {
+                new Popup().width(900)
+                        .warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                                addressAsString,
+                                daoFacade.getAllDonationAddresses(),
+                                tradeId,
+                                Res.get("support.warning.disputesWithInvalidDonationAddress.refundAgent")))
+                        .show();
             }
         }
+    }
 
+    private void doClose(Button closeTicketButton) {
         disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
@@ -789,7 +803,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             text += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
         }
 
-        disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
+        checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
             UserThread.runAfter(() -> new Popup()
@@ -803,15 +817,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         closeTicketButton.disableProperty().unbind();
 
         hide();
-    }
-
-    private void showInValidDonationAddressPopup() {
-        String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
-        Set<String> allPastParamValues = daoFacade.getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
-        String tradeId = dispute.getTradeId();
-        new Popup().warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
-                addressAsString, allPastParamValues, tradeId))
-                .show();
     }
 
     private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {

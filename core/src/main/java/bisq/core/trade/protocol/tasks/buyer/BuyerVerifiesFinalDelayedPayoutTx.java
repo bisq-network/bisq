@@ -55,12 +55,7 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             DelayedPayoutTxValidation.validatePayoutTxInput(depositTx, delayedPayoutTx);
 
             complete();
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
-                DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.InvalidLockTimeException |
-                DelayedPayoutTxValidation.AmountMismatchException |
-                DelayedPayoutTxValidation.InvalidInputException e) {
+        } catch (DelayedPayoutTxValidation.ValidationException e) {
             failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);

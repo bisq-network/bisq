@@ -74,7 +74,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -292,7 +291,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         try {
             DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-        } catch (DelayedPayoutTxValidation.DonationAddressException e) {
+        } catch (DelayedPayoutTxValidation.AddressException e) {
             disputesWithInvalidDonationAddress.add(dispute);
         }
 
@@ -340,7 +339,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
 
         Optional<Trade> optionalTrade = tradeManager.getTradeById(dispute.getTradeId());
-        checkArgument(optionalTrade.isPresent());
+        if (!optionalTrade.isPresent()) {
+            return;
+        }
+
         Trade trade = optionalTrade.get();
         try {
             DelayedPayoutTxValidation.validatePayoutTx(trade,
@@ -348,11 +350,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     dispute,
                     daoFacade,
                     btcWalletService);
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
-                DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.InvalidLockTimeException |
-                DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                DelayedPayoutTxValidation.AmountMismatchException e) {
+        } catch (DelayedPayoutTxValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.

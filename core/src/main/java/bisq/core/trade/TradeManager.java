@@ -309,11 +309,7 @@ public class TradeManager implements PersistedDataHost {
                                 trade.getDelayedPayoutTx(),
                                 daoFacade,
                                 btcWalletService);
-                    } catch (DelayedPayoutTxValidation.DonationAddressException |
-                            DelayedPayoutTxValidation.InvalidTxException |
-                            DelayedPayoutTxValidation.InvalidLockTimeException |
-                            DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                            DelayedPayoutTxValidation.AmountMismatchException e) {
+                    } catch (DelayedPayoutTxValidation.ValidationException e) {
                         log.warn("Delayed payout tx exception, trade {}, exception {}", trade.getId(), e.getMessage());
                         if (!allowFaultyDelayedTxs) {
                             // We move it to failed trades so it cannot be continued.
