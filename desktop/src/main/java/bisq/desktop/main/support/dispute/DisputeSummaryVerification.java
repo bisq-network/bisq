@@ -57,7 +57,6 @@ public class DisputeSummaryVerification {
             sigAsHex = "Signing failed";
         }
 
-        disputeResult.setArbitratorPubKey(dispute.getAgentPubKeyRing().getSignaturePubKeyBytes());
         NodeAddress agentNodeAddress = checkNotNull(disputeManager.getAgentNodeAddress(dispute));
         return Res.get("disputeSummaryWindow.close.msgWithSigAndPubKey",
                 textToSign,
