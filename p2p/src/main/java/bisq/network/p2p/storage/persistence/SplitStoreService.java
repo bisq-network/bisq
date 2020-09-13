@@ -18,41 +18,15 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Has business logic to operate data stores which are spread across multiple files.<br><br><p>
- *
- * <h3>Use Case</h3>
- * Startup requires to send all object keys to the network in order to get the new data.
- * However, data stores got quite big over time and will grow even faster in the future.
- * With multi-file data stores, we can query for new objects since the last snapshot (ie.
- * the last release) and subsequently send "I am Bisq vx.y.z and I have these new objects"
- * to the network and the network can respond accordingly.</p><br><br><p>
- *
- * <h3>Features</h3>
- * In order to only get a specific part of all the objects available in the complete data
- * store, the original single-file data store had to be split up and this class and
- * {@link PersistableNetworkPayloadStore} are there to handle the business logic needed for
- * <ul>
- * <li>migrating to the new and shiny multi-file data store</li>
- * <li>shoveling around data in case Bisq gets updated to a new version</li>
- * <li>takes care of setting up a fresh Bisq install</li>
- * <li>makes sure that historical data cannot be altered easily</li>
- * <li>adding data to the store will only amend the live store</li>
- * <li>takes care of keeping the legacy API functional</li>
- * <li>adds the feature of filtering object queries by Bisq release</li>
- * </ul>
- * </p>
- *
- * <h3>Further reading</h3><p><ul>
- *     <li><a href="https://github.com/bisq-network/projects/issues/25">project description</a></li>
- * </ul></p>
- *
  * Manages historical data stores tagged with the release versions. Those stores are immutable data. New data is added
- * to the default map in the store
+ * to the default map in the store (live data). The historical data are used when the client requests the full data set.
+ * For initial data requests we only use the live data as the version is sent with the request so the responding node
+ * can figure out if we miss any of the historical data.
  */
 @Slf4j
 public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore> extends MapStoreService<T, PersistableNetworkPayload> {
-    private final Map<String, PersistableNetworkPayloadStore> history = new HashMap<>();
-    private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfHistoricalStores = new HashMap<>();
+    private final Map<String, PersistableNetworkPayloadStore> storesByVersion = new HashMap<>();
+    private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> historicalDataMap = new HashMap<>();
 
     public SplitStoreService(File storageDir, Storage<T> storage) {
         super(storageDir, storage);
@@ -61,8 +35,9 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     @Override
     protected void put(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
         // make sure we do not add data that we already have (in a bin of historical data)
-        if (getMap().containsKey(hash))
+        if (getMap().containsKey(hash)) {
             return;
+        }
 
         store.getMap().put(hash, payload);
         persist();
@@ -72,8 +47,9 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash,
                                                     PersistableNetworkPayload payload) {
         // make sure we do not add data that we already have (in a bin of historical data)
-        if (getMap().containsKey(hash))
+        if (getMap().containsKey(hash)) {
             return null;
+        }
 
         PersistableNetworkPayload previous = store.getMap().put(hash, payload);
         persist();
@@ -90,7 +66,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
         } else {
             // We merge the historical data with our live map
             Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
-            mergedMap.putAll(mapOfHistoricalStores);
+            mergedMap.putAll(historicalDataMap);
             return mergedMap;
         }
     }
@@ -106,7 +82,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
      */
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String version) {
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
-        history.entrySet().stream()
+        storesByVersion.entrySet().stream()
                 .filter(entry -> {
                     int storeVersion = Integer.parseInt(entry.getKey().replace(".", ""));
                     int requestersVersion = Integer.parseInt(version);
@@ -134,13 +110,13 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
             File versionedFile = new File(absolutePathOfStorageDir, versionedFileName);
             if (versionedFile.exists()) {
                 T versionedStore = getStore(versionedFileName);
-                history.put(version, versionedStore);
-                mapOfHistoricalStores.putAll(versionedStore.getMap());
+                storesByVersion.put(version, versionedStore);
+                historicalDataMap.putAll(versionedStore.getMap());
             } else {
                 PersistableNetworkPayloadStore storeFromResource = getStoreFromResource(version, postFix);
                 pruneStore(storeFromResource);
-                history.put(version, storeFromResource);
-                mapOfHistoricalStores.putAll(storeFromResource.getMap());
+                storesByVersion.put(version, storeFromResource);
+                historicalDataMap.putAll(storeFromResource.getMap());
             }
         });
     }
