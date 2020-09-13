@@ -21,7 +21,6 @@ import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
@@ -357,15 +356,8 @@ public abstract class TradeProtocol {
             return;
 
         String tradeId = tradeMessage.getTradeId();
-        String sourceUid = "";
-        if (tradeMessage instanceof MailboxMessage) {
-            sourceUid = ((MailboxMessage) tradeMessage).getUid();
-        } else {
-            // For direct msg we don't have a mandatory uid so we need to cast to get it
-            if (tradeMessage instanceof InputsForDepositTxRequest) {
-                sourceUid = tradeMessage.getUid();
-            }
-        }
+        String sourceUid = tradeMessage.getUid();
+
         AckMessage ackMessage = new AckMessage(processModel.getMyNodeAddress(),
                 AckMessageSourceType.TRADE_MESSAGE,
                 tradeMessage.getClass().getSimpleName(),
@@ -378,7 +370,6 @@ public abstract class TradeProtocol {
         final NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress() : processModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
                 ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
-        String finalSourceUid = sourceUid;
         processModel.getP2PService().sendEncryptedMailboxMessage(
                 peersNodeAddress,
                 processModel.getTradingPeer().getPubKeyRing(),
@@ -387,19 +378,19 @@ public abstract class TradeProtocol {
                     @Override
                     public void onArrived() {
                         log.info("AckMessage for {} arrived at peer {}. tradeId={}, sourceUid={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, finalSourceUid);
+                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
                     }
 
                     @Override
                     public void onStoredInMailbox() {
                         log.info("AckMessage for {} stored in mailbox for peer {}. tradeId={}, sourceUid={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, finalSourceUid);
+                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
                     }
 
                     @Override
                     public void onFault(String errorMessage) {
                         log.error("AckMessage for {} failed. Peer {}. tradeId={}, sourceUid={}, errorMessage={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, finalSourceUid, errorMessage);
+                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid, errorMessage);
                     }
                 }
         );
