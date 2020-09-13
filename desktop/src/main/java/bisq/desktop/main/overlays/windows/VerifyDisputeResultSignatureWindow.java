@@ -57,7 +57,7 @@ public class VerifyDisputeResultSignatureWindow extends Overlay<VerifyDisputeRes
         if (headLine == null)
             headLine = Res.get("support.sigCheck.popup.header");
 
-        width = 1000;
+        width = 1050;
         createGridPane();
         addHeadLine();
         addContent();

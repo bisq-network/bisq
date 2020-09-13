@@ -18,7 +18,6 @@
 package bisq.desktop.main.support.dispute;
 
 import bisq.core.locale.Res;
-import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
@@ -36,16 +35,20 @@ import bisq.common.util.Utilities;
 import java.security.KeyPair;
 import java.security.PublicKey;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class DisputeSummaryVerification {
     // Must not change as it is used for splitting the text for verifying the signature of the summary message
-    private static final String SEPARATOR = "\n------------------------------------------------------------------------------------------\n";
+    private static final String SEPARATOR1 = "\n-----BEGIN SIGNATURE-----\n";
+    private static final String SEPARATOR2 = "\n-----END SIGNATURE-----\n";
 
     public static String signAndApply(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                                      Dispute dispute,
                                       DisputeResult disputeResult,
                                       String textToSign) {
+
         byte[] hash = Hash.getSha256Hash(textToSign);
         KeyPair signatureKeyPair = disputeManager.getSignatureKeyPair();
         String sigAsHex;
@@ -57,25 +60,20 @@ public class DisputeSummaryVerification {
             sigAsHex = "Signing failed";
         }
 
-        NodeAddress agentNodeAddress = checkNotNull(disputeManager.getAgentNodeAddress(dispute));
-        return Res.get("disputeSummaryWindow.close.msgWithSigAndPubKey",
+        return Res.get("disputeSummaryWindow.close.msgWithSig",
                 textToSign,
-                SEPARATOR,
-                agentNodeAddress.getFullAddress(),
+                SEPARATOR1,
                 sigAsHex,
-                SEPARATOR);
+                SEPARATOR2);
     }
 
     public static String verifySignature(String input,
                                          MediatorManager mediatorManager,
                                          RefundAgentManager refundAgentManager) {
         try {
-            String[] tokens = input.split(SEPARATOR);
-            String textToSign = tokens[0];
-            String data = tokens[1];
-            String[] dataTokens = data.split("\n");
-            String fullAddress = dataTokens[0].split(": ")[1];
-
+            String[] parts = input.split(SEPARATOR1);
+            String textToSign = parts[0];
+            String fullAddress = textToSign.split("\n")[1].split(": ")[1];
             NodeAddress nodeAddress = new NodeAddress(fullAddress);
             DisputeAgent disputeAgent = mediatorManager.getDisputeAgentByNodeAddress(nodeAddress).orElse(null);
             if (disputeAgent == null) {
@@ -84,11 +82,9 @@ public class DisputeSummaryVerification {
             checkNotNull(disputeAgent);
             PublicKey pubKey = disputeAgent.getPubKeyRing().getSignaturePubKey();
 
-            String sigString = dataTokens[1].split(": ")[1];
+            String sigString = parts[1].split(SEPARATOR2)[0];
             byte[] sig = Utilities.decodeFromHex(sigString);
-
             byte[] hash = Hash.getSha256Hash(textToSign);
-
             try {
                 boolean result = Sig.verify(pubKey, hash, sig);
                 if (result) {
