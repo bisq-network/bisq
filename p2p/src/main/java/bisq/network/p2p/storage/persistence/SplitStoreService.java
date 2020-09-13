@@ -80,13 +80,12 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     /**
      * @return Map of our live store merged with the historical stores which are newer than the verion parameter
      */
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String version) {
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String requestersVersion) {
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
         storesByVersion.entrySet().stream()
                 .filter(entry -> {
-                    int storeVersion = Integer.parseInt(entry.getKey().replace(".", ""));
-                    int requestersVersion = Integer.parseInt(version);
-                    return storeVersion > requestersVersion;
+                    String storeVersion = entry.getKey();
+                    return Version.isNewVersion(storeVersion, requestersVersion);
                 })
                 .map(e -> e.getValue().getMap())
                 .forEach(mergedMap::putAll);

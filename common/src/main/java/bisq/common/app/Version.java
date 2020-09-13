@@ -53,7 +53,7 @@ public class Version {
         return isNewVersion(newVersion, VERSION);
     }
 
-    static boolean isNewVersion(String newVersion, String currentVersion) {
+    public static boolean isNewVersion(String newVersion, String currentVersion) {
         if (newVersion.equals(currentVersion))
             return false;
         else if (getMajorVersion(newVersion) > getMajorVersion(currentVersion))
