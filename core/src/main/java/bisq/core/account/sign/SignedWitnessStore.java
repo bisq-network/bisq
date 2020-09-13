@@ -19,13 +19,18 @@ package bisq.core.account.sign;
 
 
 import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.persistence.SplitStore;
+import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+
+import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
 
 import com.google.protobuf.Message;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -35,7 +40,10 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class SignedWitnessStore extends SplitStore {
+public class SignedWitnessStore implements ThreadedPersistableEnvelope {
+    @Getter
+    private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
+
     SignedWitnessStore() {
     }
 

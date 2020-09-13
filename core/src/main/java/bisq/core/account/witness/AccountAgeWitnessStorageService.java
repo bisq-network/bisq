@@ -17,21 +17,26 @@
 
 package bisq.core.account.witness;
 
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.SplitStoreService;
+import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
-public class AccountAgeWitnessStorageService extends SplitStoreService<AccountAgeWitnessStore> {
+public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeWitnessStore, PersistableNetworkPayload> {
     private static final String FILE_NAME = "AccountAgeWitnessStore";
 
 
@@ -55,6 +60,11 @@ public class AccountAgeWitnessStorageService extends SplitStoreService<AccountAg
     }
 
     @Override
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
+        return store.getMap();
+    }
+
+    @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
         return payload instanceof AccountAgeWitness;
     }
@@ -67,5 +77,13 @@ public class AccountAgeWitnessStorageService extends SplitStoreService<AccountAg
     @Override
     protected AccountAgeWitnessStore createStore() {
         return new AccountAgeWitnessStore();
+    }
+
+    @Override
+    protected void readStore() {
+        super.readStore();
+        checkArgument(store instanceof AccountAgeWitnessStore,
+                "Store is not instance of AccountAgeWitnessStore. That can happen if the ProtoBuffer " +
+                        "file got changed. We cleared the data store and recreated it again.");
     }
 }
