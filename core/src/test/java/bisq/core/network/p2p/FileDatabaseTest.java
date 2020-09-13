@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -34,6 +35,7 @@ import org.junit.Test;
  *
  * TODO these tests are bound to be changed once Bisq migrates to a real database backend
  */
+@Ignore
 public class FileDatabaseTest extends FileDatabaseTestUtils {
 
     /**
