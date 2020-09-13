@@ -120,10 +120,8 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         }
     }
 
-
-    protected void readStore() {
-        final String fileName = getFileName();
-        store = storage.initAndGetPersistedWithFileName(fileName, 100);
+    protected T getStore(String fileName) {
+        T store = storage.initAndGetPersistedWithFileName(fileName, 100);
         if (store != null) {
             log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
                     storage.getClass().getSimpleName(),
@@ -131,6 +129,12 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         } else {
             store = createStore();
         }
+        return store;
+    }
+
+
+    protected void readStore() {
+        store = getStore(getFileName());
     }
 
     protected abstract T createStore();
