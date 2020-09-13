@@ -28,6 +28,7 @@ import protobuf.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.NotNull;
+import javax.annotation.Nullable;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -43,9 +44,12 @@ import org.jetbrains.annotations.NotNull;
 public final class PreliminaryGetDataRequest extends GetDataRequest implements AnonymousMessage, SupportedCapabilitiesMessage {
     private final Capabilities supportedCapabilities;
 
-    public PreliminaryGetDataRequest(int nonce,
-                                     @NotNull Set<byte[]> excludedKeys) {
-        this(nonce, excludedKeys, Capabilities.app, Version.getP2PMessageVersion());
+    public PreliminaryGetDataRequest(int nonce, Set<byte[]> excludedKeys) {
+        this(nonce,
+                excludedKeys,
+                Version.VERSION,
+                Capabilities.app,
+                Version.getP2PMessageVersion());
     }
 
 
@@ -54,10 +58,11 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PreliminaryGetDataRequest(int nonce,
-                                      @NotNull Set<byte[]> excludedKeys,
-                                      @NotNull Capabilities supportedCapabilities,
+                                      Set<byte[]> excludedKeys,
+                                      @Nullable String version,
+                                      Capabilities supportedCapabilities,
                                       int messageVersion) {
-        super(messageVersion, nonce, excludedKeys);
+        super(messageVersion, nonce, excludedKeys, version);
 
         this.supportedCapabilities = supportedCapabilities;
     }
@@ -70,6 +75,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
+        Optional.ofNullable(version).ifPresent(builder::setVersion);
 
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setPreliminaryGetDataRequest(builder)
@@ -82,6 +88,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
         log.info("Received a PreliminaryGetDataRequest with {} kB", proto.getSerializedSize() / 1000d);
         return new PreliminaryGetDataRequest(proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
+                ProtoUtil.stringOrNullFromProto(proto.getVersion()),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
     }

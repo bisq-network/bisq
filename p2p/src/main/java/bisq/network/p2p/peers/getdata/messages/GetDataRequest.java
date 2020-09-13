@@ -27,6 +27,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @ToString
@@ -35,11 +37,17 @@ public abstract class GetDataRequest extends NetworkEnvelope implements Extended
     // Keys for ProtectedStorageEntry items to be excluded from the request because the peer has them already
     protected final Set<byte[]> excludedKeys;
 
+    // Added at v1.3.9
+    @Nullable
+    protected final String version;
+
     public GetDataRequest(int messageVersion,
                           int nonce,
-                          Set<byte[]> excludedKeys) {
+                          Set<byte[]> excludedKeys,
+                          @Nullable String version) {
         super(messageVersion);
         this.nonce = nonce;
         this.excludedKeys = excludedKeys;
+        this.version = version;
     }
 }

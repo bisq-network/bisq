@@ -27,12 +27,15 @@ import protobuf.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -48,6 +51,7 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
         this(senderNodeAddress,
                 nonce,
                 excludedKeys,
+                Version.VERSION,
                 Version.getP2PMessageVersion());
     }
 
@@ -59,10 +63,12 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
     private GetUpdatedDataRequest(NodeAddress senderNodeAddress,
                                   int nonce,
                                   Set<byte[]> excludedKeys,
+                                  @Nullable String version,
                                   int messageVersion) {
         super(messageVersion,
                 nonce,
-                excludedKeys);
+                excludedKeys,
+                version);
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetUpdatedDataRequest");
         this.senderNodeAddress = senderNodeAddress;
     }
@@ -75,6 +81,7 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
+        Optional.ofNullable(version).ifPresent(builder::setVersion);
 
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
@@ -88,6 +95,7 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
+                ProtoUtil.stringOrNullFromProto(proto.getVersion()),
                 messageVersion);
     }
 }
