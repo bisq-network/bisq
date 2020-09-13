@@ -825,7 +825,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (reason == DisputeResult.Reason.OPTION_TRADE &&
                 dispute.getChatMessages().size() > 1 &&
                 dispute.getChatMessages().get(1).isSystemMessage()) {
-            textToSign += "\n\n" + dispute.getChatMessages().get(1).getMessage();
+            textToSign += "\n" + dispute.getChatMessages().get(1).getMessage() + "\n";
         }
 
         String summaryText = DisputeSummaryVerification.signAndApply(disputeManager, disputeResult, textToSign);
