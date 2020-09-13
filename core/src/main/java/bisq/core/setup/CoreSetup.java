@@ -58,7 +58,10 @@ public class CoreSetup {
     private static void setupLog(Config config) {
         String logPath = Paths.get(config.appDataDir.getPath(), "bisq").toString();
         Log.setup(logPath);
-        log.info("\n\n\nLog files under: " + logPath);
+        log.info("\n\n\n///////////////////////////////////////////////////////////////////////////////////////////");
+        log.info("\n// BISQ STARTED ///////////////////////////////////////////////////////////////////////////");
+        log.info("\n///////////////////////////////////////////////////////////////////////////////////////////");
+        log.info("\n\nLog files under: {}", logPath);
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(config.logLevel));
     }
