@@ -79,8 +79,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
 
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>();
-        result.putAll(store.getMap());
+        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
         history.forEach((s, store) -> result.putAll(store.getMap()));
 
         return result;
@@ -88,8 +87,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
 
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String filter) {
-        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>();
-        result.putAll(store.getMap());
+        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
 
         // TODO do a proper language, possibly classes
         if (filter.startsWith("since ")) {
@@ -113,7 +111,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
      * directory. If we have, we can proceed loading the stores. If we do not, we have to create the stores
      * from resources.
      *
-     * @param postFix
+     * @param postFix The post fix indicating the network and coin (was used in the past when multiple base currencies was supported)
      */
     @Override
     protected void readFromResources(String postFix) {
