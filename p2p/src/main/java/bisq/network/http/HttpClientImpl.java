@@ -123,8 +123,8 @@ public class HttpClientImpl implements HttpClient {
         try {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(30));
-            connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(30));
+            connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(120));
+            connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(120));
             connection.setRequestProperty("User-Agent", "bisq/" + Version.VERSION);
             if (headerKey != null && headerValue != null)
                 connection.setRequestProperty(headerKey, headerValue);
