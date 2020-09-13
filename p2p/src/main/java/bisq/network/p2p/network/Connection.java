@@ -48,6 +48,8 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import javax.inject.Inject;
 
 import com.google.common.util.concurrent.MoreExecutors;
@@ -283,12 +285,20 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     bundleSender.schedule(() -> {
                                         if (!stopped) {
                                             synchronized (lock) {
-                                                BundleOfEnvelopes current = queueOfBundles.poll();
-                                                if (current != null && !stopped) {
-                                                    if (current.getEnvelopes().size() == 1) {
-                                                        protoOutputStream.writeEnvelope(current.getEnvelopes().get(0));
-                                                    } else {
-                                                        protoOutputStream.writeEnvelope(current);
+                                                BundleOfEnvelopes bundle = queueOfBundles.poll();
+                                                if (bundle != null && !stopped) {
+                                                    NetworkEnvelope envelope = bundle.getEnvelopes().size() == 1 ?
+                                                            bundle.getEnvelopes().get(0) :
+                                                            bundle;
+                                                    try {
+                                                        protoOutputStream.writeEnvelope(envelope);
+                                                    } catch (Throwable t) {
+                                                        log.error("Sending envelope of class {} to address {} " +
+                                                                        "failed due {}",
+                                                                envelope.getClass().getSimpleName(),
+                                                                this.getPeersNodeAddressOptional(),
+                                                                t.toString());
+                                                        log.error("envelope: {}", envelope);
                                                     }
                                                 }
                                             }
@@ -876,7 +886,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     log.error(e.getMessage());
                     e.printStackTrace();
                     reportInvalidRequest(RuleViolation.INVALID_CLASS);
-                } catch (ProtobufferException | NoClassDefFoundError e) {
+                } catch (ProtobufferException | NoClassDefFoundError | InvalidProtocolBufferException e) {
                     log.error(e.getMessage());
                     e.printStackTrace();
                     reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);

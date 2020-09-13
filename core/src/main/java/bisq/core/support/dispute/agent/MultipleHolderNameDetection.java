@@ -200,18 +200,19 @@ public class MultipleHolderNameDetection {
 
     private Map<String, List<Dispute>> getAllDisputesByTraderMap() {
         Map<String, List<Dispute>> allDisputesByTraderMap = new HashMap<>();
-        disputeManager.getDisputesAsObservableList()
-                .forEach(dispute -> {
+        disputeManager.getDisputesAsObservableList().stream()
+                .filter(dispute -> {
                     Contract contract = dispute.getContract();
                     PaymentAccountPayload paymentAccountPayload = isBuyer(dispute) ?
                             contract.getBuyerPaymentAccountPayload() :
                             contract.getSellerPaymentAccountPayload();
-                    if (paymentAccountPayload instanceof PayloadWithHolderName) {
-                        String traderPubKeyHash = getSigPubKeyHashAsHex(dispute);
-                        allDisputesByTraderMap.putIfAbsent(traderPubKeyHash, new ArrayList<>());
-                        List<Dispute> disputes = allDisputesByTraderMap.get(traderPubKeyHash);
-                        disputes.add(dispute);
-                    }
+                    return paymentAccountPayload instanceof PayloadWithHolderName;
+                })
+                .forEach(dispute -> {
+                    String traderPubKeyHash = getSigPubKeyHashAsHex(dispute);
+                    allDisputesByTraderMap.putIfAbsent(traderPubKeyHash, new ArrayList<>());
+                    List<Dispute> disputes = allDisputesByTraderMap.get(traderPubKeyHash);
+                    disputes.add(dispute);
                 });
         return allDisputesByTraderMap;
     }

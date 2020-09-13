@@ -685,8 +685,18 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return marketPricePresentation.getPriceFeedComboBoxItems();
     }
 
+    // We keep daoPresentation and accountPresentation support even it is not used atm. But if we add a new feature and
+    // add a badge again it will be needed.
+    @SuppressWarnings({"unused"})
     public BooleanProperty getShowDaoUpdatesNotification() {
         return daoPresentation.getShowDaoUpdatesNotification();
+    }
+
+    // We keep daoPresentation and accountPresentation support even it is not used atm. But if we add a new feature and
+    // add a badge again it will be needed.
+    @SuppressWarnings("unused")
+    public BooleanProperty getShowAccountUpdatesNotification() {
+        return accountPresentation.getShowAccountUpdatesNotification();
     }
 
     public BooleanProperty getShowSettingsUpdatesNotification() {

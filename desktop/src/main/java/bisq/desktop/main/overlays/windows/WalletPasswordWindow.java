@@ -21,15 +21,16 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.PasswordTextField;
+import bisq.desktop.main.SharedPresentation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
+import bisq.core.offer.OpenOfferManager;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -88,6 +89,7 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 @Slf4j
 public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private final WalletsManager walletsManager;
+    private final OpenOfferManager openOfferManager;
     private File storageDir;
 
     private Button unlockButton;
@@ -115,8 +117,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     @Inject
     private WalletPasswordWindow(WalletsManager walletsManager,
+                                 OpenOfferManager openOfferManager,
                                  @Named(Config.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
+        this.openOfferManager = openOfferManager;
         this.storageDir = storageDir;
         type = Type.Attention;
         width = 900;
@@ -277,7 +281,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         gridPane.getChildren().add(headLine2Label);
 
         seedWordsTextArea = addTextArea(gridPane, ++rowIndex, Res.get("seed.enterSeedWords"), 5);
-        ;
         seedWordsTextArea.setPrefHeight(60);
 
         Tuple2<Label, DatePicker> labelDatePickerTuple2 = addTopLabelDatePicker(gridPane, ++rowIndex,
@@ -356,6 +359,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         //TODO Is ZoneOffset correct?
         long date = value != null ? value.atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
-        GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
+        SharedPresentation.restoreSeedWords(walletsManager, openOfferManager, seed, storageDir);
     }
 }
