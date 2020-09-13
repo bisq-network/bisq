@@ -17,21 +17,16 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.MapStoreService;
 import bisq.network.p2p.storage.persistence.SplitStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
-import javax.inject.Inject;
-
 import java.io.File;
-
-import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 

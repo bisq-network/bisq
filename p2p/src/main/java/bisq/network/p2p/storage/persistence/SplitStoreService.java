@@ -80,12 +80,22 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
     /**
      * @return Map of our live store merged with the historical stores
      */
+
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(boolean ignoreHistoricalData) {
+        if (ignoreHistoricalData) {
+            return store.getMap();
+        } else {
+            // We merge the historical data with our live map
+            Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
+            mergedMap.putAll(mapOfHistoricalStores);
+            return mergedMap;
+        }
+    }
+
+    // By default we want to get all data including he historical data
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        // We merge the historical data with our live map
-        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
-        mergedMap.putAll(mapOfHistoricalStores);
-        return mergedMap;
+        return getMap(false);
     }
 
     /**
@@ -113,17 +123,9 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
      */
     @Override
     protected void readFromResources(String postFix) {
-        // load our live data store
         readStore();
 
-        // create file list of files we should have by now
-        List<String> versions = new ArrayList<>();
-
-        //TODO add recent version to history as well to distinguish more clearly from live store
-        versions.add(Version.VERSION);
-
-        versions.addAll(Version.history);
-
+        List<String> versions = new ArrayList<>(Version.history);
         versions.forEach(version -> {
             String versionedFileName = getFileName() + "_" + version;
             File versionedFile = new File(absolutePathOfStorageDir, versionedFileName);

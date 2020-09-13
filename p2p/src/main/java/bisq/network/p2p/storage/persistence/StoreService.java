@@ -132,7 +132,6 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         return store;
     }
 
-
     protected void readStore() {
         store = getStore(getFileName());
     }

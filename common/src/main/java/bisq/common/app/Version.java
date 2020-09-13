@@ -33,15 +33,9 @@ public class Version {
     public static final String VERSION = "1.3.8";
 
     /**
-     * Holds a list of historical versions.
-     *
-     * Has been introduced with version 1.3.2. Prior versions did not need the history.
-     *
-     * The history of versions is used in the differential data store solution which
-     * was introduced to eliminate the need to rewrite all data to disk every time the
-     * data changes.
+     * Holds a list of the versions of tagged resource files for optimizing the getData requests.
      */
-    public static final List<String> history = Arrays.asList("1.3.5", "1.3.6", "1.3.7");
+    public static final List<String> history = Arrays.asList("1.3.5", "1.3.6", "1.3.7", "1.3.8");
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);

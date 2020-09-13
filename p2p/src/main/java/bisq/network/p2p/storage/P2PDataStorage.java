@@ -29,7 +29,6 @@ import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
-import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddOncePayload;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
@@ -116,8 +115,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @VisibleForTesting
     public static final int CHECK_TTL_INTERVAL_SEC = 60;
-    private final SeedNodeRepository seedNodeRepository;
-    private final NetworkNode networkNode;
 
     private boolean initialRequestApplied = false;
 
@@ -155,17 +152,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
                           Storage<SequenceNumberMap> sequenceNumberMapStorage,
-                          SeedNodeRepository seedNodeRepository,
                           Clock clock,
                           @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge) {
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
-        this.seedNodeRepository = seedNodeRepository;
         this.clock = clock;
         this.maxSequenceNumberMapSizeBeforePurge = maxSequenceNumberBeforePurge;
-        this.networkNode = networkNode;
+
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -210,18 +205,25 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
     }
 
+    /**
+     * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
+     */
     private Set<byte[]> getKnownPayloadHashes() {
         // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys = getKeysAsBytes(appendOnlyDataStoreService.getMap());
-        Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsBytes(map);
+
+        // We call the getMap method with ignoreHistoricalData set to true so that we receive only the live data.
+        // In our request we will pass our version so the responding node can send us potentially missing data based
+        // on the version and the excludedKeys from our live data.
+        Set<byte[]> excludedKeys = getKeysAsByteSet(appendOnlyDataStoreService.getMap(true));
+        Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsByteSet(map);
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
         return excludedKeys;
     }
 
-    private Set<byte[]> getKeysAsBytes(Map<ByteArray, ? extends PersistablePayload> map) {
+    private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
         return map.keySet().stream()
                 .map(e -> e.bytes)
                 .collect(Collectors.toSet());
@@ -268,18 +270,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
-        Map<ByteArray, PersistableNetworkPayload> prefilteredData;
-        String version = getDataRequest.getVersion();
-        if (version == null) {
+        Map<ByteArray, PersistableNetworkPayload> mapToFilter;
+        String requestersVersion = getDataRequest.getVersion();
+        if (requestersVersion == null) {
             // Pre v 1.3.9 requests do not have set the field
-            prefilteredData = this.appendOnlyDataStoreService.getMap();
+            mapToFilter = this.appendOnlyDataStoreService.getMap();
         } else {
-            prefilteredData = this.appendOnlyDataStoreService.getMap(version);
+            mapToFilter = this.appendOnlyDataStoreService.getMap(requestersVersion);
         }
 
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
-                        prefilteredData,
+                        mapToFilter,
                         Function.identity(),
                         excludedKeysAsByteArray,
                         peerCapabilities,
