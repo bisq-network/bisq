@@ -55,7 +55,6 @@ import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
-import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
@@ -82,10 +81,7 @@ import java.security.PublicKey;
 
 import java.time.Clock;
 
-import java.nio.charset.StandardCharsets;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -214,76 +210,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
     }
 
-    /**
-     * Create the special key. <br><br>
-     *
-     * <ul>
-     *      <li>A "key" is a 20 byte cryptographic hash code to identify a single p2p network message</li>
-     *      <li>A "special key" is the label to a bundle of p2p network messages, each having standard keys</li>
-     * </ul>
-     *
-     * For example: "1.3.4" encoded into a 20 byte array.
-     *
-     * @return the special key
-     */
-    private byte[] getSpecialKey() {
-        byte[] result = new byte[20];
-        Arrays.fill(result, (byte) 0);
-        System.arraycopy(Version.VERSION.getBytes(StandardCharsets.UTF_8), 0, result, 0, Version.VERSION.length());
-        return result;
-    }
-
-    /**
-     * See if the request contains a "special key". A special key is a label of a bundle of messages.
-     * <ul>
-     *      <li>A "key" is a 20 byte cryptographic hash code to identify a single p2p network message</li>
-     *      <li>A "special key" is the label to a bundle of p2p network messages, each having standard keys</li>
-     * </ul>
-     *
-     * @param knownPayloadHashes
-     * @return the "special key" or <code>null</code> if no special key has been found
-     */
-    private String findSpecialKey(Set<P2PDataStorage.ByteArray> knownPayloadHashes) {
-        return knownPayloadHashes.stream()
-                .map(byteArray -> new String(byteArray.bytes, StandardCharsets.UTF_8).trim())
-                .filter(s -> s.matches("^[0-9]\\.[0-9]\\.[0-9]$"))
-                .findFirst()
-                .orElse(null);
-    }
-
-    /**
-     * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
-     */
     private Set<byte[]> getKnownPayloadHashes() {
-
         // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys;
-        boolean weAreASeedNode = seedNodeRepository != null && seedNodeRepository.isSeedNode(networkNode.getNodeAddress());
-        if (weAreASeedNode) {
-            excludedKeys = getKeySetInBytes(this.appendOnlyDataStoreService.getMap());
-        } else {
-            excludedKeys = getKeySetInBytes(this.appendOnlyDataStoreService.getMap("since " + Version.VERSION));
-        }
-
-        Set<byte[]> excludedKeysFromPersistedEntryMap = getKeySetInBytes(this.map);
-
+        Set<byte[]> excludedKeys = getKeysAsBytes(appendOnlyDataStoreService.getMap());
+        Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsBytes(map);
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
-        excludedKeys.add(getSpecialKey());
-
         return excludedKeys;
     }
 
-    /**
-     * Helper for extracting hash bytes from a map of objects.
-     *
-     * @param input a map of objects
-     * @return a list of hash bytes of the objects in the input map
-     */
-    private Set<byte[]> getKeySetInBytes(Map<ByteArray, ?> input) {
-        return input.keySet().stream()
+    private Set<byte[]> getKeysAsBytes(Map<ByteArray, ? extends PersistablePayload> map) {
+        return map.keySet().stream()
                 .map(e -> e.bytes)
                 .collect(Collectors.toSet());
     }
@@ -329,14 +268,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
-        // In case we get a "new" data request, ie. with a "special key" like "1.3.4", we
-        // pre-filter the data. If there is no "special key", we use all data.
         Map<ByteArray, PersistableNetworkPayload> prefilteredData;
-        String specialKey = findSpecialKey(excludedKeysAsByteArray);
-        if (specialKey == null) {
+        String version = getDataRequest.getVersion();
+        if (version == null) {
+            // Pre v 1.3.9 requests do not have set the field
             prefilteredData = this.appendOnlyDataStoreService.getMap();
         } else {
-            prefilteredData = this.appendOnlyDataStoreService.getMap("since " + specialKey);
+            prefilteredData = this.appendOnlyDataStoreService.getMap(version);
         }
 
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
@@ -350,7 +288,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
                 filterKnownHashes(
-                        this.map,
+                        map,
                         ProtectedStorageEntry::getProtectedStoragePayload,
                         excludedKeysAsByteArray,
                         peerCapabilities,

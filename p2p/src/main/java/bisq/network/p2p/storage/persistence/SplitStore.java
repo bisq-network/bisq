@@ -15,5 +15,5 @@ import lombok.Getter;
  */
 public abstract class SplitStore implements ThreadedPersistableEnvelope {
     @Getter
-    protected Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
 }

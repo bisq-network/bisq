@@ -77,33 +77,31 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
         return previous;
     }
 
+    /**
+     * @return Map of our live store merged with the historical stores
+     */
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         // We merge the historical data with our live map
-        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> merged = new HashMap<>(store.getMap());
-        merged.putAll(mapOfHistoricalStores);
-        return merged;
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
+        mergedMap.putAll(mapOfHistoricalStores);
+        return mergedMap;
     }
 
-    @Override
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String filter) {
-        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
-
-        // TODO do a proper language, possibly classes
-        if (filter.startsWith("since ")) {
-            String finalFilter = filter.replace("since ", "");
-            if (!finalFilter.equals(Version.VERSION)) {
-                history.entrySet().stream()
-                        .filter(entry -> parseSpecialKey(entry.getKey()) > parseSpecialKey(finalFilter))
-                        .forEach(entry -> result.putAll(entry.getValue().getMap()));
-            }
-        }
-
-        return result;
-    }
-
-    private int parseSpecialKey(String specialKey) {
-        return Integer.parseInt(specialKey.replace(".", ""));
+    /**
+     * @return Map of our live store merged with the historical stores which are newer than the verion parameter
+     */
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String version) {
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
+        history.entrySet().stream()
+                .filter(entry -> {
+                    int storeVersion = Integer.parseInt(entry.getKey().replace(".", ""));
+                    int requestersVersion = Integer.parseInt(version);
+                    return storeVersion > requestersVersion;
+                })
+                .map(e -> e.getValue().getMap())
+                .forEach(mergedMap::putAll);
+        return mergedMap;
     }
 
     /**

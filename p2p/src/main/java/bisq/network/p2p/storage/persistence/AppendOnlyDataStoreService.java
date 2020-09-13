@@ -55,25 +55,19 @@ public class AppendOnlyDataStoreService {
         services.forEach(service -> service.readFromResources(postFix));
     }
 
-    /**
-     * Same as {@link AppendOnlyDataStoreService#getMap()}, but takes a filter string.
-     * Currently, a string of format "since " + a version string is supported. Eg. "since 1.3.5".
-     *
-     * The filter string is kept generic so that we may not need to change the API again
-     * once other filters become necessary in the future.
-     *
-     * @param filter
-     * @return
-     */
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String filter) {
-        return services.stream()
-                .flatMap(service -> service.getMap(filter).entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return services.stream()
-                .flatMap(service -> service.getMap().entrySet().stream())
+                .flatMap(service -> {
+                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
+                    if (service instanceof SplitStoreService) {
+                        SplitStoreService<? extends SplitStore> splitStoreService = (SplitStoreService<? extends SplitStore>) service;
+                        SplitStore splitStore = splitStoreService.getStore();
+                        map = splitStore.getMap();
+                    } else {
+                        map = service.getMap();
+                    }
+                    return map.entrySet().stream();
+                })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
@@ -81,5 +75,20 @@ public class AppendOnlyDataStoreService {
         services.stream()
                 .filter(service -> service.canHandle(payload))
                 .forEach(service -> service.putIfAbsent(hashAsByteArray, payload));
+    }
+
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String version) {
+        return services.stream()
+                .flatMap(service -> {
+                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
+                    if (service instanceof SplitStoreService) {
+                        SplitStoreService<? extends SplitStore> splitStoreService = (SplitStoreService<? extends SplitStore>) service;
+                        map = splitStoreService.getMap(version);
+                    } else {
+                        map = service.getMap();
+                    }
+                    return map.entrySet().stream();
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
