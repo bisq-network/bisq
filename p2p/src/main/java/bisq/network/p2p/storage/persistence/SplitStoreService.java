@@ -109,74 +109,53 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
     }
 
     /**
-     * For the {@link SplitStoreService}s, we check if we already have all the historical data stores in our working
-     * directory. If we have, we can proceed loading the stores. If we do not, we have to transfer the fresh data stores
+     * For the {@link SplitStoreService}s, we check if we already have all the historical data stores in our db
+     * directory. If we have, we can proceed loading the stores. If we do not, we have to create the stores
      * from resources.
      *
      * @param postFix
      */
     @Override
     protected void readFromResources(String postFix) {
-        // initialize here in case this method gets called twice
         history = new HashMap<>();
 
         // load our live data store
-        store = readStore(getFileName());
+        readStore();
 
         // create file list of files we should have by now
         List<String> versions = new ArrayList<>();
+
+        //TODO add recent version to history as well to distinguish more clearly from live store
         versions.add(Version.VERSION);
+
         versions.addAll(Version.history);
 
-        // go through the list one by one
         versions.forEach(version -> {
-            String filename = getFileName() + "_" + version;
-            if (new File(absolutePathOfStorageDir, filename).exists()) {
-                // if it is there already, load
-                history.put(version, readStore(getFileName() + "_" + version));
+            String versionedFileName = getFileName() + "_" + version;
+            File versionedFile = new File(absolutePathOfStorageDir, versionedFileName);
+            if (versionedFile.exists()) {
+                T versionedStore = getStore(versionedFileName);
+                history.put(version, versionedStore);
             } else {
-                // either copy and split
-                history.put(version, copyAndSplit(version, postFix));
+                SplitStore storeFromResource = getStoreFromResource(version, postFix);
+                pruneStore(storeFromResource);
+                history.put(version, storeFromResource);
             }
         });
-
-        // load our live data store again - ie to make sure our storage is indeed our live store
-        storage.initAndGetPersistedWithFileName(getFileName(), 10);
     }
 
     /**
-     * Bluntly copy and pasted from {@link StoreService} because:
-     * <ul><li>The member function there is private</li>
-     * <li>it does not match our interface</li>
-     * <li>is a temporary solutions, until https://github.com/bisq-network/projects/issues/29</li></ul>
-     *
-     * @param name
-     * @return store
-     */
-    private T readStore(String name) {
-        T store = storage.initAndGetPersistedWithFileName(name, 100);
-        if (store != null) {
-            log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
-                    storage.getClass().getSimpleName(),
-                    store.toProtoMessage().toByteArray().length / 1_000_000D);
-        } else {
-            store = createStore();
-        }
-
-        return store;
-    }
-
-    /**
-     * Copy the missing data store from resources and remove its object from the live store.
+     * Creating a file from resources
      *
      * @param version to identify the data store eg. "1.3.4"
      * @param postFix the global postfix eg. "_BTC_MAINNET"
-     * @return the freshly copied and loaded data store
+     * @return The store created from resource file
      */
-    private SplitStore copyAndSplit(String version, String postFix) {
+    private SplitStore getStoreFromResource(String version, String postFix) {
         // if not, copy and split
-        final File destinationFile = new File(absolutePathOfStorageDir, getFileName() + "_" + version);
-        String resourceFileName = destinationFile.getName() + postFix; // postFix has a preceding "_" already
+        String versionedFileName = getFileName() + "_" + version;
+        File destinationFile = new File(absolutePathOfStorageDir, versionedFileName);
+        String resourceFileName = versionedFileName + postFix; // postFix has a preceding "_" already
         try {
             log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
             FileUtil.resourceToFile(resourceFileName, destinationFile);
@@ -187,16 +166,17 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
             e.printStackTrace();
         }
 
-        // split
-        // - get all
-        SplitStore historicalStore = readStore(destinationFile.getName());
-        // - subtract all that is in resource files
+        return getStore(versionedFileName);
+    }
+
+    /**
+     * Removes entries in our live store which exists in the historical store already
+     *
+     * @param historicalStore   The historical store we use for pruning
+     */
+    private void pruneStore(SplitStore historicalStore) {
         store.getMap().keySet().removeAll(historicalStore.getMap().keySet());
 
-        // - create new file with leftovers
-        storage.initAndGetPersisted(store, 0);
         storage.queueUpForSave();
-
-        return historicalStore;
     }
 }
