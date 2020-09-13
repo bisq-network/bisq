@@ -102,7 +102,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doExecute() {
-        AsciiLogo.show();
+        AsciiLogo.showAsciiLogo();
         configUserThread();
         CoreSetup.setup(config);
         addCapabilities();

@@ -21,32 +21,26 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AsciiLogo {
-    public static void show() {
+    public static void showAsciiLogo() {
         log.info("\n\n" +
-                "                                                                                                                                                      \n" +
-                "                           ````                                                                                                                       \n" +
-                "                      .-/+oooooo+:.                    `:::::-                                                                                        \n" +
-                "                   ./+ooooooooooooo+.                  .ooooo/                                                                                        \n" +
-                "                `-+oooooooooooooooooo                  .ooooo/                                                                                        \n" +
-                "               -+oooo:--/oooooooooooo    `.`           .ooooo/                                                                                        \n" +
-                "              /ooooo/    `-/ooooooo/.  `:+o+.          .ooooo/  `.----..`         `.....`      `.--::--.`             `.--::--.`                      \n" +
-                "             /oooooo`       `-:/:-.  `:oooooo.         .ooooo+/+oooooooo+/-`      :ooooo:    ./+oooooooo+/.        .:+oooooooooo+:`                   \n" +
-                "            :oooooo-                `+ooooooo+`        .oooooooooooooooooooo:`    :ooooo:   :ooooooooooooo+.     .+oooooooooooooooo/`                 \n" +
-                "           `oooooo+                 `+oooooooo+        .oooooooo+/:--:/+ooooo+.   :ooooo:  -ooooo+-..-/o/-`     :oooooo/:---:/+ooooo+.                \n" +
-                "           :oooooo:                   .-/+oooo+        .ooooooo-`      `-oooooo`  :ooooo:  /ooooo-     `       -ooooo+.       `-oooooo`               \n" +
-                "           :oooooo.   ````          ```` ``...`        .oooooo.          -ooooo/  :ooooo:  .oooooo+/::-.`      oooooo`          -ooooo/               \n" +
-                "           :oooooo`   /ooo:        :+oo+               .ooooo/            ooooo+  :ooooo:   .+oooooooooo+/.   .ooooo/            ooooo+               \n" +
-                "           .oooooo-   ./oo/        /oo/.               `ooooo/           `ooooo+  :ooooo:    `.:++ooooooooo/  `ooooo/           `oooooo               \n" +
-                "            +oooooo.    ``          ``                  +ooooo.          :ooooo:  :ooooo:        `..-:+ooooo:  +ooooo.         `/oooooo               \n" +
-                "            `+oooooo-`      `::::`        `.:/:`        .oooooo:`      `:ooooo+`  :ooooo:   `-+:`     -ooooo/  .oooooo:`     `.+ooooooo               \n" +
-                "             .+oooooo+:`     -++-      `.:+oooo:         .+oooooo+//:/+oooooo/`   :ooooo:  -+oooo+/::/oooooo.   .+oooooo+////+ooooooooo               \n" +
-                "              `/oooooooo/-`         `.:+oooooo+`          `:+oooooooooooooo+-     :ooooo:  `/ooooooooooooo+.     `:+ooooooooooooooooooo               \n" +
-                "                -+ooooooooo/:..`..-/+ooooooo+-              `-:+ooooooo++:.       -+ooo+-    .:+ooooooo+/.         `.:++oooooo+:-oooooo               \n" +
-                "                  ./oooooooooooooooooooooo/-                    ``....`            `````        ``....`                 ``..``   oooooo               \n" +
-                "                    `.:+oooooooooooooo+:-`                                                                                       oooooo               \n" +
-                "                         `.--::::--..`                                                                                           oooooo               \n" +
-                "                                                                                                                                 oooooo               \n" +
-                "                                                                                                                                 .----.  " +
+                "                    ........                  ......                                                                         \n" +
+                "                ..............                ......                                                                         \n" +
+                "              .................               ......                                                                         \n" +
+                "            ......   ..........   ..          ......                                                                         \n" +
+                "           ......      ......   ......        ...............        .....     .........         ..........                  \n" +
+                "          .......              ........       ..................     .....   .............     ...............               \n" +
+                "          ......               ........       ..........  .......    .....  ......   ...     ........   .......              \n" +
+                "         ......                   .....       .......        .....   .....  .....            .....        ......             \n" +
+                "         ......    ...        ...             ......         ......  .....   ...........    ......         ......            \n" +
+                "         ......   .....      ....             ......         ......  .....    ............  .....          ......            \n" +
+                "          ......                               .....         ......  .....         ........ ......         ......            \n" +
+                "           ......       ....        ...        ......       ......   .....    ..     ......  ......      ........            \n" +
+                "            ........     ..      .......        .................    .....  ..............    ...................            \n" +
+                "             ..........       .........           .............      .....   ............       .................            \n" +
+                "               ......................                 .....                      ....               ....   ......            \n" +
+                "                  ................                                                                         ......            \n" +
+                "                        ....                                                                               ......            \n" +
+                "                                                                                                           ......            \n" +
                 "\n\n");
     }
 }
