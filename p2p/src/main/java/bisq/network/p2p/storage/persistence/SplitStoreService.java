@@ -48,7 +48,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class SplitStoreService<T extends SplitStore> extends MapStoreService<T, PersistableNetworkPayload> {
-    protected HashMap<String, SplitStore> history;
+    private final Map<String, SplitStore> history = new HashMap<>();
+    private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfHistoricalStores = new HashMap<>();
 
     public SplitStoreService(File storageDir, Storage<T> storage) {
         super(storageDir, storage);
@@ -76,13 +77,12 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
         return previous;
     }
 
-
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        HashMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
-        history.forEach((s, store) -> result.putAll(store.getMap()));
-
-        return result;
+        // We merge the historical data with our live map
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> merged = new HashMap<>(store.getMap());
+        merged.putAll(mapOfHistoricalStores);
+        return merged;
     }
 
     @Override
@@ -115,8 +115,6 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
      */
     @Override
     protected void readFromResources(String postFix) {
-        history = new HashMap<>();
-
         // load our live data store
         readStore();
 
@@ -134,10 +132,12 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
             if (versionedFile.exists()) {
                 T versionedStore = getStore(versionedFileName);
                 history.put(version, versionedStore);
+                mapOfHistoricalStores.putAll(versionedStore.getMap());
             } else {
                 SplitStore storeFromResource = getStoreFromResource(version, postFix);
                 pruneStore(storeFromResource);
                 history.put(version, storeFromResource);
+                mapOfHistoricalStores.putAll(storeFromResource.getMap());
             }
         });
     }
