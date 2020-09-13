@@ -11,9 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 
 /**
- *  Goes with {@link SplitStoreService}.
+ *  Base class for store implementations using a map with a PersistableNetworkPayload
+ *  as the type of the map value.
  */
-public abstract class SplitStore implements ThreadedPersistableEnvelope {
+public abstract class PersistableNetworkPayloadStore implements ThreadedPersistableEnvelope {
     @Getter
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
 }

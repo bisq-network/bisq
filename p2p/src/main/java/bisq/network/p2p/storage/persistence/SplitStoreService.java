@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  * <h3>Features</h3>
  * In order to only get a specific part of all the objects available in the complete data
  * store, the original single-file data store had to be split up and this class and
- * {@link SplitStore} are there to handle the business logic needed for
+ * {@link PersistableNetworkPayloadStore} are there to handle the business logic needed for
  * <ul>
  * <li>migrating to the new and shiny multi-file data store</li>
  * <li>shoveling around data in case Bisq gets updated to a new version</li>
@@ -45,10 +45,13 @@ import lombok.extern.slf4j.Slf4j;
  * <h3>Further reading</h3><p><ul>
  *     <li><a href="https://github.com/bisq-network/projects/issues/25">project description</a></li>
  * </ul></p>
+ *
+ * Manages historical data stores tagged with the release versions. Those stores are immutable data. New data is added
+ * to the default map in the store
  */
 @Slf4j
-public abstract class SplitStoreService<T extends SplitStore> extends MapStoreService<T, PersistableNetworkPayload> {
-    private final Map<String, SplitStore> history = new HashMap<>();
+public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore> extends MapStoreService<T, PersistableNetworkPayload> {
+    private final Map<String, PersistableNetworkPayloadStore> history = new HashMap<>();
     private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfHistoricalStores = new HashMap<>();
 
     public SplitStoreService(File storageDir, Storage<T> storage) {
@@ -134,7 +137,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
                 history.put(version, versionedStore);
                 mapOfHistoricalStores.putAll(versionedStore.getMap());
             } else {
-                SplitStore storeFromResource = getStoreFromResource(version, postFix);
+                PersistableNetworkPayloadStore storeFromResource = getStoreFromResource(version, postFix);
                 pruneStore(storeFromResource);
                 history.put(version, storeFromResource);
                 mapOfHistoricalStores.putAll(storeFromResource.getMap());
@@ -149,7 +152,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
      * @param postFix the global postfix eg. "_BTC_MAINNET"
      * @return The store created from resource file
      */
-    private SplitStore getStoreFromResource(String version, String postFix) {
+    private PersistableNetworkPayloadStore getStoreFromResource(String version, String postFix) {
         // if not, copy and split
         String versionedFileName = getFileName() + "_" + version;
         File destinationFile = new File(absolutePathOfStorageDir, versionedFileName);
@@ -172,7 +175,7 @@ public abstract class SplitStoreService<T extends SplitStore> extends MapStoreSe
      *
      * @param historicalStore   The historical store we use for pruning
      */
-    private void pruneStore(SplitStore historicalStore) {
+    private void pruneStore(PersistableNetworkPayloadStore historicalStore) {
         store.getMap().keySet().removeAll(historicalStore.getMap().keySet());
 
         storage.queueUpForSave();

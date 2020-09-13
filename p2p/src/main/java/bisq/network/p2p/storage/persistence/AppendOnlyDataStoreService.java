@@ -70,7 +70,7 @@ public class AppendOnlyDataStoreService {
                 .flatMap(service -> {
                     Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
                     if (service instanceof SplitStoreService) {
-                        SplitStoreService<? extends SplitStore> splitStoreService = (SplitStoreService<? extends SplitStore>) service;
+                        SplitStoreService<? extends PersistableNetworkPayloadStore> splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
                         map = splitStoreService.getMap(ignoreHistoricalData);
                     } else {
                         map = service.getMap();
@@ -85,7 +85,7 @@ public class AppendOnlyDataStoreService {
                 .flatMap(service -> {
                     Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
                     if (service instanceof SplitStoreService) {
-                        SplitStoreService<? extends SplitStore> splitStoreService = (SplitStoreService<? extends SplitStore>) service;
+                        SplitStoreService<? extends PersistableNetworkPayloadStore> splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
                         map = splitStoreService.getMap(requestersVersion);
                     } else {
                         map = service.getMap();

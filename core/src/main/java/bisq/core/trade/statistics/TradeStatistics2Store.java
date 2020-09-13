@@ -18,7 +18,7 @@
 package bisq.core.trade.statistics;
 
 import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.persistence.SplitStore;
+import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
 
@@ -33,7 +33,8 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class TradeStatistics2Store extends SplitStore {
+public class TradeStatistics2Store extends PersistableNetworkPayloadStore {
+
     TradeStatistics2Store() {
     }
 
