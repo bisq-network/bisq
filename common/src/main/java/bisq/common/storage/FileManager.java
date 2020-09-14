@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -112,20 +111,6 @@ public class FileManager<T extends PersistableEnvelope> {
         executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
-    @SuppressWarnings("unchecked")
-    public synchronized T read(File file) {
-        log.debug("Read from disc: {}", file.getName());
-
-        try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            protobuf.PersistableEnvelope persistable = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
-            return (T) persistenceProtoResolver.fromProto(persistable);
-        } catch (Throwable t) {
-            String errorMsg = "Exception at proto read: " + t.getMessage() + " file:" + file.getAbsolutePath();
-            log.error(errorMsg, t);
-            //if(DevEnv.DEV_MODE)
-            throw new RuntimeException(errorMsg);
-        }
-    }
 
     synchronized void removeFile(String fileName) {
         File file = new File(dir, fileName);
@@ -143,7 +128,6 @@ public class FileManager<T extends PersistableEnvelope> {
             }
         }
     }
-
 
     /**
      * Shut down auto-saving.

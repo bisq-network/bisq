@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.slf4j.Logger;
@@ -136,42 +137,31 @@ public class Storage<T extends PersistableEnvelope> {
         fileManager.removeFile(fileName);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // We do the file read on the UI thread to avoid problems from multi threading.
-    // Data are small and read is done only at startup, so it is no performance issue.
     @Nullable
-    private T getPersisted() {
-        if (storageFile.exists()) {
-            long now = System.currentTimeMillis();
+    public T getPersisted() {
+        if (!storageFile.exists()) {
+            return null;
+        }
+
+        long ts = System.currentTimeMillis();
+        try (final FileInputStream fileInputStream = new FileInputStream(storageFile)) {
+            protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
+            T persistableEnvelope = (T) persistenceProtoResolver.fromProto(proto);
+            log.info("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
+            return persistableEnvelope;
+        } catch (Throwable t) {
+            log.error("Reading {} failed with {}.", fileName, t.getMessage());
             try {
-                T persistedObject = fileManager.read(storageFile);
-                log.trace("Read {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
-
-                // If we did not get any exception we can be sure the data are consistent so we make a backup
-                now = System.currentTimeMillis();
-                fileManager.backupFile(fileName, numMaxBackupFiles);
-                log.trace("Backup {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
-
-                return persistedObject;
-            } catch (Throwable t) {
-                log.error("We cannot read the persisted data. " +
-                        "We make a backup and remove the inconsistent file. fileName=" + fileName);
-                log.error(t.getMessage());
-                try {
-                    // We keep a backup which might be used for recovery
-                    removeAndBackupFile(fileName);
-                    DevEnv.logErrorAndThrowIfDevMode(t.toString());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                    log.error(e1.getMessage());
-                    // We swallow Exception if backup fails
-                }
-                if (corruptedDatabaseFilesHandler != null)
-                    corruptedDatabaseFilesHandler.onFileCorrupted(storageFile.getName());
+                // We keep a backup which might be used for recovery
+                fileManager.removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
+                DevEnv.logErrorAndThrowIfDevMode(t.toString());
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                log.error(e1.getMessage());
+                // We swallow Exception if backup fails
+            }
+            if (corruptedDatabaseFilesHandler != null) {
+                corruptedDatabaseFilesHandler.onFileCorrupted(storageFile.getName());
             }
         }
         return null;
