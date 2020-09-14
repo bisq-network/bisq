@@ -21,14 +21,16 @@ import java.net.InetAddress;
 
 import java.io.IOException;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 
 import bisq.apitest.config.ApiTestConfig;
+import bisq.apitest.config.BisqAppConfig;
 import bisq.apitest.method.BitcoinCliHelper;
 import bisq.cli.GrpcStubs;
 
@@ -59,32 +61,39 @@ import bisq.cli.GrpcStubs;
  */
 public class ApiTestCase {
 
-    // The gRPC service stubs are used by method & scenario tests, but not e2e tests.
-    protected static GrpcStubs grpcStubs;
-
     protected static Scaffold scaffold;
     protected static ApiTestConfig config;
     protected static BitcoinCliHelper bitcoinCli;
+
+    // gRPC service stubs are used by method & scenario tests, but not e2e tests.
+    private static final Map<BisqAppConfig, GrpcStubs> grpcStubsCache = new HashMap<>();
 
     public static void setUpScaffold(String supportingApps)
             throws InterruptedException, ExecutionException, IOException {
         scaffold = new Scaffold(supportingApps).setUp();
         config = scaffold.config;
         bitcoinCli = new BitcoinCliHelper((config));
-        grpcStubs = new GrpcStubs(InetAddress.getLoopbackAddress().getHostAddress(),
-                alicedaemon.apiPort, config.apiPassword);
     }
 
     public static void setUpScaffold(String[] params)
             throws InterruptedException, ExecutionException, IOException {
         scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
-        grpcStubs = new GrpcStubs(InetAddress.getLoopbackAddress().getHostAddress(),
-                alicedaemon.apiPort, config.apiPassword);
     }
 
     public static void tearDownScaffold() {
         scaffold.tearDown();
+    }
+
+    protected static GrpcStubs grpcStubs(BisqAppConfig bisqAppConfig) {
+        if (grpcStubsCache.containsKey(bisqAppConfig)) {
+            return grpcStubsCache.get(bisqAppConfig);
+        } else {
+            GrpcStubs stubs = new GrpcStubs(InetAddress.getLoopbackAddress().getHostAddress(),
+                    bisqAppConfig.apiPort, config.apiPassword);
+            grpcStubsCache.put(bisqAppConfig, stubs);
+            return stubs;
+        }
     }
 
     protected void sleep(long ms) {
