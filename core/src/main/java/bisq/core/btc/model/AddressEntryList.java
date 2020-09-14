@@ -211,7 +211,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     private void maybeAddNewAddressEntry(Transaction tx) {
         tx.getOutputs().stream()
                 .filter(output -> output.isMine(wallet))
-                .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
+                .map(output -> output.getScriptPubKey().getToAddress(wallet.getNetworkParameters()))
                 .filter(Objects::nonNull)
                 .filter(this::isAddressNotInEntries)
                 .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(),

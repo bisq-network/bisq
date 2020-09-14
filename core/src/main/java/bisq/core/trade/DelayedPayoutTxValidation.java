@@ -146,16 +146,12 @@ public class DelayedPayoutTxValidation {
 
 
         NetworkParameters params = btcWalletService.getParams();
-        Address address = output.getAddressFromP2PKHScript(params);
+        Address address = output.getScriptPubKey().getToAddress(params);
         if (address == null) {
-            // The donation address can be as well be a multisig address.
-            address = output.getAddressFromP2SH(params);
-            if (address == null) {
-                errorMsg = "Donation address cannot be resolved (not of type P2PKHScript or P2SH). Output: " + output;
-                log.error(errorMsg);
-                log.error(delayedPayoutTx.toString());
-                throw new DonationAddressException(errorMsg);
-            }
+            errorMsg = "Donation address cannot be resolved (not of type P2PK nor P2SH nor P2WH). Output: " + output;
+            log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
+            throw new DonationAddressException(errorMsg);
         }
 
         String addressAsString = address.toString();

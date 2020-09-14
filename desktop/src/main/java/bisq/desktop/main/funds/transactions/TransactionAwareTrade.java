@@ -157,7 +157,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                     tx.getOutputs().forEach(txo -> {
                         if (btcWalletService.isTransactionOutputMine(txo)) {
                             try {
-                                Address receiverAddress = txo.getAddressFromP2PKHScript(btcWalletService.getParams());
+                                Address receiverAddress = txo.getScriptPubKey().getToAddress(btcWalletService.getParams());
                                 Contract contract = checkNotNull(trade.getContract());
                                 String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
                                         contract.getBuyerPayoutAddressString() :
