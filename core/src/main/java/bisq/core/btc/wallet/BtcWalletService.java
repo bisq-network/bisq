@@ -584,20 +584,10 @@ public class BtcWalletService extends WalletService {
             if (emptyAvailableAddressEntry.isPresent()) {
                 return addressEntryList.swapAvailableToAddressEntryWithOfferId(emptyAvailableAddressEntry.get(), context, offerId);
             } else {
-                AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, offerId);
+                AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, offerId, true);
                 addressEntryList.addAddressEntry(entry);
                 return entry;
             }
-        }
-    }
-
-    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
-        if (addressEntry.isPresent()) {
-            return addressEntry.get();
-        } else {
-            AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context);
-            addressEntryList.addAddressEntry(entry);
-            return entry;
         }
     }
 
@@ -621,6 +611,16 @@ public class BtcWalletService extends WalletService {
     public void recoverAddressEntry(String offerId, String address, AddressEntry.Context context) {
         findAddressEntry(address, AddressEntry.Context.AVAILABLE).ifPresent(addressEntry ->
                 addressEntryList.swapAvailableToAddressEntryWithOfferId(addressEntry, context, offerId));
+    }
+
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
+        if (addressEntry.isPresent()) {
+            return addressEntry.get();
+        } else {
+            AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, true);
+            addressEntryList.addAddressEntry(entry);
+            return entry;
+        }
     }
 
     private Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {

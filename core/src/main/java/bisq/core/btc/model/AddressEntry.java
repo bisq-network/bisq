@@ -28,6 +28,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.script.Script;
 
 import java.util.Optional;
 
@@ -74,6 +75,9 @@ public final class AddressEntry implements PersistablePayload {
 
     private long coinLockedInMultiSig;
 
+    @Getter
+    private boolean segwit;
+
     @Nullable
     transient private DeterministicKey keyPair;
     @Nullable
@@ -86,18 +90,20 @@ public final class AddressEntry implements PersistablePayload {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressEntry(DeterministicKey keyPair, Context context) {
-        this(keyPair, context, null);
+    public AddressEntry(DeterministicKey keyPair, Context context, boolean segwit) {
+        this(keyPair, context, null, segwit);
     }
 
     public AddressEntry(@NotNull DeterministicKey keyPair,
                         Context context,
-                        @Nullable String offerId) {
+                        @Nullable String offerId,
+                        boolean segwit) {
         this.keyPair = keyPair;
         this.context = context;
         this.offerId = offerId;
         pubKey = keyPair.getPubKey();
         pubKeyHash = keyPair.getPubKeyHash();
+        this.segwit = segwit;
     }
 
 
@@ -109,12 +115,14 @@ public final class AddressEntry implements PersistablePayload {
                          byte[] pubKeyHash,
                          Context context,
                          @Nullable String offerId,
-                         Coin coinLockedInMultiSig) {
+                         Coin coinLockedInMultiSig,
+                         boolean segwit) {
         this.pubKey = pubKey;
         this.pubKeyHash = pubKeyHash;
         this.context = context;
         this.offerId = offerId;
         this.coinLockedInMultiSig = coinLockedInMultiSig.value;
+        this.segwit = segwit;
     }
 
     public static AddressEntry fromProto(protobuf.AddressEntry proto) {
@@ -122,7 +130,8 @@ public final class AddressEntry implements PersistablePayload {
                 proto.getPubKeyHash().toByteArray(),
                 ProtoUtil.enumFromProto(AddressEntry.Context.class, proto.getContext().name()),
                 ProtoUtil.stringOrNullFromProto(proto.getOfferId()),
-                Coin.valueOf(proto.getCoinLockedInMultiSig()));
+                Coin.valueOf(proto.getCoinLockedInMultiSig()),
+                proto.getSegwit());
     }
 
     @Override
@@ -131,7 +140,8 @@ public final class AddressEntry implements PersistablePayload {
                 .setPubKey(ByteString.copyFrom(pubKey))
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
                 .setContext(protobuf.AddressEntry.Context.valueOf(context.name()))
-                .setCoinLockedInMultiSig(coinLockedInMultiSig);
+                .setCoinLockedInMultiSig(coinLockedInMultiSig)
+                .setSegwit(segwit);
         Optional.ofNullable(offerId).ifPresent(builder::setOfferId);
         return builder.build();
     }
@@ -175,7 +185,7 @@ public final class AddressEntry implements PersistablePayload {
     @Nullable
     public Address getAddress() {
         if (address == null && keyPair != null)
-            address = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(), keyPair);
+            address = Address.fromKey(Config.baseCurrencyNetworkParameters(), keyPair, segwit ? Script.ScriptType.P2WPKH : Script.ScriptType.P2PKH);
         return address;
     }
 
@@ -198,6 +208,7 @@ public final class AddressEntry implements PersistablePayload {
                 ", context=" + context +
                 ", offerId='" + offerId + '\'' +
                 ", coinLockedInMultiSig=" + coinLockedInMultiSig +
+                ", segwit=" + segwit +
                 "}";
     }
 }
