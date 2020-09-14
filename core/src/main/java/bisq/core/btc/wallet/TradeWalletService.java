@@ -334,7 +334,7 @@ public class TradeWalletService {
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
         // We don't care about fee calculation differences between the real tx and that dummy tx as we use a static tx fee.
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, new ECKey().toAddress(params));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, LegacyAddress.fromKey(params, new ECKey()));
         dummyTX.addOutput(dummyOutput);
 
         // Find the needed inputs to pay the output, optionally add 1 change output.
@@ -454,7 +454,7 @@ public class TradeWalletService {
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx.
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, new ECKey().toAddress(params));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, LegacyAddress.fromKey(params, new ECKey()));
         dummyTx.addOutput(dummyOutput);
         addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
