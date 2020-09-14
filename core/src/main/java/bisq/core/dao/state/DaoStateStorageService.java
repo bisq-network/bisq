@@ -26,7 +26,7 @@ import bisq.network.p2p.storage.persistence.StoreService;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
-import bisq.common.storage.FileManager;
+import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
@@ -114,20 +114,20 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         long currentTime = System.currentTimeMillis();
         String backupDirName = "out_of_sync_dao_data";
         String newFileName = "BlindVoteStore_" + currentTime;
-        FileManager.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
 
         newFileName = "ProposalStore_" + currentTime;
-        FileManager.removeAndBackupFile(storageDir, new File(storageDir, "ProposalStore"), newFileName, backupDirName);
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "ProposalStore"), newFileName, backupDirName);
 
         // We also need to remove ballot list as it contains the proposals as well. It will be recreated at resync
         newFileName = "BallotList_" + currentTime;
-        FileManager.removeAndBackupFile(storageDir, new File(storageDir, "BallotList"), newFileName, backupDirName);
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BallotList"), newFileName, backupDirName);
 
         newFileName = "UnconfirmedBsqChangeOutputList_" + currentTime;
-        FileManager.removeAndBackupFile(storageDir, new File(storageDir, "UnconfirmedBsqChangeOutputList"), newFileName, backupDirName);
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "UnconfirmedBsqChangeOutputList"), newFileName, backupDirName);
 
         newFileName = "DaoStateStore_" + currentTime;
-        FileManager.removeAndBackupFile(storageDir, new File(storageDir, "DaoStateStore"), newFileName, backupDirName);
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "DaoStateStore"), newFileName, backupDirName);
     }
 
 

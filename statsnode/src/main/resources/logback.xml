@@ -11,7 +11,6 @@
     </root>
 
     <logger name="bisq.common.storage.Storage" level="WARN"/>
-    <logger name="bisq.common.storage.FileManager" level="WARN"/>
 
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
 

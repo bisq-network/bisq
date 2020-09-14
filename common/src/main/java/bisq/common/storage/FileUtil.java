@@ -37,14 +37,12 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+@Slf4j
 public class FileUtil {
-    private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
-
     public static void rollingBackup(File dir, String fileName, int numMaxBackupFiles) {
         if (dir.exists()) {
             File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
@@ -209,5 +207,18 @@ public class FileUtil {
             throw new IOException("There already exists a file with path: " + path);
         }
         return file;
+    }
+
+    public static void removeAndBackupFile(File dbDir, File storageFile, String fileName, String backupFolderName)
+            throws IOException {
+        File corruptedBackupDir = new File(Paths.get(dbDir.getAbsolutePath(), backupFolderName).toString());
+        if (!corruptedBackupDir.exists())
+            if (!corruptedBackupDir.mkdir())
+                log.warn("make dir failed");
+
+        File corruptedFile = new File(Paths.get(dbDir.getAbsolutePath(), backupFolderName, fileName).toString());
+        if (storageFile.exists()) {
+            renameFile(storageFile, corruptedFile);
+        }
     }
 }
