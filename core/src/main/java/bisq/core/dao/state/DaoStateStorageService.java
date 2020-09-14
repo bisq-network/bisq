@@ -24,7 +24,6 @@ import bisq.core.dao.state.model.DaoState;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
-import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.storage.FileManager;
 import bisq.common.storage.Storage;
@@ -36,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -104,8 +102,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             store.setDaoState(new DaoState());
             store.setDaoStateHashChain(new LinkedList<>());
         });
-        storage.saveNow(store);
-        UserThread.runAfter(resultHandler, 300, TimeUnit.MILLISECONDS);
+        storage.saveAsync(store, resultHandler);
     }
 
     public void resyncDaoStateFromResources(File storageDir) throws IOException {

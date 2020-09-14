@@ -612,18 +612,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    public void setResyncSpvRequested(boolean resyncSpvRequested) {
+    public void applyResyncSpvRequested(boolean resyncSpvRequested, @Nullable Runnable completeHandler) {
         prefPayload.setResyncSpvRequested(resyncSpvRequested);
-        // We call that before shutdown so we don't want a delay here,
-        // still it is threaded so we cannot shut down immediately
-        storage.saveNow(prefPayload);
+        storage.saveAsync(prefPayload, completeHandler);
     }
 
     public void setBridgeAddresses(List<String> bridgeAddresses) {
         prefPayload.setBridgeAddresses(bridgeAddresses);
-        // We call that before shutdown so we don't want a delay here,
-        // still it is threaded so we cannot shut down immediately
-        storage.saveNow(prefPayload);
+        storage.saveSync(prefPayload);
     }
 
     // Only used from PB but keep it explicit as it may be used from the client and then we want to persist

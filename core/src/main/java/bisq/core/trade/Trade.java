@@ -787,7 +787,7 @@ public abstract class Trade implements Tradable, Model {
     // Get called from taskRunner after each completed task
     @Override
     public void persist() {
-        if (storage != null)
+        if (storage != null && storage.isInitialized())
             storage.queueUpForSave();
     }
 

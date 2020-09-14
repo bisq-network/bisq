@@ -511,11 +511,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
         firstPopup.hide();
-        preferences.setResyncSpvRequested(false);
-        new Popup().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
-                .hideCloseButton()
-                .useShutDownButton()
-                .show();
+        preferences.applyResyncSpvRequested(false,
+                () -> {
+                    new Popup().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+                            .hideCloseButton()
+                            .useShutDownButton()
+                            .show();
+                });
     }
 
     private void showPopupIfInvalidBtcConfig() {

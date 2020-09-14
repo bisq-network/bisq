@@ -31,25 +31,23 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class FileManager<T extends PersistableEnvelope> {
     private final File dir;
     private final File storageFile;
-    private final ScheduledThreadPoolExecutor executor;
-    private final long delay;
-    private final Callable<Void> saveFileTask;
-    private final AtomicReference<T> nextWrite;
-    private final AtomicInteger taskIndex = new AtomicInteger(0);
+    private final AtomicReference<T> nextWrite = new AtomicReference<>(null);
     private final PersistenceProtoResolver persistenceProtoResolver;
     private Path usedTempFilePath;
+    private final Timer timer;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -59,36 +57,19 @@ public class FileManager<T extends PersistableEnvelope> {
         this.dir = dir;
         this.storageFile = storageFile;
         this.persistenceProtoResolver = persistenceProtoResolver;
-        this.nextWrite = new AtomicReference<>(null);
+        timer = new Timer();
 
-        executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
-
-        // File must only be accessed from the auto-save executor from now on, to avoid simultaneous access.
-        this.delay = delay;
-
-        saveFileTask = () -> {
-            try {
-                Thread.currentThread().setName("Save-file-task-" + storageFile.getName() + "-" + taskIndex.getAndIncrement());
-
-                // Atomically take the next object to write and set the value to null so concurrent saveFileTask
-                // won't duplicate work.
-                T persistable = this.nextWrite.getAndSet(null);
-
-                // If null, a concurrent saveFileTask already grabbed the data. Don't duplicate work.
-                if (persistable == null) {
-                    log.debug("A concurrent saveFileTask already grabbed the data. Storage file={}, taskIndex={}",
-                            storageFile.getName(), taskIndex);
-                    return null;
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                // Atomically take the next object to write and set the value to null
+                T persistable = FileManager.this.nextWrite.getAndSet(null);
+                if (persistable != null) {
+                    saveToFile(persistable);
                 }
-
-                long now = System.currentTimeMillis();
-                saveToFile(persistable, dir, storageFile);
-                log.debug("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
-            } catch (Throwable e) {
-                log.error("Error during saveFileTask", e);
             }
-            return null;
-        };
+        }, delay, delay);
+
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
                 UserThread.execute(FileManager.this::shutDown), "FileManager.ShutDownHook")
         );
@@ -99,21 +80,30 @@ public class FileManager<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Queues up a save in the background. Useful for not very important wallet changes.
-     */
-    void saveLater(T persistable) {
-        saveLater(persistable, delay);
-    }
-
-    public void saveLater(T persistable, long delayInMilli) {
+    public void saveLater(T persistable) {
         // Atomically set the value of the next write. This allows batching of multiple writes of the same data
         // structure if there are multiple calls to saveLater within a given `delayInMillis`.
-        this.nextWrite.set(persistable);
+        nextWrite.set(persistable);
+    }
 
-        // Always schedule a write. It is possible that a previous saveLater was called with a larger `delayInMilli`
-        // and we want the lower delay to execute. The saveFileTask handles concurrent operations.
-        executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
+    // By default we use a new thread
+    public void saveNow(T persistable, @Nullable Runnable completeHandler) {
+        saveNow(persistable, Utilities.getSingleThreadExecutor("FileManager-saveNow-thread"), completeHandler);
+    }
+
+    public void saveNow(T persistable, Executor executor, @Nullable Runnable completeHandler) {
+        nextWrite.set(persistable);
+
+        executor.execute(() -> {
+            T candidate = FileManager.this.nextWrite.getAndSet(null);
+            if (candidate != null) {
+                saveToFile(candidate);
+            }
+
+            if (completeHandler != null) {
+                completeHandler.run();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -127,8 +117,7 @@ public class FileManager<T extends PersistableEnvelope> {
         } catch (Throwable t) {
             String errorMsg = "Exception at proto read: " + t.getMessage() + " file:" + file.getAbsolutePath();
             log.error(errorMsg, t);
-            //if(DevEnv.DEV_MODE)
-            throw new RuntimeException(errorMsg);
+            throw new RuntimeException(errorMsg, t);
         }
     }
 
@@ -150,12 +139,7 @@ public class FileManager<T extends PersistableEnvelope> {
     }
 
     public void shutDown() {
-        executor.shutdown();
-        try {
-            executor.awaitTermination(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        timer.cancel();
     }
 
     public static void removeAndBackupFile(File dbDir, File storageFile, String fileName, String backupFolderName)
@@ -183,7 +167,7 @@ public class FileManager<T extends PersistableEnvelope> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private synchronized void saveToFile(T persistable, File dir, File storageFile) {
+    private synchronized void saveToFile(T persistable) {
         long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;

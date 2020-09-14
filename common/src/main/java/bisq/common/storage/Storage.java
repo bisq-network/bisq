@@ -26,16 +26,19 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.io.File;
 import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 
 import static bisq.common.util.Preconditions.checkDir;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * That class handles the storage of a particular object to disk using Protobuffer.
@@ -62,6 +65,8 @@ public class Storage<T extends PersistableEnvelope> {
     private String fileName;
     private int numMaxBackupFiles = 10;
     private final PersistenceProtoResolver persistenceProtoResolver;
+    @Getter
+    private boolean initialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +87,7 @@ public class Storage<T extends PersistableEnvelope> {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, delay, persistenceProtoResolver);
+        initialized = true;
         return getPersisted();
     }
 
@@ -96,32 +102,28 @@ public class Storage<T extends PersistableEnvelope> {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, delay, persistenceProtoResolver);
+        initialized = true;
         return getPersisted();
     }
 
+    // Save once the periodic timer thread executes
     public void queueUpForSave() {
         queueUpForSave(persistable);
     }
 
-    // Save delayed and on a background thread
+    // Save once the periodic timer thread executes
     public void queueUpForSave(T persistable) {
-        if (persistable != null) {
-            checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
-
-            fileManager.saveLater(persistable);
-        } else {
-            log.trace("queueUpForSave called but no persistable set");
-        }
+        fileManager.saveLater(persistable);
     }
 
-    public void saveNow(T persistable) {
-        if (persistable != null) {
-            checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
+    // Save synchronously on user thread
+    public void saveSync(T persistable) {
+        fileManager.saveNow(persistable, MoreExecutors.directExecutor(), null);
+    }
 
-            fileManager.saveLater(persistable, 1);
-        } else {
-            log.trace("queueUpForSave called but no persistable set");
-        }
+    // Save asynchronously using a new thread
+    public void saveAsync(T persistable, @Nullable Runnable completeHandler) {
+        fileManager.saveNow(persistable, completeHandler);
     }
 
     public void remove(String fileName) {
@@ -135,7 +137,6 @@ public class Storage<T extends PersistableEnvelope> {
     public void setNumMaxBackupFiles(int numMaxBackupFiles) {
         this.numMaxBackupFiles = numMaxBackupFiles;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

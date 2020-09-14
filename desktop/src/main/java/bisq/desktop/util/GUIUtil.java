@@ -134,7 +134,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -793,8 +792,7 @@ public class GUIUtil {
                     .useShutDownButton()
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
-                        preferences.setResyncSpvRequested(true);
-                        UserThread.runAfter(BisqApp.getShutDownHandler(), 100, TimeUnit.MILLISECONDS);
+                        preferences.applyResyncSpvRequested(true, BisqApp.getShutDownHandler());
                     })
                     .hideCloseButton()
                     .show();
@@ -1162,9 +1160,9 @@ public class GUIUtil {
         // match 127/8 (127.0.0.0 ~ 127.255.255.255)
         String localhostIpv4RegexPattern = String.format(
                 "(?:127\\.)" +
-                "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){2}" +
-                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-                "(?:\\:%1$s)?",
+                        "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){2}" +
+                        "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+                        "(?:\\:%1$s)?",
                 portRegexPattern);
 
         // match ::/64 with optional port at the end, i.e. ::1 or [::1]:8081
@@ -1190,36 +1188,36 @@ public class GUIUtil {
         // match 10/8 (10.0.0.0 ~ 10.255.255.255)
         String localnetIpv4RegexPatternA = String.format(
                 "(?:10\\.)" +
-                "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){2}" +
-                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-                "(?:\\:%1$s)?",
+                        "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){2}" +
+                        "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+                        "(?:\\:%1$s)?",
                 portRegexPattern);
 
         // match 172.16/12 (172.16.0.0 ~ 172.31.255.255)
         String localnetIpv4RegexPatternB = String.format(
                 "(?:172\\.)" +
-                "(?:(?:1[6-9]|2[0-9]|[3][0-1])\\.)" +
-                "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)" +
-                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-                "(?:\\:%1$s)?",
+                        "(?:(?:1[6-9]|2[0-9]|[3][0-1])\\.)" +
+                        "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)" +
+                        "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+                        "(?:\\:%1$s)?",
                 portRegexPattern);
 
         // match 192.168/16 (192.168.0.0 ~ 192.168.255.255)
         String localnetIpv4RegexPatternC = String.format(
                 "(?:192\\.)" +
-                "(?:168\\.)" +
-                "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)" +
-                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-                "(?:\\:%1$s)?",
+                        "(?:168\\.)" +
+                        "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)" +
+                        "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+                        "(?:\\:%1$s)?",
                 portRegexPattern);
 
         // match 169.254/15 (169.254.0.0 ~ 169.255.255.255)
         String autolocalIpv4RegexPattern = String.format(
                 "(?:169\\.)" +
-                "(?:(?:254|255)\\.)" +
-                "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)" +
-                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-                "(?:\\:%1$s)?",
+                        "(?:(?:254|255)\\.)" +
+                        "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)" +
+                        "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+                        "(?:\\:%1$s)?",
                 portRegexPattern);
 
         // match fc00::/7  (fc00:: ~ fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff)
