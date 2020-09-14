@@ -26,7 +26,6 @@ import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.script.Script;
 
