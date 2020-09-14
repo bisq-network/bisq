@@ -17,6 +17,8 @@
 
 package bisq.apitest;
 
+import java.net.InetAddress;
+
 import java.io.IOException;
 
 import java.util.concurrent.ExecutionException;
@@ -69,16 +71,16 @@ public class ApiTestCase {
         scaffold = new Scaffold(supportingApps).setUp();
         config = scaffold.config;
         bitcoinCli = new BitcoinCliHelper((config));
-        // For now, all grpc requests are sent to the alicedaemon, but this will need to
-        // be made configurable for new test cases that call arb or bob node daemons.
-        grpcStubs = new GrpcStubs("localhost", alicedaemon.apiPort, config.apiPassword);
+        grpcStubs = new GrpcStubs(InetAddress.getLoopbackAddress().getHostAddress(),
+                alicedaemon.apiPort, config.apiPassword);
     }
 
     public static void setUpScaffold(String[] params)
             throws InterruptedException, ExecutionException, IOException {
         scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
-        grpcStubs = new GrpcStubs("localhost", alicedaemon.apiPort, config.apiPassword);
+        grpcStubs = new GrpcStubs(InetAddress.getLoopbackAddress().getHostAddress(),
+                alicedaemon.apiPort, config.apiPassword);
     }
 
     public static void tearDownScaffold() {
