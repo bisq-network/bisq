@@ -25,7 +25,6 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import com.google.protobuf.Message;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -110,11 +109,13 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         if (!entrySet.isEmpty()) {
             Set<AddressEntry> toBeRemoved = new HashSet<>();
             entrySet.forEach(addressEntry -> {
+                Script.ScriptType scriptType = addressEntry.isSegwit() ? Script.ScriptType.P2WPKH
+                                                                       : Script.ScriptType.P2PKH;
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(
-                        addressEntry.getPubKeyHash(),
-                        Script.ScriptType.P2PKH);
+                                                                        addressEntry.getPubKeyHash(), scriptType);
                 if (keyFromPubHash != null) {
-                    Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash);
+                    Address addressFromKey = Address.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash,
+                                                             scriptType);
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);

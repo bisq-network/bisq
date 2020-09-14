@@ -36,8 +36,8 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
@@ -153,7 +153,7 @@ public class TradeWalletService {
         Transaction tradingFeeTx = new Transaction(params);
         SendRequest sendRequest = null;
         try {
-            tradingFeeTx.addOutput(tradingFee, LegacyAddress.fromBase58(params, feeReceiverAddress));
+            tradingFeeTx.addOutput(tradingFee, Address.fromString(params, feeReceiverAddress));
             // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
             tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -335,7 +335,7 @@ public class TradeWalletService {
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
         // We don't care about fee calculation differences between the real tx and that dummy tx as we use a static tx fee.
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, LegacyAddress.fromKey(params, new ECKey()));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, SegwitAddress.fromKey(params, new ECKey()));
         dummyTX.addOutput(dummyOutput);
 
         // Find the needed inputs to pay the output, optionally add 1 change output.
@@ -454,7 +454,7 @@ public class TradeWalletService {
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx.
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, LegacyAddress.fromKey(params, new ECKey()));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, SegwitAddress.fromKey(params, new ECKey()));
         dummyTx.addOutput(dummyOutput);
         addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
@@ -516,7 +516,7 @@ public class TradeWalletService {
         TransactionOutput takerTransactionOutput = null;
         if (takerChangeOutputValue > 0 && takerChangeAddressString != null) {
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
-                    LegacyAddress.fromBase58(params, takerChangeAddressString));
+                    Address.fromString(params, takerChangeAddressString));
         }
 
         if (makerIsBuyer) {
@@ -686,7 +686,7 @@ public class TradeWalletService {
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
         Coin outputAmount = p2SHMultiSigOutput.getValue().subtract(minerFee);
-        delayedPayoutTx.addOutput(outputAmount, LegacyAddress.fromBase58(params, donationAddressString));
+        delayedPayoutTx.addOutput(outputAmount, Address.fromString(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         return delayedPayoutTx;
@@ -938,10 +938,10 @@ public class TradeWalletService {
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromString(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1001,10 +1001,10 @@ public class TradeWalletService {
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromString(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1146,10 +1146,10 @@ public class TradeWalletService {
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            transaction.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
+            transaction.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            transaction.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
+            transaction.addOutput(sellerPayoutAmount, Address.fromString(params, sellerAddressString));
         }
         checkArgument(transaction.getOutputs().size() >= 1, "We need at least one output.");
         return transaction;
