@@ -40,7 +40,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -89,7 +88,7 @@ public class PreferencesTest {
         final FiatCurrency usd = new FiatCurrency("USD");
         fiatCurrencies.add(usd);
 
-        when(storage.initAndGetPersistedWithFileName(anyString(), anyLong())).thenReturn(payload);
+        when(storage.getPersisted(anyString())).thenReturn(payload);
         when(payload.getUserLanguage()).thenReturn("en");
         when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
         when(payload.getPreferredTradeCurrency()).thenReturn(usd);
@@ -110,7 +109,7 @@ public class PreferencesTest {
         final CryptoCurrency dash = new CryptoCurrency("DASH", "Dash");
         cryptoCurrencies.add(dash);
 
-        when(storage.initAndGetPersistedWithFileName(anyString(), anyLong())).thenReturn(payload);
+        when(storage.getPersisted(anyString())).thenReturn(payload);
         when(payload.getUserLanguage()).thenReturn("en");
         when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
         when(payload.getPreferredTradeCurrency()).thenReturn(new FiatCurrency("USD"));
@@ -131,7 +130,7 @@ public class PreferencesTest {
 
         assertEquals("US-Dollar (USD)", usd.getNameAndCode());
 
-        when(storage.initAndGetPersistedWithFileName(anyString(), anyLong())).thenReturn(payload);
+        when(storage.getPersisted(anyString())).thenReturn(payload);
         when(payload.getUserLanguage()).thenReturn("en");
         when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
         when(payload.getPreferredTradeCurrency()).thenReturn(usd);

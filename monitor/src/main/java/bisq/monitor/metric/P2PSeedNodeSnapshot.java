@@ -21,7 +21,6 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
 import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
@@ -34,11 +33,11 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.storage.Storage;
@@ -138,10 +137,10 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
             try {
                 Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
-                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.initAndGetPersistedWithFileName(TradeStatistics2Store.class.getSimpleName() + networkPostfix, 0);
+                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.getPersisted(TradeStatistics2Store.class.getSimpleName() + networkPostfix);
                 hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
 
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.initAndGetPersistedWithFileName(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix, 0);
+                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.getPersisted(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix);
                 hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
             } catch (NullPointerException e) {
                 // in case there is no store file

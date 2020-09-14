@@ -56,7 +56,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyReputationList persisted = storage.initAndGetPersisted(myReputationList, 100);
+            MyReputationList persisted = storage.getPersisted(myReputationList.getDefaultStorageFileName());
             if (persisted != null) {
                 myReputationList.clear();
                 myReputationList.addAll(persisted.getList());

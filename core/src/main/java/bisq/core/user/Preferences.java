@@ -226,7 +226,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     @Override
     public void readPersisted() {
-        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 100);
+        //todo
+        PreferencesPayload persisted = storage.getPersisted("PreferencesPayload");
         BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {

@@ -113,9 +113,6 @@ public class Storage<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Queues up a save in the background. Useful for not very important wallet changes.
-     */
     void saveLater(T persistable) {
         saveLater(persistable, delay);
     }
@@ -208,9 +205,10 @@ public class Storage<T extends PersistableEnvelope> {
         }
     }
 
-
     @Nullable
-    public T getPersisted() {
+    public T getPersisted(String fileName) {
+        storageFile = new File(dir, fileName);
+
         if (!storageFile.exists()) {
             return null;
         }
@@ -244,27 +242,6 @@ public class Storage<T extends PersistableEnvelope> {
     }
 
     // TODO refactor old API
-
-
-    @Nullable
-    public T initAndGetPersistedWithFileName(String fileName, long delay) {
-        this.fileName = fileName;
-        storageFile = new File(dir, fileName);
-        return getPersisted();
-    }
-
-    @Nullable
-    public T initAndGetPersisted(T persistable, long delay) {
-        return initAndGetPersisted(persistable, persistable.getClass().getSimpleName(), delay);
-    }
-
-    @Nullable
-    public T initAndGetPersisted(T persistable, String fileName, long delay) {
-        this.persistable = persistable;
-        this.fileName = fileName;
-        storageFile = new File(dir, fileName);
-        return getPersisted();
-    }
 
     public void queueUpForSave() {
         queueUpForSave(persistable);

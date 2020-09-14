@@ -90,7 +90,8 @@ public class User implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        UserPayload persisted = storage.initAndGetPersistedWithFileName("UserPayload", 100);
+        //todo
+        UserPayload persisted = checkNotNull(storage).getPersisted("UserPayload");
         userPayload = persisted != null ? persisted : new UserPayload();
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");

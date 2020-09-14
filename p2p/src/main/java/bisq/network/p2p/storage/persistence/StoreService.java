@@ -97,7 +97,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     }
 
     protected void makeFileFromResourceFile(String postFix) {
-        final String fileName = getFileName();
+        String fileName = getFileName();
         String resourceFileName = fileName + postFix;
         File dbDir = new File(absolutePathOfStorageDir);
         if (!dbDir.exists() && !dbDir.mkdir())
@@ -122,8 +122,8 @@ public abstract class StoreService<T extends PersistableEnvelope> {
 
 
     protected void readStore() {
-        final String fileName = getFileName();
-        store = storage.initAndGetPersistedWithFileName(fileName, 100);
+        String fileName = getFileName();
+        store = storage.getPersisted(fileName);
         if (store != null) {
             log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
                     storage.getClass().getSimpleName(),

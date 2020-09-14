@@ -105,7 +105,7 @@ public class TestState {
      * not running the entire storage code paths.
      */
     void simulateRestart() {
-        when(this.mockSeqNrStorage.initAndGetPersisted(any(SequenceNumberMap.class), anyLong()))
+        when(this.mockSeqNrStorage.getPersisted(any(SequenceNumberMap.class).getDefaultStorageFileName()))
                 .thenReturn(this.mockedStorage.sequenceNumberMap);
 
         this.mockedStorage = createP2PDataStorageForTest(

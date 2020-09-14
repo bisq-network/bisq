@@ -56,7 +56,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyProofOfBurnList persisted = storage.initAndGetPersisted(myProofOfBurnList, 100);
+            MyProofOfBurnList persisted = storage.getPersisted(myProofOfBurnList.getDefaultStorageFileName());
             if (persisted != null) {
                 myProofOfBurnList.clear();
                 myProofOfBurnList.addAll(persisted.getList());

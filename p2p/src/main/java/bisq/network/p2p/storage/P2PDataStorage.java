@@ -171,7 +171,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @Override
     public void readPersisted() {
-        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap, 300);
+        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.getPersisted(sequenceNumberMap.getDefaultStorageFileName());
         if (persistedSequenceNumberMap != null)
             sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));
     }

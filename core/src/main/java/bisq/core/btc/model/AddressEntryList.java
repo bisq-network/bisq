@@ -60,7 +60,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
 
     @Override
     public void readPersisted() {
-        AddressEntryList persisted = storage.initAndGetPersisted(this, 50);
+        AddressEntryList persisted = storage.getPersisted(this.getDefaultStorageFileName());
         if (persisted != null) {
             entrySet.clear();
             entrySet.addAll(persisted.entrySet);

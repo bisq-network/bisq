@@ -53,7 +53,7 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
     @Override
     public void readPersisted() {
         // We need to use DisputeList as file name to not lose existing disputes which are stored in the DisputeList file
-        ArbitrationDisputeList persisted = storage.initAndGetPersisted(this, "DisputeList", 50);
+        ArbitrationDisputeList persisted = storage.getPersisted("DisputeList");
         if (persisted != null) {
             list.addAll(persisted.getList());
         }

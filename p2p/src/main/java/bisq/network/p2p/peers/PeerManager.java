@@ -36,9 +36,8 @@ import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -175,19 +174,20 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList", 1000);
-        if (persistedPeerList != null) {
-            long peersWithNoCapabilitiesSet = persistedPeerList.getList().stream()
+        // todo
+        PeerList persisted = storage.getPersisted("PeerList");
+        if (persisted != null) {
+            long peersWithNoCapabilitiesSet = persisted.getList().stream()
                     .filter(e -> e.getCapabilities().isEmpty())
                     .mapToInt(e -> 1)
                     .count();
             if (peersWithNoCapabilitiesSet > 100) {
-                log.warn("peersWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peersWithNoCapabilitiesSet, persistedPeerList.size());
+                log.warn("peersWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peersWithNoCapabilitiesSet, persisted.size());
             } else {
-                log.info("peersWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peersWithNoCapabilitiesSet, persistedPeerList.size());
+                log.info("peersWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peersWithNoCapabilitiesSet, persisted.size());
             }
 
-            this.persistedPeers.addAll(persistedPeerList.getList());
+            this.persistedPeers.addAll(persisted.getList());
         }
     }
 

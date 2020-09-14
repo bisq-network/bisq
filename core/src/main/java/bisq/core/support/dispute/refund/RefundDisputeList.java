@@ -53,7 +53,7 @@ public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
     @Override
     public void readPersisted() {
         // We need to use DisputeList as file name to not lose existing disputes which are stored in the DisputeList file
-        RefundDisputeList persisted = storage.initAndGetPersisted(this, "RefundDisputeList", 50);
+        RefundDisputeList persisted = storage.getPersisted(this.getDefaultStorageFileName());
         if (persisted != null) {
             list.addAll(persisted.getList());
         }
