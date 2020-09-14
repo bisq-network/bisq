@@ -69,7 +69,7 @@ public class MyVoteListService implements PersistedDataHost {
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyVoteList persisted = storage.initAndGetPersisted(myVoteList, 100);
+            MyVoteList persisted = storage.initAndGetPersisted(myVoteList, 500);
             if (persisted != null) {
                 this.myVoteList.clear();
                 this.myVoteList.addAll(persisted.getList());

@@ -49,7 +49,7 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
 
     @Override
     public void readPersisted() {
-        MediationDisputeList persisted = storage.initAndGetPersisted(this, "MediationDisputeList", 0);
+        MediationDisputeList persisted = storage.initAndGetPersisted(this, "MediationDisputeList", 500);
         if (persisted != null) {
             list.addAll(persisted.getList());
         }

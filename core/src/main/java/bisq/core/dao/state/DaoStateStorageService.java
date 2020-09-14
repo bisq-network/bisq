@@ -84,15 +84,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
-        persist(daoState, daoStateHashChain, 200);
-    }
-
-    private void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, long delayInMilli) {
         store.modifySynchronized(() -> {
             store.setDaoState(daoState);
             store.setDaoStateHashChain(daoStateHashChain);
         });
-        storage.queueUpForSave(store, delayInMilli);
+        storage.queueUpForSave(store);
     }
 
     public DaoState getPersistedBsqState() {
@@ -104,7 +100,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        persist(new DaoState(), new LinkedList<>(), 1);
+        store.modifySynchronized(() -> {
+            store.setDaoState(new DaoState());
+            store.setDaoStateHashChain(new LinkedList<>());
+        });
+        storage.saveNow(store);
         UserThread.runAfter(resultHandler, 300, TimeUnit.MILLISECONDS);
     }
 

@@ -214,9 +214,10 @@ public class GUIUtil {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (!directory.isEmpty()) {
-                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
-                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
-                paymentAccountsStorage.queueUpForSave();
+                Storage<PersistableList<PaymentAccount>> tempStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
+                tempStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
+                tempStorage.queueUpForSave();
+                tempStorage.shutDown();
                 new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
             }
         } else {
@@ -242,12 +243,12 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
-                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
-                if (persisted != null) {
+                Storage<PaymentAccountList> tempStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
+                PaymentAccountList imported = tempStorage.initAndGetPersistedWithFileName(fileName, 100);
+                if (imported != null) {
                     final StringBuilder msg = new StringBuilder();
                     final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
-                    persisted.getList().forEach(paymentAccount -> {
+                    imported.getList().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
                             paymentAccounts.add(paymentAccount);
@@ -256,6 +257,8 @@ public class GUIUtil {
                             msg.append(Res.get("guiUtil.accountImport.noImport", id));
                         }
                     });
+                    tempStorage.shutDown();
+
                     user.addImportedPaymentAccounts(paymentAccounts);
                     new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 

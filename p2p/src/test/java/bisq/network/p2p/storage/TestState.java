@@ -161,7 +161,7 @@ public class TestState {
      */
     private void verifySequenceNumberMapWriteContains(P2PDataStorage.ByteArray payloadHash, int sequenceNumber) {
         final ArgumentCaptor<SequenceNumberMap> captor = ArgumentCaptor.forClass(SequenceNumberMap.class);
-        verify(this.mockSeqNrStorage).queueUpForSave(captor.capture(), anyLong());
+        verify(this.mockSeqNrStorage).queueUpForSave(captor.capture());
 
         SequenceNumberMap savedMap = captor.getValue();
         Assert.assertEquals(sequenceNumber, savedMap.get(payloadHash).sequenceNr);
@@ -232,7 +232,7 @@ public class TestState {
         if (expectedSequenceNrMapWrite) {
             this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
         } else {
-            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
+            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class));
         }
     }
 
@@ -273,7 +273,7 @@ public class TestState {
         }
 
         if (!expectedSeqNrWrite)
-            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
+            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class));
 
         if (!expectedBroadcast)
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
@@ -338,7 +338,7 @@ public class TestState {
             }
 
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
-            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
+            verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class));
         }
     }
 

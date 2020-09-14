@@ -149,11 +149,7 @@ public class FileManager<T extends PersistableEnvelope> {
         }
     }
 
-
-    /**
-     * Shut down auto-saving.
-     */
-    private void shutDown() {
+    public void shutDown() {
         executor.shutdown();
         try {
             executor.awaitTermination(5, TimeUnit.SECONDS);

@@ -103,14 +103,6 @@ public class Storage<T extends PersistableEnvelope> {
         queueUpForSave(persistable);
     }
 
-    public void queueUpForSave(long delayInMilli) {
-        queueUpForSave(persistable, delayInMilli);
-    }
-
-    public void setNumMaxBackupFiles(int numMaxBackupFiles) {
-        this.numMaxBackupFiles = numMaxBackupFiles;
-    }
-
     // Save delayed and on a background thread
     public void queueUpForSave(T persistable) {
         if (persistable != null) {
@@ -122,11 +114,11 @@ public class Storage<T extends PersistableEnvelope> {
         }
     }
 
-    public void queueUpForSave(T persistable, long delayInMilli) {
+    public void saveNow(T persistable) {
         if (persistable != null) {
             checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
-            fileManager.saveLater(persistable, delayInMilli);
+            fileManager.saveLater(persistable, 1);
         } else {
             log.trace("queueUpForSave called but no persistable set");
         }
@@ -134,6 +126,14 @@ public class Storage<T extends PersistableEnvelope> {
 
     public void remove(String fileName) {
         fileManager.removeFile(fileName);
+    }
+
+    public void shutDown() {
+        fileManager.shutDown();
+    }
+
+    public void setNumMaxBackupFiles(int numMaxBackupFiles) {
+        this.numMaxBackupFiles = numMaxBackupFiles;
     }
 
 

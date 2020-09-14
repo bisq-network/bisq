@@ -171,7 +171,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @Override
     public void readPersisted() {
-        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap, 300);
+        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap, 2000);
         if (persistedSequenceNumberMap != null)
             sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));
     }
@@ -618,7 +618,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 2000);
+        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap));
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast)
@@ -672,7 +672,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the latest sequence number and persist it
         sequenceNumberMap.put(hashOfPayload, new MapValue(updatedEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
+        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap));
 
         // Always broadcast refreshes
         broadcaster.broadcast(refreshTTLMessage, sender);
@@ -708,7 +708,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the latest sequence number and persist it
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
+        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap));
 
         // Update that we have seen this AddOncePayload so the next time it is seen it fails verification
         if (protectedStoragePayload instanceof AddOncePayload)

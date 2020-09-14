@@ -66,7 +66,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void persist() {
-        storage.queueUpForSave(store, 200);
+        storage.queueUpForSave(store);
     }
 
     protected T getStore() {
@@ -123,7 +123,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
 
     protected void readStore() {
         final String fileName = getFileName();
-        store = storage.initAndGetPersistedWithFileName(fileName, 100);
+        store = storage.initAndGetPersistedWithFileName(fileName, 500);
         if (store != null) {
             int length = store.toProtoMessage().toByteArray().length;
             double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;

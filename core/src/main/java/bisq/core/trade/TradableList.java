@@ -54,7 +54,7 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
     public TradableList(Storage<TradableList<T>> storage, String fileName) {
         this.storage = storage;
 
-        TradableList<T> persisted = storage.initAndGetPersisted(this, fileName, 50);
+        TradableList<T> persisted = storage.initAndGetPersisted(this, fileName, 500);
         if (persisted != null)
             list.addAll(persisted.getList());
     }

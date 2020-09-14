@@ -226,7 +226,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     @Override
     public void readPersisted() {
-        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 100);
+        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 500);
         BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
@@ -614,14 +614,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setResyncSpvRequested(boolean resyncSpvRequested) {
         prefPayload.setResyncSpvRequested(resyncSpvRequested);
-        // We call that before shutdown so we dont want a delay here
-        storage.queueUpForSave(prefPayload, 1);
+        // We call that before shutdown so we don't want a delay here,
+        // still it is threaded so we cannot shut down immediately
+        storage.saveNow(prefPayload);
     }
 
     public void setBridgeAddresses(List<String> bridgeAddresses) {
         prefPayload.setBridgeAddresses(bridgeAddresses);
-        // We call that before shutdown so we dont want a delay here
-        storage.queueUpForSave(prefPayload, 1);
+        // We call that before shutdown so we don't want a delay here,
+        // still it is threaded so we cannot shut down immediately
+        storage.saveNow(prefPayload);
     }
 
     // Only used from PB but keep it explicit as it may be used from the client and then we want to persist
