@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.DisputeAgentsGrpc;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.OffersGrpc;
 import bisq.proto.grpc.PaymentAccountsGrpc;
@@ -29,6 +30,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class GrpcStubs {
 
+    public final DisputeAgentsGrpc.DisputeAgentsBlockingStub disputeAgentsService;
     public final GetVersionGrpc.GetVersionBlockingStub versionService;
     public final OffersGrpc.OffersBlockingStub offersService;
     public final PaymentAccountsGrpc.PaymentAccountsBlockingStub paymentAccountsService;
@@ -46,6 +48,7 @@ public class GrpcStubs {
             }
         }));
 
+        this.disputeAgentsService = DisputeAgentsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.offersService = OffersGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
