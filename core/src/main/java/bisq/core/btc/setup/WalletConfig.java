@@ -359,9 +359,7 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     protected Wallet createWallet(boolean isBsqWallet) {
-        // Change preferredOutputScriptType of btc wallet to P2WPKH to start using segwit
-        // Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
-        Script.ScriptType preferredOutputScriptType = Script.ScriptType.P2PKH;
+        Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
         KeyChainGroup.Builder kcgBuilder = KeyChainGroup.builder(params, structure);
         if (restoreFromSeed != null) {
