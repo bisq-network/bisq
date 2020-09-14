@@ -352,6 +352,14 @@ public class WalletConfig extends AbstractIdleService {
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
+            if (!isBsqWallet && BisqKeyChainGroupStructure.BIP44_BTC_NON_SEGWIT_ACCOUNT_PATH.equals(wallet.getActiveKeyChain().getAccountPath())) {
+                // Btc wallet does not have a native segwit keychain, we should add one.
+                DeterministicSeed seed = wallet.getKeyChainSeed();
+                DeterministicKeyChain nativeSegwitKeyChain = DeterministicKeyChain.builder().seed(seed)
+                        .outputScriptType(Script.ScriptType.P2WPKH)
+                        .accountPath(new BisqKeyChainGroupStructure(isBsqWallet).accountPathFor(Script.ScriptType.P2WPKH)).build();
+                wallet.addAndActivateHDChain(nativeSegwitKeyChain);
+            }
         } finally {
             walletStream.close();
         }
