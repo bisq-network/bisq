@@ -31,10 +31,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +47,7 @@ public class FileManager<T extends PersistableEnvelope> {
     private final long delay;
     private final Callable<Void> saveFileTask;
     private final AtomicReference<T> nextWrite;
+    private final AtomicInteger taskIndex = new AtomicInteger(0);
     private final PersistenceProtoResolver persistenceProtoResolver;
     private Path usedTempFilePath;
 
@@ -67,15 +68,18 @@ public class FileManager<T extends PersistableEnvelope> {
 
         saveFileTask = () -> {
             try {
-                Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
+                Thread.currentThread().setName("Save-file-task-" + storageFile.getName() + "-" + taskIndex.getAndIncrement());
 
                 // Atomically take the next object to write and set the value to null so concurrent saveFileTask
                 // won't duplicate work.
                 T persistable = this.nextWrite.getAndSet(null);
 
                 // If null, a concurrent saveFileTask already grabbed the data. Don't duplicate work.
-                if (persistable == null)
+                if (persistable == null) {
+                    log.debug("A concurrent saveFileTask already grabbed the data. Storage file={}, taskIndex={}",
+                            storageFile.getName(), taskIndex);
                     return null;
+                }
 
                 long now = System.currentTimeMillis();
                 saveToFile(persistable, dir, storageFile);
@@ -114,11 +118,12 @@ public class FileManager<T extends PersistableEnvelope> {
 
     @SuppressWarnings("unchecked")
     public synchronized T read(File file) {
-        log.debug("Read from disc: {}", file.getName());
-
-        try (final FileInputStream fileInputStream = new FileInputStream(file)) {
+        long ts = System.currentTimeMillis();
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
             protobuf.PersistableEnvelope persistable = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
-            return (T) persistenceProtoResolver.fromProto(persistable);
+            T result = (T) persistenceProtoResolver.fromProto(persistable);
+            log.info("Reading {} from disc took {} ms", file.getName(), System.currentTimeMillis() - ts);
+            return result;
         } catch (Throwable t) {
             String errorMsg = "Exception at proto read: " + t.getMessage() + " file:" + file.getAbsolutePath();
             log.error(errorMsg, t);
@@ -183,12 +188,12 @@ public class FileManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private synchronized void saveToFile(T persistable, File dir, File storageFile) {
+        long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         PrintWriter printWriter = null;
 
         try {
-            log.debug("Write to disc: {}", storageFile.getName());
             protobuf.PersistableEnvelope protoPersistable;
             try {
                 protoPersistable = (protobuf.PersistableEnvelope) persistable.toPersistableMessage();
@@ -235,7 +240,7 @@ public class FileManager<T extends PersistableEnvelope> {
                 if (!tempFile.delete())
                     log.error("Cannot delete temp file.");
             }
-
+            log.info("Write {} to disc took {} ms", storageFile.getName(), System.currentTimeMillis() - ts);
             try {
                 if (fileOutputStream != null)
                     fileOutputStream.close();
