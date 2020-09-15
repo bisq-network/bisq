@@ -33,7 +33,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -141,7 +140,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     private void flushAndShutDown() {
         if (persistRequested) {
-            writeToDisk();
+            persistNow();
         }
     }
 
@@ -197,27 +196,9 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     }
 
     public void persistNow() {
-        checkNotNull(persistable, "queueUpForSave: persistable must not be null. this=" + this);
-        checkNotNull(storageFile, "queueUpForSave: storageFile must not be null. persistable=" + persistable.getClass().getSimpleName());
-
-        writeToDisk();
-    }
-
-    public void removeAndBackupFile(String fileName) throws IOException {
-        FileUtil.removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private void writeToDisk() {
         long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
-        PrintWriter printWriter = null;
 
         try {
             // Before we write we backup existing file
@@ -272,9 +253,6 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             try {
                 if (fileOutputStream != null)
                     fileOutputStream.close();
-                //noinspection ConstantConditions,ConstantConditions
-                if (printWriter != null)
-                    printWriter.close();
             } catch (IOException e) {
                 // We swallow that
                 e.printStackTrace();
@@ -287,13 +265,14 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     @Override
     public String toString() {
-        return "Storage{" +
+        return "PersistenceManager{" +
                 "\n     dir=" + dir +
                 ",\n     storageFile=" + storageFile +
                 ",\n     persistable=" + persistable +
                 ",\n     fileName='" + fileName + '\'' +
                 ",\n     priority=" + priority +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
+                ",\n     persistRequested=" + persistRequested +
                 "\n}";
     }
 }

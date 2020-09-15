@@ -25,7 +25,6 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import java.nio.file.Paths;
 
 import java.io.File;
-import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,12 +82,6 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         try {
             readStore();
         } catch (Throwable t) {
-            try {
-                String fileName = getFileName();
-                persistenceManager.removeAndBackupFile(fileName);
-            } catch (IOException e) {
-                log.error(e.toString());
-            }
             makeFileFromResourceFile(postFix);
             readStore();
         }
