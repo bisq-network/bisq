@@ -20,7 +20,7 @@ package bisq.core.dao.state;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 
-import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
+import bisq.common.proto.persistable.PersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @Slf4j
-public class DaoStateStore implements ThreadedPersistableEnvelope {
+public class DaoStateStore implements PersistableEnvelope {
     // DaoState is always a clone and must not be used for read access beside initial read from disc when we apply
     // the snapshot!
     @Getter

@@ -18,42 +18,68 @@
 package bisq.common.proto.persistable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Delegate;
 
-@EqualsAndHashCode
-public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope, Iterable<T> {
-    @Delegate(excludes = ExcludesDelegateMethods.class)
+// public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope, Iterable<T> {
+public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope {
+
     @Getter
-    @Setter
-    private List<T> list;
+    private final List<T> list = createList();
+
+    protected List<T> createList() {
+        return new ArrayList<>();
+    }
 
     public PersistableList() {
-        list = new ArrayList<>();
     }
 
     public PersistableList(List<T> list) {
-        this.list = list;
+        setAll(list);
     }
 
-    // this.stream() does not compile for unknown reasons, so add that manual delegate method
+    public void setAll(Collection<T> collection) {
+        this.list.clear();
+        this.list.addAll(collection);
+    }
+
+    public boolean add(T item) {
+        if (!list.contains(item)) {
+            list.add(item);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean remove(T tradable) {
+        return list.remove(tradable);
+    }
+
     public Stream<T> stream() {
         return list.stream();
     }
 
-    private interface ExcludesDelegateMethods<T> {
-        Stream<T> stream();
+    public int size() {
+        return list.size();
     }
 
-    @Override
-    public String toString() {
-        return "PersistableList{" +
-                "\n     list=" + list +
-                "\n}";
+    public boolean contains(T thing) {
+        return list.contains(thing);
+    }
+
+    public boolean isEmpty() {
+        return list.isEmpty();
+    }
+
+    public void forEach(Consumer<? super T> action) {
+        list.forEach(action);
+    }
+
+    public void clear() {
+        list.clear();
     }
 }

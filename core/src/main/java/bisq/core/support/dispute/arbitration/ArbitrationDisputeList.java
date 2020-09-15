@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public final class ArbitrationDisputeList extends DisputeList<ArbitrationDisputeList> {
+public final class ArbitrationDisputeList extends DisputeList<Dispute> {
 
     ArbitrationDisputeList() {
         super();
@@ -61,10 +61,10 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
     @Override
     public Message toProtoMessage() {
 
-        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION"));
+        forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION"));
 
         return protobuf.PersistableEnvelope.newBuilder().setArbitrationDisputeList(protobuf.ArbitrationDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list), protobuf.Dispute.class))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(getList()), protobuf.Dispute.class))).build();
     }
 
     public static ArbitrationDisputeList fromProto(protobuf.ArbitrationDisputeList proto,

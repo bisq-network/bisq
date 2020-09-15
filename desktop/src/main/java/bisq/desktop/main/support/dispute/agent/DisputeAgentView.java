@@ -62,7 +62,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
 
     private final MultipleHolderNameDetection multipleHolderNameDetection;
 
-    public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+    public DisputeAgentView(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                             KeyRing keyRing,
                             TradeManager tradeManager,
                             CoinFormatter formatter,

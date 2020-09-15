@@ -111,7 +111,7 @@ import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
-    protected final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+    protected final DisputeManager<? extends DisputeList<Dispute>> disputeManager;
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     protected final CoinFormatter formatter;
@@ -148,7 +148,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+    public DisputeView(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                        KeyRing keyRing,
                        TradeManager tradeManager,
                        CoinFormatter formatter,

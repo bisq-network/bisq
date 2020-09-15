@@ -59,8 +59,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
         if (DevEnv.isDaoActivated()) {
             UnconfirmedBsqChangeOutputList persisted = storage.getPersisted();
             if (persisted != null) {
-                unconfirmedBsqChangeOutputList.clear();
-                unconfirmedBsqChangeOutputList.addAll(persisted.getList());
+                unconfirmedBsqChangeOutputList.setAll(persisted.getList());
             }
         }
     }

@@ -113,7 +113,7 @@ public class MultipleHolderNameDetection {
     // Class fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+    private final DisputeManager<? extends DisputeList<Dispute>> disputeManager;
 
     // Key is hex of hash of sig pubKey which we consider a trader identity. We could use onion address as well but
     // once we support multiple onion addresses that would not work anymore.
@@ -126,7 +126,7 @@ public class MultipleHolderNameDetection {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public MultipleHolderNameDetection(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+    public MultipleHolderNameDetection(DisputeManager<? extends DisputeList<Dispute>> disputeManager) {
         this.disputeManager = disputeManager;
 
         disputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> {

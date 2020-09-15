@@ -23,7 +23,7 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
-import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
+import bisq.common.proto.persistable.PersistableList;
 import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
@@ -32,17 +32,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class TradableList<T extends Tradable> implements UserThreadMappedPersistableEnvelope {
+public final class TradableList<T extends Tradable> extends PersistableList<T> {
     @Getter
     private final ObservableList<T> list = FXCollections.observableArrayList();
 
@@ -60,7 +57,7 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TradableList(List<T> list) {
-        this.list.addAll(list);
+        super(list);
     }
 
     @Override
@@ -97,43 +94,5 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
                 .collect(Collectors.toList());
 
         return new TradableList<>(list);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public boolean add(T tradable) {
-        if (!list.contains(tradable)) {
-            list.add(tradable);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean remove(T tradable) {
-        return list.remove(tradable);
-    }
-
-    public Stream<T> stream() {
-        return list.stream();
-    }
-
-    public void forEach(Consumer<? super T> action) {
-        list.forEach(action);
-    }
-
-    public int size() {
-        return list.size();
-    }
-
-    public boolean contains(T thing) {
-        return list.contains(thing);
-    }
-
-    public void setAll(Collection<T> list) {
-        this.list.clear();
-        this.list.addAll(list);
     }
 }

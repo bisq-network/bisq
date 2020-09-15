@@ -19,7 +19,7 @@ package bisq.network.p2p.storage.persistence;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
-import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
+import bisq.common.proto.persistable.PersistableEnvelope;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ import lombok.Setter;
  * in protobuffer the map construct can't be anything, so the straightforward mapping was not possible.
  * Hence this Persistable class.
  */
-public class SequenceNumberMap implements ThreadedPersistableEnvelope {
+public class SequenceNumberMap implements PersistableEnvelope {
     @Getter
     @Setter
     private Map<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> map = new ConcurrentHashMap<>();
@@ -53,9 +53,10 @@ public class SequenceNumberMap implements ThreadedPersistableEnvelope {
 
     @Override
     public protobuf.PersistableEnvelope toProtoMessage() {
+        Map<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> tempMap = new HashMap<>(map);
         return protobuf.PersistableEnvelope.newBuilder()
                 .setSequenceNumberMap(protobuf.SequenceNumberMap.newBuilder()
-                        .addAllSequenceNumberEntries(map.entrySet().stream()
+                        .addAllSequenceNumberEntries(tempMap.entrySet().stream()
                                 .map(entry -> protobuf.SequenceNumberEntry.newBuilder()
                                         .setBytes(entry.getKey().toProtoMessage())
                                         .setMapValue(entry.getValue().toProtoMessage())

@@ -49,7 +49,6 @@ import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.storage.Storage;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
@@ -75,7 +74,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class DisputeManager<T extends DisputeList<? extends DisputeList<? extends PersistableEnvelope>>> extends SupportManager {
+public abstract class DisputeManager<T extends DisputeList<Dispute>> extends SupportManager {
     protected final TradeWalletService tradeWalletService;
     protected final BtcWalletService btcWalletService;
     protected final TradeManager tradeManager;

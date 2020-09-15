@@ -111,8 +111,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         if (DevEnv.isDaoActivated()) {
             MyProposalList persisted = storage.getPersisted();
             if (persisted != null) {
-                myProposalList.clear();
-                myProposalList.addAll(persisted.getList());
+                myProposalList.setAll(persisted.getList());
                 listeners.forEach(l -> l.onListChanged(getList()));
             }
         }

@@ -22,7 +22,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
 
@@ -36,11 +35,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,10 +54,6 @@ public class Storage<T extends PersistableEnvelope> {
     private T persistable;
     private String fileName;
     private int numMaxBackupFiles = 10;
-
-    private final AtomicReference<T> nextWrite;
-    private final Callable<Void> saveFileTask;
-    private final ScheduledThreadPoolExecutor executor;
     private Path usedTempFilePath;
     private final long delay = 100;
 
@@ -79,30 +70,6 @@ public class Storage<T extends PersistableEnvelope> {
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
 
-        this.nextWrite = new AtomicReference<>(null);
-
-        executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
-
-        saveFileTask = () -> {
-            try {
-                Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
-
-                // Atomically take the next object to write and set the value to null so concurrent saveFileTask
-                // won't duplicate work.
-                T persistable = this.nextWrite.getAndSet(null);
-
-                // If null, a concurrent saveFileTask already grabbed the data. Don't duplicate work.
-                if (persistable == null)
-                    return null;
-
-                long now = System.currentTimeMillis();
-                saveToFile(persistable, dir, storageFile);
-                log.debug("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
-            } catch (Throwable e) {
-                log.error("Error during saveFileTask", e);
-            }
-            return null;
-        };
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
                 UserThread.execute(Storage.this::shutDown), "FileManager.ShutDownHook")
         );
@@ -143,7 +110,7 @@ public class Storage<T extends PersistableEnvelope> {
         try (final FileInputStream fileInputStream = new FileInputStream(storageFile)) {
             protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
             T persistableEnvelope = (T) persistenceProtoResolver.fromProto(proto);
-            log.info("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
+            log.error("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
             return persistableEnvelope;
         } catch (Throwable t) {
             log.error("Reading {} failed with {}.", fileName, t.getMessage());
@@ -171,21 +138,28 @@ public class Storage<T extends PersistableEnvelope> {
     public void queueUpForSave() {
         checkNotNull(persistable, "queueUpForSave: persistable must not be null. this=" + this);
         checkNotNull(storageFile, "queueUpForSave: storageFile must not be null. persistable=" + persistable.getClass().getSimpleName());
-
+        log.error("queueUpForSave for {}", fileName);
         // Atomically set the value of the next write. This allows batching of multiple writes of the same data
         // structure if there are multiple calls to saveLater within a given `delayInMillis`.
-        this.nextWrite.set(persistable);
+        log.error("pre");
+        UserThread.runAfter(() -> {
+            try {
+                log.error("run");
+                long now = System.currentTimeMillis();
+                saveToFile(persistable);
+                log.error("Save {} completed in {} msec", fileName, System.currentTimeMillis() - now);
+            } catch (Throwable e) {
+                log.error("Error during saveFileTask", e);
+            }
+        }, delay, TimeUnit.MILLISECONDS);
 
-        // Always schedule a write. It is possible that a previous saveLater was called with a larger `delayInMilli`
-        // and we want the lower delay to execute. The saveFileTask handles concurrent operations.
-        executor.schedule(saveFileTask, delay, TimeUnit.MILLISECONDS);
+        log.error("post");
     }
 
     //todo
     public void setNumMaxBackupFiles(int numMaxBackupFiles) {
         this.numMaxBackupFiles = numMaxBackupFiles;
     }
-
 
     public void removeAndBackupFile(String fileName) throws IOException {
         FileUtil.removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
@@ -197,20 +171,19 @@ public class Storage<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private synchronized void saveToFile(T persistable, File dir, File storageFile) {
+    private void saveToFile(T persistable) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         PrintWriter printWriter = null;
 
         try {
-            log.debug("Write to disc: {}", storageFile.getName());
             protobuf.PersistableEnvelope protoPersistable;
             try {
                 protoPersistable = (protobuf.PersistableEnvelope) persistable.toPersistableMessage();
                 if (protoPersistable.toByteArray().length == 0)
                     log.error("protoPersistable is empty. persistable=" + persistable.getClass().getSimpleName());
             } catch (Throwable e) {
-                log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), storageFile);
+                log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), fileName);
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
@@ -226,7 +199,6 @@ public class Storage<T extends PersistableEnvelope> {
 
             fileOutputStream = new FileOutputStream(tempFile);
 
-            log.debug("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
             protoPersistable.writeDelimitedTo(fileOutputStream);
 
             // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
@@ -243,10 +215,10 @@ public class Storage<T extends PersistableEnvelope> {
         } catch (Throwable t) {
             // If an error occurred, don't attempt to reuse this path again, in case temp file cleanup fails.
             usedTempFilePath = null;
-            log.error("Error at saveToFile, storageFile=" + storageFile.toString(), t);
+            log.error("Error at saveToFile, storageFile={}", fileName, t);
         } finally {
             if (tempFile != null && tempFile.exists()) {
-                log.warn("Temp file still exists after failed save. We will delete it now. storageFile=" + storageFile);
+                log.warn("Temp file still exists after failed save. We will delete it now. storageFile={}", fileName);
                 if (!tempFile.delete())
                     log.error("Cannot delete temp file.");
             }
@@ -266,12 +238,7 @@ public class Storage<T extends PersistableEnvelope> {
     }
 
     private void shutDown() {
-        executor.shutdown();
-        try {
-            executor.awaitTermination(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        //todo
     }
 
 

@@ -133,8 +133,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
         if (DevEnv.isDaoActivated()) {
             BallotList persisted = storage.getPersisted();
             if (persisted != null) {
-                ballotList.clear();
-                ballotList.addAll(persisted.getList());
+                ballotList.setAll(persisted.getList());
                 listeners.forEach(l -> l.onListChanged(ballotList.getList()));
             }
         }

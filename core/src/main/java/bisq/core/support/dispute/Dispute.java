@@ -25,6 +25,7 @@ import bisq.core.trade.Contract;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
+import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -55,7 +56,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class Dispute implements NetworkPayload {
+public final class Dispute implements NetworkPayload, PersistablePayload {
     private final String tradeId;
     private final String id;
     private final int traderId;

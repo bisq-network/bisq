@@ -73,8 +73,7 @@ public class MyVoteListService implements PersistedDataHost {
         if (DevEnv.isDaoActivated()) {
             MyVoteList persisted = storage.getPersisted();
             if (persisted != null) {
-                this.myVoteList.clear();
-                this.myVoteList.addAll(persisted.getList());
+                this.myVoteList.setAll(persisted.getList());
             }
         }
     }
@@ -104,7 +103,7 @@ public class MyVoteListService implements PersistedDataHost {
         List<MyVote> list = new ArrayList<>(myVoteList.getList());
         list.sort(Comparator.comparing(MyVote::getDate));
         for (MyVote myVote : list) {
-            for (Ballot ballot : myVote.getBallotList()) {
+            for (Ballot ballot : myVote.getBallotList().getList()) {
                 if (ballot.getTxId().equals(proposalTxId)) {
                     merit = myVote.getMerit(myBlindVoteListService, daoStateService);
                     stake = myVote.getBlindVote().getStake();

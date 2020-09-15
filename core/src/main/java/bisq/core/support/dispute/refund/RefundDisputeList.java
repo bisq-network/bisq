@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
+public final class RefundDisputeList extends DisputeList<Dispute> {
 
     RefundDisputeList() {
         super();
@@ -61,10 +61,10 @@ public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
     @Override
     public Message toProtoMessage() {
 
-        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.REFUND), "Support type has to be REFUND"));
+        forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.REFUND), "Support type has to be REFUND"));
 
         return protobuf.PersistableEnvelope.newBuilder().setRefundDisputeList(protobuf.RefundDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list), protobuf.Dispute.class))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(getList()), protobuf.Dispute.class))).build();
     }
 
     public static RefundDisputeList fromProto(protobuf.RefundDisputeList proto,

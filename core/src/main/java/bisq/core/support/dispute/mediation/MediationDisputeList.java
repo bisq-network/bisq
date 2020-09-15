@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public final class MediationDisputeList extends DisputeList<MediationDisputeList> {
+public final class MediationDisputeList extends DisputeList<Dispute> {
 
     MediationDisputeList() {
         super();
@@ -59,7 +59,7 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
     @Override
     public Message toProtoMessage() {
         return protobuf.PersistableEnvelope.newBuilder().setMediationDisputeList(protobuf.MediationDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list), protobuf.Dispute.class))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(getList()), protobuf.Dispute.class))).build();
     }
 
     public static MediationDisputeList fromProto(protobuf.MediationDisputeList proto,

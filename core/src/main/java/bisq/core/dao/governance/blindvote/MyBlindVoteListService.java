@@ -166,8 +166,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         if (DevEnv.isDaoActivated()) {
             MyBlindVoteList persisted = storage.getPersisted();
             if (persisted != null) {
-                myBlindVoteList.clear();
-                myBlindVoteList.addAll(persisted.getList());
+                myBlindVoteList.setAll(persisted.getList());
             }
         }
     }

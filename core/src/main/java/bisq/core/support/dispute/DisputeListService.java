@@ -22,7 +22,6 @@ import bisq.core.trade.Contract;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
@@ -48,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class DisputeListService<T extends DisputeList<? extends DisputeList<? extends PersistableEnvelope>>> implements PersistedDataHost {
+public abstract class DisputeListService<T extends DisputeList<Dispute>> implements PersistedDataHost {
     @Getter
     protected final Storage<T> storage;
     @Getter
@@ -119,7 +118,7 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
 
     void onAllServicesInitialized() {
         if (disputeList != null) {
-            disputeList.getList().addListener((ListChangeListener<Dispute>) change -> {
+            disputeList.addListener((ListChangeListener<Dispute>) change -> {
                 change.next();
                 onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
             });
@@ -152,7 +151,7 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
             log.warn("disputes is null");
             return FXCollections.observableArrayList();
         }
-        return disputeList.getList();
+        return disputeList.getDisputesAsObservableList();
     }
 
 

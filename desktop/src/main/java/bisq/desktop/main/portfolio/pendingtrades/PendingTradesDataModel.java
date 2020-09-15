@@ -529,7 +529,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             payoutTxHashAsString = payoutTx.getHashAsString();
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
-        DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+        DisputeManager<? extends DisputeList<Dispute>> disputeManager;
         boolean useMediation;
         boolean useRefundAgent;
         // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED

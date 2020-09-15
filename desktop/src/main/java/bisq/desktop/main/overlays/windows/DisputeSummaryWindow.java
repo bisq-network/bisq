@@ -785,7 +785,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         hide();
     }
 
-    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
+    private DisputeManager<? extends DisputeList<Dispute>> getDisputeManager(Dispute dispute) {
         if (dispute.getSupportType() != null) {
             switch (dispute.getSupportType()) {
                 case ARBITRATION:
