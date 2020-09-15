@@ -17,6 +17,8 @@
 
 package bisq.common.persistence;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -35,7 +37,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +49,23 @@ import javax.annotation.Nullable;
 import static bisq.common.util.Preconditions.checkDir;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * Responsible for reading persisted data and writing it on disk. We read usually only at start-up and keep data in RAM.
+ * We write all data which got a request for persistence at shut down at the very last moment when all other services
+ * are shut down, so allowing changes to the data in the very last moment. For critical data we set {@link Priority}
+ * to HIGH which causes a timer to trigger a write to disk after 1 minute. We use that for not very frequently altered
+ * data and data which cannot be recovered from the network.
+ *
+ * We decided to not use threading (as it was in previous versions) as the read operation happens only at start-up and
+ * with the modified model that data is written at shut down we eliminate frequent and expensive disk I/O. Risks of
+ * deadlock or data inconsistency and a more complex model have been a further argument for that model. In fact
+ * previously we wasted a lot of resources as way too many threads have been created without doing actual work as well
+ * the write operations got triggered way too often specially for the very frequent changes at SequenceNumberMap and
+ * the very large DaoState (at dao blockchain sync that slowed down sync).
+ *
+ *
+ * @param <T>   The {@link PersistableEnvelope} to be written or read from disk
+ */
 @Slf4j
 public class PersistenceManager<T extends PersistableEnvelope> {
 
@@ -55,8 +76,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     public static final Map<String, PersistenceManager<?>> ALL_PERSISTENCE_MANAGER_MANAGERS = new HashMap<>();
 
     public static void flushAllDataToDisk(ResultHandler resultHandler) {
-        ALL_PERSISTENCE_MANAGER_MANAGERS.values().forEach(persistenceManager -> {
-            persistenceManager.flushAndShutDown();
+        new HashSet<>(ALL_PERSISTENCE_MANAGER_MANAGERS.values()).forEach(persistenceManager -> {
+            if (persistenceManager.requested) {
+                persistenceManager.persistNow();
+            }
             persistenceManager.close();
         });
         resultHandler.handleResult();
@@ -69,7 +92,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public enum Priority {
         LOW(1),
-        MID(5),
+        MID(4),
         HIGH(10);
 
         @Getter
@@ -95,7 +118,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private Priority priority = Priority.MID;
     private Path usedTempFilePath;
     private boolean requested;
-
+    @Nullable
+    private Timer timer;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -136,12 +160,6 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public void close() {
         ALL_PERSISTENCE_MANAGER_MANAGERS.remove(fileName);
-    }
-
-    private void flushAndShutDown() {
-        if (requested) {
-            persistNow();
-        }
     }
 
 
@@ -193,6 +211,16 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public void requestPersistence() {
         requested = true;
+
+        // In case our data has high priority we persist max. each minute after a request. This should protect
+        // important data from getting lost in case of a severe crash where the shut down routine is not getting
+        // executed. As we are on user thread we want to be cautious to not write too often.
+        if (priority == Priority.HIGH && timer == null) {
+            timer = UserThread.runAfter(() -> {
+                persistNow();
+                UserThread.execute(() -> timer = null);
+            }, 1, TimeUnit.MINUTES);
+        }
     }
 
     public void persistNow() {
