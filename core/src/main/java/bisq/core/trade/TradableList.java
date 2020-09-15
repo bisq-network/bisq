@@ -34,14 +34,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class TradableList<T extends Tradable> extends PersistableList<T> {
-    @Getter
-    private final ObservableList<T> list = FXCollections.observableArrayList();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -50,6 +46,13 @@ public final class TradableList<T extends Tradable> extends PersistableList<T> {
     public TradableList() {
     }
 
+    protected List<T> createList() {
+        return FXCollections.observableArrayList();
+    }
+
+    public ObservableList<T> getObservableList() {
+        return (ObservableList<T>) getList();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -61,7 +64,7 @@ public final class TradableList<T extends Tradable> extends PersistableList<T> {
 
     @Override
     public Message toProtoMessage() {
-        ArrayList<T> clonedList = new ArrayList<>(this.list);
+        ArrayList<T> clonedList = new ArrayList<>(getList());
         return protobuf.PersistableEnvelope.newBuilder()
                 .setTradableList(protobuf.TradableList.newBuilder()
                         .addAllTradable(ProtoUtil.collectionToProto(clonedList, protobuf.Tradable.class)))

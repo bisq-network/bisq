@@ -31,8 +31,6 @@ import org.fxmisc.easybind.Subscription;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.HashMap;
@@ -97,18 +95,14 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanupDisputes(@Nullable Consumer<String> closedDisputeHandler) {
-        if (disputeList != null) {
-            disputeList.stream().forEach(dispute -> {
-                String tradeId = dispute.getTradeId();
-                if (dispute.isClosed()) {
-                    if (closedDisputeHandler != null) {
-                        closedDisputeHandler.accept(tradeId);
-                    }
+        disputeList.stream().forEach(dispute -> {
+            String tradeId = dispute.getTradeId();
+            if (dispute.isClosed()) {
+                if (closedDisputeHandler != null) {
+                    closedDisputeHandler.accept(tradeId);
                 }
-            });
-        } else {
-            log.warn("disputes is null");
-        }
+            }
+        });
     }
 
 
@@ -117,19 +111,15 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onAllServicesInitialized() {
-        if (disputeList != null) {
-            disputeList.addListener((ListChangeListener<Dispute>) change -> {
-                change.next();
-                onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
-            });
-            onDisputesChangeListener(disputeList.getList(), null);
-        } else {
-            log.warn("disputes is null");
-        }
+        disputeList.addListener(change -> {
+            change.next();
+            onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
+        });
+        onDisputesChangeListener(disputeList.getList(), null);
     }
 
     String getNrOfDisputes(boolean isBuyer, Contract contract) {
-        return String.valueOf(getDisputesAsObservableList().stream()
+        return String.valueOf(getObservableList().stream()
                 .filter(e -> {
                     Contract contract1 = e.getContract();
                     if (contract1 == null)
@@ -146,12 +136,8 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
                 .collect(Collectors.toSet()).size());
     }
 
-    ObservableList<Dispute> getDisputesAsObservableList() {
-        if (disputeList == null) {
-            log.warn("disputes is null");
-            return FXCollections.observableArrayList();
-        }
-        return disputeList.getDisputesAsObservableList();
+    ObservableList<Dispute> getObservableList() {
+        return disputeList.getObservableList();
     }
 
 
@@ -174,14 +160,12 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
             String id = dispute.getId();
             Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
                     isClosed -> {
-                        if (disputeList != null) {
-                            // We get the event before the list gets updated, so we execute on next frame
-                            UserThread.execute(() -> {
-                                int openDisputes = (int) disputeList.getList().stream()
-                                        .filter(e -> !e.isClosed()).count();
-                                numOpenDisputes.set(openDisputes);
-                            });
-                        }
+                        // We get the event before the list gets updated, so we execute on next frame
+                        UserThread.execute(() -> {
+                            int openDisputes = (int) disputeList.getList().stream()
+                                    .filter(e -> !e.isClosed()).count();
+                            numOpenDisputes.set(openDisputes);
+                        });
                     });
             disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
         });

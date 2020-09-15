@@ -65,7 +65,7 @@ public class FailedTradesManager implements PersistedDataHost {
         this.btcWalletService = btcWalletService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
-        this.persistenceManager.initialize(failedTrades);
+        this.persistenceManager.initialize(failedTrades, "FailedTrades");
     }
 
     @Override
@@ -95,7 +95,7 @@ public class FailedTradesManager implements PersistedDataHost {
     }
 
     public ObservableList<Trade> getFailedTrades() {
-        return failedTrades.getList();
+        return failedTrades.getObservableList();
     }
 
     public Optional<Trade> getTradeById(String id) {

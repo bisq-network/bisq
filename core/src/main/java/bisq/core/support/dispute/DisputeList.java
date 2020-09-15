@@ -57,7 +57,7 @@ public abstract class DisputeList<T extends PersistablePayload> extends Persista
         ((ObservableList<T>) getList()).removeListener(listener);
     }
 
-    public ObservableList<T> getDisputesAsObservableList() {
+    public ObservableList<T> getObservableList() {
         return (ObservableList<T>) getList();
     }
 }

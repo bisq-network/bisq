@@ -204,7 +204,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
-        return disputeListService.getDisputesAsObservableList();
+        return disputeListService.getObservableList();
     }
 
     public String getNrOfDisputes(boolean isBuyer, Contract contract) {

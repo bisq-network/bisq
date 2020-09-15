@@ -199,7 +199,7 @@ public class TradeManager implements PersistedDataHost {
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
 
         this.persistenceManager = persistenceManager;
-        this.persistenceManager.initialize(tradableList, PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(tradableList, "PendingTrades", PersistenceManager.Priority.HIGH);
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -270,7 +270,7 @@ public class TradeManager implements PersistedDataHost {
                 }
             });
 
-        tradableList.getList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
+        tradableList.getObservableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
 
         getAddressEntriesForAvailableBalanceStream()
@@ -762,7 +762,7 @@ public class TradeManager implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ObservableList<Trade> getTradableList() {
-        return tradableList.getList();
+        return tradableList.getObservableList();
     }
 
     public BooleanProperty pendingTradesInitializedProperty() {
