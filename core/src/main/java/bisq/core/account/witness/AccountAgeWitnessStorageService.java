@@ -22,10 +22,10 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
@@ -46,8 +46,8 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
 
     @Inject
     public AccountAgeWitnessStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                           Storage<AccountAgeWitnessStore> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+                                           PersistenceManager<AccountAgeWitnessStore> persistableNetworkPayloadMapPersistenceManager) {
+        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

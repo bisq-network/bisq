@@ -36,7 +36,7 @@ import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -153,7 +153,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableMap<String, Boolean> dontShowAgainMapAsObservable = FXCollections.observableHashMap();
 
-    private final Storage<PreferencesPayload> storage;
+    private final PersistenceManager<PreferencesPayload> persistenceManager;
     private final Config config;
     private final LocalBitcoinNode localBitcoinNode;
     private final String btcNodesFromOptions, referralIdFromOptions,
@@ -171,7 +171,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public Preferences(Storage<PreferencesPayload> storage,
+    public Preferences(PersistenceManager<PreferencesPayload> persistenceManager,
                        Config config,
                        LocalBitcoinNode localBitcoinNode,
                        @Named(Config.BTC_NODES) String btcNodesFromOptions,
@@ -181,7 +181,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(Config.RPC_PASSWORD) String rpcPassword,
                        @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
 
-        this.storage = storage;
+        this.persistenceManager = persistenceManager;
         this.config = config;
         this.localBitcoinNode = localBitcoinNode;
         this.btcNodesFromOptions = btcNodesFromOptions;
@@ -229,10 +229,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
 
-        PreferencesPayload persisted = storage.getPersisted("PreferencesPayload");
+        PreferencesPayload persisted = persistenceManager.getPersisted("PreferencesPayload");
         if (persisted != null) {
             prefPayload = persisted;
-            storage.initialize(prefPayload);
+            persistenceManager.initialize(prefPayload);
 
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
@@ -243,7 +243,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
         } else {
             prefPayload = new PreferencesPayload();
-            storage.initialize(prefPayload);
+            persistenceManager.initialize(prefPayload);
 
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
             prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
@@ -456,7 +456,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private void persist() {
         if (initialReadDone)
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
     }
 
     public void setUserLanguage(@NotNull String userLanguageCode) {
@@ -620,13 +620,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void setResyncSpvRequested(boolean resyncSpvRequested) {
         prefPayload.setResyncSpvRequested(resyncSpvRequested);
         // We call that before shutdown so we dont want a delay here
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 
     public void setBridgeAddresses(List<String> bridgeAddresses) {
         prefPayload.setBridgeAddresses(bridgeAddresses);
         // We call that before shutdown so we dont want a delay here
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 
     // Only used from PB but keep it explicit as it may be used from the client and then we want to persist

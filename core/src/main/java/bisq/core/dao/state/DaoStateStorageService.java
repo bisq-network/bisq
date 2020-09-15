@@ -27,7 +27,7 @@ import bisq.network.p2p.storage.persistence.StoreService;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.storage.FileUtil;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,11 +58,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                                   DaoState daoState,
                                   DaoStateMonitoringService daoStateMonitoringService,
                                   @Named(Config.STORAGE_DIR) File storageDir,
-                                  Storage<DaoStateStore> storage) {
-        super(storageDir, storage);
+                                  PersistenceManager<DaoStateStore> persistenceManager) {
+        super(storageDir, persistenceManager);
         this.daoState = daoState;
         this.daoStateMonitoringService = daoStateMonitoringService;
-        storage.setNumMaxBackupFiles(1);
+        persistenceManager.setNumMaxBackupFiles(1);
 
         resourceDataStoreService.addService(this);
     }
@@ -80,7 +80,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     public void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
         store.setDaoState(daoState);
         store.setDaoStateHashChain(daoStateHashChain);
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 
     public DaoState getPersistedBsqState() {

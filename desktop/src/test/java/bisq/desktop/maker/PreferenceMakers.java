@@ -21,7 +21,7 @@ import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Property;
@@ -32,14 +32,14 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 
 public class PreferenceMakers {
 
-    public static final Property<bisq.core.user.Preferences, Storage> storage = new Property<>();
+    public static final Property<bisq.core.user.Preferences, PersistenceManager> storage = new Property<>();
     public static final Property<Preferences, Config> config = new Property<>();
     public static final Property<Preferences, LocalBitcoinNode> localBitcoinNode = new Property<>();
     public static final Property<Preferences, String> useTorFlagFromOptions = new Property<>();
     public static final Property<Preferences, String> referralID = new Property<>();
 
     public static final Instantiator<Preferences> Preferences = lookup -> new Preferences(
-            lookup.valueOf(storage, new SameValueDonor<Storage>(null)),
+            lookup.valueOf(storage, new SameValueDonor<PersistenceManager>(null)),
             lookup.valueOf(config, new SameValueDonor<Config>(null)),
             lookup.valueOf(localBitcoinNode, new SameValueDonor<LocalBitcoinNode>(null)),
             lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<String>(null)),

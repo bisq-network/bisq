@@ -49,7 +49,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 
@@ -199,8 +199,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         return disputeListService.getNumOpenDisputes();
     }
 
-    public Storage<? extends DisputeList> getStorage() {
-        return disputeListService.getStorage();
+    public PersistenceManager<? extends DisputeList> getStorage() {
+        return disputeListService.getPersistenceManager();
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {

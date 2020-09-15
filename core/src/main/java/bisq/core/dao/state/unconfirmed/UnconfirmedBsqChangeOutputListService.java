@@ -21,7 +21,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.DevEnv;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -40,13 +40,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost {
     private final UnconfirmedBsqChangeOutputList unconfirmedBsqChangeOutputList = new UnconfirmedBsqChangeOutputList();
-    private final Storage<UnconfirmedBsqChangeOutputList> storage;
+    private final PersistenceManager<UnconfirmedBsqChangeOutputList> persistenceManager;
 
     @Inject
-    public UnconfirmedBsqChangeOutputListService(Storage<UnconfirmedBsqChangeOutputList> storage) {
-        this.storage = storage;
+    public UnconfirmedBsqChangeOutputListService(PersistenceManager<UnconfirmedBsqChangeOutputList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
 
-        this.storage.initialize(unconfirmedBsqChangeOutputList);
+        this.persistenceManager.initialize(unconfirmedBsqChangeOutputList);
     }
 
 
@@ -57,7 +57,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            UnconfirmedBsqChangeOutputList persisted = storage.getPersisted();
+            UnconfirmedBsqChangeOutputList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
                 unconfirmedBsqChangeOutputList.setAll(persisted.getList());
             }
@@ -201,6 +201,6 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     }
 
     private void persist() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 }

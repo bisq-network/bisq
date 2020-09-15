@@ -34,7 +34,7 @@ import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -105,7 +105,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private int maxConnections;
     private final Set<NodeAddress> seedNodeAddresses;
 
-    private final Storage<PeerList> storage;
+    private final PersistenceManager<PeerList> persistenceManager;
     private final PeerList peerList = new PeerList();
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
@@ -132,12 +132,12 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                        SeedNodeRepository seedNodeRepository,
                        ClockWatcher clockWatcher,
                        @Named(Config.MAX_CONNECTIONS) int maxConnections,
-                       Storage<PeerList> storage) {
+                       PersistenceManager<PeerList> persistenceManager) {
         this.networkNode = networkNode;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
         this.clockWatcher = clockWatcher;
-        this.storage = storage;
-        this.storage.initialize(peerList);
+        this.persistenceManager = persistenceManager;
+        this.persistenceManager.initialize(peerList);
 
         this.networkNode.addConnectionListener(this);
 
@@ -176,7 +176,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PeerList persisted = storage.getPersisted();
+        PeerList persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             this.persistedPeers.addAll(persisted.getList());
         }
@@ -457,7 +457,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             peerList.setAll(persistedPeers);
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
 
             printReportedPeers();
         } else {
@@ -522,7 +522,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         if (persistedPeers.contains(persistedPeer)) {
             persistedPeers.remove(persistedPeer);
             peerList.setAll(persistedPeers);
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
             return true;
         } else {
             return false;

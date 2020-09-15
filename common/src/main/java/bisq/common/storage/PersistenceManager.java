@@ -46,17 +46,17 @@ import static bisq.common.util.Preconditions.checkDir;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class Storage<T extends PersistableEnvelope> {
+public class PersistenceManager<T extends PersistableEnvelope> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static final Set<Storage<?>> allStorageManagers = new HashSet<>();
+    public static final Set<PersistenceManager<?>> ALL_PERSISTENCE_MANAGER_MANAGERS = new HashSet<>();
 
     public static void flushAllDataToDisk(ResultHandler resultHandler) {
-        allStorageManagers.forEach(Storage::flushAndShutDown);
-        allStorageManagers.clear();
+        ALL_PERSISTENCE_MANAGER_MANAGERS.forEach(PersistenceManager::flushAndShutDown);
+        ALL_PERSISTENCE_MANAGER_MANAGERS.clear();
         resultHandler.handleResult();
     }
 
@@ -83,14 +83,14 @@ public class Storage<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage(@Named(Config.STORAGE_DIR) File dir,
-                   PersistenceProtoResolver persistenceProtoResolver,
-                   CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+    public PersistenceManager(@Named(Config.STORAGE_DIR) File dir,
+                              PersistenceProtoResolver persistenceProtoResolver,
+                              CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.dir = checkDir(dir);
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
 
-        shutdownHook = new Thread(Storage.this::flushAndShutDown, "FileManager.ShutDownHook");
+        shutdownHook = new Thread(PersistenceManager.this::flushAndShutDown, "FileManager.ShutDownHook");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ public class Storage<T extends PersistableEnvelope> {
         this.persistable = persistable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        allStorageManagers.add(this);
+        ALL_PERSISTENCE_MANAGER_MANAGERS.add(this);
         Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 

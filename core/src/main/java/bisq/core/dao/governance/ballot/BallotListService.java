@@ -29,7 +29,7 @@ import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.common.app.DevEnv;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 
@@ -58,7 +58,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     private final ProposalService proposalService;
     private final PeriodService periodService;
     private final ProposalValidatorProvider validatorProvider;
-    private final Storage<BallotList> storage;
+    private final PersistenceManager<BallotList> persistenceManager;
 
     private final BallotList ballotList = new BallotList();
     private final List<BallotListChangeListener> listeners = new CopyOnWriteArrayList<>();
@@ -67,13 +67,13 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     public BallotListService(ProposalService proposalService,
                              PeriodService periodService,
                              ProposalValidatorProvider validatorProvider,
-                             Storage<BallotList> storage) {
+                             PersistenceManager<BallotList> persistenceManager) {
         this.proposalService = proposalService;
         this.periodService = periodService;
         this.validatorProvider = validatorProvider;
-        this.storage = storage;
+        this.persistenceManager = persistenceManager;
 
-        this.storage.initialize(ballotList);
+        this.persistenceManager.initialize(ballotList);
     }
 
 
@@ -131,7 +131,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            BallotList persisted = storage.getPersisted();
+            BallotList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
                 ballotList.setAll(persisted.getList());
                 listeners.forEach(l -> l.onListChanged(ballotList.getList()));
@@ -172,6 +172,6 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persist() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 }

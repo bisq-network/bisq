@@ -32,7 +32,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -67,7 +67,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @AllArgsConstructor
 @Singleton
 public class User implements PersistedDataHost {
-    final private Storage<UserPayload> storage;
+    final private PersistenceManager<UserPayload> persistenceManager;
     final private KeyRing keyRing;
 
     private ObservableSet<PaymentAccount> paymentAccountsAsObservable;
@@ -77,25 +77,25 @@ public class User implements PersistedDataHost {
     private boolean isPaymentAccountImport = false;
 
     @Inject
-    public User(Storage<UserPayload> storage, KeyRing keyRing) {
-        this.storage = storage;
+    public User(PersistenceManager<UserPayload> persistenceManager, KeyRing keyRing) {
+        this.persistenceManager = persistenceManager;
         this.keyRing = keyRing;
     }
 
     // for unit tests
     public User() {
-        storage = null;
+        persistenceManager = null;
         keyRing = null;
     }
 
     @Override
     public void readPersisted() {
-        UserPayload persisted = checkNotNull(storage).getPersisted("UserPayload");
+        UserPayload persisted = checkNotNull(persistenceManager).getPersisted("UserPayload");
         if (persisted != null) {
             userPayload = persisted;
         }
 
-        storage.initialize(userPayload);
+        persistenceManager.initialize(userPayload);
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
         checkNotNull(userPayload.getAcceptedLanguageLocaleCodes(), "userPayload.getAcceptedLanguageLocaleCodes() must not be null");
@@ -121,8 +121,8 @@ public class User implements PersistedDataHost {
     }
 
     public void persist() {
-        if (storage != null)
-            storage.queueUpForSave();
+        if (persistenceManager != null)
+            persistenceManager.queueUpForSave();
     }
 
 

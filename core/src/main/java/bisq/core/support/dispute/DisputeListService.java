@@ -23,7 +23,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -49,7 +49,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public abstract class DisputeListService<T extends DisputeList<Dispute>> implements PersistedDataHost {
     @Getter
-    protected final Storage<T> storage;
+    protected final PersistenceManager<T> persistenceManager;
     @Getter
     private final T disputeList;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
@@ -61,10 +61,10 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeListService(Storage<T> storage) {
-        this.storage = storage;
+    public DisputeListService(PersistenceManager<T> persistenceManager) {
+        this.persistenceManager = persistenceManager;
         disputeList = getConcreteDisputeList();
-        this.storage.initialize(disputeList);
+        this.persistenceManager.initialize(disputeList);
     }
 
 
@@ -81,7 +81,7 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
 
     @Override
     public void readPersisted() {
-        T persisted = storage.getPersisted(getFileName());
+        T persisted = persistenceManager.getPersisted(getFileName());
         if (persisted != null) {
             disputeList.setAll(persisted.getList());
         }
@@ -188,6 +188,6 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     }
 
     public void persist() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 }

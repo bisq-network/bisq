@@ -21,7 +21,7 @@ import bisq.core.dao.DaoSetupService;
 
 import bisq.common.app.DevEnv;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MyReputationListService implements PersistedDataHost, DaoSetupService {
 
-    private final Storage<MyReputationList> storage;
+    private final PersistenceManager<MyReputationList> persistenceManager;
     private final MyReputationList myReputationList = new MyReputationList();
 
 
@@ -44,8 +44,8 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MyReputationListService(Storage<MyReputationList> storage) {
-        this.storage = storage;
+    public MyReputationListService(PersistenceManager<MyReputationList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
     }
 
 
@@ -56,7 +56,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyReputationList persisted = storage.getPersisted(myReputationList.getDefaultStorageFileName());
+            MyReputationList persisted = persistenceManager.getPersisted(myReputationList.getDefaultStorageFileName());
             if (persisted != null) {
                 myReputationList.setAll(persisted.getList());
             }
@@ -97,6 +97,6 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persist() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 }

@@ -52,7 +52,7 @@ import bisq.common.proto.persistable.NavigationPath;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Provider;
 
@@ -98,7 +98,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case TRADABLE_LIST:
                     return TradableList.fromProto(proto.getTradableList(),
                             this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler),
+                            new PersistenceManager<>(storageDir, this, corruptedDatabaseFilesHandler),
                             btcWalletService.get());
                 case ARBITRATION_DISPUTE_LIST:
                     return ArbitrationDisputeList.fromProto(proto.getArbitrationDisputeList(), this);

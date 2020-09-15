@@ -26,7 +26,7 @@ import bisq.core.dao.state.model.governance.BallotList;
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.Encryption;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MyVoteListService implements PersistedDataHost {
     private final DaoStateService daoStateService;
-    private final Storage<MyVoteList> storage;
+    private final PersistenceManager<MyVoteList> persistenceManager;
     private final MyVoteList myVoteList = new MyVoteList();
 
 
@@ -56,11 +56,11 @@ public class MyVoteListService implements PersistedDataHost {
 
     @Inject
     public MyVoteListService(DaoStateService daoStateService,
-                             Storage<MyVoteList> storage) {
+                             PersistenceManager<MyVoteList> persistenceManager) {
         this.daoStateService = daoStateService;
-        this.storage = storage;
+        this.persistenceManager = persistenceManager;
 
-        this.storage.initialize(myVoteList);
+        this.persistenceManager.initialize(myVoteList);
     }
 
 
@@ -71,7 +71,7 @@ public class MyVoteListService implements PersistedDataHost {
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyVoteList persisted = storage.getPersisted();
+            MyVoteList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
                 this.myVoteList.setAll(persisted.getList());
             }
@@ -131,6 +131,6 @@ public class MyVoteListService implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persist() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 }

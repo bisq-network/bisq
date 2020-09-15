@@ -59,7 +59,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -148,7 +148,7 @@ public class GuiceSetupTest {
         assertSingleton(MediationDisputeListService.class);
         assertSingleton(TraderChatManager.class);
 
-        assertNotSingleton(Storage.class);
+        assertNotSingleton(PersistenceManager.class);
     }
 
     private void assertSingleton(Class<?> type) {

@@ -64,7 +64,7 @@ import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -133,7 +133,7 @@ public class TradeManager implements PersistedDataHost {
     private final DaoFacade daoFacade;
     private final ClockWatcher clockWatcher;
 
-    private final Storage<TradableList<Trade>> storage;
+    private final PersistenceManager<TradableList<Trade>> persistenceManager;
     private final TradableList<Trade> tradableList = new TradableList<>();
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
     private List<Trade> tradesForStatistics;
@@ -173,7 +173,7 @@ public class TradeManager implements PersistedDataHost {
                         RefundAgentManager refundAgentManager,
                         DaoFacade daoFacade,
                         ClockWatcher clockWatcher,
-                        Storage<TradableList<Trade>> storage,
+                        PersistenceManager<TradableList<Trade>> persistenceManager,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         this.user = user;
@@ -198,8 +198,8 @@ public class TradeManager implements PersistedDataHost {
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
 
-        this.storage = storage;
-        this.storage.initialize(tradableList);
+        this.persistenceManager = persistenceManager;
+        this.persistenceManager.initialize(tradableList);
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -238,7 +238,7 @@ public class TradeManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        TradableList<Trade> persisted = storage.getPersisted("PendingTrades");
+        TradableList<Trade> persisted = persistenceManager.getPersisted("PendingTrades");
         if (persisted != null) {
             tradableList.setAll(persisted.getList());
         }
@@ -423,7 +423,7 @@ public class TradeManager implements PersistedDataHost {
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             if (tradableList.add(trade)) {
-                storage.queueUpForSave();
+                persistenceManager.queueUpForSave();
             }
             ((MakerTrade) trade).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
@@ -563,7 +563,7 @@ public class TradeManager implements PersistedDataHost {
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
 
         if (tradableList.add(trade)) {
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
         }
         ((TakerTrade) trade).takeAvailableOffer();
         tradeResultHandler.handleResult(trade);
@@ -643,7 +643,7 @@ public class TradeManager implements PersistedDataHost {
         initPendingTrade(trade);
 
         if (tradableList.add(trade)) {
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
         }
         return true;
     }
@@ -674,7 +674,7 @@ public class TradeManager implements PersistedDataHost {
 
     private void removeTrade(Trade trade) {
         if (tradableList.remove(trade)) {
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
         }
     }
 
@@ -868,6 +868,6 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public void persistTrades() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 }

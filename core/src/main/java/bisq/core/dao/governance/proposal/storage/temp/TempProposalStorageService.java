@@ -22,10 +22,10 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
@@ -44,8 +44,8 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
 
     @Inject
     public TempProposalStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                      Storage<TempProposalStore> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+                                      PersistenceManager<TempProposalStore> persistableNetworkPayloadMapPersistenceManager) {
+        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

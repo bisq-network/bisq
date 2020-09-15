@@ -6,7 +6,7 @@ import bisq.network.p2p.peers.PeerManager;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import java.nio.file.Files;
 
@@ -46,7 +46,7 @@ public class OpenOfferManagerTest {
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                new PersistenceManager<>(storageDir, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -74,7 +74,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForDeactivatedOffer() throws IOException {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        Storage storage = mock(Storage.class);
+        PersistenceManager persistenceManager = mock(PersistenceManager.class);
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
@@ -82,7 +82,7 @@ public class OpenOfferManagerTest {
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                new PersistenceManager<>(storageDir, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -102,7 +102,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForOfferThatIsCurrentlyEdited() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        Storage storage = mock(Storage.class);
+        PersistenceManager persistenceManager = mock(PersistenceManager.class);
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
@@ -110,7 +110,7 @@ public class OpenOfferManagerTest {
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                new PersistenceManager<>(storageDir, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 

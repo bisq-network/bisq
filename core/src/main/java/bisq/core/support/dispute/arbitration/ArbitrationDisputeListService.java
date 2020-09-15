@@ -19,7 +19,7 @@ package bisq.core.support.dispute.arbitration;
 
 import bisq.core.support.dispute.DisputeListService;
 
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -32,8 +32,8 @@ public final class ArbitrationDisputeListService extends DisputeListService<Arbi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitrationDisputeListService(Storage<ArbitrationDisputeList> storage) {
-        super(storage);
+    public ArbitrationDisputeListService(PersistenceManager<ArbitrationDisputeList> persistenceManager) {
+        super(persistenceManager);
     }
 
 

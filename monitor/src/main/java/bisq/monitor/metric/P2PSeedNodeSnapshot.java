@@ -40,7 +40,7 @@ import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import java.net.MalformedURLException;
 
@@ -136,11 +136,11 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             File dir = new File(configuration.getProperty(DATABASE_DIR));
             String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
             try {
-                Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
-                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.getPersisted(TradeStatistics2Store.class.getSimpleName() + networkPostfix);
+                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
+                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) persistenceManager.getPersisted(TradeStatistics2Store.class.getSimpleName() + networkPostfix);
                 hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
 
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.getPersisted(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix);
+                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) persistenceManager.getPersisted(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix);
                 hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
             } catch (NullPointerException e) {
                 // in case there is no store file

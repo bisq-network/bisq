@@ -61,7 +61,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -129,7 +129,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private final Set<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private Timer removeExpiredEntriesTimer;
 
-    private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
+    private final PersistenceManager<SequenceNumberMap> sequenceNumberMapPersistenceManager;
 
     @VisibleForTesting
     final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
@@ -151,7 +151,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           AppendOnlyDataStoreService appendOnlyDataStoreService,
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
-                          Storage<SequenceNumberMap> sequenceNumberMapStorage,
+                          PersistenceManager<SequenceNumberMap> sequenceNumberMapPersistenceManager,
                           Clock clock,
                           @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge) {
         this.broadcaster = broadcaster;
@@ -165,14 +165,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
-        this.sequenceNumberMapStorage = sequenceNumberMapStorage;
-        sequenceNumberMapStorage.setNumMaxBackupFiles(5);
-        sequenceNumberMapStorage.initialize(sequenceNumberMap);
+        this.sequenceNumberMapPersistenceManager = sequenceNumberMapPersistenceManager;
+        sequenceNumberMapPersistenceManager.setNumMaxBackupFiles(5);
+        sequenceNumberMapPersistenceManager.initialize(sequenceNumberMap);
     }
 
     @Override
     public void readPersisted() {
-        SequenceNumberMap persisted = sequenceNumberMapStorage.getPersisted(sequenceNumberMap.getDefaultStorageFileName());
+        SequenceNumberMap persisted = sequenceNumberMapPersistenceManager.getPersisted(sequenceNumberMap.getDefaultStorageFileName());
         if (persisted != null)
             sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persisted.getMap()));
     }
@@ -619,7 +619,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapStorage.queueUpForSave();
+        sequenceNumberMapPersistenceManager.queueUpForSave();
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast)
@@ -673,7 +673,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the latest sequence number and persist it
         sequenceNumberMap.put(hashOfPayload, new MapValue(updatedEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapStorage.queueUpForSave();
+        sequenceNumberMapPersistenceManager.queueUpForSave();
 
         // Always broadcast refreshes
         broadcaster.broadcast(refreshTTLMessage, sender);
@@ -709,7 +709,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the latest sequence number and persist it
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapStorage.queueUpForSave();
+        sequenceNumberMapPersistenceManager.queueUpForSave();
 
         // Update that we have seen this AddOncePayload so the next time it is seen it fails verification
         if (protectedStoragePayload instanceof AddOncePayload)

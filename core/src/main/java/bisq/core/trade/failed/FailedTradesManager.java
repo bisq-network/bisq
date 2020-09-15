@@ -28,7 +28,7 @@ import bisq.core.trade.TradeUtils;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Inject;
 
@@ -49,7 +49,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
-    private final Storage<TradableList<Trade>> storage;
+    private final PersistenceManager<TradableList<Trade>> persistenceManager;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Setter
     private Function<Trade, Boolean> unfailTradeCallback;
@@ -58,19 +58,19 @@ public class FailedTradesManager implements PersistedDataHost {
     public FailedTradesManager(KeyRing keyRing,
                                PriceFeedService priceFeedService,
                                BtcWalletService btcWalletService,
-                               Storage<TradableList<Trade>> storage,
+                               PersistenceManager<TradableList<Trade>> persistenceManager,
                                DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
-        this.storage = storage;
-        this.storage.initialize(failedTrades);
+        this.persistenceManager = persistenceManager;
+        this.persistenceManager.initialize(failedTrades);
     }
 
     @Override
     public void readPersisted() {
-        TradableList<Trade> persisted = storage.getPersisted("FailedTrades");
+        TradableList<Trade> persisted = persistenceManager.getPersisted("FailedTrades");
         if (persisted != null) {
             failedTrades.setAll(persisted.getList());
         }
@@ -86,7 +86,7 @@ public class FailedTradesManager implements PersistedDataHost {
 
     public void add(Trade trade) {
         if (failedTrades.add(trade)) {
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
         }
     }
 
@@ -114,7 +114,7 @@ public class FailedTradesManager implements PersistedDataHost {
         if (unfailTradeCallback.apply(trade)) {
             log.info("Unfailing trade {}", trade.getId());
             if (failedTrades.remove(trade)) {
-                storage.queueUpForSave();
+                persistenceManager.queueUpForSave();
             }
         }
     }

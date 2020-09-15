@@ -20,7 +20,7 @@ package bisq.core.btc.model;
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import com.google.protobuf.Message;
 
@@ -47,20 +47,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public final class AddressEntryList implements PersistableEnvelope, PersistedDataHost {
-    transient private Storage<AddressEntryList> storage;
+    transient private PersistenceManager<AddressEntryList> persistenceManager;
     transient private Wallet wallet;
     private final Set<AddressEntry> entrySet = new CopyOnWriteArraySet<>();
 
     @Inject
-    public AddressEntryList(Storage<AddressEntryList> storage) {
-        this.storage = storage;
+    public AddressEntryList(PersistenceManager<AddressEntryList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
 
-        storage.initialize(this);
+        persistenceManager.initialize(this);
     }
 
     @Override
     public void readPersisted() {
-        AddressEntryList persisted = storage.getPersisted(this.getDefaultStorageFileName());
+        AddressEntryList persisted = persistenceManager.getPersisted(this.getDefaultStorageFileName());
         if (persisted != null) {
             entrySet.clear();
             entrySet.addAll(persisted.entrySet);
@@ -194,7 +194,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     }
 
     public void persist() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 
 

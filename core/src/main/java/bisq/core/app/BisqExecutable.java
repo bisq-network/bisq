@@ -39,7 +39,7 @@ import bisq.common.config.ConfigException;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Guice;
@@ -242,7 +242,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                         module.close(injector);
                         resultHandler.handleResult();
 
-                        Storage.flushAllDataToDisk(() -> {
+                        PersistenceManager.flushAllDataToDisk(() -> {
                             log.info("Graceful shutdown completed. Exiting now.");
                             System.exit(0);
                         });

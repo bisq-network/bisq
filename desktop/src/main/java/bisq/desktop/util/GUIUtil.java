@@ -62,7 +62,7 @@ import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -214,10 +214,10 @@ public class GUIUtil {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (!directory.isEmpty()) {
-                Storage<PersistableEnvelope> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
+                PersistenceManager<PersistableEnvelope> paymentAccountsPersistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 PaymentAccountList paymentAccounts = new PaymentAccountList(accounts);
-                paymentAccountsStorage.initialize(paymentAccounts, fileName);
-                paymentAccountsStorage.queueUpForSave();
+                paymentAccountsPersistenceManager.initialize(paymentAccounts, fileName);
+                paymentAccountsPersistenceManager.queueUpForSave();
                 new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
             }
         } else {
@@ -243,8 +243,8 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
-                PaymentAccountList persisted = paymentAccountsStorage.getPersisted(fileName);
+                PersistenceManager<PaymentAccountList> paymentAccountsPersistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
+                PaymentAccountList persisted = paymentAccountsPersistenceManager.getPersisted(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
                     final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();

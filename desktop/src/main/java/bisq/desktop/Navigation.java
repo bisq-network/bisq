@@ -24,7 +24,7 @@ import bisq.desktop.main.market.MarketView;
 
 import bisq.common.proto.persistable.NavigationPath;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Inject;
 
@@ -57,7 +57,7 @@ public final class Navigation implements PersistedDataHost {
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
     private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Storage<NavigationPath> storage;
+    private final PersistenceManager<NavigationPath> persistenceManager;
     private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
@@ -72,15 +72,15 @@ public final class Navigation implements PersistedDataHost {
 
 
     @Inject
-    public Navigation(Storage<NavigationPath> storage) {
-        this.storage = storage;
-        storage.initialize(navigationPath);
-        storage.setNumMaxBackupFiles(3);
+    public Navigation(PersistenceManager<NavigationPath> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+        persistenceManager.initialize(navigationPath);
+        persistenceManager.setNumMaxBackupFiles(3);
     }
 
     @Override
     public void readPersisted() {
-        NavigationPath persisted = storage.getPersisted(navigationPath.getDefaultStorageFileName());
+        NavigationPath persisted = persistenceManager.getPersisted(navigationPath.getDefaultStorageFileName());
         if (persisted != null) {
             List<Class<? extends View>> viewClasses = persisted.getPath().stream()
                     .map(className -> {
@@ -144,7 +144,7 @@ public final class Navigation implements PersistedDataHost {
         if (currentPath.tip() != null) {
             navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toUnmodifiableList()));
         }
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 
     public void navigateToPreviousVisitedView() {

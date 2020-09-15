@@ -22,10 +22,10 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
@@ -46,8 +46,8 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
 
     @Inject
     public SignedWitnessStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                       Storage<SignedWitnessStore> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+                                       PersistenceManager<SignedWitnessStore> persistableNetworkPayloadMapPersistenceManager) {
+        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

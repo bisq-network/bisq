@@ -19,8 +19,8 @@ package bisq.network.p2p.storage.persistence;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.storage.FileUtil;
+import bisq.common.storage.PersistenceManager;
 import bisq.common.storage.ResourceNotFoundException;
-import bisq.common.storage.Storage;
 
 import java.nio.file.Paths;
 
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class StoreService<T extends PersistableEnvelope> {
 
-    protected final Storage<T> storage;
+    protected final PersistenceManager<T> persistenceManager;
     protected final String absolutePathOfStorageDir;
 
     protected T store;
@@ -53,8 +53,8 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public StoreService(File storageDir,
-                        Storage<T> storage) {
-        this.storage = storage;
+                        PersistenceManager<T> persistenceManager) {
+        this.persistenceManager = persistenceManager;
         absolutePathOfStorageDir = storageDir.getAbsolutePath();
     }
 
@@ -64,7 +64,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void persist() {
-        storage.queueUpForSave();
+        persistenceManager.queueUpForSave();
     }
 
     protected T getStore() {
@@ -85,7 +85,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         } catch (Throwable t) {
             try {
                 String fileName = getFileName();
-                storage.removeAndBackupFile(fileName);
+                persistenceManager.removeAndBackupFile(fileName);
             } catch (IOException e) {
                 log.error(e.toString());
             }
@@ -121,7 +121,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
 
     protected void readStore() {
         String fileName = getFileName();
-        T persisted = storage.getPersisted(fileName);
+        T persisted = persistenceManager.getPersisted(fileName);
         if (persisted != null) {
             store = persisted;
 
@@ -129,11 +129,11 @@ public abstract class StoreService<T extends PersistableEnvelope> {
             double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;
             String unit = length > 1_000_000D ? "MB" : "KB";
             log.info("{}: size of {}: {} {}", this.getClass().getSimpleName(),
-                    storage.getClass().getSimpleName(), size, unit);
+                    persistenceManager.getClass().getSimpleName(), size, unit);
         } else {
             store = createStore();
         }
-        storage.initialize(store);
+        persistenceManager.initialize(store);
     }
 
     protected abstract T createStore();

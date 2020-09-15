@@ -26,7 +26,7 @@ import bisq.core.trade.Trade;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Inject;
 
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ClosedTradableManager implements PersistedDataHost {
-    private final Storage<TradableList<Tradable>> storage;
+    private final PersistenceManager<TradableList<Tradable>> persistenceManager;
     private final TradableList<Tradable> closedTradables = new TradableList<>();
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
@@ -49,20 +49,20 @@ public class ClosedTradableManager implements PersistedDataHost {
     @Inject
     public ClosedTradableManager(KeyRing keyRing,
                                  PriceFeedService priceFeedService,
-                                 Storage<TradableList<Tradable>> storage,
+                                 PersistenceManager<TradableList<Tradable>> persistenceManager,
                                  DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
 
-        this.storage = storage;
-        this.storage.initialize(closedTradables);
-        this.storage.setNumMaxBackupFiles(3);
+        this.persistenceManager = persistenceManager;
+        this.persistenceManager.initialize(closedTradables);
+        this.persistenceManager.setNumMaxBackupFiles(3);
     }
 
     @Override
     public void readPersisted() {
-        TradableList<Tradable> persisted = storage.getPersisted("ClosedTrades");
+        TradableList<Tradable> persisted = persistenceManager.getPersisted("ClosedTrades");
         if (persisted != null) {
             closedTradables.setAll(persisted.getList());
         }
@@ -76,13 +76,13 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     public void add(Tradable tradable) {
         if (closedTradables.add(tradable)) {
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
         }
     }
 
     public void remove(Tradable tradable) {
         if (closedTradables.remove(tradable)) {
-            storage.queueUpForSave();
+            persistenceManager.queueUpForSave();
         }
     }
 
