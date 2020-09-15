@@ -286,7 +286,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
             }
-            log.error("Save {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
+            log.info("Save {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
             requested = false;
         }
     }
