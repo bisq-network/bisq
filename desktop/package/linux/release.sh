@@ -4,7 +4,7 @@
 # Prior to running this script:
 #   - Update version below
 
-version=1.3.8
+version=1.3.8-SNAPSHOT
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
 package_dir=$base_dir/desktop/package
 release_dir=$base_dir/desktop/release/$version
