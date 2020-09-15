@@ -137,7 +137,7 @@ public final class AddressEntry implements PersistablePayload {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Set after wallet is ready
@@ -145,17 +145,22 @@ public final class AddressEntry implements PersistablePayload {
         this.keyPair = deterministicKey;
     }
 
+    public void setCoinLockedInMultiSig(Coin coinLockedInMultiSig) {
+        this.coinLockedInMultiSig = coinLockedInMultiSig.value;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
     // getKeyPair must not be called before wallet is ready (in case we get the object recreated from disk deserialization)
     // If the object is created at runtime it must be always constructed after wallet is ready.
-    @NotNull
     public DeterministicKey getKeyPair() {
         checkNotNull(keyPair, "keyPair must not be null. If we got the addressEntry created from PB we need to have " +
                 "setDeterministicKey got called before any access with getKeyPair().");
         return keyPair;
-    }
-
-    public void setCoinLockedInMultiSig(@NotNull Coin coinLockedInMultiSig) {
-        this.coinLockedInMultiSig = coinLockedInMultiSig.value;
     }
 
     // For display we usually only display the first 8 characters.

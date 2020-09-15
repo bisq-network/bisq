@@ -257,7 +257,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                         if (item != null && !empty) {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon(Res.get("funds.reserved.reserved", item.getAddressEntry().getShortOfferId()),
+                                field = new HyperlinkWithIcon(Res.get("funds.reserved.reserved", item.getOpenOffer().getShortId()),
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
