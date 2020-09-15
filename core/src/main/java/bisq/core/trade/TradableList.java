@@ -21,7 +21,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.proto.CoreProtoResolver;
 
-import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.persistable.PersistableList;
@@ -71,7 +70,6 @@ public final class TradableList<T extends Tradable> extends PersistableList<T> {
 
     public static TradableList<Tradable> fromProto(protobuf.TradableList proto,
                                                    CoreProtoResolver coreProtoResolver,
-                                                   PersistenceManager<TradableList<Tradable>> persistenceManager,
                                                    BtcWalletService btcWalletService) {
         List<Tradable> list = proto.getTradableList().stream()
                 .map(tradable -> {

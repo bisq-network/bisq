@@ -47,7 +47,6 @@ import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.config.Config;
 import bisq.common.persistence.CorruptedDatabaseFilesHandler;
-import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.NavigationPath;
@@ -98,7 +97,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case TRADABLE_LIST:
                     return TradableList.fromProto(proto.getTradableList(),
                             this,
-                            new PersistenceManager<>(storageDir, this, corruptedDatabaseFilesHandler),
                             btcWalletService.get());
                 case ARBITRATION_DISPUTE_LIST:
                     return ArbitrationDisputeList.fromProto(proto.getArbitrationDisputeList(), this);

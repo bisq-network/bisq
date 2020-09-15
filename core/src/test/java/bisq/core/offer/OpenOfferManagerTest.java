@@ -74,8 +74,6 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForDeactivatedOffer() throws IOException {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        PersistenceManager persistenceManager = mock(PersistenceManager.class);
-
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,

@@ -212,9 +212,9 @@ public class FileUtil {
     public static void removeAndBackupFile(File dbDir, File storageFile, String fileName, String backupFolderName)
             throws IOException {
         File corruptedBackupDir = new File(Paths.get(dbDir.getAbsolutePath(), backupFolderName).toString());
-        if (!corruptedBackupDir.exists())
-            if (!corruptedBackupDir.mkdir())
-                log.warn("make dir failed");
+        if (!corruptedBackupDir.exists() && !corruptedBackupDir.mkdir()) {
+            log.warn("make dir failed");
+        }
 
         File corruptedFile = new File(Paths.get(dbDir.getAbsolutePath(), backupFolderName, fileName).toString());
         if (storageFile.exists()) {
