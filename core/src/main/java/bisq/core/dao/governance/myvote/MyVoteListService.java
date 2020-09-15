@@ -131,6 +131,6 @@ public class MyVoteListService implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persist() {
-        persistenceManager.persistAtShutDown();
+        persistenceManager.requestPersistence();
     }
 }

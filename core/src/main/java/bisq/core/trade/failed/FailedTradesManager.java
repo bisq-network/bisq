@@ -86,7 +86,7 @@ public class FailedTradesManager implements PersistedDataHost {
 
     public void add(Trade trade) {
         if (failedTrades.add(trade)) {
-            persistenceManager.persistAtShutDown();
+            persistenceManager.requestPersistence();
         }
     }
 
@@ -114,7 +114,7 @@ public class FailedTradesManager implements PersistedDataHost {
         if (unfailTradeCallback.apply(trade)) {
             log.info("Unfailing trade {}", trade.getId());
             if (failedTrades.remove(trade)) {
-                persistenceManager.persistAtShutDown();
+                persistenceManager.requestPersistence();
             }
         }
     }

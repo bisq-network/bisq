@@ -125,9 +125,9 @@ public class DisputeMsgEvents {
         if (dispute.isClosed() && !chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
             dispute.setIsClosed(false);
             if (dispute.getSupportType() == SupportType.MEDIATION) {
-                mediationManager.getStorage().persistAtShutDown();
+                mediationManager.getStorage().requestPersistence();
             } else if (dispute.getSupportType() == SupportType.REFUND) {
-                refundManager.getStorage().persistAtShutDown();
+                refundManager.getStorage().requestPersistence();
             }
         }
     }

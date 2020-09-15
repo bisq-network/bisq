@@ -143,7 +143,7 @@ public final class Navigation implements PersistedDataHost {
         if (currentPath.tip() != null) {
             navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toUnmodifiableList()));
         }
-        persistenceManager.persistAtShutDown();
+        persistenceManager.requestPersistence();
     }
 
     public void navigateToPreviousVisitedView() {

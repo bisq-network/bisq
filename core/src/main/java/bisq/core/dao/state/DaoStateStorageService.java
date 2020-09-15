@@ -79,7 +79,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     public void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
         store.setDaoState(daoState);
         store.setDaoStateHashChain(daoStateHashChain);
-        persistenceManager.persistAtShutDown();
+        persistenceManager.requestPersistence();
     }
 
     public DaoState getPersistedBsqState() {

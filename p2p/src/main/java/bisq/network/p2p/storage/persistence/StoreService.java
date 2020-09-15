@@ -63,7 +63,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void persist() {
-        persistenceManager.persistAtShutDown();
+        persistenceManager.requestPersistence();
     }
 
     protected T getStore() {

@@ -94,7 +94,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private String fileName;
     private Priority priority = Priority.MID;
     private Path usedTempFilePath;
-    private boolean persistRequested;
+    private boolean requested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     }
 
     private void flushAndShutDown() {
-        if (persistRequested) {
+        if (requested) {
             persistNow();
         }
     }
@@ -191,8 +191,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Write file to disk
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void persistAtShutDown() {
-        persistRequested = true;
+    public void requestPersistence() {
+        requested = true;
     }
 
     public void persistNow() {
@@ -259,7 +259,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 log.error("Cannot close resources." + e.getMessage());
             }
             log.error("Save {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
-            persistRequested = false;
+            requested = false;
         }
     }
 
@@ -272,7 +272,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 ",\n     fileName='" + fileName + '\'' +
                 ",\n     priority=" + priority +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
-                ",\n     persistRequested=" + persistRequested +
+                ",\n     persistRequested=" + requested +
                 "\n}";
     }
 }

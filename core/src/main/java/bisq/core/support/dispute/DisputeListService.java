@@ -188,6 +188,6 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     }
 
     public void persist() {
-        persistenceManager.persistAtShutDown();
+        persistenceManager.requestPersistence();
     }
 }

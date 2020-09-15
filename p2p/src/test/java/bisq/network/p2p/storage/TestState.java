@@ -161,7 +161,7 @@ public class TestState {
      */
     private void verifySequenceNumberMapWriteContains(P2PDataStorage.ByteArray payloadHash, int sequenceNumber) {
         //final ArgumentCaptor<SequenceNumberMap> captor = ArgumentCaptor.forClass(SequenceNumberMap.class);
-        verify(this.mockSeqNrPersistenceManager).persistAtShutDown();
+        verify(this.mockSeqNrPersistenceManager).requestPersistence();
 
         // FIXME enable test again
         // captor is not used anymore in queueUpForSave, so captor.getValue() is null
@@ -235,7 +235,7 @@ public class TestState {
         if (expectedSequenceNrMapWrite) {
             this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
         } else {
-            verify(this.mockSeqNrPersistenceManager, never()).persistAtShutDown();
+            verify(this.mockSeqNrPersistenceManager, never()).requestPersistence();
         }
     }
 
@@ -276,7 +276,7 @@ public class TestState {
         }
 
         if (!expectedSeqNrWrite)
-            verify(this.mockSeqNrPersistenceManager, never()).persistAtShutDown();
+            verify(this.mockSeqNrPersistenceManager, never()).requestPersistence();
 
         if (!expectedBroadcast)
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
@@ -341,7 +341,7 @@ public class TestState {
             }
 
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
-            verify(this.mockSeqNrPersistenceManager, never()).persistAtShutDown();
+            verify(this.mockSeqNrPersistenceManager, never()).requestPersistence();
         }
     }
 

@@ -75,13 +75,13 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     public void add(Tradable tradable) {
         if (closedTradables.add(tradable)) {
-            persistenceManager.persistAtShutDown();
+            persistenceManager.requestPersistence();
         }
     }
 
     public void remove(Tradable tradable) {
         if (closedTradables.remove(tradable)) {
-            persistenceManager.persistAtShutDown();
+            persistenceManager.requestPersistence();
         }
     }
 
