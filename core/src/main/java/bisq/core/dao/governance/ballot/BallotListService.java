@@ -28,8 +28,8 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 

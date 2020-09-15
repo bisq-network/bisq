@@ -39,7 +39,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
-import bisq.common.storage.FileUtil;
+import bisq.common.persistence.FileUtil;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;

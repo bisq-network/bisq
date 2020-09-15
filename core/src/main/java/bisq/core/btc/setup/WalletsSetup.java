@@ -37,7 +37,7 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.FileUtil;
+import bisq.common.persistence.FileUtil;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.BlockChain;

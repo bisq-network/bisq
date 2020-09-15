@@ -22,8 +22,8 @@ import bisq.core.trade.Contract;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;

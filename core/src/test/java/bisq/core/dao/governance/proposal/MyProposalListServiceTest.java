@@ -7,7 +7,7 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.PersistenceManager;
 
 import javafx.beans.property.SimpleIntegerProperty;
 

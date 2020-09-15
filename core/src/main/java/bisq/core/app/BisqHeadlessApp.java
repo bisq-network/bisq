@@ -20,8 +20,8 @@ package bisq.core.app;
 import bisq.core.trade.TradeManager;
 
 import bisq.common.UserThread;
+import bisq.common.persistence.CorruptedDatabaseFilesHandler;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.util.Profiler;
 
 import com.google.inject.Injector;

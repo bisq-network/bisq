@@ -37,9 +37,9 @@ import bisq.common.config.BisqHelpFormatter;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigException;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.storage.PersistenceManager;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Guice;

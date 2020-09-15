@@ -56,10 +56,10 @@ import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.persistence.CorruptedDatabaseFilesHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

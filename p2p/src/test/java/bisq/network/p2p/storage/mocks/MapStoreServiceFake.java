@@ -21,9 +21,9 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistablePayload;
-import bisq.common.storage.PersistenceManager;
 
 import java.io.File;
 

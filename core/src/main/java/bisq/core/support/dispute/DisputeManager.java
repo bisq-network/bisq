@@ -49,7 +49,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 

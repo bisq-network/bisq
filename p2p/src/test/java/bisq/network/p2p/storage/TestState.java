@@ -39,8 +39,8 @@ import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.crypto.Sig;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistablePayload;
-import bisq.common.storage.PersistenceManager;
 
 import java.security.PublicKey;
 

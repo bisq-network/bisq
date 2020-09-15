@@ -19,7 +19,7 @@ package bisq.core.support.dispute.mediation;
 
 import bisq.core.support.dispute.DisputeListService;
 
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

@@ -20,8 +20,8 @@ package bisq.core.dao.state.unconfirmed;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

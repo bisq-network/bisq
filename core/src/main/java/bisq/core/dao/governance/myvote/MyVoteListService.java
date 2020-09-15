@@ -25,8 +25,8 @@ import bisq.core.dao.state.model.governance.BallotList;
 
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.Encryption;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;

@@ -25,8 +25,8 @@ import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Inject;
 

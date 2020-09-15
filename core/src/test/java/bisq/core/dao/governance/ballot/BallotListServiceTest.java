@@ -6,7 +6,7 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.ProposalValidatorProvider;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.PersistenceManager;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

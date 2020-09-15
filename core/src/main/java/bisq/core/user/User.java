@@ -31,8 +31,8 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

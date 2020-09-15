@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.storage;
+package bisq.common.persistence;
 
 public class ResourceNotFoundException extends Exception {
     public ResourceNotFoundException(String path) {

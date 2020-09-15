@@ -34,9 +34,9 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.PersistenceManager;
 
 import java.io.File;
 

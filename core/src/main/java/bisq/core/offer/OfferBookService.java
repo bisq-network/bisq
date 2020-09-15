@@ -30,7 +30,7 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.JsonFileManager;
+import bisq.common.persistence.JsonFileManager;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;

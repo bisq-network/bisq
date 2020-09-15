@@ -22,7 +22,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;

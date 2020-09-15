@@ -52,8 +52,8 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 

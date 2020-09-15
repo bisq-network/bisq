@@ -22,9 +22,9 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.market.MarketView;
 
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.NavigationPath;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import com.google.inject.Inject;
 

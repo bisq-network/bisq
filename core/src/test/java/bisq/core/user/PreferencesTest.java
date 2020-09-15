@@ -26,7 +26,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 
 import bisq.common.config.Config;
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.PersistenceManager;
 
 import javafx.collections.ObservableList;
 

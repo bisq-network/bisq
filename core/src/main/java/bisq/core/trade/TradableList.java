@@ -21,10 +21,10 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.proto.CoreProtoResolver;
 
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.persistable.PersistableList;
-import bisq.common.storage.PersistenceManager;
 
 import com.google.protobuf.Message;
 

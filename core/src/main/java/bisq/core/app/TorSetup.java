@@ -19,7 +19,7 @@ package bisq.core.app;
 
 import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.storage.FileUtil;
+import bisq.common.persistence.FileUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;

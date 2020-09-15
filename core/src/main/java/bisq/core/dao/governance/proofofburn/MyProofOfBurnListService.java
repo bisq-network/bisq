@@ -20,8 +20,8 @@ package bisq.core.dao.governance.proofofburn;
 import bisq.core.dao.DaoSetupService;
 
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import javax.inject.Inject;
 

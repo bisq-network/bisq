@@ -26,7 +26,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.JsonFileManager;
+import bisq.common.persistence.JsonFileManager;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;

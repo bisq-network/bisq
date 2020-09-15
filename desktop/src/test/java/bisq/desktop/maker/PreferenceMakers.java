@@ -21,7 +21,7 @@ import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.PersistenceManager;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Property;

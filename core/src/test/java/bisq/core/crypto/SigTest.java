@@ -21,7 +21,7 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.Sig;
-import bisq.common.storage.FileUtil;
+import bisq.common.persistence.FileUtil;
 
 import java.io.File;
 import java.io.IOException;

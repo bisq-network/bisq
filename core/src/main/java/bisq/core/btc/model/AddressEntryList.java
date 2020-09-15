@@ -18,9 +18,9 @@
 package bisq.core.btc.model;
 
 import bisq.common.config.Config;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.PersistenceManager;
 
 import com.google.protobuf.Message;
 

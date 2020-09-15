@@ -5,8 +5,8 @@ import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.PersistenceManager;
+import bisq.common.persistence.CorruptedDatabaseFilesHandler;
+import bisq.common.persistence.PersistenceManager;
 
 import java.nio.file.Files;
 
