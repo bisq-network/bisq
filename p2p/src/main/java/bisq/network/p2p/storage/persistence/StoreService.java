@@ -130,7 +130,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     }
 
     protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.HIGH);
+        persistenceManager.initialize(store);
     }
 
     protected abstract T createStore();
