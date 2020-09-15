@@ -55,12 +55,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public AddressEntryList(PersistenceManager<AddressEntryList> persistenceManager) {
         this.persistenceManager = persistenceManager;
 
-        persistenceManager.initialize(this);
+        persistenceManager.initialize(this, PersistenceManager.Priority.HIGH);
     }
 
     @Override
     public void readPersisted() {
-        AddressEntryList persisted = persistenceManager.getPersisted(this.getDefaultStorageFileName());
+        AddressEntryList persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             entrySet.clear();
             entrySet.addAll(persisted.entrySet);

@@ -199,7 +199,7 @@ public class TradeManager implements PersistedDataHost {
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
 
         this.persistenceManager = persistenceManager;
-        this.persistenceManager.initialize(tradableList);
+        this.persistenceManager.initialize(tradableList, PersistenceManager.Priority.HIGH);
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();

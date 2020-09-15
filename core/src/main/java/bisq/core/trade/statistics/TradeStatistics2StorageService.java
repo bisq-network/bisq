@@ -82,4 +82,9 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     protected void readStore() {
         super.readStore();
     }
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+    }
 }

@@ -162,7 +162,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.filterManager = filterManager;
 
         this.persistenceManager = persistenceManager;
-        this.persistenceManager.initialize(openOffers);
+        this.persistenceManager.initialize(openOffers, PersistenceManager.Priority.HIGH);
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(OpenOfferManager.this::shutDown,

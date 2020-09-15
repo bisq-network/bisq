@@ -58,8 +58,8 @@ import sun.misc.Signal;
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
-    private static final int EXIT_SUCCESS = 0;
-    private static final int EXIT_FAILURE = 1;
+    public static final int EXIT_SUCCESS = 0;
+    public static final int EXIT_FAILURE = 1;
 
     private final String fullName;
     private final String scriptName;
@@ -216,7 +216,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         if (injector == null) {
             log.warn("Shut down called before injector was created");
             resultHandler.handleResult();
-            System.exit(0);
+            System.exit(EXIT_SUCCESS);
         }
 
         try {
@@ -238,13 +238,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         log.info("P2PService shutdown completed");
-
                         module.close(injector);
-                        resultHandler.handleResult();
-
                         PersistenceManager.flushAllDataToDisk(() -> {
                             log.info("Graceful shutdown completed. Exiting now.");
-                            System.exit(0);
+                            resultHandler.handleResult();
+                            System.exit(EXIT_SUCCESS);
                         });
                     });
                 });
@@ -255,13 +253,20 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             // Wait max 20 sec.
             UserThread.runAfter(() -> {
                 log.warn("Timeout triggered resultHandler");
-                resultHandler.handleResult();
-                System.exit(0);
+                PersistenceManager.flushAllDataToDisk(() -> {
+                    log.info("Graceful shutdown resulted in a timeout. Exiting now.");
+                    resultHandler.handleResult();
+                    System.exit(EXIT_SUCCESS);
+                });
             }, 20);
         } catch (Throwable t) {
             log.error("App shutdown failed with exception {}", t.toString());
             t.printStackTrace();
-            System.exit(1);
+            PersistenceManager.flushAllDataToDisk(() -> {
+                log.info("Graceful shutdown resulted in an error. Exiting now.");
+                resultHandler.handleResult();
+                System.exit(EXIT_FAILURE);
+            });
         }
     }
 

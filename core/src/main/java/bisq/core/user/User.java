@@ -95,7 +95,7 @@ public class User implements PersistedDataHost {
             userPayload = persisted;
         }
 
-        persistenceManager.initialize(userPayload);
+        persistenceManager.initialize(userPayload, PersistenceManager.Priority.HIGH);
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
         checkNotNull(userPayload.getAcceptedLanguageLocaleCodes(), "userPayload.getAcceptedLanguageLocaleCodes() must not be null");

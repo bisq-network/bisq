@@ -46,6 +46,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     @Inject
     public MyProofOfBurnListService(PersistenceManager<MyProofOfBurnList> persistenceManager) {
         this.persistenceManager = persistenceManager;
+        persistenceManager.initialize(myProofOfBurnList, PersistenceManager.Priority.HIGH);
     }
 
 
@@ -56,7 +57,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyProofOfBurnList persisted = persistenceManager.getPersisted(myProofOfBurnList.getDefaultStorageFileName());
+            MyProofOfBurnList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
                 myProofOfBurnList.setAll(persisted.getList());
             }

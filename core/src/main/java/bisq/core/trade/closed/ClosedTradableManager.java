@@ -57,7 +57,6 @@ public class ClosedTradableManager implements PersistedDataHost {
 
         this.persistenceManager = persistenceManager;
         this.persistenceManager.initialize(closedTradables);
-        this.persistenceManager.setNumMaxBackupFiles(3);
     }
 
     @Override

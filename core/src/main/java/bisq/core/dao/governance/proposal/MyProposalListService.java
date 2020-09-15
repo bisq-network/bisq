@@ -92,7 +92,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         this.walletsManager = walletsManager;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(myProposalList);
+        this.persistenceManager.initialize(myProposalList, PersistenceManager.Priority.HIGH);
 
         signaturePubKey = pubKeyRing.getSignaturePubKey();
 

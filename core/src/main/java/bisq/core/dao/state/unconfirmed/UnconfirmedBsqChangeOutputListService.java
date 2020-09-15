@@ -46,7 +46,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     public UnconfirmedBsqChangeOutputListService(PersistenceManager<UnconfirmedBsqChangeOutputList> persistenceManager) {
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(unconfirmedBsqChangeOutputList);
+        this.persistenceManager.initialize(unconfirmedBsqChangeOutputList, PersistenceManager.Priority.HIGH);
     }
 
 

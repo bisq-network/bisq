@@ -62,7 +62,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         super(storageDir, persistenceManager);
         this.daoState = daoState;
         this.daoStateMonitoringService = daoStateMonitoringService;
-        persistenceManager.setNumMaxBackupFiles(1);
 
         resourceDataStoreService.addService(this);
     }
@@ -127,5 +126,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     @Override
     protected DaoStateStore createStore() {
         return new DaoStateStore(DaoState.getClone(daoState), new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain()));
+    }
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
     }
 }

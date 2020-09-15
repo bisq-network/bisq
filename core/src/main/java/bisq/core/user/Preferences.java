@@ -232,7 +232,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         PreferencesPayload persisted = persistenceManager.getPersisted("PreferencesPayload");
         if (persisted != null) {
             prefPayload = persisted;
-            persistenceManager.initialize(prefPayload);
+            persistenceManager.initialize(prefPayload, PersistenceManager.Priority.HIGH);
 
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
@@ -243,7 +243,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
         } else {
             prefPayload = new PreferencesPayload();
-            persistenceManager.initialize(prefPayload);
+            persistenceManager.initialize(prefPayload, PersistenceManager.Priority.HIGH);
 
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
             prefPayload.setUserCountry(CountryUtil.getDefaultCountry());

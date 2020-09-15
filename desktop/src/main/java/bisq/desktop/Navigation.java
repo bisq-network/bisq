@@ -74,13 +74,12 @@ public final class Navigation implements PersistedDataHost {
     @Inject
     public Navigation(PersistenceManager<NavigationPath> persistenceManager) {
         this.persistenceManager = persistenceManager;
-        persistenceManager.initialize(navigationPath);
-        persistenceManager.setNumMaxBackupFiles(3);
+        persistenceManager.initialize(navigationPath, PersistenceManager.Priority.LOW);
     }
 
     @Override
     public void readPersisted() {
-        NavigationPath persisted = persistenceManager.getPersisted(navigationPath.getDefaultStorageFileName());
+        NavigationPath persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             List<Class<? extends View>> viewClasses = persisted.getPath().stream()
                     .map(className -> {

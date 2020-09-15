@@ -35,9 +35,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -52,12 +53,33 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static final Set<PersistenceManager<?>> ALL_PERSISTENCE_MANAGER_MANAGERS = new HashSet<>();
+    public static final Map<String, PersistenceManager<?>> ALL_PERSISTENCE_MANAGER_MANAGERS = new HashMap<>();
 
     public static void flushAllDataToDisk(ResultHandler resultHandler) {
-        ALL_PERSISTENCE_MANAGER_MANAGERS.forEach(PersistenceManager::flushAndShutDown);
-        ALL_PERSISTENCE_MANAGER_MANAGERS.clear();
+        ALL_PERSISTENCE_MANAGER_MANAGERS.values().forEach(persistenceManager -> {
+            persistenceManager.flushAndShutDown();
+            persistenceManager.close();
+        });
         resultHandler.handleResult();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public enum Priority {
+        LOW(1),
+        MID(5),
+        HIGH(10);
+
+        @Getter
+        private final int numMaxBackupFiles;
+
+        Priority(int numMaxBackupFiles) {
+
+            this.numMaxBackupFiles = numMaxBackupFiles;
+        }
     }
 
 
@@ -68,12 +90,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private final File dir;
     private final PersistenceProtoResolver persistenceProtoResolver;
     private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
-    private final Thread shutdownHook;
-
     private File storageFile;
     private T persistable;
     private String fileName;
-    private int numMaxBackupFiles = 10;
+    private Priority priority = Priority.MID;
     private Path usedTempFilePath;
     private boolean persistRequested;
 
@@ -89,8 +109,6 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         this.dir = checkDir(dir);
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
-
-        shutdownHook = new Thread(PersistenceManager.this::flushAndShutDown, "FileManager.ShutDownHook");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,22 +116,33 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize(T persistable) {
-        this.initialize(persistable, persistable.getDefaultStorageFileName());
+        this.initialize(persistable, persistable.getDefaultStorageFileName(), Priority.MID);
+    }
+
+    public void initialize(T persistable, Priority priority) {
+        this.initialize(persistable, persistable.getDefaultStorageFileName(), priority);
     }
 
     public void initialize(T persistable, String fileName) {
+        this.initialize(persistable, fileName, Priority.MID);
+    }
+
+    public void initialize(T persistable, String fileName, Priority priority) {
         this.persistable = persistable;
         this.fileName = fileName;
+        this.priority = priority;
         storageFile = new File(dir, fileName);
-        ALL_PERSISTENCE_MANAGER_MANAGERS.add(this);
-        Runtime.getRuntime().addShutdownHook(shutdownHook);
+        ALL_PERSISTENCE_MANAGER_MANAGERS.put(fileName, this);
+    }
+
+    public void close() {
+        ALL_PERSISTENCE_MANAGER_MANAGERS.remove(fileName);
     }
 
     private void flushAndShutDown() {
         if (persistRequested) {
-            saveToFile(persistable);
+            writeToDisk();
         }
-        Runtime.getRuntime().removeShutdownHook(shutdownHook);
     }
 
 
@@ -167,17 +196,11 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         persistRequested = true;
     }
 
-    public void saveNow() {
-        persistRequested = true;
+    public void persistNow() {
         checkNotNull(persistable, "queueUpForSave: persistable must not be null. this=" + this);
         checkNotNull(storageFile, "queueUpForSave: storageFile must not be null. persistable=" + persistable.getClass().getSimpleName());
 
-        saveToFile(persistable);
-    }
-
-    //todo
-    public void setNumMaxBackupFiles(int numMaxBackupFiles) {
-        this.numMaxBackupFiles = numMaxBackupFiles;
+        writeToDisk();
     }
 
     public void removeAndBackupFile(String fileName) throws IOException {
@@ -190,13 +213,16 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private void saveToFile(T persistable) {
+    private void writeToDisk() {
         long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         PrintWriter printWriter = null;
 
         try {
+            // Before we write we backup existing file
+            FileUtil.rollingBackup(dir, fileName, priority.getNumMaxBackupFiles());
+
             protobuf.PersistableEnvelope protoPersistable;
             try {
                 protoPersistable = (protobuf.PersistableEnvelope) persistable.toPersistableMessage();
@@ -266,7 +292,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 ",\n     storageFile=" + storageFile +
                 ",\n     persistable=" + persistable +
                 ",\n     fileName='" + fileName + '\'' +
-                ",\n     numMaxBackupFiles=" + numMaxBackupFiles +
+                ",\n     priority=" + priority +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
                 "\n}";
     }

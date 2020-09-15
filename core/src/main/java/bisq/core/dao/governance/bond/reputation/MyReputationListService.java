@@ -46,6 +46,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     @Inject
     public MyReputationListService(PersistenceManager<MyReputationList> persistenceManager) {
         this.persistenceManager = persistenceManager;
+        persistenceManager.initialize(myReputationList, PersistenceManager.Priority.HIGH);
     }
 
 
@@ -56,7 +57,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyReputationList persisted = persistenceManager.getPersisted(myReputationList.getDefaultStorageFileName());
+            MyReputationList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
                 myReputationList.setAll(persisted.getList());
             }

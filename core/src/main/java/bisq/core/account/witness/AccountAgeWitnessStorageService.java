@@ -86,4 +86,9 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
                 "Store is not instance of AccountAgeWitnessStore. That can happen if the ProtoBuffer " +
                         "file got changed. We cleared the data store and recreated it again.");
     }
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+    }
 }
