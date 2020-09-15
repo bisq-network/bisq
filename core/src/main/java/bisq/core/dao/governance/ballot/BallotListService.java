@@ -72,6 +72,8 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
         this.periodService = periodService;
         this.validatorProvider = validatorProvider;
         this.storage = storage;
+
+        this.storage.initialize(ballotList);
     }
 
 
@@ -129,7 +131,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            BallotList persisted = storage.getPersisted(ballotList.getDefaultStorageFileName());
+            BallotList persisted = storage.getPersisted();
             if (persisted != null) {
                 ballotList.clear();
                 ballotList.addAll(persisted.getList());

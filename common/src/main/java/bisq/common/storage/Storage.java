@@ -108,24 +108,93 @@ public class Storage<T extends PersistableEnvelope> {
         );
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Init
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void saveLater(T persistable) {
-        saveLater(persistable, delay);
+    public void initialize(T persistable) {
+        this.initialize(persistable, persistable.getDefaultStorageFileName());
     }
 
-    public void saveLater(T persistable, long delayInMilli) {
+    public void initialize(T persistable, String fileName) {
+        this.persistable = persistable;
+        this.fileName = fileName;
+        storageFile = new File(dir, fileName);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Reading file
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    public T getPersisted() {
+        return getPersisted(checkNotNull(fileName));
+    }
+
+    @Nullable
+    public T getPersisted(String fileName) {
+        File storageFile = new File(dir, fileName);
+        if (!storageFile.exists()) {
+            return null;
+        }
+
+        long ts = System.currentTimeMillis();
+        try (final FileInputStream fileInputStream = new FileInputStream(storageFile)) {
+            protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
+            T persistableEnvelope = (T) persistenceProtoResolver.fromProto(proto);
+            log.info("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
+            return persistableEnvelope;
+        } catch (Throwable t) {
+            log.error("Reading {} failed with {}.", fileName, t.getMessage());
+            try {
+                // We keep a backup which might be used for recovery
+                FileUtil.removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
+                DevEnv.logErrorAndThrowIfDevMode(t.toString());
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                log.error(e1.getMessage());
+                // We swallow Exception if backup fails
+            }
+            if (corruptedDatabaseFilesHandler != null) {
+                corruptedDatabaseFilesHandler.onFileCorrupted(storageFile.getName());
+            }
+        }
+        return null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Write file to disk
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void queueUpForSave() {
+        checkNotNull(persistable, "queueUpForSave: persistable must not be null. this=" + this);
+        checkNotNull(storageFile, "queueUpForSave: storageFile must not be null. persistable=" + persistable.getClass().getSimpleName());
+
         // Atomically set the value of the next write. This allows batching of multiple writes of the same data
         // structure if there are multiple calls to saveLater within a given `delayInMillis`.
         this.nextWrite.set(persistable);
 
         // Always schedule a write. It is possible that a previous saveLater was called with a larger `delayInMilli`
         // and we want the lower delay to execute. The saveFileTask handles concurrent operations.
-        executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
+        executor.schedule(saveFileTask, delay, TimeUnit.MILLISECONDS);
     }
+
+    //todo
+    public void setNumMaxBackupFiles(int numMaxBackupFiles) {
+        this.numMaxBackupFiles = numMaxBackupFiles;
+    }
+
+
+    public void removeAndBackupFile(String fileName) throws IOException {
+        FileUtil.removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     private synchronized void saveToFile(T persistable, File dir, File storageFile) {
@@ -205,74 +274,17 @@ public class Storage<T extends PersistableEnvelope> {
         }
     }
 
-    @Nullable
-    public T getPersisted(String fileName) {
-        storageFile = new File(dir, fileName);
 
-        if (!storageFile.exists()) {
-            return null;
-        }
-
-        long ts = System.currentTimeMillis();
-        try (final FileInputStream fileInputStream = new FileInputStream(storageFile)) {
-            protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
-            T persistableEnvelope = (T) persistenceProtoResolver.fromProto(proto);
-            log.info("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
-            return persistableEnvelope;
-        } catch (Throwable t) {
-            log.error("Reading {} failed with {}.", fileName, t.getMessage());
-            try {
-                // We keep a backup which might be used for recovery
-                FileUtil.removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
-                DevEnv.logErrorAndThrowIfDevMode(t.toString());
-            } catch (IOException e1) {
-                e1.printStackTrace();
-                log.error(e1.getMessage());
-                // We swallow Exception if backup fails
-            }
-            if (corruptedDatabaseFilesHandler != null) {
-                corruptedDatabaseFilesHandler.onFileCorrupted(storageFile.getName());
-            }
-        }
-        return null;
-    }
-
-    public void removeAndBackupFile(String fileName) throws IOException {
-        FileUtil.removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
-    }
-
-    // TODO refactor old API
-
-    public void queueUpForSave() {
-        queueUpForSave(persistable);
-    }
-
-    public void queueUpForSave(long delayInMilli) {
-        queueUpForSave(persistable, delayInMilli);
-    }
-
-    public void setNumMaxBackupFiles(int numMaxBackupFiles) {
-        this.numMaxBackupFiles = numMaxBackupFiles;
-    }
-
-    // Save delayed and on a background thread
-    public void queueUpForSave(T persistable) {
-        if (persistable != null) {
-            checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
-
-            saveLater(persistable);
-        } else {
-            log.trace("queueUpForSave called but no persistable set");
-        }
-    }
-
-    public void queueUpForSave(T persistable, long delayInMilli) {
-        if (persistable != null) {
-            checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
-
-            saveLater(persistable, delayInMilli);
-        } else {
-            log.trace("queueUpForSave called but no persistable set");
-        }
+    @Override
+    public String toString() {
+        return "Storage{" +
+                "\n     dir=" + dir +
+                ",\n     storageFile=" + storageFile +
+                ",\n     persistable=" + persistable +
+                ",\n     fileName='" + fileName + '\'' +
+                ",\n     numMaxBackupFiles=" + numMaxBackupFiles +
+                ",\n     usedTempFilePath=" + usedTempFilePath +
+                ",\n     delay=" + delay +
+                "\n}";
     }
 }

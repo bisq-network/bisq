@@ -204,6 +204,8 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
         sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
+
+        getStorage().queueUpForSave();
     }
 
 

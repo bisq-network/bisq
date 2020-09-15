@@ -101,17 +101,11 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                             new Storage<>(storageDir, this, corruptedDatabaseFilesHandler),
                             btcWalletService.get());
                 case ARBITRATION_DISPUTE_LIST:
-                    return ArbitrationDisputeList.fromProto(proto.getArbitrationDisputeList(),
-                            this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                    return ArbitrationDisputeList.fromProto(proto.getArbitrationDisputeList(), this);
                 case MEDIATION_DISPUTE_LIST:
-                    return MediationDisputeList.fromProto(proto.getMediationDisputeList(),
-                            this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                    return MediationDisputeList.fromProto(proto.getMediationDisputeList(), this);
                 case REFUND_DISPUTE_LIST:
-                    return RefundDisputeList.fromProto(proto.getRefundDisputeList(),
-                            this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                    return RefundDisputeList.fromProto(proto.getRefundDisputeList(), this);
                 case PREFERENCES_PAYLOAD:
                     return PreferencesPayload.fromProto(proto.getPreferencesPayload(), this);
                 case USER_PAYLOAD:

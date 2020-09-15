@@ -43,6 +43,11 @@ public final class ArbitrationDisputeListService extends DisputeListService<Arbi
 
     @Override
     protected ArbitrationDisputeList getConcreteDisputeList() {
-        return new ArbitrationDisputeList(storage);
+        return new ArbitrationDisputeList();
+    }
+
+    @Override
+    protected String getFileName() {
+        return "DisputeList";
     }
 }

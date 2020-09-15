@@ -43,6 +43,6 @@ public final class RefundDisputeListService extends DisputeListService<RefundDis
 
     @Override
     protected RefundDisputeList getConcreteDisputeList() {
-        return new RefundDisputeList(storage);
+        return new RefundDisputeList();
     }
 }

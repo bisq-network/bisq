@@ -52,7 +52,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.storage.Storage;
 import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
 
@@ -367,10 +366,9 @@ public abstract class Trade implements Tradable, Model {
     transient final private Coin txFee;
     @Getter
     transient final private Coin takerFee;
-    @Getter // to set in constructor so not final but set at init
-    transient private Storage<? extends TradableList> storage;
-    @Getter // to set in constructor so not final but set at init
-    transient private BtcWalletService btcWalletService;
+
+    @Getter
+    transient final private BtcWalletService btcWalletService;
 
     transient final private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
     transient final private ObjectProperty<Phase> statePhaseProperty = new SimpleObjectProperty<>(state.phase);
@@ -463,13 +461,11 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress arbitratorNodeAddress,
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
-                    Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
         this.offer = offer;
         this.txFee = txFee;
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
-        this.storage = storage;
         this.btcWalletService = btcWalletService;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
@@ -496,7 +492,6 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress arbitratorNodeAddress,
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
-                    Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
 
         this(offer,
@@ -506,7 +501,6 @@ public abstract class Trade implements Tradable, Model {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService);
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
@@ -616,11 +610,6 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setTransientFields(Storage<? extends TradableList> storage, BtcWalletService btcWalletService) {
-        this.storage = storage;
-        this.btcWalletService = btcWalletService;
-    }
 
     public void init(P2PService p2PService,
                      BtcWalletService btcWalletService,
@@ -755,7 +744,6 @@ public abstract class Trade implements Tradable, Model {
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
         if (!chatMessages.contains(chatMessage)) {
             chatMessages.add(chatMessage);
-            storage.queueUpForSave();
         } else {
             log.error("Trade ChatMessage already exists");
         }
@@ -784,16 +772,16 @@ public abstract class Trade implements Tradable, Model {
     // Model implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Get called from taskRunner after each completed task
-    @Override
-    public void persist() {
-        if (storage != null)
-            storage.queueUpForSave();
-    }
-
     @Override
     public void onComplete() {
         persist();
+    }
+
+    @Override
+    public void persist() {
+        // We do not persist inside the trade anymore.
+        // TODO
+        // We might remove that interface requirement in a future refactoring.
     }
 
 
@@ -1206,7 +1194,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     txFee=" + txFee +
                 ",\n     takerFee=" + takerFee +
-                ",\n     storage=" + storage +
                 ",\n     btcWalletService=" + btcWalletService +
                 ",\n     stateProperty=" + stateProperty +
                 ",\n     statePhaseProperty=" + statePhaseProperty +

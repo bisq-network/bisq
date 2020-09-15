@@ -133,8 +133,8 @@ public class TradeManager implements PersistedDataHost {
     private final DaoFacade daoFacade;
     private final ClockWatcher clockWatcher;
 
-    private final Storage<TradableList<Trade>> tradableListStorage;
-    private TradableList<Trade> tradableList;
+    private final Storage<TradableList<Trade>> storage;
+    private final TradableList<Trade> tradableList = new TradableList<>();
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
     private List<Trade> tradesForStatistics;
     @Setter
@@ -198,7 +198,8 @@ public class TradeManager implements PersistedDataHost {
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
 
-        tradableListStorage = storage;
+        this.storage = storage;
+        this.storage.initialize(tradableList);
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -237,9 +238,12 @@ public class TradeManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        tradableList = new TradableList<>(tradableListStorage, "PendingTrades");
+        TradableList<Trade> persisted = storage.getPersisted("PendingTrades");
+        if (persisted != null) {
+            tradableList.setAll(persisted.getList());
+        }
+
         tradableList.forEach(trade -> {
-            trade.setTransientFields(tradableListStorage, btcWalletService);
             Offer offer = trade.getOffer();
             if (offer != null)
                 offer.setPriceFeedService(priceFeedService);
@@ -406,7 +410,6 @@ public class TradeManager implements PersistedDataHost {
                         openOffer.getArbitratorNodeAddress(),
                         openOffer.getMediatorNodeAddress(),
                         openOffer.getRefundAgentNodeAddress(),
-                        tradableListStorage,
                         btcWalletService);
             else
                 trade = new SellerAsMakerTrade(offer,
@@ -416,11 +419,12 @@ public class TradeManager implements PersistedDataHost {
                         openOffer.getArbitratorNodeAddress(),
                         openOffer.getMediatorNodeAddress(),
                         openOffer.getRefundAgentNodeAddress(),
-                        tradableListStorage,
                         btcWalletService);
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
-            tradableList.add(trade);
+            if (tradableList.add(trade)) {
+                storage.queueUpForSave();
+            }
             ((MakerTrade) trade).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
                     takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
@@ -540,7 +544,6 @@ public class TradeManager implements PersistedDataHost {
                     model.getSelectedArbitrator(),
                     model.getSelectedMediator(),
                     model.getSelectedRefundAgent(),
-                    tradableListStorage,
                     btcWalletService);
         else
             trade = new BuyerAsTakerTrade(offer,
@@ -553,14 +556,15 @@ public class TradeManager implements PersistedDataHost {
                     model.getSelectedArbitrator(),
                     model.getSelectedMediator(),
                     model.getSelectedRefundAgent(),
-                    tradableListStorage,
                     btcWalletService);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
 
-        tradableList.add(trade);
+        if (tradableList.add(trade)) {
+            storage.queueUpForSave();
+        }
         ((TakerTrade) trade).takeAvailableOffer();
         tradeResultHandler.handleResult(trade);
     }
@@ -638,8 +642,8 @@ public class TradeManager implements PersistedDataHost {
 
         initPendingTrade(trade);
 
-        if (!tradableList.contains(trade)) {
-            tradableList.add(trade);
+        if (tradableList.add(trade)) {
+            storage.queueUpForSave();
         }
         return true;
     }
@@ -669,7 +673,9 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void removeTrade(Trade trade) {
-        tradableList.remove(trade);
+        if (tradableList.remove(trade)) {
+            storage.queueUpForSave();
+        }
     }
 
 
@@ -862,6 +868,6 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public void persistTrades() {
-        tradableList.persist();
+        storage.queueUpForSave();
     }
 }

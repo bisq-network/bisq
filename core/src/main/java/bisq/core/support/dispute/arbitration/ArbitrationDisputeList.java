@@ -23,7 +23,6 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
@@ -46,17 +45,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class ArbitrationDisputeList extends DisputeList<ArbitrationDisputeList> {
 
-    ArbitrationDisputeList(Storage<ArbitrationDisputeList> storage) {
-        super(storage);
-    }
-
-    @Override
-    public void readPersisted() {
-        // We need to use DisputeList as file name to not lose existing disputes which are stored in the DisputeList file
-        ArbitrationDisputeList persisted = storage.getPersisted("DisputeList");
-        if (persisted != null) {
-            list.addAll(persisted.getList());
-        }
+    ArbitrationDisputeList() {
+        super();
     }
 
 
@@ -64,8 +54,8 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ArbitrationDisputeList(Storage<ArbitrationDisputeList> storage, List<Dispute> list) {
-        super(storage, list);
+    private ArbitrationDisputeList(List<Dispute> list) {
+        super(list);
     }
 
     @Override
@@ -78,16 +68,12 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
     }
 
     public static ArbitrationDisputeList fromProto(protobuf.ArbitrationDisputeList proto,
-                                                   CoreProtoResolver coreProtoResolver,
-                                                   Storage<ArbitrationDisputeList> storage) {
+                                                   CoreProtoResolver coreProtoResolver) {
         List<Dispute> list = proto.getDisputeList().stream()
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
+                .filter(e -> e.getSupportType().equals(SupportType.ARBITRATION))
                 .collect(Collectors.toList());
 
-        list.forEach(e -> {
-            checkArgument(e.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION");
-            e.setStorage(storage);
-        });
-        return new ArbitrationDisputeList(storage, list);
+        return new ArbitrationDisputeList(list);
     }
 }

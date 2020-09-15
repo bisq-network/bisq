@@ -74,6 +74,7 @@ public final class Navigation implements PersistedDataHost {
     @Inject
     public Navigation(Storage<NavigationPath> storage) {
         this.storage = storage;
+        storage.initialize(navigationPath);
         storage.setNumMaxBackupFiles(3);
     }
 
@@ -143,7 +144,7 @@ public final class Navigation implements PersistedDataHost {
         if (currentPath.tip() != null) {
             navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toUnmodifiableList()));
         }
-        storage.queueUpForSave(navigationPath, 1000);
+        storage.queueUpForSave();
     }
 
     public void navigateToPreviousVisitedView() {

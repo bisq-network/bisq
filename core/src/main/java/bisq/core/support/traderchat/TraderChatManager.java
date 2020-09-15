@@ -121,6 +121,7 @@ public class TraderChatManager extends SupportManager {
                     addSystemMsg(trade);
                 }
                 trade.addAndPersistChatMessage(message);
+                tradeManager.persistTrades();
             } else {
                 log.warn("Trade got a chatMessage that we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());

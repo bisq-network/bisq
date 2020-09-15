@@ -81,6 +81,7 @@ import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
+import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -544,7 +545,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
             checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
-            Dispute dispute = new Dispute(disputeManager.getStorage(),
+            Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -619,7 +620,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             checkNotNull(refundAgentPubKeyRing, "refundAgentPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
-            Dispute dispute = new Dispute(disputeManager.getStorage(),
+            Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,

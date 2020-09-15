@@ -18,13 +18,12 @@
 package bisq.core.support.dispute;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
-import bisq.common.storage.Storage;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -40,14 +39,11 @@ import lombok.extern.slf4j.Slf4j;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public abstract class DisputeList<T extends PersistableEnvelope> implements UserThreadMappedPersistableEnvelope, PersistedDataHost {
-    transient protected final Storage<T> storage;
-
+public abstract class DisputeList<T extends PersistableEnvelope> implements UserThreadMappedPersistableEnvelope {
     @Getter
     protected final ObservableList<Dispute> list = FXCollections.observableArrayList();
 
-    public DisputeList(Storage<T> storage) {
-        this.storage = storage;
+    public DisputeList() {
     }
 
 
@@ -55,8 +51,7 @@ public abstract class DisputeList<T extends PersistableEnvelope> implements User
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected DisputeList(Storage<T> storage, List<Dispute> list) {
-        this.storage = storage;
+    protected DisputeList(List<Dispute> list) {
         this.list.addAll(list);
     }
 
@@ -68,23 +63,14 @@ public abstract class DisputeList<T extends PersistableEnvelope> implements User
     public boolean add(Dispute dispute) {
         if (!list.contains(dispute)) {
             list.add(dispute);
-            persist();
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean remove(Object dispute) {
-        //noinspection SuspiciousMethodCalls
-        boolean changed = list.remove(dispute);
-        if (changed)
-            persist();
-        return changed;
-    }
-
-    public void persist() {
-        storage.queueUpForSave();
+    public boolean remove(Dispute dispute) {
+        return list.remove(dispute);
     }
 
     public int size() {
@@ -102,5 +88,10 @@ public abstract class DisputeList<T extends PersistableEnvelope> implements User
 
     public Stream<Dispute> stream() {
         return list.stream();
+    }
+
+    public void setAll(Collection<Dispute> collection) {
+        this.list.clear();
+        this.list.addAll(collection);
     }
 }

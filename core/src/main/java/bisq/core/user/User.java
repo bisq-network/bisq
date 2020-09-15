@@ -90,9 +90,12 @@ public class User implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        //todo
         UserPayload persisted = checkNotNull(storage).getPersisted("UserPayload");
-        userPayload = persisted != null ? persisted : new UserPayload();
+        if (persisted != null) {
+            userPayload = persisted;
+        }
+
+        storage.initialize(userPayload);
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
         checkNotNull(userPayload.getAcceptedLanguageLocaleCodes(), "userPayload.getAcceptedLanguageLocaleCodes() must not be null");
@@ -119,7 +122,7 @@ public class User implements PersistedDataHost {
 
     public void persist() {
         if (storage != null)
-            storage.queueUpForSave(userPayload);
+            storage.queueUpForSave();
     }
 
 

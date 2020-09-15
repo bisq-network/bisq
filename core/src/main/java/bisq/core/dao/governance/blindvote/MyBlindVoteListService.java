@@ -136,6 +136,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         this.myVoteListService = myVoteListService;
         this.myProposalListService = myProposalListService;
 
+        this.storage.initialize(myBlindVoteList);
+
         numConnectedPeersListener = (observable, oldValue, newValue) -> maybeRePublishMyBlindVote();
     }
 
@@ -162,7 +164,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyBlindVoteList persisted = storage.getPersisted(myBlindVoteList.getDefaultStorageFileName());
+            MyBlindVoteList persisted = storage.getPersisted();
             if (persisted != null) {
                 myBlindVoteList.clear();
                 myBlindVoteList.addAll(persisted.getList());

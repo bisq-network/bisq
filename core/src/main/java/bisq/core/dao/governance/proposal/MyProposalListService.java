@@ -92,6 +92,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         this.walletsManager = walletsManager;
         this.storage = storage;
 
+        this.storage.initialize(myProposalList);
+
         signaturePubKey = pubKeyRing.getSignaturePubKey();
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishMyProposalsOnceWellConnected();
@@ -107,7 +109,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyProposalList persisted = storage.getPersisted(myProposalList.getDefaultStorageFileName());
+            MyProposalList persisted = storage.getPersisted();
             if (persisted != null) {
                 myProposalList.clear();
                 myProposalList.addAll(persisted.getList());

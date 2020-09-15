@@ -23,7 +23,6 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
@@ -46,17 +45,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
 
-    RefundDisputeList(Storage<RefundDisputeList> storage) {
-        super(storage);
-    }
-
-    @Override
-    public void readPersisted() {
-        // We need to use DisputeList as file name to not lose existing disputes which are stored in the DisputeList file
-        RefundDisputeList persisted = storage.getPersisted(this.getDefaultStorageFileName());
-        if (persisted != null) {
-            list.addAll(persisted.getList());
-        }
+    RefundDisputeList() {
+        super();
     }
 
 
@@ -64,8 +54,8 @@ public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RefundDisputeList(Storage<RefundDisputeList> storage, List<Dispute> list) {
-        super(storage, list);
+    private RefundDisputeList(List<Dispute> list) {
+        super(list);
     }
 
     @Override
@@ -78,16 +68,11 @@ public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
     }
 
     public static RefundDisputeList fromProto(protobuf.RefundDisputeList proto,
-                                              CoreProtoResolver coreProtoResolver,
-                                              Storage<RefundDisputeList> storage) {
+                                              CoreProtoResolver coreProtoResolver) {
         List<Dispute> list = proto.getDisputeList().stream()
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
+                .filter(e -> e.getSupportType().equals(SupportType.REFUND))
                 .collect(Collectors.toList());
-
-        list.forEach(e -> {
-            checkArgument(e.getSupportType().equals(SupportType.REFUND), "Support type has to be REFUND");
-            e.setStorage(storage);
-        });
-        return new RefundDisputeList(storage, list);
+        return new RefundDisputeList(list);
     }
 }

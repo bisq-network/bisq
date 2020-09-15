@@ -25,7 +25,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 
@@ -48,7 +47,6 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress arbitratorNodeAddress,
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
-               Storage<? extends TradableList> storage,
                BtcWalletService btcWalletService) {
         super(offer,
                 tradeAmount,
@@ -60,7 +58,6 @@ public abstract class BuyerTrade extends Trade {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService);
     }
 
@@ -71,7 +68,6 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress arbitratorNodeAddress,
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
-               Storage<? extends TradableList> storage,
                BtcWalletService btcWalletService) {
         super(offer,
                 txFee,
@@ -80,7 +76,6 @@ public abstract class BuyerTrade extends Trade {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService);
     }
 

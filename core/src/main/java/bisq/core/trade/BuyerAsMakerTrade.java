@@ -27,7 +27,6 @@ import bisq.core.trade.protocol.MakerProtocol;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 
@@ -49,7 +48,6 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                              @Nullable NodeAddress arbitratorNodeAddress,
                              @Nullable NodeAddress mediatorNodeAddress,
                              @Nullable NodeAddress refundAgentNodeAddress,
-                             Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService) {
         super(offer,
                 txFee,
@@ -58,7 +56,6 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService);
     }
 
@@ -75,7 +72,6 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     }
 
     public static Tradable fromProto(protobuf.BuyerAsMakerTrade buyerAsMakerTradeProto,
-                                     Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         protobuf.Trade proto = buyerAsMakerTradeProto.getTrade();
@@ -87,7 +83,6 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                 proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                 proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
-                storage,
                 btcWalletService);
 
         trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());

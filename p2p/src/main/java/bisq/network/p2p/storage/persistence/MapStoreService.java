@@ -68,7 +68,7 @@ public abstract class MapStoreService<T extends PersistableEnvelope, R extends P
     }
 
     R remove(P2PDataStorage.ByteArray hash) {
-        final R result = getMap().remove(hash);
+        R result = getMap().remove(hash);
         persist();
         return result;
     }

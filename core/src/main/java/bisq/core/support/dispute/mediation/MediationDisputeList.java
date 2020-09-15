@@ -18,11 +18,11 @@
 package bisq.core.support.dispute.mediation;
 
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
@@ -43,16 +43,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 public final class MediationDisputeList extends DisputeList<MediationDisputeList> {
 
-    MediationDisputeList(Storage<MediationDisputeList> storage) {
-        super(storage);
-    }
-
-    @Override
-    public void readPersisted() {
-        MediationDisputeList persisted = storage.getPersisted(this.getDefaultStorageFileName());
-        if (persisted != null) {
-            list.addAll(persisted.getList());
-        }
+    MediationDisputeList() {
+        super();
     }
 
 
@@ -60,8 +52,8 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private MediationDisputeList(Storage<MediationDisputeList> storage, List<Dispute> list) {
-        super(storage, list);
+    private MediationDisputeList(List<Dispute> list) {
+        super(list);
     }
 
     @Override
@@ -71,12 +63,11 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
     }
 
     public static MediationDisputeList fromProto(protobuf.MediationDisputeList proto,
-                                                 CoreProtoResolver coreProtoResolver,
-                                                 Storage<MediationDisputeList> storage) {
+                                                 CoreProtoResolver coreProtoResolver) {
         List<Dispute> list = proto.getDisputeList().stream()
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
+                .filter(e -> e.getSupportType().equals(SupportType.MEDIATION))
                 .collect(Collectors.toList());
-        list.forEach(e -> e.setStorage(storage));
-        return new MediationDisputeList(storage, list);
+        return new MediationDisputeList(list);
     }
 }

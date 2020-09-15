@@ -39,14 +39,12 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * The AddressEntries was previously stored as list, now as hashSet. We still keep the old name to reflect the
  * associated protobuf message.
  */
-@ToString
 @Slf4j
 public final class AddressEntryList implements UserThreadMappedPersistableEnvelope, PersistedDataHost {
     transient private Storage<AddressEntryList> storage;
@@ -56,6 +54,8 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     @Inject
     public AddressEntryList(Storage<AddressEntryList> storage) {
         this.storage = storage;
+
+        storage.initialize(this);
     }
 
     @Override
@@ -194,7 +194,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     }
 
     public void persist() {
-        storage.queueUpForSave(50);
+        storage.queueUpForSave();
     }
 
 
@@ -216,5 +216,12 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
 
     private boolean isAddressNotInEntries(Address address) {
         return entrySet.stream().noneMatch(e -> address.equals(e.getAddress()));
+    }
+
+    @Override
+    public String toString() {
+        return "AddressEntryList{" +
+                ",\n     entrySet=" + entrySet +
+                "\n}";
     }
 }

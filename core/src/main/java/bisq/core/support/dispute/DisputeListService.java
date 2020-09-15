@@ -22,6 +22,7 @@ import bisq.core.trade.Contract;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
+import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
@@ -47,12 +48,11 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class DisputeListService<T extends DisputeList<? extends DisputeList>> implements PersistedDataHost {
+public abstract class DisputeListService<T extends DisputeList<? extends DisputeList<? extends PersistableEnvelope>>> implements PersistedDataHost {
     @Getter
     protected final Storage<T> storage;
-    @Nullable
     @Getter
-    private T disputeList;
+    private final T disputeList;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
@@ -64,6 +64,8 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
 
     public DisputeListService(Storage<T> storage) {
         this.storage = storage;
+        disputeList = getConcreteDisputeList();
+        this.storage.initialize(disputeList);
     }
 
 
@@ -80,9 +82,14 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
 
     @Override
     public void readPersisted() {
-        disputeList = getConcreteDisputeList();
-        disputeList.readPersisted();
-        disputeList.stream().forEach(dispute -> dispute.setStorage(storage));
+        T persisted = storage.getPersisted(getFileName());
+        if (persisted != null) {
+            disputeList.setAll(persisted.getList());
+        }
+    }
+
+    protected String getFileName() {
+        return disputeList.getDefaultStorageFileName();
     }
 
 
@@ -93,7 +100,6 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     public void cleanupDisputes(@Nullable Consumer<String> closedDisputeHandler) {
         if (disputeList != null) {
             disputeList.stream().forEach(dispute -> {
-                dispute.setStorage(storage);
                 String tradeId = dispute.getTradeId();
                 if (dispute.isClosed()) {
                     if (closedDisputeHandler != null) {
@@ -183,8 +189,6 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     }
 
     public void persist() {
-        if (disputeList != null) {
-            disputeList.persist();
-        }
+        storage.queueUpForSave();
     }
 }

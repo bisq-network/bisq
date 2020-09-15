@@ -56,8 +56,6 @@ public abstract class StoreService<T extends PersistableEnvelope> {
                         Storage<T> storage) {
         this.storage = storage;
         absolutePathOfStorageDir = storageDir.getAbsolutePath();
-
-        storage.setNumMaxBackupFiles(1);
     }
 
 
@@ -66,7 +64,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void persist() {
-        storage.queueUpForSave(store, 200);
+        storage.queueUpForSave();
     }
 
     protected T getStore() {
@@ -123,14 +121,16 @@ public abstract class StoreService<T extends PersistableEnvelope> {
 
     protected void readStore() {
         String fileName = getFileName();
-        store = storage.getPersisted(fileName);
-        if (store != null) {
+        T persisted = storage.getPersisted(fileName);
+        if (persisted != null) {
+            store = persisted;
             log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
                     storage.getClass().getSimpleName(),
                     store.toProtoMessage().toByteArray().length / 1_000_000D);
         } else {
             store = createStore();
         }
+        storage.initialize(store);
     }
 
     protected abstract T createStore();

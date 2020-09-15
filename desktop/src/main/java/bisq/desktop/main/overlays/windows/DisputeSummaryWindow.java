@@ -656,6 +656,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         cancelButton.setOnAction(e -> {
             dispute.setDisputeResult(disputeResult);
+            checkNotNull(getDisputeManager(dispute)).getStorage().queueUpForSave();
             hide();
         });
     }
@@ -765,7 +766,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             text += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
         }
 
-        checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
+        var disputeManager = checkNotNull(getDisputeManager(dispute));
+        disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
             UserThread.runAfter(() -> new Popup()
@@ -775,6 +777,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
 
         finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
+
+        disputeManager.getStorage().queueUpForSave();
 
         closeTicketButton.disableProperty().unbind();
 

@@ -32,6 +32,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -42,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class TradableList<T extends Tradable> implements UserThreadMappedPersistableEnvelope {
-    transient final private Storage<TradableList<T>> storage;
     @Getter
     private final ObservableList<T> list = FXCollections.observableArrayList();
 
@@ -51,12 +51,7 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradableList(Storage<TradableList<T>> storage, String fileName) {
-        this.storage = storage;
-
-        TradableList<T> persisted = storage.getPersisted(fileName);
-        if (persisted != null)
-            list.addAll(persisted.getList());
+    public TradableList() {
     }
 
 
@@ -64,8 +59,7 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TradableList(Storage<TradableList<T>> storage, List<T> list) {
-        this.storage = storage;
+    private TradableList(List<T> list) {
         this.list.addAll(list);
     }
 
@@ -88,13 +82,13 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
                         case OPEN_OFFER:
                             return OpenOffer.fromProto(tradable.getOpenOffer());
                         case BUYER_AS_MAKER_TRADE:
-                            return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), btcWalletService, coreProtoResolver);
                         case BUYER_AS_TAKER_TRADE:
-                            return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), btcWalletService, coreProtoResolver);
                         case SELLER_AS_MAKER_TRADE:
-                            return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), btcWalletService, coreProtoResolver);
                         case SELLER_AS_TAKER_TRADE:
-                            return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), btcWalletService, coreProtoResolver);
                         default:
                             log.error("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                             throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
@@ -102,7 +96,7 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
                 })
                 .collect(Collectors.toList());
 
-        return new TradableList<>(storage, list);
+        return new TradableList<>(list);
     }
 
 
@@ -111,21 +105,15 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean add(T tradable) {
-        boolean changed = list.add(tradable);
-        if (changed)
-            storage.queueUpForSave();
-        return changed;
+        if (!list.contains(tradable)) {
+            list.add(tradable);
+            return true;
+        }
+        return false;
     }
 
     public boolean remove(T tradable) {
-        boolean changed = list.remove(tradable);
-        if (changed)
-            storage.queueUpForSave();
-        return changed;
-    }
-
-    public void persist() {
-        storage.queueUpForSave();
+        return list.remove(tradable);
     }
 
     public Stream<T> stream() {
@@ -142,5 +130,10 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
 
     public boolean contains(T thing) {
         return list.contains(thing);
+    }
+
+    public void setAll(Collection<T> list) {
+        this.list.clear();
+        this.list.addAll(list);
     }
 }

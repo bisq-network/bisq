@@ -43,6 +43,6 @@ public final class MediationDisputeListService extends DisputeListService<Mediat
 
     @Override
     protected MediationDisputeList getConcreteDisputeList() {
-        return new MediationDisputeList(storage);
+        return new MediationDisputeList();
     }
 }

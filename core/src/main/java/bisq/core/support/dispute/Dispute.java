@@ -25,7 +25,6 @@ import bisq.core.trade.Contract;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -91,8 +90,6 @@ public final class Dispute implements NetworkPayload {
     private String disputePayoutTxId;
     private long openingDate;
 
-    transient private Storage<? extends DisputeList> storage;
-
     // Added v1.2.0
     private SupportType supportType;
     // Only used at refundAgent so that he knows how the mediator resolved the case
@@ -108,7 +105,7 @@ public final class Dispute implements NetworkPayload {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Dispute(Storage<? extends DisputeList> storage,
+    public Dispute(long openingDate,
                    String tradeId,
                    int traderId,
                    boolean disputeOpenerIsBuyer,
@@ -145,8 +142,7 @@ public final class Dispute implements NetworkPayload {
                 agentPubKeyRing,
                 isSupportTicket,
                 supportType);
-        this.storage = storage;
-        openingDate = new Date().getTime();
+        this.openingDate = openingDate;
     }
 
 
@@ -282,7 +278,6 @@ public final class Dispute implements NetworkPayload {
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
         if (!chatMessages.contains(chatMessage)) {
             chatMessages.add(chatMessage);
-            storage.queueUpForSave();
         } else {
             log.error("disputeDirectMessage already exists");
         }
@@ -293,30 +288,16 @@ public final class Dispute implements NetworkPayload {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // In case we get the object via the network storage is not set as its transient, so we need to set it.
-    public void setStorage(Storage<? extends DisputeList> storage) {
-        this.storage = storage;
-    }
-
     public void setIsClosed(boolean isClosed) {
-        boolean changed = this.isClosedProperty.get() != isClosed;
         this.isClosedProperty.set(isClosed);
-        if (changed)
-            storage.queueUpForSave();
     }
 
     public void setDisputeResult(DisputeResult disputeResult) {
-        boolean changed = disputeResultProperty.get() == null || !disputeResultProperty.get().equals(disputeResult);
         disputeResultProperty.set(disputeResult);
-        if (changed)
-            storage.queueUpForSave();
     }
 
     public void setDisputePayoutTxId(String disputePayoutTxId) {
-        boolean changed = this.disputePayoutTxId == null || !this.disputePayoutTxId.equals(disputePayoutTxId);
         this.disputePayoutTxId = disputePayoutTxId;
-        if (changed)
-            storage.queueUpForSave();
     }
 
     public void setSupportType(SupportType supportType) {
@@ -378,7 +359,6 @@ public final class Dispute implements NetworkPayload {
                 ",\n     disputeResultProperty=" + disputeResultProperty +
                 ",\n     disputePayoutTxId='" + disputePayoutTxId + '\'' +
                 ",\n     openingDate=" + openingDate +
-                ",\n     storage=" + storage +
                 ",\n     supportType=" + supportType +
                 ",\n     mediatorsDisputeResult='" + mediatorsDisputeResult + '\'' +
                 ",\n     delayedPayoutTxId='" + delayedPayoutTxId + '\'' +

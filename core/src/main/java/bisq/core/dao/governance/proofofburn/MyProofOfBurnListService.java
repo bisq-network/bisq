@@ -99,6 +99,6 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persist() {
-        storage.queueUpForSave(20);
+        storage.queueUpForSave();
     }
 }

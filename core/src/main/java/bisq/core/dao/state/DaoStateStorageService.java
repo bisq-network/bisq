@@ -45,13 +45,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
-    // We needed to rename the db file as we have a new file structure with the hashChain feature and need to enforce the
-    // new file to be used.
-    // We can rename to DaoStateStore before mainnet launch again.
-    // Another update due to some data field changes which would cause diff. hashes, so to enforce users to get the new
-    // data we rename it to DaoStateStore
-    private static final String FILE_NAME = "DaoStateStore";
-
     private final DaoState daoState;
     private final DaoStateMonitoringService daoStateMonitoringService;
 
@@ -65,10 +58,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                                   DaoState daoState,
                                   DaoStateMonitoringService daoStateMonitoringService,
                                   @Named(Config.STORAGE_DIR) File storageDir,
-                                  Storage<DaoStateStore> daoSnapshotStorage) {
-        super(storageDir, daoSnapshotStorage);
+                                  Storage<DaoStateStore> storage) {
+        super(storageDir, storage);
         this.daoState = daoState;
         this.daoStateMonitoringService = daoStateMonitoringService;
+        storage.setNumMaxBackupFiles(1);
 
         resourceDataStoreService.addService(this);
     }
@@ -80,19 +74,15 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     public String getFileName() {
-        return FILE_NAME;
+        return "DaoStateStore";
     }
 
     public void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
-        persist(daoState, daoStateHashChain, 200);
-    }
-
-    private void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, long delayInMilli) {
         store.modifySynchronized(() -> {
             store.setDaoState(daoState);
             store.setDaoStateHashChain(daoStateHashChain);
         });
-        storage.queueUpForSave(store, delayInMilli);
+        storage.queueUpForSave();
     }
 
     public DaoState getPersistedBsqState() {
@@ -104,7 +94,8 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        persist(new DaoState(), new LinkedList<>(), 1);
+        persist(new DaoState(), new LinkedList<>());
+
         UserThread.runAfter(resultHandler, 300, TimeUnit.MILLISECONDS);
     }
 

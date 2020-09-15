@@ -98,6 +98,6 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persist() {
-        storage.queueUpForSave(20);
+        storage.queueUpForSave();
     }
 }
