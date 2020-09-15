@@ -63,7 +63,7 @@ configure(subprojects) {
         loggingVersion = '1.2'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = '0.6.7'
+        netlayerVersion = '0.6.8'
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'

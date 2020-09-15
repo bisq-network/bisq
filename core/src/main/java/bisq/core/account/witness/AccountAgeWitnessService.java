@@ -20,7 +20,6 @@ package bisq.core.account.witness;
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterManager;
-import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -718,10 +717,8 @@ public class AccountAgeWitnessService {
                 filterManager.isCurrencyBanned(dispute.getContract().getOfferPayload().getCurrencyCode()) ||
                 filterManager.isPaymentMethodBanned(
                         PaymentMethod.getPaymentMethodById(dispute.getContract().getPaymentMethodId())) ||
-                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getBuyerPaymentAccountPayload(),
-                        new PaymentAccountFilter[1]) ||
-                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getSellerPaymentAccountPayload(),
-                        new PaymentAccountFilter[1]) ||
+                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getBuyerPaymentAccountPayload()) ||
+                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getSellerPaymentAccountPayload()) ||
                 filterManager.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(dispute.getContract().getBuyerPubKeyRing().getSignaturePubKeyBytes())) ||
                 filterManager.isWitnessSignerPubKeyBanned(

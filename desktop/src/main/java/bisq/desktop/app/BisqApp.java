@@ -54,6 +54,8 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import com.google.common.base.Joiner;
+
 import javafx.application.Application;
 
 import javafx.stage.Modality;
@@ -69,6 +71,8 @@ import javafx.scene.layout.StackPane;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -241,8 +245,19 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         // configure the primary stage
         String appName = injector.getInstance(Key.get(String.class, Names.named(Config.APP_NAME)));
-        if (!Config.baseCurrencyNetwork().isMainnet())
-            appName += " [" + Res.get(Config.baseCurrencyNetwork().name()) + "]";
+        List<String> postFixes = new ArrayList<>();
+        if (!Config.baseCurrencyNetwork().isMainnet()) {
+            postFixes.add(Config.baseCurrencyNetwork().name());
+        }
+        if (injector.getInstance(Config.class).useLocalhostForP2P) {
+            postFixes.add("LOCALHOST");
+        }
+        if (injector.getInstance(Config.class).useDevMode) {
+            postFixes.add("DEV MODE");
+        }
+        if (!postFixes.isEmpty()) {
+            appName += " [" + Joiner.on(", ").join(postFixes) + " ]";
+        }
 
         stage.setTitle(appName);
         stage.setScene(scene);
