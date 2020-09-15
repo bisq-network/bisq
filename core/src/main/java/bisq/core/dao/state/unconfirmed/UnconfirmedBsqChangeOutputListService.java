@@ -201,6 +201,6 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     }
 
     private void persist() {
-        persistenceManager.queueUpForSave();
+        persistenceManager.persistAtShutDown();
     }
 }

@@ -75,7 +75,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private String fileName;
     private int numMaxBackupFiles = 10;
     private Path usedTempFilePath;
-    private boolean isDirty;
+    private boolean persistRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     }
 
     private void flushAndShutDown() {
-        if (isDirty) {
+        if (persistRequested) {
             saveToFile(persistable);
         }
         Runtime.getRuntime().removeShutdownHook(shutdownHook);
@@ -126,7 +126,6 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         return getPersisted(checkNotNull(fileName));
     }
 
-
     @Nullable
     public T getPersisted(String fileName) {
         File storageFile = new File(dir, fileName);
@@ -139,7 +138,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
             //noinspection unchecked
             T persistableEnvelope = (T) persistenceProtoResolver.fromProto(proto);
-            log.info("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
+            log.info("Reading {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
             return persistableEnvelope;
         } catch (Throwable t) {
             log.error("Reading {} failed with {}.", fileName, t.getMessage());
@@ -164,12 +163,12 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Write file to disk
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void queueUpForSave() {
-        isDirty = true;
+    public void persistAtShutDown() {
+        persistRequested = true;
     }
 
     public void saveNow() {
-        isDirty = true;
+        persistRequested = true;
         checkNotNull(persistable, "queueUpForSave: persistable must not be null. this=" + this);
         checkNotNull(storageFile, "queueUpForSave: storageFile must not be null. persistable=" + persistable.getClass().getSimpleName());
 
@@ -256,7 +255,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 log.error("Cannot close resources." + e.getMessage());
             }
             log.error("Save {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
-            isDirty = false;
+            persistRequested = false;
         }
     }
 

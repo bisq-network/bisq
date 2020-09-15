@@ -122,7 +122,7 @@ public class User implements PersistedDataHost {
 
     public void persist() {
         if (persistenceManager != null)
-            persistenceManager.queueUpForSave();
+            persistenceManager.persistAtShutDown();
     }
 
 

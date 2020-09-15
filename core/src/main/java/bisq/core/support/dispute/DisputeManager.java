@@ -161,7 +161,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         findDispute(message).ifPresent(dispute -> {
             if (dispute.getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 dispute.addAndPersistChatMessage(message);
-                getStorage().queueUpForSave();
+                getStorage().persistAtShutDown();
             } else {
                 log.warn("We got a chatMessage that we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());

@@ -236,7 +236,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private void persist() {
-        persistenceManager.queueUpForSave();
+        persistenceManager.persistAtShutDown();
     }
 
     private boolean canRemoveProposal(Proposal proposal, DaoStateService daoStateService, PeriodService periodService) {

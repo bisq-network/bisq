@@ -194,7 +194,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     }
 
     public void persist() {
-        persistenceManager.queueUpForSave();
+        persistenceManager.persistAtShutDown();
     }
 
 

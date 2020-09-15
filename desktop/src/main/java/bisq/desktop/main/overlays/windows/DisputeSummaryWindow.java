@@ -656,7 +656,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         cancelButton.setOnAction(e -> {
             dispute.setDisputeResult(disputeResult);
-            checkNotNull(getDisputeManager(dispute)).getStorage().queueUpForSave();
+            checkNotNull(getDisputeManager(dispute)).getStorage().persistAtShutDown();
             hide();
         });
     }
@@ -778,7 +778,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
 
-        disputeManager.getStorage().queueUpForSave();
+        disputeManager.getStorage().persistAtShutDown();
 
         closeTicketButton.disableProperty().unbind();
 

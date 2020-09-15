@@ -215,7 +215,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
 
-        getStorage().queueUpForSave();
+        getStorage().persistAtShutDown();
     }
 
 

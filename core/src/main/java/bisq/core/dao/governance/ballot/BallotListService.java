@@ -172,6 +172,6 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persist() {
-        persistenceManager.queueUpForSave();
+        persistenceManager.persistAtShutDown();
     }
 }

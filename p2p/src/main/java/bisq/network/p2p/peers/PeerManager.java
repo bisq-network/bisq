@@ -457,7 +457,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             peerList.setAll(persistedPeers);
-            persistenceManager.queueUpForSave();
+            persistenceManager.persistAtShutDown();
 
             printReportedPeers();
         } else {
@@ -522,7 +522,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         if (persistedPeers.contains(persistedPeer)) {
             persistedPeers.remove(persistedPeer);
             peerList.setAll(persistedPeers);
-            persistenceManager.queueUpForSave();
+            persistenceManager.persistAtShutDown();
             return true;
         } else {
             return false;

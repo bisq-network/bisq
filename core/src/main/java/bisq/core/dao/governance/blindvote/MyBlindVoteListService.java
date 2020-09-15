@@ -409,6 +409,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     }
 
     private void persist() {
-        persistenceManager.queueUpForSave();
+        persistenceManager.persistAtShutDown();
     }
 }

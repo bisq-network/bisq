@@ -619,7 +619,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapPersistenceManager.queueUpForSave();
+        sequenceNumberMapPersistenceManager.persistAtShutDown();
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast)
@@ -673,7 +673,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the latest sequence number and persist it
         sequenceNumberMap.put(hashOfPayload, new MapValue(updatedEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapPersistenceManager.queueUpForSave();
+        sequenceNumberMapPersistenceManager.persistAtShutDown();
 
         // Always broadcast refreshes
         broadcaster.broadcast(refreshTTLMessage, sender);
@@ -709,7 +709,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Record the latest sequence number and persist it
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
-        sequenceNumberMapPersistenceManager.queueUpForSave();
+        sequenceNumberMapPersistenceManager.persistAtShutDown();
 
         // Update that we have seen this AddOncePayload so the next time it is seen it fails verification
         if (protectedStoragePayload instanceof AddOncePayload)

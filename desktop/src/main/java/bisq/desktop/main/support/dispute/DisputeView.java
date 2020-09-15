@@ -409,7 +409,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         if (selectedDispute != null) {
             selectedDispute.setIsClosed(false);
             handleOnSelectDispute(selectedDispute);
-            disputeManager.getStorage().queueUpForSave();
+            disputeManager.getStorage().persistAtShutDown();
         }
     }
 
