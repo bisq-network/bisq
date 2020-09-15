@@ -17,9 +17,9 @@
 
 package bisq.common.storage;
 
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
@@ -35,7 +35,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.concurrent.TimeUnit;
+import java.util.HashSet;
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,16 +47,35 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class Storage<T extends PersistableEnvelope> {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final Set<Storage<?>> allStorageManagers = new HashSet<>();
+
+    public static void flushAllDataToDisk(ResultHandler resultHandler) {
+        allStorageManagers.forEach(Storage::flushAndShutDown);
+        allStorageManagers.clear();
+        resultHandler.handleResult();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Class fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private final File dir;
     private final PersistenceProtoResolver persistenceProtoResolver;
     private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final Thread shutdownHook;
 
     private File storageFile;
     private T persistable;
     private String fileName;
     private int numMaxBackupFiles = 10;
     private Path usedTempFilePath;
-    private final long delay = 100;
+    private boolean isDirty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,13 +90,11 @@ public class Storage<T extends PersistableEnvelope> {
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->
-                UserThread.execute(Storage.this::shutDown), "FileManager.ShutDownHook")
-        );
+        shutdownHook = new Thread(Storage.this::flushAndShutDown, "FileManager.ShutDownHook");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Init
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize(T persistable) {
@@ -87,6 +105,15 @@ public class Storage<T extends PersistableEnvelope> {
         this.persistable = persistable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
+        allStorageManagers.add(this);
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
+    }
+
+    private void flushAndShutDown() {
+        if (isDirty) {
+            saveToFile(persistable);
+        }
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
     }
 
 
@@ -99,6 +126,7 @@ public class Storage<T extends PersistableEnvelope> {
         return getPersisted(checkNotNull(fileName));
     }
 
+
     @Nullable
     public T getPersisted(String fileName) {
         File storageFile = new File(dir, fileName);
@@ -107,10 +135,11 @@ public class Storage<T extends PersistableEnvelope> {
         }
 
         long ts = System.currentTimeMillis();
-        try (final FileInputStream fileInputStream = new FileInputStream(storageFile)) {
+        try (FileInputStream fileInputStream = new FileInputStream(storageFile)) {
             protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
+            //noinspection unchecked
             T persistableEnvelope = (T) persistenceProtoResolver.fromProto(proto);
-            log.error("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
+            log.info("Read {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
             return persistableEnvelope;
         } catch (Throwable t) {
             log.error("Reading {} failed with {}.", fileName, t.getMessage());
@@ -136,24 +165,15 @@ public class Storage<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void queueUpForSave() {
+        isDirty = true;
+    }
+
+    public void saveNow() {
+        isDirty = true;
         checkNotNull(persistable, "queueUpForSave: persistable must not be null. this=" + this);
         checkNotNull(storageFile, "queueUpForSave: storageFile must not be null. persistable=" + persistable.getClass().getSimpleName());
-        log.error("queueUpForSave for {}", fileName);
-        // Atomically set the value of the next write. This allows batching of multiple writes of the same data
-        // structure if there are multiple calls to saveLater within a given `delayInMillis`.
-        log.error("pre");
-        UserThread.runAfter(() -> {
-            try {
-                log.error("run");
-                long now = System.currentTimeMillis();
-                saveToFile(persistable);
-                log.error("Save {} completed in {} msec", fileName, System.currentTimeMillis() - now);
-            } catch (Throwable e) {
-                log.error("Error during saveFileTask", e);
-            }
-        }, delay, TimeUnit.MILLISECONDS);
 
-        log.error("post");
+        saveToFile(persistable);
     }
 
     //todo
@@ -172,6 +192,7 @@ public class Storage<T extends PersistableEnvelope> {
 
 
     private void saveToFile(T persistable) {
+        long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         PrintWriter printWriter = null;
@@ -234,13 +255,10 @@ public class Storage<T extends PersistableEnvelope> {
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
             }
+            log.error("Save {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
+            isDirty = false;
         }
     }
-
-    private void shutDown() {
-        //todo
-    }
-
 
     @Override
     public String toString() {
@@ -251,7 +269,6 @@ public class Storage<T extends PersistableEnvelope> {
                 ",\n     fileName='" + fileName + '\'' +
                 ",\n     numMaxBackupFiles=" + numMaxBackupFiles +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
-                ",\n     delay=" + delay +
                 "\n}";
     }
 }

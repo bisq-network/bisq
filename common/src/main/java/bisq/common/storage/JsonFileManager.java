@@ -17,7 +17,6 @@
 
 package bisq.common.storage;
 
-import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import java.nio.file.Paths;
@@ -47,9 +46,8 @@ public class JsonFileManager {
             if (!dir.mkdir())
                 log.warn("make dir failed");
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            UserThread.execute(JsonFileManager.this::shutDown);
-        }, "WriteOnlyFileManager.ShutDownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(JsonFileManager.this::shutDown,
+                "WriteOnlyFileManager.ShutDownHook"));
     }
 
     public void shutDown() {

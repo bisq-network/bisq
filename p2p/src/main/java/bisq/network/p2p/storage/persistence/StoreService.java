@@ -124,9 +124,12 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         T persisted = storage.getPersisted(fileName);
         if (persisted != null) {
             store = persisted;
-            log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
-                    storage.getClass().getSimpleName(),
-                    store.toProtoMessage().toByteArray().length / 1_000_000D);
+
+            int length = store.toProtoMessage().toByteArray().length;
+            double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;
+            String unit = length > 1_000_000D ? "MB" : "KB";
+            log.info("{}: size of {}: {} {}", this.getClass().getSimpleName(),
+                    storage.getClass().getSimpleName(), size, unit);
         } else {
             store = createStore();
         }

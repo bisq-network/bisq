@@ -165,8 +165,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.storage.initialize(openOffers);
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->
-                UserThread.execute(OpenOfferManager.this::shutDown), "OpenOfferManager.ShutDownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(OpenOfferManager.this::shutDown,
+                "OpenOfferManager.ShutDownHook"));
     }
 
     @Override
