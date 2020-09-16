@@ -99,7 +99,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -216,8 +215,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys = getKeysAsByteSet(getSplitStoreLiveDataMap());
+        Set<byte[]> excludedKeys = getKeysAsByteSet(getMapForDataRequest());
         Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsByteSet(map);
+
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
         return excludedKeys;
     }
@@ -237,7 +237,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Pre v 1.3.9 requests do not have set the requestersVersion field so it is null.
         // The methods in splitStoreService will return all historical data in that case.
-        Map<ByteArray, PersistableNetworkPayload> splitStoreMapSinceVersion = getSplitStoreMapSinceVersion(getDataRequest.getVersion());
+        Map<ByteArray, PersistableNetworkPayload> splitStoreMapSinceVersion = getMapForDataResponse(getDataRequest.getVersion());
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
                         splitStoreMapSinceVersion,
@@ -263,26 +263,37 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 getDataRequest instanceof GetUpdatedDataRequest);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils for collecting the exclude hashes
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<? extends SplitStoreService<? extends PersistableNetworkPayloadStore>> getSplitStoreServices() {
-        return appendOnlyDataStoreService.getServices().stream()
-                .filter(service -> service instanceof SplitStoreService)
-                .map(service -> (SplitStoreService<? extends PersistableNetworkPayloadStore>) service);
+    private Map<ByteArray, PersistableNetworkPayload> getMapForDataRequest() {
+        Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
+        appendOnlyDataStoreService.getServices()
+                .forEach(service -> {
+                    if (service instanceof SplitStoreService) {
+                        var splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
+                        map.putAll(splitStoreService.getMapOfLiveData());
+                    } else {
+                        map.putAll(service.getMap());
+                    }
+                });
+        return map;
     }
 
-    private Map<ByteArray, PersistableNetworkPayload> getSplitStoreLiveDataMap() {
-        return getSplitStoreServices()
-                .flatMap(splitStoreService -> splitStoreService.getMapOfLiveData().entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    private Map<ByteArray, PersistableNetworkPayload> getSplitStoreMapSinceVersion(String requestersVersion) {
-        return getSplitStoreServices()
-                .flatMap(splitStoreService -> splitStoreService.getMapSinceVersion(requestersVersion).entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    private Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
+        Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
+        appendOnlyDataStoreService.getServices()
+                .forEach(service -> {
+                    if (service instanceof SplitStoreService) {
+                        var splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
+                        map.putAll(splitStoreService.getMapSinceVersion(requestersVersion));
+                    } else {
+                        map.putAll(service.getMap());
+                    }
+                });
+        return map;
     }
 
     private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
