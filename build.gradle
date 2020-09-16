@@ -217,6 +217,8 @@ configure(project(':assets')) {
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
             exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
         }
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
@@ -248,6 +250,8 @@ configure(project(':common')) {
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
             exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
         }
         runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')

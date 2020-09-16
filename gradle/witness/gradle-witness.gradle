@@ -47,8 +47,6 @@ dependencyVerification {
         'com.googlecode.jcsv:jcsv:73ca7d715e90c8d2c2635cc284543b038245a34f70790660ed590e157b8714a2',
         'com.jfoenix:jfoenix:4739e37a05e67c3bc9d5b391a1b93717b5a48fa872992616b0964d3f827f8fe6',
         'com.nativelibs4java:bridj:101bcd9b6637e6bc16e56deb3daefba62b1f5e8e9e37e1b3e56e3b5860d659cf',
-        'com.squareup.okhttp3:okhttp:aad7718e45841b87baa4625e322cb12291119fd80fd590029adc81227cba4367',
-        'com.squareup.okio:okio:693fa319a7e8843300602b204023b7674f106ebcb577f2dd5807212b66118bd2',
         'commons-codec:commons-codec:61f7a3079e92b9fdd605238d0295af5fd11ac411a0a0af48deace1f6c5ffa072',
         'commons-io:commons-io:f877d304660ac2a142f3865badfc971dec7ed73c747c7f8d5d2f5139ca736513',
         'commons-logging:commons-logging:daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636',
