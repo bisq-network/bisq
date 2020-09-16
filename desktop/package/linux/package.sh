@@ -6,7 +6,7 @@
 #   - Update version below
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
-version=1.3.8
+version=1.3.9
 version_base=$(echo $version | awk -F'[_-]' '{print $1}')
 if [ ! -f "$JAVA_HOME/bin/javapackager" ]; then
 	if [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
