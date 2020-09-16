@@ -47,9 +47,11 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
+import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
+import bisq.network.p2p.storage.persistence.SplitStoreService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -97,6 +99,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -195,14 +198,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * Returns a PreliminaryGetDataRequest that can be sent to a peer node to request missing Payload data.
      */
     public PreliminaryGetDataRequest buildPreliminaryGetDataRequest(int nonce) {
-        return new PreliminaryGetDataRequest(nonce, this.getKnownPayloadHashes());
+        return new PreliminaryGetDataRequest(nonce, getKnownPayloadHashes());
     }
 
     /**
      * Returns a GetUpdatedDataRequest that can be sent to a peer node to request missing Payload data.
      */
     public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
-        return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
+        return new GetUpdatedDataRequest(senderNodeAddress, nonce, getKnownPayloadHashes());
     }
 
     /**
@@ -213,14 +216,74 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-
-        // We call the getMap method with ignoreHistoricalData set to true so that we receive only the live data.
-        // In our request we will pass our version so the responding node can send us potentially missing data based
-        // on the version and the excludedKeys from our live data.
-        Set<byte[]> excludedKeys = getKeysAsByteSet(appendOnlyDataStoreService.getMap(true));
+        Set<byte[]> excludedKeys = getKeysAsByteSet(getSplitStoreLiveDataMap());
+        // Set<byte[]> excludedKeys = getKeysAsByteSet(appendOnlyDataStoreService.getMap(true));
         Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsByteSet(map);
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
         return excludedKeys;
+    }
+
+    /**
+     * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
+     */
+    public GetDataResponse buildGetDataResponse(
+            GetDataRequest getDataRequest,
+            int maxEntriesPerType,
+            AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
+            AtomicBoolean outProtectedStorageEntryOutputTruncated,
+            Capabilities peerCapabilities) {
+
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
+                P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+
+        // Pre v 1.3.9 requests do not have set the requestersVersion field so it is null.
+        // The methods in splitStoreService will return all historical data in that case.
+        Map<ByteArray, PersistableNetworkPayload> splitStoreMapSinceVersion = getSplitStoreMapSinceVersion(getDataRequest.getVersion());
+        Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
+                filterKnownHashes(
+                        splitStoreMapSinceVersion,
+                        Function.identity(),
+                        excludedKeysAsByteArray,
+                        peerCapabilities,
+                        maxEntriesPerType,
+                        outPersistableNetworkPayloadOutputTruncated);
+
+        Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
+                filterKnownHashes(
+                        map,
+                        ProtectedStorageEntry::getProtectedStoragePayload,
+                        excludedKeysAsByteArray,
+                        peerCapabilities,
+                        maxEntriesPerType,
+                        outProtectedStorageEntryOutputTruncated);
+
+        return new GetDataResponse(
+                filteredProtectedStorageEntries,
+                filteredPersistableNetworkPayloads,
+                getDataRequest.getNonce(),
+                getDataRequest instanceof GetUpdatedDataRequest);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils for collecting the exclude hashes
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private Stream<? extends SplitStoreService<? extends PersistableNetworkPayloadStore>> getSplitStoreServices() {
+        return appendOnlyDataStoreService.getServices().stream()
+                .filter(service -> service instanceof SplitStoreService)
+                .map(service -> (SplitStoreService<? extends PersistableNetworkPayloadStore>) service);
+    }
+
+    private Map<ByteArray, PersistableNetworkPayload> getSplitStoreLiveDataMap() {
+        return getSplitStoreServices()
+                .flatMap(splitStoreService -> splitStoreService.getMapOfLiveData().entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private Map<ByteArray, PersistableNetworkPayload> getSplitStoreMapSinceVersion(String requestersVersion) {
+        return getSplitStoreServices()
+                .flatMap(splitStoreService -> splitStoreService.getMapSinceVersion(requestersVersion).entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
@@ -255,53 +318,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             outTruncated.set(true);
 
         return filteredResults;
-    }
-
-    /**
-     * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
-     */
-    public GetDataResponse buildGetDataResponse(
-            GetDataRequest getDataRequest,
-            int maxEntriesPerType,
-            AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
-            AtomicBoolean outProtectedStorageEntryOutputTruncated,
-            Capabilities peerCapabilities) {
-
-        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
-                P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
-
-        Map<ByteArray, PersistableNetworkPayload> mapToFilter;
-        String requestersVersion = getDataRequest.getVersion();
-        if (requestersVersion == null) {
-            // Pre v 1.3.9 requests do not have set the field
-            mapToFilter = this.appendOnlyDataStoreService.getMap();
-        } else {
-            mapToFilter = this.appendOnlyDataStoreService.getMap(requestersVersion);
-        }
-
-        Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
-                filterKnownHashes(
-                        mapToFilter,
-                        Function.identity(),
-                        excludedKeysAsByteArray,
-                        peerCapabilities,
-                        maxEntriesPerType,
-                        outPersistableNetworkPayloadOutputTruncated);
-
-        Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
-                filterKnownHashes(
-                        map,
-                        ProtectedStorageEntry::getProtectedStoragePayload,
-                        excludedKeysAsByteArray,
-                        peerCapabilities,
-                        maxEntriesPerType,
-                        outProtectedStorageEntryOutputTruncated);
-
-        return new GetDataResponse(
-                filteredProtectedStorageEntries,
-                filteredPersistableNetworkPayloads,
-                getDataRequest.getNonce(),
-                getDataRequest instanceof GetUpdatedDataRequest);
     }
 
     /**
@@ -412,6 +428,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public Map<ByteArray, PersistableNetworkPayload> getAppendOnlyDataStoreMap() {
         return appendOnlyDataStoreService.getMap();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation

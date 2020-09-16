@@ -4,38 +4,88 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Version;
-import bisq.common.storage.FileUtil;
-import bisq.common.storage.ResourceNotFoundException;
 import bisq.common.storage.Storage;
+
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Manages historical data stores tagged with the release versions. Those stores are immutable data. New data is added
- * to the default map in the store (live data). The historical data are used when the client requests the full data set.
- * For initial data requests we only use the live data as the version is sent with the request so the responding node
- * can figure out if we miss any of the historical data.
+ * Manages historical data stores tagged with the release versions.
+ * New data is added to the default map in the store (live data). Historical data is created from resource files.
+ * For initial data requests we only use the live data as the version is sent with the
+ * request so the responding (seed)node can figure out if we miss any of the historical data.
  */
 @Slf4j
 public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore> extends MapStoreService<T, PersistableNetworkPayload> {
-    private final Map<String, PersistableNetworkPayloadStore> storesByVersion = new HashMap<>();
-    private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> historicalDataMap = new HashMap<>();
+    private ImmutableMap<String, PersistableNetworkPayloadStore> storesByVersion;
+    private ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
     public SplitStoreService(File storageDir, Storage<T> storage) {
         super(storageDir, storage);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // We give back a map of our live map and all historical maps newer than the requested version.
+    // If requestersVersion is null we return all historical data.
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapSinceVersion(String requestersVersion) {
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
+        storesByVersion.entrySet().stream()
+                .filter(entry -> {
+                    if (requestersVersion == null) {
+                        return true;
+                    }
+
+                    String storeVersion = entry.getKey();
+                    return Version.isNewVersion(storeVersion, requestersVersion);
+                })
+                .map(e -> e.getValue().getMap())
+                .forEach(result::putAll);
+        return result;
+    }
+
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfLiveData() {
+        return store.getMap();
+    }
+
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfAllData() {
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
+        result.putAll(allHistoricalPayloads);
+        return result;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MapStoreService
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // TODO optimize so that callers to AppendOnlyDataStoreService are not invoking that often getMap
+    // ProposalService is one of the main callers and could avoid it by using the ProposalStoreService directly
+    // instead of AppendOnlyDataStoreService
+
+    // By default we return the live data only. This method should not be used by domain clients but rather the
+    // custom methods getMapOfAllData, getMapOfLiveData or getMapSinceVersion
+    @Override
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
+        return store.getMap();
+    }
+
     @Override
     protected void put(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
-        // make sure we do not add data that we already have (in a bin of historical data)
-        if (getMap().containsKey(hash)) {
+        if (anyMapContainsKey(hash)) {
             return;
         }
 
@@ -44,10 +94,8 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     }
 
     @Override
-    protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash,
-                                                    PersistableNetworkPayload payload) {
-        // make sure we do not add data that we already have (in a bin of historical data)
-        if (getMap().containsKey(hash)) {
+    protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
+        if (anyMapContainsKey(hash)) {
             return null;
         }
 
@@ -56,103 +104,52 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
         return previous;
     }
 
-    /**
-     * @return Map of our live store merged with the historical stores
-     */
 
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(boolean ignoreHistoricalData) {
-        if (ignoreHistoricalData) {
-            return store.getMap();
-        } else {
-            // We merge the historical data with our live map
-            Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
-            mergedMap.putAll(historicalDataMap);
-            return mergedMap;
-        }
-    }
-
-    // By default we want to get all data including he historical data
-    @Override
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return getMap(false);
-    }
-
-    /**
-     * @return Map of our live store merged with the historical stores which are newer than the verion parameter
-     */
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String requestersVersion) {
-        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mergedMap = new HashMap<>(store.getMap());
-        storesByVersion.entrySet().stream()
-                .filter(entry -> {
-                    String storeVersion = entry.getKey();
-                    return Version.isNewVersion(storeVersion, requestersVersion);
-                })
-                .map(e -> e.getValue().getMap())
-                .forEach(mergedMap::putAll);
-        return mergedMap;
-    }
-
-    /**
-     * For the {@link SplitStoreService}s, we check if we already have all the historical data stores in our db
-     * directory. If we have, we can proceed loading the stores. If we do not, we have to create the stores
-     * from resources.
-     *
-     * @param postFix The post fix indicating the network and coin (was used in the past when multiple base currencies was supported)
-     */
     @Override
     protected void readFromResources(String postFix) {
-        readStore();
+        // We create the store for the live data
+        super.readFromResources(postFix);
 
-        List<String> versions = new ArrayList<>(Version.history);
-        versions.forEach(version -> {
-            String versionedFileName = getFileName() + "_" + version;
-            File versionedFile = new File(absolutePathOfStorageDir, versionedFileName);
-            if (versionedFile.exists()) {
-                T versionedStore = getStore(versionedFileName);
-                storesByVersion.put(version, versionedStore);
-                historicalDataMap.putAll(versionedStore.getMap());
-            } else {
-                PersistableNetworkPayloadStore storeFromResource = getStoreFromResource(version, postFix);
-                pruneStore(storeFromResource);
-                storesByVersion.put(version, storeFromResource);
-                historicalDataMap.putAll(storeFromResource.getMap());
-            }
-        });
+        // Now we add our historical data stores. As they are immutable after created we use an ImmutableMap
+        ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, PersistableNetworkPayloadStore> storesByVersionBuilder = ImmutableMap.builder();
+
+        Version.HISTORY.forEach(version -> readHistoricalStoreFromResources(version, postFix, allHistoricalPayloadsBuilder, storesByVersionBuilder));
+
+        allHistoricalPayloads = allHistoricalPayloadsBuilder.build();
+        storesByVersion = storesByVersionBuilder.build();
     }
 
-    /**
-     * Creating a file from resources
-     *
-     * @param version to identify the data store eg. "1.3.4"
-     * @param postFix the global postfix eg. "_BTC_MAINNET"
-     * @return The store created from resource file
-     */
-    private PersistableNetworkPayloadStore getStoreFromResource(String version, String postFix) {
-        // if not, copy and split
-        String versionedFileName = getFileName() + "_" + version;
-        File destinationFile = new File(absolutePathOfStorageDir, versionedFileName);
-        String resourceFileName = versionedFileName + postFix; // postFix has a preceding "_" already
-        try {
-            log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
-            FileUtil.resourceToFile(resourceFileName, destinationFile);
-        } catch (ResourceNotFoundException e) {
-            log.info("Could not find resourceFile {}. That is expected if none is provided yet.", resourceFileName);
-        } catch (Throwable e) {
-            log.error("Could not copy resourceFile {} to {}.\n{}", resourceFileName, destinationFile.getAbsolutePath(), e.getMessage());
-            e.printStackTrace();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void readHistoricalStoreFromResources(String version,
+                                                  String postFix,
+                                                  ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalDataBuilder,
+                                                  ImmutableMap.Builder<String, PersistableNetworkPayloadStore> storesByVersionBuilder) {
+        String fileName = getFileName() + "_" + version;
+        makeFileFromResourceFile(fileName, postFix);
+
+        // If resource file does not exist we return null. We do not create a new store as it would never get filled.
+        PersistableNetworkPayloadStore historicalStore = storage.getPersisted(fileName);
+        if (historicalStore == null) {
+            return;
         }
 
-        return getStore(versionedFileName);
+        storesByVersionBuilder.put(version, historicalStore);
+        allHistoricalDataBuilder.putAll(historicalStore.getMap());
+
+        pruneStore(historicalStore);
     }
 
-    /**
-     * Removes entries in our live store which exists in the historical store already
-     *
-     * @param historicalStore   The historical store we use for pruning
-     */
     private void pruneStore(PersistableNetworkPayloadStore historicalStore) {
         store.getMap().keySet().removeAll(historicalStore.getMap().keySet());
+        storage.queueUpForSave(store);
+    }
 
-        storage.queueUpForSave();
+    private boolean anyMapContainsKey(P2PDataStorage.ByteArray hash) {
+        return store.getMap().containsKey(hash) || allHistoricalPayloads.containsKey(hash);
     }
 }

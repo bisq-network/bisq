@@ -79,7 +79,7 @@ public class TradeStatisticsManager {
                 addToSet((TradeStatistics2) payload);
         });
 
-        Set<TradeStatistics2> collect = tradeStatistics2StorageService.getMap().values().stream()
+        Set<TradeStatistics2> map = tradeStatistics2StorageService.getMapOfAllData().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
                 .map(WrapperTradeStatistics2::new)
@@ -87,7 +87,7 @@ public class TradeStatisticsManager {
                 .map(WrapperTradeStatistics2::unwrap)
                 .filter(TradeStatistics2::isValid)
                 .collect(Collectors.toSet());
-        observableTradeStatisticsSet.addAll(collect);
+        observableTradeStatisticsSet.addAll(map);
 
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
 

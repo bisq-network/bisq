@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,7 +37,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AppendOnlyDataStoreService {
-    private List<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
+    @Getter
+    private final List<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,43 +57,15 @@ public class AppendOnlyDataStoreService {
         services.forEach(service -> service.readFromResources(postFix));
     }
 
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
+        return services.stream()
+                .flatMap(service -> service.getMap().entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
     public void put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
         services.stream()
                 .filter(service -> service.canHandle(payload))
                 .forEach(service -> service.putIfAbsent(hashAsByteArray, payload));
-    }
-
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return getMap(false);
-    }
-
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(boolean ignoreHistoricalData) {
-        return services.stream()
-                .flatMap(service -> {
-                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
-                    if (service instanceof SplitStoreService) {
-                        SplitStoreService<? extends PersistableNetworkPayloadStore> splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
-                        map = splitStoreService.getMap(ignoreHistoricalData);
-                    } else {
-                        map = service.getMap();
-                    }
-                    return map.entrySet().stream();
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(String requestersVersion) {
-        return services.stream()
-                .flatMap(service -> {
-                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
-                    if (service instanceof SplitStoreService) {
-                        SplitStoreService<? extends PersistableNetworkPayloadStore> splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
-                        map = splitStoreService.getMap(requestersVersion);
-                    } else {
-                        map = service.getMap();
-                    }
-                    return map.entrySet().stream();
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

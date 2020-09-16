@@ -81,29 +81,28 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void readFromResources(String postFix) {
-        makeFileFromResourceFile(postFix);
+        String fileName = getFileName();
+        makeFileFromResourceFile(fileName, postFix);
         try {
             readStore();
         } catch (Throwable t) {
             try {
-                String fileName = getFileName();
                 storage.removeAndBackupFile(fileName);
             } catch (IOException e) {
                 log.error(e.toString());
             }
-            makeFileFromResourceFile(postFix);
+            makeFileFromResourceFile(fileName, postFix);
             readStore();
         }
     }
 
-    protected void makeFileFromResourceFile(String postFix) {
-        final String fileName = getFileName();
+    protected void makeFileFromResourceFile(String fileName, String postFix) {
         String resourceFileName = fileName + postFix;
         File dbDir = new File(absolutePathOfStorageDir);
         if (!dbDir.exists() && !dbDir.mkdir())
             log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
 
-        final File destinationFile = new File(Paths.get(absolutePathOfStorageDir, fileName).toString());
+        File destinationFile = new File(Paths.get(absolutePathOfStorageDir, fileName).toString());
         if (!destinationFile.exists()) {
             try {
                 log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
