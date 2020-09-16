@@ -217,7 +217,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
         Set<byte[]> excludedKeys = getKeysAsByteSet(getSplitStoreLiveDataMap());
-        // Set<byte[]> excludedKeys = getKeysAsByteSet(appendOnlyDataStoreService.getMap(true));
         Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsByteSet(map);
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
         return excludedKeys;
