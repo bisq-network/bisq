@@ -186,10 +186,6 @@ public final class AddressEntry implements PersistablePayload {
         return context == Context.MULTI_SIG || context == Context.TRADE_PAYOUT;
     }
 
-    public boolean isTradable() {
-        return isOpenOffer() || isTrade();
-    }
-
     public Coin getCoinLockedInMultiSig() {
         return Coin.valueOf(coinLockedInMultiSig);
     }
@@ -197,9 +193,10 @@ public final class AddressEntry implements PersistablePayload {
     @Override
     public String toString() {
         return "AddressEntry{" +
-                "offerId='" + getOfferId() + '\'' +
+                "address=" + address +
                 ", context=" + context +
-                ", address=" + getAddressString() +
-                '}';
+                ", offerId='" + offerId + '\'' +
+                ", coinLockedInMultiSig=" + coinLockedInMultiSig +
+                "}";
     }
 }

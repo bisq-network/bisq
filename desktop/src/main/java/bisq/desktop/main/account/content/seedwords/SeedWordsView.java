@@ -19,14 +19,15 @@ package bisq.desktop.main.account.content.seedwords;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.SharedPresentation;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.OpenOfferManager;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.config.Config;
@@ -68,6 +69,7 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 @FxmlView
 public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private final WalletsManager walletsManager;
+    private final OpenOfferManager openOfferManager;
     private final BtcWalletService btcWalletService;
     private final WalletPasswordWindow walletPasswordWindow;
     private final File storageDir;
@@ -91,10 +93,12 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private SeedWordsView(WalletsManager walletsManager,
+                          OpenOfferManager openOfferManager,
                           BtcWalletService btcWalletService,
                           WalletPasswordWindow walletPasswordWindow,
                           @Named(Config.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
+        this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
         this.walletPasswordWindow = walletPasswordWindow;
         this.storageDir = storageDir;
@@ -166,20 +170,18 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         String key = "showBackupWarningAtSeedPhrase";
         if (DontShowAgainLookup.showAgain(key)) {
             new Popup().warning(Res.get("account.seed.backup.warning"))
-                .onAction(() -> {
-                    showSeedPhrase();
-                })
-                .actionButtonText(Res.get("shared.iUnderstand"))
-                .useIUnderstandButton()
-                .dontShowAgainId(key)
-                .hideCloseButton()
-                .show();
+                    .onAction(this::showSeedPhrase)
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .useIUnderstandButton()
+                    .dontShowAgainId(key)
+                    .hideCloseButton()
+                    .show();
         } else {
             showSeedPhrase();
         }
     }
 
-    public void showSeedPhrase() {
+    private void showSeedPhrase() {
         DeterministicSeed keyChainSeed = btcWalletService.getKeyChainSeed();
         // wallet creation date is not encrypted
         walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
@@ -305,6 +307,6 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         long date = localDateTime.toEpochSecond(ZoneOffset.UTC);
 
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
-        GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
+        SharedPresentation.restoreSeedWords(walletsManager, openOfferManager, seed, storageDir);
     }
 }
