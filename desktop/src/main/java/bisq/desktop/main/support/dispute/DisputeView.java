@@ -89,6 +89,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
+import javafx.util.Duration;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -102,6 +103,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.Getter;
 
@@ -110,6 +112,29 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
+    public enum FilterResult {
+        NO_MATCH("No Match"),
+        NO_FILTER("No filter text"),
+        OPEN_DISPUTES("Open disputes"),
+        TRADE_ID("Trade ID"),
+        OPENING_DATE("Opening date"),
+        BUYER_NODE_ADDRESS("Buyer node address"),
+        SELLER_NODE_ADDRESS("Seller node address"),
+        BUYER_ACCOUNT_DETAILS("Buyer account details"),
+        SELLER_ACCOUNT_DETAILS("Seller account details"),
+        DEPOSIT_TX("Deposit tx ID"),
+        PAYOUT_TX("Payout tx ID"),
+        DEL_PAYOUT_TX("Delayed payout tx ID"),
+        JSON("Contract as json");
+
+        @Getter
+        private final String displayString;
+
+        FilterResult(String displayString) {
+
+            this.displayString = displayString;
+        }
+    }
 
     protected final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
     protected final KeyRing keyRing;
@@ -177,6 +202,10 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         HBox.setHgrow(label, Priority.NEVER);
 
         filterTextField = new InputTextField();
+        Tooltip tooltip = new Tooltip();
+        tooltip.setShowDelay(Duration.millis(100));
+        tooltip.setShowDuration(Duration.seconds(10));
+        filterTextField.setTooltip(tooltip);
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
         HBox.setHgrow(filterTextField, Priority.NEVER);
 
@@ -385,9 +414,76 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected abstract DisputeSession getConcreteDisputeChatSession(Dispute dispute);
 
     protected void applyFilteredListPredicate(String filterString) {
-        // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
-        filteredList.setPredicate(dispute -> !dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing()));
+        AtomicReference<FilterResult> filterResult = new AtomicReference<>(FilterResult.NO_FILTER);
+        filteredList.setPredicate(dispute -> {
+            FilterResult filterResult1 = getFilterResult(dispute, filterString);
+            filterResult.set(filterResult1);
+            boolean b = filterResult.get() != FilterResult.NO_MATCH;
+            log.error("filterResult1 {} {} {}, {}", filterResult1, dispute.getTraderId(), b, filterResult);
+            return b;
+        });
+
+        if (filterResult.get() == FilterResult.NO_MATCH) {
+            filterTextField.getTooltip().setText("No matches found");
+        } else if (filterResult.get() == FilterResult.NO_FILTER) {
+            filterTextField.getTooltip().setText("No filter applied");
+        } else if (filterResult.get() == FilterResult.OPEN_DISPUTES) {
+            filterTextField.getTooltip().setText("Show all open disputes");
+        } else {
+            filterTextField.getTooltip().setText("Data matching filter string: " + filterResult.get().getDisplayString());
+        }
     }
+
+    protected FilterResult getFilterResult(Dispute dispute, String filterString) {
+        if (filterString.isEmpty()) {
+            return FilterResult.NO_FILTER;
+        }
+        if (!dispute.isClosed() && filterString.toLowerCase().equals("open")) {
+            return FilterResult.OPEN_DISPUTES;
+        }
+
+        if (dispute.getTradeId().contains(filterString)) {
+            return FilterResult.TRADE_ID;
+        }
+
+        if (DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString)) {
+            return FilterResult.OPENING_DATE;
+        }
+
+        if (dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString)) {
+            return FilterResult.BUYER_NODE_ADDRESS;
+        }
+
+        if (dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString)) {
+            return FilterResult.SELLER_NODE_ADDRESS;
+        }
+
+        if (dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString)) {
+            return FilterResult.BUYER_ACCOUNT_DETAILS;
+        }
+
+        if (dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString)) {
+            return FilterResult.SELLER_ACCOUNT_DETAILS;
+        }
+
+        if (dispute.getDepositTxId() != null && dispute.getDepositTxId().contains(filterString)) {
+            return FilterResult.DEPOSIT_TX;
+        }
+        if (dispute.getPayoutTxId() != null && dispute.getPayoutTxId().contains(filterString)) {
+            return FilterResult.PAYOUT_TX;
+        }
+
+        if (dispute.getDelayedPayoutTxId() != null && dispute.getDelayedPayoutTxId().contains(filterString)) {
+            return FilterResult.DEL_PAYOUT_TX;
+        }
+
+        if (dispute.getContractAsJson().contains(filterString)) {
+            return FilterResult.JSON;
+        }
+
+        return FilterResult.NO_MATCH;
+    }
+
 
     protected void reOpenDisputeFromButton() {
         reOpenDispute();
@@ -412,16 +508,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    protected boolean anyMatchOfFilterString(Dispute dispute, String filterString) {
-        boolean matchesTradeId = dispute.getTradeId().contains(filterString);
-        boolean matchesDate = DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString);
-        boolean isBuyerOnion = dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString);
-        boolean isSellerOnion = dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString);
-        boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-        boolean matchesSellersPaymentAccountData = dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-        return matchesTradeId || matchesDate || isBuyerOnion || isSellerOnion ||
-                matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions

@@ -174,17 +174,13 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(dispute -> {
-            // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
-            if (!dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
-                return false;
-            }
-            boolean isOpen = !dispute.isClosed() && filterString.toLowerCase().equals("open");
-            return filterString.isEmpty() ||
-                    isOpen ||
-                    anyMatchOfFilterString(dispute, filterString);
-        });
+    protected DisputeView.FilterResult getFilterResult(Dispute dispute, String filterString) {
+        // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
+        if (!dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
+            return FilterResult.NO_MATCH;
+        }
+
+        return super.getFilterResult(dispute, filterString);
     }
 
     @Override
