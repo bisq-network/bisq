@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -57,7 +58,8 @@ public class GetBalanceTest extends MethodTest {
     public void testGetBalance() {
         // All tests depend on the DAO / regtest environment, and Alice's wallet is
         // initialized with 10 BTC during the scaffolding setup.
-        var balance = grpcStubs.walletsService.getBalance(GetBalanceRequest.newBuilder().build()).getBalance();
+        var balance = grpcStubs(alicedaemon).walletsService
+                .getBalance(GetBalanceRequest.newBuilder().build()).getBalance();
         assertEquals(1000000000, balance);
     }
 
