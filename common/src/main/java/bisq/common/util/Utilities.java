@@ -88,7 +88,7 @@ public class Utilities {
         return gson.toJson(object);
     }
 
-    public static ListeningExecutorService getSingleThreadExecutor(String name) {
+    public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)

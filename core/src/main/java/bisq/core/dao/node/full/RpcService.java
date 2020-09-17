@@ -81,7 +81,7 @@ public class RpcService {
 
     // We could use multiple threads but then we need to support ordering of results in a queue
     // Keep that for optimization after measuring performance differences
-    private final ListeningExecutorService executor = Utilities.getSingleThreadExecutor("RpcService");
+    private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("RpcService");
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
