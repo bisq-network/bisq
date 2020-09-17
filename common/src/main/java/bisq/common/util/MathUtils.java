@@ -29,6 +29,8 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class MathUtils {
     private static final Logger log = LoggerFactory.getLogger(MathUtils.class);
 
@@ -127,24 +129,30 @@ public class MathUtils {
         }
 
         public Optional<Double> next(long val) {
-            var fullAtStart = isFull();
-            if (fullAtStart) {
-                if (outlier > 0) {
-                    // Return early if it's an outlier
-                    var avg = (double) sum / size;
-                    if (Math.abs(avg - val) / avg > outlier) {
-                        return Optional.empty();
+            try {
+                var fullAtStart = isFull();
+                if (fullAtStart) {
+                    if (outlier > 0) {
+                        // Return early if it's an outlier
+                        checkArgument(size != 0);
+                        var avg = (double) sum / size;
+                        if (Math.abs(avg - val) / avg > outlier) {
+                            return Optional.empty();
+                        }
                     }
+                    sum -= window.remove();
                 }
-                sum -= window.remove();
+                window.add(val);
+                sum += val;
+                if (!fullAtStart && isFull() && outlier != 0) {
+                    removeInitialOutlier();
+                }
+                // When discarding outliers, the first n non discarded elements return Optional.empty()
+                return outlier > 0 && !isFull() ? Optional.empty() : current();
+            } catch (Throwable t) {
+                log.error(t.toString());
+                return Optional.empty();
             }
-            window.add(val);
-            sum += val;
-            if (!fullAtStart && isFull() && outlier != 0) {
-                removeInitialOutlier();
-            }
-            // When discarding outliers, the first n non discarded elements return Optional.empty()
-            return outlier > 0 && !isFull() ? Optional.empty() : current();
         }
 
         boolean isFull() {
@@ -155,7 +163,9 @@ public class MathUtils {
             var element = window.iterator();
             while (element.hasNext()) {
                 var val = element.next();
-                var avgExVal = (double) (sum - val) / (size - 1);
+                int div = size - 1;
+                checkArgument(div != 0);
+                var avgExVal = (double) (sum - val) / div;
                 if (Math.abs(avgExVal - val) / avgExVal > outlier) {
                     element.remove();
                     break;
