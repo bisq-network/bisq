@@ -490,14 +490,20 @@ public class WalletConfig extends AbstractIdleService {
         Script.ScriptType preferredOutputScriptType = Script.ScriptType.P2PKH;
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
         KeyChainGroup.Builder kcg = KeyChainGroup.builder(params, structure);
-        if (restoreFromSeed != null)
+        if (restoreFromSeed != null) {
             kcg.fromSeed(restoreFromSeed, preferredOutputScriptType).build();
-        else if (restoreFromKey != null)
+        } else if (restoreFromKey != null) {
             kcg.addChain(DeterministicKeyChain.builder().spend(restoreFromKey).outputScriptType(preferredOutputScriptType).build());
-        else if (!isBsqWallet)
-            kcg.fromRandom(preferredOutputScriptType);
-        else
-            kcg.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
+        } else {
+            // new wallet
+            if (!isBsqWallet) {
+                // btc wallet uses a new random seed.
+                kcg.fromRandom(preferredOutputScriptType);
+            } else {
+                // bsq wallet uses btc wallet's seed created a few milliseconds ago.
+                kcg.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
+            }
+        }
         if (walletFactory != null) {
             return walletFactory.create(params, kcg.build());
         } else {
