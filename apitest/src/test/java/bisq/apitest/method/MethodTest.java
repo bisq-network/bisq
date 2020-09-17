@@ -20,13 +20,17 @@ package bisq.apitest.method;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 
+import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+
 
 
 import bisq.apitest.ApiTestCase;
+import bisq.apitest.config.BisqAppConfig;
 
 public class MethodTest extends ApiTestCase {
 
@@ -60,24 +64,31 @@ public class MethodTest extends ApiTestCase {
         return GetFundingAddressesRequest.newBuilder().build();
     }
 
+    protected final RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
+        return RegisterDisputeAgentRequest.newBuilder()
+                .setDisputeAgentType(disputeAgentType)
+                .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
+    }
+
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
-    protected final long getBalance() {
-        return grpcStubs.walletsService.getBalance(createBalanceRequest()).getBalance();
+    protected final long getBalance(BisqAppConfig bisqAppConfig) {
+        return grpcStubs(bisqAppConfig).walletsService.getBalance(createBalanceRequest()).getBalance();
     }
 
-    protected final void unlockWallet(String password, long timeout) {
+    protected final void unlockWallet(BisqAppConfig bisqAppConfig, String password, long timeout) {
         //noinspection ResultOfMethodCallIgnored
-        grpcStubs.walletsService.unlockWallet(createUnlockWalletRequest(password, timeout));
+        grpcStubs(bisqAppConfig).walletsService.unlockWallet(createUnlockWalletRequest(password, timeout));
     }
 
-    protected final void lockWallet() {
+    protected final void lockWallet(BisqAppConfig bisqAppConfig) {
         //noinspection ResultOfMethodCallIgnored
-        grpcStubs.walletsService.lockWallet(createLockWalletRequest());
+        grpcStubs(bisqAppConfig).walletsService.lockWallet(createLockWalletRequest());
     }
 
-    protected final String getUnusedBtcAddress() {
-        return grpcStubs.walletsService.getFundingAddresses(createGetFundingAddressesRequest())
+    protected final String getUnusedBtcAddress(BisqAppConfig bisqAppConfig) {
+        //noinspection OptionalGetWithoutIsPresent
+        return grpcStubs(bisqAppConfig).walletsService.getFundingAddresses(createGetFundingAddressesRequest())
                 .getAddressBalanceInfoList()
                 .stream()
                 .filter(a -> a.getBalance() == 0 && a.getNumConfirmations() == 0)
