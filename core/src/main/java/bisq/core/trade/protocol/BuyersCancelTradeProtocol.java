@@ -64,6 +64,7 @@ public class BuyersCancelTradeProtocol extends CancelTradeProtocol {
                 });
         taskRunner.addTasks(
                 ApplyFilter.class,
+                //TODO we must not sent the sig at that moment!
                 SignCanceledTradePayoutTx.class,
                 SendRequestCancelTradeMessage.class,
                 SetupCanceledTradePayoutTxListener.class

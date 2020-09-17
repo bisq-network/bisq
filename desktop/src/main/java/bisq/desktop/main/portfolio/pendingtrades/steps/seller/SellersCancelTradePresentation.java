@@ -139,7 +139,7 @@ public class SellersCancelTradePresentation {
     }
 
     private void onStateChanged(SellerTrade.CancelTradeState state) {
-        log.error("onStateChanged {} for trade {}", state, trade.getShortId());
+        log.info("onStateChanged {} for trade {}", state, trade.getShortId());
         if (state == null) {
             hideAll();
             hideButton();

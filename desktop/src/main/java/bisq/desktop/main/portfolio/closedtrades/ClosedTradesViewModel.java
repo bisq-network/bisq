@@ -148,7 +148,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                 Trade trade = (Trade) item.getTradable();
 
                 if (trade.isWithdrawn() || trade.isPayoutPublished()) {
-                    if (trade.wasCanceledTrade()) {
+                    if (trade.isCanceled()) {
                         return Res.get("portfolio.closed.canceled");
                     } else {
                         return Res.get("portfolio.closed.completed");

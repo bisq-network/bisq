@@ -332,8 +332,8 @@ message MediatedPayoutTxSignatureMessage {
 
 message RequestCancelTradeMessage {
     string uid = 1;
-    string trade_id = 3;
-    bytes tx_signature = 2;
+    string trade_id = 2;
+    bytes tx_signature = 3;
     NodeAddress sender_node_address = 4;
 }
 

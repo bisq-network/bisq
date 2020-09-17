@@ -836,6 +836,7 @@ public class TradeWalletService {
     // Canceled trade payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO avoid code duplication
     public byte[] signCanceledTradePayoutTx(Transaction depositTx,
                                             Coin buyerPayoutAmount,
                                             Coin sellerPayoutAmount,
@@ -845,7 +846,8 @@ public class TradeWalletService {
                                             byte[] buyerPubKey,
                                             byte[] sellerPubKey)
             throws AddressFormatException, TransactionVerificationException {
-        Transaction preparedPayoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
+        Transaction preparedPayoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount,
+                buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         // MS output from prev. tx is index 0
@@ -860,6 +862,7 @@ public class TradeWalletService {
         return mySignature.encodeToDER();
     }
 
+    //TODO avoid code duplication
     public Transaction finalizeCanceledTradePayoutTx(Transaction depositTx,
                                                      byte[] buyerSignature,
                                                      byte[] sellerSignature,

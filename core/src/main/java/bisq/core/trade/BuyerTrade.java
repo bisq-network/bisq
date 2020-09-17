@@ -160,7 +160,7 @@ public abstract class BuyerTrade extends Trade {
     }
 
     @Override
-    public boolean wasCanceledTrade() {
+    public boolean isCanceled() {
         if (cancelTradeState == null) {
             return false;
         }

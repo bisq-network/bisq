@@ -801,7 +801,7 @@ public abstract class Trade implements Tradable, Model {
 
     public abstract Coin getPayoutAmount();
 
-    public abstract boolean wasCanceledTrade();
+    public abstract boolean isCanceled();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
