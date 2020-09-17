@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 class GetPeersRequestHandler {
     // We want to keep timeout short here
-    private static final long TIMEOUT = 40;
+    private static final long TIMEOUT = 90;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

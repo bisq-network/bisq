@@ -47,24 +47,36 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreApi {
 
+    private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public CoreApi(CoreOffersService coreOffersService,
+    public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
+                   CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
+        this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
     }
 
+    @SuppressWarnings("SameReturnValue")
     public String getVersion() {
         return Version.VERSION;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dispute Agents
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void registerDisputeAgent(String disputeAgentType, String registrationKey) {
+        coreDisputeAgentsService.registerDisputeAgent(disputeAgentType, registrationKey);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

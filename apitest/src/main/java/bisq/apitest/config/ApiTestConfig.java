@@ -27,6 +27,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import java.net.InetAddress;
+
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -169,7 +171,7 @@ public class ApiTestConfig {
         ArgumentAcceptingOptionSpec<String> bitcoinRegtestHostOpt =
                 parser.accepts(BITCOIN_REGTEST_HOST, "Bitcoin Core regtest host")
                         .withRequiredArg()
-                        .ofType(String.class).defaultsTo("localhost");
+                        .ofType(String.class).defaultsTo(InetAddress.getLoopbackAddress().getHostAddress());
 
         ArgumentAcceptingOptionSpec<Integer> bitcoinRpcPortOpt =
                 parser.accepts(BITCOIN_RPC_PORT, "Bitcoin Core rpc port (non-default)")
