@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.PrintWriter;
 
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,11 +51,6 @@ public class JsonFileManager {
 
     public void shutDown() {
         executor.shutdown();
-        try {
-            executor.awaitTermination(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     public void writeToDisc(String json, String fileName) {
