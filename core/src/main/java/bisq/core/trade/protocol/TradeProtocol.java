@@ -66,7 +66,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class TradeProtocol {
-    private static final long TIMEOUT = 90;
+    private static final long TIMEOUT = 180;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
