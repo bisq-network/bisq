@@ -494,8 +494,10 @@ public class WalletConfig extends AbstractIdleService {
             kcg.fromSeed(restoreFromSeed, preferredOutputScriptType).build();
         else if (restoreFromKey != null)
             kcg.addChain(DeterministicKeyChain.builder().spend(restoreFromKey).outputScriptType(preferredOutputScriptType).build());
-        else
+        else if (!isBsqWallet)
             kcg.fromRandom(preferredOutputScriptType);
+        else
+            kcg.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
         if (walletFactory != null) {
             return walletFactory.create(params, kcg.build());
         } else {
