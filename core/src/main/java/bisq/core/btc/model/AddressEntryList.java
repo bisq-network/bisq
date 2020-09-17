@@ -107,9 +107,12 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
         if (!entrySet.isEmpty()) {
             Set<AddressEntry> toBeRemoved = new HashSet<>();
             entrySet.forEach(addressEntry -> {
-                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(addressEntry.getPubKeyHash(), Script.ScriptType.P2PKH);
+                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(
+                                                                                addressEntry.getPubKeyHash(),
+                                                                                Script.ScriptType.P2PKH);
                 if (keyFromPubHash != null) {
-                    Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash);
+                    Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(),
+                                                                   keyFromPubHash);
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
@@ -177,7 +180,8 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
 
     public void swapToAvailable(AddressEntry addressEntry) {
         boolean setChangedByRemove = entrySet.remove(addressEntry);
-        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
+        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
+                                                                AddressEntry.Context.AVAILABLE));
         if (setChangedByRemove || setChangedByAdd) {
             persist();
         }
@@ -210,7 +214,8 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                 .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
                 .filter(Objects::nonNull)
                 .filter(this::isAddressNotInEntries)
-                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(), Script.ScriptType.P2PKH))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(),
+                                                                                Script.ScriptType.P2PKH))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
                 .forEach(this::addAddressEntry);
