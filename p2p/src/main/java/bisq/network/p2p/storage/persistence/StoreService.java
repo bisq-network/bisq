@@ -122,7 +122,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
             double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;
             String unit = length > 1_000_000D ? "MB" : "KB";
             log.info("{}: size of {}: {} {}", this.getClass().getSimpleName(),
-                    persistenceManager.getClass().getSimpleName(), size, unit);
+                    persisted.getClass().getSimpleName(), size, unit);
         } else {
             store = createStore();
         }
