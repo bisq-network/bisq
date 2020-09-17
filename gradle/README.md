@@ -1,9 +1,9 @@
 # How to upgrade the Gradle version
 
 Visit the [Gradle website](https://gradle.org/releases/) and decide the:
-*  desired version
-*  desired distribution type
-*  what is the sha256 for the version and type chosen
+*   desired version
+*   desired distribution type
+*   what is the sha256 for the version and type chosen
 
 Adjust the following command with tha arguments above and execute it twice:
 
@@ -15,8 +15,8 @@ The first execution should automatically update:
 *   `bisq/gradle/wrapper/gradle-wrapper.properties`
 
 The second execution should then update:
- - `bisq/gradle/wrapper/gradle-wrapper.jar`
- - `bisq/gradlew`
- - `bisq/gradlew.bat`
+*   `bisq/gradle/wrapper/gradle-wrapper.jar`
+*   `bisq/gradlew`
+*   `bisq/gradlew.bat`
 
 The four updated files are ready to be committed.
