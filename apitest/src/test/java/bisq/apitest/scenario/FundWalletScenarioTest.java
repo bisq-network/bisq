@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -48,16 +49,17 @@ public class FundWalletScenarioTest extends ScenarioTest {
     @Test
     @Order(1)
     public void testFundWallet() {
-        long balance = getBalance();  // bisq wallet was initialized with 10 btc
+        // bisq wallet was initialized with 10 btc
+        long balance = getBalance(alicedaemon);
         assertEquals(1000000000, balance);
 
-        String unusedAddress = getUnusedBtcAddress();
+        String unusedAddress = getUnusedBtcAddress(alicedaemon);
         bitcoinCli.sendToAddress(unusedAddress, "2.5");
 
         bitcoinCli.generateBlocks(1);
         sleep(1500);
 
-        balance = getBalance();
+        balance = getBalance(alicedaemon);
         assertEquals(1250000000L, balance); // new balance is 12.5 btc
     }
 
