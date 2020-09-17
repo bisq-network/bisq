@@ -81,7 +81,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     // We don't use the gracefulShutDown implementation of the super class as we have a limited set of modules
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
-        log.debug("gracefulShutDown");
+        log.info("gracefulShutDown");
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();

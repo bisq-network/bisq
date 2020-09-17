@@ -24,6 +24,7 @@ import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
 
@@ -39,7 +40,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,14 +78,38 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public static final Map<String, PersistenceManager<?>> ALL_PERSISTENCE_MANAGERS = new HashMap<>();
 
-    public static void flushAllDataToDisk(ResultHandler resultHandler) {
+    // We don't know from which thread we are called so we map back to user thread
+    public static void flushAllDataToDisk(ResultHandler completeHandler) {
+        log.info("Start flushAllDataToDisk at shutdown");
+        AtomicInteger openInstances = new AtomicInteger(ALL_PERSISTENCE_MANAGERS.size());
+
+        if (openInstances.get() == 0) {
+            log.info("flushAllDataToDisk completed");
+            UserThread.execute(completeHandler::handleResult);
+        }
+
         new HashSet<>(ALL_PERSISTENCE_MANAGERS.values()).forEach(persistenceManager -> {
-            if (persistenceManager.requested) {
-                persistenceManager.persistNow();
+            if (persistenceManager.persistenceRequested) {
+                // We don't know from which thread we are called so we map back to user thread when calling persistNow
+                UserThread.execute(() -> {
+                    persistenceManager.persistNow(() ->
+                            writeCompleted(completeHandler, openInstances, persistenceManager));
+                });
+            } else {
+                writeCompleted(completeHandler, openInstances, persistenceManager);
             }
-            persistenceManager.close();
         });
-        resultHandler.handleResult();
+    }
+
+    protected static void writeCompleted(ResultHandler completeHandler,
+                                         AtomicInteger openInstances,
+                                         PersistenceManager<?> persistenceManager) {
+        persistenceManager.shutdown();
+        openInstances.getAndDecrement();
+        if (openInstances.get() == 0) {
+            log.info("flushAllDataToDisk completed");
+            UserThread.execute(completeHandler::handleResult);
+        }
     }
 
 
@@ -119,9 +146,11 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private String fileName;
     private Priority priority = Priority.MID;
     private Path usedTempFilePath;
-    private boolean requested;
+    private volatile boolean persistenceRequested;
     @Nullable
     private Timer timer;
+    private ExecutorService writeToDiskExecutor;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -160,8 +189,16 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         ALL_PERSISTENCE_MANAGERS.put(fileName, this);
     }
 
-    public void close() {
+    public void shutdown() {
         ALL_PERSISTENCE_MANAGERS.remove(fileName);
+
+        if (timer != null) {
+            timer.stop();
+        }
+
+        if (writeToDiskExecutor != null) {
+            writeToDiskExecutor.shutdown();
+        }
     }
 
 
@@ -174,6 +211,9 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         return getPersisted(checkNotNull(fileName));
     }
 
+    //TODO use threading here instead in the clients
+    // We get called at startup either by readAllPersisted or readFromResources. Both are wrapped in a thread so we
+    // are not on the user thread.
     @Nullable
     public T getPersisted(String fileName) {
         File storageFile = new File(dir, fileName);
@@ -212,19 +252,39 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestPersistence() {
-        requested = true;
+        persistenceRequested = true;
 
         // We write to disk with a delay to avoid frequent write operations. Depending on the priority those delays
         // can be rather long.
         if (timer == null) {
             timer = UserThread.runPeriodically(() -> {
-                persistNow();
+                persistNow(null);
                 UserThread.execute(() -> timer = null);
             }, priority.delayInSec, TimeUnit.SECONDS);
         }
     }
 
-    public void persistNow() {
+    public void persistNow(@Nullable Runnable completeHandler) {
+        long ts = System.currentTimeMillis();
+        try {
+            // The serialisation is done on the user thread to avoid threading issue with potential mutations of the
+            // persistable object. Keeping it on the user thread we are in a synchronize model.
+            protobuf.PersistableEnvelope serialized = (protobuf.PersistableEnvelope) persistable.toPersistableMessage();
+
+            // For the write to disk task we use a thread. We do not have any issues anymore if the persistable objects
+            // gets mutated while the thread is running as we have serialized it already and do not operate on the
+            // reference to the persistable object.
+            getWriteToDiskExecutor().execute(() -> writeToDisk(serialized, completeHandler));
+
+            log.info("Serializing {} took {} msec", fileName, System.currentTimeMillis() - ts);
+        } catch (Throwable e) {
+            log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), fileName);
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void writeToDisk(protobuf.PersistableEnvelope serialized, @Nullable Runnable completeHandler) {
         long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
@@ -233,19 +293,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             // Before we write we backup existing file
             FileUtil.rollingBackup(dir, fileName, priority.getNumMaxBackupFiles());
 
-            protobuf.PersistableEnvelope protoPersistable;
-            try {
-                protoPersistable = (protobuf.PersistableEnvelope) persistable.toPersistableMessage();
-                if (protoPersistable.toByteArray().length == 0)
-                    log.error("protoPersistable is empty. persistable=" + persistable.getClass().getSimpleName());
-            } catch (Throwable e) {
-                log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), fileName);
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-
             if (!dir.exists() && !dir.mkdir())
-                log.warn("make dir failed");
+                log.warn("make dir failed {}", fileName);
 
             tempFile = usedTempFilePath != null
                     ? FileUtil.createNewFile(usedTempFilePath)
@@ -255,7 +304,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
             fileOutputStream = new FileOutputStream(tempFile);
 
-            protoPersistable.writeDelimitedTo(fileOutputStream);
+            serialized.writeDelimitedTo(fileOutputStream);
 
             // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
             // to not write through to physical media for at least a few seconds, but this is the best we can do.
@@ -275,33 +324,47 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         } finally {
             if (tempFile != null && tempFile.exists()) {
                 log.warn("Temp file still exists after failed save. We will delete it now. storageFile={}", fileName);
-                if (!tempFile.delete())
+                if (!tempFile.delete()) {
                     log.error("Cannot delete temp file.");
+                }
             }
 
             try {
-                if (fileOutputStream != null)
+                if (fileOutputStream != null) {
                     fileOutputStream.close();
+                }
             } catch (IOException e) {
                 // We swallow that
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
             }
-            log.info("Save {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
-            requested = false;
+            log.info("Writing the serialized {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
+            persistenceRequested = false;
+            if (completeHandler != null) {
+                completeHandler.run();
+            }
         }
     }
+
+    public ExecutorService getWriteToDiskExecutor() {
+        if (writeToDiskExecutor == null) {
+            String name = "Write-" + fileName + "_to-disk";
+            writeToDiskExecutor = Utilities.getSingleThreadExecutor(name);
+        }
+        return writeToDiskExecutor;
+    }
+
 
     @Override
     public String toString() {
         return "PersistenceManager{" +
-                "\n     dir=" + dir +
+                "\n     fileName='" + fileName + '\'' +
+                ",\n     dir=" + dir +
                 ",\n     storageFile=" + storageFile +
                 ",\n     persistable=" + persistable +
-                ",\n     fileName='" + fileName + '\'' +
                 ",\n     priority=" + priority +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
-                ",\n     persistRequested=" + requested +
+                ",\n     persistenceRequested=" + persistenceRequested +
                 "\n}";
     }
 }

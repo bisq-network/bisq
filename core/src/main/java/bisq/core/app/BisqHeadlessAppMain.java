@@ -22,8 +22,6 @@ import bisq.common.app.AppModule;
 import bisq.common.app.Version;
 import bisq.common.setup.CommonSetup;
 
-import joptsimple.OptionSet;
-
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.Executors;

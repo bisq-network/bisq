@@ -49,7 +49,12 @@ import java.nio.file.Paths;
 
 import java.io.File;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 
 
@@ -138,7 +143,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     // Headless versions can call inside launchApplication the onApplicationLaunched() manually
     protected void onApplicationLaunched() {
         setupGuice();
-        startApplication();
+        setupDevEnv();
+        readAllPersisted(this::startApplication);
     }
 
 
@@ -159,9 +165,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void applyInjector() {
-        setupDevEnv();
-
-        setupPersistedDataHosts(injector);
     }
 
     protected void setupDevEnv() {
@@ -169,18 +172,27 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         DevEnv.setDaoActivated(config.daoActivated);
     }
 
-    protected void setupPersistedDataHosts(Injector injector) {
-        try {
-            PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
-        } catch (Throwable t) {
-            log.error("Error at PersistedDataHost.apply: {}", t.toString(), t);
-            // If we are in dev mode we want to get the exception if some db files are corrupted
-            // We need to delay it as the stage is not created yet and so popups would not be shown.
-            if (DevEnv.isDevMode())
-                UserThread.runAfter(() -> {
-                    throw t;
-                }, 2);
+    protected void readAllPersisted(Runnable completeHandler) {
+        readAllPersisted(null, completeHandler);
+    }
+
+    protected void readAllPersisted(@Nullable List<PersistedDataHost> additionalHosts, Runnable completeHandler) {
+        List<PersistedDataHost> hosts = CorePersistedDataHost.getPersistedDataHosts(injector);
+        if (additionalHosts != null) {
+            hosts.addAll(additionalHosts);
         }
+
+        AtomicInteger remaining = new AtomicInteger(hosts.size());
+        hosts.forEach(e -> {
+            new Thread(() -> {
+                e.readPersisted();
+                remaining.getAndDecrement();
+                if (remaining.get() == 0) {
+                    UserThread.execute(completeHandler);
+                }
+
+            }, "BisqExecutable-read-" + e.getClass().getSimpleName()).start();
+        });
     }
 
     protected abstract void startApplication();

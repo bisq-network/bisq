@@ -217,9 +217,12 @@ public class GUIUtil {
                 PersistenceManager<PersistableEnvelope> paymentAccountsPersistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 PaymentAccountList paymentAccounts = new PaymentAccountList(accounts);
                 paymentAccountsPersistenceManager.initialize(paymentAccounts, fileName);
-                paymentAccountsPersistenceManager.persistNow();
-                paymentAccountsPersistenceManager.close();
-                new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+                paymentAccountsPersistenceManager.persistNow(() -> {
+                    paymentAccountsPersistenceManager.shutdown();
+                    new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath",
+                            Paths.get(directory, fileName).toAbsolutePath()))
+                            .show();
+                });
             }
         } else {
             new Popup().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
