@@ -56,6 +56,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -86,6 +87,14 @@ public class Utilities {
                 .setPrettyPrinting()
                 .create();
         return gson.toJson(object);
+    }
+
+    public static ExecutorService getSingleThreadExecutor(String name) {
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name)
+                .setDaemon(true)
+                .build();
+        return Executors.newSingleThreadExecutor(threadFactory);
     }
 
     public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {
