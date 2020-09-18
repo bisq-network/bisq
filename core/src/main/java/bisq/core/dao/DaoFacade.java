@@ -73,6 +73,7 @@ import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.asset.Asset;
 
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
@@ -766,12 +767,16 @@ public class DaoFacade implements DaoSetupService {
         Set<String> allPastParamValues = getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
 
         // If Dao is deactivated we need to add the default address as getAllPastParamValues will not return us any.
-        allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
+        if (allPastParamValues.isEmpty()) {
+            allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
+        }
 
-        // If Dao is deactivated we need to add the past addresses used as well.
-        // This list need to be updated once a new address gets defined.
-        allPastParamValues.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"); // burning man 2019
-        allPastParamValues.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV"); // burningman2
+        if (Config.baseCurrencyNetwork().isMainnet()) {
+            // If Dao is deactivated we need to add the past addresses used as well.
+            // This list need to be updated once a new address gets defined.
+            allPastParamValues.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"); // burning man 2019
+            allPastParamValues.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV"); // burningman2
+        }
 
         return allPastParamValues;
     }

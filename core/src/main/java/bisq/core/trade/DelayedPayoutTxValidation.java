@@ -30,9 +30,14 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -44,6 +49,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DelayedPayoutTxValidation {
 
     public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
+            throws AddressException {
+        validateDonationAddress(null, addressAsString, daoFacade);
+    }
+
+    public static void validateDonationAddress(@Nullable Dispute dispute, String addressAsString, DaoFacade daoFacade)
             throws AddressException {
 
         if (addressAsString == null) {
@@ -57,7 +67,55 @@ public class DelayedPayoutTxValidation {
                     "\nAddress used in the dispute: " + addressAsString +
                     "\nAll DAO param donation addresses:" + allPastParamValues;
             log.error(errorMsg);
-            throw new AddressException(errorMsg);
+            throw new AddressException(dispute, errorMsg);
+        }
+    }
+
+    public static void testIfDisputeTriesReplay(Dispute disputeToTest, List<Dispute> disputeList)
+            throws DisputeReplayException {
+        try {
+            String disputeToTestDelayedPayoutTxId = disputeToTest.getDelayedPayoutTxId();
+            checkNotNull(disputeToTestDelayedPayoutTxId,
+                    "delayedPayoutTxId must not be null. Trade ID: " + disputeToTest.getTradeId());
+            String disputeToTestAgentsUid = checkNotNull(disputeToTest.getAgentsUid(),
+                    "agentsUid must not be null. Trade ID: " + disputeToTest.getTradeId());
+            // This method can be called with the existing list and a new dispute (at opening a new dispute) or with the
+            // dispute already added (at close dispute). So we will consider that in the for loop.
+            // We have 2 disputes per trade (one per trader).
+
+            Map<String, Set<String>> disputesPerTradeId = new HashMap<>();
+            Map<String, Set<String>> disputesPerDelayedPayoutTxId = new HashMap<>();
+            disputeList.forEach(dispute -> {
+                String tradeId = dispute.getTradeId();
+                String agentsUid = dispute.getAgentsUid();
+
+                // We use an uid we have created not data delivered by the trader to protect against replay attacks
+                // If our dispute got already added to the list we ignore it. We will check once we build our maps
+
+                disputesPerTradeId.putIfAbsent(tradeId, new HashSet<>());
+                Set<String> set = disputesPerTradeId.get(tradeId);
+                if (!disputeToTestAgentsUid.equals(agentsUid)) {
+                    set.add(agentsUid);
+                }
+
+                String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
+                disputesPerDelayedPayoutTxId.putIfAbsent(delayedPayoutTxId, new HashSet<>());
+                set = disputesPerDelayedPayoutTxId.get(delayedPayoutTxId);
+                if (!disputeToTestAgentsUid.equals(agentsUid)) {
+                    set.add(agentsUid);
+                }
+            });
+
+            String disputeToTestTradeId = disputeToTest.getTradeId();
+            checkArgument(disputesPerTradeId.get(disputeToTestTradeId).size() <= 1,
+                    "We found more then 2 disputes with the same trade ID. " +
+                            "Trade ID: " + disputeToTest.getTradeId());
+            checkArgument(disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId).size() <= 1,
+                    "We found more then 2 disputes with the same delayedPayoutTxId. " +
+                            "Trade ID: " + disputeToTest.getTradeId());
+
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new DisputeReplayException(disputeToTest, e.getMessage());
         }
     }
 
@@ -177,7 +235,7 @@ public class DelayedPayoutTxValidation {
                 errorMsg = "Donation address cannot be resolved (not of type P2PKHScript or P2SH). Output: " + output;
                 log.error(errorMsg);
                 log.error(delayedPayoutTx.toString());
-                throw new AddressException(errorMsg);
+                throw new AddressException(dispute, errorMsg);
             }
         }
 
@@ -220,14 +278,23 @@ public class DelayedPayoutTxValidation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static class ValidationException extends Exception {
+        @Nullable
+        @Getter
+        private final Dispute dispute;
+
         ValidationException(String msg) {
+            this(null, msg);
+        }
+
+        ValidationException(@Nullable Dispute dispute, String msg) {
             super(msg);
+            this.dispute = dispute;
         }
     }
 
     public static class AddressException extends ValidationException {
-        AddressException(String msg) {
-            super(msg);
+        AddressException(@Nullable Dispute dispute, String msg) {
+            super(dispute, msg);
         }
     }
 
@@ -258,6 +325,12 @@ public class DelayedPayoutTxValidation {
     public static class InvalidInputException extends ValidationException {
         InvalidInputException(String msg) {
             super(msg);
+        }
+    }
+
+    public static class DisputeReplayException extends ValidationException {
+        DisputeReplayException(Dispute dispute, String msg) {
+            super(dispute, msg);
         }
     }
 }

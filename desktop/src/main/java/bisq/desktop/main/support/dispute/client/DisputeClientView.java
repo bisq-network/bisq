@@ -60,14 +60,12 @@ public abstract class DisputeClientView extends DisputeView {
     }
 
     @Override
-    protected void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(dispute -> {
-            // As we are in the client view we hide disputes where we are the agent
-            if (dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
-                return false;
-            }
+    protected DisputeView.FilterResult getFilterResult(Dispute dispute, String filterString) {
+        // As we are in the client view we hide disputes where we are the agent
+        if (dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
+            return FilterResult.NO_MATCH;
+        }
 
-            return filterString.isEmpty() || anyMatchOfFilterString(dispute, filterString);
-        });
+        return super.getFilterResult(dispute, filterString);
     }
 }
