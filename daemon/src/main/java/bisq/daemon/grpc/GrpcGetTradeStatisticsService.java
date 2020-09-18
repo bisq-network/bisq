@@ -13,7 +13,7 @@ import javax.inject.Inject;
 
 import java.util.stream.Collectors;
 
-public class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
+class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
 
     private final CoreApi coreApi;
 

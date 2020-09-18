@@ -10,7 +10,7 @@ import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
-public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
+class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
 
     private final CoreApi coreApi;
 
