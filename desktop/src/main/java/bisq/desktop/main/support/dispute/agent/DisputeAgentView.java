@@ -34,6 +34,8 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
@@ -77,6 +79,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                             TradeDetailsWindow tradeDetailsWindow,
                             AccountAgeWitnessService accountAgeWitnessService,
                             DaoFacade daoFacade,
+                            MediatorManager mediatorManager,
+                            RefundAgentManager refundAgentManager,
                             boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
@@ -87,6 +91,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                mediatorManager,
+                refundAgentManager,
                 useDevPrivilegeKeys);
 
         multipleHolderNameDetection = new MultipleHolderNameDetection(disputeManager);

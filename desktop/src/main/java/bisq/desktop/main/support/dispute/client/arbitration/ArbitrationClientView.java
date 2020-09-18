@@ -30,6 +30,8 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.ArbitrationSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -37,9 +39,8 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class ArbitrationClientView extends DisputeClientView {
@@ -53,10 +54,12 @@ public class ArbitrationClientView extends DisputeClientView {
                                  ContractWindow contractWindow,
                                  TradeDetailsWindow tradeDetailsWindow,
                                  AccountAgeWitnessService accountAgeWitnessService,
+                                 MediatorManager mediatorManager,
+                                 RefundAgentManager refundAgentManager,
                                  @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(arbitrationManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
-                useDevPrivilegeKeys);
+                mediatorManager, refundAgentManager, useDevPrivilegeKeys);
     }
 
     @Override

@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.overlays.windows.VerifyDisputeResultSignatureWindow;
 import bisq.desktop.main.shared.ChatView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -42,6 +43,8 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
@@ -121,6 +124,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private final TradeDetailsWindow tradeDetailsWindow;
 
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final MediatorManager mediatorManager;
+    private final RefundAgentManager refundAgentManager;
     private final boolean useDevPrivilegeKeys;
 
     protected TableView<Dispute> tableView;
@@ -136,7 +141,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected FilteredList<Dispute> filteredList;
     protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
-    protected AutoTooltipButton reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
+    protected AutoTooltipButton sigCheckButton, reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
     private Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
     @Nullable
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
@@ -157,6 +162,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                        ContractWindow contractWindow,
                        TradeDetailsWindow tradeDetailsWindow,
                        AccountAgeWitnessService accountAgeWitnessService,
+                       MediatorManager mediatorManager,
+                       RefundAgentManager refundAgentManager,
                        boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
@@ -167,6 +174,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.mediatorManager = mediatorManager;
+        this.refundAgentManager = refundAgentManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -222,6 +231,12 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             showFullReport();
         });
 
+        sigCheckButton = new AutoTooltipButton(Res.get("support.sigCheck.button"));
+        HBox.setHgrow(sigCheckButton, Priority.NEVER);
+        sigCheckButton.setOnAction(e -> {
+            new VerifyDisputeResultSignatureWindow(mediatorManager, refundAgentManager).show();
+        });
+
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -234,7 +249,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 reOpenButton,
                 sendPrivateNotificationButton,
                 reportButton,
-                fullReportButton);
+                fullReportButton,
+                sigCheckButton);
         VBox.setVgrow(filterBox, Priority.NEVER);
 
         tableView = new TableView<>();

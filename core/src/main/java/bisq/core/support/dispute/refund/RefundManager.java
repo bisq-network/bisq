@@ -45,7 +45,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
-import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.KeyRing;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -76,11 +76,11 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          ClosedTradableManager closedTradableManager,
                          OpenOfferManager openOfferManager,
                          DaoFacade daoFacade,
-                         PubKeyRing pubKeyRing,
+                         KeyRing keyRing,
                          RefundDisputeListService refundDisputeListService,
                          PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, daoFacade, pubKeyRing, refundDisputeListService, priceFeedService);
+                openOfferManager, daoFacade, keyRing, refundDisputeListService, priceFeedService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
