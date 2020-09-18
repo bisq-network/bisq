@@ -24,19 +24,20 @@ option java_package = "bisq.proto.grpc";
 option java_multiple_files = true;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Version
+// DisputeAgents
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service GetVersion {
-    rpc GetVersion (GetVersionRequest) returns (GetVersionReply) {
+service DisputeAgents {
+    rpc RegisterDisputeAgent (RegisterDisputeAgentRequest) returns (RegisterDisputeAgentReply) {
     }
 }
 
-message GetVersionRequest {
+message RegisterDisputeAgentRequest {
+    string disputeAgentType = 1;
+    string registrationKey = 2;
 }
 
-message GetVersionReply {
-    string version = 1;
+message RegisterDisputeAgentReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -214,3 +215,20 @@ message AddressBalanceInfo {
     int64 balance = 2;
     int64 numConfirmations = 3;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Version
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service GetVersion {
+    rpc GetVersion (GetVersionRequest) returns (GetVersionReply) {
+    }
+}
+
+message GetVersionRequest {
+}
+
+message GetVersionReply {
+    string version = 1;
+}
+
