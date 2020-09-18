@@ -25,6 +25,7 @@ import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
@@ -69,7 +70,8 @@ public class CliMain {
         lockwallet,
         unlockwallet,
         removewalletpassword,
-        setwalletpassword
+        setwalletpassword,
+        registerdisputeagent
     }
 
     public static void main(String[] args) {
@@ -114,9 +116,9 @@ public class CliMain {
         }
 
         var methodName = nonOptionArgs.get(0);
-        final Method method;
+        Method method;
         try {
-            method = Method.valueOf(methodName);
+            method = getMethodFromCmd(methodName);
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(format("'%s' is not a supported method", methodName));
         }
@@ -128,6 +130,7 @@ public class CliMain {
             throw new IllegalArgumentException("missing required 'password' option");
 
         GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
+        var disputeAgentsService = grpcStubs.disputeAgentsService;
         var versionService = grpcStubs.versionService;
         var offersService = grpcStubs.offersService;
         var paymentAccountsService = grpcStubs.paymentAccountsService;
@@ -166,34 +169,38 @@ public class CliMain {
                 }
                 case getoffers: {
                     if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("incorrect parameter count, expecting direction (buy|sell), currency code");
+                        throw new IllegalArgumentException("incorrect parameter count,"
+                                + " expecting direction (buy|sell), currency code");
 
                     var direction = nonOptionArgs.get(1);
                     var fiatCurrency = nonOptionArgs.get(2);
 
                     var request = GetOffersRequest.newBuilder()
                             .setDirection(direction)
-                            .setFiatCurrencyCode(fiatCurrency)
+                            .setCurrencyCode(fiatCurrency)
                             .build();
                     var reply = offersService.getOffers(request);
                     out.println(formatOfferTable(reply.getOffersList(), fiatCurrency));
                     return;
                 }
                 case createpaymentacct: {
-                    if (nonOptionArgs.size() < 4)
+                    if (nonOptionArgs.size() < 5)
                         throw new IllegalArgumentException(
-                                "incorrect parameter count, expecting account name, account number, currency code");
+                                "incorrect parameter count, expecting payment method id,"
+                                        + " account name, account number, currency code");
 
-                    var accountName = nonOptionArgs.get(1);
-                    var accountNumber = nonOptionArgs.get(2);
-                    var fiatCurrencyCode = nonOptionArgs.get(3);
+                    var paymentMethodId = nonOptionArgs.get(1);
+                    var accountName = nonOptionArgs.get(2);
+                    var accountNumber = nonOptionArgs.get(3);
+                    var currencyCode = nonOptionArgs.get(4);
 
                     var request = CreatePaymentAccountRequest.newBuilder()
+                            .setPaymentMethodId(paymentMethodId)
                             .setAccountName(accountName)
                             .setAccountNumber(accountNumber)
-                            .setFiatCurrencyCode(fiatCurrencyCode).build();
+                            .setCurrencyCode(currencyCode).build();
                     paymentAccountsService.createPaymentAccount(request);
-                    out.println(format("payment account %s saved", accountName));
+                    out.printf("payment account %s saved", accountName);
                     return;
                 }
                 case getpaymentaccts: {
@@ -232,7 +239,8 @@ public class CliMain {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("no password specified");
 
-                    var request = RemoveWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1)).build();
+                    var request = RemoveWalletPasswordRequest.newBuilder()
+                            .setPassword(nonOptionArgs.get(1)).build();
                     walletsService.removeWalletPassword(request);
                     out.println("wallet decrypted");
                     return;
@@ -241,12 +249,26 @@ public class CliMain {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("no password specified");
 
-                    var requestBuilder = SetWalletPasswordRequest.newBuilder().setPassword(nonOptionArgs.get(1));
+                    var requestBuilder = SetWalletPasswordRequest.newBuilder()
+                            .setPassword(nonOptionArgs.get(1));
                     var hasNewPassword = nonOptionArgs.size() == 3;
                     if (hasNewPassword)
                         requestBuilder.setNewPassword(nonOptionArgs.get(2));
                     walletsService.setWalletPassword(requestBuilder.build());
                     out.println("wallet encrypted" + (hasNewPassword ? " with new password" : ""));
+                    return;
+                }
+                case registerdisputeagent: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException(
+                                "incorrect parameter count, expecting dispute agent type, registration key");
+
+                    var disputeAgentType = nonOptionArgs.get(1);
+                    var registrationKey = nonOptionArgs.get(2);
+                    var requestBuilder = RegisterDisputeAgentRequest.newBuilder()
+                            .setDisputeAgentType(disputeAgentType).setRegistrationKey(registrationKey);
+                    disputeAgentsService.registerDisputeAgent(requestBuilder.build());
+                    out.println(disputeAgentType + " registered");
                     return;
                 }
                 default: {
@@ -258,6 +280,13 @@ public class CliMain {
             String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
             throw new RuntimeException(message, ex);
         }
+    }
+
+    private static Method getMethodFromCmd(String methodName) {
+        // TODO if we use const type for enum we need add some mapping.  Even if we don't
+        //  change now it is handy to have flexibility in case we change internal code
+        //  and don't want to break user commands.
+        return Method.valueOf(methodName.toLowerCase());
     }
 
     private static void printHelp(OptionParser parser, PrintStream stream) {

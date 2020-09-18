@@ -45,7 +45,10 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
     @Override
     public void createPaymentAccount(CreatePaymentAccountRequest req,
                                      StreamObserver<CreatePaymentAccountReply> responseObserver) {
-        coreApi.createPaymentAccount(req.getAccountName(), req.getAccountNumber(), req.getFiatCurrencyCode());
+        coreApi.createPaymentAccount(req.getPaymentMethodId(),
+                req.getAccountName(),
+                req.getAccountNumber(),
+                req.getCurrencyCode());
         var reply = CreatePaymentAccountReply.newBuilder().build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
@@ -54,10 +57,11 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
     @Override
     public void getPaymentAccounts(GetPaymentAccountsRequest req,
                                    StreamObserver<GetPaymentAccountsReply> responseObserver) {
-        var tradeStatistics = coreApi.getPaymentAccounts().stream()
+        var paymentAccounts = coreApi.getPaymentAccounts().stream()
                 .map(PaymentAccount::toProtoMessage)
                 .collect(Collectors.toList());
-        var reply = GetPaymentAccountsReply.newBuilder().addAllPaymentAccounts(tradeStatistics).build();
+        var reply = GetPaymentAccountsReply.newBuilder()
+                .addAllPaymentAccounts(paymentAccounts).build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
     }

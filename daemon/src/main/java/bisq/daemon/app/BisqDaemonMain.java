@@ -23,6 +23,7 @@ import bisq.core.app.CoreModule;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
+import bisq.common.handlers.ResultHandler;
 import bisq.common.setup.CommonSetup;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -39,13 +40,15 @@ import bisq.daemon.grpc.GrpcServer;
 @Slf4j
 public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.BisqSetupListener {
 
+    private GrpcServer grpcServer;
+
     public static void main(String[] args) {
         new BisqDaemonMain().execute(args);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void configUserThread() {
@@ -70,9 +73,9 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
         headlessApp.setGracefulShutDownHandler(this);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected AppModule getModule() {
@@ -91,7 +94,8 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
         // We need to be in user thread! We mapped at launchApplication already...
         headlessApp.startApplication();
 
-        // In headless mode we don't have an async behaviour so we trigger the setup by calling onApplicationStarted
+        // In headless mode we don't have an async behaviour so we trigger the setup by
+        // calling onApplicationStarted.
         onApplicationStarted();
     }
 
@@ -99,7 +103,14 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-        GrpcServer grpcServer = injector.getInstance(GrpcServer.class);
+        grpcServer = injector.getInstance(GrpcServer.class);
         grpcServer.start();
+    }
+
+    @Override
+    public void gracefulShutDown(ResultHandler resultHandler) {
+        super.gracefulShutDown(resultHandler);
+
+        grpcServer.shutdown();
     }
 }
