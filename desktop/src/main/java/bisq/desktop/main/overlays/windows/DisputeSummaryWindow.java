@@ -746,6 +746,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         var disputeManager = checkNotNull(getDisputeManager(dispute));
         try {
             DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            DelayedPayoutTxValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
             doClose(closeTicketButton);
         } catch (DelayedPayoutTxValidation.AddressException exception) {
             String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
@@ -773,6 +774,21 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 daoFacade.getAllDonationAddresses(),
                                 tradeId,
                                 Res.get("support.warning.disputesWithInvalidDonationAddress.refundAgent")))
+                        .show();
+            }
+        } catch (DelayedPayoutTxValidation.DisputeReplayException exception) {
+            if (disputeManager instanceof MediationManager) {
+                new Popup().width(900)
+                        .warning(exception.getMessage())
+                        .onAction(() -> {
+                            doClose(closeTicketButton);
+                        })
+                        .actionButtonText(Res.get("shared.yes"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .show();
+            } else {
+                new Popup().width(900)
+                        .warning(exception.getMessage())
                         .show();
             }
         }

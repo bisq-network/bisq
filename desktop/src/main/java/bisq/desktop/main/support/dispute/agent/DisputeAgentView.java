@@ -34,6 +34,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
+import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
@@ -59,13 +60,14 @@ import javafx.collections.ListChangeListener;
 
 import java.util.List;
 
+import static bisq.core.trade.DelayedPayoutTxValidation.ValidationException;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
 
     private final MultipleHolderNameDetection multipleHolderNameDetection;
     private final DaoFacade daoFacade;
-    private ListChangeListener<Dispute> disputesWithInvalidDonationAddressListener;
+    private ListChangeListener<ValidationException> validationExceptionListener;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                             KeyRing keyRing,
@@ -115,24 +117,30 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
 
         multipleHolderNameDetection.detectMultipleHolderNames();
 
-        disputesWithInvalidDonationAddressListener = c -> {
+        validationExceptionListener = c -> {
             c.next();
             if (c.wasAdded()) {
-                showWarningForInvalidDonationAddress(c.getAddedSubList());
+                showWarningForValidationExceptions(c.getAddedSubList());
             }
         };
     }
 
-    protected void showWarningForInvalidDonationAddress(List<? extends Dispute> disputes) {
-        disputes.stream()
-                .filter(dispute -> !dispute.isClosed())
-                .forEach(dispute -> {
-                    new Popup().warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
-                            dispute.getDonationAddressOfDelayedPayoutTx(),
-                            daoFacade.getAllDonationAddresses(),
-                            dispute.getTradeId(),
-                            ""))
-                            .show();
+    protected void showWarningForValidationExceptions(List<? extends ValidationException> exceptions) {
+        exceptions.stream()
+                .filter(ex -> ex.getDispute() != null)
+                .filter(ex -> !ex.getDispute().isClosed())
+                .forEach(ex -> {
+                    Dispute dispute = ex.getDispute();
+                    if (ex instanceof DelayedPayoutTxValidation.AddressException) {
+                        new Popup().width(900).warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                                dispute.getDonationAddressOfDelayedPayoutTx(),
+                                daoFacade.getAllDonationAddresses(),
+                                dispute.getTradeId(),
+                                ""))
+                                .show();
+                    } else {
+                        new Popup().width(900).warning(ex.getMessage()).show();
+                    }
                 });
     }
 
@@ -145,8 +153,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
             suspiciousDisputeDetected();
         }
 
-        disputeManager.getDisputesWithInvalidDonationAddress().addListener(disputesWithInvalidDonationAddressListener);
-        showWarningForInvalidDonationAddress(disputeManager.getDisputesWithInvalidDonationAddress());
+        disputeManager.getValidationExceptions().addListener(validationExceptionListener);
+        showWarningForValidationExceptions(disputeManager.getValidationExceptions());
     }
 
     @Override
@@ -155,7 +163,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
 
         multipleHolderNameDetection.removeListener(this);
 
-        disputeManager.getDisputesWithInvalidDonationAddress().removeListener(disputesWithInvalidDonationAddressListener);
+        disputeManager.getValidationExceptions().removeListener(validationExceptionListener);
     }
 
 

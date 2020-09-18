@@ -86,10 +86,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final PubKeyRing pubKeyRing;
     protected final DisputeListService<T> disputeListService;
     private final PriceFeedService priceFeedService;
-    private final DaoFacade daoFacade;
+    protected final DaoFacade daoFacade;
 
     @Getter
-    protected final ObservableList<Dispute> disputesWithInvalidDonationAddress = FXCollections.observableArrayList();
+    protected final ObservableList<DelayedPayoutTxValidation.ValidationException> validationExceptions =
+            FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +220,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeListService.getNrOfDisputes(isBuyer, contract);
     }
 
-    private T getDisputeList() {
+    protected T getDisputeList() {
         return disputeListService.getDisputeList();
     }
 
@@ -251,6 +252,20 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         tryApplyMessages();
         cleanupDisputes();
+
+        getDisputeList().getList().forEach(dispute -> {
+            if (dispute.getAgentsUid() == null) {
+                dispute.setAgentsUid(UUID.randomUUID().toString());
+            }
+
+            try {
+                DelayedPayoutTxValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+                DelayedPayoutTxValidation.testIfDisputeTriesReplay(dispute, getDisputeList().getList());
+            } catch (DelayedPayoutTxValidation.AddressException | DelayedPayoutTxValidation.DisputeReplayException e) {
+                log.error(e.toString());
+                validationExceptions.add(e);
+            }
+        });
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -282,6 +297,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
+        // Dispute agent sets uid to be sure to identify disputes uniquely to protect against replaying old disputes
+        dispute.setAgentsUid(UUID.randomUUID().toString());
         dispute.setStorage(disputeListService.getStorage());
         // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
         dispute.setSupportType(openNewDisputeMessage.getSupportType());
@@ -291,8 +308,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         try {
             DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-        } catch (DelayedPayoutTxValidation.AddressException e) {
-            disputesWithInvalidDonationAddress.add(dispute);
+            DelayedPayoutTxValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+        } catch (DelayedPayoutTxValidation.AddressException | DelayedPayoutTxValidation.DisputeReplayException e) {
+            log.error(e.toString());
+            validationExceptions.add(e);
         }
 
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
@@ -579,6 +598,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         dispute.addAndPersistChatMessage(chatMessage);
 
         addPriceInfoMessage(dispute, 0);
+
+        // Dispute agent sets uid to be sure to identify disputes uniquely to protect against replaying old disputes
+        dispute.setAgentsUid(UUID.randomUUID().toString());
 
         disputeList.add(dispute);
 

@@ -107,6 +107,9 @@ public final class Dispute implements NetworkPayload {
     @Setter
     @Nullable
     private String donationAddressOfDelayedPayoutTx;
+    @Setter
+    @Nullable
+    private String agentsUid;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -234,6 +237,7 @@ public final class Dispute implements NetworkPayload {
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
         Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
+        Optional.ofNullable(agentsUid).ifPresent(result -> builder.setAgentsUid(agentsUid));
         return builder.build();
     }
 
@@ -280,6 +284,11 @@ public final class Dispute implements NetworkPayload {
         String donationAddressOfDelayedPayoutTx = proto.getDonationAddressOfDelayedPayoutTx();
         if (!donationAddressOfDelayedPayoutTx.isEmpty()) {
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx);
+        }
+
+        String agentsUid = proto.getAgentsUid();
+        if (!agentsUid.isEmpty()) {
+            dispute.setAgentsUid(agentsUid);
         }
 
         return dispute;

@@ -767,7 +767,9 @@ public class DaoFacade implements DaoSetupService {
         Set<String> allPastParamValues = getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
 
         // If Dao is deactivated we need to add the default address as getAllPastParamValues will not return us any.
-        allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
+        if (allPastParamValues.isEmpty()) {
+            allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
+        }
 
         if (Config.baseCurrencyNetwork().isMainnet()) {
             // If Dao is deactivated we need to add the past addresses used as well.
