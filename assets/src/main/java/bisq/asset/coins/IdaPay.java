@@ -51,7 +51,6 @@ public class IdaPay extends Coin {
             super();
             addressHeader = 29;
             p2shHeader = 36;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

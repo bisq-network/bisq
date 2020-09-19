@@ -298,7 +298,7 @@ public class ProcessModel implements Model, PersistablePayload {
 
     public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
         this.takeOfferFeeTx = takeOfferFeeTx;
-        takeOfferFeeTxId = takeOfferFeeTx.getHashAsString();
+        takeOfferFeeTxId = takeOfferFeeTx.getTxId().toString();
     }
 
     @Nullable

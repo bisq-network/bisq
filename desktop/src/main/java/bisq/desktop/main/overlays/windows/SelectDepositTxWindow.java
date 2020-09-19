@@ -94,7 +94,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         transactionsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Transaction transaction) {
-                return transaction.getHashAsString();
+                return transaction.getTxId().toString();
             }
 
             @Override

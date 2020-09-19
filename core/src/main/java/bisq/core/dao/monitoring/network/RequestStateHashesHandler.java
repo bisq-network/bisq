@@ -33,6 +33,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Optional;
@@ -151,7 +152,7 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                                 "Might be caused by an previous timeout.");
                     }
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } else {
             log.warn("We have stopped already. We ignore that requestProposalsHash call.");
         }

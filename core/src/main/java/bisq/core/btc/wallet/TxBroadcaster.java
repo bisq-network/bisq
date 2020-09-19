@@ -29,6 +29,7 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class TxBroadcaster {
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction tx, Callback callback, int timeOut) {
         Timer timeoutTimer;
-        final String txId = tx.getHashAsString();
+        final String txId = tx.getTxId().toString();
         if (!broadcastTimerMap.containsKey(txId)) {
             timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast of tx {} not completed after {} sec.", txId, timeOut);
@@ -131,7 +132,7 @@ public class TxBroadcaster {
                 UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got an onFailure from " +
                         "the peerGroup.broadcastTransaction callback.", throwable)));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private static void stopAndRemoveTimer(String txId) {

@@ -34,7 +34,6 @@ public class Kekcoin extends Coin {
             super();
             addressHeader = 45;
             p2shHeader = 88;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

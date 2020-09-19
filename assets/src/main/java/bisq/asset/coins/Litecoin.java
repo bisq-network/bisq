@@ -30,7 +30,6 @@ public class Litecoin extends Coin {
         public LitecoinMainNetParams() {
             this.addressHeader = 48;
             this.p2shHeader = 5;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

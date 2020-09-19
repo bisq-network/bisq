@@ -71,7 +71,7 @@ class DepositListItem {
             public void onBalanceChanged(Coin balanceAsCoin, Transaction tx) {
                 DepositListItem.this.balanceAsCoin = balanceAsCoin;
                 DepositListItem.this.balance.set(formatter.formatCoin(balanceAsCoin));
-                GUIUtil.updateConfidence(walletService.getConfidenceForTxId(tx.getHashAsString()), tooltip, txConfidenceIndicator);
+                GUIUtil.updateConfidence(walletService.getConfidenceForTxId(tx.getTxId().toString()), tooltip, txConfidenceIndicator);
                 updateUsage(address);
             }
         });
