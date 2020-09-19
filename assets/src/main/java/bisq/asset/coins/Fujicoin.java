@@ -30,7 +30,6 @@ public class Fujicoin extends Coin {
         public FujicoinParams() {
             addressHeader = 36;
             p2shHeader = 16;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

@@ -33,6 +33,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
@@ -49,8 +50,9 @@ import javax.inject.Inject;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -91,7 +93,10 @@ public class BtcWalletService extends WalletService {
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBtcWallet();
-            wallet.addEventListener(walletEventListener);
+            wallet.addCoinsReceivedEventListener(walletEventListener);
+            wallet.addCoinsSentEventListener(walletEventListener);
+            wallet.addReorganizeEventListener(walletEventListener);
+            wallet.addTransactionConfidenceEventListener(walletEventListener);
 
             walletsSetup.getChain().addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
             chainHeightProperty.set(walletsSetup.getChain().getBestChainHeight());
@@ -133,7 +138,7 @@ public class BtcWalletService extends WalletService {
         return "Address entry list:\n" +
                 sb.toString() +
                 "\n\n" +
-                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+                wallet.toString(true, includePrivKeys, null, true, true, walletsSetup.getChain()) + "\n\n" +
                 "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
@@ -743,7 +748,7 @@ public class BtcWalletService extends WalletService {
         AddressEntry addressEntry = getFreshAddressEntry();
         checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
         Optional<Transaction> transactionOptional = wallet.getTransactions(true).stream()
-                .filter(t -> t.getHashAsString().equals(txId))
+                .filter(t -> t.getTxId().toString().equals(txId))
                 .findAny();
         if (transactionOptional.isPresent()) {
             Transaction txToDoubleSpend = transactionOptional.get();
@@ -864,7 +869,7 @@ public class BtcWalletService extends WalletService {
                                     log.error("Broadcasting double spending transaction failed. " + t.getMessage());
                                     errorMessageHandler.handleErrorMessage(t.getMessage());
                                 }
-                            });
+                            }, MoreExecutors.directExecutor());
                         }
 
                     } catch (InsufficientMoneyException e) {
@@ -988,7 +993,7 @@ public class BtcWalletService extends WalletService {
     public int getEstimatedFeeTxSize(List<Coin> outputValues, Coin txFee)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction transaction = new Transaction(params);
-        Address dummyAddress = wallet.currentReceiveKey().toAddress(params);
+        Address dummyAddress = LegacyAddress.fromKey(params, wallet.currentReceiveKey());
         outputValues.forEach(outputValue -> transaction.addOutput(outputValue, dummyAddress));
 
         SendRequest sendRequest = SendRequest.forTx(transaction);
@@ -1019,10 +1024,10 @@ public class BtcWalletService extends WalletService {
             AddressEntryException, InsufficientMoneyException {
         SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
+        Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
 
         printTx("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
+        return sendResult.tx.getTxId().toString();
     }
 
     public String sendFundsForMultipleAddresses(Set<String> fromAddresses,
@@ -1036,10 +1041,10 @@ public class BtcWalletService extends WalletService {
 
         SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
+        Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
 
         printTx("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
+        return sendResult.tx.getTxId().toString();
     }
 
     private SendRequest getSendRequest(String fromAddress,
@@ -1053,7 +1058,7 @@ public class BtcWalletService extends WalletService {
         final Coin receiverAmount = amount.subtract(fee);
         Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, Address.fromBase58(params, toAddress));
+        tx.addOutput(receiverAmount, LegacyAddress.fromBase58(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1084,7 +1089,7 @@ public class BtcWalletService extends WalletService {
         checkArgument(Restrictions.isAboveDust(netValue),
                 "The amount is too low (dust limit).");
 
-        tx.addOutput(netValue, Address.fromBase58(params, toAddress));
+        tx.addOutput(netValue, LegacyAddress.fromBase58(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1149,14 +1154,14 @@ public class BtcWalletService extends WalletService {
             Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
                     "The buyerAmount is too low (dust limit).");
 
-            tx.addOutput(buyerAmount, Address.fromBase58(params, buyerAddressString));
+            tx.addOutput(buyerAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         // sellerAmount can be 0
         if (sellerAmount.isPositive()) {
             Preconditions.checkArgument(Restrictions.isAboveDust(sellerAmount),
                     "The sellerAmount is too low (dust limit).");
 
-            tx.addOutput(sellerAmount, Address.fromBase58(params, sellerAddressString));
+            tx.addOutput(sellerAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
 
         SendRequest sendRequest = SendRequest.forTx(tx);

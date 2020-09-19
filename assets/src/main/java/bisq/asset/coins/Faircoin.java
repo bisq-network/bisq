@@ -32,7 +32,6 @@ public class Faircoin extends Coin {
         public FaircoinParams() {
             addressHeader = 95;
             p2shHeader = 36;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 

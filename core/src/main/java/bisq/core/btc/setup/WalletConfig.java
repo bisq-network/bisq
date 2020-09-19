@@ -20,200 +20,529 @@ package bisq.core.btc.setup;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
-
-import bisq.common.app.Version;
 import bisq.common.config.Config;
 
-import org.bitcoinj.core.BlockChain;
-import org.bitcoinj.core.CheckpointManager;
-import org.bitcoinj.core.Context;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.PeerAddress;
-import org.bitcoinj.core.PeerGroup;
-import org.bitcoinj.core.Utils;
-import org.bitcoinj.core.listeners.DownloadProgressTracker;
-import org.bitcoinj.core.listeners.PeerDataEventListener;
+import com.google.common.collect.*;
+import com.google.common.io.Closeables;
+import com.google.common.util.concurrent.*;
+import org.bitcoinj.core.listeners.*;
+import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.net.BlockingClientManager;
-import org.bitcoinj.net.discovery.DnsDiscovery;
-import org.bitcoinj.net.discovery.PeerDiscovery;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
-import org.bitcoinj.store.BlockStore;
-import org.bitcoinj.store.BlockStoreException;
-import org.bitcoinj.store.SPVBlockStore;
-import org.bitcoinj.wallet.DeterministicKeyChain;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.KeyChainGroup;
-import org.bitcoinj.wallet.Protos;
-import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.WalletExtension;
-import org.bitcoinj.wallet.WalletProtobufSerializer;
+import org.bitcoinj.net.discovery.*;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.store.*;
+import org.bitcoinj.wallet.*;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.AbstractIdleService;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
+import org.slf4j.*;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-
-import java.nio.channels.FileLock;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import javax.annotation.*;
+import java.io.*;
+import java.net.*;
+import java.nio.channels.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
 
 import static bisq.common.util.Preconditions.checkDir;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
-// Derived from WalletAppKit
-// Does the basic wiring
-@Slf4j
+/**
+ * <p>Utility class that wraps the boilerplate needed to set up a new SPV bitcoinj app. Instantiate it with a directory
+ * and file prefix, optionally configure a few things, then use startAsync and optionally awaitRunning. The object will
+ * construct and configure a {@link BlockChain}, {@link SPVBlockStore}, {@link Wallet} and {@link PeerGroup}. Depending
+ * on the value of the blockingStartup property, startup will be considered complete once the block chain has fully
+ * synchronized, so it can take a while.</p>
+ *
+ * <p>To add listeners and modify the objects that are constructed, you can either do that by overriding the
+ * {@link #onSetupCompleted()} method (which will run on a background thread) and make your changes there,
+ * or by waiting for the service to start and then accessing the objects from wherever you want. However, you cannot
+ * access the objects this class creates until startup is complete.</p>
+ *
+ * <p>The asynchronous design of this class may seem puzzling (just use {@link #awaitRunning()} if you don't want that).
+ * It is to make it easier to fit bitcoinj into GUI apps, which require a high degree of responsiveness on their main
+ * thread which handles all the animation and user interaction. Even when blockingStart is false, initializing bitcoinj
+ * means doing potentially blocking file IO, generating keys and other potentially intensive operations. By running it
+ * on a background thread, there's no risk of accidentally causing UI lag.</p>
+ *
+ * <p>Note that {@link #awaitRunning()} can throw an unchecked {@link IllegalStateException}
+ * if anything goes wrong during startup - you should probably handle it and use {@link Exception#getCause()} to figure
+ * out what went wrong more precisely. Same thing if you just use the {@link #startAsync()} method.</p>
+ */
 public class WalletConfig extends AbstractIdleService {
+
     private static final int TOR_SOCKET_TIMEOUT = 120 * 1000;  // 1 sec used in bitcoinj, but since bisq uses Tor we allow more.
     private static final int TOR_VERSION_EXCHANGE_TIMEOUT = 125 * 1000;  // 5 sec used in bitcoinj, but since bisq uses Tor we allow more.
 
+    protected static final Logger log = LoggerFactory.getLogger(WalletConfig.class);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // WalletFactory
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    protected final NetworkParameters params;
+    protected final String filePrefix;
+    protected volatile BlockChain vChain;
+    protected volatile SPVBlockStore vStore;
+    protected volatile Wallet vBtcWallet;
+    protected volatile Wallet vBsqWallet;
+    protected volatile PeerGroup vPeerGroup;
 
-    public interface BisqWalletFactory extends WalletProtobufSerializer.WalletFactory {
-        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet);
-    }
+    protected final File directory;
+    protected volatile File vBtcWalletFile;
+    protected volatile File vBsqWalletFile;
 
+    protected boolean useAutoSave = true;
+    protected PeerAddress[] peerAddresses;
+    protected DownloadProgressTracker downloadListener;
+    protected boolean autoStop = true;
+    protected InputStream checkpoints;
+    protected boolean blockingStartup = true;
+    protected String userAgent, version;
+    protected WalletProtobufSerializer.WalletFactory walletFactory;
+    @Nullable protected DeterministicSeed restoreFromSeed;
+    @Nullable protected DeterministicKey restoreFromKey;
+    @Nullable protected PeerDiscovery discovery;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    protected volatile Context context;
 
-    private final Context context;
-    private final NetworkParameters params;
-    private final File directory;
-    private final String btcWalletFileName;
-    private final String bsqWalletFileName;
-    private final String spvChainFileName;
-    private final Socks5Proxy socks5Proxy;
-    private final BisqWalletFactory walletFactory;
-    private final Config config;
-    private final LocalBitcoinNode localBitcoinNode;
-    private final String userAgent;
-    private int numConnectionsForBtc;
-
-    private volatile Wallet vBtcWallet;
-    @Nullable
-    private volatile Wallet vBsqWallet;
-    private volatile File vBtcWalletFile;
-    @Nullable
-    private volatile File vBsqWalletFile;
-    @Nullable
-    private DeterministicSeed seed;
-
-    private volatile BlockChain vChain;
-    private volatile SPVBlockStore vStore;
-    private volatile PeerGroup vPeerGroup;
-    private boolean useAutoSave = true;
-    private PeerAddress[] peerAddresses;
-    private PeerDataEventListener downloadListener;
-    private boolean autoStop = true;
-    private InputStream checkpoints;
-    private boolean blockingStartup = true;
+    protected Config config;
+    protected LocalBitcoinNode localBitcoinNode;
+    protected Socks5Proxy socks5Proxy;
+    protected int numConnectionsForBtc;
     @Getter
     @Setter
     private int minBroadcastConnections;
 
-    @Nullable
-    private PeerDiscovery discovery;
+    /**
+     * Creates a new WalletConfig, with a newly created {@link Context}. Files will be stored in the given directory.
+     */
+    public WalletConfig(NetworkParameters params, File directory, String filePrefix) {
+        this(new Context(params), directory, filePrefix);
+    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public WalletConfig(NetworkParameters params,
-                        Socks5Proxy socks5Proxy,
-                        File directory,
-                        Config config,
-                        LocalBitcoinNode localBitcoinNode,
-                        String userAgent,
-                        int numConnectionsForBtc,
-                        @SuppressWarnings("SameParameterValue") String btcWalletFileName,
-                        @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
-                        @SuppressWarnings("SameParameterValue") String spvChainFileName) {
-        this.config = config;
-        this.localBitcoinNode = localBitcoinNode;
-        this.userAgent = userAgent;
-        this.numConnectionsForBtc = numConnectionsForBtc;
-        this.context = new Context(params);
+    /**
+     * Creates a new WalletConfig, with the given {@link Context}. Files will be stored in the given directory.
+     */
+    public WalletConfig(Context context,
+                        File directory, String filePrefix) {
+        this.context = context;
         this.params = checkNotNull(context.getParams());
         this.directory = checkDir(directory);
-        this.btcWalletFileName = checkNotNull(btcWalletFileName);
-        this.bsqWalletFileName = bsqWalletFileName;
-        this.spvChainFileName = spvChainFileName;
+        this.filePrefix = checkNotNull(filePrefix);
+    }
+
+    public WalletConfig setSocks5Proxy(Socks5Proxy socks5Proxy) {
+        checkState(state() == State.NEW, "Cannot call after startup");
         this.socks5Proxy = socks5Proxy;
+        return this;
+    }
 
-        walletFactory = new BisqWalletFactory() {
-            @Override
-            public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup) {
-                // This is called when we load an existing wallet
-                // We have already the chain here so we can use this to distinguish.
-                List<DeterministicKeyChain> deterministicKeyChains = keyChainGroup.getDeterministicKeyChains();
-                if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof BisqDeterministicKeyChain) {
-                    return new BsqWallet(params, keyChainGroup);
-                } else {
-                    return new Wallet(params, keyChainGroup);
-                }
-            }
+    public WalletConfig setConfig(Config config) {
+        checkState(state() == State.NEW, "Cannot call after startup");
+        this.config = config;
+        return this;
+    }
 
-            @Override
-            public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet) {
-                // This is called at first startup when we create the wallet
-                if (isBsqWallet) {
-                    return new BsqWallet(params, keyChainGroup);
-                } else {
-                    return new Wallet(params, keyChainGroup);
-                }
-            }
-        };
+    public WalletConfig setLocalBitcoinNode(LocalBitcoinNode localBitcoinNode) {
+        checkState(state() == State.NEW, "Cannot call after startup");
+        this.localBitcoinNode = localBitcoinNode;
+        return this;
+    }
 
-        String path = null;
-        if (params.equals(MainNetParams.get())) {
-            // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
-            // in the checkpoints file and then download the rest from the network. It makes things much faster.
-            // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
-            // last months worth or more (takes a few seconds).
-            path = "/wallet/checkpoints.txt";
-        } else if (params.equals(TestNet3Params.get())) {
-            path = "/wallet/checkpoints.testnet.txt";
-        }
-        if (path != null) {
-            try {
-                setCheckpoints(getClass().getResourceAsStream(path));
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.error(e.toString());
-            }
+    public WalletConfig setNumConnectionsForBtc(int numConnectionsForBtc) {
+        checkState(state() == State.NEW, "Cannot call after startup");
+        this.numConnectionsForBtc = numConnectionsForBtc;
+        return this;
+    }
+
+
+    /** Will only connect to the given addresses. Cannot be called after startup. */
+    public WalletConfig setPeerNodes(PeerAddress... addresses) {
+        checkState(state() == State.NEW, "Cannot call after startup");
+        this.peerAddresses = addresses;
+        return this;
+    }
+
+    /** Will only connect to localhost. Cannot be called after startup. */
+    public WalletConfig connectToLocalHost() {
+        final InetAddress localHost = InetAddress.getLoopbackAddress();
+        return setPeerNodes(new PeerAddress(params, localHost, params.getPort()));
+    }
+
+    /** If true, the wallet will save itself to disk automatically whenever it changes. */
+    public WalletConfig setAutoSave(boolean value) {
+        checkState(state() == State.NEW, "Cannot call after startup");
+        useAutoSave = value;
+        return this;
+    }
+
+    /**
+     * If you want to learn about the sync process, you can provide a listener here. For instance, a
+     * {@link DownloadProgressTracker} is a good choice. This has no effect unless setBlockingStartup(false) has been called
+     * too, due to some missing implementation code.
+     */
+    public WalletConfig setDownloadListener(DownloadProgressTracker listener) {
+        this.downloadListener = listener;
+        return this;
+    }
+
+    /** If true, will register a shutdown hook to stop the library. Defaults to true. */
+    public WalletConfig setAutoStop(boolean autoStop) {
+        this.autoStop = autoStop;
+        return this;
+    }
+
+    /**
+     * If set, the file is expected to contain a checkpoints file calculated with BuildCheckpoints. It makes initial
+     * block sync faster for new users - please refer to the documentation on the bitcoinj website
+     * (https://bitcoinj.github.io/speeding-up-chain-sync) for further details.
+     */
+    public WalletConfig setCheckpoints(InputStream checkpoints) {
+        if (this.checkpoints != null)
+            Closeables.closeQuietly(checkpoints);
+        this.checkpoints = checkNotNull(checkpoints);
+        return this;
+    }
+
+    /**
+     * If true (the default) then the startup of this service won't be considered complete until the network has been
+     * brought up, peer connections established and the block chain synchronised. Therefore {@link #awaitRunning()} can
+     * potentially take a very long time. If false, then startup is considered complete once the network activity
+     * begins and peer connections/block chain sync will continue in the background.
+     */
+    public WalletConfig setBlockingStartup(boolean blockingStartup) {
+        this.blockingStartup = blockingStartup;
+        return this;
+    }
+
+    /**
+     * Sets the string that will appear in the subver field of the version message.
+     * @param userAgent A short string that should be the name of your app, e.g. "My Wallet"
+     * @param version A short string that contains the version number, e.g. "1.0-BETA"
+     */
+    public WalletConfig setUserAgent(String userAgent, String version) {
+        this.userAgent = checkNotNull(userAgent);
+        this.version = checkNotNull(version);
+        return this;
+    }
+
+    /**
+     * Sets a wallet factory which will be used when the kit creates a new wallet.
+     */
+    public WalletConfig setWalletFactory(WalletProtobufSerializer.WalletFactory walletFactory) {
+        this.walletFactory = walletFactory;
+        return this;
+    }
+
+    /**
+     * If a seed is set here then any existing wallet that matches the file name will be renamed to a backup name,
+     * the chain file will be deleted, and the wallet object will be instantiated with the given seed instead of
+     * a fresh one being created. This is intended for restoring a wallet from the original seed. To implement restore
+     * you would shut down the existing appkit, if any, then recreate it with the seed given by the user, then start
+     * up the new kit. The next time your app starts it should work as normal (that is, don't keep calling this each
+     * time).
+     */
+    public WalletConfig restoreWalletFromSeed(DeterministicSeed seed) {
+        this.restoreFromSeed = seed;
+        return this;
+    }
+
+    /**
+     * If an account key is set here then any existing wallet that matches the file name will be renamed to a backup name,
+     * the chain file will be deleted, and the wallet object will be instantiated with the given key instead of
+     * a fresh seed being created. This is intended for restoring a wallet from an account key. To implement restore
+     * you would shut down the existing appkit, if any, then recreate it with the key given by the user, then start
+     * up the new kit. The next time your app starts it should work as normal (that is, don't keep calling this each
+     * time).
+     */
+    public WalletConfig restoreWalletFromKey(DeterministicKey accountKey) {
+        this.restoreFromKey = accountKey;
+        return this;
+    }
+
+    /**
+     * Sets the peer discovery class to use. If none is provided then DNS is used, which is a reasonable default.
+     */
+    public WalletConfig setDiscovery(@Nullable PeerDiscovery discovery) {
+        this.discovery = discovery;
+        return this;
+    }
+
+    /**
+     * <p>Override this to return wallet extensions if any are necessary.</p>
+     *
+     * <p>When this is called, chain(), store(), and peerGroup() will return the created objects, however they are not
+     * initialized/started.</p>
+     */
+    protected List<WalletExtension> provideWalletExtensions() throws Exception {
+        return ImmutableList.of();
+    }
+
+    /**
+     * This method is invoked on a background thread after all objects are initialised, but before the peer group
+     * or block chain download is started. You can tweak the objects configuration here.
+     */
+    protected void onSetupCompleted() {
+        // Meant to be overridden by subclasses
+    }
+
+    /**
+     * Tests to see if the spvchain file has an operating system file lock on it. Useful for checking if your app
+     * is already running. If another copy of your app is running and you start the appkit anyway, an exception will
+     * be thrown during the startup process. Returns false if the chain file does not exist or is a directory.
+     */
+    public boolean isChainFileLocked() throws IOException {
+        RandomAccessFile file2 = null;
+        try {
+            File file = new File(directory, filePrefix + ".spvchain");
+            if (!file.exists())
+                return false;
+            if (file.isDirectory())
+                return false;
+            file2 = new RandomAccessFile(file, "rw");
+            FileLock lock = file2.getChannel().tryLock();
+            if (lock == null)
+                return true;
+            lock.release();
+            return false;
+        } finally {
+            if (file2 != null)
+                file2.close();
         }
     }
+
+    @Override
+    protected void startUp() throws Exception {
+        // Runs in a separate thread.
+        Context.propagate(context);
+        // bitcoinj's WalletAppKit creates the wallet directory if it was not created already,
+        // but WalletConfig should not do that.
+        // if (!directory.exists()) {
+        //     if (!directory.mkdirs()) {
+        //         throw new IOException("Could not create directory " + directory.getAbsolutePath());
+        //     }
+        // }
+        log.info("Starting up with directory = {}", directory);
+        try {
+            File chainFile = new File(directory, filePrefix + ".spvchain");
+            boolean chainFileExists = chainFile.exists();
+            String btcPrefix = "_BTC";
+            vBtcWalletFile = new File(directory, filePrefix + btcPrefix + ".wallet");
+            boolean shouldReplayWallet = (vBtcWalletFile.exists() && !chainFileExists) || restoreFromSeed != null || restoreFromKey != null;
+            vBtcWallet = createOrLoadWallet(shouldReplayWallet, vBtcWalletFile, false);
+            vBtcWallet.allowSpendingUnconfirmedTransactions();
+            vBtcWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
+
+            String bsqPrefix = "_BSQ";
+            vBsqWalletFile = new File(directory, filePrefix + bsqPrefix + ".wallet");
+            vBsqWallet = createOrLoadWallet(shouldReplayWallet, vBsqWalletFile, true);
+            vBsqWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
+
+            // Initiate Bitcoin network objects (block store, blockchain and peer group)
+            vStore = new SPVBlockStore(params, chainFile);
+            if (!chainFileExists || restoreFromSeed != null || restoreFromKey != null) {
+                if (checkpoints == null && !Utils.isAndroidRuntime()) {
+                    checkpoints = CheckpointManager.openStream(params);
+                }
+
+                if (checkpoints != null) {
+                    // Initialize the chain file with a checkpoint to speed up first-run sync.
+                    long time;
+                    if (restoreFromSeed != null) {
+                        time = restoreFromSeed.getCreationTimeSeconds();
+                        if (chainFileExists) {
+                            log.info("Clearing the chain file in preparation for restore.");
+                            vStore.clear();
+                        }
+                    } else if (restoreFromKey != null) {
+                        time = restoreFromKey.getCreationTimeSeconds();
+                        if (chainFileExists) {
+                            log.info("Clearing the chain file in preparation for restore.");
+                            vStore.clear();
+                        }
+                    } else {
+                        time = vBtcWallet.getEarliestKeyCreationTime();
+                    }
+                    if (time > 0)
+                        CheckpointManager.checkpoint(params, checkpoints, vStore, time);
+                    else
+                        log.warn("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
+                } else if (chainFileExists) {
+                    log.info("Clearing the chain file in preparation for restore.");
+                    vStore.clear();
+                }
+            }
+            vChain = new BlockChain(params, vStore);
+            vPeerGroup = createPeerGroup();
+            if (minBroadcastConnections > 0 )
+                vPeerGroup.setMinBroadcastConnections(minBroadcastConnections);
+            if (this.userAgent != null)
+                vPeerGroup.setUserAgent(userAgent, version);
+
+            // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
+            // before we're actually connected the broadcast waits for an appropriate number of connections.
+            if (peerAddresses != null) {
+                for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
+                int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
+                log.info("We try to connect to {} btc nodes", maxConnections);
+                vPeerGroup.setMaxConnections(maxConnections);
+                vPeerGroup.setAddPeersFromAddressMessage(false);
+                peerAddresses = null;
+            } else if (!params.getId().equals(NetworkParameters.ID_REGTEST)) {
+                vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
+            }
+            vChain.addWallet(vBtcWallet);
+            vPeerGroup.addWallet(vBtcWallet);
+            vChain.addWallet(vBsqWallet);
+            vPeerGroup.addWallet(vBsqWallet);
+            onSetupCompleted();
+
+            if (blockingStartup) {
+                vPeerGroup.start();
+                // Make sure we shut down cleanly.
+                installShutdownHook();
+                //completeExtensionInitiations(vPeerGroup);
+
+                // TODO: Be able to use the provided download listener when doing a blocking startup.
+                final DownloadProgressTracker listener = new DownloadProgressTracker();
+                vPeerGroup.startBlockChainDownload(listener);
+                listener.await();
+            } else {
+                Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
+                    @Override
+                    public void onSuccess(@Nullable Object result) {
+                        //completeExtensionInitiations(vPeerGroup);
+                        final DownloadProgressTracker l = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
+                        vPeerGroup.startBlockChainDownload(l);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        throw new RuntimeException(t);
+
+                    }
+                }, MoreExecutors.directExecutor());
+            }
+        } catch (BlockStoreException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private Wallet createOrLoadWallet(boolean shouldReplayWallet, File walletFile, boolean isBsqWallet) throws Exception {
+        Wallet wallet;
+
+        maybeMoveOldWalletOutOfTheWay(walletFile);
+
+        if (walletFile.exists()) {
+            wallet = loadWallet(shouldReplayWallet, walletFile, isBsqWallet);
+        } else {
+            wallet = createWallet(isBsqWallet);
+            wallet.freshReceiveKey();
+            for (WalletExtension e : provideWalletExtensions()) {
+                wallet.addExtension(e);
+            }
+
+            // Currently the only way we can be sure that an extension is aware of its containing wallet is by
+            // deserializing the extension (see WalletExtension#deserializeWalletExtension(Wallet, byte[]))
+            // Hence, we first save and then load wallet to ensure any extensions are correctly initialized.
+            wallet.saveToFile(walletFile);
+            wallet = loadWallet(false, walletFile, isBsqWallet);
+        }
+
+        if (useAutoSave) {
+            this.setupAutoSave(wallet, walletFile);
+        }
+
+        return wallet;
+    }
+
+    protected void setupAutoSave(Wallet wallet, File walletFile) {
+        wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
+    }
+
+    private Wallet loadWallet(boolean shouldReplayWallet, File walletFile, boolean isBsqWallet) throws Exception {
+        Wallet wallet;
+        FileInputStream walletStream = new FileInputStream(walletFile);
+        try {
+            List<WalletExtension> extensions = provideWalletExtensions();
+            WalletExtension[] extArray = extensions.toArray(new WalletExtension[extensions.size()]);
+            Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
+            final WalletProtobufSerializer serializer;
+            if (walletFactory != null)
+                serializer = new WalletProtobufSerializer(walletFactory);
+            else
+                serializer = new WalletProtobufSerializer();
+            // Hack to convert bitcoinj 0.14 wallets to bitcoinj 0.15 format
+            serializer.setKeyChainFactory(new BisqKeyChainFactory(isBsqWallet));
+            wallet = serializer.readWallet(params, extArray, proto);
+            if (shouldReplayWallet)
+                wallet.reset();
+        } finally {
+            walletStream.close();
+        }
+        return wallet;
+    }
+
+    protected Wallet createWallet(boolean isBsqWallet) {
+        // Change preferredOutputScriptType of btc wallet to P2WPKH to start using segwit
+        // Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
+        Script.ScriptType preferredOutputScriptType = Script.ScriptType.P2PKH;
+        KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
+        KeyChainGroup.Builder kcg = KeyChainGroup.builder(params, structure);
+        if (restoreFromSeed != null) {
+            kcg.fromSeed(restoreFromSeed, preferredOutputScriptType).build();
+        } else if (restoreFromKey != null) {
+            kcg.addChain(DeterministicKeyChain.builder().spend(restoreFromKey).outputScriptType(preferredOutputScriptType).build());
+        } else {
+            // new wallet
+            if (!isBsqWallet) {
+                // btc wallet uses a new random seed.
+                kcg.fromRandom(preferredOutputScriptType);
+            } else {
+                // bsq wallet uses btc wallet's seed created a few milliseconds ago.
+                kcg.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
+            }
+        }
+        if (walletFactory != null) {
+            return walletFactory.create(params, kcg.build());
+        } else {
+            return new Wallet(params, kcg.build()); // default
+        }
+    }
+
+    private void maybeMoveOldWalletOutOfTheWay(File walletFile) {
+        if (restoreFromSeed == null && restoreFromKey == null) return;
+        if (!walletFile.exists()) return;
+        int counter = 1;
+        File newName;
+        do {
+            newName = new File(walletFile.getParent(), "Backup " + counter + " for " + walletFile.getName());
+            counter++;
+        } while (newName.exists());
+        log.info("Renaming old wallet file {} to {}", walletFile, newName);
+        if (!walletFile.renameTo(newName)) {
+            // This should not happen unless something is really messed up.
+            throw new RuntimeException("Failed to rename wallet for restore");
+        }
+    }
+
+    /*
+     * As soon as the transaction broadcaster han been created we will pass it to the
+     * payment channel extensions
+     */
+    // private void completeExtensionInitiations(TransactionBroadcaster transactionBroadcaster) {
+    //     StoredPaymentChannelClientStates clientStoredChannels = (StoredPaymentChannelClientStates)
+    //             vWallet.getExtensions().get(StoredPaymentChannelClientStates.class.getName());
+    //     if(clientStoredChannels != null) {
+    //         clientStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
+    //     }
+    //     StoredPaymentChannelServerStates serverStoredChannels = (StoredPaymentChannelServerStates)
+    //             vWallet.getExtensions().get(StoredPaymentChannelServerStates.class.getName());
+    //     if(serverStoredChannels != null) {
+    //         serverStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
+    //     }
+    // }
 
     private PeerGroup createPeerGroup() {
         PeerGroup peerGroup;
@@ -244,322 +573,17 @@ public class WalletConfig extends AbstractIdleService {
         return peerGroup;
     }
 
-    /**
-     * Will only connect to the given addresses. Cannot be called after startup.
-     */
-    public WalletConfig setPeerNodes(PeerAddress... addresses) {
-        checkState(state() == State.NEW, "Cannot call after startup");
-        this.peerAddresses = addresses;
-        return this;
-    }
-
-
-    /**
-     * If true, the wallet will save itself to disk automatically whenever it changes.
-     */
-    public WalletConfig setAutoSave(boolean value) {
-        checkState(state() == State.NEW, "Cannot call after startup");
-        useAutoSave = value;
-        return this;
-    }
-
-    public WalletConfig setDownloadListener(PeerDataEventListener listener) {
-        this.downloadListener = listener;
-        return this;
-    }
-
-    /**
-     * If true, will register a shutdown hook to stop the library. Defaults to true.
-     */
-    public WalletConfig setAutoStop(boolean autoStop) {
-        this.autoStop = autoStop;
-        return this;
-    }
-
-    /**
-     * If set, the file is expected to contain a checkpoints file calculated with BuildCheckpoints. It makes initial
-     * block sync faster for new users - please refer to the documentation on the bitcoinj website for further details.
-     */
-    private void setCheckpoints(InputStream checkpoints) {
-        if (this.checkpoints != null)
-            Utils.closeUnchecked(this.checkpoints);
-        this.checkpoints = checkNotNull(checkpoints);
-    }
-
-    /**
-     * If true (the default) then the startup of this service won't be considered complete until the network has been
-     * brought up, peer connections established and the block chain synchronised. Therefore startAndWait() can
-     * potentially take a very long time. If false, then startup is considered complete once the network activity
-     * begins and peer connections/block chain sync will continue in the background.
-     */
-    public WalletConfig setBlockingStartup(@SuppressWarnings("SameParameterValue") boolean blockingStartup) {
-        this.blockingStartup = blockingStartup;
-        return this;
-    }
-
-    /**
-     * If a seed is set here then any existing wallet that matches the file name will be renamed to a backup name,
-     * the chain file will be deleted, and the wallet object will be instantiated with the given seed instead of
-     * a fresh one being created. This is intended for restoring a wallet from the original seed. To implement restore
-     * you would shut down the existing appkit, if any, then recreate it with the seed given by the user, then start
-     * up the new kit. The next time your app starts it should work as normal (that is, don't keep calling this each
-     * time).
-     */
-    public WalletConfig setSeed(@Nullable DeterministicSeed seed) {
-        this.seed = seed;
-        return this;
-    }
-
-    /**
-     * Sets the peer discovery class to use. If none is provided then DNS is used, which is a reasonable default.
-     */
-    public WalletConfig setDiscovery(@Nullable PeerDiscovery discovery) {
-        this.discovery = discovery;
-        return this;
-    }
-
-    /**
-     * <p>Override this to return wallet extensions if any are necessary.</p>
-     * <p>
-     * <p>When this is called, chain(), store(), and peerGroup() will return the created objects, however they are not
-     * initialized/started.</p>
-     */
-    private List<WalletExtension> provideWalletExtensions() {
-        return ImmutableList.of();
-    }
-
-    /**
-     * This method is invoked on a background thread after all objects are initialised, but before the peer group
-     * or block chain download is started. You can tweak the objects configuration here.
-     */
-    void onSetupCompleted() {
-    }
-
-    /**
-     * Tests to see if the spvchain file has an operating system file lock on it. Useful for checking if your app
-     * is already running. If another copy of your app is running and you start the appkit anyway, an exception will
-     * be thrown during the startup process. Returns false if the chain file does not exist or is a directory.
-     */
-    public boolean isChainFileLocked() throws IOException {
-        RandomAccessFile file2 = null;
-        try {
-            File file = new File(directory, spvChainFileName);
-            if (!file.exists())
-                return false;
-            if (file.isDirectory())
-                return false;
-            file2 = new RandomAccessFile(file, "rw");
-            FileLock lock = file2.getChannel().tryLock();
-            if (lock == null)
-                return true;
-            lock.release();
-            return false;
-        } finally {
-            if (file2 != null)
-                file2.close();
-        }
-    }
-
-    @Override
-    protected void startUp() throws Exception {
-        // Runs in a separate thread.
-        Context.propagate(context);
-        log.info("Wallet directory: {}", directory);
-        try {
-            File chainFile = new File(directory, spvChainFileName);
-            boolean chainFileExists = chainFile.exists();
-
-            // BTC wallet
-            vBtcWalletFile = new File(directory, btcWalletFileName);
-            boolean shouldReplayWallet = (vBtcWalletFile.exists() && !chainFileExists) || seed != null;
-            BisqKeyChainGroup keyChainGroup;
-            if (seed != null)
-                keyChainGroup = new BisqKeyChainGroup(params, new BtcDeterministicKeyChain(seed), true);
-            else
-                keyChainGroup = new BisqKeyChainGroup(params, true);
-            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false, seed);
-
-            vBtcWallet.allowSpendingUnconfirmedTransactions();
-            vBtcWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
-
-            if (seed != null)
-                keyChainGroup = new BisqKeyChainGroup(params, new BisqDeterministicKeyChain(seed), false);
-            else
-                keyChainGroup = new BisqKeyChainGroup(params, new BisqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false);
-
-            // BSQ wallet
-            vBsqWalletFile = new File(directory, bsqWalletFileName);
-            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
-            vBsqWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
-
-            // Initiate Bitcoin network objects (block store, blockchain and peer group)
-            vStore = new SPVBlockStore(params, chainFile);
-            if (!chainFileExists || seed != null) {
-                if (checkpoints != null) {
-                    // Initialize the chain file with a checkpoint to speed up first-run sync.
-                    long time;
-
-                    if (seed != null) {
-                        // we created both wallets at the same time
-                        time = seed.getCreationTimeSeconds();
-                        if (chainFileExists) {
-                            log.info("Clearing the chain file in preparation from restore.");
-                            vStore.clear();
-                        }
-                    } else {
-                        time = vBtcWallet.getEarliestKeyCreationTime();
-                    }
-
-
-                    if (time > 0)
-                        CheckpointManager.checkpoint(params, checkpoints, vStore, time);
-                    else
-                        log.warn("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
-                } else if (chainFileExists) {
-                    log.info("Clearing the chain file in preparation from restore.");
-                    vStore.clear();
+    private void installShutdownHook() {
+        if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread("WalletConfig ShutdownHook") {
+            @Override public void run() {
+                try {
+                    WalletConfig.this.stopAsync();
+                    WalletConfig.this.awaitTerminated();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
-            vChain = new BlockChain(params, vStore);
-            vPeerGroup = createPeerGroup();
-
-            if (minBroadcastConnections > 0)
-                vPeerGroup.setMinBroadcastConnections(minBroadcastConnections);
-
-            vPeerGroup.setUserAgent(userAgent, Version.VERSION);
-
-            // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
-            // before we're actually connected the broadcast waits for an appropriate number of connections.
-            if (peerAddresses != null) {
-                for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                int maxConnections = Math.min(numConnectionsForBtc, peerAddresses.length);
-                log.info("We try to connect to {} btc nodes", maxConnections);
-                vPeerGroup.setMaxConnections(maxConnections);
-                vPeerGroup.setAddPeersFromAddressMessage(false);
-                peerAddresses = null;
-            } else if (!params.equals(RegTestParams.get())) {
-                vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
-            }
-            vChain.addWallet(vBtcWallet);
-            vPeerGroup.addWallet(vBtcWallet);
-
-            if (vBsqWallet != null) {
-                //noinspection ConstantConditions
-                vChain.addWallet(vBsqWallet);
-                //noinspection ConstantConditions
-                vPeerGroup.addWallet(vBsqWallet);
-            }
-
-            onSetupCompleted();
-
-            if (blockingStartup) {
-                vPeerGroup.start();
-                // Make sure we shut down cleanly.
-                installShutdownHook();
-
-                final DownloadProgressTracker listener = new DownloadProgressTracker();
-                vPeerGroup.startBlockChainDownload(listener);
-                listener.await();
-            } else {
-                Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
-                    @Override
-                    public void onSuccess(@Nullable Object result) {
-                        final PeerDataEventListener listener = downloadListener == null ?
-                                new DownloadProgressTracker() : downloadListener;
-                        vPeerGroup.startBlockChainDownload(listener);
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-                });
-            }
-        } catch (BlockStoreException e) {
-            throw new IOException(e);
-        }
-    }
-
-    void setPeerNodesForLocalHost() {
-        setPeerNodes(new PeerAddress(InetAddress.getLoopbackAddress(), params.getPort()));
-    }
-
-    private Wallet createOrLoadWallet(File walletFile,
-                                      boolean shouldReplayWallet,
-                                      BisqKeyChainGroup keyChainGroup,
-                                      boolean isBsqWallet,
-                                      DeterministicSeed restoreFromSeed)
-            throws Exception {
-
-        if (restoreFromSeed != null)
-            maybeMoveOldWalletOutOfTheWay(walletFile);
-
-        Wallet wallet;
-        if (walletFile.exists()) {
-            wallet = loadWallet(walletFile, shouldReplayWallet, keyChainGroup.isUseBitcoinDeterministicKeyChain());
-        } else {
-            wallet = createWallet(keyChainGroup, isBsqWallet);
-            wallet.freshReceiveKey();
-            wallet.saveToFile(walletFile);
-        }
-
-        if (useAutoSave) wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
-
-        return wallet;
-    }
-
-    private void maybeMoveOldWalletOutOfTheWay(File vWalletFile) {
-        if (!vWalletFile.exists()) return;
-
-        int counter = 1;
-        File newName;
-        do {
-            newName = new File(vWalletFile.getParent(), "Backup " + counter + " for " + vWalletFile.getName());
-            counter++;
-        } while (newName.exists());
-
-        log.info("Renaming old wallet file {} to {}", vWalletFile, newName);
-        if (!vWalletFile.renameTo(newName)) {
-            // This should not happen unless something is really messed up.
-            throw new RuntimeException("Failed to rename wallet for restore");
-        }
-    }
-
-    private Wallet loadWallet(File walletFile,
-                              boolean shouldReplayWallet,
-                              boolean useBitcoinDeterministicKeyChain) throws Exception {
-        Wallet wallet;
-        try (FileInputStream walletStream = new FileInputStream(walletFile)) {
-            List<WalletExtension> extensions = provideWalletExtensions();
-            WalletExtension[] extArray = extensions.toArray(new WalletExtension[extensions.size()]);
-            Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
-            final WalletProtobufSerializer serializer;
-            if (walletFactory != null)
-                serializer = new WalletProtobufSerializer(walletFactory);
-            else
-                serializer = new WalletProtobufSerializer();
-
-            serializer.setKeyChainFactory(new BisqKeyChainFactory(useBitcoinDeterministicKeyChain));
-            wallet = serializer.readWallet(params, extArray, proto);
-            if (shouldReplayWallet)
-                wallet.reset();
-        }
-        return wallet;
-    }
-
-    private Wallet createWallet(BisqKeyChainGroup keyChainGroup, boolean isBsqWallet) {
-        checkNotNull(walletFactory, "walletFactory must not be null");
-        return walletFactory.create(params, keyChainGroup, isBsqWallet);
-    }
-
-    private void installShutdownHook() {
-        if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                WalletConfig.this.stopAsync();
-                WalletConfig.this.awaitTerminated();
-            } catch (Throwable ignore) {
-            }
-        }, "WalletConfig ShutdownHook"));
+        });
     }
 
     @Override
@@ -608,13 +632,12 @@ public class WalletConfig extends AbstractIdleService {
         return vStore;
     }
 
-    public Wallet getBtcWallet() {
+    public Wallet btcWallet() {
         checkState(state() == State.STARTING || state() == State.RUNNING, "Cannot call until startup is complete");
         return vBtcWallet;
     }
 
-    @Nullable
-    public Wallet getBsqWallet() {
+    public Wallet bsqWallet() {
         checkState(state() == State.STARTING || state() == State.RUNNING, "Cannot call until startup is complete");
         return vBsqWallet;
     }

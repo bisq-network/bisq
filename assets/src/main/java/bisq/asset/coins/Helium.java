@@ -33,7 +33,6 @@ public class Helium extends Coin {
         public HeliumParams() {
             addressHeader = 63;
             p2shHeader = 5;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

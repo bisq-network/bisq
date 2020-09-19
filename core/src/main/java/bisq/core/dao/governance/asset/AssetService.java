@@ -222,7 +222,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         walletsManager.publishAndCommitBsqTx(transaction, TxType.ASSET_LISTING_FEE, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("Asset listing fee tx has been published. TxId={}", transaction.getHashAsString());
+                log.info("Asset listing fee tx has been published. TxId={}", transaction.getTxId().toString());
                 resultHandler.handleResult();
             }
 
