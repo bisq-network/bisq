@@ -378,6 +378,10 @@ configure(project(':desktop')) {
 
     version = '1.3.9-SNAPSHOT'
 
+    jar.manifest.attributes(
+        "Implementation-Title": project.name,
+        "Implementation-Version": version)
+
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
     tasks.withType(AbstractArchiveTask) {
