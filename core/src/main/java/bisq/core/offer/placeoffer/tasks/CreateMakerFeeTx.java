@@ -109,7 +109,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                             }
                         });
             } else {
-                final BsqWalletService bsqWalletService = model.getBsqWalletService();
+                BsqWalletService bsqWalletService = model.getBsqWalletService();
                 Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedTradeFeeTx(offer.getMakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
@@ -126,32 +126,34 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
 
+                // We use a short timeout as there are issues with BSQ txs. See comment in TxBroadcaster
                 bsqWalletService.broadcastTx(signedTx, new TxBroadcaster.Callback() {
-                    @Override
-                    public void onSuccess(@Nullable Transaction transaction) {
-                        if (transaction != null) {
-                            offer.setOfferFeePaymentTxId(transaction.getTxId().toString());
-                            model.setTransaction(transaction);
-                            log.debug("onSuccess, offerId={}, OFFER_FUNDING", id);
-                            walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                            @Override
+                            public void onSuccess(@Nullable Transaction transaction) {
+                                if (transaction != null) {
+                                    offer.setOfferFeePaymentTxId(transaction.getTxId().toString());
+                                    model.setTransaction(transaction);
+                                    log.debug("onSuccess, offerId={}, OFFER_FUNDING", id);
+                                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
-                            log.debug("Successfully sent tx with id " + transaction.getTxId().toString());
-                            model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
+                                    log.debug("Successfully sent tx with id " + transaction.getTxId().toString());
+                                    model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
 
-                            complete();
-                        }
-                    }
+                                    complete();
+                                }
+                            }
 
-                    @Override
-                    public void onFailure(TxBroadcastException exception) {
-                        log.error(exception.toString());
-                        exception.printStackTrace();
-                        offer.setErrorMessage("An error occurred.\n" +
-                                "Error message:\n"
-                                + exception.getMessage());
-                        failed(exception);
-                    }
-                });
+                            @Override
+                            public void onFailure(TxBroadcastException exception) {
+                                log.error(exception.toString());
+                                exception.printStackTrace();
+                                offer.setErrorMessage("An error occurred.\n" +
+                                        "Error message:\n"
+                                        + exception.getMessage());
+                                failed(exception);
+                            }
+                        },
+                        1);
             }
         } catch (Throwable t) {
             if (t instanceof DaoDisabledException) {

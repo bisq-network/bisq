@@ -342,9 +342,12 @@ public abstract class WalletService {
     // Broadcast tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public void broadcastTx(Transaction tx, TxBroadcaster.Callback callback) {
         TxBroadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback);
+    }
+
+    public void broadcastTx(Transaction tx, TxBroadcaster.Callback callback, int timeOut) {
+        TxBroadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback, timeOut);
     }
 
 
