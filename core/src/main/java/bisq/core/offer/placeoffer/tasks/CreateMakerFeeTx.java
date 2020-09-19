@@ -86,7 +86,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                                 // returned (tradeFeeTx would be null in that case)
                                 UserThread.execute(() -> {
                                     if (!completed) {
-                                        offer.setOfferFeePaymentTxId(transaction.getHashAsString());
+                                        offer.setOfferFeePaymentTxId(transaction.getTxId().toString());
                                         model.setTransaction(transaction);
                                         walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
@@ -130,12 +130,12 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
                         if (transaction != null) {
-                            offer.setOfferFeePaymentTxId(transaction.getHashAsString());
+                            offer.setOfferFeePaymentTxId(transaction.getTxId().toString());
                             model.setTransaction(transaction);
                             log.debug("onSuccess, offerId={}, OFFER_FUNDING", id);
                             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
-                            log.debug("Successfully sent tx with id " + transaction.getHashAsString());
+                            log.debug("Successfully sent tx with id " + transaction.getTxId().toString());
                             model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
 
                             complete();

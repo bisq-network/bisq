@@ -30,7 +30,6 @@ public class KnowYourDeveloper extends Coin {
         public KydMainNetParams() {
             this.addressHeader = 78;
             this.p2shHeader = 85;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

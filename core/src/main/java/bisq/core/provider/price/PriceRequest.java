@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Map;
@@ -56,7 +57,7 @@ public class PriceRequest {
             public void onFailure(@NotNull Throwable throwable) {
                 resultFuture.setException(new PriceRequestException(throwable, baseUrl));
             }
-        });
+        }, MoreExecutors.directExecutor());
 
         return resultFuture;
     }

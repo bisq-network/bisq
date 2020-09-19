@@ -247,7 +247,7 @@ class TakeOfferDataModel extends OfferDataModel {
                 updateBalance();
 
                 /*if (isMainNet.get()) {
-                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
+                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getTxId().toString());
                     Futures.addCallback(future, new FutureCallback<Coin>() {
                         public void onSuccess(Coin fee) {
                             UserThread.execute(() -> setFeeFromFundingTx(fee));
@@ -265,7 +265,7 @@ class TakeOfferDataModel extends OfferDataModel {
                                     .onClose(() -> setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI))
                                     .show());
                         }
-                    });
+                    }, MoreExecutors.directExecutor());
                 } else {
                     setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx());
                     isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);
