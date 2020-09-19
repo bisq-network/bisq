@@ -50,7 +50,8 @@ public class GetVersionTest extends MethodTest {
     @Test
     @Order(1)
     public void testGetVersion() {
-        var version = grpcStubs.versionService.getVersion(GetVersionRequest.newBuilder().build()).getVersion();
+        var version = grpcStubs(alicedaemon).versionService
+                .getVersion(GetVersionRequest.newBuilder().build()).getVersion();
         assertEquals(VERSION, version);
     }
 

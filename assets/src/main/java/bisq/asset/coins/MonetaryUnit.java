@@ -50,7 +50,6 @@ public class MonetaryUnit extends Coin {
         public MonetaryUnitParams() {
             addressHeader = 16;
             p2shHeader = 76;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

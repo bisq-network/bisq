@@ -50,7 +50,6 @@ public class PZDC extends Coin {
         public PZDCParams() {
             addressHeader = 55;
             p2shHeader = 13;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

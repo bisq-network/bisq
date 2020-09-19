@@ -50,7 +50,6 @@ public class Veil extends Coin {
         public VeilParams() {
             addressHeader = 70;
             p2shHeader = 5;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

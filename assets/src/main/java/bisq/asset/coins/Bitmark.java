@@ -27,7 +27,6 @@ public class Bitmark extends Coin {
         public BitmarkParams() {
             addressHeader = 85;
             p2shHeader = 5;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 

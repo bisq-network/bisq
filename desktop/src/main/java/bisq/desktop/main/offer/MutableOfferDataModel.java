@@ -335,37 +335,42 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     private void setSuggestedSecurityDeposit(PaymentAccount paymentAccount) {
         var minSecurityDeposit = preferences.getBuyerSecurityDepositAsPercent(getPaymentAccount());
-        if (getTradeCurrency() == null) {
-            setBuyerSecurityDeposit(minSecurityDeposit, false);
-            return;
-        }
-        // Get average historic prices over for the prior trade period equaling the lock time
-        var blocksRange = Restrictions.getLockTime(paymentAccount.getPaymentMethod().isAsset());
-        var startDate = new Date(System.currentTimeMillis() - blocksRange * 10 * 60000);
-        var sortedRangeData = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> e.getCurrencyCode().equals(getTradeCurrency().getCode()))
-                .filter(e -> e.getTradeDate().compareTo(startDate) >= 0)
-                .sorted(Comparator.comparing(TradeStatistics2::getTradeDate))
-                .collect(Collectors.toList());
-        var movingAverage = new MathUtils.MovingAverage(10, 0.2);
-        double[] extremes = {Double.MAX_VALUE, Double.MIN_VALUE};
-        sortedRangeData.forEach(e -> {
-            var price = e.getTradePrice().getValue();
-            movingAverage.next(price).ifPresent(val -> {
-                if (val < extremes[0]) extremes[0] = val;
-                if (val > extremes[1]) extremes[1] = val;
+        try {
+            if (getTradeCurrency() == null) {
+                setBuyerSecurityDeposit(minSecurityDeposit, false);
+                return;
+            }
+            // Get average historic prices over for the prior trade period equaling the lock time
+            var blocksRange = Restrictions.getLockTime(paymentAccount.getPaymentMethod().isAsset());
+            var startDate = new Date(System.currentTimeMillis() - blocksRange * 10 * 60000);
+            var sortedRangeData = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                    .filter(e -> e.getCurrencyCode().equals(getTradeCurrency().getCode()))
+                    .filter(e -> e.getTradeDate().compareTo(startDate) >= 0)
+                    .sorted(Comparator.comparing(TradeStatistics2::getTradeDate))
+                    .collect(Collectors.toList());
+            var movingAverage = new MathUtils.MovingAverage(10, 0.2);
+            double[] extremes = {Double.MAX_VALUE, Double.MIN_VALUE};
+            sortedRangeData.forEach(e -> {
+                var price = e.getTradePrice().getValue();
+                movingAverage.next(price).ifPresent(val -> {
+                    if (val < extremes[0]) extremes[0] = val;
+                    if (val > extremes[1]) extremes[1] = val;
+                });
             });
-        });
-        var min = extremes[0];
-        var max = extremes[1];
-        if (min == 0d || max == 0d) {
-            setBuyerSecurityDeposit(minSecurityDeposit, false);
-            return;
+            var min = extremes[0];
+            var max = extremes[1];
+            if (min == 0d || max == 0d) {
+                setBuyerSecurityDeposit(minSecurityDeposit, false);
+                return;
+            }
+            // Suggested deposit is double the trade range over the previous lock time period, bounded by min/max deposit
+            var suggestedSecurityDeposit =
+                    Math.min(2 * (max - min) / max, Restrictions.getMaxBuyerSecurityDepositAsPercent());
+            buyerSecurityDeposit.set(Math.max(suggestedSecurityDeposit, minSecurityDeposit));
+        } catch (Throwable t) {
+            log.error(t.toString());
+            buyerSecurityDeposit.set(minSecurityDeposit);
         }
-        // Suggested deposit is double the trade range over the previous lock time period, bounded by min/max deposit
-        var suggestedSecurityDeposit =
-                Math.min(2 * (max - min) / max, Restrictions.getMaxBuyerSecurityDepositAsPercent());
-        buyerSecurityDeposit.set(Math.max(suggestedSecurityDeposit, minSecurityDeposit));
     }
 
 

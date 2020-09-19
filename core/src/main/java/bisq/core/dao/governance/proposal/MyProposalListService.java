@@ -137,7 +137,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         walletsManager.publishAndCommitBsqTx(transaction, proposal.getTxType(), new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("Proposal tx has been published. TxId={}", transaction.getHashAsString());
+                log.info("Proposal tx has been published. TxId={}", transaction.getTxId().toString());
                 resultHandler.handleResult();
             }
 

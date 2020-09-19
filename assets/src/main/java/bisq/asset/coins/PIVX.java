@@ -50,7 +50,6 @@ public class PIVX extends Coin {
         public PIVXParams() {
             addressHeader = 30;
             p2shHeader = 13;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

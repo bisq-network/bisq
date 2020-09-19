@@ -31,7 +31,6 @@ public class LBRYCredits extends Coin {
         public LBRYCreditsMainNetParams() {
             this.addressHeader = 0x55;
             this.p2shHeader = 0x7a;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }
