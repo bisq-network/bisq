@@ -74,24 +74,35 @@ public class DelayedPayoutTxValidation {
     public static void testIfDisputeTriesReplay(Dispute disputeToTest, List<Dispute> disputeList)
             throws DisputeReplayException {
         try {
+            String disputeToTestTradeId = disputeToTest.getTradeId();
+
             String disputeToTestDelayedPayoutTxId = disputeToTest.getDelayedPayoutTxId();
+            String disputeToTestDepositTxId = disputeToTest.getDepositTxId();
+            String disputeToTestAgentsUid = disputeToTest.getAgentsUid();
+
             checkNotNull(disputeToTestDelayedPayoutTxId,
-                    "delayedPayoutTxId must not be null. Trade ID: " + disputeToTest.getTradeId());
-            String disputeToTestAgentsUid = checkNotNull(disputeToTest.getAgentsUid(),
-                    "agentsUid must not be null. Trade ID: " + disputeToTest.getTradeId());
+                    "delayedPayoutTxId must not be null. Trade ID: " + disputeToTestTradeId);
+            checkNotNull(disputeToTestDepositTxId,
+                    "depositTxId must not be null. Trade ID: " + disputeToTestTradeId);
+            checkNotNull(disputeToTestAgentsUid,
+                    "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
+
             // This method can be called with the existing list and a new dispute (at opening a new dispute) or with the
             // dispute already added (at close dispute). So we will consider that in the for loop.
             // We have 2 disputes per trade (one per trader).
 
             Map<String, Set<String>> disputesPerTradeId = new HashMap<>();
             Map<String, Set<String>> disputesPerDelayedPayoutTxId = new HashMap<>();
+            Map<String, Set<String>> disputesPerDepositTxId = new HashMap<>();
             disputeList.forEach(dispute -> {
-                String tradeId = dispute.getTradeId();
                 String agentsUid = dispute.getAgentsUid();
+                checkNotNull(agentsUid,
+                        "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
 
                 // We use an uid we have created not data delivered by the trader to protect against replay attacks
                 // If our dispute got already added to the list we ignore it. We will check once we build our maps
 
+                String tradeId = dispute.getTradeId();
                 disputesPerTradeId.putIfAbsent(tradeId, new HashSet<>());
                 Set<String> set = disputesPerTradeId.get(tradeId);
                 if (!disputeToTestAgentsUid.equals(agentsUid)) {
@@ -104,15 +115,24 @@ public class DelayedPayoutTxValidation {
                 if (!disputeToTestAgentsUid.equals(agentsUid)) {
                     set.add(agentsUid);
                 }
+
+                String depositTxId = dispute.getDepositTxId();
+                disputesPerDepositTxId.putIfAbsent(depositTxId, new HashSet<>());
+                set = disputesPerDepositTxId.get(depositTxId);
+                if (!disputeToTestAgentsUid.equals(agentsUid)) {
+                    set.add(agentsUid);
+                }
             });
 
-            String disputeToTestTradeId = disputeToTest.getTradeId();
             checkArgument(disputesPerTradeId.get(disputeToTestTradeId).size() <= 1,
                     "We found more then 2 disputes with the same trade ID. " +
-                            "Trade ID: " + disputeToTest.getTradeId());
+                            "Trade ID: " + disputeToTestTradeId);
             checkArgument(disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId).size() <= 1,
                     "We found more then 2 disputes with the same delayedPayoutTxId. " +
-                            "Trade ID: " + disputeToTest.getTradeId());
+                            "Trade ID: " + disputeToTestTradeId);
+            checkArgument(disputesPerDepositTxId.get(disputeToTestDepositTxId).size() <= 1,
+                    "We found more then 2 disputes with the same depositTxId. " +
+                            "Trade ID: " + disputeToTestTradeId);
 
         } catch (IllegalArgumentException | NullPointerException e) {
             throw new DisputeReplayException(disputeToTest, e.getMessage());
