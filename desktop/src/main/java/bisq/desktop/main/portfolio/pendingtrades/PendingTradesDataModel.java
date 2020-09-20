@@ -80,7 +80,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -456,7 +456,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             String tradeId = selectedTrade.getId();
             tradeStateChangeListener = (observable, oldValue, newValue) -> {
                 if (depositTx != null) {
-                    txId.set(depositTx.getHashAsString());
+                    txId.set(depositTx.getTxId().toString());
                     notificationCenter.setSelectedTradeId(tradeId);
                     selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
                 } else {
@@ -473,7 +473,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             isMaker = tradeManager.isMyOffer(offer);
             if (depositTx != null) {
-                txId.set(depositTx.getHashAsString());
+                txId.set(depositTx.getTxId().toString());
             } else {
                 txId.set("");
             }
@@ -504,7 +504,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             new Popup().instruction(Res.get("portfolio.pending.error.depositTxNull")).show();
             return;
         }
-        String depositTxId = depositTx.getHashAsString();
+        String depositTxId = depositTx.getTxId().toString();
 
         Trade trade = getTrade();
         if (trade == null) {
@@ -527,7 +527,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Transaction payoutTx = trade.getPayoutTx();
         if (payoutTx != null) {
             payoutTxSerialized = payoutTx.bitcoinSerialize();
-            payoutTxHashAsString = payoutTx.getHashAsString();
+            payoutTxHashAsString = payoutTx.getTxId().toString();
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
         DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
@@ -646,7 +646,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             PubKeyRing refundAgentPubKeyRing = trade.getRefundAgentPubKeyRing();
             checkNotNull(refundAgentPubKeyRing, "refundAgentPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
-            String depositTxHashAsString = depositTx.getHashAsString();
+            String depositTxHashAsString = depositTx.getTxId().toString();
             Dispute dispute = new Dispute(disputeManager.getStorage(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
@@ -667,8 +667,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isSupportTicket,
                     SupportType.REFUND);
 
-            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
-            dispute.setDelayedPayoutTxId(delayedPayoutTx.getHashAsString());
 
             String tradeId = dispute.getTradeId();
             mediationManager.findDispute(tradeId)
@@ -682,6 +680,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                             dispute.setMediatorsDisputeResult(message);
                         }
                     });
+
+            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
+            dispute.setDelayedPayoutTxId(trade.getDelayedPayoutTx().getTxId().toString());
+
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
             //todo add UI spinner as it can take a bit if peer is offline

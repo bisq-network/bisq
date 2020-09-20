@@ -50,7 +50,6 @@ public class MobitGlobal extends Coin {
         public MobitGlobalParams() {
             addressHeader = 50;
             p2shHeader = 110;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

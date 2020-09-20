@@ -32,7 +32,6 @@ public class Chaucha extends Coin {
 	    public ChauchaParams() {
 	        addressHeader = 88;
 	        p2shHeader = 50;
-	        acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
 	    }
 	}
 }

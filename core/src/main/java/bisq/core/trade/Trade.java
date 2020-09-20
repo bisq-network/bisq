@@ -66,6 +66,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -694,12 +695,12 @@ public abstract class Trade implements Tradable, Model {
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
     void updateDepositTxFromWallet() {
         if (getDepositTx() != null)
-            applyDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
+            applyDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getTxId()));
     }
 
     public void applyDepositTx(Transaction tx) {
         this.depositTx = tx;
-        depositTxId = depositTx.getHashAsString();
+        depositTxId = depositTx.getTxId().toString();
         setupConfidenceListener();
         persist();
     }
@@ -889,7 +890,7 @@ public abstract class Trade implements Tradable, Model {
 
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
-        payoutTxId = payoutTx.getHashAsString();
+        payoutTxId = payoutTx.getTxId().toString();
     }
 
     public void setErrorMessage(String errorMessage) {
@@ -961,7 +962,7 @@ public abstract class Trade implements Tradable, Model {
                 log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
                         new Date(startTime), new Date(tradeTime), new Date(blockTime));
             } else {
-                log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getHashAsString());
+                log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getTxId().toString());
                 startTime = now;
             }
         } else {
@@ -1167,7 +1168,7 @@ public abstract class Trade implements Tradable, Model {
                         log.error(t.getMessage());
                         throw new RuntimeException(t);
                     }
-                });
+                }, MoreExecutors.directExecutor());
             }
         } else {
             log.error("depositTx == null. That must not happen.");

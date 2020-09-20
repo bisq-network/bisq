@@ -58,6 +58,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -280,7 +281,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                             @Override
                             public void onSuccess(Transaction transaction) {
                                 // after successful publish we send peer the tx
-                                dispute.setDisputePayoutTxId(transaction.getHashAsString());
+                                dispute.setDisputePayoutTxId(transaction.getTxId().toString());
                                 sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
                                 updateTradeOrOpenOfferManager(tradeId);
                             }
@@ -300,7 +301,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 } else {
                     log.warn("We already got a payout tx. That might be the case if the other peer did not get the " +
                             "payout tx and opened a dispute. TradeId = " + tradeId);
-                    dispute.setDisputePayoutTxId(payoutTx.getHashAsString());
+                    dispute.setDisputePayoutTxId(payoutTx.getTxId().toString());
                     sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);
 
                     success = true;
@@ -324,7 +325,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             updateTradeOrOpenOfferManager(tradeId);
 
             throw new RuntimeException(errorMessage);
-        } catch (AddressFormatException | WalletException e) {
+        } catch (AddressFormatException | WalletException | SignatureDecodeException e) {
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
             log.error(errorMessage, e);
             success = false;
@@ -363,7 +364,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
         Transaction committedDisputePayoutTx = WalletService.maybeAddNetworkTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction(), btcWalletService.getWallet());
 
-        dispute.setDisputePayoutTxId(committedDisputePayoutTx.getHashAsString());
+        dispute.setDisputePayoutTxId(committedDisputePayoutTx.getTxId().toString());
         BtcWalletService.printTx("Disputed payoutTx received from peer", committedDisputePayoutTx);
 
         // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute

@@ -30,7 +30,6 @@ public class Vertcoin extends Coin {
         public VertcoinMainNetParams() {
             this.addressHeader = 71;
             this.p2shHeader = 5;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

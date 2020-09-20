@@ -265,7 +265,7 @@ public class DelayedPayoutTxValidation {
         // input.getConnectedOutput() is null as the tx is not committed at that point
 
         TransactionOutPoint outpoint = input.getOutpoint();
-        if (!outpoint.getHash().toString().equals(depositTx.getHashAsString()) || outpoint.getIndex() != 0) {
+        if (!outpoint.getHash().toString().equals(depositTx.getTxId().toString()) || outpoint.getIndex() != 0) {
             throw new InvalidInputException("Input of delayed payout transaction does not point to output of deposit tx.\n" +
                     "Delayed payout tx=" + delayedPayoutTx + "\n" +
                     "Deposit tx=" + depositTx);

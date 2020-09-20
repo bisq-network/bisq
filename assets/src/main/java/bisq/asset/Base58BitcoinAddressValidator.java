@@ -17,8 +17,8 @@
 
 package bisq.asset;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 
@@ -27,7 +27,7 @@ import org.bitcoinj.params.MainNetParams;
  *
  * @author Chris Beams
  * @since 0.7.0
- * @see org.bitcoinj.core.Address#fromBase58(NetworkParameters, String)
+ * @see org.bitcoinj.core.LegacyAddress#fromBase58(NetworkParameters, String)
  */
 public class Base58BitcoinAddressValidator implements AddressValidator {
 
@@ -44,7 +44,7 @@ public class Base58BitcoinAddressValidator implements AddressValidator {
     @Override
     public AddressValidationResult validate(String address) {
         try {
-            Address.fromBase58(networkParameters, address);
+            LegacyAddress.fromBase58(networkParameters, address);
         } catch (AddressFormatException ex) {
             return AddressValidationResult.invalidAddress(ex);
         }

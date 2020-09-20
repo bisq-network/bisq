@@ -96,7 +96,7 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -388,7 +388,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
                                             transaction.setMemo(withdrawMemoTextField.getText());
-                                            log.debug("onWithdraw onSuccess tx ID:{}", transaction.getHashAsString());
+                                            log.debug("onWithdraw onSuccess tx ID:{}", transaction.getTxId().toString());
                                         } else {
                                             log.error("onWithdraw transaction is null");
                                         }

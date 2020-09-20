@@ -32,7 +32,6 @@ public class Qbase extends Coin {
         public QbaseParams() {
             addressHeader = 25;
             p2shHeader = 5;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }
