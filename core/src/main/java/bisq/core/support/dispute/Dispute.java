@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -289,6 +290,8 @@ public final class Dispute implements NetworkPayload {
         String agentsUid = proto.getAgentsUid();
         if (!agentsUid.isEmpty()) {
             dispute.setAgentsUid(agentsUid);
+        } else {
+            dispute.setAgentsUid(UUID.randomUUID().toString());
         }
 
         return dispute;
