@@ -260,18 +260,20 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         cleanupDisputes();
 
         getDisputeList().getList().forEach(dispute -> {
-            if (dispute.getAgentsUid() == null) {
-                dispute.setAgentsUid(UUID.randomUUID().toString());
-            }
-
             try {
                 DelayedPayoutTxValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-                DelayedPayoutTxValidation.testIfDisputeTriesReplay(dispute, getDisputeList().getList());
-            } catch (DelayedPayoutTxValidation.AddressException | DelayedPayoutTxValidation.DisputeReplayException e) {
+            } catch (DelayedPayoutTxValidation.AddressException e) {
                 log.error(e.toString());
                 validationExceptions.add(e);
             }
+
         });
+
+        DelayedPayoutTxValidation.testIfAnyDisputeTriedReplay(getDisputeList().getList(),
+                disputeReplayException -> {
+                    log.error(disputeReplayException.toString());
+                    validationExceptions.add(disputeReplayException);
+                });
     }
 
     public boolean isTrader(Dispute dispute) {

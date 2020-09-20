@@ -22,6 +22,8 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 
+import bisq.common.util.Tuple3;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
@@ -57,7 +59,7 @@ public class DelayedPayoutTxValidation {
             throws AddressException {
 
         if (addressAsString == null) {
-            log.warn("address is null at validateDonationAddress. This is expected in case of an not updated trader.");
+            log.debug("address is null at validateDonationAddress. This is expected in case of an not updated trader.");
             return;
         }
 
@@ -71,11 +73,76 @@ public class DelayedPayoutTxValidation {
         }
     }
 
-    public static void testIfDisputeTriesReplay(Dispute disputeToTest, List<Dispute> disputeList)
+    public static void testIfAnyDisputeTriedReplay(List<Dispute> disputeList,
+                                                   Consumer<DisputeReplayException> exceptionHandler) {
+        var tuple = getTestReplayHashMaps(disputeList);
+        Map<String, Set<String>> disputesPerTradeId = tuple.first;
+        Map<String, Set<String>> disputesPerDelayedPayoutTxId = tuple.second;
+        Map<String, Set<String>> disputesPerDepositTxId = tuple.third;
+
+        disputeList.forEach(disputeToTest -> {
+            try {
+                testIfDisputeTriesReplay(disputeToTest,
+                        disputesPerTradeId,
+                        disputesPerDelayedPayoutTxId,
+                        disputesPerDepositTxId);
+
+            } catch (DisputeReplayException e) {
+                exceptionHandler.accept(e);
+            }
+        });
+    }
+
+
+    public static void testIfDisputeTriesReplay(Dispute dispute,
+                                                List<Dispute> disputeList) throws DisputeReplayException {
+        var tuple = DelayedPayoutTxValidation.getTestReplayHashMaps(disputeList);
+        Map<String, Set<String>> disputesPerTradeId = tuple.first;
+        Map<String, Set<String>> disputesPerDelayedPayoutTxId = tuple.second;
+        Map<String, Set<String>> disputesPerDepositTxId = tuple.third;
+
+        testIfDisputeTriesReplay(dispute,
+                disputesPerTradeId,
+                disputesPerDelayedPayoutTxId,
+                disputesPerDepositTxId);
+    }
+
+
+    private static Tuple3<Map<String, Set<String>>, Map<String, Set<String>>, Map<String, Set<String>>> getTestReplayHashMaps(
+            List<Dispute> disputeList) {
+        Map<String, Set<String>> disputesPerTradeId = new HashMap<>();
+        Map<String, Set<String>> disputesPerDelayedPayoutTxId = new HashMap<>();
+        Map<String, Set<String>> disputesPerDepositTxId = new HashMap<>();
+        disputeList.forEach(dispute -> {
+            String agentsUid = dispute.getAgentsUid();
+
+            String tradeId = dispute.getTradeId();
+            disputesPerTradeId.putIfAbsent(tradeId, new HashSet<>());
+            Set<String> set = disputesPerTradeId.get(tradeId);
+            set.add(agentsUid);
+
+            String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
+            disputesPerDelayedPayoutTxId.putIfAbsent(delayedPayoutTxId, new HashSet<>());
+            set = disputesPerDelayedPayoutTxId.get(delayedPayoutTxId);
+            set.add(agentsUid);
+
+            String depositTxId = dispute.getDepositTxId();
+            disputesPerDepositTxId.putIfAbsent(depositTxId, new HashSet<>());
+            set = disputesPerDepositTxId.get(depositTxId);
+            set.add(agentsUid);
+        });
+
+        return new Tuple3<>(disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
+    }
+
+    private static void testIfDisputeTriesReplay(Dispute disputeToTest,
+                                                 Map<String, Set<String>> disputesPerTradeId,
+                                                 Map<String, Set<String>> disputesPerDelayedPayoutTxId,
+                                                 Map<String, Set<String>> disputesPerDepositTxId)
             throws DisputeReplayException {
+
         try {
             String disputeToTestTradeId = disputeToTest.getTradeId();
-
             String disputeToTestDelayedPayoutTxId = disputeToTest.getDelayedPayoutTxId();
             String disputeToTestDepositTxId = disputeToTest.getDepositTxId();
             String disputeToTestAgentsUid = disputeToTest.getAgentsUid();
@@ -87,50 +154,13 @@ public class DelayedPayoutTxValidation {
             checkNotNull(disputeToTestAgentsUid,
                     "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
 
-            // This method can be called with the existing list and a new dispute (at opening a new dispute) or with the
-            // dispute already added (at close dispute). So we will consider that in the for loop.
-            // We have 2 disputes per trade (one per trader).
-
-            Map<String, Set<String>> disputesPerTradeId = new HashMap<>();
-            Map<String, Set<String>> disputesPerDelayedPayoutTxId = new HashMap<>();
-            Map<String, Set<String>> disputesPerDepositTxId = new HashMap<>();
-            disputeList.forEach(dispute -> {
-                String agentsUid = dispute.getAgentsUid();
-                checkNotNull(agentsUid,
-                        "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
-
-                // We use an uid we have created not data delivered by the trader to protect against replay attacks
-                // If our dispute got already added to the list we ignore it. We will check once we build our maps
-
-                String tradeId = dispute.getTradeId();
-                disputesPerTradeId.putIfAbsent(tradeId, new HashSet<>());
-                Set<String> set = disputesPerTradeId.get(tradeId);
-                if (!disputeToTestAgentsUid.equals(agentsUid)) {
-                    set.add(agentsUid);
-                }
-
-                String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
-                disputesPerDelayedPayoutTxId.putIfAbsent(delayedPayoutTxId, new HashSet<>());
-                set = disputesPerDelayedPayoutTxId.get(delayedPayoutTxId);
-                if (!disputeToTestAgentsUid.equals(agentsUid)) {
-                    set.add(agentsUid);
-                }
-
-                String depositTxId = dispute.getDepositTxId();
-                disputesPerDepositTxId.putIfAbsent(depositTxId, new HashSet<>());
-                set = disputesPerDepositTxId.get(depositTxId);
-                if (!disputeToTestAgentsUid.equals(agentsUid)) {
-                    set.add(agentsUid);
-                }
-            });
-
-            checkArgument(disputesPerTradeId.get(disputeToTestTradeId).size() <= 1,
+            checkArgument(disputesPerTradeId.get(disputeToTestTradeId).size() <= 2,
                     "We found more then 2 disputes with the same trade ID. " +
                             "Trade ID: " + disputeToTestTradeId);
-            checkArgument(disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId).size() <= 1,
+            checkArgument(disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId).size() <= 2,
                     "We found more then 2 disputes with the same delayedPayoutTxId. " +
                             "Trade ID: " + disputeToTestTradeId);
-            checkArgument(disputesPerDepositTxId.get(disputeToTestDepositTxId).size() <= 1,
+            checkArgument(disputesPerDepositTxId.get(disputeToTestDepositTxId).size() <= 2,
                     "We found more then 2 disputes with the same depositTxId. " +
                             "Trade ID: " + disputeToTestTradeId);
 
