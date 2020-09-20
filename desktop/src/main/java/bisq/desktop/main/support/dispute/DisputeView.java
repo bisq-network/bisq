@@ -432,11 +432,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected void applyFilteredListPredicate(String filterString) {
         AtomicReference<FilterResult> filterResult = new AtomicReference<>(FilterResult.NO_FILTER);
         filteredList.setPredicate(dispute -> {
-            FilterResult filterResult1 = getFilterResult(dispute, filterString);
-            filterResult.set(filterResult1);
-            boolean b = filterResult.get() != FilterResult.NO_MATCH;
-            log.error("filterResult1 {} {} {}, {}", filterResult1, dispute.getTraderId(), b, filterResult);
-            return b;
+            filterResult.set(getFilterResult(dispute, filterString));
+            return filterResult.get() != FilterResult.NO_MATCH;
         });
 
         if (filterResult.get() == FilterResult.NO_MATCH) {
