@@ -46,13 +46,11 @@ public class BuyerStep1View extends TradeStepView {
         } catch (DelayedPayoutTxValidation.DonationAddressException |
                 DelayedPayoutTxValidation.InvalidTxException |
                 DelayedPayoutTxValidation.AmountMismatchException |
-                DelayedPayoutTxValidation.InvalidLockTimeException e) {
+                DelayedPayoutTxValidation.InvalidLockTimeException |
+                DelayedPayoutTxValidation.MissingDelayedPayoutTxException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
                 new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
             }
-        } catch (DelayedPayoutTxValidation.MissingDelayedPayoutTxException ignore) {
-            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
-            // trade manager after initPendingTrades which happens after activate might be called.
         }
     }
 
