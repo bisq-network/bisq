@@ -317,18 +317,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         Contract contract = dispute.getContract();
         addPriceInfoMessage(dispute, 0);
 
-        try {
-            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
-            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
-            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
-        } catch (TradeDataValidation.AddressException |
-                TradeDataValidation.DisputeReplayException |
-                TradeDataValidation.NodeAddressException e) {
-            log.error(e.toString());
-            validationExceptions.add(e);
-        }
-
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
         if (isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
@@ -359,6 +347,18 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         addMediationResultMessage(dispute);
+
+        try {
+            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
+        } catch (TradeDataValidation.AddressException |
+                TradeDataValidation.DisputeReplayException |
+                TradeDataValidation.NodeAddressException e) {
+            log.error(e.toString());
+            validationExceptions.add(e);
+        }
     }
 
     // Not-dispute-requester receives that msg from dispute agent

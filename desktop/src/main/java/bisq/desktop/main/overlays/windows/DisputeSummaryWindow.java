@@ -733,7 +733,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     fee,
                     buyerPayoutAddressString,
                     sellerPayoutAddressString);
-            log.error("transaction " + tx);
             tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
