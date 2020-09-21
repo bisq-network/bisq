@@ -35,6 +35,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.support.SupportType;
@@ -92,6 +93,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -147,6 +150,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
+    protected final DaoFacade daoFacade;
     private final boolean useDevPrivilegeKeys;
 
     protected TableView<Dispute> tableView;
@@ -185,6 +189,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                        AccountAgeWitnessService accountAgeWitnessService,
                        MediatorManager mediatorManager,
                        RefundAgentManager refundAgentManager,
+                       DaoFacade daoFacade,
                        boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
@@ -197,6 +202,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
+        this.daoFacade = daoFacade;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -612,6 +618,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         StringBuilder stringBuilder = new StringBuilder();
         StringBuilder csvStringBuilder = new StringBuilder();
         csvStringBuilder.append("Dispute nr").append(";")
+                .append("Closed during cycle").append(";")
                 .append("Status").append(";")
                 .append("Trade date").append(";")
                 .append("Trade ID").append(";")
@@ -636,6 +643,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 .append("Summary notes").append(";")
                 .append("Summary notes (other trader)");
 
+        Map<Integer, Date> blockStartDateByCycleIndex = daoFacade.getBlockStartDateByCycleIndex();
+
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
         AtomicInteger disputeIndex = new AtomicInteger();
         allDisputes.forEach(disputesPerTrade -> {
             if (disputesPerTrade.size() > 0) {
@@ -652,18 +662,36 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 String sellerPayoutAmount = disputeResult != null ? disputeResult.getSellerPayoutAmount().toFriendlyString() : "";
 
                 int index = disputeIndex.incrementAndGet();
-                String tradeDateString = DisplayUtils.formatDateTime(firstDispute.getTradeDate());
-                String openingDateString = DisplayUtils.formatDateTime(openingDate);
-                stringBuilder.append("\n")
-                        .append("Dispute nr. ").append(index)
-                        .append("\n")
-                        .append("Trade date: ").append(tradeDateString)
+                String tradeDateString = dateFormatter.format(firstDispute.getTradeDate());
+                String openingDateString = dateFormatter.format(openingDate);
+
+                // Index we display starts with 1 not with 0
+                int cycleIndex = 0;
+                if (disputeResult != null) {
+                    Date closeDate = disputeResult.getCloseDate();
+                    cycleIndex = blockStartDateByCycleIndex.entrySet().stream()
+                            .filter(e -> e.getValue().after(closeDate))
+                            .findFirst()
+                            .map(Map.Entry::getKey)
+                            .orElse(0);
+                }
+                stringBuilder.append("\n").append("Dispute nr.: ").append(index).append("\n");
+
+                if (cycleIndex > 0) {
+                    stringBuilder.append("Closed during cycle: ").append(cycleIndex).append("\n");
+                }
+                stringBuilder.append("Trade date: ").append(tradeDateString)
                         .append("\n")
                         .append("Opening date: ").append(openingDateString)
                         .append("\n");
                 String tradeId = firstDispute.getTradeId();
-                csvStringBuilder.append("\n").append(index).append(";")
-                        .append(firstDispute.isClosed() ? "Closed" : "Open").append(";")
+                csvStringBuilder.append("\n").append(index).append(";");
+                if (cycleIndex > 0) {
+                    csvStringBuilder.append(cycleIndex).append(";");
+                } else {
+                    csvStringBuilder.append(";");
+                }
+                csvStringBuilder.append(firstDispute.isClosed() ? "Closed" : "Open").append(";")
                         .append(tradeDateString).append(";")
                         .append(firstDispute.getShortTradeId()).append(";")
                         .append(tradeId, tradeId.length() - 3, tradeId.length()).append(";")
@@ -674,7 +702,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     Date closeDate = disputeResult.getCloseDate();
                     long duration = closeDate.getTime() - openingDate.getTime();
 
-                    String closeDateString = DisplayUtils.formatDateTime(closeDate);
+                    String closeDateString = dateFormatter.format(closeDate);
                     String durationAsWords = FormattingUtils.formatDurationAsWords(duration);
                     stringBuilder.append("Close date: ").append(closeDateString).append("\n")
                             .append("Dispute duration: ").append(durationAsWords).append("\n");

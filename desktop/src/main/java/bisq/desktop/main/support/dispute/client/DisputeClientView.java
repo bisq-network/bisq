@@ -24,6 +24,7 @@ import bisq.desktop.main.support.dispute.DisputeView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
@@ -47,10 +48,11 @@ public abstract class DisputeClientView extends DisputeView {
                              AccountAgeWitnessService accountAgeWitnessService,
                              MediatorManager mediatorManager,
                              RefundAgentManager refundAgentManager,
+                             DaoFacade daoFacade,
                              boolean useDevPrivilegeKeys) {
         super(DisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow, privateNotificationManager,
                 contractWindow, tradeDetailsWindow, accountAgeWitnessService,
-                mediatorManager, refundAgentManager, useDevPrivilegeKeys);
+                mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
     }
 
     @Override

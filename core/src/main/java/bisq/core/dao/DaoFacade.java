@@ -96,10 +96,14 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -425,8 +429,16 @@ public class DaoFacade implements DaoSetupService {
             case RESULT:
                 break;
         }
-
         return firstBlock;
+    }
+
+    public Map<Integer, Date> getBlockStartDateByCycleIndex() {
+        AtomicInteger index = new AtomicInteger();
+        Map<Integer, Date> map = new HashMap<>();
+        periodService.getCycles()
+                .forEach(cycle -> daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+                        .ifPresent(block -> map.put(index.getAndIncrement(), new Date(block.getTime()))));
+        return map;
     }
 
     // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the

@@ -68,7 +68,6 @@ import static bisq.desktop.util.FormBuilder.getIconForLabel;
 public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
 
     private final MultipleHolderNameDetection multipleHolderNameDetection;
-    private final DaoFacade daoFacade;
     private ListChangeListener<ValidationException> validationExceptionListener;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
@@ -95,10 +94,10 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                 accountAgeWitnessService,
                 mediatorManager,
                 refundAgentManager,
+                daoFacade,
                 useDevPrivilegeKeys);
 
         multipleHolderNameDetection = new MultipleHolderNameDetection(disputeManager);
-        this.daoFacade = daoFacade;
     }
 
 
