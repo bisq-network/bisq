@@ -70,8 +70,8 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
-import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;
@@ -635,15 +635,15 @@ public class BuyerStep2View extends TradeStepView {
 
     private void validatePayoutTx() {
         try {
-            DelayedPayoutTxValidation.validatePayoutTx(trade,
+            TradeDataValidation.validatePayoutTx(trade,
                     trade.getDelayedPayoutTx(),
                     model.dataModel.daoFacade,
                     model.dataModel.btcWalletService);
-        } catch (DelayedPayoutTxValidation.MissingTxException ignore) {
+        } catch (TradeDataValidation.MissingTxException ignore) {
             // We don't react on those errors as a failed trade might get listed initially but getting removed from the
             // trade manager after initPendingTrades which happens after activate might be called.
             log.error("");
-        } catch (DelayedPayoutTxValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
                 new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
             }

@@ -22,7 +22,7 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.DelayedPayoutTxValidation;
+import bisq.core.trade.TradeDataValidation;
 
 import bisq.common.UserThread;
 
@@ -99,15 +99,15 @@ public class BuyerStep1View extends TradeStepView {
 
     private void validatePayoutTx() {
         try {
-            DelayedPayoutTxValidation.validatePayoutTx(trade,
+            TradeDataValidation.validatePayoutTx(trade,
                     trade.getDelayedPayoutTx(),
                     model.dataModel.daoFacade,
                     model.dataModel.btcWalletService);
-        } catch (DelayedPayoutTxValidation.MissingTxException ignore) {
+        } catch (TradeDataValidation.MissingTxException ignore) {
             // We don't react on those errors as a failed trade might get listed initially but getting removed from the
             // trade manager after initPendingTrades which happens after activate might be called.
             log.error("");
-        } catch (DelayedPayoutTxValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
                 new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
             }

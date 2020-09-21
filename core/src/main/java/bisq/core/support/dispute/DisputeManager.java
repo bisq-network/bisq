@@ -36,8 +36,8 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
-import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 
@@ -92,7 +92,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final DaoFacade daoFacade;
 
     @Getter
-    protected final ObservableList<DelayedPayoutTxValidation.ValidationException> validationExceptions =
+    protected final ObservableList<TradeDataValidation.ValidationException> validationExceptions =
             FXCollections.observableArrayList();
     @Getter
     private final KeyPair signatureKeyPair;
@@ -262,15 +262,15 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         ObservableList<Dispute> disputes = getDisputeList().getList();
         disputes.forEach(dispute -> {
             try {
-                DelayedPayoutTxValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            } catch (DelayedPayoutTxValidation.AddressException e) {
+                TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            } catch (TradeDataValidation.AddressException e) {
                 log.error(e.toString());
                 validationExceptions.add(e);
             }
 
         });
 
-        DelayedPayoutTxValidation.testIfAnyDisputeTriedReplay(disputes,
+        TradeDataValidation.testIfAnyDisputeTriedReplay(disputes,
                 disputeReplayException -> {
                     log.error(disputeReplayException.toString());
                     validationExceptions.add(disputeReplayException);
@@ -313,9 +313,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         addPriceInfoMessage(dispute, 0);
 
         try {
-            DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            DelayedPayoutTxValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
-        } catch (DelayedPayoutTxValidation.AddressException | DelayedPayoutTxValidation.DisputeReplayException e) {
+            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+        } catch (TradeDataValidation.AddressException | TradeDataValidation.DisputeReplayException e) {
             log.error(e.toString());
             validationExceptions.add(e);
         }
@@ -370,12 +370,12 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         Trade trade = optionalTrade.get();
         try {
-            DelayedPayoutTxValidation.validatePayoutTx(trade,
+            TradeDataValidation.validatePayoutTx(trade,
                     trade.getDelayedPayoutTx(),
                     dispute,
                     daoFacade,
                     btcWalletService);
-        } catch (DelayedPayoutTxValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.

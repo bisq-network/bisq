@@ -47,7 +47,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
-import bisq.core.trade.DelayedPayoutTxValidation;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -757,10 +757,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void doCloseIfValid(Button closeTicketButton) {
         var disputeManager = checkNotNull(getDisputeManager(dispute));
         try {
-            DelayedPayoutTxValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            DelayedPayoutTxValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
+            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
             doClose(closeTicketButton);
-        } catch (DelayedPayoutTxValidation.AddressException exception) {
+        } catch (TradeDataValidation.AddressException exception) {
             String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
             String tradeId = dispute.getTradeId();
 
@@ -788,7 +788,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 Res.get("support.warning.disputesWithInvalidDonationAddress.refundAgent")))
                         .show();
             }
-        } catch (DelayedPayoutTxValidation.DisputeReplayException exception) {
+        } catch (TradeDataValidation.DisputeReplayException exception) {
             if (disputeManager instanceof MediationManager) {
                 new Popup().width(900)
                         .warning(exception.getMessage())

@@ -48,7 +48,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class DelayedPayoutTxValidation {
+public class TradeDataValidation {
 
     public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
             throws AddressException {
@@ -96,7 +96,7 @@ public class DelayedPayoutTxValidation {
 
     public static void testIfDisputeTriesReplay(Dispute dispute,
                                                 List<Dispute> disputeList) throws DisputeReplayException {
-        var tuple = DelayedPayoutTxValidation.getTestReplayHashMaps(disputeList);
+        var tuple = TradeDataValidation.getTestReplayHashMaps(disputeList);
         Map<String, Set<String>> disputesPerTradeId = tuple.first;
         Map<String, Set<String>> disputesPerDelayedPayoutTxId = tuple.second;
         Map<String, Set<String>> disputesPerDepositTxId = tuple.third;

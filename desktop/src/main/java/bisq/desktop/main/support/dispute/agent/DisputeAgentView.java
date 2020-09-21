@@ -36,7 +36,7 @@ import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.DelayedPayoutTxValidation;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
@@ -62,7 +62,7 @@ import javafx.collections.ListChangeListener;
 
 import java.util.List;
 
-import static bisq.core.trade.DelayedPayoutTxValidation.ValidationException;
+import static bisq.core.trade.TradeDataValidation.ValidationException;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
@@ -136,7 +136,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                 .filter(ex -> !ex.getDispute().isClosed())
                 .forEach(ex -> {
                     Dispute dispute = ex.getDispute();
-                    if (ex instanceof DelayedPayoutTxValidation.AddressException) {
+                    if (ex instanceof TradeDataValidation.AddressException) {
                         new Popup().width(900).warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
                                 dispute.getDonationAddressOfDelayedPayoutTx(),
                                 daoFacade.getAllDonationAddresses(),

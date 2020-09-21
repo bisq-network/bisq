@@ -47,9 +47,9 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.BuyerTrade;
-import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.user.Preferences;
@@ -541,12 +541,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         AtomicReference<String> donationAddressString = new AtomicReference<>("");
         Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
         try {
-            DelayedPayoutTxValidation.validatePayoutTx(trade,
+            TradeDataValidation.validatePayoutTx(trade,
                     delayedPayoutTx,
                     daoFacade,
                     btcWalletService,
                     donationAddressString::set);
-        } catch (DelayedPayoutTxValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.
