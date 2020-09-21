@@ -259,7 +259,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         tryApplyMessages();
         cleanupDisputes();
 
-        getDisputeList().getList().forEach(dispute -> {
+        ObservableList<Dispute> disputes = getDisputeList().getList();
+        disputes.forEach(dispute -> {
             try {
                 DelayedPayoutTxValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             } catch (DelayedPayoutTxValidation.AddressException e) {
@@ -269,7 +270,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         });
 
-        DelayedPayoutTxValidation.testIfAnyDisputeTriedReplay(getDisputeList().getList(),
+        DelayedPayoutTxValidation.testIfAnyDisputeTriedReplay(disputes,
                 disputeReplayException -> {
                     log.error(disputeReplayException.toString());
                     validationExceptions.add(disputeReplayException);

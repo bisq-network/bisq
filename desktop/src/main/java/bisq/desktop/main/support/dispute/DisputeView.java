@@ -61,8 +61,6 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.common.collect.Lists;
-
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Button;
@@ -94,10 +92,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -128,6 +122,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         DEPOSIT_TX("Deposit tx ID"),
         PAYOUT_TX("Payout tx ID"),
         DEL_PAYOUT_TX("Delayed payout tx ID"),
+        RESULT_MESSAGE("Result message"),
+        REASON("Reason"),
         JSON("Contract as json");
 
         @Getter
@@ -300,7 +296,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected void activate() {
         filterTextField.textProperty().addListener(filterTextFieldListener);
 
-        filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
+        ObservableList<Dispute> disputesAsObservableList = disputeManager.getDisputesAsObservableList();
+        filteredList = new FilteredList<>(disputesAsObservableList);
         applyFilteredListPredicate(filterTextField.getText());
 
         sortedList = new SortedList<>(filteredList);
@@ -321,54 +318,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             chatView.scrollToBottom();
         }
 
-
-        // If doPrint=true we print out a html page which opens tabs with all deposit txs
-        // (firefox needs about:config change to allow > 20 tabs)
-        // Useful to check if there any funds in not finished trades (no payout tx done).
-        // Last check 10.02.2017 found 8 trades and we contacted all traders as far as possible (email if available
-        // otherwise in-app private notification)
-        boolean doPrint = false;
-        //noinspection ConstantConditions
-        if (doPrint) {
-            try {
-                DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
-                //noinspection UnusedAssignment
-                Date startDate = formatter.parse("10/02/17");
-                startDate = new Date(0); // print all from start
-
-                HashMap<String, Dispute> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
-
-                final Date finalStartDate = startDate;
-                List<Dispute> disputes = new ArrayList<>(map.values());
-                disputes.sort(Comparator.comparing(Dispute::getOpeningDate));
-                List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
-                StringBuilder sb = new StringBuilder();
-                // We don't translate that as it is not intended for the public
-                subLists.forEach(list -> {
-                    StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
-                    StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
-                    list.forEach(dispute -> {
-                        if (dispute.getOpeningDate().after(finalStartDate)) {
-                            String txId = dispute.getDepositTxId();
-                            sb1.append("window.open(\"https://blockchain.info/tx/").append(txId).append("\", '_blank');\n");
-
-                            sb2.append("Dispute ID: ").append(dispute.getId()).
-                                    append(" Tx ID: ").
-                                    append("<a href=\"https://blockchain.info/tx/").append(txId).append("\">").
-                                    append(txId).append("</a> ").
-                                    append("Opening date: ").append(formatter.format(dispute.getOpeningDate())).append("<br/>\n");
-                        }
-                    });
-                    sb2.append("</body></html>");
-                    String res = sb1.toString() + sb2.toString();
-
-                    sb.append(res).append("\n\n\n");
-                });
-                log.info(sb.toString());
-            } catch (ParseException ignore) {
-            }
-        }
         GUIUtil.requestFocus(filterTextField);
     }
 
@@ -448,18 +397,21 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     }
 
     protected FilterResult getFilterResult(Dispute dispute, String filterString) {
+        filterString = filterString.toLowerCase();
         if (filterString.isEmpty()) {
             return FilterResult.NO_FILTER;
         }
-        if (!dispute.isClosed() && filterString.toLowerCase().equals("open")) {
-            return FilterResult.OPEN_DISPUTES;
+
+        // For open filter we do not want to continue further as json data would cause a match
+        if (filterString.equalsIgnoreCase("open")) {
+            return !dispute.isClosed() ? FilterResult.OPEN_DISPUTES : FilterResult.NO_MATCH;
         }
 
-        if (dispute.getTradeId().contains(filterString)) {
+        if (dispute.getTradeId().toLowerCase().contains(filterString)) {
             return FilterResult.TRADE_ID;
         }
 
-        if (DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString)) {
+        if (DisplayUtils.formatDate(dispute.getOpeningDate()).toLowerCase().contains(filterString)) {
             return FilterResult.OPENING_DATE;
         }
 
@@ -471,11 +423,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             return FilterResult.SELLER_NODE_ADDRESS;
         }
 
-        if (dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString)) {
+        if (dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filterString)) {
             return FilterResult.BUYER_ACCOUNT_DETAILS;
         }
 
-        if (dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString)) {
+        if (dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filterString)) {
             return FilterResult.SELLER_ACCOUNT_DETAILS;
         }
 
@@ -490,7 +442,19 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             return FilterResult.DEL_PAYOUT_TX;
         }
 
-        if (dispute.getContractAsJson().contains(filterString)) {
+        DisputeResult disputeResult = dispute.getDisputeResultProperty().get();
+        if (disputeResult != null) {
+            ChatMessage chatMessage = disputeResult.getChatMessage();
+            if (chatMessage != null && chatMessage.getMessage().toLowerCase().contains(filterString)) {
+                return FilterResult.RESULT_MESSAGE;
+            }
+
+            if (disputeResult.getReason().name().toLowerCase().contains(filterString)) {
+                return FilterResult.REASON;
+            }
+        }
+
+        if (dispute.getContractAsJson().toLowerCase().contains(filterString)) {
             return FilterResult.JSON;
         }
 
@@ -646,6 +610,32 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         map.forEach((key, value) -> allDisputes.add(value));
         allDisputes.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
         StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder csvStringBuilder = new StringBuilder();
+        csvStringBuilder.append("Dispute nr").append(";")
+                .append("Status").append(";")
+                .append("Trade date").append(";")
+                .append("Trade ID").append(";")
+                .append("Offer version").append(";")
+                .append("Opening date").append(";")
+                .append("Close date").append(";")
+                .append("Duration").append(";")
+                .append("Currency").append(";")
+                .append("Trade amount").append(";")
+                .append("Payment method").append(";")
+                .append("Buyer account details").append(";")
+                .append("Seller account details").append(";")
+                .append("Buyer address").append(";")
+                .append("Seller address").append(";")
+                .append("Buyer security deposit").append(";")
+                .append("Seller security deposit").append(";")
+                .append("Dispute opened by").append(";")
+                .append("Payout to buyer").append(";")
+                .append("Payout to seller").append(";")
+                .append("Winner").append(";")
+                .append("Reason").append(";")
+                .append("Summary notes").append(";")
+                .append("Summary notes (other trader)");
+
         AtomicInteger disputeIndex = new AtomicInteger();
         allDisputes.forEach(disputesPerTrade -> {
             if (disputesPerTrade.size() > 0) {
@@ -660,38 +650,58 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                         disputeResult.getWinner() == DisputeResult.Winner.BUYER ? "Buyer" : "Seller";
                 String buyerPayoutAmount = disputeResult != null ? disputeResult.getBuyerPayoutAmount().toFriendlyString() : "";
                 String sellerPayoutAmount = disputeResult != null ? disputeResult.getSellerPayoutAmount().toFriendlyString() : "";
+
+                int index = disputeIndex.incrementAndGet();
+                String tradeDateString = DisplayUtils.formatDateTime(firstDispute.getTradeDate());
+                String openingDateString = DisplayUtils.formatDateTime(openingDate);
                 stringBuilder.append("\n")
-                        .append("Dispute nr. ")
-                        .append(disputeIndex.incrementAndGet())
+                        .append("Dispute nr. ").append(index)
                         .append("\n")
-                        .append("Opening date: ")
-                        .append(DisplayUtils.formatDateTime(openingDate))
+                        .append("Trade date: ").append(tradeDateString)
+                        .append("\n")
+                        .append("Opening date: ").append(openingDateString)
                         .append("\n");
-                String summaryNotes0 = "";
+                String tradeId = firstDispute.getTradeId();
+                csvStringBuilder.append("\n").append(index).append(";")
+                        .append(firstDispute.isClosed() ? "Closed" : "Open").append(";")
+                        .append(tradeDateString).append(";")
+                        .append(firstDispute.getShortTradeId()).append(";")
+                        .append(tradeId, tradeId.length() - 3, tradeId.length()).append(";")
+                        .append(openingDateString).append(";");
+
+                String summaryNotes = "";
                 if (disputeResult != null) {
                     Date closeDate = disputeResult.getCloseDate();
                     long duration = closeDate.getTime() - openingDate.getTime();
-                    stringBuilder.append("Close date: ")
-                            .append(DisplayUtils.formatDateTime(closeDate))
-                            .append("\n")
-                            .append("Dispute duration: ")
-                            .append(FormattingUtils.formatDurationAsWords(duration))
-                            .append("\n");
+
+                    String closeDateString = DisplayUtils.formatDateTime(closeDate);
+                    String durationAsWords = FormattingUtils.formatDurationAsWords(duration);
+                    stringBuilder.append("Close date: ").append(closeDateString).append("\n")
+                            .append("Dispute duration: ").append(durationAsWords).append("\n");
+                    csvStringBuilder.append(closeDateString).append(";")
+                            .append(durationAsWords).append(";");
+                } else {
+                    csvStringBuilder.append(";").append(";");
                 }
 
+                String paymentMethod = Res.get(contract.getPaymentMethodId());
+                String currency = CurrencyUtil.getNameAndCode(contract.getOfferPayload().getCurrencyCode());
+                String tradeAmount = contract.getTradeAmount().toFriendlyString();
+                String buyerDeposit = Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()).toFriendlyString();
+                String sellerDeposit = Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()).toFriendlyString();
                 stringBuilder.append("Payment method: ")
-                        .append(Res.get(contract.getPaymentMethodId()))
+                        .append(paymentMethod)
                         .append("\n")
                         .append("Currency: ")
-                        .append(CurrencyUtil.getNameAndCode(contract.getOfferPayload().getCurrencyCode()))
+                        .append(currency)
                         .append("\n")
                         .append("Trade amount: ")
-                        .append(contract.getTradeAmount().toFriendlyString())
+                        .append(tradeAmount)
                         .append("\n")
                         .append("Buyer/seller security deposit: ")
-                        .append(Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()).toFriendlyString())
+                        .append(buyerDeposit)
                         .append("/")
-                        .append(Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()).toFriendlyString())
+                        .append(sellerDeposit)
                         .append("\n")
                         .append("Dispute opened by: ")
                         .append(opener)
@@ -702,6 +712,28 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                         .append(winner)
                         .append(")\n");
 
+                String buyerPaymentAccountPayload = Utilities.toTruncatedString(
+                        contract.getBuyerPaymentAccountPayload().getPaymentDetails().
+                                replace("\n", " ").replace(";", "."), 100);
+                String sellerPaymentAccountPayload = Utilities.toTruncatedString(
+                        contract.getSellerPaymentAccountPayload().getPaymentDetails()
+                                .replace("\n", " ").replace(";", "."), 100);
+                String buyerNodeAddress = contract.getBuyerNodeAddress().getFullAddress();
+                String sellerNodeAddress = contract.getSellerNodeAddress().getFullAddress();
+                csvStringBuilder.append(currency).append(";")
+                        .append(tradeAmount.replace(" BTC", "")).append(";")
+                        .append(paymentMethod).append(";")
+                        .append(buyerPaymentAccountPayload).append(";")
+                        .append(sellerPaymentAccountPayload).append(";")
+                        .append(buyerNodeAddress.replace(".onion:9999", "")).append(";")
+                        .append(sellerNodeAddress.replace(".onion:9999", "")).append(";")
+                        .append(buyerDeposit.replace(" BTC", "")).append(";")
+                        .append(sellerDeposit.replace(" BTC", "")).append(";")
+                        .append(opener).append(";")
+                        .append(buyerPayoutAmount.replace(" BTC", "")).append(";")
+                        .append(sellerPayoutAmount.replace(" BTC", "")).append(";")
+                        .append(winner).append(";");
+
                 if (disputeResult != null) {
                     DisputeResult.Reason reason = disputeResult.getReason();
                     if (firstDispute.disputeResultProperty().get().getReason() != null) {
@@ -710,10 +742,18 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                         stringBuilder.append("Reason: ")
                                 .append(reason.name())
                                 .append("\n");
+
+                        csvStringBuilder.append(reason.name()).append(";");
+                    } else {
+                        csvStringBuilder.append(";");
                     }
 
-                    summaryNotes0 = disputeResult.getSummaryNotesProperty().get();
-                    stringBuilder.append("Summary notes: ").append(summaryNotes0).append("\n");
+                    summaryNotes = disputeResult.getSummaryNotesProperty().get();
+                    stringBuilder.append("Summary notes: ").append(summaryNotes).append("\n");
+
+                    csvStringBuilder.append(summaryNotes).append(";");
+                } else {
+                    csvStringBuilder.append(";");
                 }
 
                 // We might have a different summary notes at second trader. Only if it
@@ -723,8 +763,12 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     DisputeResult disputeResult1 = dispute1.getDisputeResultProperty().get();
                     if (disputeResult1 != null) {
                         String summaryNotes1 = disputeResult1.getSummaryNotesProperty().get();
-                        if (!summaryNotes1.equals(summaryNotes0)) {
+                        if (!summaryNotes1.equals(summaryNotes)) {
                             stringBuilder.append("Summary notes (different message to other trader was used): ").append(summaryNotes1).append("\n");
+
+                            csvStringBuilder.append(summaryNotes1).append(";");
+                        } else {
+                            csvStringBuilder.append(";");
                         }
                     }
                 }
@@ -742,8 +786,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 .width(1200)
                 .actionButtonText("Copy to clipboard")
                 .onAction(() -> Utilities.copyToClipboard(message))
+                .secondaryActionButtonText("Copy as csv data")
+                .onSecondaryAction(() -> Utilities.copyToClipboard(csvStringBuilder.toString()))
                 .show();
-
     }
 
     private void showFullReport() {
