@@ -403,65 +403,65 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    protected FilterResult getFilterResult(Dispute dispute, String filterString) {
-        filterString = filterString.toLowerCase();
-        if (filterString.isEmpty()) {
+    protected FilterResult getFilterResult(Dispute dispute, String filterTerm) {
+        String filter = filterTerm.toLowerCase();
+        if (filter.isEmpty()) {
             return FilterResult.NO_FILTER;
         }
 
         // For open filter we do not want to continue further as json data would cause a match
-        if (filterString.equalsIgnoreCase("open")) {
+        if (filter.equalsIgnoreCase("open")) {
             return !dispute.isClosed() ? FilterResult.OPEN_DISPUTES : FilterResult.NO_MATCH;
         }
 
-        if (dispute.getTradeId().toLowerCase().contains(filterString)) {
+        if (dispute.getTradeId().toLowerCase().contains(filter)) {
             return FilterResult.TRADE_ID;
         }
 
-        if (DisplayUtils.formatDate(dispute.getOpeningDate()).toLowerCase().contains(filterString)) {
+        if (DisplayUtils.formatDate(dispute.getOpeningDate()).toLowerCase().contains(filter)) {
             return FilterResult.OPENING_DATE;
         }
 
-        if (dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString)) {
+        if (dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filter)) {
             return FilterResult.BUYER_NODE_ADDRESS;
         }
 
-        if (dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString)) {
+        if (dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filter)) {
             return FilterResult.SELLER_NODE_ADDRESS;
         }
 
-        if (dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filterString)) {
+        if (dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
             return FilterResult.BUYER_ACCOUNT_DETAILS;
         }
 
-        if (dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filterString)) {
+        if (dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
             return FilterResult.SELLER_ACCOUNT_DETAILS;
         }
 
-        if (dispute.getDepositTxId() != null && dispute.getDepositTxId().contains(filterString)) {
+        if (dispute.getDepositTxId() != null && dispute.getDepositTxId().contains(filter)) {
             return FilterResult.DEPOSIT_TX;
         }
-        if (dispute.getPayoutTxId() != null && dispute.getPayoutTxId().contains(filterString)) {
+        if (dispute.getPayoutTxId() != null && dispute.getPayoutTxId().contains(filter)) {
             return FilterResult.PAYOUT_TX;
         }
 
-        if (dispute.getDelayedPayoutTxId() != null && dispute.getDelayedPayoutTxId().contains(filterString)) {
+        if (dispute.getDelayedPayoutTxId() != null && dispute.getDelayedPayoutTxId().contains(filter)) {
             return FilterResult.DEL_PAYOUT_TX;
         }
 
         DisputeResult disputeResult = dispute.getDisputeResultProperty().get();
         if (disputeResult != null) {
             ChatMessage chatMessage = disputeResult.getChatMessage();
-            if (chatMessage != null && chatMessage.getMessage().toLowerCase().contains(filterString)) {
+            if (chatMessage != null && chatMessage.getMessage().toLowerCase().contains(filter)) {
                 return FilterResult.RESULT_MESSAGE;
             }
 
-            if (disputeResult.getReason().name().toLowerCase().contains(filterString)) {
+            if (disputeResult.getReason().name().toLowerCase().contains(filter)) {
                 return FilterResult.REASON;
             }
         }
 
-        if (dispute.getContractAsJson().toLowerCase().contains(filterString)) {
+        if (dispute.getContractAsJson().toLowerCase().contains(filter)) {
             return FilterResult.JSON;
         }
 
