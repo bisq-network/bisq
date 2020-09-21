@@ -24,13 +24,7 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.core.locale.Res;
 import bisq.core.trade.TradeDataValidation;
 
-import bisq.common.UserThread;
-
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.value.ChangeListener;
-
 public class BuyerStep1View extends TradeStepView {
-    private ChangeListener<Boolean> pendingTradesInitializedListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -41,22 +35,9 @@ public class BuyerStep1View extends TradeStepView {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
-        // We need to have the trades initialized before we can call validatePayoutTx.
-        BooleanProperty pendingTradesInitialized = model.dataModel.tradeManager.getPendingTradesInitialized();
-        if (pendingTradesInitialized.get()) {
-            validatePayoutTx();
-        } else {
-            pendingTradesInitializedListener = (observable, oldValue, newValue) -> {
-                if (newValue) {
-                    validatePayoutTx();
-                    UserThread.execute(() -> pendingTradesInitialized.removeListener(pendingTradesInitializedListener));
-                }
-            };
-            pendingTradesInitialized.addListener(pendingTradesInitializedListener);
-        }
+    protected void onPendingTradesInitialized() {
+        super.onPendingTradesInitialized();
+        validatePayoutTx();
     }
 
 

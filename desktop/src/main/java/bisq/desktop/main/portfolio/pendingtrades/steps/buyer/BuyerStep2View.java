@@ -88,9 +88,6 @@ import javafx.scene.layout.Priority;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.value.ChangeListener;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -107,7 +104,6 @@ public class BuyerStep2View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
-    private ChangeListener<Boolean> pendingTradesInitializedListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -120,20 +116,6 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     public void activate() {
         super.activate();
-
-        // We need to have the trades initialized before we can call validatePayoutTx.
-        BooleanProperty pendingTradesInitialized = model.dataModel.tradeManager.getPendingTradesInitialized();
-        if (pendingTradesInitialized.get()) {
-            validatePayoutTx();
-        } else {
-            pendingTradesInitializedListener = (observable, oldValue, newValue) -> {
-                if (newValue) {
-                    validatePayoutTx();
-                    UserThread.execute(() -> pendingTradesInitialized.removeListener(pendingTradesInitializedListener));
-                }
-            };
-            pendingTradesInitialized.addListener(pendingTradesInitializedListener);
-        }
 
         if (timeoutTimer != null)
             timeoutTimer.stop();
@@ -211,6 +193,13 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = null;
         }
     }
+
+    @Override
+    protected void onPendingTradesInitialized() {
+        super.onPendingTradesInitialized();
+        validatePayoutTx();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Content
