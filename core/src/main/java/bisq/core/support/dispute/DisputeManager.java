@@ -263,11 +263,12 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         disputes.forEach(dispute -> {
             try {
                 TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            } catch (TradeDataValidation.AddressException e) {
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress());
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress());
+            } catch (TradeDataValidation.AddressException | TradeDataValidation.NodeAddressException e) {
                 log.error(e.toString());
                 validationExceptions.add(e);
             }
-
         });
 
         TradeDataValidation.testIfAnyDisputeTriedReplay(disputes,

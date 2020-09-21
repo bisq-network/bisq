@@ -21,6 +21,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
+import bisq.core.util.validation.RegexValidatorFactory;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.util.Tuple3;
 
@@ -53,6 +56,16 @@ public class TradeDataValidation {
     public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
             throws AddressException {
         validateDonationAddress(null, addressAsString, daoFacade);
+    }
+
+    public static void validateNodeAddress(Dispute dispute, NodeAddress nodeAddress)
+            throws NodeAddressException {
+        if (!RegexValidatorFactory.onionAddressRegexValidator().validate(nodeAddress.getFullAddress()).isValid) {
+            String msg = "Node address " + nodeAddress.getFullAddress() + " at dispute with trade ID " +
+                    dispute.getShortTradeId() + " is not a valid address";
+            log.error(msg);
+            throw new NodeAddressException(dispute, msg);
+        }
     }
 
     public static void validateDonationAddress(@Nullable Dispute dispute, String addressAsString, DaoFacade daoFacade)
@@ -380,6 +393,12 @@ public class TradeDataValidation {
 
     public static class DisputeReplayException extends ValidationException {
         DisputeReplayException(Dispute dispute, String msg) {
+            super(dispute, msg);
+        }
+    }
+
+    public static class NodeAddressException extends ValidationException {
+        NodeAddressException(Dispute dispute, String msg) {
             super(dispute, msg);
         }
     }

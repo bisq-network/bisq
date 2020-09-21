@@ -133,7 +133,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     protected void showWarningForValidationExceptions(List<? extends ValidationException> exceptions) {
         exceptions.stream()
                 .filter(ex -> ex.getDispute() != null)
-                .filter(ex -> !ex.getDispute().isClosed())
+                .filter(ex -> !ex.getDispute().isClosed()) // we show warnings only for open cases
                 .forEach(ex -> {
                     Dispute dispute = ex.getDispute();
                     if (ex instanceof TradeDataValidation.AddressException) {
