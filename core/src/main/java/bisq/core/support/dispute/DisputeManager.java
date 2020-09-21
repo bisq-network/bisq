@@ -305,8 +305,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
-        // Dispute agent sets uid to be sure to identify disputes uniquely to protect against replaying old disputes
-        dispute.setAgentsUid(UUID.randomUUID().toString());
         dispute.setStorage(disputeListService.getStorage());
         // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
         dispute.setSupportType(openNewDisputeMessage.getSupportType());
@@ -606,9 +604,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         dispute.addAndPersistChatMessage(chatMessage);
 
         addPriceInfoMessage(dispute, 0);
-
-        // Dispute agent sets uid to be sure to identify disputes uniquely to protect against replaying old disputes
-        dispute.setAgentsUid(UUID.randomUUID().toString());
 
         disputeList.add(dispute);
 

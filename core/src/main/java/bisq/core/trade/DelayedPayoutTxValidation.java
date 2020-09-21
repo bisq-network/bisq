@@ -114,22 +114,22 @@ public class DelayedPayoutTxValidation {
         Map<String, Set<String>> disputesPerDelayedPayoutTxId = new HashMap<>();
         Map<String, Set<String>> disputesPerDepositTxId = new HashMap<>();
         disputeList.forEach(dispute -> {
-            String agentsUid = dispute.getAgentsUid();
+            String uid = dispute.getUid();
 
             String tradeId = dispute.getTradeId();
             disputesPerTradeId.putIfAbsent(tradeId, new HashSet<>());
             Set<String> set = disputesPerTradeId.get(tradeId);
-            set.add(agentsUid);
+            set.add(uid);
 
             String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
             disputesPerDelayedPayoutTxId.putIfAbsent(delayedPayoutTxId, new HashSet<>());
             set = disputesPerDelayedPayoutTxId.get(delayedPayoutTxId);
-            set.add(agentsUid);
+            set.add(uid);
 
             String depositTxId = dispute.getDepositTxId();
             disputesPerDepositTxId.putIfAbsent(depositTxId, new HashSet<>());
             set = disputesPerDepositTxId.get(depositTxId);
-            set.add(agentsUid);
+            set.add(uid);
         });
 
         return new Tuple3<>(disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
@@ -145,13 +145,13 @@ public class DelayedPayoutTxValidation {
             String disputeToTestTradeId = disputeToTest.getTradeId();
             String disputeToTestDelayedPayoutTxId = disputeToTest.getDelayedPayoutTxId();
             String disputeToTestDepositTxId = disputeToTest.getDepositTxId();
-            String disputeToTestAgentsUid = disputeToTest.getAgentsUid();
+            String disputeToTestUid = disputeToTest.getUid();
 
             checkNotNull(disputeToTestDelayedPayoutTxId,
                     "delayedPayoutTxId must not be null. Trade ID: " + disputeToTestTradeId);
             checkNotNull(disputeToTestDepositTxId,
                     "depositTxId must not be null. Trade ID: " + disputeToTestTradeId);
-            checkNotNull(disputeToTestAgentsUid,
+            checkNotNull(disputeToTestUid,
                     "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
 
             checkArgument(disputesPerTradeId.get(disputeToTestTradeId).size() <= 2,
