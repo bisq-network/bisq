@@ -1,7 +1,6 @@
-package bisq.desktop.util.validation;
+package bisq.core.util.validation;
 
 import bisq.core.locale.Res;
-import bisq.core.util.validation.InputValidator;
 
 public class RegexValidator extends InputValidator {
     private String pattern;
