@@ -249,7 +249,7 @@ public class WalletsSetup {
                 UserThread.execute(() -> {
                     addressEntryList.onWalletReady(walletConfig.btcWallet());
                     timeoutTimer.stop();
-                    setupCompletedHandlers.stream().forEach(Runnable::run);
+                    setupCompletedHandlers.forEach(Runnable::run);
                 });
 
                 // onSetupCompleted in walletAppKit is not the called on the last invocations, so we add a bit of delay

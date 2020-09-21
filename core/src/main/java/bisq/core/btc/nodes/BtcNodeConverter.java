@@ -55,8 +55,7 @@ class BtcNodeConverter {
     PeerAddress convertOnionHost(BtcNode node) {
         // no DNS lookup for onion addresses
         String onionAddress = Objects.requireNonNull(node.getOnionAddress());
-        PeerAddress result = new PeerAddress(onionAddress, node.getPort());
-        return result;
+        return new PeerAddress(onionAddress, node.getPort());
     }
 
     @Nullable
@@ -69,7 +68,7 @@ class BtcNodeConverter {
             if (address != null) {
                 result = create(address, port);
             } else {
-                log.warn("Lookup failed, no address for node", node);
+                log.warn("Lookup failed, no address for node {}", node);
             }
         }
         return result;
@@ -85,7 +84,7 @@ class BtcNodeConverter {
             if (address != null) {
                 result = create(proxy, address, port);
             } else {
-                log.warn("Lookup failed, no address for node", node);
+                log.warn("Lookup failed, no address for node {}", node);
             }
         }
         return result;

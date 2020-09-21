@@ -20,6 +20,7 @@ package bisq.core.btc.setup;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
+
 import bisq.common.config.Config;
 
 import com.google.common.collect.*;
@@ -124,8 +125,7 @@ public class WalletConfig extends AbstractIdleService {
     /**
      * Creates a new WalletConfig, with the given {@link Context}. Files will be stored in the given directory.
      */
-    public WalletConfig(Context context,
-                        File directory, String filePrefix) {
+    public WalletConfig(Context context, File directory, String filePrefix) {
         this.context = context;
         this.params = checkNotNull(context.getParams());
         this.directory = checkDir(directory);
@@ -275,7 +275,7 @@ public class WalletConfig extends AbstractIdleService {
      * <p>When this is called, chain(), store(), and peerGroup() will return the created objects, however they are not
      * initialized/started.</p>
      */
-    protected List<WalletExtension> provideWalletExtensions() throws Exception {
+    protected List<WalletExtension> provideWalletExtensions() {
         return ImmutableList.of();
     }
 
@@ -413,8 +413,8 @@ public class WalletConfig extends AbstractIdleService {
                     @Override
                     public void onSuccess(@Nullable Object result) {
                         //completeExtensionInitiations(vPeerGroup);
-                        final DownloadProgressTracker l = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
-                        vPeerGroup.startBlockChainDownload(l);
+                        DownloadProgressTracker tracker = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
+                        vPeerGroup.startBlockChainDownload(tracker);
                     }
 
                     @Override
