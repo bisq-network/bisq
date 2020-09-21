@@ -551,56 +551,8 @@ public abstract class WalletService {
     // Wallet delegates to avoid direct access to wallet outside the service class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addCoinsReceivedEventListener(WalletCoinsReceivedEventListener listener) {
-        wallet.addCoinsReceivedEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addCoinsSentEventListener(WalletCoinsSentEventListener listener) {
-        wallet.addCoinsSentEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addReorganizeEventListener(WalletReorganizeEventListener listener) {
-        wallet.addReorganizeEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addTransactionConfidenceEventListener(TransactionConfidenceEventListener listener) {
-        wallet.addTransactionConfidenceEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addKeyChainEventListener(KeyChainEventListener listener) {
-        wallet.addKeyChainEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addScriptChangeEventListener(ScriptsChangeEventListener listener) {
-        wallet.addScriptChangeEventListener(Threading.USER_THREAD, listener);
-    }
-
     public void addChangeEventListener(WalletChangeEventListener listener) {
         wallet.addChangeEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void removeCoinsReceivedEventListener(WalletCoinsReceivedEventListener listener) {
-        wallet.removeCoinsReceivedEventListener(listener);
-    }
-
-    public void removeCoinsSentEventListener(WalletCoinsSentEventListener listener) {
-        wallet.removeCoinsSentEventListener(listener);
-    }
-
-    public void removeReorganizeEventListener(WalletReorganizeEventListener listener) {
-        wallet.removeReorganizeEventListener(listener);
-    }
-
-    public void removeTransactionConfidenceEventListener(TransactionConfidenceEventListener listener) {
-        wallet.removeTransactionConfidenceEventListener(listener);
-    }
-
-    public void removeKeyChainEventListener(KeyChainEventListener listener) {
-        wallet.removeKeyChainEventListener(listener);
-    }
-
-    public void removeScriptChangeEventListener(ScriptsChangeEventListener listener) {
-        wallet.removeScriptChangeEventListener(listener);
     }
 
     public void removeChangeEventListener(WalletChangeEventListener listener) {
