@@ -2,6 +2,7 @@ package bisq.desktop.util.validation;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.util.validation.RegexValidator;
 
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
