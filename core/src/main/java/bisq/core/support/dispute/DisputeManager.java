@@ -48,6 +48,7 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
@@ -88,6 +89,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final OpenOfferManager openOfferManager;
     protected final PubKeyRing pubKeyRing;
     protected final DisputeListService<T> disputeListService;
+    private final Config config;
     private final PriceFeedService priceFeedService;
     protected final DaoFacade daoFacade;
 
@@ -112,6 +114,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           DaoFacade daoFacade,
                           KeyRing keyRing,
                           DisputeListService<T> disputeListService,
+                          Config config,
                           PriceFeedService priceFeedService) {
         super(p2PService, walletsSetup);
 
@@ -124,6 +127,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.pubKeyRing = keyRing.getPubKeyRing();
         signatureKeyPair = keyRing.getSignatureKeyPair();
         this.disputeListService = disputeListService;
+        this.config = config;
         this.priceFeedService = priceFeedService;
     }
 
@@ -263,8 +267,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         disputes.forEach(dispute -> {
             try {
                 TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress());
-                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress());
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
             } catch (TradeDataValidation.AddressException | TradeDataValidation.NodeAddressException e) {
                 log.error(e.toString());
                 validationExceptions.add(e);
@@ -316,8 +320,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         try {
             TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
-            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress());
-            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress());
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
         } catch (TradeDataValidation.AddressException |
                 TradeDataValidation.DisputeReplayException |
                 TradeDataValidation.NodeAddressException e) {

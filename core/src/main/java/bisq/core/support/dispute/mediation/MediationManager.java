@@ -47,6 +47,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -84,9 +85,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                             DaoFacade daoFacade,
                             KeyRing keyRing,
                             MediationDisputeListService mediationDisputeListService,
+                            Config config,
                             PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, daoFacade, keyRing, mediationDisputeListService, priceFeedService);
+                openOfferManager, daoFacade, keyRing, mediationDisputeListService, config, priceFeedService);
     }
 
 

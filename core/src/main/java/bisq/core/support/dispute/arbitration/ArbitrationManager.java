@@ -54,6 +54,7 @@ import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
@@ -94,9 +95,10 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                               DaoFacade daoFacade,
                               KeyRing keyRing,
                               ArbitrationDisputeListService arbitrationDisputeListService,
+                              Config config,
                               PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, daoFacade, keyRing, arbitrationDisputeListService, priceFeedService);
+                openOfferManager, daoFacade, keyRing, arbitrationDisputeListService, config, priceFeedService);
     }
 
 
