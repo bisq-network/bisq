@@ -42,6 +42,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
@@ -165,14 +166,9 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), paymentMethodText);
 
         // second group
-        rows = 6;
+        rows = 8;
         PaymentAccountPayload buyerPaymentAccountPayload = null;
         PaymentAccountPayload sellerPaymentAccountPayload = null;
-
-       /* if (offer.getAcceptedCountryCodes() != null)
-            rows++;
-        if (offer.getAcceptedBanks() != null)
-            rows++;*/
 
         if (contract != null) {
             rows++;
@@ -191,8 +187,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         if (trade.getTakerFeeTxId() != null)
             rows++;
-        if (trade.getDepositTx() != null)
-            rows++;
+
         if (trade.getPayoutTx() != null)
             rows++;
         boolean showDisputedTx = arbitrationManager.findOwnDispute(trade.getId()).isPresent() &&
@@ -288,9 +283,14 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (trade.getTakerFeeTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakerFeeTxId());
 
-        if (trade.getDepositTx() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"),
-                    trade.getDepositTx().getTxId().toString());
+        Transaction depositTx = trade.getDepositTx();
+        String depositTxString = depositTx != null ? depositTx.getTxId().toString() : Res.get("shared.na");
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), depositTxString);
+
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        String delayedPayoutTxString = delayedPayoutTx != null ? delayedPayoutTx.getTxId().toString() : Res.get("shared.na");
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), delayedPayoutTxString);
+
         if (trade.getPayoutTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"),
                     trade.getPayoutTx().getTxId().toString());
