@@ -374,6 +374,7 @@ public final class Dispute implements NetworkPayload {
         return "Dispute{" +
                 "\n     tradeId='" + tradeId + '\'' +
                 ",\n     id='" + id + '\'' +
+                ",\n     uid='" + uid + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
                 ",\n     disputeOpenerIsMaker=" + disputeOpenerIsMaker +

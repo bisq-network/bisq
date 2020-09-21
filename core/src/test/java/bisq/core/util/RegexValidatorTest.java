@@ -30,7 +30,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+
 public class RegexValidatorTest {
+
     @Before
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
@@ -308,5 +310,4 @@ public class RegexValidatorTest {
         assertFalse(regexValidator.validate("-example.com").isValid);
         assertFalse(regexValidator.validate("example-.com").isValid);
     }
-
 }

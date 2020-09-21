@@ -316,7 +316,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         try {
             TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
-        } catch (TradeDataValidation.AddressException | TradeDataValidation.DisputeReplayException e) {
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress());
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress());
+        } catch (TradeDataValidation.AddressException |
+                TradeDataValidation.DisputeReplayException |
+                TradeDataValidation.NodeAddressException e) {
             log.error(e.toString());
             validationExceptions.add(e);
         }

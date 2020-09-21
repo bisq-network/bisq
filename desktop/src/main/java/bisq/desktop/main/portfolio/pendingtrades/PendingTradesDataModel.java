@@ -590,7 +590,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
             if (delayedPayoutTx != null) {
-                dispute.setDelayedPayoutTxId(delayedPayoutTx.getHashAsString());
+                dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
             }
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
@@ -667,7 +667,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isSupportTicket,
                     SupportType.REFUND);
 
-
             String tradeId = dispute.getTradeId();
             mediationManager.findDispute(tradeId)
                     .ifPresent(mediatorsDispute -> {
@@ -682,7 +681,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     });
 
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
-            dispute.setDelayedPayoutTxId(trade.getDelayedPayoutTx().getTxId().toString());
+            dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
 
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 

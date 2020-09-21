@@ -3,7 +3,6 @@ package bisq.core.util.validation;
 import bisq.core.locale.Res;
 
 public class RegexValidator extends InputValidator {
-
     private String pattern;
     private String errorMessage;
 

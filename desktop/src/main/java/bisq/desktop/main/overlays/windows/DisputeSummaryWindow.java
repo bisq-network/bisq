@@ -99,8 +99,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
-
-
     private final CoinFormatter formatter;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
@@ -862,6 +860,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
 
         finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
+
         closeTicketButton.disableProperty().unbind();
 
         hide();

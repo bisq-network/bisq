@@ -129,6 +129,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         REASON("Reason"),
         JSON("Contract as json");
 
+        // Used in tooltip at search string to show where the match was found
         @Getter
         private final String displayString;
 
