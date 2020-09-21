@@ -37,7 +37,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.script.ScriptException;
@@ -499,12 +498,12 @@ public abstract class WalletService {
     // Empty complete Wallet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void emptyWallet(String toAddress,
-                            KeyParameter aesKey,
-                            ResultHandler resultHandler,
-                            ErrorMessageHandler errorMessageHandler)
+    public void emptyBtcWallet(String toAddress,
+                               KeyParameter aesKey,
+                               ResultHandler resultHandler,
+                               ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
-        SendRequest sendRequest = SendRequest.emptyWallet(LegacyAddress.fromBase58(params, toAddress));
+        SendRequest sendRequest = SendRequest.emptyWallet(Address.fromString(params, toAddress));
         sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
@@ -739,7 +738,8 @@ public abstract class WalletService {
 
     public static boolean isOutputScriptConvertibleToAddress(TransactionOutput output) {
         return ScriptPattern.isP2PKH(output.getScriptPubKey()) ||
-                ScriptPattern.isP2SH(output.getScriptPubKey());
+                ScriptPattern.isP2SH(output.getScriptPubKey()) ||
+                ScriptPattern.isP2WH(output.getScriptPubKey());
     }
 
     @Nullable

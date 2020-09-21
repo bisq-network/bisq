@@ -17,13 +17,13 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Australiacash extends Coin {
     public Australiacash() {
-        super("Australiacash", "AUS", new Base58BitcoinAddressValidator(new AustraliacashParams()));
+        super("Australiacash", "AUS", new Base58AddressValidator(new AustraliacashParams()));
     }
 	   public static class AustraliacashParams extends NetworkParametersAdapter {
 

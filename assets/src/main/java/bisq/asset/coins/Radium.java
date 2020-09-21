@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Radium extends Coin {
 
     public Radium() {
-        super("Radium", "RADS", new Base58BitcoinAddressValidator(new RadiumParams()));
+        super("Radium", "RADS", new Base58AddressValidator(new RadiumParams()));
     }
 
 

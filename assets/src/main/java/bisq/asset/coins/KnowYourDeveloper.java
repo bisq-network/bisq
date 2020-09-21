@@ -17,13 +17,13 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class KnowYourDeveloper extends Coin {
     public KnowYourDeveloper() {
-        super("Know Your Developer", "KYDC", new Base58BitcoinAddressValidator(new KydMainNetParams()));
+        super("Know Your Developer", "KYDC", new Base58AddressValidator(new KydMainNetParams()));
     }
 
     public static class KydMainNetParams extends NetworkParametersAdapter {

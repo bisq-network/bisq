@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Pinkcoin extends Coin {
 
     public Pinkcoin() {
-        super("Pinkcoin", "PINK", new Base58BitcoinAddressValidator(new PinkcoinParams()));
+        super("Pinkcoin", "PINK", new Base58AddressValidator(new PinkcoinParams()));
     }
 
 

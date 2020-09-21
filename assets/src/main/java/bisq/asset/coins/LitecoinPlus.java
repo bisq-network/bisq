@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class LitecoinPlus extends Coin {
 
     public LitecoinPlus() {
-        super("LitecoinPlus", "LCP", new Base58BitcoinAddressValidator(new LitecoinPlusMainNetParams()));
+        super("LitecoinPlus", "LCP", new Base58AddressValidator(new LitecoinPlusMainNetParams()));
     }
 
     public static class LitecoinPlusMainNetParams extends NetworkParametersAdapter {

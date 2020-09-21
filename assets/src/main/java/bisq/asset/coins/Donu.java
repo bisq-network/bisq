@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -29,7 +29,7 @@ public class Donu extends Coin {
     }
 
 
-    public static class DonuAddressValidator extends Base58BitcoinAddressValidator {
+    public static class DonuAddressValidator extends Base58AddressValidator {
 
         public DonuAddressValidator() {
             super(new DonuParams());

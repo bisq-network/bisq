@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Spectrecoin extends Coin {
 
     public Spectrecoin() {
-        super("Spectrecoin", "XSPEC", new Base58BitcoinAddressValidator(new SpectrecoinParams()));
+        super("Spectrecoin", "XSPEC", new Base58AddressValidator(new SpectrecoinParams()));
     }
 
 
