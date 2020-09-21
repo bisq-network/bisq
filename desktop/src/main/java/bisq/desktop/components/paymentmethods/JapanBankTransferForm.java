@@ -27,7 +27,6 @@ import bisq.desktop.util.validation.JapanBankBranchCodeValidator;
 import bisq.desktop.util.validation.JapanBankBranchNameValidator;
 import bisq.desktop.util.validation.JapanBankTransferValidator;
 import bisq.desktop.util.validation.LengthValidator;
-import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
@@ -38,6 +37,7 @@ import bisq.core.payment.payload.JapanBankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.RegexValidator;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;

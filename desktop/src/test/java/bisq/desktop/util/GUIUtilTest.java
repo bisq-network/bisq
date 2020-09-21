@@ -17,8 +17,6 @@
 
 package bisq.desktop.util;
 
-import bisq.desktop.util.validation.RegexValidator;
-
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -28,6 +26,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.validation.RegexValidator;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
@@ -39,7 +38,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
@@ -141,7 +139,7 @@ public class GUIUtilTest {
         assertFalse(regexValidator.validate("abcdefghijklmnop.onion:").isValid);
 
         // onion v3 addresses
-        assertFalse(regexValidator.validate("32zzibxmqi2ybxpqyggwwuwz7a3lbvtzoloti7cxoevyvijexvgsfei.onion:8333").isValid); // 1 missing char 
+        assertFalse(regexValidator.validate("32zzibxmqi2ybxpqyggwwuwz7a3lbvtzoloti7cxoevyvijexvgsfei.onion:8333").isValid); // 1 missing char
         assertTrue(regexValidator.validate("wizseedscybbttk4bmb2lzvbuk2jtect37lcpva4l3twktmkzemwbead.onion:8000").isValid);
 
         // ipv4 addresses

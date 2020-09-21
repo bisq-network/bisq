@@ -30,7 +30,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BtcValidator;
-import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
@@ -52,6 +51,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.IntegerValidator;
+import bisq.core.util.validation.RegexValidator;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -94,8 +94,8 @@ import javafx.util.StringConverter;
 
 import java.io.File;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
