@@ -307,11 +307,12 @@ public class WalletsSetup {
             }
         }
 
-        walletConfig.setDownloadListener(downloadListener)
-                .setBlockingStartup(false);
+        walletConfig.setDownloadListener(downloadListener);
 
         // If seed is non-null it means we are restoring from backup.
-        walletConfig.restoreWalletFromSeed(seed);
+        if (seed != null) {
+            walletConfig.restoreWalletFromSeed(seed);
+        }
 
         walletConfig.addListener(new Service.Listener() {
             @Override
