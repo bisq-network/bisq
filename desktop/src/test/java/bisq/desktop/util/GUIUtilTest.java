@@ -27,6 +27,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.RegexValidator;
+import bisq.core.util.validation.RegexValidatorFactory;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
@@ -119,7 +120,7 @@ public class GUIUtilTest {
 
     @Test
     public void testAddressRegexValidator() {
-        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.addressRegexValidator();
 
         assertTrue(regexValidator.validate("").isValid);
         assertFalse(regexValidator.validate(" ").isValid);
@@ -175,7 +176,7 @@ public class GUIUtilTest {
 
     @Test
     public void testOnionAddressRegexValidator() {
-        RegexValidator regexValidator = GUIUtil.onionAddressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.onionAddressRegexValidator();
 
         assertTrue(regexValidator.validate("").isValid);
         assertFalse(regexValidator.validate(" ").isValid);
@@ -202,7 +203,7 @@ public class GUIUtilTest {
 
     @Test
     public void testLocalnetAddressRegexValidator() {
-        RegexValidator regexValidator = GUIUtil.localnetAddressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.localnetAddressRegexValidator();
 
         assertTrue(regexValidator.validate("").isValid);
         assertFalse(regexValidator.validate(" ").isValid);
@@ -291,7 +292,7 @@ public class GUIUtilTest {
 
     @Test
     public void testLocalhostAddressRegexValidator() {
-        RegexValidator regexValidator = GUIUtil.localhostAddressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.localhostAddressRegexValidator();
 
         assertTrue(regexValidator.validate("").isValid);
         assertFalse(regexValidator.validate(" ").isValid);

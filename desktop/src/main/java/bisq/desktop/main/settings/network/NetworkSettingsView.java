@@ -37,6 +37,7 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.validation.RegexValidator;
+import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
@@ -237,7 +238,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         };
 
         btcNodesInputTextField.setPromptText(Res.get("settings.net.ips"));
-        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.addressRegexValidator();
         btcNodesInputTextField.setValidator(regexValidator);
         btcNodesInputTextField.setErrorMessage(Res.get("validation.invalidAddressList"));
         btcNodesInputTextFieldFocusListener = (observable, oldValue, newValue) -> {
