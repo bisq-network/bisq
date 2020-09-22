@@ -268,7 +268,7 @@ public final class Contract implements NetworkPayload {
     }
 
     public void printDiff(@Nullable String peersContractAsJson) {
-        final String json = Utilities.objectToJson(this);
+        String json = Utilities.objectToJson(this);
         String diff = StringUtils.difference(json, peersContractAsJson);
         if (!diff.isEmpty()) {
             log.warn("Diff of both contracts: \n" + diff);

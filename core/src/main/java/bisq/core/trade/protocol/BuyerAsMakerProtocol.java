@@ -138,8 +138,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 BuyerSetupDepositTxListener.class,
                 BuyerAsMakerSendsInputsForDepositTxResponse.class
         );
-        // We don't use a timeout here because if the DepositTxPublishedMessage does not arrive we
-        // get the deposit tx set at MakerSetupDepositTxListener once it is seen in the bitcoin network
         taskRunner.run();
     }
 

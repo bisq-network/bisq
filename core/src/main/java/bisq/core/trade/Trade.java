@@ -1146,7 +1146,7 @@ public abstract class Trade implements Tradable, Model {
                 setConfirmedState();
             } else {
                 ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
-                Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+                Futures.addCallback(future, new FutureCallback<>() {
                     @Override
                     public void onSuccess(TransactionConfidence result) {
                         setConfirmedState();

@@ -52,18 +52,18 @@ public class TakerVerifyAndSignContract extends TradeTask {
         try {
             runInterceptHook();
 
-            checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
-
+            String takerFeeTxId = checkNotNull(trade.getTakerFeeTxId());
             TradingPeer maker = processModel.getTradingPeer();
             PaymentAccountPayload makerPaymentAccountPayload = checkNotNull(maker.getPaymentAccountPayload());
             PaymentAccountPayload takerPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade));
 
             boolean isBuyerMakerAndSellerTaker = trade instanceof SellerAsTakerTrade;
-            NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
-            NodeAddress sellerNodeAddress = isBuyerMakerAndSellerTaker ? processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
-            log.debug("isBuyerMakerAndSellerTaker " + isBuyerMakerAndSellerTaker);
-            log.debug("buyerAddress " + buyerNodeAddress);
-            log.debug("sellerAddress " + sellerNodeAddress);
+            NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
+                    processModel.getTempTradingPeerNodeAddress() :
+                    processModel.getMyNodeAddress();
+            NodeAddress sellerNodeAddress = isBuyerMakerAndSellerTaker ?
+                    processModel.getMyNodeAddress() :
+                    processModel.getTempTradingPeerNodeAddress();
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
@@ -75,13 +75,12 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     takerMultiSigAddressEntry.getPubKey()),
                     "takerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            final Coin tradeAmount = trade.getTradeAmount();
-            checkNotNull(tradeAmount, "tradeAmount must not be null");
+            Coin tradeAmount = checkNotNull(trade.getTradeAmount());
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
                     tradeAmount.value,
                     trade.getTradePrice().getValue(),
-                    trade.getTakerFeeTxId(),
+                    takerFeeTxId,
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getMediatorNodeAddress(),
@@ -100,10 +99,11 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     trade.getRefundAgentNodeAddress()
             );
             String contractAsJson = Utilities.objectToJson(contract);
-            log.trace("Contract as json:{}", contractAsJson);
 
-            contract.printDiff(processModel.getTradingPeer().getContractAsJson());
-            checkArgument(contractAsJson.equals(processModel.getTradingPeer().getContractAsJson()), "Contracts are not matching");
+            if (!contractAsJson.equals(processModel.getTradingPeer().getContractAsJson())) {
+                contract.printDiff(processModel.getTradingPeer().getContractAsJson());
+                failed("Contracts are not matching");
+            }
 
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
             trade.setContract(contract);
@@ -117,7 +117,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
 
                 complete();
             } catch (Throwable t) {
-                failed("Signature verification failed. " + t.getMessage());
+                failed("Contract signature verification failed. " + t.getMessage());
             }
         } catch (Throwable t) {
             failed(t);
