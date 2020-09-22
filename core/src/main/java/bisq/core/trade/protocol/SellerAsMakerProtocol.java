@@ -160,8 +160,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 SellerProcessDelayedPayoutTxSignatureResponse.class,
                 SellerSignsDelayedPayoutTx.class,
                 SellerFinalizesDelayedPayoutTx.class,
-                SellerPublishesDepositTx.class,
                 SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                SellerPublishesDepositTx.class,
                 PublishTradeStatistics.class
         );
         taskRunner.run();
