@@ -40,17 +40,14 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
-            checkNotNull(delayedPayoutTx, "trade.getDelayedPayoutTx() must not be null");
-            // Check again tx
+            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
             DelayedPayoutTxValidation.validatePayoutTx(trade,
                     delayedPayoutTx,
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
 
             // Now as we know the deposit tx we can also verify the input
-            Transaction depositTx = trade.getDepositTx();
-            checkNotNull(depositTx, "trade.getDepositTx() must not be null");
+            Transaction depositTx = checkNotNull(trade.getDepositTx());
             DelayedPayoutTxValidation.validatePayoutTxInput(depositTx, delayedPayoutTx);
 
             complete();
