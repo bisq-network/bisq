@@ -26,7 +26,6 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
-import bisq.common.crypto.Hash;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
@@ -60,9 +59,6 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             TradingPeer tradingPeer = processModel.getTradingPeer();
             Offer offer = checkNotNull(trade.getOffer());
 
-            byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
-            trade.setContractHash(contractHash);
-
             Coin makerInputAmount = offer.getBuyerSecurityDeposit();
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
@@ -87,7 +83,7 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     "buyerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().buyerAsMakerCreatesAndSignsDepositTx(
-                    contractHash,
+                    trade.getContractHash(),
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,

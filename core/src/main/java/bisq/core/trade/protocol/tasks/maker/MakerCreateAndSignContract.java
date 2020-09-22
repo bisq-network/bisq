@@ -27,6 +27,7 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;
@@ -93,6 +94,10 @@ public class MakerCreateAndSignContract extends TradeTask {
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
             trade.setMakerContractSignature(signature);
+
+            byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
+            trade.setContractHash(contractHash);
+
             processModel.setMyMultiSigPubKey(makerMultiSigPubKey);
 
             complete();
