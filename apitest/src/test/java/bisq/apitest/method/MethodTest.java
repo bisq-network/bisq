@@ -95,6 +95,18 @@ public class MethodTest extends ApiTestCase {
                 .getAddress();
     }
 
+    protected final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
+            String accountName,
+            String accountNumber,
+            String currencyCode) {
+        return CreatePaymentAccountRequest.newBuilder()
+                .setPaymentMethodId(PERFECT_MONEY.getId())
+                .setAccountName(accountName)
+                .setAccountNumber(accountNumber)
+                .setCurrencyCode(currencyCode)
+                .build();
+    }
+
     // Static conveniences for test methods and test case fixture setups.
 
     protected static RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
@@ -108,17 +120,5 @@ public class MethodTest extends ApiTestCase {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR.name()));
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUNDAGENT.name()));
-    }
-
-    protected static CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
-            String accountName,
-            String accountNumber,
-            String currencyCode) {
-        return CreatePaymentAccountRequest.newBuilder()
-                .setPaymentMethodId(PERFECT_MONEY.getId())
-                .setAccountName(accountName)
-                .setAccountNumber(accountNumber)
-                .setCurrencyCode(currencyCode)
-                .build();
     }
 }
