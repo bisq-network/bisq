@@ -363,20 +363,20 @@ public class WalletConfig extends AbstractIdleService {
         // Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
         Script.ScriptType preferredOutputScriptType = Script.ScriptType.P2PKH;
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
-        KeyChainGroup.Builder kcg = KeyChainGroup.builder(params, structure);
+        KeyChainGroup.Builder kcgBuilder = KeyChainGroup.builder(params, structure);
         if (restoreFromSeed != null) {
-            kcg.fromSeed(restoreFromSeed, preferredOutputScriptType).build();
+            kcgBuilder.fromSeed(restoreFromSeed, preferredOutputScriptType).build();
         } else {
             // new wallet
             if (!isBsqWallet) {
                 // btc wallet uses a new random seed.
-                kcg.fromRandom(preferredOutputScriptType);
+                kcgBuilder.fromRandom(preferredOutputScriptType);
             } else {
                 // bsq wallet uses btc wallet's seed created a few milliseconds ago.
-                kcg.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
+                kcgBuilder.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
             }
         }
-        return new Wallet(params, kcg.build()); // default
+        return new Wallet(params, kcgBuilder.build()); // default
     }
 
     private void maybeMoveOldWalletOutOfTheWay(File walletFile) {
