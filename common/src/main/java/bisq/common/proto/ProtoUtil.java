@@ -69,13 +69,10 @@ public class ProtoUtil {
      */
     @Nullable
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
-        if (name == null) {
-            return null;
-        }
-
-        E result = Enums.getIfPresent(enumType, name).orNull();
+        String enumName = name != null ? name : "UNDEFINED";
+        E result = Enums.getIfPresent(enumType, enumName).orNull();
         if (result == null) {
-            log.debug("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
+            log.debug("Invalid value for enum " + enumType.getSimpleName() + ": " + enumName);
             result = Enums.getIfPresent(enumType, "UNDEFINED").orNull();
             log.debug("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
                     "otherwise the enum is null. enum={}", result);
