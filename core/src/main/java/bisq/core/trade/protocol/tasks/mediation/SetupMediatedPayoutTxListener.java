@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
-    @SuppressWarnings({"unused"})
     public SetupMediatedPayoutTxListener(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

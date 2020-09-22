@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SellerAsMakerSendsInputsForDepositTxResponse extends MakerSendsInputsForDepositTxResponse {
-    @SuppressWarnings({"unused"})
     public SellerAsMakerSendsInputsForDepositTxResponse(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

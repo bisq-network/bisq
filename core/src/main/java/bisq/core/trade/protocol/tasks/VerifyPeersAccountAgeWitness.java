@@ -35,7 +35,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class VerifyPeersAccountAgeWitness extends TradeTask {
 
-    @SuppressWarnings({"unused"})
     public VerifyPeersAccountAgeWitness(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

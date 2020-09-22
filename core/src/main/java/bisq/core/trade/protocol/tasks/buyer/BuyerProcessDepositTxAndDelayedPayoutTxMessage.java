@@ -37,7 +37,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
     public BuyerProcessDepositTxAndDelayedPayoutTxMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

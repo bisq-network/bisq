@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
     public BuyerSendCounterCurrencyTransferStartedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

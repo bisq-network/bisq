@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MakerVerifyTakerFeePayment extends TradeTask {
 
-    @SuppressWarnings({"unused"})
     public MakerVerifyTakerFeePayment(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

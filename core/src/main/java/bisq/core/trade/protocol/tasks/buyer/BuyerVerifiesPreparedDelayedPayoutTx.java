@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
-    @SuppressWarnings({"unused"})
     public BuyerVerifiesPreparedDelayedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

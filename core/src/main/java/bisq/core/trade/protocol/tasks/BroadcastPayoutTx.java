@@ -32,7 +32,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class BroadcastPayoutTx extends TradeTask {
-    @SuppressWarnings({"unused"})
     public BroadcastPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
