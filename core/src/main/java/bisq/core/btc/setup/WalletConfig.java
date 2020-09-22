@@ -365,7 +365,7 @@ public class WalletConfig extends AbstractIdleService {
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
         KeyChainGroup.Builder kcgBuilder = KeyChainGroup.builder(params, structure);
         if (restoreFromSeed != null) {
-            kcgBuilder.fromSeed(restoreFromSeed, preferredOutputScriptType).build();
+            kcgBuilder.fromSeed(restoreFromSeed, preferredOutputScriptType);
         } else {
             // new wallet
             if (!isBsqWallet) {
