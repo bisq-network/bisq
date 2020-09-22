@@ -61,13 +61,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
     private final List<NodeAddress> acceptedMediatorNodeAddresses;
     private final List<NodeAddress> acceptedRefundAgentNodeAddresses;
-    @Nullable
     private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
     private final NodeAddress refundAgentNodeAddress;
 
-    // added in v 0.6. can be null if we trade with an older peer
-    @Nullable
     private final byte[] accountAgeWitnessSignatureOfOfferId;
     private final long currentDate;
 
@@ -95,7 +92,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      NodeAddress refundAgentNodeAddress,
                                      String uid,
                                      int messageVersion,
-                                     @Nullable byte[] accountAgeWitnessSignatureOfOfferId,
+                                     byte[] accountAgeWitnessSignatureOfOfferId,
                                      long currentDate) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
@@ -155,12 +152,12 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
-                .setUid(uid);
+                .setUid(uid)
+                .setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(accountAgeWitnessSignatureOfOfferId))
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
+                .setCurrentDate(currentDate);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
-        Optional.ofNullable(accountAgeWitnessSignatureOfOfferId).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(e)));
-        Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
-        builder.setCurrentDate(currentDate);
 
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
@@ -203,7 +200,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 NodeAddress.fromProto(proto.getRefundAgentNodeAddress()),
                 proto.getUid(),
                 messageVersion,
-                ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
+                proto.getAccountAgeWitnessSignatureOfOfferId().toByteArray(),
                 proto.getCurrentDate());
     }
 
