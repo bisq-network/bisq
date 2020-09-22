@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
@@ -52,11 +51,7 @@ public class MakerCreateAndSignContract extends TradeTask {
             Preconditions.checkNotNull(trade.getTakerFeeTxId(), "trade.getTakeOfferFeeTxId() must not be null");
 
             TradingPeer taker = processModel.getTradingPeer();
-            PaymentAccountPayload makerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
-            checkNotNull(makerPaymentAccountPayload, "makerPaymentAccountPayload must not be null");
-            PaymentAccountPayload takerPaymentAccountPayload = checkNotNull(taker.getPaymentAccountPayload());
             boolean isBuyerMakerAndSellerTaker = trade instanceof BuyerAsMakerTrade;
-
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
                     processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
             NodeAddress sellerNodeAddress = isBuyerMakerAndSellerTaker ?
@@ -70,10 +65,9 @@ public class MakerCreateAndSignContract extends TradeTask {
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
 
             AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
-            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
-                    trade.getTradeAmount().value,
+                    checkNotNull(trade.getTradeAmount()).value,
                     trade.getTradePrice().getValue(),
                     trade.getTakerFeeTxId(),
                     buyerNodeAddress,
@@ -81,15 +75,15 @@ public class MakerCreateAndSignContract extends TradeTask {
                     trade.getMediatorNodeAddress(),
                     isBuyerMakerAndSellerTaker,
                     processModel.getAccountId(),
-                    taker.getAccountId(),
-                    makerPaymentAccountPayload,
-                    takerPaymentAccountPayload,
+                    checkNotNull(taker.getAccountId()),
+                    checkNotNull(processModel.getPaymentAccountPayload(trade)),
+                    checkNotNull(taker.getPaymentAccountPayload()),
                     processModel.getPubKeyRing(),
-                    taker.getPubKeyRing(),
+                    checkNotNull(taker.getPubKeyRing()),
                     takerAddressEntry.getAddressString(),
-                    taker.getPayoutAddressString(),
+                    checkNotNull(taker.getPayoutAddressString()),
                     makerMultiSigPubKey,
-                    taker.getMultiSigPubKey(),
+                    checkNotNull(taker.getMultiSigPubKey()),
                     trade.getLockTime(),
                     trade.getRefundAgentNodeAddress()
             );

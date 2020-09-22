@@ -38,10 +38,10 @@ public class MakerSetsLockTime extends TradeTask {
             runInterceptHook();
 
             // 10 days for altcoins, 20 days for other payment methods
-            int delay = Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
-            if (Config.baseCurrencyNetwork().isRegtest()) {
-                delay = 5;
-            }
+            // For regtest dev environment we use 5 blocks
+            int delay = Config.baseCurrencyNetwork().isRegtest() ?
+                    5 :
+                    Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
 
             long lockTime = processModel.getBtcWalletService().getBestChainHeight() + delay;
             log.info("lockTime={}, delay={}", lockTime, delay);
