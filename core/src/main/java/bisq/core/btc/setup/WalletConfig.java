@@ -23,12 +23,10 @@ import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.config.Config;
 
-import com.google.common.collect.*;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.*;
 import org.bitcoinj.core.listeners.*;
 import org.bitcoinj.core.*;
-import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.*;
 import org.bitcoinj.script.Script;
@@ -42,8 +40,6 @@ import org.slf4j.*;
 import javax.annotation.*;
 import java.io.*;
 import java.net.*;
-import java.nio.channels.*;
-import java.util.*;
 import java.util.concurrent.*;
 
 import lombok.Getter;
