@@ -38,6 +38,8 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -51,20 +53,15 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
+            Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             TradingPeer tradingPeer = processModel.getTradingPeer();
             Offer offer = checkNotNull(trade.getOffer());
 
-            // params
             byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
             trade.setContractHash(contractHash);
-            log.debug("\n\n------------------------------------------------------------\n"
-                    + "Contract as json\n"
-                    + trade.getContractAsJson()
-                    + "\n------------------------------------------------------------\n");
 
             Coin makerInputAmount = offer.getBuyerSecurityDeposit();
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
@@ -76,15 +73,15 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             Coin msOutputAmount = makerInputAmount
                     .add(trade.getTxFee())
                     .add(offer.getSellerSecurityDeposit())
-                    .add(trade.getTradeAmount());
+                    .add(tradeAmount);
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
-            String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
+            @Nullable String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
             byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
-            byte[] sellerPubKey = tradingPeer.getMultiSigPubKey();
+            byte[] sellerPubKey = checkNotNull(tradingPeer.getMultiSigPubKey());
             checkArgument(Arrays.equals(buyerPubKey,
                     makerMultiSigAddressEntry.getPubKey()),
                     "buyerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
