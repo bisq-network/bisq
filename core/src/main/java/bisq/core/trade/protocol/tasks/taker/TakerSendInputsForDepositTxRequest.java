@@ -32,11 +32,14 @@ import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Coin;
+
 import com.google.common.base.Charsets;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
@@ -54,42 +57,51 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
-            checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
-            final User user = processModel.getUser();
-            checkNotNull(user, "User must not be null");
-            final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
-            final List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
-            final List<NodeAddress> acceptedRefundAgentAddresses = user.getAcceptedRefundAgentAddresses();
+            Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
+            String takerFeeTxId = checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
+            User user = checkNotNull(processModel.getUser(), "User must not be null");
+            List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses() == null ?
+                    new ArrayList<>() :
+                    user.getAcceptedArbitratorAddresses();
+            List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
+            List<NodeAddress> acceptedRefundAgentAddresses = user.getAcceptedRefundAgentAddresses() == null ?
+                    new ArrayList<>() :
+                    user.getAcceptedRefundAgentAddresses();
             // We don't check for arbitrators as they should vanish soon
             checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
-            // We also don't check for refund agents yet as we don't want to restict us too much. They are not mandatory.
+            // We also don't check for refund agents yet as we don't want to restrict us too much. They are not mandatory.
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            checkArgument(walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
+            Optional<AddressEntry> optionalMultiSigAddressEntry = walletService.getAddressEntry(id,
+                    AddressEntry.Context.MULTI_SIG);
+            checkArgument(optionalMultiSigAddressEntry.isPresent(),
                     "MULTI_SIG addressEntry must have been already set here.");
-            AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            byte[] takerMultiSigPubKey = addressEntry.getPubKey();
+            AddressEntry multiSigAddressEntry = optionalMultiSigAddressEntry.get();
+            byte[] takerMultiSigPubKey = multiSigAddressEntry.getPubKey();
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 
-            checkArgument(walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).isPresent(),
-                    "TRADE_PAYOUT addressEntry must have been already set here.");
-            AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
-            String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
+            Optional<AddressEntry> optionalPayoutAddressEntry = walletService.getAddressEntry(id,
+                    AddressEntry.Context.TRADE_PAYOUT);
+            checkArgument(optionalPayoutAddressEntry.isPresent(),
+                    "TRADE_PAYOUT multiSigAddressEntry must have been already set here.");
+            AddressEntry payoutAddressEntry = optionalPayoutAddressEntry.get();
+            String takerPayoutAddressString = payoutAddressEntry.getAddressString();
 
-            final String offerId = processModel.getOfferId();
+            String offerId = processModel.getOfferId();
 
-            // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
-            // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
-            final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade), "processModel.getPaymentAccountPayload(trade) must not be null");
-            byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), offerId.getBytes(Charsets.UTF_8));
+            // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge
+            // protocol for passing the nonce we want to get signed)
+            PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                    "processModel.getPaymentAccountPayload(trade) must not be null");
+            byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
+                    offerId.getBytes(Charsets.UTF_8));
 
-            InputsForDepositTxRequest message = new InputsForDepositTxRequest(
+            InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,
                     processModel.getMyNodeAddress(),
-                    trade.getTradeAmount().value,
+                    tradeAmount.value,
                     trade.getTradePrice().getValue(),
                     trade.getTxFee().getValue(),
                     trade.getTakerFee().getValue(),
@@ -102,10 +114,10 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     processModel.getPubKeyRing(),
                     paymentAccountPayload,
                     processModel.getAccountId(),
-                    trade.getTakerFeeTxId(),
-                    acceptedArbitratorAddresses == null ? new ArrayList<>() : new ArrayList<>(acceptedArbitratorAddresses),
-                    new ArrayList<>(acceptedMediatorAddresses),
-                    acceptedRefundAgentAddresses == null ? new ArrayList<>() : new ArrayList<>(acceptedRefundAgentAddresses),
+                    takerFeeTxId,
+                    acceptedArbitratorAddresses,
+                    acceptedMediatorAddresses,
+                    acceptedRefundAgentAddresses,
                     trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
                     trade.getRefundAgentNodeAddress(),
@@ -114,25 +126,25 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     sig,
                     new Date().getTime());
             log.info("Send {} with offerId {} and uid {} to peer {}",
-                    message.getClass().getSimpleName(), message.getTradeId(),
-                    message.getUid(), trade.getTradingPeerNodeAddress());
+                    request.getClass().getSimpleName(), request.getTradeId(),
+                    request.getUid(), trade.getTradingPeerNodeAddress());
             processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.getTradingPeer().getPubKeyRing(),
-                    message,
+                    request,
                     new SendDirectMessageListener() {
                         public void onArrived() {
                             log.info("{} arrived at peer: offerId={}; uid={}",
-                                    message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
+                                    request.getClass().getSimpleName(), request.getTradeId(), request.getUid());
                             complete();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
                             log.error("Sending {} failed: uid={}; peer={}; error={}",
-                                    message.getClass().getSimpleName(), message.getUid(),
+                                    request.getClass().getSimpleName(), request.getUid(),
                                     trade.getTradingPeerNodeAddress(), errorMessage);
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+                            appendToErrorMessage("Sending message failed: message=" + request + "\nerrorMessage=" + errorMessage);
                             failed();
                         }
                     }
