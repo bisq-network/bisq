@@ -85,21 +85,21 @@ public class DelayedPayoutTxValidation {
             InvalidTxException, InvalidLockTimeException, AmountMismatchException {
         String errorMsg;
         if (delayedPayoutTx == null) {
-            errorMsg = "DelayedPayoutTx must not be null";
+            errorMsg = "DelayedPayoutTx must not be null. tradeId=" + trade.getShortId();
             log.error(errorMsg);
-            throw new MissingDelayedPayoutTxException("DelayedPayoutTx must not be null");
+            throw new MissingDelayedPayoutTxException(errorMsg);
         }
 
         // Validate tx structure
         if (delayedPayoutTx.getInputs().size() != 1) {
-            errorMsg = "Number of delayedPayoutTx inputs must be 1";
+            errorMsg = "Number of delayedPayoutTx inputs must be 1. tradeId=" + trade.getShortId();
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new InvalidTxException(errorMsg);
         }
 
         if (delayedPayoutTx.getOutputs().size() != 1) {
-            errorMsg = "Number of delayedPayoutTx outputs must be 1";
+            errorMsg = "Number of delayedPayoutTx outputs must be 1. tradeId=" + trade.getShortId();
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new InvalidTxException(errorMsg);
@@ -110,7 +110,7 @@ public class DelayedPayoutTxValidation {
 
         // Validate lock time
         if (delayedPayoutTx.getLockTime() != trade.getLockTime()) {
-            errorMsg = "delayedPayoutTx.getLockTime() must match trade.getLockTime()";
+            errorMsg = "delayedPayoutTx.getLockTime() must match trade.getLockTime(). tradeId=" + trade.getShortId();
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new InvalidLockTimeException(errorMsg);
@@ -118,7 +118,7 @@ public class DelayedPayoutTxValidation {
 
         // Validate seq num
         if (delayedPayoutTx.getInput(0).getSequenceNumber() != TransactionInput.NO_SEQUENCE - 1) {
-            errorMsg = "Sequence number must be 0xFFFFFFFE";
+            errorMsg = "Sequence number must be 0xFFFFFFFE. tradeId=" + trade.getShortId();
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new InvalidLockTimeException(errorMsg);
@@ -132,7 +132,8 @@ public class DelayedPayoutTxValidation {
                 .add(checkNotNull(trade.getTradeAmount()));
 
         if (!output.getValue().equals(msOutputAmount)) {
-            errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
+            errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output +
+                    " / msOutputAmount: " + msOutputAmount + ". tradeId=" + trade.getShortId();
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new AmountMismatchException(errorMsg);

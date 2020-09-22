@@ -44,7 +44,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            var message = (DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage();
+            var message = checkNotNull((DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage());
             checkNotNull(message);
             Validator.checkTradeId(processModel.getOfferId(), message);
 

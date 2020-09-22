@@ -129,7 +129,9 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
             // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
             if (newValue == MessageState.ACKNOWLEDGED) {
                 // We treat a ACK like BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG
-                trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+                if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT) {
+                    trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+                }
                 // Ensure listener construction is completed before remove call
                 UserThread.execute(this::stop);
             }

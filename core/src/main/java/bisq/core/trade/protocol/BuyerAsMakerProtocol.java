@@ -172,11 +172,30 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
-    // DepositTxAndDelayedPayoutTxMessage is a MailboxMessage
+    // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
+    // be also received from the network once published.
+    // Now we send the delayed payout tx as well and with that this message is mandatory for continuing the protocol.
+    // We do not support mailbox message handling during the take offer process as it is expected that both peers
+    // are online.
+    // For backward compatibility and extra resilience we still keep DepositTxAndDelayedPayoutTxMessage as a
+    // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
+    // in the hope to reach the buyer directly.
     private void handle(DepositTxAndDelayedPayoutTxMessage tradeMessage, NodeAddress peerNodeAddress) {
+        if (trade.getDepositTx() != null && trade.getDelayedPayoutTx() != null) {
+            log.warn("We received a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
+                    "delayed payout tx so we ignore the message. This can happen if the ACK message to the peer did not " +
+                    "arrive and the peer repeats sending us the message. We send another ACK msg.");
+            sendAckMessage(tradeMessage, true, null);
+            processModel.removeMailboxMessageAfterProcessing(trade);
+            return;
+        }
+
+        if (!isTradeInPhase(Trade.Phase.TAKER_FEE_PUBLISHED, tradeMessage)) {
+            return;
+        }
+
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
-
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                 () -> handleTaskRunnerSuccess(tradeMessage, "handle DepositTxAndDelayedPayoutTxMessage"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
@@ -186,7 +205,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 PublishTradeStatistics.class
         );
         taskRunner.run();
-        processModel.logTrade(buyerAsMakerTrade);
+        processModel.witnessDebugLog(buyerAsMakerTrade);
     }
 
 

@@ -165,7 +165,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 PublishTradeStatistics.class
         );
         taskRunner.run();
-        processModel.logTrade(sellerAsMakerTrade);
+        processModel.witnessDebugLog(sellerAsMakerTrade);
     }
 
 

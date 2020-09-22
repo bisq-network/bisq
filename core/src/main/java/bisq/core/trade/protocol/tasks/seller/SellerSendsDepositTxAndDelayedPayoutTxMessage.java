@@ -17,27 +17,108 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
+import bisq.core.network.MessageState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendMailboxMessageListener;
-
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Transaction;
+import javafx.beans.value.ChangeListener;
 
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * We send the buyer the deposit and delayed payout tx. We wait to receive a ACK message back and resend the message
+ * in case that does not happen in 4 seconds or if the message was stored in mailbox or failed. We keep repeating that
+ * with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached. If never successful we fail and
+ * do not continue the protocol with publishing the deposit tx. That way we avoid that a deposit tx is published but the
+ * buyer does not has the delayed payout tx and would not be able to open arbitration.
+ */
 @Slf4j
-public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends TradeTask {
+public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMessageTask {
+    private static final int MAX_RESEND_ATTEMPTS = 7;
+    private int delayInSec = 4;
+    private int resendCounter = 0;
+    private DepositTxAndDelayedPayoutTxMessage depositTxAndDelayedPayoutTxMessage;
+    private ChangeListener<MessageState> listener;
+    private Timer timer;
+
     public SellerSendsDepositTxAndDelayedPayoutTxMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
+    }
+
+    @Override
+    protected TradeMessage getMessage(String tradeId) {
+        if (depositTxAndDelayedPayoutTxMessage == null) {
+            // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
+            // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox
+            // messages where only the one which gets processed by the peer would be removed we use the same uid. All
+            // other data stays the same when we re-send the message at any time later.
+            String deterministicId = tradeId + processModel.getMyNodeAddress().getFullAddress();
+            depositTxAndDelayedPayoutTxMessage = new DepositTxAndDelayedPayoutTxMessage(
+                    deterministicId,
+                    processModel.getOfferId(),
+                    processModel.getMyNodeAddress(),
+                    checkNotNull(trade.getDepositTx()).bitcoinSerialize(),
+                    checkNotNull(trade.getDelayedPayoutTx()).bitcoinSerialize());
+        }
+        return depositTxAndDelayedPayoutTxMessage;
+    }
+
+    @Override
+    protected void setStateSent() {
+        trade.setStateIfValidTransitionTo(Trade.State.SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
+    }
+
+    @Override
+    protected void setStateArrived() {
+        trade.setStateIfValidTransitionTo(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
+        cleanup();
+        // Complete is called in base class
+    }
+
+    // We override the default behaviour for onStoredInMailbox and do not call complete
+    @Override
+    protected void onStoredInMailbox() {
+        setStateStoredInMailbox();
+    }
+
+    @Override
+    protected void setStateStoredInMailbox() {
+        trade.setStateIfValidTransitionTo(Trade.State.SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
+        // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
+        // be also received from the network once published.
+        // Now we send the delayed payout tx as well and with that this message is mandatory for continuing the protocol.
+        // We do not support mailbox message handling during the take offer process as it is expected that both peers
+        // are online.
+        // For backward compatibility and extra resilience we still keep DepositTxAndDelayedPayoutTxMessage as a
+        // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
+        // in the hope to reach the buyer directly.
+        if (!trade.isDepositConfirmed()) {
+            tryToSendAgainLater();
+        }
+    }
+
+    // We override the default behaviour for onFault and do not call appendToErrorMessage and failed
+    @Override
+    protected void onFault(String errorMessage, TradeMessage message) {
+        setStateFault();
+    }
+
+    @Override
+    protected void setStateFault() {
+        trade.setStateIfValidTransitionTo(Trade.State.SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG);
+        if (!trade.isDepositConfirmed()) {
+            tryToSendAgainLater();
+        }
     }
 
     @Override
@@ -45,52 +126,55 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction depositTx = checkNotNull(trade.getDepositTx(), "DepositTx must not be null");
-            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
-            DepositTxAndDelayedPayoutTxMessage message = new DepositTxAndDelayedPayoutTxMessage(UUID.randomUUID().toString(),
-                    processModel.getOfferId(),
-                    processModel.getMyNodeAddress(),
-                    depositTx.bitcoinSerialize(),
-                    delayedPayoutTx.bitcoinSerialize());
-            trade.setState(Trade.State.SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
-
-            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            processModel.getP2PService().sendEncryptedMailboxMessage(
-                    peersNodeAddress,
-                    processModel.getTradingPeer().getPubKeyRing(),
-                    message,
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            trade.setState(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
-                            complete();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-
-                            trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
-                            complete();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            trade.setState(Trade.State.SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG);
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                            failed();
-                        }
-                    }
-            );
+            super.run();
         } catch (Throwable t) {
             failed(t);
+        } finally {
+            cleanup();
+        }
+    }
+
+    private void cleanup() {
+        if (timer != null) {
+            timer.stop();
+        }
+        if (listener != null) {
+            processModel.getPaymentStartedMessageStateProperty().removeListener(listener);
+        }
+    }
+
+    private void tryToSendAgainLater() {
+        if (resendCounter >= MAX_RESEND_ATTEMPTS) {
+            cleanup();
+            failed("We never received an ACK message when sending the msg to the peer. " +
+                    "We fail here and do not publish the deposit tx.");
+            return;
+        }
+
+        log.info("We send the message again to the peer after a delay of {} sec.", delayInSec);
+        if (timer != null) {
+            timer.stop();
+        }
+        timer = UserThread.runAfter(this::run, delayInSec, TimeUnit.SECONDS);
+
+        if (resendCounter == 0) {
+            // We want to register listener only once
+            listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
+            processModel.getDepositTxMessageStateProperty().addListener(listener);
+            onMessageStateChange(processModel.getDepositTxMessageStateProperty().get());
+        }
+
+        delayInSec = delayInSec * 2;
+        resendCounter++;
+    }
+
+    private void onMessageStateChange(MessageState newValue) {
+        // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
+        if (newValue == MessageState.ACKNOWLEDGED) {
+            // We treat a ACK like SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG
+            trade.setStateIfValidTransitionTo(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
+            cleanup();
+            complete();
         }
     }
 }

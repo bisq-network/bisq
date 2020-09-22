@@ -71,22 +71,30 @@ public abstract class SendMailboxMessageTask extends TradeTask {
                         public void onStoredInMailbox() {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            setStateStoredInMailbox();
-                            complete();
+                            SendMailboxMessageTask.this.onStoredInMailbox();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            setStateFault();
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                            failed(errorMessage);
+                            SendMailboxMessageTask.this.onFault(errorMessage, message);
                         }
                     }
             );
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    protected void onStoredInMailbox() {
+        setStateStoredInMailbox();
+        complete();
+    }
+
+    protected void onFault(String errorMessage, TradeMessage message) {
+        setStateFault();
+        appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+        failed(errorMessage);
     }
 }

@@ -143,4 +143,11 @@ public final class TradableList<T extends Tradable> implements UserThreadMappedP
     public boolean contains(T thing) {
         return list.contains(thing);
     }
+
+    @Override
+    public String toString() {
+        return "TradableList{" +
+                ",\n     list=" + list +
+                "\n}";
+    }
 }

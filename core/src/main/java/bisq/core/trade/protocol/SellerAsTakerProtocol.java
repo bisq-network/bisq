@@ -164,7 +164,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 PublishTradeStatistics.class
         );
         taskRunner.run();
-        processModel.logTrade(sellerAsTakerTrade);
+        processModel.witnessDebugLog(sellerAsTakerTrade);
     }
 
 

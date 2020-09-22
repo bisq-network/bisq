@@ -21,6 +21,7 @@ import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
@@ -93,9 +94,13 @@ public abstract class TradeProtocol {
                     AckMessage ackMessage = (AckMessage) networkEnvelope;
                     if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
                             ackMessage.getSourceId().equals(trade.getId())) {
-                        // We only handle the ack for CounterCurrencyTransferStartedMessage
-                        if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName()))
+                        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
+                        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
+                        if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
                             processModel.setPaymentStartedAckMessage(ackMessage);
+                        } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
+                            processModel.setDepositTxSentAckMessage(ackMessage);
+                        }
 
                         if (ackMessage.isSuccess()) {
                             log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
@@ -333,7 +338,7 @@ public abstract class TradeProtocol {
         return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
     }
 
-    private void sendAckMessage(@Nullable TradeMessage tradeMessage, boolean result, @Nullable String errorMessage) {
+    protected void sendAckMessage(@Nullable TradeMessage tradeMessage, boolean result, @Nullable String errorMessage) {
         // We complete at initial protocol setup with the setup listener tasks.
         // Other cases are if we start from an UI event the task runner (payment started, confirmed).
         // In such cases we have not set any tradeMessage and we ignore the sendAckMessage call.
@@ -352,7 +357,9 @@ public abstract class TradeProtocol {
                 errorMessage);
         // If there was an error during offer verification, the tradingPeerNodeAddress of the trade might not be set yet.
         // We can find the peer's node address in the processModel's tempTradingPeerNodeAddress in that case.
-        final NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress() : processModel.getTempTradingPeerNodeAddress();
+        NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress() != null ?
+                trade.getTradingPeerNodeAddress() :
+                processModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
                 ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
         processModel.getP2PService().sendEncryptedMailboxMessage(
@@ -400,5 +407,27 @@ public abstract class TradeProtocol {
                         "about the deposit tx nor saw it in the network. tradeId={}, tradeState={}", trade.getId(), trade.getState());
             }
         }
+    }
+
+    protected boolean isTradeInPhase(Trade.Phase phase) {
+        return isTradeInPhase(phase, null);
+    }
+
+    protected boolean isTradeInPhase(Trade.Phase expectedPhase,
+                                     @Nullable TradeMessage tradeMessage) {
+        boolean isValidPhase = trade.getPhase() == expectedPhase;
+        if (!isValidPhase) {
+            if (tradeMessage != null) {
+                log.error("We received a {} but we are not in the correct phase. Phase={}, State= {} ",
+                        tradeMessage.getClass().getSimpleName(),
+                        trade.getPhase(),
+                        trade.getState());
+            } else {
+                log.error("We are not in the correct phase. Phase={}, State= {} ",
+                        trade.getPhase(),
+                        trade.getState());
+            }
+        }
+        return isValidPhase;
     }
 }

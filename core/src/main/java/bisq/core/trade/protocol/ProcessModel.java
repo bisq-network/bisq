@@ -112,15 +112,26 @@ public class ProcessModel implements Model, PersistablePayload {
     @Nullable
     transient private Transaction preparedDelayedPayoutTx;
 
+    // Added in v1.4.0
+    // MessageState of the last message sent from the seller to the buyer in the take offer process.
+    // It is used only in a task which would not be executed after restart, so no need to persist it.
+    @Setter
+    transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+
+
     // Persistable Immutable (private setter only used by PB method)
+    @Setter
     private TradingPeer tradingPeer = new TradingPeer();
+    @Setter
     private String offerId;
+    @Setter
     private String accountId;
+    @Setter
     private PubKeyRing pubKeyRing;
 
     // Persistable Mutable
     @Nullable
-    @Setter()
+    @Setter
     private String takeOfferFeeTxId;
     @Nullable
     @Setter
@@ -158,8 +169,9 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private long sellerPayoutAmountFromMediation;
 
-    // The only trade message where we want to indicate the user the state of the message delivery is the
-    // CounterCurrencyTransferStartedMessage. We persist the state with the processModel.
+    // We want to indicate the user the state of the message delivery of the
+    // CounterCurrencyTransferStartedMessage. As well we do an automatic re-send in case it was not ACKed yet.
+    // To enable that even after restart we persist the state.
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
@@ -173,7 +185,7 @@ public class ProcessModel implements Model, PersistablePayload {
 
     @Override
     public protobuf.ProcessModel toProtoMessage() {
-        final protobuf.ProcessModel.Builder builder = protobuf.ProcessModel.newBuilder()
+        protobuf.ProcessModel.Builder builder = protobuf.ProcessModel.newBuilder()
                 .setTradingPeer((protobuf.TradingPeer) tradingPeer.toProtoMessage())
                 .setOfferId(offerId)
                 .setAccountId(accountId)
@@ -221,10 +233,12 @@ public class ProcessModel implements Model, PersistablePayload {
         processModel.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
         processModel.setMyMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMyMultiSigPubKey()));
         processModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
-        String paymentStartedMessageState = proto.getPaymentStartedMessageState().isEmpty() ? MessageState.UNDEFINED.name() : proto.getPaymentStartedMessageState();
-        ObjectProperty<MessageState> paymentStartedMessageStateProperty = processModel.getPaymentStartedMessageStateProperty();
-        paymentStartedMessageStateProperty.set(ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageState));
         processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
+
+        String paymentStartedMessageStateString = ProtoUtil.stringOrNullFromProto(proto.getPaymentStartedMessageState());
+        MessageState paymentStartedMessageState = ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageStateString);
+        processModel.setPaymentStartedMessageState(paymentStartedMessageState);
+
         return processModel;
     }
 
@@ -330,34 +344,28 @@ public class ProcessModel implements Model, PersistablePayload {
     }
 
     void setPaymentStartedAckMessage(AckMessage ackMessage) {
-        if (ackMessage.isSuccess()) {
-            setPaymentStartedMessageState(MessageState.ACKNOWLEDGED);
-        } else {
-            setPaymentStartedMessageState(MessageState.FAILED);
-        }
+        MessageState messageState = ackMessage.isSuccess() ?
+                MessageState.ACKNOWLEDGED :
+                MessageState.FAILED;
+        setPaymentStartedMessageState(messageState);
     }
 
     public void setPaymentStartedMessageState(MessageState paymentStartedMessageStateProperty) {
         this.paymentStartedMessageStateProperty.set(paymentStartedMessageStateProperty);
     }
 
-    private void setTradingPeer(TradingPeer tradingPeer) {
-        this.tradingPeer = tradingPeer;
+    void setDepositTxSentAckMessage(AckMessage ackMessage) {
+        MessageState messageState = ackMessage.isSuccess() ?
+                MessageState.ACKNOWLEDGED :
+                MessageState.FAILED;
+        setDepositTxMessageState(messageState);
     }
 
-    private void setOfferId(String offerId) {
-        this.offerId = offerId;
+    public void setDepositTxMessageState(MessageState messageState) {
+        this.depositTxMessageStateProperty.set(messageState);
     }
 
-    private void setAccountId(String accountId) {
-        this.accountId = accountId;
-    }
-
-    private void setPubKeyRing(PubKeyRing pubKeyRing) {
-        this.pubKeyRing = pubKeyRing;
-    }
-
-    void logTrade(Trade trade) {
+    void witnessDebugLog(Trade trade) {
         accountAgeWitnessService.getAccountAgeWitnessUtils().witnessDebugLog(trade, null);
     }
 }

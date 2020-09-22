@@ -116,7 +116,7 @@ public abstract class Trade implements Tradable, Model {
 
         // At first part maker/taker have different roles
         // taker perspective
-        // #################### Phase TAKER_FEE_PAID
+        // #################### Phase TAKER_FEE_PUBLISHED
         TAKER_PUBLISHED_TAKER_FEE_TX(Phase.TAKER_FEE_PUBLISHED),
 
         // PUBLISH_DEPOSIT_TX_REQUEST
@@ -130,7 +130,10 @@ public abstract class Trade implements Tradable, Model {
         TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
 
 
-        // #################### Phase DEPOSIT_PAID
+        // #################### Phase DEPOSIT_PUBLISHED
+        // We changes order in trade protocol of publishing deposit tx and sending it to the peer.
+        // Now we send it first to the peer and only if that succeeds we publish it to avoid likelyhood of
+        // failed trades. We do not want to change the order of the enum though so we keep it here as it was originally.
         SELLER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PUBLISHED),
 
 
@@ -165,7 +168,7 @@ public abstract class Trade implements Tradable, Model {
         // note that this state can also be triggered by auto confirmation feature
         SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
 
-        // #################### Phase PAYOUT_PAID
+        // #################### Phase PAYOUT_PUBLISHED
         SELLER_PUBLISHED_PAYOUT_TX(Phase.PAYOUT_PUBLISHED),
 
         SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
@@ -200,6 +203,15 @@ public abstract class Trade implements Tradable, Model {
         public static protobuf.Trade.State toProtoMessage(Trade.State state) {
             return protobuf.Trade.State.valueOf(state.name());
         }
+
+
+        // We allow a state change only if the phase is the next phase or if we do not change the phase by the
+        // state change (e.g. detail change inside the same phase)
+        public boolean isValidTransitionTo(State newState) {
+            Phase newPhase = newState.getPhase();
+            Phase currentPhase = this.getPhase();
+            return currentPhase.isValidTransitionTo(newPhase) || newPhase == currentPhase;
+        }
     }
 
     public enum Phase {
@@ -218,6 +230,12 @@ public abstract class Trade implements Tradable, Model {
 
         public static protobuf.Trade.Phase toProtoMessage(Trade.Phase phase) {
             return protobuf.Trade.Phase.valueOf(phase.name());
+        }
+
+        // We allow a phase change only if the phase is next phase
+        public boolean isValidTransitionTo(Phase newPhase) {
+            // this is current phase
+            return newPhase.ordinal() == this.ordinal() + 1;
         }
     }
 
@@ -522,7 +540,7 @@ public abstract class Trade implements Tradable, Model {
 
     @Override
     public Message toProtoMessage() {
-        final protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
+        protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
                 .setOffer(checkNotNull(offer).toProtoMessage())
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTxFeeAsLong(txFeeAsLong)
@@ -811,6 +829,14 @@ public abstract class Trade implements Tradable, Model {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setStateIfValidTransitionTo(State newState) {
+        if (state.isValidTransitionTo(newState)) {
+            setState(newState);
+        } else {
+            log.warn("State change is not getting applied because it would cause an invalid transition.");
+        }
+    }
+
     public void setState(State state) {
         log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
@@ -901,6 +927,10 @@ public abstract class Trade implements Tradable, Model {
 
     public Date getTakeOfferDate() {
         return new Date(takeOfferDate);
+    }
+
+    public Phase getPhase() {
+        return state.getPhase();
     }
 
     @Nullable
