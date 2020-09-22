@@ -127,8 +127,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> {
-                    stopTimeout();
-                    handleTaskRunnerSuccess(tradeMessage, "PublishDepositTxRequest");
+                    handleTaskRunnerSuccess(tradeMessage, "handle InputsForDepositTxResponse");
                 },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
@@ -152,7 +151,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> {
                     stopTimeout();
-                    handleTaskRunnerSuccess(tradeMessage, "PublishDepositTxRequest");
+                    handleTaskRunnerSuccess(tradeMessage, "handle DelayedPayoutTxSignatureResponse");
                 },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
@@ -178,7 +177,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "CounterCurrencyTransferStartedMessage"),
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle CounterCurrencyTransferStartedMessage"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(

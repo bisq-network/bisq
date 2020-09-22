@@ -142,7 +142,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "DepositTxPublishedMessage"),
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle DepositTxMessage"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
@@ -161,7 +161,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
                 () -> {
                     stopTimeout();
-                    handleTaskRunnerSuccess(tradeMessage, "PublishDepositTxRequest");
+                    handleTaskRunnerSuccess(tradeMessage, "handle DelayedPayoutTxSignatureResponse");
                 },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
@@ -187,7 +187,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "CounterCurrencyTransferStartedMessage"),
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle CounterCurrencyTransferStartedMessage"),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(

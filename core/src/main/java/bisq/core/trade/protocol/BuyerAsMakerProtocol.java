@@ -193,12 +193,11 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     }
 
     private void handle() {
-        log.debug("handle RefreshTradeStateRequest called");
         // Resend CounterCurrencyTransferStartedMessage if it hasn't been acked yet and counterparty asked for a refresh
         if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT &&
                 trade.getState().ordinal() >= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                    () -> handleTaskRunnerSuccess("onFiatPaymentStarted"),
+                    () -> handleTaskRunnerSuccess("RefreshTradeStateRequest"),
                     this::handleTaskRunnerFault);
             taskRunner.addTasks(BuyerSendCounterCurrencyTransferStartedMessage.class);
             taskRunner.run();
