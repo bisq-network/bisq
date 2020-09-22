@@ -1,0 +1,283 @@
+import java.time.LocalDateTime
+import org.apache.tools.ant.taskdefs.condition.Os
+
+import static groovy.io.FileType.*
+
+
+task jpackageSanityChecks {
+    description 'Interactive sanity checks on the version of the code that will be packaged'
+
+    doLast {
+        executeCmd("git --no-pager log -5 --oneline")
+        ant.input(message: "Above you see the current HEAD and its recent history.\n" +
+                "Is this the right commit for packaging? (y=continue, n=abort)",
+                addproperty: "sanity-check-1",
+                validargs: "y,n")
+        if (ant.properties['sanity-check-1'] == 'n') {
+            ant.fail('Aborting')
+        }
+
+        executeCmd("git status --short --branch")
+        ant.input(message: "Above you see any local changes that are not in the remote branch.\n" +
+                "If you have any local changes, please abort, get them merged, get the latest branch and try again.\n" +
+                "Continue with packaging? (y=continue, n=abort)",
+                addproperty: "sanity-check-2",
+                validargs: "y,n")
+        if (ant.properties['sanity-check-2'] == 'n') {
+            ant.fail('Aborting')
+        }
+
+        // TODO Evtl check programmatically in gradle (i.e. fail if below v11)
+        executeCmd("java --version")
+        ant.input(message: "Above you see the installed java version, which will be used to compile and build Bisq.\n" +
+                "Is this java version ok for that? (y=continue, n=abort)",
+                addproperty: "sanity-check-3",
+                validargs: "y,n")
+        if (ant.properties['sanity-check-3'] == 'n') {
+            ant.fail('Aborting')
+        }
+    }
+}
+
+task getJpackageJDKDownloadURL {
+    description 'Find out which JDK will be used for jpackage and prepare to download it'
+    dependsOn 'jpackageSanityChecks'
+
+    doLast {
+        // The build directory will be deleted next time the clean task runs
+        // Therefore, we can use it to store any temp files (separate JDK for jpackage, etc) and resulting build artefacts
+        // We create a temp folder in the build directory which holds all jpackage-related artefacts (not just the final installers)
+        String tempRootDirName = 'temp-' + LocalDateTime.now().getNano()
+        File tempRootDir = new File(project.buildDir, tempRootDirName)
+        tempRootDir.mkdirs()
+        ext.tempRootDir = tempRootDir
+        println "Created temp root folder " + tempRootDir
+
+        File binariesFolderPath = new File(tempRootDir, "binaries")
+        binariesFolderPath.mkdirs();
+        ext.binariesFolderPath = binariesFolderPath
+
+        def apiEndpointLatestRelease = 'https://api.github.com/repos/AdoptOpenJDK/openjdk15-binaries/releases/latest'
+        def apiEndpointLatestReleaseJSON = new groovy.json.JsonSlurper().parseText(apiEndpointLatestRelease.toURL().text)
+        def latestReleaseTag = apiEndpointLatestReleaseJSON.tag_name
+        println "Latest AdoptOpenJDK release is ${latestReleaseTag}"
+
+        // AdoptOpenJDK only offer the latest release version for download (but none of the previous ones)
+        // This means we cannot hardcode a download URL for a specific version, because it will likely not work
+        // when the next release is out
+        // Therefore, we always query the latest version and download it (to use its jpackage)
+
+        // TODO Extend script logic to alternatively allow a local (separate, v14+) JDK for jpackage
+        // TODO Another option is to use the local JDK for everything: build jars and use jpackage (but then it has to be v14+)
+
+        // See details of latest release available
+        // See https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/latest for binaries available
+        // https://adoptopenjdk.net/releases.html?variant=openjdk15&jvmVariant=hotspot
+
+        def latestReleaseAssetsEndpoint = "https://api.github.com/repos/AdoptOpenJDK/openjdk15-binaries/releases/tags/${latestReleaseTag}"
+        def latestReleaseAssetsJSON = new groovy.json.JsonSlurper().parseText(latestReleaseAssetsEndpoint.toURL().text)
+        def latestReleaseAssets = latestReleaseAssetsJSON.assets.findAll {
+            // We could generate installers for other platforms as well, but for now just x64
+            it.name.contains('OpenJDK15U-jdk_x64_') &&
+                    // They distribute the JDK archive as zip for windows, tar.gz for mac/linux
+                    ( it.name.endsWith('tar.gz') || it.name.endsWith('zip') )
+        }
+
+        def latestReleaseAssetsMap = [
+                linux: latestReleaseAssets.find {it.name.contains('linux')}.browser_download_url,
+                mac: latestReleaseAssets.find {it.name.contains('mac')}.browser_download_url,
+                windows: latestReleaseAssets.find {it.name.contains('windows')}.browser_download_url
+        ]
+
+        // Ensure we got the 3 we want
+        assert latestReleaseAssets.size() == 3
+        assert latestReleaseAssetsMap['linux'] != null
+        assert latestReleaseAssetsMap['mac'] != null
+        assert latestReleaseAssetsMap['windows'] != null
+
+        String downloadURL
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            downloadURL = latestReleaseAssetsMap['windows']
+        } else if (Os.isFamily(Os.FAMILY_MAC)) {
+            downloadURL = latestReleaseAssetsMap['mac']
+        } else {
+            downloadURL = latestReleaseAssetsMap['linux']
+        }
+
+        // The download URL can be manually overwritten here, if necessary
+        // downloadURL = 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_linux_hotspot_14.0.2_12.tar.gz';
+
+        ext.downloadURL = downloadURL
+    }
+}
+
+task packageGetJpackagePath {
+    description 'Retrieve JDK for jpackage and extract it'
+    dependsOn 'getJpackageJDKDownloadURL'
+
+    doLast {
+        // Folder where the jpackage JDK archive will be downloaded and extracted
+        String jdkForJpackageDirName = "jpackage-jdk"
+        File jdkForJpackageDir = new File(getJpackageJDKDownloadURL.property("tempRootDir"), jdkForJpackageDirName)
+        jdkForJpackageDir.mkdirs();
+
+        String archiveURL = getJpackageJDKDownloadURL.property('downloadURL')
+        String archiveFileName = archiveURL.tokenize('/').last()
+        File jdkArchiveFile = new File(jdkForJpackageDir, archiveFileName)
+        String jpackageBinaryFileName
+
+        ext.downloadJpackageJDKArchive(archiveURL, jdkArchiveFile)
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            ext.extractJpackageJDKArchiveZip(jdkArchiveFile, jdkForJpackageDir)
+            jpackageBinaryFileName = 'jpackage.exe'
+        } else {
+            ext.extractJpackageJDKArchiveTarGz(jdkArchiveFile, jdkForJpackageDir)
+            jpackageBinaryFileName = 'jpackage'
+        }
+
+        // Find jpackage in the newly extracted JDK
+        // Don't rely on hardcoded paths to reach it, because the path depends on the version and platform
+        jdkForJpackageDir.traverse(type: FILES, nameFilter: jpackageBinaryFileName) {
+            println 'Using jpackage binary from ' + it
+            ext.jpackageFilePath = it.path
+        }
+    }
+
+    ext.downloadJpackageJDKArchive = {String archiveURL, File jdkArchiveFile ->
+        println "Downloading ${archiveURL}"
+        ant.get(src: archiveURL, dest: jdkArchiveFile)
+        println 'Download saved to ' + jdkArchiveFile
+    }
+
+    ext.extractJpackageJDKArchiveTarGz = {File jdkArchiveFile, File separateJdkForJpackageDir ->
+        println "Extracting tar.gz ${jdkArchiveFile}"
+        // Gradle's tar extraction preserves permissions (crucial for jpackage to function correctly)
+        copy {
+            from tarTree(resources.gzip(jdkArchiveFile))
+            into separateJdkForJpackageDir
+        }
+        println "Extracted to ${separateJdkForJpackageDir}"
+    }
+
+    ext.extractJpackageJDKArchiveZip = {File jdkArchiveFile, File separateJdkForJpackageDir ->
+        println "Extracting zip ${jdkArchiveFile}..."
+        ant.unzip(src: jdkArchiveFile, dest: separateJdkForJpackageDir)
+        println "Extracted to ${separateJdkForJpackageDir}"
+    }
+}
+
+task packageInstallers {
+    description 'Call jpackage to prepare platform-specific binaries for this platform'
+    dependsOn 'packageGetJpackagePath'
+    // We need :clean and :shadowJar to make sure we have a fresh, current jar for the installers
+    dependsOn ':clean'
+    dependsOn ':desktop:shadowJar'
+
+    doLast {
+        String jPackageFilePath = "${packageGetJpackagePath.property('jpackageFilePath')}"
+        String licenseFilePath = "${rootProject.projectDir}/LICENSE"
+        File binariesFolderPath = file(getJpackageJDKDownloadURL.property('binariesFolderPath'))
+
+        // ALL contents of this folder will be included in the resulting installers
+        // However, the fat jar is the only one we need
+        // Therefore, this location should point to a folder that ONLY contains the fat jar
+        // If later we will need to include other non-jar resources, we can do that by adding --resource-dir to the jpackage opts
+        String fatJarFolderPath = "${project(':desktop').buildDir}/libs"
+        String mainJarName = file(fatJarFolderPath).list()[0]
+
+        // TODO For non-modular applications: use jlink to create a custom runtime containing only the modules required
+
+        // See jpackager argument documentation:
+        // https://docs.oracle.com/en/java/javase/15/docs/specs/man/jpackage.html
+
+        // For mac, valid versions are one to three integers separated by dot
+        // TODO Special handling for mac? Or always remove -SNAPSHOT suffix?
+        String appVersion = '1.1.1'
+        println "Packaging Bisq version ${appVersion}"
+
+        String commonOpts =
+                // Generic options
+                " --dest \"${binariesFolderPath}\"" +
+                " --name bisq-pr4242-test" +
+                " --description \"A decentralized bitcoin exchange network.\"" +
+                " --app-version ${appVersion}" +
+                " --copyright \"© 2020 Bisq\"" +
+                " --vendor Bisq" +
+                // Options for creating the application image
+                " --input ${fatJarFolderPath}" +
+                // Options for creating the application launcher
+                " --main-jar ${mainJarName}" +
+                " --main-class bisq.desktop.app.BisqAppMain" +
+                " --java-options -Xss1280k" +
+                " --java-options -XX:MaxRAM=4g" +
+                " --java-options -Djava.net.preferIPv4Stack=true" +
+                // Options for creating the application package
+                " --license-file \"${licenseFilePath}\"" ;
+
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            String windowsOpts =
+                " --icon ${project(':desktop').projectDir}/package/windows/Bisq.ico"
+                " --win-per-user-install" +
+                " --win-menu" +
+                " --win-shortcut" // TODO Seems to not work, no shortcuts created
+
+            // TODO How does the current package/windows/Bisq.iss play into this?
+
+            // TODO Do msi or exe? Or both? For pros and cons see https://stackoverflow.com/a/1925819
+            executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
+            executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type msi")
+        } else if (Os.isFamily(Os.FAMILY_MAC)) {
+            // TODO Include signing args, like --mac-sign / -mac-signing-keychain / --mac-signing-key-user-name
+            String macOpts =
+                " --icon ${project(':desktop').projectDir}/package/macosx/Bisq.icns"
+                " --mac-package-name Bisq-PR-4242" +
+                " --mac-package-identifier Bisq-PR-4242-ID"
+
+            // TODO Do dmg or pkg? Or both?
+            executeCmd(jPackageFilePath + commonOpts + macOpts + " --type pkg")
+            executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
+        } else {
+            String linuxOpts =
+                " --icon ${project(':desktop').projectDir}/package/linux/icon.png"
+                " --linux-package-name bisq-build-test" +
+                " --linux-app-release ${appVersion}" +
+                " --linux-menu-group Network" +
+                " --linux-shortcut"
+
+            executeCmd(jPackageFilePath + commonOpts + linuxOpts +
+                " --linux-deb-maintainer contact@bisq.network" +
+                " --type deb")
+            executeCmd(jPackageFilePath + commonOpts + linuxOpts +
+                " --linux-rpm-license-type AGPLv3" + // https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
+                " --type rpm")
+        }
+
+        println "The binaries are ready:"
+        binariesFolderPath.traverse {
+            println it.path
+        }
+    }
+}
+
+def executeCmd(String cmd) {
+    String shell
+    String shellArg
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        shell = 'cmd'
+        shellArg = '/c'
+    } else {
+        shell = 'bash'
+        shellArg = '-c'
+    }
+
+    println "Executing command:\n${cmd}\n"
+    // See "Executing External Processes" section of
+    // http://docs.groovy-lang.org/next/html/documentation/
+    def commands = [shell, shellArg, cmd]
+    def process = commands.execute(null, project.rootDir)
+    if (process.waitFor() == 0) {
+        println "Command output (stdout):\n${process.text}"
+    } else {
+        println "Command output (stderr):\n${process.err.text}"
+    }
+}
