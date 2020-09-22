@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;
@@ -108,13 +109,16 @@ public class TakerVerifyAndSignContract extends TradeTask {
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
+
+            byte[] contractHash = Hash.getSha256Hash(checkNotNull(contractAsJson));
+            trade.setContractHash(contractHash);
+
             trade.setTakerContractSignature(signature);
             try {
                 checkNotNull(maker.getPubKeyRing(), "maker.getPubKeyRing() must nto be null");
                 Sig.verify(maker.getPubKeyRing().getSignaturePubKey(),
                         contractAsJson,
                         maker.getContractSignature());
-
                 complete();
             } catch (Throwable t) {
                 failed("Contract signature verification failed. " + t.getMessage());
