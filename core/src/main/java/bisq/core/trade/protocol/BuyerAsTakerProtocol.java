@@ -153,7 +153,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> {
-                    stopTimeout();
                     handleTaskRunnerSuccess(tradeMessage, "handle InputsForDepositTxResponse");
                 },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
@@ -175,7 +174,10 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle DelayedPayoutTxSignatureRequest"),
+                () -> {
+                    stopTimeout(); // We stop timeout here as last DepositTxAndDelayedPayoutTxMessage is not mandatory
+                    handleTaskRunnerSuccess(tradeMessage, "handle DelayedPayoutTxSignatureRequest");
+                },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
         taskRunner.addTasks(
                 BuyerProcessDelayedPayoutTxSignatureRequest.class,
