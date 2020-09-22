@@ -135,9 +135,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         taskRunner.addTasks(
                 TakerProcessesInputsForDepositTxResponse.class,
                 ApplyFilter.class,
-                TakerVerifyMakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
-                TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 TakerPublishFeeTx.class,
                 SellerAsTakerSignsDepositTx.class,
