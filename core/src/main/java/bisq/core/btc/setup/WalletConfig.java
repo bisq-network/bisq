@@ -95,7 +95,6 @@ public class WalletConfig extends AbstractIdleService {
     protected DownloadProgressTracker downloadListener;
     protected InputStream checkpoints;
     protected String userAgent, version;
-    protected WalletProtobufSerializer.WalletFactory walletFactory;
     @Nullable protected DeterministicSeed restoreFromSeed;
     @Nullable protected PeerDiscovery discovery;
 
@@ -351,10 +350,7 @@ public class WalletConfig extends AbstractIdleService {
             WalletExtension[] extArray = new WalletExtension[]{};
             Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
             final WalletProtobufSerializer serializer;
-            if (walletFactory != null)
-                serializer = new WalletProtobufSerializer(walletFactory);
-            else
-                serializer = new WalletProtobufSerializer();
+            serializer = new WalletProtobufSerializer();
             // Hack to convert bitcoinj 0.14 wallets to bitcoinj 0.15 format
             serializer.setKeyChainFactory(new BisqKeyChainFactory(isBsqWallet));
             wallet = serializer.readWallet(params, extArray, proto);
@@ -384,11 +380,7 @@ public class WalletConfig extends AbstractIdleService {
                 kcg.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
             }
         }
-        if (walletFactory != null) {
-            return walletFactory.create(params, kcg.build());
-        } else {
-            return new Wallet(params, kcg.build()); // default
-        }
+        return new Wallet(params, kcg.build()); // default
     }
 
     private void maybeMoveOldWalletOutOfTheWay(File walletFile) {
