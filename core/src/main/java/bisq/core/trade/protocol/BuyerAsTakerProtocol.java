@@ -144,7 +144,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handling
+    // Incoming messages Take offer process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(InputsForDepositTxResponse tradeMessage, NodeAddress sender) {
@@ -189,6 +189,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     }
 
 
+    // DepositTxAndDelayedPayoutTxMessage is a MailboxMessage
     private void handle(DepositTxAndDelayedPayoutTxMessage tradeMessage, NodeAddress peerNodeAddress) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
@@ -205,35 +206,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         processModel.logTrade(buyerAsTakerTrade);
     }
 
-    private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
-        log.debug("handle PayoutTxPublishedMessage called");
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle PayoutTxPublishedMessage"),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                BuyerProcessPayoutTxPublishedMessage.class
-        );
-        taskRunner.run();
-    }
-
-    private void handle() {
-        // Resend CounterCurrencyTransferStartedMessage if it hasn't been acked yet and counterparty asked for a refresh
-        if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT &&
-                trade.getState().ordinal() >= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
-            TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                    () -> handleTaskRunnerSuccess("RefreshTradeStateRequest"),
-                    this::handleTaskRunnerFault);
-            taskRunner.addTasks(BuyerSendCounterCurrencyTransferStartedMessage.class);
-            taskRunner.run();
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from UI
+    // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // User clicked the "bank transfer started" button
@@ -267,6 +242,45 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             log.warn("onFiatPaymentStarted called twice. tradeState=" + trade.getState());
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Incoming message Payout tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
+        log.debug("handle PayoutTxPublishedMessage called");
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle PayoutTxPublishedMessage"),
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+
+        taskRunner.addTasks(
+                BuyerProcessPayoutTxPublishedMessage.class
+        );
+        taskRunner.run();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Incoming message Handle missing messages
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void handle() {
+        // Resend CounterCurrencyTransferStartedMessage if it hasn't been acked yet and counterparty asked for a refresh
+        if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT &&
+                trade.getState().ordinal() >= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
+            TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
+                    () -> handleTaskRunnerSuccess("RefreshTradeStateRequest"),
+                    this::handleTaskRunnerFault);
+            taskRunner.addTasks(BuyerSendCounterCurrencyTransferStartedMessage.class);
+            taskRunner.run();
+        }
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////

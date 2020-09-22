@@ -125,7 +125,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handling
+    // Incoming messages Take offer process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(DepositTxMessage tradeMessage, NodeAddress sender) {
@@ -170,7 +170,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // After peer has started Fiat tx
+    // Incoming message when buyer has clicked payment started button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(CounterCurrencyTransferStartedMessage tradeMessage, NodeAddress sender) {
@@ -191,10 +191,9 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from UI
+    // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // User clicked the "bank transfer received" button, so we release the funds for payout
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkArgument(!wasDisputed(), "A call to onFiatPaymentReceived is not permitted once a " +
