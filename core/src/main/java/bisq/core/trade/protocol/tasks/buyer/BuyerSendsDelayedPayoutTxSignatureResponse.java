@@ -49,8 +49,6 @@ public class BuyerSendsDelayedPayoutTxSignatureResponse extends TradeTask {
                     processModel.getMyNodeAddress(),
                     delayedPayoutTxSignature);
 
-            // todo trade.setState
-
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
@@ -63,7 +61,6 @@ public class BuyerSendsDelayedPayoutTxSignatureResponse extends TradeTask {
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            // todo trade.setState
                             complete();
                         }
 
@@ -71,7 +68,6 @@ public class BuyerSendsDelayedPayoutTxSignatureResponse extends TradeTask {
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            // todo trade.setState
                             appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                             failed(errorMessage);
                         }

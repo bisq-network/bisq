@@ -20,7 +20,6 @@ package bisq.core.trade.protocol.tasks.seller;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -48,7 +47,8 @@ public class SellerPublishesDepositTx extends TradeTask {
                             if (!completed) {
                                 trade.setState(Trade.State.SELLER_PUBLISHED_DEPOSIT_TX);
 
-                                processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                                processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(processModel.getOffer().getId(),
+                                        AddressEntry.Context.RESERVED_FOR_TRADE);
 
                                 complete();
                             } else {
@@ -66,9 +66,6 @@ public class SellerPublishesDepositTx extends TradeTask {
                         }
                     });
         } catch (Throwable t) {
-            Contract contract = trade.getContract();
-            if (contract != null)
-                contract.printDiff(processModel.getTradingPeer().getContractAsJson());
             failed(t);
         }
     }

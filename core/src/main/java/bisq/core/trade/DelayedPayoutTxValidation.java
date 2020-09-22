@@ -146,9 +146,13 @@ public class DelayedPayoutTxValidation {
 
 
         NetworkParameters params = btcWalletService.getParams();
+
+        //TODO update to BitcoinJ API changes
         Address address = output.getAddressFromP2PKHScript(params);
+
         if (address == null) {
             // The donation address can be as well be a multisig address.
+            //TODO update to BitcoinJ API changes
             address = output.getAddressFromP2SH(params);
             if (address == null) {
                 errorMsg = "Donation address cannot be resolved (not of type P2PKHScript or P2SH). Output: " + output;

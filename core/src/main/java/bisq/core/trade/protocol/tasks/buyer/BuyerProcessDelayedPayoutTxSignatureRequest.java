@@ -40,14 +40,13 @@ public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            DelayedPayoutTxSignatureRequest message = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
-            checkNotNull(message);
-            Validator.checkTradeId(processModel.getOfferId(), message);
-            byte[] delayedPayoutTxAsBytes = checkNotNull(message.getDelayedPayoutTx());
+            DelayedPayoutTxSignatureRequest request = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
+            checkNotNull(request);
+            Validator.checkTradeId(processModel.getOfferId(), request);
+            byte[] delayedPayoutTxAsBytes = checkNotNull(request.getDelayedPayoutTx());
             Transaction preparedDelayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxAsBytes);
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);
 
-            // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             complete();

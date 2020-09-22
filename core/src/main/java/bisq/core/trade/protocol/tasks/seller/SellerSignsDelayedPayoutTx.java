@@ -57,7 +57,8 @@ public class SellerSignsDelayedPayoutTx extends TradeTask {
                     "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
             byte[] buyerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
 
-            byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(preparedDelayedPayoutTx,
+            byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(
+                    preparedDelayedPayoutTx,
                     myMultiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey);

@@ -58,7 +58,8 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
             byte[] buyerSignature = processModel.getTradingPeer().getDelayedPayoutTxSignature();
             byte[] sellerSignature = processModel.getDelayedPayoutTxSignature();
 
-            Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeDelayedPayoutTx(preparedDelayedPayoutTx,
+            Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeDelayedPayoutTx(
+                    preparedDelayedPayoutTx,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
                     buyerSignature,
