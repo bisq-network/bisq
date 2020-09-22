@@ -47,7 +47,6 @@ public class ProcessPeerPublishedDelayedPayoutTxMessage extends TradeTask {
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            processModel.removeMailboxMessageAfterProcessing(trade);
 
             // We add the tx to our wallet.
             Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
@@ -58,6 +57,8 @@ public class ProcessPeerPublishedDelayedPayoutTxMessage extends TradeTask {
             complete();
         } catch (Throwable t) {
             failed(t);
+        } finally {
+            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }

@@ -21,7 +21,7 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.protocol.tasks.SendPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @Slf4j
-public class SendMediatedPayoutTxPublishedMessage extends SendPayoutTxPublishedMessage {
+public class SendMediatedPayoutTxPublishedMessage extends SendMailboxMessageTask {
     public SendMediatedPayoutTxPublishedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -75,6 +75,12 @@ public class SendMediatedPayoutTxPublishedMessage extends SendPayoutTxPublishedM
     protected void run() {
         try {
             runInterceptHook();
+
+            if (trade.getPayoutTx() == null) {
+                log.error("PayoutTx is null");
+                failed("PayoutTx is null");
+                return;
+            }
 
             super.run();
         } catch (Throwable t) {

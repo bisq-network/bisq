@@ -23,7 +23,6 @@ import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
@@ -87,6 +86,19 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             taskRunner.addTasks(BuyerSetupPayoutTxListener.class);
             taskRunner.run();
         }
+
+        // We might have 2 taskRunners as BuyerSetupPayoutTxListener might have been started as well
+        if (trade.getState() == Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG ||
+                trade.getState() == Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG) {
+            // In case we have not received an ACK from the CounterCurrencyTransferStartedMessage we re-send it
+            // periodically in BuyerSendCounterCurrencyTransferStartedMessage
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> handleTaskRunnerSuccess("BuyerSendCounterCurrencyTransferStartedMessage"),
+                    this::handleTaskRunnerFault);
+
+            taskRunner.addTasks(BuyerSendCounterCurrencyTransferStartedMessage.class);
+            taskRunner.run();
+        }
     }
 
 
@@ -102,8 +114,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle();
         }
     }
 
@@ -235,23 +245,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message Handle missing messages
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handle() {
-        // Resend CounterCurrencyTransferStartedMessage if it hasn't been acked yet and counterparty asked for a refresh
-        if (trade.getState().getPhase() == Trade.Phase.FIAT_SENT &&
-                trade.getState().ordinal() >= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
-            TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                    () -> handleTaskRunnerSuccess("RefreshTradeStateRequest"),
-                    this::handleTaskRunnerFault);
-            taskRunner.addTasks(BuyerSendCounterCurrencyTransferStartedMessage.class);
-            taskRunner.run();
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Message dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -268,8 +261,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof RefreshTradeStateRequest) {
-            handle();
         }
     }
 }

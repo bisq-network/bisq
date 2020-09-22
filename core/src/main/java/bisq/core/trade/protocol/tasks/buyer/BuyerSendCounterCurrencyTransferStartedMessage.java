@@ -18,24 +18,82 @@
 package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.network.MessageState;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendMailboxMessageListener;
-
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
-import java.util.UUID;
+import javafx.beans.value.ChangeListener;
+
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
-public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
+public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxMessageTask {
+    private static final long MAX_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(4);
+
+    private ChangeListener<MessageState> listener;
+    private Timer timer;
+    private CounterCurrencyTransferStartedMessage counterCurrencyTransferStartedMessage;
+
     public BuyerSendCounterCurrencyTransferStartedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
+    }
+
+    @Override
+    protected TradeMessage getMessage(String tradeId) {
+        if (counterCurrencyTransferStartedMessage == null) {
+            AddressEntry payoutAddressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(tradeId,
+                    AddressEntry.Context.TRADE_PAYOUT);
+
+            // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
+            // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox
+            // messages where only the one which gets processed by the peer would be removed we use the same uid. All
+            // other data stays the same when we re-send the message at any time later.
+            String deterministicId = tradeId + processModel.getMyNodeAddress().getFullAddress();
+            counterCurrencyTransferStartedMessage = new CounterCurrencyTransferStartedMessage(
+                    tradeId,
+                    payoutAddressEntry.getAddressString(),
+                    processModel.getMyNodeAddress(),
+                    processModel.getPayoutTxSignature(),
+                    trade.getCounterCurrencyTxId(),
+                    trade.getCounterCurrencyExtraData(),
+                    deterministicId
+            );
+        }
+        return counterCurrencyTransferStartedMessage;
+    }
+
+    @Override
+    protected void setStateSent() {
+        trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
+    }
+
+    @Override
+    protected void setStateArrived() {
+        trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+        stop();
+    }
+
+    @Override
+    protected void setStateStoredInMailbox() {
+        trade.setState(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG);
+        start();
+    }
+
+    @Override
+    protected void setStateFault() {
+        trade.setState(Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG);
+        start();
     }
 
     @Override
@@ -43,56 +101,39 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
         try {
             runInterceptHook();
 
-            BtcWalletService walletService = processModel.getBtcWalletService();
-            final String id = processModel.getOfferId();
-            AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,
-                    AddressEntry.Context.TRADE_PAYOUT);
-            final CounterCurrencyTransferStartedMessage message = new CounterCurrencyTransferStartedMessage(
-                    id,
-                    payoutAddressEntry.getAddressString(),
-                    processModel.getMyNodeAddress(),
-                    processModel.getPayoutTxSignature(),
-                    trade.getCounterCurrencyTxId(),
-                    trade.getCounterCurrencyExtraData(),
-                    UUID.randomUUID().toString()
-            );
-            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
-            processModel.getP2PService().sendEncryptedMailboxMessage(
-                    peersNodeAddress,
-                    processModel.getTradingPeer().getPubKeyRing(),
-                    message,
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
-                            complete();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            trade.setState(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG);
-                            complete();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            trade.setState(Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG);
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                            failed(errorMessage);
-                        }
-                    }
-            );
+            super.run();
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    private void stop() {
+        if (timer != null) {
+            timer.stop();
+            processModel.getPaymentStartedMessageStateProperty().removeListener(listener);
+        }
+    }
+
+    // The listeners ensure we don't get GCed even we have completed the task.
+    private void start() {
+        if (timer != null) {
+            return;
+        }
+
+        PaymentMethod paymentMethod = checkNotNull(trade.getOffer()).getPaymentMethod();
+        // For instant trades with 1 hour we want a short interval, otherwise a few hours should be ok.
+        long interval = Math.min(paymentMethod.getMaxTradePeriod() / 5, MAX_REFRESH_INTERVAL);
+        timer = UserThread.runPeriodically(this::run, interval, TimeUnit.MILLISECONDS);
+
+        listener = (observable, oldValue, newValue) -> {
+            // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
+            if (newValue == MessageState.ACKNOWLEDGED) {
+                // We treat a ACK like BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG
+                trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+                // Ensure listener construction is completed before remove call
+                UserThread.execute(this::stop);
+            }
+        };
+        processModel.getPaymentStartedMessageStateProperty().addListener(listener);
     }
 }

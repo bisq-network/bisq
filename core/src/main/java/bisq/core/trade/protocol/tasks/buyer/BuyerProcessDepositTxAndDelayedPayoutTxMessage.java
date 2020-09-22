@@ -65,8 +65,6 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-            processModel.removeMailboxMessageAfterProcessing(trade);
-
             // If we got already the confirmation we don't want to apply an earlier state
             if (trade.getState().ordinal() < Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK.ordinal()) {
                 trade.setState(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
@@ -78,6 +76,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             complete();
         } catch (Throwable t) {
             failed(t);
+        } finally {
+            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }

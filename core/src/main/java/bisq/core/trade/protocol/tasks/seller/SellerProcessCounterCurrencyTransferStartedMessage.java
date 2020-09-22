@@ -59,13 +59,13 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
                 trade.setCounterCurrencyExtraData(counterCurrencyExtraData);
             }
 
-            processModel.removeMailboxMessageAfterProcessing(trade);
-
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
 
             complete();
         } catch (Throwable t) {
             failed(t);
+        } finally {
+            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }

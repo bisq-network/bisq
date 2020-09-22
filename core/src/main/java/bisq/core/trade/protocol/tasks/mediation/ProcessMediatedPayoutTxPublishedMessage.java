@@ -74,10 +74,11 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
             } else {
                 log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
             }
-            processModel.removeMailboxMessageAfterProcessing(trade);
             complete();
         } catch (Throwable t) {
             failed(t);
+        } finally {
+            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }

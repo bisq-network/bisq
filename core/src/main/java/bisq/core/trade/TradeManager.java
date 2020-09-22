@@ -350,9 +350,6 @@ public class TradeManager implements PersistedDataHost {
                                                    ResultHandler resultHandler,
                                                    ErrorMessageHandler errorMessageHandler) {
         sellerTrade.onFiatPaymentReceived(resultHandler, errorMessageHandler);
-
-        //TODO move to trade protocol task
-        accountAgeWitnessService.maybeSignWitness(sellerTrade);
     }
 
     private void initPendingTrade(Trade trade) {

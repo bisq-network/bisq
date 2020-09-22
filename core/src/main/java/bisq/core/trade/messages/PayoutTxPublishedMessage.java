@@ -17,6 +17,8 @@
 
 package bisq.core.trade.messages;
 
+import bisq.core.account.sign.SignedWitness;
+
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
@@ -26,23 +28,35 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+@Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage {
     private final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
 
+    // Added in v1.4.0
+    @Nullable
+    private final SignedWitness signedWitness;
+
     public PayoutTxPublishedMessage(String tradeId,
                                     byte[] payoutTx,
                                     NodeAddress senderNodeAddress,
-                                    String uid) {
+                                    @Nullable SignedWitness signedWitness) {
         this(tradeId,
                 payoutTx,
                 senderNodeAddress,
-                uid,
+                signedWitness,
+                UUID.randomUUID().toString(),
                 Version.getP2PMessageVersion());
     }
 
@@ -54,28 +68,37 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
     private PayoutTxPublishedMessage(String tradeId,
                                      byte[] payoutTx,
                                      NodeAddress senderNodeAddress,
+                                     @Nullable SignedWitness signedWitness,
                                      String uid,
                                      int messageVersion) {
         super(messageVersion, tradeId, uid);
         this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
+        this.signedWitness = signedWitness;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
-                .setPayoutTxPublishedMessage(protobuf.PayoutTxPublishedMessage.newBuilder()
-                        .setTradeId(tradeId)
-                        .setPayoutTx(ByteString.copyFrom(payoutTx))
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
-                .build();
+        protobuf.PayoutTxPublishedMessage.Builder builder = protobuf.PayoutTxPublishedMessage.newBuilder()
+                .setTradeId(tradeId)
+                .setPayoutTx(ByteString.copyFrom(payoutTx))
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setUid(uid);
+        Optional.ofNullable(signedWitness).ifPresent(signedWitness -> builder.setSignedWitness(signedWitness.toProtoSignedWitness()));
+        return getNetworkEnvelopeBuilder().setPayoutTxPublishedMessage(builder).build();
     }
 
     public static NetworkEnvelope fromProto(protobuf.PayoutTxPublishedMessage proto, int messageVersion) {
+        // There is no method to check for a nullable non-primitive data type object but we know that all fields
+        // are empty/null, so we check for the signature to see if we got a valid signedWitness.
+        protobuf.SignedWitness protoSignedWitness = proto.getSignedWitness();
+        SignedWitness signedWitness = !protoSignedWitness.getSignature().isEmpty() ?
+                SignedWitness.fromProto(protoSignedWitness) :
+                null;
         return new PayoutTxPublishedMessage(proto.getTradeId(),
                 proto.getPayoutTx().toByteArray(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                signedWitness,
                 proto.getUid(),
                 messageVersion);
     }
@@ -85,7 +108,7 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
         return "PayoutTxPublishedMessage{" +
                 "\n     payoutTx=" + Utilities.bytesAsHexString(payoutTx) +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     uid='" + uid + '\'' +
+                ",\n     signedWitness=" + signedWitness +
                 "\n} " + super.toString();
     }
 }

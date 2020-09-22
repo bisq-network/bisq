@@ -48,13 +48,14 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setMediationResultState(MediationResultState.RECEIVED_SIG_MSG);
 
             complete();
         } catch (Throwable t) {
             failed(t);
+        } finally {
+            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }
