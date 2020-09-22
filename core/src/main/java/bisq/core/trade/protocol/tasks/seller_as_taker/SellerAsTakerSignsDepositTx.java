@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class SellerAsTakerSignsDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsTakerSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerAsTakerSignsDepositTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

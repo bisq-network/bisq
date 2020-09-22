@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class TakerSendInputsForDepositTxRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public TakerSendInputsForDepositTxRequest(TaskRunner taskHandler, Trade trade) {
+    public TakerSendInputsForDepositTxRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SellerCreatesDelayedPayoutTx extends TradeTask {
 
     @SuppressWarnings({"unused"})
-    public SellerCreatesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerCreatesDelayedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

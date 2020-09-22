@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class SendPayoutTxPublishedMessage extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public SendPayoutTxPublishedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
 
-    public CreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
+    public CreateTakerFeeTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

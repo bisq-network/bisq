@@ -45,7 +45,7 @@ public class BuyerSetupDepositTxListener extends TradeTask {
     private AddressConfidenceListener confidenceListener;
 
     @SuppressWarnings({"unused"})
-    public BuyerSetupDepositTxListener(TaskRunner taskHandler, Trade trade) {
+    public BuyerSetupDepositTxListener(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

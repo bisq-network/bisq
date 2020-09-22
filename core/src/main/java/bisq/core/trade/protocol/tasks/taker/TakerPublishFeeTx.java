@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class TakerPublishFeeTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public TakerPublishFeeTx(TaskRunner taskHandler, Trade trade) {
+    public TakerPublishFeeTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

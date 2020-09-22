@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PublishTradeStatistics extends TradeTask {
-    public PublishTradeStatistics(TaskRunner taskHandler, Trade trade) {
+    public PublishTradeStatistics(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

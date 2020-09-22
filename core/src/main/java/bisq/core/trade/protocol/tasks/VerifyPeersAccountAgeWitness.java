@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class VerifyPeersAccountAgeWitness extends TradeTask {
 
     @SuppressWarnings({"unused"})
-    public VerifyPeersAccountAgeWitness(TaskRunner taskHandler, Trade trade) {
+    public VerifyPeersAccountAgeWitness(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

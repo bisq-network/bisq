@@ -39,7 +39,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
     @SuppressWarnings({"unused"})
-    public ProcessMediatedPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessMediatedPayoutTxPublishedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

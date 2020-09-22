@@ -41,7 +41,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
     private AddressConfidenceListener confidenceListener;
 
     @SuppressWarnings({"unused"})
-    public SetupPayoutTxListener(TaskRunner taskHandler, Trade trade) {
+    public SetupPayoutTxListener(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

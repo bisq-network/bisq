@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerSendDelayedPayoutTxSignatureRequest(TaskRunner taskHandler, Trade trade) {
+    public SellerSendDelayedPayoutTxSignatureRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SellerPublishesDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerPublishesDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerPublishesDepositTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public MakerProcessesInputsForDepositTxRequest(TaskRunner taskHandler, Trade trade) {
+    public MakerProcessesInputsForDepositTxRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

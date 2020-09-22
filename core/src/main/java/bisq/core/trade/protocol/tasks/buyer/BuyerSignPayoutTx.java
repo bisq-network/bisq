@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class BuyerSignPayoutTx extends TradeTask {
 
     @SuppressWarnings({"unused"})
-    public BuyerSignPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerSignPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

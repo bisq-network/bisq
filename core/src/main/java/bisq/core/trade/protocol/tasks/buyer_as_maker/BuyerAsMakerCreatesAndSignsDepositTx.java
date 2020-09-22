@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public BuyerAsMakerCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerAsMakerCreatesAndSignsDepositTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

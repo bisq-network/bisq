@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FinalizeMediatedPayoutTx extends TradeTask {
 
     @SuppressWarnings({"unused"})
-    public FinalizeMediatedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public FinalizeMediatedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
