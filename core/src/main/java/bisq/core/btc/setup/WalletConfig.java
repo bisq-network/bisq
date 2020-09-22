@@ -376,7 +376,7 @@ public class WalletConfig extends AbstractIdleService {
                 kcgBuilder.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
             }
         }
-        return new Wallet(params, kcgBuilder.build()); // default
+        return new Wallet(params, kcgBuilder.build());
     }
 
     private void maybeMoveOldWalletOutOfTheWay(File walletFile) {
