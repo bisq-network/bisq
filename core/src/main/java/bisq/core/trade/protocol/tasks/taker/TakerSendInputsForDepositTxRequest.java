@@ -95,7 +95,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             // protocol for passing the nonce we want to get signed)
             PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
                     "processModel.getPaymentAccountPayload(trade) must not be null");
-            byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
+            byte[] accountAgeWitnessSignatureOfOfferId = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
                     offerId.getBytes(Charsets.UTF_8));
 
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
@@ -123,7 +123,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     trade.getRefundAgentNodeAddress(),
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion(),
-                    sig,
+                    accountAgeWitnessSignatureOfOfferId,
                     new Date().getTime());
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
