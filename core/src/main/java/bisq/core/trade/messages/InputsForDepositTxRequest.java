@@ -61,6 +61,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
     private final List<NodeAddress> acceptedMediatorNodeAddresses;
     private final List<NodeAddress> acceptedRefundAgentNodeAddresses;
+    @Nullable
     private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
     private final NodeAddress refundAgentNodeAddress;
@@ -87,7 +88,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      List<NodeAddress> acceptedArbitratorNodeAddresses,
                                      List<NodeAddress> acceptedMediatorNodeAddresses,
                                      List<NodeAddress> acceptedRefundAgentNodeAddresses,
-                                     NodeAddress arbitratorNodeAddress,
+                                     @Nullable NodeAddress arbitratorNodeAddress,
                                      NodeAddress mediatorNodeAddress,
                                      NodeAddress refundAgentNodeAddress,
                                      String uid,
@@ -154,11 +155,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
                 .setUid(uid)
                 .setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(accountAgeWitnessSignatureOfOfferId))
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setCurrentDate(currentDate);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
-
+        Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
 
@@ -200,7 +200,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 NodeAddress.fromProto(proto.getRefundAgentNodeAddress()),
                 proto.getUid(),
                 messageVersion,
-                proto.getAccountAgeWitnessSignatureOfOfferId().toByteArray(),
+                ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
                 proto.getCurrentDate());
     }
 
