@@ -98,11 +98,13 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
     @Override
     public void takeAvailableOffer() {
+        processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress());
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> handleTaskRunnerSuccess("takeAvailableOffer"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
+                ApplyFilter.class,
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
                 CreateTakerFeeTx.class,
