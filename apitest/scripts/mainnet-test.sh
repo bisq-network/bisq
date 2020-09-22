@@ -48,14 +48,14 @@
   run ./bisq-cli --password="xyz" getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.8" ]
+  [ "$output" = "1.3.9" ]
 }
 
 @test "test getversion" {
   run ./bisq-cli --password=xyz getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.8" ]
+  [ "$output" = "1.3.9" ]
 }
 
 @test "test setwalletpassword \"a b c\"" {
@@ -166,15 +166,15 @@
   [ "$output" = "Error: address bogus not found in wallet" ]
 }
 
-@test "test createpaymentacct PerfectMoneyDummy (missing nbr, ccy params)" {
-  run ./bisq-cli --password=xyz createpaymentacct PerfectMoneyDummy
+@test "test createpaymentacct PerfectMoneyDummy (missing name, nbr, ccy params)" {
+  run ./bisq-cli --password=xyz createpaymentacct PERFECT_MONEY
   [ "$status" -eq 1 ]
  echo "actual output:  $output" >&2
-  [ "$output" = "Error: incorrect parameter count, expecting account name, account number, currency code" ]
+  [ "$output" = "Error: incorrect parameter count, expecting payment method id, account name, account number, currency code" ]
 }
 
-@test "test createpaymentacct PerfectMoneyDummy 0123456789 USD" {
-  run ./bisq-cli --password=xyz createpaymentacct PerfectMoneyDummy 0123456789 USD
+@test "test createpaymentacct PERFECT_MONEY PerfectMoneyDummy 0123456789 USD" {
+  run ./bisq-cli --password=xyz createpaymentacct PERFECT_MONEY PerfectMoneyDummy 0123456789 USD
   [ "$status" -eq 0 ]
 }
 

@@ -53,7 +53,7 @@ service Offers {
 
 message GetOffersRequest {
     string direction = 1;
-    string fiatCurrencyCode = 2;
+    string currencyCode = 2;
 }
 
 message GetOffersReply {
@@ -61,7 +61,7 @@ message GetOffersReply {
 }
 
 message CreateOfferRequest {
-    string currencyCode = 1; // TODO switch order w/ direction field in next PR
+    string currencyCode = 1;
     string direction = 2;
     uint64 price = 3;
     bool useMarketBasedPrice = 4;
@@ -107,9 +107,11 @@ service PaymentAccounts {
 }
 
 message CreatePaymentAccountRequest {
-    string accountName = 1;
-    string accountNumber = 2;
-    string fiatCurrencyCode = 3;
+string paymentMethodId = 1;
+    string accountName = 2;
+    string accountNumber = 3;
+    // TODO  Support all currencies. Maybe add a repeated and if only one is used its a singletonList.
+    string currencyCode = 4;
 }
 
 message CreatePaymentAccountReply {
@@ -123,7 +125,7 @@ message GetPaymentAccountsReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// TradeStatistics
+// GetTradeStatistics
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service GetTradeStatistics {

@@ -793,6 +793,9 @@ public abstract class WalletService {
         return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
     }
 
+    public Address getAddress(String addressString) {
+        return Address.fromBase58(params, addressString);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener
