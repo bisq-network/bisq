@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.tasks;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
@@ -27,6 +28,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,44 +46,34 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
         try {
             runInterceptHook();
 
-            if (trade.getOffer() != null && CurrencyUtil.isFiatCurrency(trade.getOffer().getCurrencyCode())) {
-                final AccountAgeWitnessService accountAgeWitnessService = processModel.getAccountAgeWitnessService();
-                final TradingPeer tradingPeer = processModel.getTradingPeer();
-                final PaymentAccountPayload peersPaymentAccountPayload = checkNotNull(tradingPeer.getPaymentAccountPayload(),
-                        "Peers peersPaymentAccountPayload must not be null");
-                final PubKeyRing peersPubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "peersPubKeyRing must not be null");
-                byte[] nonce = tradingPeer.getAccountAgeWitnessNonce();
-                byte[] signature = tradingPeer.getAccountAgeWitnessSignature();
-                if (nonce != null && signature != null) {
-                    final String[] errorMsg = new String[1];
-                    long currentDateAsLong = tradingPeer.getCurrentDate();
-                    // In case the peer has an older version we get 0, so we use our time instead
-                    final Date peersCurrentDate = currentDateAsLong > 0 ? new Date(currentDateAsLong) : new Date();
-                    boolean result = accountAgeWitnessService.verifyAccountAgeWitness(trade,
-                            peersPaymentAccountPayload,
-                            peersCurrentDate,
-                            peersPubKeyRing,
-                            nonce,
-                            signature,
-                            errorMessage -> errorMsg[0] = errorMessage);
-                    if (result)
-                        complete();
-                    else
-                        failed(errorMsg[0]);
-                } else {
-                    String msg = "Seems that offer was created with an application before v0.6 which did not support the account age witness verification.";
-                    msg += "\nTrade ID=" + trade.getId();
-                    if (new Date().after(AccountAgeWitnessService.FULL_ACTIVATION)) {
-                        msg = "The account age witness verification failed.\nReason: " + msg + "\nAfter first of Feb. 2018 we don't support old offers without account age witness verification anymore.";
-                        log.error(msg);
-                        failed(msg);
-                    } else {
-                        log.warn(msg + "\nWe tolerate offers without account age witness until first of Feb. 2018");
-                        complete();
-                    }
-                }
-            } else {
+            Offer offer = checkNotNull(trade.getOffer());
+            if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
                 complete();
+                return;
+            }
+
+            AccountAgeWitnessService accountAgeWitnessService = processModel.getAccountAgeWitnessService();
+            TradingPeer tradingPeer = processModel.getTradingPeer();
+            PaymentAccountPayload peersPaymentAccountPayload = checkNotNull(tradingPeer.getPaymentAccountPayload(),
+                    "Peers peersPaymentAccountPayload must not be null");
+            PubKeyRing peersPubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "peersPubKeyRing must not be null");
+            byte[] nonce = checkNotNull(tradingPeer.getAccountAgeWitnessNonce());
+            byte[] signature = checkNotNull(tradingPeer.getAccountAgeWitnessSignature());
+            AtomicReference<String> errorMsg = new AtomicReference<>();
+            long currentDateAsLong = tradingPeer.getCurrentDate();
+            // In case the peer has an older version we get 0, so we use our time instead
+            Date peersCurrentDate = currentDateAsLong > 0 ? new Date(currentDateAsLong) : new Date();
+            boolean isValid = accountAgeWitnessService.verifyAccountAgeWitness(trade,
+                    peersPaymentAccountPayload,
+                    peersCurrentDate,
+                    peersPubKeyRing,
+                    nonce,
+                    signature,
+                    errorMsg::set);
+            if (isValid) {
+                complete();
+            } else {
+                failed(errorMsg.get());
             }
         } catch (Throwable t) {
             failed(t);
