@@ -97,20 +97,20 @@ public class MethodTest extends ApiTestCase {
 
     // Static conveniences for test methods and test case fixture setups.
 
-    protected static final RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
+    protected static RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
         return RegisterDisputeAgentRequest.newBuilder()
                 .setDisputeAgentType(disputeAgentType.toLowerCase())
                 .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    protected static final void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
+    protected static void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR.name()));
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUNDAGENT.name()));
     }
 
-    protected static final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
+    protected static CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
             String accountName,
             String accountNumber,
             String currencyCode) {
