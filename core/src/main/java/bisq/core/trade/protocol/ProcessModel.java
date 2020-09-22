@@ -311,7 +311,7 @@ public class ProcessModel implements Model, PersistablePayload {
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
-    public Coin getFundsNeededForTradeAsLong() {
+    public Coin getFundsNeededForTrade() {
         return Coin.valueOf(fundsNeededForTradeAsLong);
     }
 

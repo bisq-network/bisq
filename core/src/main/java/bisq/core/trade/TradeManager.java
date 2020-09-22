@@ -357,7 +357,7 @@ public class TradeManager implements PersistedDataHost {
 
     private void initPendingTrade(Trade trade) {
         initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
-                trade.getProcessModel().getFundsNeededForTradeAsLong());
+                trade.getProcessModel().getFundsNeededForTrade());
         trade.updateDepositTxFromWallet();
         tradesForStatistics.add(trade);
     }
@@ -419,7 +419,7 @@ public class TradeManager implements PersistedDataHost {
                         tradableListStorage,
                         btcWalletService);
 
-            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
+            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
             tradableList.add(trade);
             ((MakerTrade) trade).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
