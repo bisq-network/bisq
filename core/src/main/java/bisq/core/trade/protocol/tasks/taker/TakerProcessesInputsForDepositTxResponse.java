@@ -43,42 +43,41 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("current trade state " + trade.getState());
-            InputsForDepositTxResponse inputsForDepositTxResponse = (InputsForDepositTxResponse) processModel.getTradeMessage();
-            checkTradeId(processModel.getOfferId(), inputsForDepositTxResponse);
-            checkNotNull(inputsForDepositTxResponse);
+            InputsForDepositTxResponse response = (InputsForDepositTxResponse) processModel.getTradeMessage();
+            checkTradeId(processModel.getOfferId(), response);
+            checkNotNull(response);
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
-            tradingPeer.setPaymentAccountPayload(checkNotNull(inputsForDepositTxResponse.getMakerPaymentAccountPayload()));
-            tradingPeer.setAccountId(nonEmptyStringOf(inputsForDepositTxResponse.getMakerAccountId()));
-            tradingPeer.setMultiSigPubKey(checkNotNull(inputsForDepositTxResponse.getMakerMultiSigPubKey()));
-            tradingPeer.setContractAsJson(nonEmptyStringOf(inputsForDepositTxResponse.getMakerContractAsJson()));
-            tradingPeer.setContractSignature(nonEmptyStringOf(inputsForDepositTxResponse.getMakerContractSignature()));
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(inputsForDepositTxResponse.getMakerPayoutAddressString()));
-            tradingPeer.setRawTransactionInputs(checkNotNull(inputsForDepositTxResponse.getMakerInputs()));
-            byte[] preparedDepositTx = inputsForDepositTxResponse.getPreparedDepositTx();
-            processModel.setPreparedDepositTx(checkNotNull(preparedDepositTx));
-            long lockTime = inputsForDepositTxResponse.getLockTime();
+            tradingPeer.setPaymentAccountPayload(checkNotNull(response.getMakerPaymentAccountPayload()));
+            tradingPeer.setAccountId(nonEmptyStringOf(response.getMakerAccountId()));
+            tradingPeer.setMultiSigPubKey(checkNotNull(response.getMakerMultiSigPubKey()));
+            tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
+            tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
+            tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
+            tradingPeer.setRawTransactionInputs(checkNotNull(response.getMakerInputs()));
+            processModel.setPreparedDepositTx(checkNotNull(response.getPreparedDepositTx()));
+            long lockTime = response.getLockTime();
             if (Config.baseCurrencyNetwork().isMainnet()) {
                 int myLockTime = processModel.getBtcWalletService().getBestChainHeight() +
                         Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
                 // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in case a new
                 // block was just found
                 checkArgument(Math.abs(lockTime - myLockTime) <= 3,
-                        "Lock time of maker is more than 3 blocks different to the locktime I " +
+                        "Lock time of maker is more than 3 blocks different to the lockTime I " +
                                 "calculated. Makers lockTime= " + lockTime + ", myLockTime=" + myLockTime);
             }
             trade.setLockTime(lockTime);
-            log.info("lockTime={}, delay={}", lockTime, (processModel.getBtcWalletService().getBestChainHeight() - lockTime));
+            long delay = processModel.getBtcWalletService().getBestChainHeight() - lockTime;
+            log.info("lockTime={}, delay={}", lockTime, delay);
 
             // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a
             // challenge protocol for passing the nonce we want to get signed.
-            tradingPeer.setAccountAgeWitnessNonce(inputsForDepositTxResponse.getPreparedDepositTx());
-            tradingPeer.setAccountAgeWitnessSignature(inputsForDepositTxResponse.getAccountAgeWitnessSignatureOfPreparedDepositTx());
+            tradingPeer.setAccountAgeWitnessNonce(checkNotNull(response.getPreparedDepositTx()));
+            tradingPeer.setAccountAgeWitnessSignature(checkNotNull(response.getAccountAgeWitnessSignatureOfPreparedDepositTx()));
 
-            tradingPeer.setCurrentDate(inputsForDepositTxResponse.getCurrentDate());
+            tradingPeer.setCurrentDate(response.getCurrentDate());
 
-            checkArgument(inputsForDepositTxResponse.getMakerInputs().size() > 0);
+            checkArgument(response.getMakerInputs().size() > 0);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
