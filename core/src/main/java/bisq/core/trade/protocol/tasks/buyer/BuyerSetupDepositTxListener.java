@@ -69,8 +69,9 @@ public class BuyerSetupDepositTxListener extends TradeTask {
                     confidenceListener = new AddressConfidenceListener(depositTxAddress) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                            if (isVisibleInNetwork(confidence))
+                            if (isVisibleInNetwork(confidence)) {
                                 applyConfidence(confidence);
+                            }
                         }
                     };
                     walletService.addAddressConfidenceListener(confidenceListener);
@@ -98,15 +99,15 @@ public class BuyerSetupDepositTxListener extends TradeTask {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
             trade.applyDepositTx(walletTx);
             BtcWalletService.printTx("depositTx received from network", walletTx);
+
+            // We don't want to trigger the tradeStateSubscription when setting the state, so we unsubscribe before
+            unSubscribeAndRemoveListener();
             trade.setState(Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK);
         } else {
-            log.info("We got the deposit tx already set from MakerProcessDepositTxPublishedMessage.  tradeId={}, state={}", trade.getId(), trade.getState());
+            unSubscribeAndRemoveListener();
         }
 
         swapReservedForTradeEntry();
-
-        // need delay as it can be called inside the listener handler before listener and tradeStateSubscription are actually set.
-        UserThread.execute(this::unSubscribeAndRemoveListener);
     }
 
     private boolean isVisibleInNetwork(TransactionConfidence confidence) {
@@ -116,7 +117,6 @@ public class BuyerSetupDepositTxListener extends TradeTask {
     }
 
     private void swapReservedForTradeEntry() {
-        log.info("swapReservedForTradeEntry");
         processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(),
                 AddressEntry.Context.RESERVED_FOR_TRADE);
     }
@@ -124,10 +124,12 @@ public class BuyerSetupDepositTxListener extends TradeTask {
     private void unSubscribeAndRemoveListener() {
         if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();
+            tradeStateSubscription = null;
         }
 
         if (confidenceListener != null) {
             processModel.getBtcWalletService().removeAddressConfidenceListener(confidenceListener);
+            confidenceListener = null;
         }
     }
 }
