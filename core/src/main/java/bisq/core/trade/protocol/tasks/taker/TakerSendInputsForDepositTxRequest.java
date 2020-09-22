@@ -93,9 +93,10 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
 
             // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge
             // protocol for passing the nonce we want to get signed)
+            // This is used for verifying the peers account age witness
             PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
                     "processModel.getPaymentAccountPayload(trade) must not be null");
-            byte[] accountAgeWitnessSignatureOfOfferId = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
+            byte[] signatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
                     offerId.getBytes(Charsets.UTF_8));
 
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
@@ -123,7 +124,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     trade.getRefundAgentNodeAddress(),
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion(),
-                    accountAgeWitnessSignatureOfOfferId,
+                    signatureOfNonce,
                     new Date().getTime());
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
