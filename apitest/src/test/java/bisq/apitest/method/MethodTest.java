@@ -17,6 +17,7 @@
 
 package bisq.apitest.method;
 
+import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.LockWalletRequest;
@@ -26,6 +27,7 @@ import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
 import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.MEDIATOR;
 import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUNDAGENT;
 
@@ -66,12 +68,6 @@ public class MethodTest extends ApiTestCase {
         return GetFundingAddressesRequest.newBuilder().build();
     }
 
-    protected final RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
-        return RegisterDisputeAgentRequest.newBuilder()
-                .setDisputeAgentType(disputeAgentType.toLowerCase())
-                .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
-    }
-
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
     protected final long getBalance(BisqAppConfig bisqAppConfig) {
@@ -99,10 +95,30 @@ public class MethodTest extends ApiTestCase {
                 .getAddress();
     }
 
+    // Static conveniences for test methods and test case fixture setups.
+
+    protected static final RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
+        return RegisterDisputeAgentRequest.newBuilder()
+                .setDisputeAgentType(disputeAgentType.toLowerCase())
+                .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    protected final void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
+    protected static final void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR.name()));
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUNDAGENT.name()));
+    }
+
+    protected static final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
+            String accountName,
+            String accountNumber,
+            String currencyCode) {
+        return CreatePaymentAccountRequest.newBuilder()
+                .setPaymentMethodId(PERFECT_MONEY.getId())
+                .setAccountName(accountName)
+                .setAccountNumber(accountNumber)
+                .setCurrencyCode(currencyCode)
+                .build();
     }
 }
