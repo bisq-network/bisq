@@ -50,13 +50,14 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
         try {
             runInterceptHook();
 
-            List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(), "sellerInputs must not be null");
+            List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(),
+                    "sellerInputs must not be null");
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
-            AddressEntry sellerMultiSigAddressEntry = addressEntryOptional.get();
+            Optional<AddressEntry> optionalMultiSigAddressEntry = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            checkArgument(optionalMultiSigAddressEntry.isPresent(), "addressEntryOptional must be present");
+            AddressEntry sellerMultiSigAddressEntry = optionalMultiSigAddressEntry.get();
             byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(sellerMultiSigPubKey,
                     sellerMultiSigAddressEntry.getPubKey()),
@@ -64,7 +65,8 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
 
             Coin sellerInput = Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum());
 
-            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInput.subtract(trade.getTxFee().multiply(2)));
+            Coin totalFee = trade.getTxFee().multiply(2); // Fee for deposit and payout tx
+            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInput.subtract(totalFee));
             walletService.saveAddressEntryList();
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
