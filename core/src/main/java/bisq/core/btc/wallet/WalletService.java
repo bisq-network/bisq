@@ -507,17 +507,17 @@ public abstract class WalletService {
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        printTx("empty wallet", sendResult.tx);
+        printTx("empty btc wallet", sendResult.tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
-                log.info("emptyWallet onSuccess Transaction=" + result);
+                log.info("emptyBtcWallet onSuccess Transaction=" + result);
                 resultHandler.handleResult();
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                log.error("emptyWallet onFailure " + t.toString());
+                log.error("emptyBtcWallet onFailure " + t.toString());
                 errorMessageHandler.handleErrorMessage(t.getMessage());
             }
         }, MoreExecutors.directExecutor());
