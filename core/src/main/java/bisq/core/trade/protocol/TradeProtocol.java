@@ -222,7 +222,6 @@ public abstract class TradeProtocol {
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
-                //todo
                 ProcessPeerPublishedDelayedPayoutTxMessage.class
         );
         taskRunner.run();
@@ -309,7 +308,7 @@ public abstract class TradeProtocol {
         timeoutTimer = UserThread.runAfter(() -> {
             log.error("Timeout reached. TradeID={}, state={}", trade.getId(), trade.stateProperty().get());
             trade.setErrorMessage("A timeout occurred.");
-            cleanupTradableOnFault();
+            cleanupTradeOnFault();
             cleanup();
         }, TIMEOUT);
     }
@@ -340,7 +339,7 @@ public abstract class TradeProtocol {
 
         sendAckMessage(tradeMessage, false, errorMessage);
 
-        cleanupTradableOnFault();
+        cleanupTradeOnFault();
         cleanup();
     }
 
@@ -396,8 +395,8 @@ public abstract class TradeProtocol {
         );
     }
 
-    private void cleanupTradableOnFault() {
-        final Trade.State state = trade.getState();
+    private void cleanupTradeOnFault() {
+        Trade.State state = trade.getState();
         log.warn("cleanupTradableOnFault tradeState={}", state);
         TradeManager tradeManager = processModel.getTradeManager();
         if (trade.isInPreparation()) {
@@ -405,10 +404,11 @@ public abstract class TradeProtocol {
             tradeManager.removePreparedTrade(trade);
         } else if (!trade.isFundsLockedIn()) {
             if (processModel.getPreparedDepositTx() == null) {
-                if (trade.isTakerFeePublished())
+                if (trade.isTakerFeePublished()) {
                     tradeManager.addTradeToFailedTrades(trade);
-                else
+                } else {
                     tradeManager.addTradeToClosedTrades(trade);
+                }
             } else {
                 log.error("We have already sent the prepared deposit tx to the peer but we did not received the reply " +
                         "about the deposit tx nor saw it in the network. tradeId={}, tradeState={}", trade.getId(), trade.getState());
