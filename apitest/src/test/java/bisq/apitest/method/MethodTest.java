@@ -26,6 +26,8 @@ import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.MEDIATOR;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUNDAGENT;
 
 
 
@@ -66,7 +68,7 @@ public class MethodTest extends ApiTestCase {
 
     protected final RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
         return RegisterDisputeAgentRequest.newBuilder()
-                .setDisputeAgentType(disputeAgentType)
+                .setDisputeAgentType(disputeAgentType.toLowerCase())
                 .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
     }
 
@@ -95,5 +97,12 @@ public class MethodTest extends ApiTestCase {
                 .findFirst()
                 .get()
                 .getAddress();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
+        var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
+        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR.name()));
+        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUNDAGENT.name()));
     }
 }
