@@ -104,7 +104,9 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         });
         transactionsComboBox.setItems(FXCollections.observableArrayList(transactions));
         transactionsComboBox.setOnAction(event -> {
-            selectHandlerOptional.get().accept(transactionsComboBox.getSelectionModel().getSelectedItem());
+            if (selectHandlerOptional.isPresent()) {
+                selectHandlerOptional.get().accept(transactionsComboBox.getSelectionModel().getSelectedItem());
+            }
             hide();
         });
     }

@@ -123,7 +123,7 @@ public class BtcWalletService extends WalletService {
     @Override
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
-        addressEntryList.getAddressEntriesAsListImmutable().stream().forEach(e -> {
+        addressEntryList.getAddressEntriesAsListImmutable().forEach(e -> {
             DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
@@ -134,7 +134,7 @@ public class BtcWalletService extends WalletService {
     @Override
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
-        getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
+        getAddressEntryListAsImmutableList().forEach(e -> sb.append(e.toString()).append("\n"));
         return "Address entry list:\n" +
                 sb.toString() +
                 "\n\n" +

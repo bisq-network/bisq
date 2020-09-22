@@ -26,7 +26,6 @@ import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.KeyChainGroupStructure;
 import org.bitcoinj.wallet.Protos;
-import org.bitcoinj.wallet.UnreadableWalletException;
 
 import com.google.common.collect.ImmutableList;
 
@@ -63,12 +62,12 @@ public class BisqKeyChainFactory extends DefaultKeyChainFactory {
     }
 
     @Override
-    public DeterministicKeyChain makeWatchingKeyChain(Protos.Key key, Protos.Key firstSubKey, DeterministicKey accountKey, boolean isFollowingKey, boolean isMarried, Script.ScriptType outputScriptType) throws UnreadableWalletException {
+    public DeterministicKeyChain makeWatchingKeyChain(Protos.Key key, Protos.Key firstSubKey, DeterministicKey accountKey, boolean isFollowingKey, boolean isMarried, Script.ScriptType outputScriptType) {
         throw new UnsupportedOperationException("Bisq is not supposed to use this");
     }
 
     @Override
-    public DeterministicKeyChain makeSpendingKeyChain(Protos.Key key, Protos.Key firstSubKey, DeterministicKey accountKey, boolean isMarried, Script.ScriptType outputScriptType) throws UnreadableWalletException {
+    public DeterministicKeyChain makeSpendingKeyChain(Protos.Key key, Protos.Key firstSubKey, DeterministicKey accountKey, boolean isMarried, Script.ScriptType outputScriptType) {
         throw new UnsupportedOperationException("Bisq is not supposed to use this");
     }
 }
