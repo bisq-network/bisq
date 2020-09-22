@@ -16,8 +16,6 @@
 #
 #     ./cli/test.sh
 
-# load 'mainnet-test-helper'
-
 @test "test unsupported method error" {
   run ./bisq-cli --password=xyz bogus
   [ "$status" -eq 1 ]
