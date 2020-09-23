@@ -63,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.isTradeIdValid;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -72,7 +73,12 @@ public abstract class TradeProtocol {
         String name();
     }
 
-    private static final long TIMEOUT = 180;
+    enum DisputeEvent implements TradeProtocol.Event {
+        MEDIATION_RESULT_ACCEPTED,
+        MEDIATION_RESULT_REJECTED
+    }
+
+    private static final long DEFAULT_TIMEOUT_SEC = 180;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
@@ -134,6 +140,8 @@ public abstract class TradeProtocol {
     // Mediation: Called from UI if trader accepts mediation result
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO
+
     // Trader has not yet received the peer's signature but has clicked the accept button.
     public void onAcceptMediationResult(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         if (trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null) {
@@ -144,7 +152,7 @@ public abstract class TradeProtocol {
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> {
                     resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onAcceptMediationResult");
+                    handleTaskRunnerSuccess(DisputeEvent.MEDIATION_RESULT_ACCEPTED);
                 },
                 (errorMessage) -> {
                     errorMessageHandler.handleErrorMessage(errorMessage);
@@ -170,7 +178,7 @@ public abstract class TradeProtocol {
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> {
                     resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onAcceptMediationResult");
+                    handleTaskRunnerSuccess(DisputeEvent.MEDIATION_RESULT_ACCEPTED);
                 },
                 (errorMessage) -> {
                     errorMessageHandler.handleErrorMessage(errorMessage);
@@ -196,7 +204,7 @@ public abstract class TradeProtocol {
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "MediatedPayoutSignatureMessage"),
+                () -> handleTaskRunnerSuccess(tradeMessage),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
@@ -210,7 +218,7 @@ public abstract class TradeProtocol {
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle PayoutTxPublishedMessage"),
+                () -> handleTaskRunnerSuccess(tradeMessage),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
@@ -229,7 +237,7 @@ public abstract class TradeProtocol {
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "PeerPublishedDelayedPayoutTxMessage"),
+                () -> handleTaskRunnerSuccess(tradeMessage),
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
@@ -301,14 +309,19 @@ public abstract class TradeProtocol {
     }
 
     protected void startTimeout() {
+        startTimeout(DEFAULT_TIMEOUT_SEC);
+    }
+
+    protected void startTimeout(long timeoutSec) {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            log.error("Timeout reached. TradeID={}, state={}", trade.getId(), trade.stateProperty().get());
-            trade.setErrorMessage("A timeout occurred.");
+            log.error("Timeout reached. TradeID={}, state={}, timeoutSec={}",
+                    trade.getId(), trade.stateProperty().get(), timeoutSec);
+            trade.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
             cleanupTradeOnFault();
             cleanup();
-        }, TIMEOUT);
+        }, timeoutSec);
     }
 
     protected void stopTimeout() {
@@ -318,12 +331,18 @@ public abstract class TradeProtocol {
         }
     }
 
-    protected void handleTaskRunnerSuccess(String info) {
-        handleTaskRunnerSuccess(null, info);
+    protected void handleTaskRunnerSuccess(TradeMessage tradeMessage) {
+        handleTaskRunnerSuccess(tradeMessage, null);
     }
 
-    protected void handleTaskRunnerSuccess(@Nullable TradeMessage tradeMessage, String info) {
-        log.debug("handleTaskRunnerSuccess {}", info);
+    protected void handleTaskRunnerSuccess(Event event) {
+        handleTaskRunnerSuccess(null, event.name());
+    }
+
+    private void handleTaskRunnerSuccess(@Nullable TradeMessage tradeMessage, @Nullable String trigger) {
+        String triggerEvent = trigger != null ? trigger :
+                tradeMessage != null ? tradeMessage.getClass().getSimpleName() : "N/A";
+        log.info("TaskRunner successfully completed. {}", "Triggered from message " + triggerEvent);
 
         sendAckMessage(tradeMessage, true, null);
     }
@@ -429,25 +448,17 @@ public abstract class TradeProtocol {
         return new FluentProcess(trade, phase);
     }
 
-    static class FluentProcess {
+    class FluentProcess {
         private final Trade trade;
         @Nullable
         private TradeMessage tradeMessage;
         private final Set<Trade.Phase> expectedPhases = new HashSet<>();
+        private final Set<Boolean> preConditions = new HashSet<>();
         @Nullable
         private Event event;
-        private boolean condition = true;
-        private Runnable conditionFailedHandler;
-
-        protected FluentProcess process(Runnable runnable) {
-            if (isPhaseValid() && condition) {
-                runnable.run();
-            }
-            if (!condition && conditionFailedHandler != null) {
-                conditionFailedHandler.run();
-            }
-            return this;
-        }
+        private Runnable preConditionFailedHandler;
+        private int timeoutSec;
+        private NodeAddress peersNodeAddress;
 
         public FluentProcess(Trade trade,
                              Trade.Phase expectedPhase) {
@@ -459,6 +470,31 @@ public abstract class TradeProtocol {
                              Trade.Phase... expectedPhases) {
             this.trade = trade;
             this.expectedPhases.addAll(Set.of(expectedPhases));
+        }
+
+        protected FluentProcess process(Runnable runnable) {
+            boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
+            boolean isTradeIdValid = tradeMessage == null || isTradeIdValid(processModel.getOfferId(), tradeMessage);
+
+            if (isPhaseValid() && allPreConditionsMet && isTradeIdValid) {
+                if (timeoutSec > 0) {
+                    startTimeout(timeoutSec);
+                }
+
+                if (peersNodeAddress != null) {
+                    processModel.setTempTradingPeerNodeAddress(peersNodeAddress);
+                }
+
+                if (tradeMessage != null) {
+                    processModel.setTradeMessage(tradeMessage);
+                }
+
+                runnable.run();
+            }
+            if (!allPreConditionsMet && preConditionFailedHandler != null) {
+                preConditionFailedHandler.run();
+            }
+            return this;
         }
 
         private boolean isPhaseValid() {
@@ -490,24 +526,34 @@ public abstract class TradeProtocol {
             return this;
         }
 
-        public FluentProcess onEvent(Event event) {
+        public FluentProcess on(Event event) {
             this.event = event;
             return this;
         }
 
-        public FluentProcess onMessage(TradeMessage tradeMessage) {
+        public FluentProcess on(TradeMessage tradeMessage) {
             this.tradeMessage = tradeMessage;
             return this;
         }
 
-        public FluentProcess condition(boolean condition) {
-            this.condition = condition;
+        public FluentProcess condition(boolean preCondition) {
+            preConditions.add(preCondition);
             return this;
         }
 
-        public FluentProcess condition(boolean condition, Runnable conditionFailedHandler) {
-            this.condition = condition;
-            this.conditionFailedHandler = conditionFailedHandler;
+        public FluentProcess condition(boolean preCondition, Runnable conditionFailedHandler) {
+            preConditions.add(preCondition);
+            this.preConditionFailedHandler = conditionFailedHandler;
+            return this;
+        }
+
+        public FluentProcess withTimeout(int timeoutSec) {
+            this.timeoutSec = timeoutSec;
+            return this;
+        }
+
+        public FluentProcess from(NodeAddress peersNodeAddress) {
+            this.peersNodeAddress = peersNodeAddress;
             return this;
         }
     }

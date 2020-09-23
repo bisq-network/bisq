@@ -24,6 +24,7 @@ public interface BuyerProtocol {
     void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 
     enum BuyerEvent implements TradeProtocol.Event {
+        STARTUP,
         PAYMENT_SENT
     }
 }

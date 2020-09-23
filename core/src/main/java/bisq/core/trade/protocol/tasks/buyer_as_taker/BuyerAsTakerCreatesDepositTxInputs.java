@@ -44,7 +44,7 @@ public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
             Coin txFee = trade.getTxFee();
             Coin takerInputAmount = checkNotNull(trade.getOffer()).getBuyerSecurityDeposit()
                     .add(txFee)
-                    .add(txFee);
+                    .add(txFee); // 2 times the fee as we need it for payout tx as well
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
                     processModel.getTakeOfferFeeTx(),
                     takerInputAmount,
