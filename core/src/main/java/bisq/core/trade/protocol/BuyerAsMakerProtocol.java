@@ -54,8 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol, MakerProtocol {
-    private final BuyerAsMakerTrade buyerAsMakerTrade;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -63,8 +61,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
     public BuyerAsMakerProtocol(BuyerAsMakerTrade trade) {
         super(trade);
-
-        this.buyerAsMakerTrade = trade;
 
         Trade.Phase phase = trade.getState().getPhase();
         if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
@@ -119,7 +115,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
-                .setTaskRunner(new TradeTaskRunner(buyerAsMakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> handleTaskRunnerSuccess(message),
                         errorMessage -> {
                             errorMessageHandler.handleErrorMessage(errorMessage);
@@ -178,7 +174,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                             sendAckMessage(message, true, null);
                             processModel.removeMailboxMessageAfterProcessing(trade);
                         })
-                .setTaskRunner(new TradeTaskRunner(buyerAsMakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> {
                             stopTimeout();
                             handleTaskRunnerSuccess(message);
@@ -189,10 +185,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerVerifiesFinalDelayedPayoutTx.class,
                         PublishTradeStatistics.class
                 )
+                .run(() -> processModel.witnessDebugLog(trade))
                 .runTasks();
-
-//processModel.witnessDebugLog(buyerAsMakerTrade);
-
     }
 
 
@@ -206,7 +200,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         expectedPhase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(event)
                 .preCondition(!wasDisputed())
-                .setTaskRunner(new TradeTaskRunner(buyerAsMakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> {
                             resultHandler.handleResult();
                             handleTaskRunnerSuccess(event);
@@ -222,9 +216,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerSetupPayoutTxListener.class,
                         BuyerSendCounterCurrencyTransferStartedMessage.class
                 )
+                .run(() -> trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED))
                 .runTasks();
-
-        //  buyerAsMakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
     }
 
 

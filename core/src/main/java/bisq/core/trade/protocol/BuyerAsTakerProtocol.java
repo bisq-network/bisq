@@ -61,8 +61,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol, TakerProtocol {
-    private final BuyerAsTakerTrade buyerAsTakerTrade;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,8 +68,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
     public BuyerAsTakerProtocol(BuyerAsTakerTrade trade) {
         super(trade);
-
-        this.buyerAsTakerTrade = trade;
 
         Offer offer = checkNotNull(trade.getOffer());
         processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
@@ -192,7 +188,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                             sendAckMessage(message, true, null);
                             processModel.removeMailboxMessageAfterProcessing(trade);
                         })
-                .setTaskRunner(new TradeTaskRunner(buyerAsTakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> {
                             stopTimeout();
                             handleTaskRunnerSuccess(message);
@@ -217,7 +213,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         expectedPhase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(event)
                 .preCondition(!wasDisputed())
-                .setTaskRunner(new TradeTaskRunner(buyerAsTakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> {
                             resultHandler.handleResult();
                             handleTaskRunnerSuccess(event);
@@ -232,10 +228,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerSetupPayoutTxListener.class,
                         BuyerSendCounterCurrencyTransferStartedMessage.class
                 )
+                .run(() -> trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED))
                 .runTasks();
-
-        //todo
-        // buyerAsTakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
     }
 
 

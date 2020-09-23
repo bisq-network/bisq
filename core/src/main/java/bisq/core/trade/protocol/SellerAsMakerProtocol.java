@@ -57,8 +57,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtocol, MakerProtocol {
-    private final SellerAsMakerTrade sellerAsMakerTrade;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -66,8 +64,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
     public SellerAsMakerProtocol(SellerAsMakerTrade trade) {
         super(trade);
-
-        this.sellerAsMakerTrade = trade;
     }
 
 
@@ -97,7 +93,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
-                .setTaskRunner(new TradeTaskRunner(sellerAsMakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> handleTaskRunnerSuccess(message),
                         errorMessage -> {
                             errorMessageHandler.handleErrorMessage(errorMessage);
@@ -139,7 +135,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         expectedPhase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .on(message)
                 .from(peer)
-                .setTaskRunner(new TradeTaskRunner(sellerAsMakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> {
                             stopTimeout();
                             handleTaskRunnerSuccess(message);
@@ -153,9 +149,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerPublishesDepositTx.class,
                         PublishTradeStatistics.class
                 )
+                .run(() -> processModel.witnessDebugLog(trade)) //TODO still needed? If so move to witness domain
                 .runTasks();
-
-        //processModel.witnessDebugLog(sellerAsMakerTrade);
     }
 
 
@@ -194,7 +189,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         expectedPhase(Trade.Phase.FIAT_SENT)
                 .on(event)
                 .preCondition(!wasDisputed())
-                .setTaskRunner(new TradeTaskRunner(sellerAsMakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> {
                             resultHandler.handleResult();
                             handleTaskRunnerSuccess(event);
@@ -209,8 +204,9 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
                         SellerSendPayoutTxPublishedMessage.class
-                ).runTasks();
-        // sellerAsMakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
+                )
+                .run(() -> trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT))
+                .runTasks();
     }
 
 

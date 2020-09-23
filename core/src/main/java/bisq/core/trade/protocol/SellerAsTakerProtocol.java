@@ -59,8 +59,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtocol, TakerProtocol {
-    private final SellerAsTakerTrade sellerAsTakerTrade;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -68,8 +66,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
     public SellerAsTakerProtocol(SellerAsTakerTrade trade) {
         super(trade);
-
-        this.sellerAsTakerTrade = trade;
 
         Offer offer = checkNotNull(trade.getOffer());
         processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
@@ -143,32 +139,16 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerPublishesDepositTx.class,
                         PublishTradeStatistics.class
                 )
-                .runTasks();
-        /*
-                .addTasks(() -> {
+                .run(() -> {
                     // We stop timeout here and don't start a new one as the
                     // SellerSendsDepositTxAndDelayedPayoutTxMessage repeats the send the message and has it's own
                     // timeout if it never succeeds.
                     stopTimeout();
 
-                    TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                            () -> {
-
-                                handleTaskRunnerSuccess(message);
-                            },
-                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
-
-                    taskRunner.addTasks(
-                            SellerProcessDelayedPayoutTxSignatureResponse.class,
-                            SellerSignsDelayedPayoutTx.class,
-                            SellerFinalizesDelayedPayoutTx.class,
-                            SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
-                            SellerPublishesDepositTx.class,
-                            PublishTradeStatistics.class
-                    );
-                    taskRunner.run();
-                    processModel.witnessDebugLog(sellerAsTakerTrade);
-                });*/
+                    //TODO still needed? If so move to witness domain
+                    processModel.witnessDebugLog(trade);
+                })
+                .runTasks();
     }
 
 
@@ -207,7 +187,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         expectedPhase(Trade.Phase.FIAT_SENT)
                 .on(event)
                 .preCondition(!wasDisputed())
-                .setTaskRunner(new TradeTaskRunner(sellerAsTakerTrade,
+                .setTaskRunner(new TradeTaskRunner(trade,
                         () -> {
                             resultHandler.handleResult();
                             handleTaskRunnerSuccess(event);
@@ -222,8 +202,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
                         SellerSendPayoutTxPublishedMessage.class //TODO add repeated msg send, check UI
-                ).runTasks();
-        //sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
+                )
+                .run(() -> trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT))
+                .runTasks();
     }
 
 

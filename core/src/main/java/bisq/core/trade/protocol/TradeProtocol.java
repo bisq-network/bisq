@@ -478,11 +478,15 @@ public abstract class TradeProtocol {
             this.expectedPhases.addAll(Set.of(expectedPhases));
         }
 
-        public FluentProcess runTasks() {
-            boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
-            boolean isTradeIdValid = message == null || isTradeIdValid(processModel.getOfferId(), message);
+        public FluentProcess run(Runnable runnable) {
+            if (isValid()) {
+                runnable.run();
+            }
+            return this;
+        }
 
-            if (isPhaseValid() && allPreConditionsMet && isTradeIdValid) {
+        public FluentProcess runTasks() {
+            if (isValid()) {
                 if (timeoutSec > 0) {
                     startTimeout(timeoutSec);
                 }
@@ -498,22 +502,27 @@ public abstract class TradeProtocol {
                 taskRunner.run();
             }
 
-            if (!allPreConditionsMet && preConditionFailedHandler != null) {
-                preConditionFailedHandler.run();
-            }
-
             return this;
         }
 
-       /* protected FluentProcess defaultTaskRunner(Consumer<TradeTaskRunner> consumer) {
-            taskRunner = new TradeTaskRunner(trade,
-                    () -> handleTaskRunnerSuccess(message),
-                    errorMessage -> handleTaskRunnerFault(message, errorMessage));
+        private boolean isValid() {
+            boolean isPhaseValid = isPhaseValid();
+            boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
+            boolean isTradeIdValid = message == null || isTradeIdValid(processModel.getOfferId(), message);
 
-            consumer.accept(taskRunner);
+            if (!allPreConditionsMet) {
+                log.error("PreConditions not met. preConditions={}, this={}", preConditions, this);
+                if (preConditionFailedHandler != null) {
+                    preConditionFailedHandler.run();
+                }
+            }
+            if (!isTradeIdValid) {
+                log.error("TradeId does not match tradeId in message, TradeId={}, tradeId in message={}",
+                        trade.getId(), message.getTradeId());
+            }
 
-            return this;
-        }*/
+            return isPhaseValid && allPreConditionsMet && isTradeIdValid;
+        }
 
         @SafeVarargs
         public final FluentProcess addTasks(Class<? extends Task<Trade>>... tasks) {
@@ -598,6 +607,21 @@ public abstract class TradeProtocol {
         public FluentProcess setTaskRunner(TradeTaskRunner taskRunner) {
             this.taskRunner = taskRunner;
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return "FluentProcess{" +
+                    "\n     trade=" + trade +
+                    ",\n     message=" + message +
+                    ",\n     expectedPhases=" + expectedPhases +
+                    ",\n     preConditions=" + preConditions +
+                    ",\n     event=" + event +
+                    ",\n     preConditionFailedHandler=" + preConditionFailedHandler +
+                    ",\n     timeoutSec=" + timeoutSec +
+                    ",\n     peersNodeAddress=" + peersNodeAddress +
+                    ",\n     taskRunner=" + taskRunner +
+                    "\n}";
         }
     }
 }
