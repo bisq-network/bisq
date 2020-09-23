@@ -20,16 +20,25 @@ package bisq.apitest.method;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 
+import protobuf.PaymentAccount;
+
+import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.Assertions;
+
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
 import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.MEDIATOR;
 import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUNDAGENT;
+import static java.util.Comparator.comparing;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 
@@ -105,6 +114,18 @@ public class MethodTest extends ApiTestCase {
                 .setAccountNumber(accountNumber)
                 .setCurrencyCode(currencyCode)
                 .build();
+    }
+
+    protected final PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
+        var getPaymentAccountsRequest = GetPaymentAccountsRequest.newBuilder().build();
+        var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
+        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(getPaymentAccountsRequest)
+                .getPaymentAccountsList()
+                .stream()
+                .sorted(comparing(protobuf.PaymentAccount::getCreationDate))
+                .collect(Collectors.toList()).get(0);
+        assertEquals("PerfectMoney dummy", paymentAccount.getAccountName());
+        return paymentAccount;
     }
 
     // Static conveniences for test methods and test case fixture setups.
