@@ -174,6 +174,19 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(CounterCurrencyTransferStartedMessage tradeMessage, NodeAddress sender) {
+        if (trade.getPayoutTx() != null) {
+            log.warn("We received a CounterCurrencyTransferStartedMessage but we have already created the payout tx " +
+                    "so we ignore the message. This can happen if the ACK message to the peer did not " +
+                    "arrive and the peer repeats sending us the message. We send another ACK msg.");
+            sendAckMessage(tradeMessage, true, null);
+            processModel.removeMailboxMessageAfterProcessing(trade);
+            return;
+        }
+
+        if (!isTradeInPhase(Trade.Phase.DEPOSIT_CONFIRMED, tradeMessage)) {
+            return;
+        }
+
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -184,6 +197,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         taskRunner.addTasks(
                 SellerProcessCounterCurrencyTransferStartedMessage.class,
                 MakerVerifyTakerAccount.class,
+                ApplyFilter.class,
                 MakerVerifyTakerFeePayment.class
         );
         taskRunner.run();
