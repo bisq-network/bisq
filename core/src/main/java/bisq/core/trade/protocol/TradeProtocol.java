@@ -60,12 +60,14 @@ import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.Set;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 import static bisq.core.util.Validator.isTradeIdValid;
 import static bisq.core.util.Validator.nonEmptyStringOf;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -442,109 +444,171 @@ public abstract class TradeProtocol {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // FluentProcess
+    // FluentProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected FluentProcess expectedPhase(Trade.Phase phase) {
-        return new FluentProcess(trade, phase);
+    protected FluentProtocol given(Condition condition) {
+        return new FluentProtocol(condition);
     }
 
-    protected FluentProcess expectedPhases(Trade.Phase... phase) {
-        return new FluentProcess(trade, phase);
+    protected Condition phase(Trade.Phase expectedPhase) {
+        return new Condition(trade, expectedPhase);
     }
 
-    class FluentProcess {
-        private final Trade trade;
-        @Nullable
-        private TradeMessage message;
-        private final Set<Trade.Phase> expectedPhases = new HashSet<>();
-        private final Set<Boolean> preConditions = new HashSet<>();
-        @Nullable
-        private Event event;
-        private Runnable preConditionFailedHandler;
-        private int timeoutSec;
-        private NodeAddress peersNodeAddress;
-        private TradeTaskRunner taskRunner;
+    protected Condition anyPhase(Trade.Phase... expectedPhases) {
+        return new Condition(trade, expectedPhases);
+    }
 
-        public FluentProcess(Trade trade,
-                             Trade.Phase expectedPhase) {
-            this.trade = trade;
-            this.expectedPhases.add(expectedPhase);
+    @SafeVarargs
+    public final Setup tasks(Class<? extends Task<Trade>>... tasks) {
+        return new Setup(trade, tasks);
+    }
+
+    // Main class. Contains the condition and setup, if condition is valid it will execute the
+    // taskRunner and the optional runnable.
+    class FluentProtocol {
+        private final Condition condition;
+        private Setup setup;
+
+        public FluentProtocol(Condition condition) {
+            this.condition = condition;
         }
 
-        public FluentProcess(Trade trade,
-                             Trade.Phase... expectedPhases) {
-            this.trade = trade;
-            this.expectedPhases.addAll(Set.of(expectedPhases));
+        protected FluentProtocol setup(Setup setup) {
+            this.setup = setup;
+            return this;
         }
 
-        public FluentProcess run(Runnable runnable) {
-            if (isValid()) {
+        // Can be used before or after executeTasks
+        public FluentProtocol run(Runnable runnable) {
+            if (condition.isValid()) {
                 runnable.run();
             }
             return this;
         }
 
-        public FluentProcess runTasks() {
-            if (isValid()) {
-                if (timeoutSec > 0) {
-                    startTimeout(timeoutSec);
+        public FluentProtocol executeTasks() {
+            if (condition.isValid()) {
+                if (setup.getTimeoutSec() > 0) {
+                    startTimeout(setup.getTimeoutSec());
                 }
 
-                if (peersNodeAddress != null) {
-                    processModel.setTempTradingPeerNodeAddress(peersNodeAddress);
+                NodeAddress peer = condition.getPeersNodeAddress();
+                if (peer != null) {
+                    processModel.setTempTradingPeerNodeAddress(peer);
                 }
 
+                TradeMessage message = condition.getMessage();
                 if (message != null) {
                     processModel.setTradeMessage(message);
                 }
-
+                TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());
+                taskRunner.addTasks(setup.getTasks());
                 taskRunner.run();
             }
+            return this;
+        }
+    }
 
+    //
+    static class Condition {
+        private final Trade trade;
+        @Nullable
+        @Getter
+        private TradeMessage message;
+        private final Set<Trade.Phase> expectedPhases = new HashSet<>();
+        private final Set<Trade.State> expectedStates = new HashSet<>();
+        private final Set<Boolean> preConditions = new HashSet<>();
+        @Nullable
+        @Getter
+        private Event event;
+        @Getter
+        private NodeAddress peersNodeAddress;
+        private boolean isValid;
+        private boolean isValidated;
+        private Runnable preConditionFailedHandler;
+
+        public Condition(Trade trade, Trade.Phase expectedPhase) {
+            this.expectedPhases.add(expectedPhase);
+            this.trade = trade;
+        }
+
+        public Condition(Trade trade, Trade.Phase... expectedPhases) {
+            this.expectedPhases.addAll(Set.of(expectedPhases));
+            this.trade = trade;
+        }
+
+        public Condition state(Trade.State state) {
+            this.expectedStates.add(state);
+            return this;
+        }
+
+        public Condition anyState(Trade.State... states) {
+            this.expectedStates.addAll(Set.of(states));
+            return this;
+        }
+
+        public Condition with(Event event) {
+            checkArgument(!isValidated);
+            this.event = event;
+            return this;
+        }
+
+        public Condition with(TradeMessage tradeMessage) {
+            checkArgument(!isValidated);
+            this.message = tradeMessage;
+            return this;
+        }
+
+        public Condition from(NodeAddress peersNodeAddress) {
+            checkArgument(!isValidated);
+            this.peersNodeAddress = peersNodeAddress;
+            return this;
+        }
+
+        public Condition preCondition(boolean preCondition) {
+            checkArgument(!isValidated);
+            preConditions.add(preCondition);
+            return this;
+        }
+
+        public Condition preCondition(boolean preCondition, Runnable conditionFailedHandler) {
+            checkArgument(!isValidated);
+            preConditions.add(preCondition);
+            this.preConditionFailedHandler = conditionFailedHandler;
             return this;
         }
 
         private boolean isValid() {
-            boolean isPhaseValid = isPhaseValid();
-            boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
-            boolean isTradeIdValid = message == null || isTradeIdValid(processModel.getOfferId(), message);
+            if (!isValidated) {
+                boolean isPhaseValid = isPhaseValid();
+                boolean isStateValid = isStateValid();
 
-            if (!allPreConditionsMet) {
-                log.error("PreConditions not met. preConditions={}, this={}", preConditions, this);
-                if (preConditionFailedHandler != null) {
-                    preConditionFailedHandler.run();
+                boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
+                boolean isTradeIdValid = message == null || isTradeIdValid(trade.getId(), message);
+
+                if (!allPreConditionsMet) {
+                    log.error("PreConditions not met. preConditions={}, this={}", preConditions, this);
+                    if (preConditionFailedHandler != null) {
+                        preConditionFailedHandler.run();
+                    }
                 }
-            }
-            if (!isTradeIdValid) {
-                log.error("TradeId does not match tradeId in message, TradeId={}, tradeId in message={}",
-                        trade.getId(), message.getTradeId());
-            }
-
-            return isPhaseValid && allPreConditionsMet && isTradeIdValid;
-        }
-
-        @SafeVarargs
-        public final FluentProcess addTasks(Class<? extends Task<Trade>>... tasks) {
-            if (taskRunner == null) {
-                if (message != null) {
-                    taskRunner = new TradeTaskRunner(trade,
-                            () -> handleTaskRunnerSuccess(message),
-                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
-                } else if (event != null) {
-                    taskRunner = new TradeTaskRunner(trade,
-                            () -> handleTaskRunnerSuccess(event),
-                            errorMessage -> handleTaskRunnerFault(event, errorMessage));
-                } else {
-                    throw new IllegalStateException("addTasks must not be called without message or event " +
-                            "set in case no taskRunner has been created yet");
+                if (!isTradeIdValid) {
+                    log.error("TradeId does not match tradeId in message, TradeId={}, tradeId in message={}",
+                            trade.getId(), message.getTradeId());
                 }
+
+                isValid = isPhaseValid && isStateValid && allPreConditionsMet && isTradeIdValid;
+                isValidated = true;
             }
-            taskRunner.addTasks(tasks);
-            return this;
+            return isValid;
         }
 
         private boolean isPhaseValid() {
+            if (expectedPhases.isEmpty()) {
+                return true;
+            }
+
             boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getPhase());
             String trigger = message != null ?
                     message.getClass().getSimpleName() :
@@ -568,60 +632,75 @@ public abstract class TradeProtocol {
             return isPhaseValid;
         }
 
-        public FluentProcess orInPhase(Trade.Phase phase) {
-            expectedPhases.add(phase);
-            return this;
+        private boolean isStateValid() {
+            if (expectedStates.isEmpty()) {
+                return true;
+            }
+
+            boolean isStateValid = expectedStates.stream().anyMatch(e -> e == trade.getState());
+            String trigger = message != null ?
+                    message.getClass().getSimpleName() :
+                    event != null ?
+                            event.name() + " event" :
+                            "";
+            if (isStateValid) {
+                log.info("We received {} at state {}",
+                        trigger,
+                        trade.getState());
+            } else {
+                log.error("We received {} but we are are not in the correct state. Expected states={}, " +
+                                "Trade state= {} ",
+                        trigger,
+                        expectedStates,
+                        trade.getState());
+            }
+
+            return isStateValid;
+        }
+    }
+
+    // Setup for task runner
+    class Setup {
+        private final Trade trade;
+        @Getter
+        private final Class<? extends Task<Trade>>[] tasks;
+        @Getter
+        private int timeoutSec;
+        @Nullable
+        private TradeTaskRunner taskRunner;
+
+        @SafeVarargs
+        public Setup(Trade trade, Class<? extends Task<Trade>>... tasks) {
+            this.trade = trade;
+            this.tasks = tasks;
         }
 
-        public FluentProcess on(Event event) {
-            this.event = event;
-            return this;
-        }
-
-        public FluentProcess on(TradeMessage tradeMessage) {
-            this.message = tradeMessage;
-            return this;
-        }
-
-        public FluentProcess preCondition(boolean preCondition) {
-            preConditions.add(preCondition);
-            return this;
-        }
-
-        public FluentProcess preCondition(boolean preCondition, Runnable conditionFailedHandler) {
-            preConditions.add(preCondition);
-            this.preConditionFailedHandler = conditionFailedHandler;
-            return this;
-        }
-
-        public FluentProcess withTimeout(int timeoutSec) {
+        public Setup withTimeout(int timeoutSec) {
             this.timeoutSec = timeoutSec;
             return this;
         }
 
-        public FluentProcess from(NodeAddress peersNodeAddress) {
-            this.peersNodeAddress = peersNodeAddress;
-            return this;
-        }
-
-        public FluentProcess setTaskRunner(TradeTaskRunner taskRunner) {
+        public Setup using(TradeTaskRunner taskRunner) {
             this.taskRunner = taskRunner;
             return this;
         }
 
-        @Override
-        public String toString() {
-            return "FluentProcess{" +
-                    "\n     trade=" + trade +
-                    ",\n     message=" + message +
-                    ",\n     expectedPhases=" + expectedPhases +
-                    ",\n     preConditions=" + preConditions +
-                    ",\n     event=" + event +
-                    ",\n     preConditionFailedHandler=" + preConditionFailedHandler +
-                    ",\n     timeoutSec=" + timeoutSec +
-                    ",\n     peersNodeAddress=" + peersNodeAddress +
-                    ",\n     taskRunner=" + taskRunner +
-                    "\n}";
+        private TradeTaskRunner getTaskRunner(@Nullable TradeMessage message, @Nullable Event event) {
+            if (taskRunner == null) {
+                if (message != null) {
+                    taskRunner = new TradeTaskRunner(trade,
+                            () -> handleTaskRunnerSuccess(message),
+                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
+                } else if (event != null) {
+                    taskRunner = new TradeTaskRunner(trade,
+                            () -> handleTaskRunnerSuccess(event),
+                            errorMessage -> handleTaskRunnerFault(event, errorMessage));
+                } else {
+                    throw new IllegalStateException("addTasks must not be called without message or event " +
+                            "set in case no taskRunner has been created yet");
+                }
+            }
+            return taskRunner;
         }
     }
 }
