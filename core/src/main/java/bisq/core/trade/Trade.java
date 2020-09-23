@@ -127,7 +127,7 @@ public abstract class Trade implements Tradable, Model {
         MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
 
         // taker perspective
-        TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
+        TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED), // Not used anymore
 
 
         // #################### Phase DEPOSIT_PUBLISHED
@@ -232,10 +232,11 @@ public abstract class Trade implements Tradable, Model {
             return protobuf.Trade.Phase.valueOf(phase.name());
         }
 
-        // We allow a phase change only if the phase is next phase
+        // We allow a phase change only if the phase a future phase (we cannot limit it to next phase as we have cases where
+        // we skip a phase as it is only relevant to one role -> states and phases need a redesign ;-( )
         public boolean isValidTransitionTo(Phase newPhase) {
             // this is current phase
-            return newPhase.ordinal() == this.ordinal() + 1;
+            return newPhase.ordinal() > this.ordinal();
         }
     }
 
@@ -833,7 +834,8 @@ public abstract class Trade implements Tradable, Model {
         if (state.isValidTransitionTo(newState)) {
             setState(newState);
         } else {
-            log.warn("State change is not getting applied because it would cause an invalid transition.");
+            log.warn("State change is not getting applied because it would cause an invalid transition. " +
+                    "Trade state={}, intended state={}", state, newState);
         }
     }
 

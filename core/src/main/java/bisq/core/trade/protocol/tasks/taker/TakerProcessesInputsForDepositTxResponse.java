@@ -81,7 +81,6 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            trade.setState(Trade.State.TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST);
 
             complete();
         } catch (Throwable t) {
