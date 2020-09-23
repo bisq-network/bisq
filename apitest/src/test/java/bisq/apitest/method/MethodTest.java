@@ -120,7 +120,7 @@ public class MethodTest extends ApiTestCase {
         PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(getPaymentAccountsRequest)
                 .getPaymentAccountsList()
                 .stream()
-                .sorted(comparing(protobuf.PaymentAccount::getCreationDate))
+                .sorted(comparing(PaymentAccount::getCreationDate))
                 .collect(Collectors.toList()).get(0);
         assertEquals("PerfectMoney dummy", paymentAccount.getAccountName());
         return paymentAccount;
