@@ -200,7 +200,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
     // in the hope to reach the buyer directly.
     private void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
-        fromAny(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
+        expectedPhases(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
                 .on(message)
                 .from(peer)
                 .preCondition(trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null,
@@ -270,7 +270,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(PayoutTxPublishedMessage message, NodeAddress peer) {
-        fromAny(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
+        expectedPhases(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
                 .on(message)
                 .from(peer)
                 .process(() -> {
