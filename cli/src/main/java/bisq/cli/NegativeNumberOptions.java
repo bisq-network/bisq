@@ -73,6 +73,7 @@ class NegativeNumberOptions {
                 new BigDecimal(param);
                 return true;
             } catch (NumberFormatException ignored) {
+                // empty
             }
         }
         return false;
