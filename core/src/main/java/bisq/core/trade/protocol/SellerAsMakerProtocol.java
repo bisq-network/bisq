@@ -181,23 +181,22 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
             return;
         }
 
-        if (!isTradeInPhase(Trade.Phase.DEPOSIT_CONFIRMED, tradeMessage)) {
-            return;
-        }
+        ifInPhase(Trade.Phase.DEPOSIT_CONFIRMED, tradeMessage)
+                .run(() -> {
+                    processModel.setTradeMessage(tradeMessage);
+                    processModel.setTempTradingPeerNodeAddress(sender);
 
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
+                    TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
+                            () -> handleTaskRunnerSuccess(tradeMessage, "handle CounterCurrencyTransferStartedMessage"),
+                            errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
-        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle CounterCurrencyTransferStartedMessage"),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                SellerProcessCounterCurrencyTransferStartedMessage.class,
-                ApplyFilter.class,
-                MakerVerifyTakerFeePayment.class
-        );
-        taskRunner.run();
+                    taskRunner.addTasks(
+                            SellerProcessCounterCurrencyTransferStartedMessage.class,
+                            ApplyFilter.class,
+                            MakerVerifyTakerFeePayment.class
+                    );
+                    taskRunner.run();
+                });
     }
 
 

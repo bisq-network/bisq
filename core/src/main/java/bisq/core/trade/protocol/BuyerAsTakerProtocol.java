@@ -208,22 +208,23 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             return;
         }
 
-        if (!isTradeInPhase(Trade.Phase.TAKER_FEE_PUBLISHED, tradeMessage)) {
-            return;
-        }
-
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
-        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                () -> handleTaskRunnerSuccess(tradeMessage, "handle DepositTxAndDelayedPayoutTxMessage"),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-        taskRunner.addTasks(
-                BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
-                BuyerVerifiesFinalDelayedPayoutTx.class,
-                PublishTradeStatistics.class
-        );
-        taskRunner.run();
-        processModel.witnessDebugLog(buyerAsTakerTrade);
+        ifInPhase(Trade.Phase.TAKER_FEE_PUBLISHED, tradeMessage)
+                .run(() -> {
+                    processModel.setTradeMessage(tradeMessage);
+                    processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
+                    TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
+                            () -> handleTaskRunnerSuccess(tradeMessage, "handle DepositTxAndDelayedPayoutTxMessage"),
+                            errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+                    taskRunner.addTasks(
+                            BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                            BuyerVerifiesFinalDelayedPayoutTx.class,
+                            PublishTradeStatistics.class
+                    );
+                    taskRunner.run();
+                    processModel.witnessDebugLog(buyerAsTakerTrade);
+                }).otherWise(() -> {
+            log.warn("");
+        });
     }
 
 

@@ -56,6 +56,7 @@ import javafx.beans.value.ChangeListener;
 
 import java.security.PublicKey;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -409,25 +410,47 @@ public abstract class TradeProtocol {
         }
     }
 
-    protected boolean isTradeInPhase(Trade.Phase phase) {
-        return isTradeInPhase(phase, null);
+    protected TradeStateValidation ifInPhase(Trade.Phase phase) {
+        return new TradeStateValidation(trade, phase, null);
     }
 
-    protected boolean isTradeInPhase(Trade.Phase expectedPhase,
-                                     @Nullable TradeMessage tradeMessage) {
-        boolean isValidPhase = trade.getPhase() == expectedPhase;
-        if (!isValidPhase) {
-            if (tradeMessage != null) {
-                log.error("We received a {} but we are not in the correct phase. Phase={}, State= {} ",
-                        tradeMessage.getClass().getSimpleName(),
-                        trade.getPhase(),
-                        trade.getState());
-            } else {
-                log.error("We are not in the correct phase. Phase={}, State= {} ",
-                        trade.getPhase(),
-                        trade.getState());
+    protected TradeStateValidation ifInPhase(Trade.Phase phase,
+                                             @Nullable TradeMessage tradeMessage) {
+        return new TradeStateValidation(trade, phase, tradeMessage);
+    }
+
+    static class TradeStateValidation {
+        @Getter
+        private final boolean isValidPhase;
+
+        protected TradeStateValidation run(Runnable runnable) {
+            if (isValidPhase) {
+                runnable.run();
+            }
+            return this;
+        }
+
+        protected void otherWise(Runnable runnable) {
+            runnable.run();
+        }
+
+        public TradeStateValidation(Trade trade,
+                                    Trade.Phase expectedPhase,
+                                    @Nullable TradeMessage tradeMessage) {
+            isValidPhase = trade.getPhase() == expectedPhase;
+            if (!isValidPhase) {
+                if (tradeMessage != null) {
+                    log.error("We received a {} but we are not in the correct phase. Phase={}, State= {} ",
+                            tradeMessage.getClass().getSimpleName(),
+                            trade.getPhase(),
+                            trade.getState());
+                } else {
+                    log.error("We are not in the correct phase. Phase={}, State= {} ",
+                            trade.getPhase(),
+                            trade.getState());
+                }
             }
         }
-        return isValidPhase;
     }
+
 }
