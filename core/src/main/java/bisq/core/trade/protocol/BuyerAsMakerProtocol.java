@@ -43,7 +43,6 @@ import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForD
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
-import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.util.Validator;
 
@@ -139,7 +138,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.addTasks(
                 MakerProcessesInputsForDepositTxRequest.class,
                 ApplyFilter.class,
-                MakerVerifyTakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
                 MakerVerifyTakerFeePayment.class,
                 MakerSetsLockTime.class,
@@ -231,7 +229,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                     });
             taskRunner.addTasks(
                     ApplyFilter.class,
-                    MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
                     BuyerSignPayoutTx.class,
                     BuyerSetupPayoutTxListener.class,

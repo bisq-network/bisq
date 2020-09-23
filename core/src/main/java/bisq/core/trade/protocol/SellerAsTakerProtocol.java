@@ -46,7 +46,6 @@ import bisq.core.trade.protocol.tasks.taker.TakerProcessesInputsForDepositTxResp
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
-import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
 import bisq.network.p2p.NodeAddress;
@@ -105,7 +104,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 ApplyFilter.class,
-                TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
                 CreateTakerFeeTx.class,
                 SellerAsTakerCreatesDepositTxInputs.class,
@@ -195,7 +193,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 SellerProcessCounterCurrencyTransferStartedMessage.class,
-                TakerVerifyMakerAccount.class,
                 ApplyFilter.class,
                 TakerVerifyMakerFeePayment.class
         );
@@ -226,7 +223,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
             taskRunner.addTasks(
                     ApplyFilter.class,
-                    TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     SellerSignAndFinalizePayoutTx.class,
                     SellerBroadcastPayoutTx.class,
@@ -251,7 +247,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
             taskRunner.addTasks(
                     ApplyFilter.class,
-                    TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     SellerSendPayoutTxPublishedMessage.class
             );

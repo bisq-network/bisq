@@ -31,7 +31,6 @@ import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
-import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerCreatesDelayedPayoutTx;
@@ -111,7 +110,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         taskRunner.addTasks(
                 MakerProcessesInputsForDepositTxRequest.class,
                 ApplyFilter.class,
-                MakerVerifyTakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
                 MakerVerifyTakerFeePayment.class,
                 MakerSetsLockTime.class,
@@ -196,7 +194,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 SellerProcessCounterCurrencyTransferStartedMessage.class,
-                MakerVerifyTakerAccount.class,
                 ApplyFilter.class,
                 MakerVerifyTakerFeePayment.class
         );
@@ -227,7 +224,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
             taskRunner.addTasks(
                     ApplyFilter.class,
-                    MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
                     SellerSignAndFinalizePayoutTx.class,
                     SellerBroadcastPayoutTx.class,
@@ -252,7 +248,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
             taskRunner.addTasks(
                     ApplyFilter.class,
-                    MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
                     SellerSendPayoutTxPublishedMessage.class
             );

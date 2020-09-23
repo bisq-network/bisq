@@ -37,7 +37,6 @@ import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositT
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
@@ -51,7 +50,6 @@ import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessesInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
-import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
 import bisq.common.taskrunner.Task;
@@ -106,18 +104,15 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessesInputsForDepositTxRequest.class,
                         ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         MakerCreateAndSignContract.class,
                         BuyerAsMakerCreatesAndSignsDepositTx.class,
                         BuyerSetupDepositTxListener.class,
 
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         PublishTradeStatistics.class,
 
                         ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         BuyerSignPayoutTx.class,
                         BuyerSendCounterCurrencyTransferStartedMessage.class,
@@ -125,7 +120,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 ));
         addGroup("SellerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         CreateTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
@@ -133,18 +127,15 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         TakerProcessesInputsForDepositTxResponse.class,
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         TakerVerifyAndSignContract.class,
                         SellerAsTakerSignsDepositTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
 
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
@@ -152,7 +143,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 ));
         addGroup("BuyerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         CreateTakerFeeTx.class,
                         BuyerAsTakerCreatesDepositTxInputs.class,
@@ -160,14 +150,12 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         TakerProcessesInputsForDepositTxResponse.class,
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         TakerVerifyAndSignContract.class,
                         BuyerAsTakerSignsDepositTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
 
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         BuyerSignPayoutTx.class,
                         BuyerSendCounterCurrencyTransferStartedMessage.class,
@@ -177,22 +165,18 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessesInputsForDepositTxRequest.class,
                         ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         MakerCreateAndSignContract.class,
                         SellerAsMakerCreatesUnsignedDepositTx.class,
                         BuyerSetupDepositTxListener.class,
 
                         PublishTradeStatistics.class,
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
 
                         ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
