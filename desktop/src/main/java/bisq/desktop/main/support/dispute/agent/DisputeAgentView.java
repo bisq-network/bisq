@@ -27,12 +27,16 @@ import bisq.desktop.main.support.dispute.DisputeView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
@@ -54,13 +58,17 @@ import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
+import javafx.collections.ListChangeListener;
+
 import java.util.List;
 
+import static bisq.core.trade.TradeDataValidation.ValidationException;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
 
     private final MultipleHolderNameDetection multipleHolderNameDetection;
+    private ListChangeListener<ValidationException> validationExceptionListener;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                             KeyRing keyRing,
@@ -71,6 +79,9 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                             ContractWindow contractWindow,
                             TradeDetailsWindow tradeDetailsWindow,
                             AccountAgeWitnessService accountAgeWitnessService,
+                            DaoFacade daoFacade,
+                            MediatorManager mediatorManager,
+                            RefundAgentManager refundAgentManager,
                             boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
@@ -81,6 +92,9 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                mediatorManager,
+                refundAgentManager,
+                daoFacade,
                 useDevPrivilegeKeys);
 
         multipleHolderNameDetection = new MultipleHolderNameDetection(disputeManager);
@@ -107,6 +121,32 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         fullReportButton.setManaged(true);
 
         multipleHolderNameDetection.detectMultipleHolderNames();
+
+        validationExceptionListener = c -> {
+            c.next();
+            if (c.wasAdded()) {
+                showWarningForValidationExceptions(c.getAddedSubList());
+            }
+        };
+    }
+
+    protected void showWarningForValidationExceptions(List<? extends ValidationException> exceptions) {
+        exceptions.stream()
+                .filter(ex -> ex.getDispute() != null)
+                .filter(ex -> !ex.getDispute().isClosed()) // we show warnings only for open cases
+                .forEach(ex -> {
+                    Dispute dispute = ex.getDispute();
+                    if (ex instanceof TradeDataValidation.AddressException) {
+                        new Popup().width(900).warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                                dispute.getDonationAddressOfDelayedPayoutTx(),
+                                daoFacade.getAllDonationAddresses(),
+                                dispute.getTradeId(),
+                                ""))
+                                .show();
+                    } else {
+                        new Popup().width(900).warning(ex.getMessage()).show();
+                    }
+                });
     }
 
     @Override
@@ -117,6 +157,9 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         if (multipleHolderNameDetection.hasSuspiciousDisputesDetected()) {
             suspiciousDisputeDetected();
         }
+
+        disputeManager.getValidationExceptions().addListener(validationExceptionListener);
+        showWarningForValidationExceptions(disputeManager.getValidationExceptions());
     }
 
     @Override
@@ -124,6 +167,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         super.deactivate();
 
         multipleHolderNameDetection.removeListener(this);
+
+        disputeManager.getValidationExceptions().removeListener(validationExceptionListener);
     }
 
 
@@ -142,17 +187,13 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(dispute -> {
-            // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
-            if (!dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
-                return false;
-            }
-            boolean isOpen = !dispute.isClosed() && filterString.toLowerCase().equals("open");
-            return filterString.isEmpty() ||
-                    isOpen ||
-                    anyMatchOfFilterString(dispute, filterString);
-        });
+    protected DisputeView.FilterResult getFilterResult(Dispute dispute, String filterString) {
+        // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
+        if (!dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
+            return FilterResult.NO_MATCH;
+        }
+
+        return super.getFilterResult(dispute, filterString);
     }
 
     @Override

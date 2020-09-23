@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol.tasks.buyer;
 
-import bisq.core.trade.DelayedPayoutTxValidation;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -36,17 +36,13 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            DelayedPayoutTxValidation.validatePayoutTx(trade,
+            TradeDataValidation.validatePayoutTx(trade,
                     processModel.getPreparedDelayedPayoutTx(),
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
 
             complete();
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
-                DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.InvalidLockTimeException |
-                DelayedPayoutTxValidation.AmountMismatchException e) {
+        } catch (TradeDataValidation.ValidationException e) {
             failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);

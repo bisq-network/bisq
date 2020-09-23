@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -53,6 +54,8 @@ import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -89,11 +92,13 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                               TradeManager tradeManager,
                               ClosedTradableManager closedTradableManager,
                               OpenOfferManager openOfferManager,
-                              PubKeyRing pubKeyRing,
+                              DaoFacade daoFacade,
+                              KeyRing keyRing,
                               ArbitrationDisputeListService arbitrationDisputeListService,
+                              Config config,
                               PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, arbitrationDisputeListService, priceFeedService);
+                openOfferManager, daoFacade, keyRing, arbitrationDisputeListService, config, priceFeedService);
     }
 
 
@@ -135,7 +140,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     }
 
     @Override
-    protected Trade.DisputeState getDisputeState_StartedByPeer() {
+    protected Trade.DisputeState getDisputeStateStartedByPeer() {
         return Trade.DisputeState.DISPUTE_STARTED_BY_PEER;
     }
 

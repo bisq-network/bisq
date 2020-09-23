@@ -21,6 +21,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
@@ -36,6 +37,7 @@ import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 
@@ -46,6 +48,8 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
@@ -58,7 +62,10 @@ import org.bitcoinj.utils.Fiat;
 
 import javafx.beans.property.IntegerProperty;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import java.security.KeyPair;
 
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +73,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -81,7 +89,15 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final OpenOfferManager openOfferManager;
     protected final PubKeyRing pubKeyRing;
     protected final DisputeListService<T> disputeListService;
+    private final Config config;
     private final PriceFeedService priceFeedService;
+    protected final DaoFacade daoFacade;
+
+    @Getter
+    protected final ObservableList<TradeDataValidation.ValidationException> validationExceptions =
+            FXCollections.observableArrayList();
+    @Getter
+    private final KeyPair signatureKeyPair;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,8 +111,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
-                          PubKeyRing pubKeyRing,
+                          DaoFacade daoFacade,
+                          KeyRing keyRing,
                           DisputeListService<T> disputeListService,
+                          Config config,
                           PriceFeedService priceFeedService) {
         super(p2PService, walletsSetup);
 
@@ -105,8 +123,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
-        this.pubKeyRing = pubKeyRing;
+        this.daoFacade = daoFacade;
+        this.pubKeyRing = keyRing.getPubKeyRing();
+        signatureKeyPair = keyRing.getSignatureKeyPair();
         this.disputeListService = disputeListService;
+        this.config = config;
         this.priceFeedService = priceFeedService;
     }
 
@@ -178,7 +199,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     @Nullable
     public abstract NodeAddress getAgentNodeAddress(Dispute dispute);
 
-    protected abstract Trade.DisputeState getDisputeState_StartedByPeer();
+    protected abstract Trade.DisputeState getDisputeStateStartedByPeer();
 
     public abstract void cleanupDisputes();
 
@@ -209,7 +230,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeListService.getNrOfDisputes(isBuyer, contract);
     }
 
-    private T getDisputeList() {
+    protected T getDisputeList() {
         return disputeListService.getDisputeList();
     }
 
@@ -241,6 +262,24 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         tryApplyMessages();
         cleanupDisputes();
+
+        ObservableList<Dispute> disputes = getDisputeList().getList();
+        disputes.forEach(dispute -> {
+            try {
+                TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
+            } catch (TradeDataValidation.AddressException | TradeDataValidation.NodeAddressException e) {
+                log.error(e.toString());
+                validationExceptions.add(e);
+            }
+        });
+
+        TradeDataValidation.testIfAnyDisputeTriedReplay(disputes,
+                disputeReplayException -> {
+                    log.error(disputeReplayException.toString());
+                    validationExceptions.add(disputeReplayException);
+                });
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -308,9 +347,21 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         addMediationResultMessage(dispute);
+
+        try {
+            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
+        } catch (TradeDataValidation.AddressException |
+                TradeDataValidation.DisputeReplayException |
+                TradeDataValidation.NodeAddressException e) {
+            log.error(e.toString());
+            validationExceptions.add(e);
+        }
     }
 
-    // not dispute requester receives that from dispute agent
+    // Not-dispute-requester receives that msg from dispute agent
     protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -320,14 +371,33 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
+
+        Optional<Trade> optionalTrade = tradeManager.getTradeById(dispute.getTradeId());
+        if (!optionalTrade.isPresent()) {
+            return;
+        }
+
+        Trade trade = optionalTrade.get();
+        try {
+            TradeDataValidation.validatePayoutTx(trade,
+                    trade.getDelayedPayoutTx(),
+                    dispute,
+                    daoFacade,
+                    btcWalletService);
+        } catch (TradeDataValidation.ValidationException e) {
+            // The peer sent us an invalid donation address. We do not return here as we don't want to break
+            // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
+            // a popup displayed to react.
+            log.error("Donation address invalid. {}", e.toString());
+        }
+
         if (!isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
                     dispute.setStorage(disputeListService.getStorage());
                     disputeList.add(dispute);
-                    Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
-                    tradeOptional.ifPresent(trade -> trade.setDisputeState(getDisputeState_StartedByPeer()));
+                    trade.setDisputeState(getDisputeStateStartedByPeer());
                     errorMessage = null;
                 } else {
                     // valid case if both have opened a dispute and agent was not online.
@@ -516,6 +586,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.getSupportType());
         dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
+        dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
 
@@ -609,7 +680,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     // dispute agent send result to trader
-    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
+    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String summaryText) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
@@ -621,7 +692,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
-                text,
+                summaryText,
                 p2PService.getAddress());
 
         disputeResult.setChatMessage(chatMessage);
