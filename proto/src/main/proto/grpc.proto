@@ -73,7 +73,7 @@ message CreateOfferRequest {
 }
 
 message CreateOfferReply {
-    bool result = 1;
+    OfferInfo offer = 1;
 }
 
 message OfferInfo {
