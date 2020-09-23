@@ -47,7 +47,7 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     private static final int MAX_RESEND_ATTEMPTS = 7;
     private int delayInSec = 4;
     private int resendCounter = 0;
-    private DepositTxAndDelayedPayoutTxMessage depositTxAndDelayedPayoutTxMessage;
+    private DepositTxAndDelayedPayoutTxMessage message;
     private ChangeListener<MessageState> listener;
     private Timer timer;
 
@@ -57,20 +57,20 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
 
     @Override
     protected TradeMessage getMessage(String tradeId) {
-        if (depositTxAndDelayedPayoutTxMessage == null) {
+        if (message == null) {
             // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
             // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox
             // messages where only the one which gets processed by the peer would be removed we use the same uid. All
             // other data stays the same when we re-send the message at any time later.
             String deterministicId = tradeId + processModel.getMyNodeAddress().getFullAddress();
-            depositTxAndDelayedPayoutTxMessage = new DepositTxAndDelayedPayoutTxMessage(
+            message = new DepositTxAndDelayedPayoutTxMessage(
                     deterministicId,
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
                     checkNotNull(trade.getDepositTx()).bitcoinSerialize(),
                     checkNotNull(trade.getDelayedPayoutTx()).bitcoinSerialize());
         }
-        return depositTxAndDelayedPayoutTxMessage;
+        return message;
     }
 
     @Override
