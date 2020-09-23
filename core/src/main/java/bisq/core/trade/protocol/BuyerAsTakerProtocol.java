@@ -80,14 +80,14 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> handleTaskRunnerSuccess(BuyerEvent.STARTUP),
-                    this::handleTaskRunnerFault);
+                    errorMessage -> handleTaskRunnerFault(BuyerEvent.STARTUP, errorMessage));
 
             taskRunner.addTasks(BuyerSetupDepositTxListener.class);
             taskRunner.run();
         } else if (trade.isFiatSent() && !trade.isPayoutPublished()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> handleTaskRunnerSuccess(BuyerEvent.STARTUP),
-                    this::handleTaskRunnerFault);
+                    errorMessage -> handleTaskRunnerFault(BuyerEvent.STARTUP, errorMessage));
 
             taskRunner.addTasks(BuyerSetupPayoutTxListener.class);
 
@@ -127,21 +127,13 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         expectedPhase(Trade.Phase.INIT)
                 .on(TakerEvent.TAKE_OFFER)
                 .withTimeout(30)
-                .process(() -> {
-                    processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress());
-                    TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                            () -> handleTaskRunnerSuccess(TakerEvent.TAKE_OFFER),
-                            this::handleTaskRunnerFault);
-
-                    taskRunner.addTasks(
-                            ApplyFilter.class,
-                            TakerVerifyMakerFeePayment.class,
-                            CreateTakerFeeTx.class,
-                            BuyerAsTakerCreatesDepositTxInputs.class,
-                            TakerSendInputsForDepositTxRequest.class
-                    );
-                    taskRunner.run();
-                });
+                .addTasks(
+                        ApplyFilter.class,
+                        TakerVerifyMakerFeePayment.class,
+                        CreateTakerFeeTx.class,
+                        BuyerAsTakerCreatesDepositTxInputs.class,
+                        TakerSendInputsForDepositTxRequest.class
+                ).run();
     }
 
 
@@ -154,22 +146,15 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
-                .process(() -> {
-                    TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                            () -> handleTaskRunnerSuccess(message),
-                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
-                    taskRunner.addTasks(
-                            TakerProcessesInputsForDepositTxResponse.class,
-                            ApplyFilter.class,
-                            VerifyPeersAccountAgeWitness.class,
-                            TakerVerifyAndSignContract.class,
-                            TakerPublishFeeTx.class,
-                            BuyerAsTakerSignsDepositTx.class,
-                            BuyerSetupDepositTxListener.class,
-                            BuyerAsTakerSendsDepositTxMessage.class
-                    );
-                    taskRunner.run();
-                });
+                .addTasks(TakerProcessesInputsForDepositTxResponse.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class,
+                        TakerVerifyAndSignContract.class,
+                        TakerPublishFeeTx.class,
+                        BuyerAsTakerSignsDepositTx.class,
+                        BuyerSetupDepositTxListener.class,
+                        BuyerAsTakerSendsDepositTxMessage.class)
+                .run();
     }
 
     private void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
@@ -177,18 +162,13 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
-                .process(() -> {
-                    TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                            () -> handleTaskRunnerSuccess(message),
-                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
-                    taskRunner.addTasks(
-                            BuyerProcessDelayedPayoutTxSignatureRequest.class,
-                            BuyerVerifiesPreparedDelayedPayoutTx.class,
-                            BuyerSignsDelayedPayoutTx.class,
-                            BuyerSendsDelayedPayoutTxSignatureResponse.class
-                    );
-                    taskRunner.run();
-                });
+                .addTasks(
+                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
+                        BuyerVerifiesPreparedDelayedPayoutTx.class,
+                        BuyerSignsDelayedPayoutTx.class,
+                        BuyerSendsDelayedPayoutTxSignatureResponse.class
+                )
+                .run();
     }
 
     // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
@@ -212,21 +192,17 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                             sendAckMessage(message, true, null);
                             processModel.removeMailboxMessageAfterProcessing(trade);
                         })
-                .process(() -> {
-                    TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                            () -> {
-                                stopTimeout();
-                                handleTaskRunnerSuccess(message);
-                            },
-                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
-                    taskRunner.addTasks(
-                            BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
-                            BuyerVerifiesFinalDelayedPayoutTx.class,
-                            PublishTradeStatistics.class
-                    );
-                    taskRunner.run();
-                    processModel.witnessDebugLog(buyerAsTakerTrade);
-                });
+                .setTaskRunner(new TradeTaskRunner(buyerAsTakerTrade,
+                        () -> {
+                            stopTimeout();
+                            handleTaskRunnerSuccess(message);
+                        },
+                        errorMessage -> handleTaskRunnerFault(message, errorMessage)))
+                .addTasks(BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                        BuyerVerifiesFinalDelayedPayoutTx.class,
+                        PublishTradeStatistics.class)
+                .run();
+        //processModel.witnessDebugLog(buyerAsTakerTrade);
     }
 
 
@@ -237,31 +213,29 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        BuyerEvent event = BuyerEvent.PAYMENT_SENT;
         expectedPhase(Trade.Phase.DEPOSIT_CONFIRMED)
-                .on(BuyerEvent.PAYMENT_SENT)
+                .on(event)
                 .preCondition(!wasDisputed())
-                .process(() -> {
-                    //todo
-                    buyerAsTakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
+                .setTaskRunner(new TradeTaskRunner(buyerAsTakerTrade,
+                        () -> {
+                            resultHandler.handleResult();
+                            handleTaskRunnerSuccess(event);
+                        },
+                        (errorMessage) -> {
+                            errorMessageHandler.handleErrorMessage(errorMessage);
+                            handleTaskRunnerFault(event, errorMessage);
+                        }))
+                .addTasks(ApplyFilter.class,
+                        TakerVerifyMakerFeePayment.class,
+                        BuyerSignPayoutTx.class,
+                        BuyerSetupPayoutTxListener.class,
+                        BuyerSendCounterCurrencyTransferStartedMessage.class
+                )
+                .run();
 
-                    TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                            () -> {
-                                resultHandler.handleResult();
-                                handleTaskRunnerSuccess(BuyerEvent.PAYMENT_SENT);
-                            },
-                            (errorMessage) -> {
-                                errorMessageHandler.handleErrorMessage(errorMessage);
-                                handleTaskRunnerFault(errorMessage);
-                            });
-                    taskRunner.addTasks(
-                            ApplyFilter.class,
-                            TakerVerifyMakerFeePayment.class,
-                            BuyerSignPayoutTx.class,
-                            BuyerSetupPayoutTxListener.class,
-                            BuyerSendCounterCurrencyTransferStartedMessage.class
-                    );
-                    taskRunner.run();
-                });
+        //todo
+        // buyerAsTakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
     }
 
 
@@ -273,16 +247,11 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         expectedPhases(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
                 .on(message)
                 .from(peer)
-                .process(() -> {
-                    TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                            () -> handleTaskRunnerSuccess(message),
-                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
+                .addTasks(
+                        BuyerProcessPayoutTxPublishedMessage.class
+                )
+                .run();
 
-                    taskRunner.addTasks(
-                            BuyerProcessPayoutTxPublishedMessage.class
-                    );
-                    taskRunner.run();
-                });
     }
 
 

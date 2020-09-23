@@ -51,6 +51,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.taskrunner.Task;
 
 import javafx.beans.value.ChangeListener;
 
@@ -148,15 +149,15 @@ public abstract class TradeProtocol {
             errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
             return;
         }
-
+        DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> {
                     resultHandler.handleResult();
-                    handleTaskRunnerSuccess(DisputeEvent.MEDIATION_RESULT_ACCEPTED);
+                    handleTaskRunnerSuccess(event);
                 },
                 (errorMessage) -> {
                     errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
+                    handleTaskRunnerFault(event, errorMessage);
                 });
         taskRunner.addTasks(
                 ApplyFilter.class,
@@ -175,14 +176,15 @@ public abstract class TradeProtocol {
             return;
         }
 
+        DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
         TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                 () -> {
                     resultHandler.handleResult();
-                    handleTaskRunnerSuccess(DisputeEvent.MEDIATION_RESULT_ACCEPTED);
+                    handleTaskRunnerSuccess(event);
                 },
                 (errorMessage) -> {
                     errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
+                    handleTaskRunnerFault(event, errorMessage);
                 });
         taskRunner.addTasks(
                 ApplyFilter.class,
@@ -347,14 +349,17 @@ public abstract class TradeProtocol {
         sendAckMessage(tradeMessage, true, null);
     }
 
-    protected void handleTaskRunnerFault(String errorMessage) {
-        handleTaskRunnerFault(null, errorMessage);
-    }
-
     protected void handleTaskRunnerFault(@Nullable TradeMessage tradeMessage, String errorMessage) {
-        log.error(errorMessage);
+        log.error("Task runner failed on {} with error {}", tradeMessage, errorMessage);
 
         sendAckMessage(tradeMessage, false, errorMessage);
+
+        cleanupTradeOnFault();
+        cleanup();
+    }
+
+    protected void handleTaskRunnerFault(@Nullable Event event, String errorMessage) {
+        log.error("Task runner failed on {} with error {}", event, errorMessage);
 
         cleanupTradeOnFault();
         cleanup();
@@ -451,7 +456,7 @@ public abstract class TradeProtocol {
     class FluentProcess {
         private final Trade trade;
         @Nullable
-        private TradeMessage tradeMessage;
+        private TradeMessage message;
         private final Set<Trade.Phase> expectedPhases = new HashSet<>();
         private final Set<Boolean> preConditions = new HashSet<>();
         @Nullable
@@ -459,6 +464,7 @@ public abstract class TradeProtocol {
         private Runnable preConditionFailedHandler;
         private int timeoutSec;
         private NodeAddress peersNodeAddress;
+        private TradeTaskRunner taskRunner;
 
         public FluentProcess(Trade trade,
                              Trade.Phase expectedPhase) {
@@ -472,9 +478,9 @@ public abstract class TradeProtocol {
             this.expectedPhases.addAll(Set.of(expectedPhases));
         }
 
-        protected FluentProcess process(Runnable runnable) {
+        public FluentProcess run() {
             boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
-            boolean isTradeIdValid = tradeMessage == null || isTradeIdValid(processModel.getOfferId(), tradeMessage);
+            boolean isTradeIdValid = message == null || isTradeIdValid(processModel.getOfferId(), message);
 
             if (isPhaseValid() && allPreConditionsMet && isTradeIdValid) {
                 if (timeoutSec > 0) {
@@ -485,22 +491,54 @@ public abstract class TradeProtocol {
                     processModel.setTempTradingPeerNodeAddress(peersNodeAddress);
                 }
 
-                if (tradeMessage != null) {
-                    processModel.setTradeMessage(tradeMessage);
+                if (message != null) {
+                    processModel.setTradeMessage(message);
                 }
 
-                runnable.run();
+                taskRunner.run();
             }
+
             if (!allPreConditionsMet && preConditionFailedHandler != null) {
                 preConditionFailedHandler.run();
             }
+
+            return this;
+        }
+
+       /* protected FluentProcess defaultTaskRunner(Consumer<TradeTaskRunner> consumer) {
+            taskRunner = new TradeTaskRunner(trade,
+                    () -> handleTaskRunnerSuccess(message),
+                    errorMessage -> handleTaskRunnerFault(message, errorMessage));
+
+            consumer.accept(taskRunner);
+
+            return this;
+        }*/
+
+        @SafeVarargs
+        public final FluentProcess addTasks(Class<? extends Task<Trade>>... tasks) {
+            if (taskRunner == null) {
+                if (message != null) {
+                    taskRunner = new TradeTaskRunner(trade,
+                            () -> handleTaskRunnerSuccess(message),
+                            errorMessage -> handleTaskRunnerFault(message, errorMessage));
+                } else if (event != null) {
+                    taskRunner = new TradeTaskRunner(trade,
+                            () -> handleTaskRunnerSuccess(event),
+                            errorMessage -> handleTaskRunnerFault(event, errorMessage));
+                } else {
+                    throw new IllegalStateException("addTasks must not be called without message or event " +
+                            "set in case no taskRunner has been created yet");
+                }
+            }
+            taskRunner.addTasks(tasks);
             return this;
         }
 
         private boolean isPhaseValid() {
             boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getPhase());
-            String trigger = tradeMessage != null ?
-                    tradeMessage.getClass().getSimpleName() :
+            String trigger = message != null ?
+                    message.getClass().getSimpleName() :
                     event != null ?
                             event.name() + " event" :
                             "";
@@ -532,7 +570,7 @@ public abstract class TradeProtocol {
         }
 
         public FluentProcess on(TradeMessage tradeMessage) {
-            this.tradeMessage = tradeMessage;
+            this.message = tradeMessage;
             return this;
         }
 
@@ -554,6 +592,11 @@ public abstract class TradeProtocol {
 
         public FluentProcess from(NodeAddress peersNodeAddress) {
             this.peersNodeAddress = peersNodeAddress;
+            return this;
+        }
+
+        public FluentProcess setTaskRunner(TradeTaskRunner taskRunner) {
+            this.taskRunner = taskRunner;
             return this;
         }
     }
