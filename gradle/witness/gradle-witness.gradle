@@ -42,7 +42,7 @@ dependencyVerification {
         'com.google.zxing:core:11aae8fd974ab25faa8208be50468eb12349cd239e93e7c797377fa13e381729',
         'com.google.zxing:javase:0ec23e2ec12664ddd6347c8920ad647bb3b9da290f897a88516014b56cc77eb9',
         'com.googlecode.jcsv:jcsv:73ca7d715e90c8d2c2635cc284543b038245a34f70790660ed590e157b8714a2',
-        'com.jfoenix:jfoenix:4739e37a05e67c3bc9d5b391a1b93717b5a48fa872992616b0964d3f827f8fe6',
+        'com.jfoenix:jfoenix:8060235fec5eb49617ec8d81d379e8c945f6cc722d0645e97190045100de2084',
         'com.lambdaworks:scrypt:9a82d218099fb14c10c0e86e7eefeebd8c104de920acdc47b8b4b7a686fb73b4',
         'com.madgag.spongycastle:core:8d6240b974b0aca4d3da9c7dd44d42339d8a374358aca5fc98e50a995764511f',
         'com.nativelibs4java:bridj:101bcd9b6637e6bc16e56deb3daefba62b1f5e8e9e37e1b3e56e3b5860d659cf',

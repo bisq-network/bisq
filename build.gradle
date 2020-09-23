@@ -56,7 +56,7 @@ configure(subprojects) {
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
-        jfoenixVersion = '9.0.6'
+        jfoenixVersion = '9.0.10'
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
