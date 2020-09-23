@@ -203,7 +203,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         fromAny(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
                 .on(message)
                 .from(peer)
-                .condition(trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null,
+                .preCondition(trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null,
                         () -> {
                             log.warn("We received a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
                                     "delayed payout tx so we ignore the message. This can happen if the ACK message to the peer did not " +
@@ -239,7 +239,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         from(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(BuyerEvent.PAYMENT_SENT)
-                .condition(!wasDisputed())
+                .preCondition(!wasDisputed())
                 .process(() -> {
                     //todo
                     buyerAsTakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);

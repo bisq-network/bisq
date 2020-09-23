@@ -536,12 +536,12 @@ public abstract class TradeProtocol {
             return this;
         }
 
-        public FluentProcess condition(boolean preCondition) {
+        public FluentProcess preCondition(boolean preCondition) {
             preConditions.add(preCondition);
             return this;
         }
 
-        public FluentProcess condition(boolean preCondition, Runnable conditionFailedHandler) {
+        public FluentProcess preCondition(boolean preCondition, Runnable conditionFailedHandler) {
             preConditions.add(preCondition);
             this.preConditionFailedHandler = conditionFailedHandler;
             return this;

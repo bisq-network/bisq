@@ -188,7 +188,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         from(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(message)
                 .from(peer)
-                .condition(trade.getPayoutTx() == null,
+                .preCondition(trade.getPayoutTx() == null,
                         () -> {
                             log.warn("We received a CounterCurrencyTransferStartedMessage but we have already created the payout tx " +
                                     "so we ignore the message. This can happen if the ACK message to the peer did not " +
@@ -228,7 +228,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         from(Trade.Phase.FIAT_SENT)
                 .on(SellerEvent.PAYMENT_RECEIVED)
-                .condition(!wasDisputed())
+                .preCondition(!wasDisputed())
                 .process(() -> {
                     sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
                     TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
