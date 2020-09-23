@@ -234,8 +234,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                     MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
                     BuyerSignPayoutTx.class,
-                    BuyerSendCounterCurrencyTransferStartedMessage.class,
-                    BuyerSetupPayoutTxListener.class
+                    BuyerSetupPayoutTxListener.class,
+                    BuyerSendCounterCurrencyTransferStartedMessage.class
             );
             taskRunner.run();
         } else {

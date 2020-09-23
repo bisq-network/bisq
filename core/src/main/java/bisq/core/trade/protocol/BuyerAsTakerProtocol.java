@@ -198,7 +198,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
-
     // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
     // be also received from the network once published.
     // Now we send the delayed payout tx as well and with that this message is mandatory for continuing the protocol.
@@ -263,8 +262,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     BuyerSignPayoutTx.class,
-                    BuyerSendCounterCurrencyTransferStartedMessage.class,
-                    BuyerSetupPayoutTxListener.class
+                    BuyerSetupPayoutTxListener.class,
+                    BuyerSendCounterCurrencyTransferStartedMessage.class
             );
             taskRunner.run();
         } else {
