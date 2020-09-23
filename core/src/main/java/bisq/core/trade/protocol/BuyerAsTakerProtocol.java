@@ -57,7 +57,6 @@ import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -125,8 +124,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
     @Override
     public void takeAvailableOffer() {
-        ifInPhase(Trade.Phase.INIT)
-                .run(() -> {
+        from(Trade.Phase.INIT)
+                .onEvent(TakerEvent.TAKE_OFFER)
+                .process(() -> {
                     processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress());
                     TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                             () -> handleTaskRunnerSuccess("takeAvailableOffer"),
@@ -153,8 +153,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(InputsForDepositTxResponse tradeMessage, NodeAddress sender) {
-        ifInPhase(Trade.Phase.INIT, tradeMessage)
-                .run(() -> {
+        from(Trade.Phase.INIT)
+                .onMessage(tradeMessage)
+                .process(() -> {
                     processModel.setTradeMessage(tradeMessage);
                     processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -178,8 +179,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     }
 
     private void handle(DelayedPayoutTxSignatureRequest tradeMessage, NodeAddress sender) {
-        ifInPhase(Trade.Phase.TAKER_FEE_PUBLISHED, tradeMessage)
-                .run(() -> {
+        from(Trade.Phase.TAKER_FEE_PUBLISHED)
+                .onMessage(tradeMessage)
+                .process(() -> {
                     processModel.setTradeMessage(tradeMessage);
                     processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -208,17 +210,17 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
     // in the hope to reach the buyer directly.
     private void handle(DepositTxAndDelayedPayoutTxMessage tradeMessage, NodeAddress peerNodeAddress) {
-        if (trade.getDepositTx() != null && trade.getDelayedPayoutTx() != null) {
-            log.warn("We received a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
-                    "delayed payout tx so we ignore the message. This can happen if the ACK message to the peer did not " +
-                    "arrive and the peer repeats sending us the message. We send another ACK msg.");
-            sendAckMessage(tradeMessage, true, null);
-            processModel.removeMailboxMessageAfterProcessing(trade);
-            return;
-        }
-
-        ifInPhase(Trade.Phase.TAKER_FEE_PUBLISHED, tradeMessage).orInPhase(Trade.Phase.DEPOSIT_PUBLISHED)
-                .run(() -> {
+        fromAny(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
+                .onMessage(tradeMessage)
+                .condition(trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null,
+                        () -> {
+                            log.warn("We received a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
+                                    "delayed payout tx so we ignore the message. This can happen if the ACK message to the peer did not " +
+                                    "arrive and the peer repeats sending us the message. We send another ACK msg.");
+                            sendAckMessage(tradeMessage, true, null);
+                            processModel.removeMailboxMessageAfterProcessing(trade);
+                        })
+                .process(() -> {
                     processModel.setTradeMessage(tradeMessage);
                     processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
                     TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
@@ -231,9 +233,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                     );
                     taskRunner.run();
                     processModel.witnessDebugLog(buyerAsTakerTrade);
-                }).otherWise(() -> {
-            log.warn("");
-        });
+                });
     }
 
 
@@ -244,11 +244,10 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkArgument(!wasDisputed(), "A call to onFiatPaymentStarted is not permitted once a " +
-                "dispute has been opened.");
-
-        ifInPhase(Trade.Phase.DEPOSIT_CONFIRMED)
-                .run(() -> {
+        from(Trade.Phase.DEPOSIT_CONFIRMED)
+                .onEvent(BuyerEvent.PAYMENT_SENT)
+                .condition(!wasDisputed())
+                .process(() -> {
                     buyerAsTakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
                     TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                             () -> {
@@ -276,8 +275,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
-        ifInPhase(Trade.Phase.FIAT_SENT, tradeMessage).orInPhase(Trade.Phase.PAYOUT_PUBLISHED)
-                .run(() -> {
+        fromAny(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
+                .onMessage(tradeMessage)
+                .process(() -> {
                     processModel.setTradeMessage(tradeMessage);
                     processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 

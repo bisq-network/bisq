@@ -68,6 +68,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class TradeProtocol {
+    interface Event {
+        String name();
+    }
+
     private static final long TIMEOUT = 180;
 
     protected final ProcessModel processModel;
@@ -412,64 +416,98 @@ public abstract class TradeProtocol {
         }
     }
 
-    protected TradeStateValidation ifInPhase(Trade.Phase phase) {
-        return new TradeStateValidation(trade, phase, null);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // FluentProcess
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected FluentProcess from(Trade.Phase phase) {
+        return new FluentProcess(trade, phase);
     }
 
-    protected TradeStateValidation ifInPhase(Trade.Phase phase,
-                                             @Nullable TradeMessage tradeMessage) {
-        return new TradeStateValidation(trade, phase, tradeMessage);
+    protected FluentProcess fromAny(Trade.Phase... phase) {
+        return new FluentProcess(trade, phase);
     }
 
-    static class TradeStateValidation {
+    static class FluentProcess {
         private final Trade trade;
-        private final Trade.Phase expectedPhase;
         @Nullable
-        private final TradeMessage tradeMessage;
-        private Set<Trade.Phase> alternativePhase = new HashSet<>();
+        private TradeMessage tradeMessage;
+        private final Set<Trade.Phase> expectedPhases = new HashSet<>();
+        @Nullable
+        private Event event;
+        private boolean condition = true;
+        private Runnable conditionFailedHandler;
 
-        protected TradeStateValidation run(Runnable runnable) {
-            if (isValidPhase()) {
+        protected FluentProcess process(Runnable runnable) {
+            if (isPhaseValid() && condition) {
                 runnable.run();
+            }
+            if (!condition && conditionFailedHandler != null) {
+                conditionFailedHandler.run();
             }
             return this;
         }
 
-        protected void otherWise(Runnable runnable) {
-            runnable.run();
-        }
-
-        public TradeStateValidation(Trade trade,
-                                    Trade.Phase expectedPhase,
-                                    @Nullable TradeMessage tradeMessage) {
+        public FluentProcess(Trade trade,
+                             Trade.Phase expectedPhase) {
             this.trade = trade;
-            this.expectedPhase = expectedPhase;
-            this.tradeMessage = tradeMessage;
+            this.expectedPhases.add(expectedPhase);
         }
 
-        public boolean isValidPhase() {
-            boolean isValidPhase = trade.getPhase() == expectedPhase ||
-                    (alternativePhase.stream().anyMatch(e -> e == trade.getPhase()));
+        public FluentProcess(Trade trade,
+                             Trade.Phase... expectedPhases) {
+            this.trade = trade;
+            this.expectedPhases.addAll(Set.of(expectedPhases));
+        }
 
-            if (!isValidPhase) {
-                if (tradeMessage != null) {
-                    log.error("We received a {} but we are not in the correct phase. Expected phase={}, Trade phase={}, Trade state= {} ",
-                            tradeMessage.getClass().getSimpleName(),
-                            expectedPhase,
-                            trade.getPhase(),
-                            trade.getState());
-                } else {
-                    log.error("We are not in the correct phase. Expected phase={}, Trade phase={}, Trade state= {} ",
-                            expectedPhase,
-                            trade.getPhase(),
-                            trade.getState());
-                }
+        private boolean isPhaseValid() {
+            boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getPhase());
+            String trigger = tradeMessage != null ?
+                    tradeMessage.getClass().getSimpleName() :
+                    event != null ?
+                            event.name() + " event" :
+                            "";
+            if (isPhaseValid) {
+                log.info("We received {} at phase {} and state {}",
+                        trigger,
+                        trade.getPhase(),
+                        trade.getState());
+            } else {
+                log.error("We received {} but we are are not in the correct phase. Expected phases={}, " +
+                                "Trade phase={}, Trade state= {} ",
+                        trigger,
+                        expectedPhases,
+                        trade.getPhase(),
+                        trade.getState());
             }
-            return isValidPhase;
+
+            return isPhaseValid;
         }
 
-        public TradeStateValidation orInPhase(Trade.Phase phase) {
-            alternativePhase.add(phase);
+        public FluentProcess orInPhase(Trade.Phase phase) {
+            expectedPhases.add(phase);
+            return this;
+        }
+
+        public FluentProcess onEvent(Event event) {
+            this.event = event;
+            return this;
+        }
+
+        public FluentProcess onMessage(TradeMessage tradeMessage) {
+            this.tradeMessage = tradeMessage;
+            return this;
+        }
+
+        public FluentProcess condition(boolean condition) {
+            this.condition = condition;
+            return this;
+        }
+
+        public FluentProcess condition(boolean condition, Runnable conditionFailedHandler) {
+            this.condition = condition;
+            this.conditionFailedHandler = conditionFailedHandler;
             return this;
         }
     }

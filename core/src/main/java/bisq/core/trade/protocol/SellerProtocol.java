@@ -22,4 +22,8 @@ import bisq.common.handlers.ResultHandler;
 
 public interface SellerProtocol {
     void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
+
+    enum SellerEvent implements TradeProtocol.Event {
+        PAYMENT_RECEIVED
+    }
 }
