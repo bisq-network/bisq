@@ -96,7 +96,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
     @Override
     public void takeAvailableOffer() {
-        from(Trade.Phase.INIT)
+        expectedPhase(Trade.Phase.INIT)
                 .on(TakerEvent.TAKE_OFFER)
                 .withTimeout(30)
                 .process(() -> {
@@ -124,7 +124,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(InputsForDepositTxResponse message, NodeAddress peer) {
-        from(Trade.Phase.INIT)
+        expectedPhase(Trade.Phase.INIT)
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
@@ -150,7 +150,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     }
 
     private void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
-        from(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expectedPhase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .on(message)
                 .from(peer)
                 .process(() -> {
@@ -185,7 +185,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
-        from(Trade.Phase.DEPOSIT_CONFIRMED)
+        expectedPhase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(message)
                 .from(peer)
                 .preCondition(trade.getPayoutTx() == null,
@@ -226,7 +226,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        from(Trade.Phase.FIAT_SENT)
+        expectedPhase(Trade.Phase.FIAT_SENT)
                 .on(SellerEvent.PAYMENT_RECEIVED)
                 .preCondition(!wasDisputed())
                 .process(() -> {

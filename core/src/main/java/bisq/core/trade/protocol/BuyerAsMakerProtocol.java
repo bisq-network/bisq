@@ -115,7 +115,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     public void handleTakeOfferRequest(InputsForDepositTxRequest message,
                                        NodeAddress peer,
                                        ErrorMessageHandler errorMessageHandler) {
-        from(Trade.Phase.INIT)
+        expectedPhase(Trade.Phase.INIT)
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
@@ -147,7 +147,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        from(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expectedPhase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
@@ -212,7 +212,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        from(Trade.Phase.DEPOSIT_CONFIRMED)
+        expectedPhase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(BuyerEvent.PAYMENT_SENT)
                 .preCondition(!wasDisputed())
                 .process(() -> {

@@ -440,7 +440,7 @@ public abstract class TradeProtocol {
     // FluentProcess
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected FluentProcess from(Trade.Phase phase) {
+    protected FluentProcess expectedPhase(Trade.Phase phase) {
         return new FluentProcess(trade, phase);
     }
 

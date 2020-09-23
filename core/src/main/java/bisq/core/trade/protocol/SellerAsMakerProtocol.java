@@ -93,7 +93,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     public void handleTakeOfferRequest(InputsForDepositTxRequest message,
                                        NodeAddress peer,
                                        ErrorMessageHandler errorMessageHandler) {
-        from(Trade.Phase.INIT)
+        expectedPhase(Trade.Phase.INIT)
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
@@ -126,7 +126,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(DepositTxMessage message, NodeAddress peer) {
-        from(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expectedPhase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
@@ -146,7 +146,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     }
 
     private void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
-        from(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expectedPhase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .on(message)
                 .from(peer)
                 .process(() -> {
@@ -176,7 +176,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
-        from(Trade.Phase.DEPOSIT_CONFIRMED)
+        expectedPhase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(message)
                 .from(peer)
                 .preCondition(trade.getPayoutTx() == null,
@@ -208,7 +208,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        from(Trade.Phase.FIAT_SENT)
+        expectedPhase(Trade.Phase.FIAT_SENT)
                 .on(SellerEvent.PAYMENT_RECEIVED)
                 .preCondition(!wasDisputed())
                 .process(() -> {

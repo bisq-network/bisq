@@ -124,7 +124,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
     @Override
     public void takeAvailableOffer() {
-        from(Trade.Phase.INIT)
+        expectedPhase(Trade.Phase.INIT)
                 .on(TakerEvent.TAKE_OFFER)
                 .withTimeout(30)
                 .process(() -> {
@@ -150,7 +150,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(InputsForDepositTxResponse message, NodeAddress peer) {
-        from(Trade.Phase.INIT)
+        expectedPhase(Trade.Phase.INIT)
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
@@ -173,7 +173,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     }
 
     private void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        from(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expectedPhase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .on(message)
                 .from(peer)
                 .withTimeout(30)
@@ -237,7 +237,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        from(Trade.Phase.DEPOSIT_CONFIRMED)
+        expectedPhase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .on(BuyerEvent.PAYMENT_SENT)
                 .preCondition(!wasDisputed())
                 .process(() -> {
