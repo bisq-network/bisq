@@ -133,7 +133,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         CreateTakerFeeTx.class,
                         BuyerAsTakerCreatesDepositTxInputs.class,
                         TakerSendInputsForDepositTxRequest.class
-                ).run();
+                ).runTasks();
     }
 
 
@@ -154,7 +154,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerAsTakerSignsDepositTx.class,
                         BuyerSetupDepositTxListener.class,
                         BuyerAsTakerSendsDepositTxMessage.class)
-                .run();
+                .runTasks();
     }
 
     private void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
@@ -168,7 +168,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerSignsDelayedPayoutTx.class,
                         BuyerSendsDelayedPayoutTxSignatureResponse.class
                 )
-                .run();
+                .runTasks();
     }
 
     // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
@@ -201,7 +201,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 .addTasks(BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
                         BuyerVerifiesFinalDelayedPayoutTx.class,
                         PublishTradeStatistics.class)
-                .run();
+                .runTasks();
         //processModel.witnessDebugLog(buyerAsTakerTrade);
     }
 
@@ -232,7 +232,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerSetupPayoutTxListener.class,
                         BuyerSendCounterCurrencyTransferStartedMessage.class
                 )
-                .run();
+                .runTasks();
 
         //todo
         // buyerAsTakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
@@ -250,7 +250,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 .addTasks(
                         BuyerProcessPayoutTxPublishedMessage.class
                 )
-                .run();
+                .runTasks();
 
     }
 

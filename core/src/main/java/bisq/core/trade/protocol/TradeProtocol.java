@@ -478,7 +478,7 @@ public abstract class TradeProtocol {
             this.expectedPhases.addAll(Set.of(expectedPhases));
         }
 
-        public FluentProcess run() {
+        public FluentProcess runTasks() {
             boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
             boolean isTradeIdValid = message == null || isTradeIdValid(processModel.getOfferId(), message);
 

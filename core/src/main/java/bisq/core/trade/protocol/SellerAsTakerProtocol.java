@@ -105,7 +105,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                         CreateTakerFeeTx.class, //
                         SellerAsTakerCreatesDepositTxInputs.class,
                         TakerSendInputsForDepositTxRequest.class
-                ).run();
+                ).runTasks();
     }
 
 
@@ -128,7 +128,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerCreatesDelayedPayoutTx.class,
                         SellerSendDelayedPayoutTxSignatureRequest.class
                 )
-                .run();
+                .runTasks();
     }
 
     private void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
@@ -143,7 +143,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerPublishesDepositTx.class,
                         PublishTradeStatistics.class
                 )
-                .run();
+                .runTasks();
         /*
                 .addTasks(() -> {
                     // We stop timeout here and don't start a new one as the
@@ -193,7 +193,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                         ApplyFilter.class,
                         TakerVerifyMakerFeePayment.class
                 )
-                .run();
+                .runTasks();
     }
 
 
@@ -222,7 +222,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
                         SellerSendPayoutTxPublishedMessage.class //TODO add repeated msg send, check UI
-                ).run();
+                ).runTasks();
         //sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
     }
 

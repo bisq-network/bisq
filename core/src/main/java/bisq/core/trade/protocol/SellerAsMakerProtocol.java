@@ -113,7 +113,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerAsMakerCreatesUnsignedDepositTx.class,
                         SellerAsMakerSendsInputsForDepositTxResponse.class
                 )
-                .run();
+                .runTasks();
     }
 
 
@@ -132,7 +132,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerCreatesDelayedPayoutTx.class,
                         SellerSendDelayedPayoutTxSignatureRequest.class
                 )
-                .run();
+                .runTasks();
     }
 
     private void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
@@ -153,7 +153,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerPublishesDepositTx.class,
                         PublishTradeStatistics.class
                 )
-                .run();
+                .runTasks();
 
         //processModel.witnessDebugLog(sellerAsMakerTrade);
     }
@@ -180,7 +180,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         ApplyFilter.class,
                         MakerVerifyTakerFeePayment.class
                 )
-                .run();
+                .runTasks();
     }
 
 
@@ -209,7 +209,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
                         SellerSendPayoutTxPublishedMessage.class
-                ).run();
+                ).runTasks();
         // sellerAsMakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
     }
 

@@ -136,7 +136,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerSetupDepositTxListener.class,
                         BuyerAsMakerSendsInputsForDepositTxResponse.class
                 )
-                .run();
+                .runTasks();
     }
 
 
@@ -154,7 +154,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerVerifiesPreparedDelayedPayoutTx.class,
                         BuyerSignsDelayedPayoutTx.class,
                         BuyerSendsDelayedPayoutTxSignatureResponse.class
-                ).run();
+                ).runTasks();
     }
 
     // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
@@ -189,7 +189,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerVerifiesFinalDelayedPayoutTx.class,
                         PublishTradeStatistics.class
                 )
-                .run();
+                .runTasks();
 
 //processModel.witnessDebugLog(buyerAsMakerTrade);
 
@@ -222,7 +222,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         BuyerSetupPayoutTxListener.class,
                         BuyerSendCounterCurrencyTransferStartedMessage.class
                 )
-                .run();
+                .runTasks();
 
         //  buyerAsMakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
     }
@@ -239,7 +239,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 .addTasks(
                         BuyerProcessPayoutTxPublishedMessage.class
                 )
-                .run();
+                .runTasks();
     }
 
 
