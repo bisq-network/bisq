@@ -44,7 +44,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class SellerProtocol extends TradeProtocol {
+public abstract class SellerProtocol extends MediationProtocol {
     enum SellerEvent implements TradeProtocol.Event {
         PAYMENT_RECEIVED
     }

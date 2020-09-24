@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class BuyerProtocol extends TradeProtocol {
+public abstract class BuyerProtocol extends MediationProtocol {
     enum BuyerEvent implements TradeProtocol.Event {
         STARTUP,
         PAYMENT_SENT

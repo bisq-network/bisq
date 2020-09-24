@@ -22,20 +22,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
-import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.protocol.tasks.ApplyFilter;
-import bisq.core.trade.protocol.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.tasks.mediation.BroadcastMediatedPayoutTx;
-import bisq.core.trade.protocol.tasks.mediation.FinalizeMediatedPayoutTx;
-import bisq.core.trade.protocol.tasks.mediation.ProcessMediatedPayoutSignatureMessage;
-import bisq.core.trade.protocol.tasks.mediation.ProcessMediatedPayoutTxPublishedMessage;
-import bisq.core.trade.protocol.tasks.mediation.SendMediatedPayoutSignatureMessage;
-import bisq.core.trade.protocol.tasks.mediation.SendMediatedPayoutTxPublishedMessage;
-import bisq.core.trade.protocol.tasks.mediation.SetupMediatedPayoutTxListener;
-import bisq.core.trade.protocol.tasks.mediation.SignMediatedPayoutTx;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
@@ -48,8 +35,6 @@ import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.taskrunner.Task;
 
@@ -93,18 +78,18 @@ public abstract class TradeProtocol {
         this.trade = trade;
         this.processModel = trade.getProcessModel();
 
-        decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
+        decryptedDirectMessageListener = (decryptedMessageWithPubKey, peer) -> {
             // We check the sig only as soon we have stored the peers pubKeyRing.
             PubKeyRing tradingPeerPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
                 if (networkEnvelope instanceof TradeMessage) {
-                    TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-                    nonEmptyStringOf(tradeMessage.getTradeId());
+                    TradeMessage message = (TradeMessage) networkEnvelope;
+                    nonEmptyStringOf(message.getTradeId());
 
-                    if (tradeMessage.getTradeId().equals(processModel.getOfferId())) {
-                        doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
+                    if (message.getTradeId().equals(processModel.getOfferId())) {
+                        doHandleDecryptedMessage(message, peer);
                     }
                 } else if (networkEnvelope instanceof AckMessage) {
                     AckMessage ackMessage = (AckMessage) networkEnvelope;
@@ -120,10 +105,10 @@ public abstract class TradeProtocol {
 
                         if (ackMessage.isSuccess()) {
                             log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
-                                    ackMessage.getSourceMsgClassName(), peersNodeAddress, ackMessage.getSourceId(), ackMessage.getSourceUid());
+                                    ackMessage.getSourceMsgClassName(), peer, ackMessage.getSourceId(), ackMessage.getSourceUid());
                         } else {
                             log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
-                                    ackMessage.getSourceMsgClassName(), peersNodeAddress, ackMessage.getSourceId(), ackMessage.getErrorMessage());
+                                    ackMessage.getSourceMsgClassName(), peer, ackMessage.getSourceId(), ackMessage.getErrorMessage());
                         }
                     }
                 }
@@ -131,139 +116,16 @@ public abstract class TradeProtocol {
         };
         processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
 
+        //todo move
         stateChangeListener = (observable, oldValue, newValue) -> {
             if (newValue.getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED && trade instanceof MakerTrade)
                 processModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
         };
         trade.stateProperty().addListener(stateChangeListener);
+
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Mediation: Called from UI if trader accepts mediation result
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    //TODO
-
-    // Trader has not yet received the peer's signature but has clicked the accept button.
-    public void onAcceptMediationResult(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null) {
-            errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
-            return;
-        }
-        DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess(event);
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(event, errorMessage);
-                });
-        taskRunner.addTasks(
-                ApplyFilter.class,
-                SignMediatedPayoutTx.class,
-                SendMediatedPayoutSignatureMessage.class,
-                SetupMediatedPayoutTxListener.class
-        );
-        taskRunner.run();
-    }
-
-
-    // Trader has already received the peer's signature and has clicked the accept button as well.
-    public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.getPayoutTx() != null) {
-            errorMessageHandler.handleErrorMessage("Payout tx is already published.");
-            return;
-        }
-
-        DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess(event);
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(event, errorMessage);
-                });
-        taskRunner.addTasks(
-                ApplyFilter.class,
-                SignMediatedPayoutTx.class,
-                FinalizeMediatedPayoutTx.class,
-                BroadcastMediatedPayoutTx.class,
-                SendMediatedPayoutTxPublishedMessage.class
-        );
-        taskRunner.run();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Mediation: incoming message
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void handle(MediatedPayoutTxSignatureMessage tradeMessage, NodeAddress sender) {
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessMediatedPayoutSignatureMessage.class
-        );
-        taskRunner.run();
-    }
-
-    protected void handle(MediatedPayoutTxPublishedMessage tradeMessage, NodeAddress sender) {
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessMediatedPayoutTxPublishedMessage.class
-        );
-        taskRunner.run();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Peer has published the delayed payout tx
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handle(PeerPublishedDelayedPayoutTxMessage tradeMessage, NodeAddress sender) {
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(tradeMessage),
-                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessPeerPublishedDelayedPayoutTxMessage.class
-        );
-        taskRunner.run();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Dispatcher
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
-        if (tradeMessage instanceof MediatedPayoutTxSignatureMessage) {
-            handle((MediatedPayoutTxSignatureMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof MediatedPayoutTxPublishedMessage) {
-            handle((MediatedPayoutTxPublishedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
-            handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, sender);
-        }
-    }
+    protected abstract void doHandleDecryptedMessage(TradeMessage message, NodeAddress peer);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -290,26 +152,18 @@ public abstract class TradeProtocol {
 
             if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
                 this.trade = trade;
-                TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
+                TradeMessage message = (TradeMessage) networkEnvelope;
                 NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
-                doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);
+                doApplyMailboxTradeMessage(message, peerNodeAddress);
             }
         } else {
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
         }
     }
 
-    protected void doApplyMailboxTradeMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
+    protected void doApplyMailboxTradeMessage(TradeMessage message, NodeAddress peerNodeAddress) {
         log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
-                tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-
-        if (tradeMessage instanceof MediatedPayoutTxSignatureMessage) {
-            handle((MediatedPayoutTxSignatureMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof MediatedPayoutTxPublishedMessage) {
-            handle((MediatedPayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
-            handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
-        }
+                message.getClass().getSimpleName(), peerNodeAddress, message.getTradeId(), message.getUid());
     }
 
     protected void startTimeout() {
@@ -335,26 +189,26 @@ public abstract class TradeProtocol {
         }
     }
 
-    protected void handleTaskRunnerSuccess(TradeMessage tradeMessage) {
-        handleTaskRunnerSuccess(tradeMessage, null);
+    protected void handleTaskRunnerSuccess(TradeMessage message) {
+        handleTaskRunnerSuccess(message, null);
     }
 
     protected void handleTaskRunnerSuccess(Event event) {
         handleTaskRunnerSuccess(null, event.name());
     }
 
-    private void handleTaskRunnerSuccess(@Nullable TradeMessage tradeMessage, @Nullable String trigger) {
+    private void handleTaskRunnerSuccess(@Nullable TradeMessage message, @Nullable String trigger) {
         String triggerEvent = trigger != null ? trigger :
-                tradeMessage != null ? tradeMessage.getClass().getSimpleName() : "N/A";
+                message != null ? message.getClass().getSimpleName() : "N/A";
         log.info("TaskRunner successfully completed. {}", "Triggered from message " + triggerEvent);
 
-        sendAckMessage(tradeMessage, true, null);
+        sendAckMessage(message, true, null);
     }
 
-    protected void handleTaskRunnerFault(@Nullable TradeMessage tradeMessage, String errorMessage) {
-        log.error("Task runner failed on {} with error {}", tradeMessage, errorMessage);
+    protected void handleTaskRunnerFault(@Nullable TradeMessage message, String errorMessage) {
+        log.error("Task runner failed on {} with error {}", message, errorMessage);
 
-        sendAckMessage(tradeMessage, false, errorMessage);
+        sendAckMessage(message, false, errorMessage);
 
         cleanupTradeOnFault();
         cleanup();
@@ -367,55 +221,52 @@ public abstract class TradeProtocol {
         cleanup();
     }
 
-    protected boolean wasDisputed() {
-        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
-    }
 
-    protected void sendAckMessage(@Nullable TradeMessage tradeMessage, boolean result, @Nullable String errorMessage) {
+    protected void sendAckMessage(@Nullable TradeMessage message, boolean result, @Nullable String errorMessage) {
         // We complete at initial protocol setup with the setup listener tasks.
         // Other cases are if we start from an UI event the task runner (payment started, confirmed).
-        // In such cases we have not set any tradeMessage and we ignore the sendAckMessage call.
-        if (tradeMessage == null)
+        // In such cases we have not set any message and we ignore the sendAckMessage call.
+        if (message == null)
             return;
 
-        String tradeId = tradeMessage.getTradeId();
-        String sourceUid = tradeMessage.getUid();
+        String tradeId = message.getTradeId();
+        String sourceUid = message.getUid();
 
         AckMessage ackMessage = new AckMessage(processModel.getMyNodeAddress(),
                 AckMessageSourceType.TRADE_MESSAGE,
-                tradeMessage.getClass().getSimpleName(),
+                message.getClass().getSimpleName(),
                 sourceUid,
                 tradeId,
                 result,
                 errorMessage);
         // If there was an error during offer verification, the tradingPeerNodeAddress of the trade might not be set yet.
         // We can find the peer's node address in the processModel's tempTradingPeerNodeAddress in that case.
-        NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress() != null ?
+        NodeAddress peer = trade.getTradingPeerNodeAddress() != null ?
                 trade.getTradingPeerNodeAddress() :
                 processModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
-                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
+                ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid);
         processModel.getP2PService().sendEncryptedMailboxMessage(
-                peersNodeAddress,
+                peer,
                 processModel.getTradingPeer().getPubKeyRing(),
                 ackMessage,
                 new SendMailboxMessageListener() {
                     @Override
                     public void onArrived() {
                         log.info("AckMessage for {} arrived at peer {}. tradeId={}, sourceUid={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
+                                ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid);
                     }
 
                     @Override
                     public void onStoredInMailbox() {
                         log.info("AckMessage for {} stored in mailbox for peer {}. tradeId={}, sourceUid={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
+                                ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid);
                     }
 
                     @Override
                     public void onFault(String errorMessage) {
                         log.error("AckMessage for {} failed. Peer {}. tradeId={}, sourceUid={}, errorMessage={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid, errorMessage);
+                                ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid, errorMessage);
                     }
                 }
         );
@@ -493,7 +344,7 @@ public abstract class TradeProtocol {
                     startTimeout(setup.getTimeoutSec());
                 }
 
-                NodeAddress peer = condition.getPeersNodeAddress();
+                NodeAddress peer = condition.getPeer();
                 if (peer != null) {
                     processModel.setTempTradingPeerNodeAddress(peer);
                 }
@@ -523,7 +374,7 @@ public abstract class TradeProtocol {
         @Getter
         private Event event;
         @Getter
-        private NodeAddress peersNodeAddress;
+        private NodeAddress peer;
         private boolean isValid;
         private boolean isValidated;
         private Runnable preConditionFailedHandler;
@@ -554,15 +405,15 @@ public abstract class TradeProtocol {
             return this;
         }
 
-        public Condition with(TradeMessage tradeMessage) {
+        public Condition with(TradeMessage message) {
             checkArgument(!isValidated);
-            this.message = tradeMessage;
+            this.message = message;
             return this;
         }
 
-        public Condition from(NodeAddress peersNodeAddress) {
+        public Condition from(NodeAddress peer) {
             checkArgument(!isValidated);
-            this.peersNodeAddress = peersNodeAddress;
+            this.peer = peer;
             return this;
         }
 
