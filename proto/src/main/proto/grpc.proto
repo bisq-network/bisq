@@ -63,7 +63,7 @@ message GetOffersReply {
 message CreateOfferRequest {
     string currencyCode = 1;
     string direction = 2;
-    uint64 price = 3;
+    string price = 3;
     bool useMarketBasedPrice = 4;
     double marketPriceMargin = 5;
     uint64 amount = 6;

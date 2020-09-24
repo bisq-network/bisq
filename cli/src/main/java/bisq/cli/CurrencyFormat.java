@@ -17,8 +17,6 @@
 
 package bisq.cli;
 
-import com.google.common.math.DoubleMath;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -28,7 +26,6 @@ import java.math.RoundingMode;
 import java.util.Locale;
 
 import static java.lang.String.format;
-import static java.math.RoundingMode.HALF_UP;
 
 class CurrencyFormat {
 
@@ -76,12 +73,5 @@ class CurrencyFormat {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(format("'%s' is not a number", btc));
         }
-    }
-
-    static long fixedPriceToLong(String fixedPrice) {
-        BigDecimal priceInput = new BigDecimal(fixedPrice);
-        int precision = 2;
-        double factor = Math.pow(priceInput.doubleValue(), precision);
-        return DoubleMath.roundToLong(factor, HALF_UP);
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
@@ -27,8 +28,11 @@ import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.user.User;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+
+import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
@@ -36,6 +40,9 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.util.MathUtils.roundDoubleToLong;
+import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
+import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 
@@ -58,11 +65,11 @@ class CoreOffersService {
         this.user = user;
     }
 
-    List<Offer> getOffers(String direction, String fiatCurrencyCode) {
+    List<Offer> getOffers(String direction, String currencyCode) {
         List<Offer> offers = offerBookService.getOffers().stream()
                 .filter(o -> {
                     var offerOfWantedDirection = o.getDirection().name().equalsIgnoreCase(direction);
-                    var offerInWantedCurrency = o.getOfferPayload().getCounterCurrencyCode().equalsIgnoreCase(fiatCurrencyCode);
+                    var offerInWantedCurrency = o.getOfferPayload().getCounterCurrencyCode().equalsIgnoreCase(currencyCode);
                     return offerOfWantedDirection && offerInWantedCurrency;
                 })
                 .collect(Collectors.toList());
@@ -79,7 +86,7 @@ class CoreOffersService {
 
     Offer createOffer(String currencyCode,
                       String directionAsString,
-                      long priceAsLong,
+                      String priceAsString,
                       boolean useMarketBasedPrice,
                       double marketPriceMargin,
                       long amountAsLong,
@@ -89,7 +96,7 @@ class CoreOffersService {
                       TransactionResultHandler resultHandler) {
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
-        Price price = Price.valueOf(currencyCode, priceAsLong);
+        Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
@@ -163,7 +170,7 @@ class CoreOffersService {
 
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
-                currencyCode.toUpperCase(),
+                currencyCode,
                 amount,
                 minAmount,
                 price,
@@ -180,5 +187,12 @@ class CoreOffersService {
                 log::error);
 
         return offer;
+    }
+
+    private long priceStringToLong(String priceAsString, String currencyCode) {
+        int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
+        double priceAsDouble = new BigDecimal(priceAsString).doubleValue();
+        double scaled = scaleUpByPowerOf10(priceAsDouble, precision);
+        return roundDoubleToLong(scaled);
     }
 }

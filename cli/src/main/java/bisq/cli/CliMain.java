@@ -45,7 +45,6 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.cli.CurrencyFormat.fixedPriceToLong;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.NegativeNumberOptions.hasNegativeNumberOptions;
@@ -201,12 +200,12 @@ public class CliMain {
                     var amount = toSatoshis(nonOptionArgs.get(4));
                     var minAmount = toSatoshis(nonOptionArgs.get(5));
                     var useMarketBasedPrice = Boolean.parseBoolean(nonOptionArgs.get(6));
-                    var fixedPrice = 0L;
+                    var fixedPrice = ZERO.toString();
                     var marketPriceMargin = ZERO;
                     if (useMarketBasedPrice)
                         marketPriceMargin = new BigDecimal(nonOptionArgs.get(7));
-                    else  // Scale and convert the (double) fixed price to a long.
-                        fixedPrice = fixedPriceToLong(nonOptionArgs.get(7));
+                    else
+                        fixedPrice = nonOptionArgs.get(7);
                     var securityDeposit = new BigDecimal(nonOptionArgs.get(8));
 
                     var request = CreateOfferRequest.newBuilder()

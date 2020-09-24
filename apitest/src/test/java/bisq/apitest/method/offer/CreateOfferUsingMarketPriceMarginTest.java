@@ -15,55 +15,37 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.method;
+package bisq.apitest.method.offer;
 
 import bisq.core.btc.wallet.Restrictions;
 
 import bisq.proto.grpc.CreateOfferRequest;
-import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OfferInfo;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.apitest.config.BisqAppConfig.arbdaemon;
-import static bisq.apitest.config.BisqAppConfig.seednode;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-
 
 @Slf4j
-@TestMethodOrder(OrderAnnotation.class)
-public class CreateOfferTest extends MethodTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTest {
 
-    @BeforeAll
-    public static void setUp() {
-        try {
-            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon", "--enableBisqDebugging", "true"});
-            setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon);
-
-            // Generate 1 regtest block for alice's wallet to show 10 BTC balance,
-            // and give alicedaemon time to parse the new block.
-            bitcoinCli.generateBlocks(1);
-            MILLISECONDS.sleep(1500);
-        } catch (Exception ex) {
-            fail(ex);
-        }
-    }
+    // Incremented every time a new offer is created.
+    private static int expectedOffersCount = 0;
 
     @Test
     @Order(1)
-    public void testCreateBuyOffer() {
+    public void testCreateUSDBTCBuyOfferUsingMarketPriceMargin() {
         var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
                 .setPaymentAccountId(paymentAccount.getId())
@@ -73,10 +55,12 @@ public class CreateOfferTest extends MethodTest {
                 .setMinAmount(10000000)
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(0.00)
-                .setPrice(0)
+                .setPrice("0")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
-        var newOffer = grpcStubs(alicedaemon).offersService.createOffer(req).getOffer();
+        var newOffer = alice.offersService.createOffer(req).getOffer();
+        String newOfferId = newOffer.getId();
+        assertNotEquals("", newOfferId);
         assertEquals("BUY", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
         assertEquals(10000000, newOffer.getAmount());
@@ -85,16 +69,11 @@ public class CreateOfferTest extends MethodTest {
         assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
-    }
 
-    @Test
-    @Order(2)
-    public void testGetNewBuyOffer() {
-        var req = GetOffersRequest.newBuilder().setDirection("BUY").setCurrencyCode("USD").build();
-        var reply = grpcStubs(alicedaemon).offersService.getOffers(req);
-
-        assertEquals(1, reply.getOffersCount());
-        OfferInfo offer = reply.getOffersList().get(0);
+        List<OfferInfo> offers = getOffersSortedByDate("buy", "usd");
+        assertEquals(++expectedOffersCount, offers.size());
+        OfferInfo offer = offers.get(expectedOffersCount - 1);
+        assertEquals(newOfferId, offer.getId());
         assertEquals("BUY", offer.getDirection());
         assertTrue(offer.getUseMarketBasedPrice());
         assertEquals(10000000, offer.getAmount());
@@ -103,10 +82,5 @@ public class CreateOfferTest extends MethodTest {
         assertEquals("", offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("USD", offer.getCounterCurrencyCode());
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        tearDownScaffold();
     }
 }

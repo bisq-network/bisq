@@ -83,13 +83,13 @@ public class CoreApi {
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<Offer> getOffers(String direction, String fiatCurrencyCode) {
-        return coreOffersService.getOffers(direction, fiatCurrencyCode);
+    public List<Offer> getOffers(String direction, String currencyCode) {
+        return coreOffersService.getOffers(direction, currencyCode);
     }
 
     public Offer createOffer(String currencyCode,
                              String directionAsString,
-                             long priceAsLong,
+                             String priceAsString,
                              boolean useMarketBasedPrice,
                              double marketPriceMargin,
                              long amountAsLong,
@@ -97,9 +97,9 @@ public class CoreApi {
                              double buyerSecurityDeposit,
                              String paymentAccountId,
                              TransactionResultHandler resultHandler) {
-        return coreOffersService.createOffer(currencyCode,
+        return coreOffersService.createOffer(currencyCode.toUpperCase(),
                 directionAsString,
-                priceAsLong,
+                priceAsString,
                 useMarketBasedPrice,
                 marketPriceMargin,
                 amountAsLong,
@@ -122,7 +122,7 @@ public class CoreApi {
                              boolean useSavingsWallet,
                              TransactionResultHandler resultHandler) {
         return coreOffersService.createOffer(offerId,
-                currencyCode,
+                currencyCode.toUpperCase(),
                 direction,
                 price,
                 useMarketBasedPrice,
