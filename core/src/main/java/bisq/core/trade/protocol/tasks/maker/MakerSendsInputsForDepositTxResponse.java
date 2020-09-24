@@ -90,6 +90,11 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
 
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
 
+            // We could consider to remove the offer later once the deposit is published to reduce the risk
+            // of lost maker fee in case of a failed trade. The protocol has not maker specific tasks at that moment on
+            // so it would require a bit of extra work to add that (without using instance of checks...).
+            processModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
+
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());

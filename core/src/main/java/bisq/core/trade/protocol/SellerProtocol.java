@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class SellerProtocol extends MediationProtocol {
-    enum SellerEvent implements TradeProtocol.Event {
+    enum SellerEvent implements FluentProtocol.Event {
         PAYMENT_RECEIVED
     }
 
@@ -59,8 +59,8 @@ public abstract class SellerProtocol extends MediationProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxTradeMessage(TradeMessage message, NodeAddress peerNodeAddress) {
-        super.doApplyMailboxTradeMessage(message, peerNodeAddress);
+    public void onMailboxMessage(TradeMessage message, NodeAddress peerNodeAddress) {
+        super.onMailboxMessage(message, peerNodeAddress);
 
         if (message instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) message, peerNodeAddress);
@@ -146,8 +146,8 @@ public abstract class SellerProtocol extends MediationProtocol {
 
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage message, NodeAddress peer) {
-        super.doHandleDecryptedMessage(message, peer);
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        super.onTradeMessage(message, peer);
 
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());

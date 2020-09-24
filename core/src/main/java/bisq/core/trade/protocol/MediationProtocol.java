@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MediationProtocol extends TradeProtocol {
 
-    enum DisputeEvent implements TradeProtocol.Event {
+    enum DisputeEvent implements FluentProtocol.Event {
         MEDIATION_RESULT_ACCEPTED,
         MEDIATION_RESULT_REJECTED
     }
@@ -171,7 +171,7 @@ public class MediationProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage message, NodeAddress peer) {
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
         if (message instanceof MediatedPayoutTxSignatureMessage) {
             handle((MediatedPayoutTxSignatureMessage) message, peer);
         } else if (message instanceof MediatedPayoutTxPublishedMessage) {
@@ -182,13 +182,14 @@ public class MediationProtocol extends TradeProtocol {
     }
 
     @Override
-    protected void doApplyMailboxTradeMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
-        if (tradeMessage instanceof MediatedPayoutTxSignatureMessage) {
-            handle((MediatedPayoutTxSignatureMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof MediatedPayoutTxPublishedMessage) {
-            handle((MediatedPayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
-            handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
+    protected void onMailboxMessage(TradeMessage message, NodeAddress peer) {
+        super.onMailboxMessage(message, peer);
+        if (message instanceof MediatedPayoutTxSignatureMessage) {
+            handle((MediatedPayoutTxSignatureMessage) message, peer);
+        } else if (message instanceof MediatedPayoutTxPublishedMessage) {
+            handle((MediatedPayoutTxPublishedMessage) message, peer);
+        } else if (message instanceof PeerPublishedDelayedPayoutTxMessage) {
+            handle((PeerPublishedDelayedPayoutTxMessage) message, peer);
         }
     }
 }

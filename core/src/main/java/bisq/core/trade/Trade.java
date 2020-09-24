@@ -703,7 +703,7 @@ public abstract class Trade implements Tradable, Model {
         // or async calls there.
         // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
         HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
-        set.forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
+        set.forEach(msg -> tradeProtocol.applyMailboxMessage(msg));
     }
 
 
@@ -773,7 +773,7 @@ public abstract class Trade implements Tradable, Model {
             // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context
             // or async calls there.
             if (tradeProtocol != null)
-                tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey, this);
+                tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey);
         }
     }
 
@@ -861,9 +861,6 @@ public abstract class Trade implements Tradable, Model {
         this.state = state;
         stateProperty.set(state);
         statePhaseProperty.set(state.getPhase());
-
-        if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
-            tradeProtocol.completed();
 
         if (changed)
             persist();

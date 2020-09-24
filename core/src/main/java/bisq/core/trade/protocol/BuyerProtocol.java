@@ -17,7 +17,6 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.offer.Offer;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
@@ -46,11 +45,9 @@ import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public abstract class BuyerProtocol extends MediationProtocol {
-    enum BuyerEvent implements TradeProtocol.Event {
+    enum BuyerEvent implements FluentProtocol.Event {
         STARTUP,
         PAYMENT_SENT
     }
@@ -61,10 +58,6 @@ public abstract class BuyerProtocol extends MediationProtocol {
 
     public BuyerProtocol(BuyerTrade trade) {
         super(trade);
-
-        Offer offer = checkNotNull(trade.getOffer());
-        processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
-
 
         given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(BuyerEvent.STARTUP))
@@ -85,8 +78,8 @@ public abstract class BuyerProtocol extends MediationProtocol {
     }
 
     @Override
-    public void doApplyMailboxTradeMessage(TradeMessage message, NodeAddress peer) {
-        super.doApplyMailboxTradeMessage(message, peer);
+    public void onMailboxMessage(TradeMessage message, NodeAddress peer) {
+        super.onMailboxMessage(message, peer);
 
         if (message instanceof DepositTxAndDelayedPayoutTxMessage) {
             handle((DepositTxAndDelayedPayoutTxMessage) message, peer);
@@ -188,8 +181,8 @@ public abstract class BuyerProtocol extends MediationProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage message, NodeAddress peer) {
-        super.doHandleDecryptedMessage(message, peer);
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        super.onTradeMessage(message, peer);
 
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());

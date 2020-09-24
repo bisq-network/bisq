@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol;
 
 
+import bisq.core.offer.Offer;
 import bisq.core.trade.BuyerAsTakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
@@ -46,6 +47,8 @@ import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol {
 
@@ -55,6 +58,9 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
 
     public BuyerAsTakerProtocol(BuyerAsTakerTrade trade) {
         super(trade);
+
+        Offer offer = checkNotNull(trade.getOffer());
+        processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
     }
 
 
@@ -138,8 +144,8 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage message, NodeAddress peer) {
-        super.doHandleDecryptedMessage(message, peer);
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        super.onTradeMessage(message, peer);
 
         if (message instanceof InputsForDepositTxResponse) {
             handle((InputsForDepositTxResponse) message, peer);

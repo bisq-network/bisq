@@ -583,6 +583,7 @@ public class TradeManager implements PersistedDataHost {
                     log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
+                    trade.getTradeProtocol().onWithdrawCompleted();
                     resultHandler.handleResult();
                 }
             }
