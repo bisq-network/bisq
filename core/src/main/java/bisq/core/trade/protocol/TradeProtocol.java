@@ -61,87 +61,32 @@ public abstract class TradeProtocol {
         String name();
     }
 
-    enum DisputeEvent implements TradeProtocol.Event {
-        MEDIATION_RESULT_ACCEPTED,
-        MEDIATION_RESULT_REJECTED
-    }
-
     private static final long DEFAULT_TIMEOUT_SEC = 180;
 
     protected final ProcessModel processModel;
-    private final DecryptedDirectMessageListener decryptedDirectMessageListener;
-    private final ChangeListener<Trade.State> stateChangeListener;
+    private DecryptedDirectMessageListener decryptedDirectMessageListener;
+    private ChangeListener<Trade.State> stateChangeListener;
     protected Trade trade;
     private Timer timeoutTimer;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TradeProtocol(Trade trade) {
         this.trade = trade;
         this.processModel = trade.getProcessModel();
 
-        decryptedDirectMessageListener = (decryptedMessageWithPubKey, peer) -> {
-            // We check the sig only as soon we have stored the peers pubKeyRing.
-            PubKeyRing tradingPeerPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
-            PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
-            if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
-                NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-                if (networkEnvelope instanceof TradeMessage) {
-                    TradeMessage message = (TradeMessage) networkEnvelope;
-                    nonEmptyStringOf(message.getTradeId());
-
-                    if (message.getTradeId().equals(processModel.getOfferId())) {
-                        doHandleDecryptedMessage(message, peer);
-                    }
-                } else if (networkEnvelope instanceof AckMessage) {
-                    AckMessage ackMessage = (AckMessage) networkEnvelope;
-                    if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
-                            ackMessage.getSourceId().equals(trade.getId())) {
-                        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
-                        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
-                        if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
-                            processModel.setPaymentStartedAckMessage(ackMessage);
-                        } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
-                            processModel.setDepositTxSentAckMessage(ackMessage);
-                        }
-
-                        if (ackMessage.isSuccess()) {
-                            log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
-                                    ackMessage.getSourceMsgClassName(), peer, ackMessage.getSourceId(), ackMessage.getSourceUid());
-                        } else {
-                            log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
-                                    ackMessage.getSourceMsgClassName(), peer, ackMessage.getSourceId(), ackMessage.getErrorMessage());
-                        }
-                    }
-                }
-            }
-        };
-        processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
-
-        //todo move
-        stateChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue.getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED && trade instanceof MakerTrade)
-                processModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
-        };
-        trade.stateProperty().addListener(stateChangeListener);
-
+        setupListeners();
     }
-
-    protected abstract void doHandleDecryptedMessage(TradeMessage message, NodeAddress peer);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
     public void completed() {
         cleanup();
-    }
-
-    private void cleanup() {
-        stopTimeout();
-        trade.stateProperty().removeListener(stateChangeListener);
-        // We removed that from here earlier as it broke the trade process in some non critical error cases.
-        // But it should be actually removed...
-        processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
@@ -160,6 +105,17 @@ public abstract class TradeProtocol {
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Abstract
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    protected abstract void doHandleDecryptedMessage(TradeMessage message, NodeAddress peer);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doApplyMailboxTradeMessage(TradeMessage message, NodeAddress peerNodeAddress) {
         log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
@@ -196,31 +152,6 @@ public abstract class TradeProtocol {
     protected void handleTaskRunnerSuccess(Event event) {
         handleTaskRunnerSuccess(null, event.name());
     }
-
-    private void handleTaskRunnerSuccess(@Nullable TradeMessage message, @Nullable String trigger) {
-        String triggerEvent = trigger != null ? trigger :
-                message != null ? message.getClass().getSimpleName() : "N/A";
-        log.info("TaskRunner successfully completed. {}", "Triggered from message " + triggerEvent);
-
-        sendAckMessage(message, true, null);
-    }
-
-    protected void handleTaskRunnerFault(@Nullable TradeMessage message, String errorMessage) {
-        log.error("Task runner failed on {} with error {}", message, errorMessage);
-
-        sendAckMessage(message, false, errorMessage);
-
-        cleanupTradeOnFault();
-        cleanup();
-    }
-
-    protected void handleTaskRunnerFault(@Nullable Event event, String errorMessage) {
-        log.error("Task runner failed on {} with error {}", event, errorMessage);
-
-        cleanupTradeOnFault();
-        cleanup();
-    }
-
 
     protected void sendAckMessage(@Nullable TradeMessage message, boolean result, @Nullable String errorMessage) {
         // We complete at initial protocol setup with the setup listener tasks.
@@ -270,6 +201,90 @@ public abstract class TradeProtocol {
                     }
                 }
         );
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupListeners() {
+        decryptedDirectMessageListener = (decryptedMessageWithPubKey, peer) -> {
+            // We check the sig only as soon we have stored the peers pubKeyRing.
+            PubKeyRing tradingPeerPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
+            PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
+            if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
+                NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+                if (networkEnvelope instanceof TradeMessage) {
+                    TradeMessage message = (TradeMessage) networkEnvelope;
+                    nonEmptyStringOf(message.getTradeId());
+
+                    if (message.getTradeId().equals(processModel.getOfferId())) {
+                        doHandleDecryptedMessage(message, peer);
+                    }
+                } else if (networkEnvelope instanceof AckMessage) {
+                    AckMessage ackMessage = (AckMessage) networkEnvelope;
+                    if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
+                            ackMessage.getSourceId().equals(trade.getId())) {
+                        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
+                        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
+                        if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
+                            processModel.setPaymentStartedAckMessage(ackMessage);
+                        } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
+                            processModel.setDepositTxSentAckMessage(ackMessage);
+                        }
+
+                        if (ackMessage.isSuccess()) {
+                            log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
+                                    ackMessage.getSourceMsgClassName(), peer, ackMessage.getSourceId(), ackMessage.getSourceUid());
+                        } else {
+                            log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
+                                    ackMessage.getSourceMsgClassName(), peer, ackMessage.getSourceId(), ackMessage.getErrorMessage());
+                        }
+                    }
+                }
+            }
+        };
+        processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
+
+        //todo move
+        stateChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue.getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED && trade instanceof MakerTrade)
+                processModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
+        };
+        trade.stateProperty().addListener(stateChangeListener);
+    }
+
+
+    private void handleTaskRunnerSuccess(@Nullable TradeMessage message, @Nullable String trigger) {
+        String triggerEvent = trigger != null ? trigger :
+                message != null ? message.getClass().getSimpleName() : "N/A";
+        log.info("TaskRunner successfully completed. {}", "Triggered from message " + triggerEvent);
+
+        sendAckMessage(message, true, null);
+    }
+
+    protected void handleTaskRunnerFault(@Nullable TradeMessage message, String errorMessage) {
+        log.error("Task runner failed on {} with error {}", message, errorMessage);
+
+        sendAckMessage(message, false, errorMessage);
+
+        cleanupTradeOnFault();
+        cleanup();
+    }
+
+    protected void handleTaskRunnerFault(@Nullable Event event, String errorMessage) {
+        log.error("Task runner failed on {} with error {}", event, errorMessage);
+
+        cleanupTradeOnFault();
+        cleanup();
+    }
+
+    private void cleanup() {
+        stopTimeout();
+        trade.stateProperty().removeListener(stateChangeListener);
+        // We removed that from here earlier as it broke the trade process in some non critical error cases.
+        // But it should be actually removed...
+        processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
     private void cleanupTradeOnFault() {
