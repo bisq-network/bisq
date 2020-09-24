@@ -114,8 +114,8 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     }
 
     @Override
-    public void takeAvailableOffer() {
+    public void onTakeOffer() {
         checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
-        ((TakerProtocol) tradeProtocol).takeAvailableOffer();
+        ((TakerProtocol) tradeProtocol).onTakeOffer();
     }
 }

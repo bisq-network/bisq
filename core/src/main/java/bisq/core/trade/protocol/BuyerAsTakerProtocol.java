@@ -63,7 +63,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void takeAvailableOffer() {
+    public void onTakeOffer() {
         given(phase(Trade.Phase.INIT)
                 .with(TakerEvent.TAKE_OFFER))
                 .setup(tasks(

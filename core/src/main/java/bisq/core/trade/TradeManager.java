@@ -555,7 +555,7 @@ public class TradeManager implements PersistedDataHost {
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
 
         tradableList.add(trade);
-        ((TakerTrade) trade).takeAvailableOffer();
+        ((TakerTrade) trade).onTakeOffer();
         tradeResultHandler.handleResult(trade);
     }
 

@@ -18,5 +18,5 @@
 package bisq.core.trade;
 
 public interface TakerTrade {
-    void takeAvailableOffer();
+    void onTakeOffer();
 }

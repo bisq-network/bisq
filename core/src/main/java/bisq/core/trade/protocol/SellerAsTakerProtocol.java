@@ -68,7 +68,7 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void takeAvailableOffer() {
+    public void onTakeOffer() {
         given(phase(Trade.Phase.INIT)
                 .with(TakerEvent.TAKE_OFFER)
                 .from(trade.getTradingPeerNodeAddress()))
