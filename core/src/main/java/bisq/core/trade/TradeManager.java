@@ -495,8 +495,8 @@ public class TradeManager implements PersistedDataHost {
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
-                    if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount,
+                    if (offer.getState() == Offer.State.AVAILABLE) {
+                        Trade trade = getNewTrade(amount,
                                 txFee,
                                 takerFee,
                                 isCurrencyForTakerFeeBtc,
@@ -505,25 +505,27 @@ public class TradeManager implements PersistedDataHost {
                                 offer,
                                 paymentAccountId,
                                 useSavingsWallet,
-                                model,
-                                tradeResultHandler);
+                                model);
+                        tradableList.add(trade);
+                        ((TakerTrade) trade).onTakeOffer();
+                        tradeResultHandler.handleResult(trade);
+                    }
                 },
                 errorMessageHandler);
     }
 
-    private void createTrade(Coin amount,
-                             Coin txFee,
-                             Coin takerFee,
-                             boolean isCurrencyForTakerFeeBtc,
-                             long tradePrice,
-                             Coin fundsNeededForTrade,
-                             Offer offer,
-                             String paymentAccountId,
-                             boolean useSavingsWallet,
-                             OfferAvailabilityModel model,
-                             TradeResultHandler tradeResultHandler) {
+    private Trade getNewTrade(Coin amount,
+                              Coin txFee,
+                              Coin takerFee,
+                              boolean isCurrencyForTakerFeeBtc,
+                              long tradePrice,
+                              Coin fundsNeededForTrade,
+                              Offer offer,
+                              String paymentAccountId,
+                              boolean useSavingsWallet,
+                              OfferAvailabilityModel model) {
         Trade trade;
-        if (offer.isBuyOffer())
+        if (offer.isBuyOffer()) {
             trade = new SellerAsTakerTrade(offer,
                     amount,
                     txFee,
@@ -536,7 +538,7 @@ public class TradeManager implements PersistedDataHost {
                     model.getSelectedRefundAgent(),
                     tradableListStorage,
                     btcWalletService);
-        else
+        } else {
             trade = new BuyerAsTakerTrade(offer,
                     amount,
                     txFee,
@@ -549,14 +551,10 @@ public class TradeManager implements PersistedDataHost {
                     model.getSelectedRefundAgent(),
                     tradableListStorage,
                     btcWalletService);
-
+        }
         trade.setTakerPaymentAccountId(paymentAccountId);
-
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
-
-        tradableList.add(trade);
-        ((TakerTrade) trade).onTakeOffer();
-        tradeResultHandler.handleResult(trade);
+        return trade;
     }
 
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {
