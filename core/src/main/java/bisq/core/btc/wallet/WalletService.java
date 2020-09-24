@@ -607,11 +607,6 @@ public abstract class WalletService {
     }
 
     @Nullable
-    public DeterministicKey findKeyFromPubKeyHash(byte[] pubKeyHash) {
-        return wallet.getActiveKeyChain().findKeyFromPubHash(pubKeyHash);
-    }
-
-    @Nullable
     public DeterministicKey findKeyFromPubKey(byte[] pubKey) {
         return (DeterministicKey) wallet.findKeyFromPubKey(pubKey);
     }
