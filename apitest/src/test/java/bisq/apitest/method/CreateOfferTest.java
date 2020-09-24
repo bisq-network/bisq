@@ -66,8 +66,8 @@ public class CreateOfferTest extends MethodTest {
     public void testCreateBuyOffer() {
         var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
-                .setCurrencyCode("USD")
-                .setDirection("BUY")
+                .setCurrencyCode("usd")
+                .setDirection("buy")
                 .setPrice(0)
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(0.00)

@@ -21,7 +21,6 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
-import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -37,6 +36,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 
 @Slf4j
@@ -88,7 +88,7 @@ class CoreOffersService {
                       String paymentAccountId,
                       TransactionResultHandler resultHandler) {
         String offerId = createOfferService.getRandomOfferId();
-        OfferPayload.Direction direction = OfferPayload.Direction.valueOf(directionAsString);
+        Direction direction = Direction.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(currencyCode, priceAsLong);
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
@@ -113,7 +113,7 @@ class CoreOffersService {
 
     Offer createAndPlaceOffer(String offerId,
                               String currencyCode,
-                              OfferPayload.Direction direction,
+                              Direction direction,
                               Price price,
                               boolean useMarketBasedPrice,
                               double marketPriceMargin,
@@ -127,7 +127,7 @@ class CoreOffersService {
 
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
-                currencyCode,
+                currencyCode.toUpperCase(),
                 amount,
                 minAmount,
                 price,
@@ -149,7 +149,7 @@ class CoreOffersService {
 
     Offer createOffer(String offerId,
                       String currencyCode,
-                      OfferPayload.Direction direction,
+                      Direction direction,
                       Price price,
                       boolean useMarketBasedPrice,
                       double marketPriceMargin,
@@ -163,7 +163,7 @@ class CoreOffersService {
 
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
-                currencyCode,
+                currencyCode.toUpperCase(),
                 amount,
                 minAmount,
                 price,

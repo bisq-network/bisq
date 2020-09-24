@@ -210,8 +210,8 @@ public class CliMain {
                     var securityDeposit = new BigDecimal(nonOptionArgs.get(8));
 
                     var request = CreateOfferRequest.newBuilder()
-                            .setDirection(direction.toUpperCase())
-                            .setCurrencyCode(currencyCode.toUpperCase())
+                            .setDirection(direction)
+                            .setCurrencyCode(currencyCode)
                             .setAmount(amount)
                             .setMinAmount(minAmount)
                             .setUseMarketBasedPrice(useMarketBasedPrice)
