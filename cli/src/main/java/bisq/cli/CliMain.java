@@ -191,15 +191,14 @@ public class CliMain {
                 case createoffer: {
                     if (nonOptionArgs.size() < 9)
                         throw new IllegalArgumentException("incorrect parameter count,"
-                                + " expecting buy | sell, payment acct id, currency code, amount, min amount,"
+                                + " expecting payment acct id, buy | sell, currency code, amount, min amount,"
                                 + " use-market-based-price, fixed-price | mkt-price-margin, security-deposit");
 
-                    var direction = nonOptionArgs.get(1);
-                    var paymentAcctId = nonOptionArgs.get(2);
+                    var paymentAcctId = nonOptionArgs.get(1);
+                    var direction = nonOptionArgs.get(2);
                     var currencyCode = nonOptionArgs.get(3);
                     var amount = toSatoshis(nonOptionArgs.get(4));
                     var minAmount = toSatoshis(nonOptionArgs.get(5));
-
                     var useMarketBasedPrice = Boolean.parseBoolean(nonOptionArgs.get(6));
                     var fixedPrice = ZERO;
                     var marketPriceMargin = ZERO;
@@ -354,20 +353,24 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.format("%-22s%-50s%s%n", "Method", "Params", "Description");
-            stream.format("%-22s%-50s%s%n", "------", "------", "------------");
-            stream.format("%-22s%-50s%s%n", "getversion", "", "Get server version");
-            stream.format("%-22s%-50s%s%n", "getbalance", "", "Get server wallet balance");
-            stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
-            stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
-            stream.format("%-22s%-50s%s%n", "createoffer", "", "Create and place an offer");
-            stream.format("%-22s%-50s%s%n", "getoffers", "buy | sell, fiat currency code", "Get current offers");
-            stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
-            stream.format("%-22s%-50s%s%n", "getpaymentaccts", "", "Get user payment accounts");
-            stream.format("%-22s%-50s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
-            stream.format("%-22s%-50s%s%n", "unlockwallet", "password timeout",
+            String rowFormat = "%-22s%-50s%s%n";
+            stream.format(rowFormat, "Method", "Params", "Description");
+            stream.format(rowFormat, "------", "------", "------------");
+            stream.format(rowFormat, "getversion", "", "Get server version");
+            stream.format(rowFormat, "getbalance", "", "Get server wallet balance");
+            stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
+            stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
+            stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
+            stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
+            stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
+            stream.format(rowFormat, "", "security deposit (%)", "");
+            stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
+            stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
+            stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
+            stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");
+            stream.format(rowFormat, "unlockwallet", "password timeout",
                     "Store wallet password in memory for timeout seconds");
-            stream.format("%-22s%-50s%s%n", "setwalletpassword", "password [newpassword]",
+            stream.format(rowFormat, "setwalletpassword", "password [newpassword]",
                     "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.println();
         } catch (IOException ex) {

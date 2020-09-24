@@ -66,15 +66,15 @@ public class CreateOfferTest extends MethodTest {
     public void testCreateBuyOffer() {
         var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
-                .setCurrencyCode("usd")
+                .setPaymentAccountId(paymentAccount.getId())
                 .setDirection("buy")
-                .setPrice(0)
-                .setUseMarketBasedPrice(true)
-                .setMarketPriceMargin(0.00)
+                .setCurrencyCode("usd")
                 .setAmount(10000000)
                 .setMinAmount(10000000)
+                .setUseMarketBasedPrice(true)
+                .setMarketPriceMargin(0.00)
+                .setPrice(0)
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
-                .setPaymentAccountId(paymentAccount.getId())
                 .build();
         var newOffer = grpcStubs(alicedaemon).offersService.createOffer(req).getOffer();
         assertEquals("BUY", newOffer.getDirection());
