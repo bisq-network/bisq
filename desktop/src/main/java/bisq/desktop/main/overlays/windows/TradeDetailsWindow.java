@@ -26,6 +26,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -78,6 +79,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     private final CoinFormatter formatter;
     private final ArbitrationManager arbitrationManager;
     private final TradeManager tradeManager;
+    private final BtcWalletService btcWalletService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private Trade trade;
     private ChangeListener<Number> changeListener;
@@ -94,10 +96,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     public TradeDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                               ArbitrationManager arbitrationManager,
                               TradeManager tradeManager,
+                              BtcWalletService btcWalletService,
                               AccountAgeWitnessService accountAgeWitnessService) {
         this.formatter = formatter;
         this.arbitrationManager = arbitrationManager;
         this.tradeManager = tradeManager;
+        this.btcWalletService = btcWalletService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         type = Type.Confirmation;
     }
@@ -166,7 +170,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), paymentMethodText);
 
         // second group
-        rows = 8;
+        rows = 9;
         PaymentAccountPayload buyerPaymentAccountPayload = null;
         PaymentAccountPayload sellerPaymentAccountPayload = null;
 
@@ -184,9 +188,6 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
                 rows++;
         }
-
-        if (trade.getTakerFeeTxId() != null)
-            rows++;
 
         if (trade.getPayoutTx() != null)
             rows++;
@@ -280,15 +281,14 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         }
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
-        if (trade.getTakerFeeTxId() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakerFeeTxId());
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakerFeeTxId());
 
         Transaction depositTx = trade.getDepositTx();
-        String depositTxString = depositTx != null ? depositTx.getTxId().toString() : Res.get("shared.na");
+        String depositTxString = depositTx != null ? depositTx.getTxId().toString() : null;
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), depositTxString);
 
-        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
-        String delayedPayoutTxString = delayedPayoutTx != null ? delayedPayoutTx.getTxId().toString() : Res.get("shared.na");
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx(btcWalletService);
+        String delayedPayoutTxString = delayedPayoutTx != null ? delayedPayoutTx.getTxId().toString() : null;
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), delayedPayoutTxString);
 
         if (trade.getPayoutTx() != null)

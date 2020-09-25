@@ -26,14 +26,11 @@ import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeUtils;
 
-import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
@@ -88,6 +85,10 @@ public class FailedTradesManager implements PersistedDataHost {
         if (!failedTrades.contains(trade)) {
             failedTrades.add(trade);
         }
+    }
+
+    public void removeTrade(Trade trade) {
+        failedTrades.remove(trade);
     }
 
     public boolean wasMyOffer(Offer offer) {

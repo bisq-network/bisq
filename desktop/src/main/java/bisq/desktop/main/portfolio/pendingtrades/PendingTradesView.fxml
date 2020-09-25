@@ -39,6 +39,7 @@
             <TableColumn fx:id="roleColumn" minWidth="150"/>
             <TableColumn fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
             <TableColumn fx:id="chatColumn" minWidth="40" maxWidth="40"/>
+            <TableColumn fx:id="moveTradeToFailedColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
 </VBox>

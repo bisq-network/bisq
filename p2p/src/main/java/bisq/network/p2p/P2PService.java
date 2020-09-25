@@ -555,6 +555,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void sendEncryptedMailboxMessage(NodeAddress peersNodeAddress, PubKeyRing peersPubKeyRing,
                                             NetworkEnvelope message,
                                             SendMailboxMessageListener sendMailboxMessageListener) {
+        if (peersPubKeyRing == null) {
+            log.error("sendEncryptedMailboxMessage: peersPubKeyRing is null. We ignore the call.");
+            return;
+        }
+
         checkNotNull(peersNodeAddress,
                 "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         checkNotNull(networkNode.getNodeAddress(),

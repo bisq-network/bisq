@@ -50,9 +50,11 @@ import bisq.common.util.Utilities;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXBadge;
+import com.jfoenix.controls.JFXButton;
 
 import javafx.fxml.FXML;
 
@@ -64,6 +66,7 @@ import javafx.stage.Window;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -87,6 +90,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -97,6 +101,9 @@ import java.util.Map;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
+    public interface ChatCallback {
+        void onOpenChat(Trade trade);
+    }
 
     private final TradeDetailsWindow tradeDetailsWindow;
     private final CoinFormatter formatter;
@@ -108,7 +115,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     TableView<PendingTradesListItem> tableView;
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn,
-            marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn, chatColumn;
+            marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn, chatColumn, moveTradeToFailedColumn;
     private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -165,6 +172,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
         avatarColumn.setText("");
         chatColumn.setText("");
+        moveTradeToFailedColumn.setText("");
 
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
@@ -176,6 +184,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setRoleColumnCellFactory();
         setAvatarColumnCellFactory();
         setChatColumnCellFactory();
+        setRemoveTradeColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.openTrades"))));
@@ -212,10 +221,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(popup::hide)
                         .show();
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
-                new Popup().warning(Res.get("portfolio.pending.removeFailedTrade"))
-                        .onAction(model.dataModel::onMoveToFailedTrades)
-                        .show();
             }
         };
 
@@ -224,26 +229,16 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     protected void activate() {
-        sortedList = new SortedList<>(model.dataModel.list);
+        ObservableList<PendingTradesListItem> list = model.dataModel.list;
+        sortedList = new SortedList<>(list);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        updateMoveTradeToFailedColumnState();
 
         scene = root.getScene();
         if (scene != null) {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
-
-            //TODO: in what cases is it necessary to request focus?
-            /*appFocusSubscription = EasyBind.subscribe(scene.getWindow().focusedProperty(), isFocused -> {
-                if (isFocused && model.dataModel.selectedItemProperty.get() != null) {
-                    // Focus selectedItem from model
-                    int index = table.getItems().indexOf(model.dataModel.selectedItemProperty.get());
-                    UserThread.execute(() -> {
-                        //TODO app wide focus
-                        //table.requestFocus();
-                        //UserThread.execute(() -> table.getFocusModel().focus(index));
-                    });
-                }
-            });*/
         }
 
         selectedItemSubscription = EasyBind.subscribe(model.dataModel.selectedItemProperty, selectedItem -> {
@@ -287,7 +282,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         updateTableSelection();
 
-        model.dataModel.list.addListener(tradesListChangeListener);
+        list.addListener(tradesListChangeListener);
         updateNewChatMessagesByTradeMap();
     }
 
@@ -312,6 +307,41 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             selectedSubView = null;
         }
     }
+
+    private void updateMoveTradeToFailedColumnState() {
+        moveTradeToFailedColumn.setVisible(model.dataModel.list.stream().anyMatch(item -> isInvalidState(item.getTrade())));
+    }
+
+    private boolean isInvalidState(Trade trade) {
+        String errorMessage = trade.getErrorMessage();
+        boolean hasErrorMsg = errorMessage != null && !errorMessage.isEmpty();
+        return hasErrorMsg ||
+                trade.getDepositTxId() == null ||
+                trade.getDelayedPayoutTxBytes() == null;
+    }
+
+    private void onMoveTradeToFailedTrades(Trade trade) {
+        String reason;
+        String errorMessage = trade.getErrorMessage();
+        if (errorMessage != null && !errorMessage.isEmpty()) {
+            reason = errorMessage;
+        } else if (trade.getDepositTxId() == null) {
+            reason = Res.get("trade.error.depositTxIsNull");
+        } else if (trade.getDelayedPayoutTxBytes() == null) {
+            reason = Res.get("trade.error.delayedPayoutTxIsNull");
+        } else {
+            reason = Res.get("shared.na");
+        }
+        new Popup().attention(Res.get("portfolio.pending.moveToFailed.popup", reason))
+                .onAction(() -> {
+                    model.dataModel.moveTradeToFailedTrades(trade);
+                    updateMoveTradeToFailedColumnState();
+                })
+                .actionButtonText(Res.get("shared.yes"))
+                .closeButtonText(Res.get("shared.no"))
+                .show();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Chat
@@ -503,9 +533,18 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(item.getTrade().getShortId());
-                                    field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
-                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                    if (isInvalidState(item.getTrade())) {
+                                        field = new HyperlinkWithIcon(item.getTrade().getShortId(), AwesomeIcon.WARNING_SIGN);
+                                        field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
+                                        field.setTooltip(new Tooltip(Res.get("tooltip.invalidTradeState.warning")));
+                                        //FIXME icon does not take red color ;-(
+                                        field.getIcon().getStyleClass().clear();
+                                        field.getIcon().getStyleClass().addAll("hyperlink", "error");
+                                    } else {
+                                        field = new HyperlinkWithIcon(item.getTrade().getShortId());
+                                        field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
+                                        field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                    }
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -519,7 +558,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setDateColumnCellFactory() {
-        dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        dateColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         dateColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -541,7 +580,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setAmountColumnCellFactory() {
-        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        amountColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         amountColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -562,7 +601,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setPriceColumnCellFactory() {
-        priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        priceColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         priceColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -583,7 +622,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setVolumeColumnCellFactory() {
-        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        volumeColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -593,9 +632,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(DisplayUtils.formatVolumeWithCode(item.getTrade().getTradeVolume())));
-                                else
+                                if (item != null && !empty) {
+                                    try {
+                                        String volume = DisplayUtils.formatVolumeWithCode(item.getTrade().getTradeVolume());
+                                        setGraphic(new AutoTooltipLabel(volume));
+                                    } catch (Throwable ignore) {
+                                    }
+                                } else
                                     setGraphic(null);
                             }
                         };
@@ -604,7 +647,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setPaymentMethodColumnCellFactory() {
-        paymentMethodColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        paymentMethodColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         paymentMethodColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -625,7 +668,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setMarketColumnCellFactory() {
-        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         marketColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -643,7 +686,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setRoleColumnCellFactory() {
-        roleColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        roleColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         roleColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -665,7 +708,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @SuppressWarnings("UnusedReturnValue")
     private TableColumn<PendingTradesListItem, PendingTradesListItem> setAvatarColumnCellFactory() {
-        avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        avatarColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
         avatarColumn.setCellFactory(
                 new Callback<>() {
@@ -675,7 +718,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         return new TableCell<>() {
 
                             @Override
-                            public void updateItem(final PendingTradesListItem newItem, boolean empty) {
+                            public void updateItem(PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
                                 if (!empty && newItem != null) {
                                     final Trade trade = newItem.getTrade();
@@ -704,8 +747,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @SuppressWarnings("UnusedReturnValue")
     private TableColumn<PendingTradesListItem, PendingTradesListItem> setChatColumnCellFactory() {
-        chatColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        //TODO
+        chatColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         chatColumn.getStyleClass().addAll("last-column", "avatar-column");
         chatColumn.setSortable(false);
         chatColumn.setCellFactory(
@@ -715,7 +757,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         return new TableCell<>() {
 
                             @Override
-                            public void updateItem(final PendingTradesListItem newItem, boolean empty) {
+                            public void updateItem(PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
 
                                 if (!empty && newItem != null) {
@@ -772,8 +814,34 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         return chatColumn;
     }
 
-    public interface ChatCallback {
-        void onOpenChat(Trade trade);
-    }
+    private TableColumn<PendingTradesListItem, PendingTradesListItem> setRemoveTradeColumnCellFactory() {
+        moveTradeToFailedColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
+        moveTradeToFailedColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
+                            PendingTradesListItem> column) {
+                        return new TableCell<>() {
 
+                            @Override
+                            public void updateItem(PendingTradesListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
+                                if (!empty && newItem != null && isInvalidState(newItem.getTrade())) {
+                                    Label icon = FormBuilder.getIcon(AwesomeIcon.TRASH);
+                                    icon.getStyleClass().addAll("icon", "error-icon");
+                                    JFXButton iconButton = new JFXButton("", icon);
+                                    iconButton.setStyle("-fx-cursor: hand;");
+                                    iconButton.getStyleClass().add("hidden-icon-button");
+                                    iconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.moveTradeToFailed")));
+                                    iconButton.setOnAction(e -> onMoveTradeToFailedTrades(newItem.getTrade()));
+                                    setGraphic(iconButton);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return moveTradeToFailedColumn;
+    }
 }

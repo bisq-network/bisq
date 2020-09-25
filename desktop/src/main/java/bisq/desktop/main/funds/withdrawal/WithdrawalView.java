@@ -41,9 +41,9 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -100,7 +100,6 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -399,7 +398,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                                 .forEach(trade -> walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
                                                         .ifPresent(addressEntry -> {
                                                             if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
-                                                                tradeManager.addTradeToClosedTrades(trade);
+                                                                tradeManager.onTradeCompleted(trade);
                                                         }));
                                     }
 

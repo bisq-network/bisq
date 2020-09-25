@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
@@ -162,6 +161,12 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
     }
 
     protected void sendAckMessage(TradeMessage message, boolean result, @Nullable String errorMessage) {
+        PubKeyRing peersPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
+        if (peersPubKeyRing == null) {
+            log.error("We cannot send the ACK message as peersPubKeyRing is null");
+            return;
+        }
+
         String tradeId = message.getTradeId();
         String sourceUid = message.getUid();
         AckMessage ackMessage = new AckMessage(processModel.getMyNodeAddress(),
@@ -180,7 +185,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
                 ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid);
         processModel.getP2PService().sendEncryptedMailboxMessage(
                 peer,
-                processModel.getTradingPeer().getPubKeyRing(),
+                peersPubKeyRing,
                 ackMessage,
                 new SendMailboxMessageListener() {
                     @Override
@@ -216,7 +221,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
             log.error("Timeout reached. TradeID={}, state={}, timeoutSec={}",
                     trade.getId(), trade.stateProperty().get(), timeoutSec);
             trade.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
-            cleanupTradeOnFault();
+            cleanup();
         }, timeoutSec);
     }
 
@@ -284,36 +289,12 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
         if (message != null) {
             sendAckMessage(message, false, errorMessage);
         }
-        cleanupTradeOnFault();
+        cleanup();
     }
 
 
     private void cleanup() {
         stopTimeout();
         processModel.getP2PService().removeDecryptedDirectMessageListener(this);
-    }
-
-    //todo
-    private void cleanupTradeOnFault() {
-        cleanup();
-
-        log.warn("cleanupTradableOnFault tradeState={}", trade.getState());
-        TradeManager tradeManager = processModel.getTradeManager();
-        if (trade.isInPreparation()) {
-            // no funds left. we just clean up the trade list
-            tradeManager.removePreparedTrade(trade);
-        } else if (!trade.isFundsLockedIn()) {
-            // No deposit tx published yet
-            if (processModel.getPreparedDepositTx() == null) {
-                if (trade.isTakerFeePublished()) {
-                    tradeManager.addTradeToFailedTrades(trade);
-                } else {
-                    tradeManager.addTradeToClosedTrades(trade);
-                }
-            } else {
-                log.error("We have already sent the prepared deposit tx to the peer but we did not received the reply " +
-                        "about the deposit tx nor saw it in the network. tradeId={}, tradeState={}", trade.getId(), trade.getState());
-            }
-        }
     }
 }

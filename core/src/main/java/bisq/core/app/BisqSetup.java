@@ -767,7 +767,6 @@ public class BisqSetup {
                                                 rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
                                                         finalDetails, trade.getShortId(), txId));
                                             }
-                                            tradeManager.addTradeToFailedTrades(trade);
                                         }, 1);
                                     }
                                 });

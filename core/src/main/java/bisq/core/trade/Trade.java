@@ -403,6 +403,8 @@ public abstract class Trade implements Tradable, Model {
     transient protected TradeProtocol tradeProtocol;
     @Nullable
     transient private Transaction depositTx;
+    @Getter
+    transient private boolean isInitialized;
 
     // Added in v1.2.0
     @Nullable
@@ -704,6 +706,8 @@ public abstract class Trade implements Tradable, Model {
         // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
         HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
         set.forEach(msg -> tradeProtocol.applyMailboxMessage(msg));
+
+        isInitialized = true;
     }
 
 
@@ -744,8 +748,14 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Transaction getDelayedPayoutTx() {
+        return getDelayedPayoutTx(processModel.getBtcWalletService());
+    }
+
+    // If called from a not initialized trade (or a closed or failed trade)
+    // we need to pass the btcWalletService
+    @Nullable
+    public Transaction getDelayedPayoutTx(BtcWalletService btcWalletService) {
         if (delayedPayoutTx == null) {
-            BtcWalletService btcWalletService = processModel.getBtcWalletService();
             if (btcWalletService == null) {
                 log.warn("btcWalletService is null. You might call that method before the tradeManager has " +
                         "initialized all trades");
@@ -944,16 +954,20 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Volume getTradeVolume() {
-        if (getTradeAmount() != null && getTradePrice() != null) {
-            Volume volumeByAmount = getTradePrice().getVolumeByAmount(getTradeAmount());
-            if (offer != null) {
-                if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
-                    volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
-                else if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
-                    volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+        try {
+            if (getTradeAmount() != null && getTradePrice() != null) {
+                Volume volumeByAmount = getTradePrice().getVolumeByAmount(getTradeAmount());
+                if (offer != null) {
+                    if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
+                        volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                    else if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
+                        volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+                }
+                return volumeByAmount;
+            } else {
+                return null;
             }
-            return volumeByAmount;
-        } else {
+        } catch (Throwable ignore) {
             return null;
         }
     }

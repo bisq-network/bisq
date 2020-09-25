@@ -79,7 +79,6 @@ import javafx.collections.ObservableList;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -230,10 +229,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public void onOpenSupportTicket() {
         tryOpenDispute(true);
-    }
-
-    public void onMoveToFailedTrades() {
-        tradeManager.addTradeToFailedTrades(getTrade());
     }
 
 
@@ -687,8 +682,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
-    public void addTradeToFailedTrades() {
-        tradeManager.addTradeToFailedTrades(selectedTrade);
+    public void moveTradeToFailedTrades(Trade trade) {
+        tradeManager.moveTradeToFailedTrades(trade);
     }
 
     public boolean isSignWitnessTrade() {

@@ -37,8 +37,8 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.protocol.MediationProtocol;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.TradeProtocol;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -234,7 +234,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         ProcessModel processModel = trade.getProcessModel();
         processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
         processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+        MediationProtocol tradeProtocol = (MediationProtocol) trade.getTradeProtocol();
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
 

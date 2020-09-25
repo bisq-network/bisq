@@ -82,15 +82,12 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -137,14 +134,11 @@ public class TradeManager implements PersistedDataHost {
     private TradableList<Trade> tradableList;
     @Getter
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private List<Trade> tradesForStatistics;
     @Setter
     @Nullable
     private ErrorMessageHandler takeOfferRequestErrorMessageHandler;
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
-    @Getter
-    private final ObservableList<Trade> tradesWithoutDepositTx = FXCollections.observableArrayList();
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Getter
     private final boolean allowFaultyDelayedTxs;
@@ -283,65 +277,16 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void initPendingTrades() {
-        List<Trade> addTradeToFailedTradesList = new ArrayList<>();
-        List<Trade> removePreparedTradeList = new ArrayList<>();
-        tradesForStatistics = new ArrayList<>();
-        tradableList.forEach(trade -> {
-                    if (trade.isDepositPublished() ||
-                            (trade.isTakerFeePublished() && !trade.hasFailed())) {
-                        initPendingTrade(trade);
-                    } else if (trade.isTakerFeePublished() && !trade.isFundsLockedIn()) {
-                        addTradeToFailedTradesList.add(trade);
-                        trade.appendErrorMessage("Invalid state: trade.isTakerFeePublished() && !trade.isFundsLockedIn()");
-                    } else {
-                        removePreparedTradeList.add(trade);
-                    }
-
-                    if (trade.getDepositTx() == null) {
-                        log.warn("Deposit tx for trader with ID {} is null at initPendingTrades. " +
-                                        "This can happen for valid transaction in rare cases (e.g. after a SPV resync). " +
-                                        "We leave it to the user to move the trade to failed trades if the problem persists.",
-                                trade.getId());
-                        tradesWithoutDepositTx.add(trade);
-                    }
-
-                    try {
-                        TradeDataValidation.validatePayoutTx(trade,
-                                trade.getDelayedPayoutTx(),
-                                daoFacade,
-                                btcWalletService);
-                    } catch (TradeDataValidation.ValidationException e) {
-                        log.warn("Delayed payout tx exception, trade {}, exception {}", trade.getId(), e.getMessage());
-                        if (!allowFaultyDelayedTxs) {
-                            // We move it to failed trades so it cannot be continued.
-                            log.warn("We move the trade with ID '{}' to failed trades", trade.getId());
-                            addTradeToFailedTradesList.add(trade);
-                        }
-                    }
-                }
-        );
-
-        // If we have a closed trade where the deposit tx is still not confirmed we move it to failed trades as the
-        // payout tx cannot be valid as well in this case. As the trade do not progress without confirmation of the
-        // deposit tx this should normally not happen. If we detect such a trade at start up (done in BisqSetup)  we
-        // show a popup telling the user to do a SPV resync.
-        closedTradableManager.getClosedTradables().stream()
-                .filter(tradable -> tradable instanceof Trade)
-                .map(tradable -> (Trade) tradable)
-                .filter(Trade::isFundsLockedIn)
-                .forEach(addTradeToFailedTradesList::add);
-
-        addTradeToFailedTradesList.forEach(closedTradableManager::remove);
-
-        addTradeToFailedTradesList.forEach(this::addTradeToFailedTrades);
-
-        removePreparedTradeList.forEach(this::removePreparedTrade);
-
-        cleanUpAddressEntries();
-
+        tradableList.forEach(this::initPendingTrade);
         pendingTradesInitialized.set(true);
     }
 
+    private void initPendingTrade(Trade trade) {
+        initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
+                trade.getProcessModel().getFundsNeededForTrade());
+
+        trade.updateDepositTxFromWallet();
+    }
 
     public void onUserConfirmedFiatPaymentReceived(SellerTrade sellerTrade,
                                                    ResultHandler resultHandler,
@@ -349,30 +294,8 @@ public class TradeManager implements PersistedDataHost {
         sellerTrade.onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
-    private void initPendingTrade(Trade trade) {
-        initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
-                trade.getProcessModel().getFundsNeededForTrade());
-        trade.updateDepositTxFromWallet();
-        tradesForStatistics.add(trade);
-    }
-
     private void onTradesChanged() {
         this.numPendingTrades.set(tradableList.getList().size());
-    }
-
-    private void cleanUpAddressEntries() {
-        // We check if we have address entries which are not in our pending trades and clean up those entries.
-        // They might be either from closed or failed trades or from trades we do not have at all in our data base files.
-        Set<String> activeTrades = getTradableList().stream()
-                .map(Tradable::getId)
-                .collect(Collectors.toSet());
-
-        btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> !activeTrades.contains(e.getOfferId()))
-                .forEach(e -> {
-                    log.warn("We found an outdated addressEntry for trade {}: entry={}", e.getOfferId(), e);
-                    btcWalletService.resetAddressEntriesForPendingTrade(e.getOfferId());
-                });
     }
 
     private void handlePayDepositRequest(InputsForDepositTxRequest inputsForDepositTxRequest, NodeAddress peer) {
@@ -421,8 +344,6 @@ public class TradeManager implements PersistedDataHost {
             });
         } else {
             // TODO respond
-            //(RequestDepositTxInputsMessage)message.
-            //  messageService.sendEncryptedMessage(peerAddress,messageWithPubKey.getMessage().);
             log.debug("We received a take offer request but don't have that offer anymore.");
         }
     }
@@ -581,7 +502,7 @@ public class TradeManager implements PersistedDataHost {
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
-                    addTradeToClosedTrades(trade);
+                    onTradeCompleted(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     trade.getTradeProtocol().onWithdrawCompleted();
                     resultHandler.handleResult();
@@ -605,20 +526,26 @@ public class TradeManager implements PersistedDataHost {
     }
 
     // If trade was completed (closed without fault but might be closed by a dispute) we move it to the closed trades
-    public void addTradeToClosedTrades(Trade trade) {
+    public void onTradeCompleted(Trade trade) {
         removeTrade(trade);
         closedTradableManager.add(trade);
 
-        cleanUpAddressEntries();
+        // TODO The address entry should have been removed already. Check and if its the case remove that.
+        btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
     }
 
     // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
     // we move the trade to failedTradesManager
-    public void addTradeToFailedTrades(Trade trade) {
+    public void moveTradeToFailedTrades(Trade trade) {
         removeTrade(trade);
         failedTradesManager.add(trade);
+    }
 
-        cleanUpAddressEntries();
+    public void addFailedTradeToPending(Trade trade) {
+        if (!trade.isInitialized()) {
+            initPendingTrade(trade);
+        }
+        tradableList.add(trade);
     }
 
     // If trade still has funds locked up it might come back from failed trades
@@ -652,15 +579,6 @@ public class TradeManager implements PersistedDataHost {
         return true;
     }
 
-
-    // If trade is in preparation (if taker role: before taker fee is paid; both roles: before deposit published)
-    // we just remove the trade from our list. We don't store those trades.
-    public void removePreparedTrade(Trade trade) {
-        removeTrade(trade);
-
-        cleanUpAddressEntries();
-    }
-
     private void removeTrade(Trade trade) {
         tradableList.remove(trade);
     }
@@ -675,7 +593,7 @@ public class TradeManager implements PersistedDataHost {
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();
             trade.setDisputeState(disputeState);
-            addTradeToClosedTrades(trade);
+            onTradeCompleted(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         }
     }

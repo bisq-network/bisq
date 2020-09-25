@@ -588,7 +588,6 @@ public abstract class TradeStepView extends AnchorPane {
         if (trade.getDepositTx() == null) {
             log.error("trade.getDepositTx() was null at openMediationResultPopup. " +
                     "We add the trade to failed trades. TradeId={}", trade.getId());
-            model.dataModel.addTradeToFailedTrades();
             new Popup().warning(Res.get("portfolio.pending.mediationResult.error.depositTxNull")).show();
             return;
         } else if (trade.getDelayedPayoutTx() == null) {

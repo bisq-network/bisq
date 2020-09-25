@@ -267,8 +267,11 @@ public class AccountAgeWitnessService {
 
     private Optional<AccountAgeWitness> findTradePeerWitness(Trade trade) {
         TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
-        return (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) ?
-                Optional.empty() : findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
+        return (tradingPeer == null ||
+                tradingPeer.getPaymentAccountPayload() == null ||
+                tradingPeer.getPubKeyRing() == null) ?
+                Optional.empty() :
+                findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
     private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {

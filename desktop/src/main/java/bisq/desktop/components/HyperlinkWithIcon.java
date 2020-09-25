@@ -31,7 +31,11 @@ import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 
+import lombok.Getter;
+
 public class HyperlinkWithIcon extends Hyperlink {
+    @Getter
+    private Node icon;
 
     public HyperlinkWithIcon(String text) {
         this(text, AwesomeIcon.INFO_SIGN);
@@ -77,6 +81,7 @@ public class HyperlinkWithIcon extends Hyperlink {
     }
 
     private void setIcon(Node icon) {
+        this.icon = icon;
         setGraphic(icon);
 
         setContentDisplay(ContentDisplay.RIGHT);
