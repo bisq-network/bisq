@@ -54,11 +54,17 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
         this.coreApi = coreApi;
     }
 
+    // TODO we need to support 3 or 4 balance types: available, reserved, lockedInTrade
+    //  and maybe total wallet balance (available+reserved). To not duplicate the methods,
+    //  we should pass an enum type. Enums in proto are a bit cumbersome as they are
+    //  global so you quickly run into  namespace conflicts if not always prefixes which
+    //  makes it more verbose. In the core code base we move to the strategy to store the
+    //  enum name and map it. This gives also more flexibility with updates.
     @Override
     public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
         try {
-            long result = coreApi.getAvailableBalance();
-            var reply = GetBalanceReply.newBuilder().setBalance(result).build();
+            long availableBalance = coreApi.getAvailableBalance();
+            var reply = GetBalanceReply.newBuilder().setBalance(availableBalance).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalStateException cause) {
@@ -72,8 +78,9 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void getAddressBalance(GetAddressBalanceRequest req,
                                   StreamObserver<GetAddressBalanceReply> responseObserver) {
         try {
-            AddressBalanceInfo result = coreApi.getAddressBalanceInfo(req.getAddress());
-            var reply = GetAddressBalanceReply.newBuilder().setAddressBalanceInfo(result.toProtoMessage()).build();
+            AddressBalanceInfo balanceInfo = coreApi.getAddressBalanceInfo(req.getAddress());
+            var reply = GetAddressBalanceReply.newBuilder()
+                    .setAddressBalanceInfo(balanceInfo.toProtoMessage()).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalStateException cause) {
@@ -87,10 +94,10 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void getFundingAddresses(GetFundingAddressesRequest req,
                                     StreamObserver<GetFundingAddressesReply> responseObserver) {
         try {
-            List<AddressBalanceInfo> result = coreApi.getFundingAddresses();
+            List<AddressBalanceInfo> balanceInfo = coreApi.getFundingAddresses();
             var reply = GetFundingAddressesReply.newBuilder()
                     .addAllAddressBalanceInfo(
-                            result.stream()
+                            balanceInfo.stream()
                                     .map(AddressBalanceInfo::toProtoMessage)
                                     .collect(Collectors.toList()))
                     .build();

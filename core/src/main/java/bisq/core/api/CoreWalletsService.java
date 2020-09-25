@@ -71,7 +71,7 @@ class CoreWalletsService {
         this.btcWalletService = btcWalletService;
     }
 
-    public long getAvailableBalance() {
+    long getAvailableBalance() {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
@@ -82,40 +82,38 @@ class CoreWalletsService {
         return balance.getValue();
     }
 
-    public long getAddressBalance(String addressString) {
+    long getAddressBalance(String addressString) {
         Address address = getAddressEntry(addressString).getAddress();
         return btcWalletService.getBalanceForAddress(address).value;
     }
 
-    public AddressBalanceInfo getAddressBalanceInfo(String addressString) {
+    AddressBalanceInfo getAddressBalanceInfo(String addressString) {
         var satoshiBalance = getAddressBalance(addressString);
         var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
         return new AddressBalanceInfo(addressString, satoshiBalance, numConfirmations);
     }
 
-    public List<AddressBalanceInfo> getFundingAddresses() {
+    List<AddressBalanceInfo> getFundingAddresses() {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
         // Create a new funding address if none exists.
-        if (btcWalletService.getAvailableAddressEntries().size() == 0)
+        if (btcWalletService.getAvailableAddressEntries().isEmpty())
             btcWalletService.getFreshAddressEntry();
 
-        List<String> addressStrings =
-                btcWalletService
-                        .getAvailableAddressEntries()
-                        .stream()
-                        .map(AddressEntry::getAddressString)
-                        .collect(Collectors.toList());
+        List<String> addressStrings = btcWalletService
+                .getAvailableAddressEntries()
+                .stream()
+                .map(AddressEntry::getAddressString)
+                .collect(Collectors.toList());
 
         // getAddressBalance is memoized, because we'll map it over addresses twice.
         // To get the balances, we'll be using .getUnchecked, because we know that
         // this::getAddressBalance cannot return null.
         var balances = memoize(this::getAddressBalance);
 
-        boolean noAddressHasZeroBalance =
-                addressStrings.stream()
-                        .allMatch(addressString -> balances.getUnchecked(addressString) != 0);
+        boolean noAddressHasZeroBalance = addressStrings.stream()
+                .allMatch(addressString -> balances.getUnchecked(addressString) != 0);
 
         if (noAddressHasZeroBalance) {
             var newZeroBalanceAddress = btcWalletService.getFreshAddressEntry();
@@ -129,13 +127,13 @@ class CoreWalletsService {
                 .collect(Collectors.toList());
     }
 
-    public int getNumConfirmationsForMostRecentTransaction(String addressString) {
+    int getNumConfirmationsForMostRecentTransaction(String addressString) {
         Address address = getAddressEntry(addressString).getAddress();
         TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(address);
         return confidence == null ? 0 : confidence.getDepthInBlocks();
     }
 
-    public void setWalletPassword(String password, String newPassword) {
+    void setWalletPassword(String password, String newPassword) {
         verifyWalletsAreAvailable();
 
         KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
@@ -165,7 +163,7 @@ class CoreWalletsService {
         walletsManager.backupWallets();
     }
 
-    public void lockWallet() {
+    void lockWallet() {
         if (!walletsManager.areWalletsEncrypted())
             throw new IllegalStateException("wallet is not encrypted with a password");
 
@@ -175,7 +173,7 @@ class CoreWalletsService {
         tempAesKey = null;
     }
 
-    public void unlockWallet(String password, long timeout) {
+    void unlockWallet(String password, long timeout) {
         verifyWalletIsAvailableAndEncrypted();
 
         KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
@@ -213,7 +211,7 @@ class CoreWalletsService {
 
     // Provided for automated wallet protection method testing, despite the
     // security risks exposed by providing users the ability to decrypt their wallets.
-    public void removeWalletPassword(String password) {
+    void removeWalletPassword(String password) {
         verifyWalletIsAvailableAndEncrypted();
         KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
 

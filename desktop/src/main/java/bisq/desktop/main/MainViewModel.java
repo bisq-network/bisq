@@ -395,6 +395,15 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .show();
             }
         });
+        bisqSetup.setQubesOSInfoHandler(() -> {
+            String key = "qubesOSSetupInfo";
+            if (preferences.showAgain(key)) {
+                new Popup().information(Res.get("popup.info.qubesOSSetupInfo"))
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .dontShowAgainId(key)
+                        .show();
+            }
+        });
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))

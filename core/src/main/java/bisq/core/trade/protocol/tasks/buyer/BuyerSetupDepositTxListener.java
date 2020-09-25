@@ -58,10 +58,7 @@ public class BuyerSetupDepositTxListener extends TradeTask {
                 NetworkParameters params = walletService.getParams();
                 Transaction preparedDepositTx = new Transaction(params, processModel.getPreparedDepositTx());
                 checkArgument(!preparedDepositTx.getOutputs().isEmpty(), "preparedDepositTx.getOutputs() must not be empty");
-
-                //TODO update to new bitcoinj API
-                Address depositTxAddress = preparedDepositTx.getOutput(0).getAddressFromP2SH(params);
-
+                Address depositTxAddress = preparedDepositTx.getOutput(0).getScriptPubKey().getToAddress(params);
                 TransactionConfidence confidence = walletService.getConfidenceForAddress(depositTxAddress);
                 if (isVisibleInNetwork(confidence)) {
                     applyConfidence(confidence);

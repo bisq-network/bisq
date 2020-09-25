@@ -1005,7 +1005,8 @@ public abstract class Trade implements Tradable, Model {
                 log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
                         new Date(startTime), new Date(tradeTime), new Date(blockTime));
             } else {
-                log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getTxId().toString());
+                log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}",
+                        depositTx.getTxId().toString());
                 startTime = now;
             }
         } else {

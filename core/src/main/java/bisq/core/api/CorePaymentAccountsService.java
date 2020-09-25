@@ -33,6 +33,9 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.payment.payload.PaymentMethod.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 class CorePaymentAccountsService {
 
@@ -49,17 +52,19 @@ class CorePaymentAccountsService {
         this.user = user;
     }
 
-    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
-        // Create and persist a PerfectMoney dummy payment account.  There is no guard
-        // against creating accounts with duplicate names & numbers, only the uuid and
-        // creation date are unique.
-        PaymentMethod dummyPaymentMethod = PaymentMethod.getDummyPaymentMethod(PaymentMethod.PERFECT_MONEY_ID);
-        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(dummyPaymentMethod);
-        paymentAccount.init();
-        paymentAccount.setAccountName(accountName);
-        ((PerfectMoneyAccount) paymentAccount).setAccountNr(accountNumber);
-        paymentAccount.setSingleTradeCurrency(new FiatCurrency(fiatCurrencyCode.toUpperCase()));
-        user.addPaymentAccount(paymentAccount);
+    void createPaymentAccount(String paymentMethodId,
+                              String accountName,
+                              String accountNumber,
+                              String currencyCode) {
+
+        PaymentAccount paymentAccount = getNewPaymentAccount(paymentMethodId,
+                accountName,
+                accountNumber,
+                currencyCode);
+
+        // TODO not sure if there is more to do at account creation.
+        //  Need to check all the flow when its created from UI.
+        user.addPaymentAccountIfNotExists(paymentAccount);
 
         // Don't do this on mainnet until thoroughly tested.
         if (config.baseCurrencyNetwork.isRegtest())
@@ -68,7 +73,64 @@ class CorePaymentAccountsService {
         log.info("Payment account {} saved", paymentAccount.getId());
     }
 
-    public Set<PaymentAccount> getPaymentAccounts() {
+    Set<PaymentAccount> getPaymentAccounts() {
         return user.getPaymentAccounts();
+    }
+
+    private PaymentAccount getNewPaymentAccount(String paymentMethodId,
+                                                String accountName,
+                                                String accountNumber,
+                                                String currencyCode) {
+        PaymentAccount paymentAccount = null;
+        PaymentMethod paymentMethod = getPaymentMethodById(paymentMethodId);
+
+        switch (paymentMethod.getId()) {
+            case UPHOLD_ID:
+            case MONEY_BEAM_ID:
+            case POPMONEY_ID:
+            case REVOLUT_ID:
+                //noinspection DuplicateBranchesInSwitch
+                log.error("PaymentMethod {} not supported yet.", paymentMethod);
+                break;
+            case PERFECT_MONEY_ID:
+                // Create and persist a PerfectMoney dummy payment account.  There is no
+                // guard against creating accounts with duplicate names & numbers, only
+                // the uuid and creation date are unique.
+                paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
+                paymentAccount.init();
+                paymentAccount.setAccountName(accountName);
+                ((PerfectMoneyAccount) paymentAccount).setAccountNr(accountNumber);
+                paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
+                break;
+            case SEPA_ID:
+            case SEPA_INSTANT_ID:
+            case FASTER_PAYMENTS_ID:
+            case NATIONAL_BANK_ID:
+            case SAME_BANK_ID:
+            case SPECIFIC_BANKS_ID:
+            case JAPAN_BANK_ID:
+            case ALI_PAY_ID:
+            case WECHAT_PAY_ID:
+            case SWISH_ID:
+            case CLEAR_X_CHANGE_ID:
+            case CHASE_QUICK_PAY_ID:
+            case INTERAC_E_TRANSFER_ID:
+            case US_POSTAL_MONEY_ORDER_ID:
+            case MONEY_GRAM_ID:
+            case WESTERN_UNION_ID:
+            case CASH_DEPOSIT_ID:
+            case HAL_CASH_ID:
+            case F2F_ID:
+            case PROMPT_PAY_ID:
+            case ADVANCED_CASH_ID:
+            default:
+                log.error("PaymentMethod {} not supported yet.", paymentMethod);
+                break;
+        }
+
+        checkNotNull(paymentAccount,
+                "Could not create payment account with paymentMethodId "
+                        + paymentMethodId + ".");
+        return paymentAccount;
     }
 }

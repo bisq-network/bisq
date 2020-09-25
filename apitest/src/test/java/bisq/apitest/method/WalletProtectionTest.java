@@ -25,7 +25,7 @@ public class WalletProtectionTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         try {
-            setUpScaffold(alicedaemon.name());
+            setUpScaffold(alicedaemon);
             MILLISECONDS.sleep(2000);
         } catch (Exception ex) {
             fail(ex);

@@ -38,8 +38,6 @@ import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
-import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -47,12 +45,14 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.listeners.NewBestBlockListener;
+import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptChunk;
+import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.signers.TransactionSigner;
 import org.bitcoinj.utils.Threading;
@@ -106,7 +106,6 @@ public abstract class WalletService {
     protected final Preferences preferences;
     protected final FeeService feeService;
     protected final NetworkParameters params;
-    @SuppressWarnings("deprecation")
     protected final BisqWalletListener walletEventListener = new BisqWalletListener();
     protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
@@ -508,17 +507,17 @@ public abstract class WalletService {
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        printTx("empty wallet", sendResult.tx);
+        printTx("empty btc wallet", sendResult.tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
-                log.info("emptyWallet onSuccess Transaction=" + result);
+                log.info("emptyBtcWallet onSuccess Transaction=" + result);
                 resultHandler.handleResult();
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                log.error("emptyWallet onFailure " + t.toString());
+                log.error("emptyBtcWallet onFailure " + t.toString());
                 errorMessageHandler.handleErrorMessage(t.getMessage());
             }
         }, MoreExecutors.directExecutor());
@@ -551,56 +550,8 @@ public abstract class WalletService {
     // Wallet delegates to avoid direct access to wallet outside the service class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addCoinsReceivedEventListener(WalletCoinsReceivedEventListener listener) {
-        wallet.addCoinsReceivedEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addCoinsSentEventListener(WalletCoinsSentEventListener listener) {
-        wallet.addCoinsSentEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addReorganizeEventListener(WalletReorganizeEventListener listener) {
-        wallet.addReorganizeEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addTransactionConfidenceEventListener(TransactionConfidenceEventListener listener) {
-        wallet.addTransactionConfidenceEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addKeyChainEventListener(KeyChainEventListener listener) {
-        wallet.addKeyChainEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void addScriptChangeEventListener(ScriptsChangeEventListener listener) {
-        wallet.addScriptChangeEventListener(Threading.USER_THREAD, listener);
-    }
-
     public void addChangeEventListener(WalletChangeEventListener listener) {
         wallet.addChangeEventListener(Threading.USER_THREAD, listener);
-    }
-
-    public void removeCoinsReceivedEventListener(WalletCoinsReceivedEventListener listener) {
-        wallet.removeCoinsReceivedEventListener(listener);
-    }
-
-    public void removeCoinsSentEventListener(WalletCoinsSentEventListener listener) {
-        wallet.removeCoinsSentEventListener(listener);
-    }
-
-    public void removeReorganizeEventListener(WalletReorganizeEventListener listener) {
-        wallet.removeReorganizeEventListener(listener);
-    }
-
-    public void removeTransactionConfidenceEventListener(TransactionConfidenceEventListener listener) {
-        wallet.removeTransactionConfidenceEventListener(listener);
-    }
-
-    public void removeKeyChainEventListener(KeyChainEventListener listener) {
-        wallet.removeKeyChainEventListener(listener);
-    }
-
-    public void removeScriptChangeEventListener(ScriptsChangeEventListener listener) {
-        wallet.removeScriptChangeEventListener(listener);
     }
 
     public void removeChangeEventListener(WalletChangeEventListener listener) {
@@ -792,7 +743,6 @@ public abstract class WalletService {
                                                  TransactionConfidence.Source source) throws VerificationException {
         return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener
