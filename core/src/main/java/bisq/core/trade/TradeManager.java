@@ -135,6 +135,7 @@ public class TradeManager implements PersistedDataHost {
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private TradableList<Trade> tradableList;
+    @Getter
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
     private List<Trade> tradesForStatistics;
     @Setter
@@ -305,15 +306,11 @@ public class TradeManager implements PersistedDataHost {
                     }
 
                     try {
-                        DelayedPayoutTxValidation.validatePayoutTx(trade,
+                        TradeDataValidation.validatePayoutTx(trade,
                                 trade.getDelayedPayoutTx(),
                                 daoFacade,
                                 btcWalletService);
-                    } catch (DelayedPayoutTxValidation.DonationAddressException |
-                            DelayedPayoutTxValidation.InvalidTxException |
-                            DelayedPayoutTxValidation.InvalidLockTimeException |
-                            DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                            DelayedPayoutTxValidation.AmountMismatchException e) {
+                    } catch (TradeDataValidation.ValidationException e) {
                         log.warn("Delayed payout tx exception, trade {}, exception {}", trade.getId(), e.getMessage());
                         if (!allowFaultyDelayedTxs) {
                             // We move it to failed trades so it cannot be continued.
