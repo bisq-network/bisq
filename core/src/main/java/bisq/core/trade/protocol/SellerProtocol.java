@@ -34,7 +34,6 @@ import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerSignsDelayedPayoutTx;
-import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -112,7 +111,7 @@ public abstract class SellerProtocol extends MediationProtocol {
                 .setup(tasks(
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
                         ApplyFilter.class,
-                        TakerVerifyMakerFeePayment.class)) //todo get TakerVerifyMakerFeePayment
+                        getVerifyPeersFeePaymentClass()))
                 .executeTasks();
     }
 
