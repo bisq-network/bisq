@@ -388,7 +388,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.
-            log.error("Donation address invalid. {}", e.toString());
+            log.warn("Donation address invalid. {}", e.toString());
         }
 
         if (!isAgent(dispute)) {
