@@ -97,7 +97,7 @@ public class CoreApi {
                              double buyerSecurityDeposit,
                              String paymentAccountId,
                              TransactionResultHandler resultHandler) {
-        return coreOffersService.createOffer(currencyCode.toUpperCase(),
+        return coreOffersService.createOffer(currencyCode,
                 directionAsString,
                 priceAsString,
                 useMarketBasedPrice,
@@ -122,7 +122,7 @@ public class CoreApi {
                              boolean useSavingsWallet,
                              TransactionResultHandler resultHandler) {
         return coreOffersService.createOffer(offerId,
-                currencyCode.toUpperCase(),
+                currencyCode,
                 direction,
                 price,
                 useMarketBasedPrice,

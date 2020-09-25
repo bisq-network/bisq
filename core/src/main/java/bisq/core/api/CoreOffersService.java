@@ -94,6 +94,7 @@ class CoreOffersService {
                       double buyerSecurityDeposit,
                       String paymentAccountId,
                       TransactionResultHandler resultHandler) {
+        currencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
@@ -134,7 +135,7 @@ class CoreOffersService {
 
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
-                currencyCode.toUpperCase(),
+                currencyCode,
                 amount,
                 minAmount,
                 price,
@@ -170,7 +171,7 @@ class CoreOffersService {
 
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
-                currencyCode,
+                currencyCode.toUpperCase(),
                 amount,
                 minAmount,
                 price,
