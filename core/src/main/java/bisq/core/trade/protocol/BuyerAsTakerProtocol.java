@@ -59,7 +59,6 @@ import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -238,9 +237,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkArgument(!wasDisputed(), "A call to onFiatPaymentStarted is not permitted once a " +
-                "dispute has been opened.");
-
         if (!trade.isFiatSent()) {
             buyerAsTakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
 
