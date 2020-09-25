@@ -601,16 +601,21 @@ public class BtcWalletService extends WalletService {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .findAny();
-        return getOrCreateAddressEntry(context, addressEntry);
+        return getOrCreateAddressEntry(context, addressEntry, false);
     }
 
     public AddressEntry getFreshAddressEntry() {
+        return getFreshAddressEntry(true);
+    }
+
+    public AddressEntry getFreshAddressEntry(boolean segwit) {
         AddressEntry.Context context = AddressEntry.Context.AVAILABLE;
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .filter(e -> isAddressUnused(e.getAddress()))
+                .filter(e -> Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType()) == segwit)
                 .findAny();
-        return getOrCreateAddressEntry(context, addressEntry);
+        return getOrCreateAddressEntry(context, addressEntry, segwit);
     }
 
     public void recoverAddressEntry(String offerId, String address, AddressEntry.Context context) {
@@ -618,18 +623,15 @@ public class BtcWalletService extends WalletService {
                 addressEntryList.swapAvailableToAddressEntryWithOfferId(addressEntry, context, offerId));
     }
 
-    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry, boolean segwit) {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
             DeterministicKey key;
-            boolean segwit;
-            if (AddressEntry.Context.AVAILABLE.equals(context)) {
+            if (segwit) {
                 key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2WPKH));
-                segwit = true;
             } else {
                 key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
-                segwit = false;
             }
             AddressEntry entry = new AddressEntry(key, context, segwit);
             addressEntryList.addAddressEntry(entry);
