@@ -875,7 +875,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
                                     // We only allow to move to failed trade if the txs are invalid.
                                     // Otherwise the trade has to be completed.
-                                    trashIconButton.setDisable(!trade.isTxChainInvalid());
+                                    boolean isTxChainValid = !trade.isTxChainInvalid();
+                                    boolean paidOut = trade.getPayoutTxId() != null;
+                                    trashIconButton.setDisable(isTxChainValid || paidOut);
 
                                     HBox hBox = new HBox();
                                     hBox.setSpacing(0);
