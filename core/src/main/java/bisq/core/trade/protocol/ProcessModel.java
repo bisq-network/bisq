@@ -169,6 +169,11 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private long sellerPayoutAmountFromMediation;
 
+    // Added in v 1.4.0
+    @Setter
+    @Getter
+    transient private Transaction depositTx;
+
     // We want to indicate the user the state of the message delivery of the
     // CounterCurrencyTransferStartedMessage. As well we do an automatic re-send in case it was not ACKed yet.
     // To enable that even after restart we persist the state.

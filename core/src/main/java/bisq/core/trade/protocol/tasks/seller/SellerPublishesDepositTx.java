@@ -40,11 +40,15 @@ public class SellerPublishesDepositTx extends TradeTask {
         try {
             runInterceptHook();
 
-            processModel.getTradeWalletService().broadcastTx(trade.getDepositTx(),
+            final Transaction depositTx = processModel.getDepositTx();
+            processModel.getTradeWalletService().broadcastTx(depositTx,
                     new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             if (!completed) {
+                                // Now as we have published the deposit tx we set it in trade
+                                trade.applyDepositTx(depositTx);
+
                                 trade.setState(Trade.State.SELLER_PUBLISHED_DEPOSIT_TX);
 
                                 processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(processModel.getOffer().getId(),

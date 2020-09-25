@@ -47,6 +47,11 @@ public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
             Transaction preparedDelayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxAsBytes);
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);
 
+            // When we receive that message the taker has published the taker fee, so we apply it to the trade.
+            // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
+            // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
+            trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
+
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             complete();

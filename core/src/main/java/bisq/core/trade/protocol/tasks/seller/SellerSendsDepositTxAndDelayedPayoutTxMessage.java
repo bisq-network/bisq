@@ -67,7 +67,7 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
                     deterministicId,
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
-                    checkNotNull(trade.getDepositTx()).bitcoinSerialize(),
+                    checkNotNull(processModel.getDepositTx()).bitcoinSerialize(),
                     checkNotNull(trade.getDelayedPayoutTx()).bitcoinSerialize());
         }
         return message;

@@ -1164,7 +1164,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isTxChainInvalid() {
-        return offer.getOfferFeePaymentTxId() == null ||
+        return checkNotNull(offer).getOfferFeePaymentTxId() == null ||
                 getTakerFeeTxId() == null ||
                 getDepositTxId() == null ||
                 getDelayedPayoutTxBytes() == null;

@@ -57,6 +57,7 @@ public class TakerPublishFeeTx extends TradeTask {
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(Transaction transaction) {
+                                trade.setTakerFeeTxId(transaction.getTxId().toString());
                                 trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
                                 complete();
                             }
@@ -81,9 +82,7 @@ public class TakerPublishFeeTx extends TradeTask {
                                 if (!completed) {
                                     if (transaction != null) {
                                         trade.setTakerFeeTxId(transaction.getTxId().toString());
-                                        processModel.setTakeOfferFeeTx(transaction);
                                         trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
-
                                         complete();
                                     }
                                 } else {

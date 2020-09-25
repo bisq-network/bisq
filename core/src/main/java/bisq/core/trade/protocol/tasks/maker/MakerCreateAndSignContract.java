@@ -32,11 +32,8 @@ import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;
 
-import com.google.common.base.Preconditions;
-
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -49,7 +46,7 @@ public class MakerCreateAndSignContract extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Preconditions.checkNotNull(trade.getTakerFeeTxId(), "trade.getTakeOfferFeeTxId() must not be null");
+            String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId());
 
             TradingPeer taker = processModel.getTradingPeer();
             boolean isBuyerMakerAndSellerTaker = trade instanceof BuyerAsMakerTrade;
@@ -60,8 +57,6 @@ public class MakerCreateAndSignContract extends TradeTask {
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
-                    "addressEntry must not be set here.");
             AddressEntry makerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
 
@@ -70,7 +65,7 @@ public class MakerCreateAndSignContract extends TradeTask {
                     processModel.getOffer().getOfferPayload(),
                     checkNotNull(trade.getTradeAmount()).value,
                     trade.getTradePrice().getValue(),
-                    trade.getTakerFeeTxId(),
+                    takerFeeTxId,
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getMediatorNodeAddress(),

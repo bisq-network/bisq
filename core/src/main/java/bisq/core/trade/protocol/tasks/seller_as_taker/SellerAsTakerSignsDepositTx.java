@@ -80,7 +80,8 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
                     tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigPubKey);
 
-            trade.applyDepositTx(depositTx);
+            // We set the deposit tx to trade once we have it published
+            processModel.setDepositTx(depositTx);
 
             complete();
         } catch (Throwable t) {
