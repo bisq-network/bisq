@@ -123,7 +123,7 @@ public abstract class Trade implements Tradable, Model {
         // maker perspective
         MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
         MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
-        MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED), //todo remove
+        MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED), //not a mailbox msg, not used...
         MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
 
         // taker perspective
@@ -1232,8 +1232,9 @@ public abstract class Trade implements Tradable, Model {
 
     private void setConfirmedState() {
         // we only apply the state if we are not already further in the process
-        if (!isDepositConfirmed())
+        if (!isDepositConfirmed()) {
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
+        }
     }
 
     @Override

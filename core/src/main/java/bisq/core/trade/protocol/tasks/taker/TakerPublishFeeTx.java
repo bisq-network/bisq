@@ -57,14 +57,12 @@ public class TakerPublishFeeTx extends TradeTask {
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(Transaction transaction) {
-                                trade.setTakerFeeTxId(transaction.getTxId().toString());
-                                trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
-                                complete();
+                                TakerPublishFeeTx.this.onSuccess(transaction);
                             }
 
                             @Override
                             public void onFailure(TxBroadcastException exception) {
-                                failed(exception);
+                                TakerPublishFeeTx.this.onFailure(exception);
                             }
                         });
             } else {
@@ -79,35 +77,43 @@ public class TakerPublishFeeTx extends TradeTask {
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(@Nullable Transaction transaction) {
-                                if (!completed) {
-                                    if (transaction != null) {
-                                        trade.setTakerFeeTxId(transaction.getTxId().toString());
-                                        trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
-                                        complete();
-                                    }
-                                } else {
-                                    log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
-                                }
+                                TakerPublishFeeTx.this.onSuccess(transaction);
                             }
 
                             @Override
                             public void onFailure(TxBroadcastException exception) {
-                                if (!completed) {
-                                    log.error(exception.toString());
-                                    exception.printStackTrace();
-                                    trade.setErrorMessage("An error occurred.\n" +
-                                            "Error message:\n"
-                                            + exception.getMessage());
-                                    failed(exception);
-                                } else {
-                                    log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
-                                }
+                                TakerPublishFeeTx.this.onFailure(exception);
                             }
                         },
                         1);
             }
         } catch (Throwable t) {
             failed(t);
+        }
+    }
+
+    protected void onFailure(TxBroadcastException exception) {
+        if (!completed) {
+            log.error(exception.toString());
+            exception.printStackTrace();
+            trade.setErrorMessage("An error occurred.\n" +
+                    "Error message:\n"
+                    + exception.getMessage());
+            failed(exception);
+        } else {
+            log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
+        }
+    }
+
+    protected void onSuccess(@org.jetbrains.annotations.Nullable Transaction transaction) {
+        if (!completed) {
+            if (transaction != null) {
+                trade.setTakerFeeTxId(transaction.getTxId().toString());
+                trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
+                complete();
+            }
+        } else {
+            log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
         }
     }
 }

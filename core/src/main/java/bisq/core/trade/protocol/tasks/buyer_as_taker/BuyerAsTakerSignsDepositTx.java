@@ -86,7 +86,7 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     sellerInputs,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey);
-            trade.applyDepositTx(depositTx);
+            processModel.setDepositTx(depositTx);
 
             complete();
         } catch (Throwable t) {

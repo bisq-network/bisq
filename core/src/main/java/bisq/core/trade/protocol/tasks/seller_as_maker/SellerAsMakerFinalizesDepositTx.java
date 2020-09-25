@@ -46,7 +46,7 @@ public class SellerAsMakerFinalizesDepositTx extends TradeTask {
             int numTakersInputs = checkNotNull(processModel.getTradingPeer().getRawTransactionInputs()).size();
             processModel.getTradeWalletService().sellerAsMakerFinalizesDepositTx(myDepositTx, takersDepositTx, numTakersInputs);
 
-            trade.applyDepositTx(myDepositTx);
+            processModel.setDepositTx(myDepositTx);
 
             complete();
         } catch (Throwable t) {
