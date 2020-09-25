@@ -187,7 +187,7 @@ public class FluentProtocol {
                 boolean isTradeIdValid = message == null || isTradeIdValid(trade.getId(), message);
 
                 if (!allPreConditionsMet) {
-                    log.error("PreConditions not met. preConditions={}, this={}", preConditions, this);
+                    log.error("PreConditions not met. preConditions={}, this={}, tradeId={}", preConditions, this, trade.getId());
                     if (preConditionFailedHandler != null) {
                         preConditionFailedHandler.run();
                     }
@@ -215,17 +215,19 @@ public class FluentProtocol {
                             event.name() + " event" :
                             "";
             if (isPhaseValid) {
-                log.info("We received {} at phase {} and state {}",
+                log.info("We received {} at phase {} and state {}, tradeId={}",
                         trigger,
                         trade.getPhase(),
-                        trade.getState());
+                        trade.getState(),
+                        trade.getId());
             } else {
-                log.error("We received {} but we are are not in the correct phase. Expected phases={}, " +
-                                "Trade phase={}, Trade state= {} ",
+                log.error("We received {} but we are are not in the expected phase. Expected phases={}, " +
+                                "Trade phase={}, Trade state= {}, tradeId={}",
                         trigger,
                         expectedPhases,
                         trade.getPhase(),
-                        trade.getState());
+                        trade.getState(),
+                        trade.getId());
             }
 
             return isPhaseValid;
@@ -243,15 +245,17 @@ public class FluentProtocol {
                             event.name() + " event" :
                             "";
             if (isStateValid) {
-                log.info("We received {} at state {}",
+                log.info("We received {} at state {}, tradeId={}",
                         trigger,
-                        trade.getState());
+                        trade.getState(),
+                        trade.getId());
             } else {
-                log.error("We received {} but we are are not in the correct state. Expected states={}, " +
-                                "Trade state= {} ",
+                log.error("We received {} but we are are not in the expected state. Expected states={}, " +
+                                "Trade state= {}, tradeId={}",
                         trigger,
                         expectedStates,
-                        trade.getState());
+                        trade.getState(),
+                        trade.getId());
             }
 
             return isStateValid;

@@ -227,7 +227,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             }
         };
 
-        tradesListChangeListener = c -> updateNewChatMessagesByTradeMap();
+        tradesListChangeListener = c -> onListChanged();
     }
 
     @Override
@@ -538,6 +538,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 //UserThread.execute(() -> table.getFocusModel().focus(index));
             });
         }
+    }
+
+    private void onListChanged() {
+        updateNewChatMessagesByTradeMap();
+        updateMoveTradeToFailedColumnState();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

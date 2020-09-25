@@ -97,7 +97,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
     public void onDirectMessage(DecryptedMessageWithPubKey message, NodeAddress peer) {
         if (isPubKeyValid(message)) {
             NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
-            if (networkEnvelope instanceof TradeMessage) {
+            if (networkEnvelope instanceof TradeMessage && isMyTradeMessage((TradeMessage) networkEnvelope)) {
                 onTradeMessage((TradeMessage) networkEnvelope, peer);
             } else if (networkEnvelope instanceof AckMessage) {
                 onAckMessage((AckMessage) networkEnvelope, peer);
@@ -292,6 +292,9 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
         cleanup();
     }
 
+    private boolean isMyTradeMessage(TradeMessage message) {
+        return message.getTradeId().equals(trade.getId());
+    }
 
     private void cleanup() {
         stopTimeout();

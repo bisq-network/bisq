@@ -40,13 +40,11 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (trade.getDepositTx() != null) {
+            if (processModel.getDepositTx() != null) {
                 DepositTxMessage message = new DepositTxMessage(UUID.randomUUID().toString(),
                         processModel.getOfferId(),
                         processModel.getMyNodeAddress(),
-                        trade.getDepositTx().bitcoinSerialize());
-
-                // todo trade.setState
+                        processModel.getDepositTx().bitcoinSerialize());
 
                 NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
                 log.info("Send {} to peer {}. tradeId={}, uid={}",
@@ -60,7 +58,6 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
                             public void onArrived() {
                                 log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                         message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                // todo trade.setState
                                 complete();
                             }
 
@@ -69,14 +66,13 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
                                 log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                         message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
 
-                                // todo trade.setState
                                 appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                                 failed();
                             }
                         }
                 );
             } else {
-                log.error("trade.getDepositTx() = " + trade.getDepositTx());
+                log.error("processModel.getDepositTx() = " + processModel.getDepositTx());
                 failed("DepositTx is null");
             }
         } catch (Throwable t) {

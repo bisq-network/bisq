@@ -122,37 +122,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         AddToOfferBook.class)
                 ));
 
-        addGroup("BuyerAsMakerProtocol",
-                FXCollections.observableArrayList(Arrays.asList(
-                        MakerProcessesInputsForDepositTxRequest.class,
-                        ApplyFilter.class,
-                        VerifyPeersAccountAgeWitness.class,
-                        MakerVerifyTakerFeePayment.class,
-                        MakerSetsLockTime.class,
-                        MakerCreateAndSignContract.class,
-                        BuyerAsMakerCreatesAndSignsDepositTx.class,
-                        BuyerSetupDepositTxListener.class,
-                        BuyerAsMakerSendsInputsForDepositTxResponse.class,
 
-                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
-                        MakerRemovesOpenOffer.class,
-                        BuyerVerifiesPreparedDelayedPayoutTx.class,
-                        BuyerSignsDelayedPayoutTx.class,
-                        BuyerSendsDelayedPayoutTxSignatureResponse.class,
-
-                        BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
-                        BuyerVerifiesFinalDelayedPayoutTx.class,
-                        PublishTradeStatistics.class,
-
-                        ApplyFilter.class,
-                        MakerVerifyTakerFeePayment.class,
-                        BuyerSignPayoutTx.class,
-                        BuyerSetupPayoutTxListener.class,
-                        BuyerSendCounterCurrencyTransferStartedMessage.class,
-
-                        BuyerProcessPayoutTxPublishedMessage.class
-                        )
-                ));
         addGroup("SellerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         ApplyFilter.class,
@@ -189,8 +159,39 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         )
                 ));
+        addGroup("BuyerAsMakerProtocol",
+                FXCollections.observableArrayList(Arrays.asList(
+                        MakerProcessesInputsForDepositTxRequest.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class,
+                        MakerVerifyTakerFeePayment.class,
+                        MakerSetsLockTime.class,
+                        MakerCreateAndSignContract.class,
+                        BuyerAsMakerCreatesAndSignsDepositTx.class,
+                        BuyerSetupDepositTxListener.class,
+                        BuyerAsMakerSendsInputsForDepositTxResponse.class,
 
-        //todo
+                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
+                        MakerRemovesOpenOffer.class,
+                        BuyerVerifiesPreparedDelayedPayoutTx.class,
+                        BuyerSignsDelayedPayoutTx.class,
+                        BuyerSendsDelayedPayoutTxSignatureResponse.class,
+
+                        BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                        BuyerVerifiesFinalDelayedPayoutTx.class,
+                        PublishTradeStatistics.class,
+
+                        ApplyFilter.class,
+                        MakerVerifyTakerFeePayment.class,
+                        BuyerSignPayoutTx.class,
+                        BuyerSetupPayoutTxListener.class,
+                        BuyerSendCounterCurrencyTransferStartedMessage.class,
+
+                        BuyerProcessPayoutTxPublishedMessage.class
+                        )
+                ));
+
+
         addGroup("BuyerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         ApplyFilter.class,
