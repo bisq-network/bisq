@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.util.MathUtils.exactMultiply;
 import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
@@ -84,6 +85,7 @@ class CoreOffersService {
         return offers;
     }
 
+    // Create offer with a random offer id.
     Offer createOffer(String currencyCode,
                       String directionAsString,
                       String priceAsString,
@@ -119,42 +121,7 @@ class CoreOffersService {
                 resultHandler);
     }
 
-    Offer createAndPlaceOffer(String offerId,
-                              String currencyCode,
-                              Direction direction,
-                              Price price,
-                              boolean useMarketBasedPrice,
-                              double marketPriceMargin,
-                              Coin amount,
-                              Coin minAmount,
-                              double buyerSecurityDeposit,
-                              PaymentAccount paymentAccount,
-                              boolean useSavingsWallet,
-                              TransactionResultHandler resultHandler) {
-        Coin useDefaultTxFee = Coin.ZERO;
-
-        Offer offer = createOfferService.createAndGetOffer(offerId,
-                direction,
-                currencyCode,
-                amount,
-                minAmount,
-                price,
-                useDefaultTxFee,
-                useMarketBasedPrice,
-                marketPriceMargin,
-                buyerSecurityDeposit,
-                paymentAccount);
-
-        // TODO give user chance to examine offer before placing it (placeoffer)
-        openOfferManager.placeOffer(offer,
-                buyerSecurityDeposit,
-                useSavingsWallet,
-                resultHandler,
-                log::error);
-
-        return offer;
-    }
-
+    // Create offer for given offer id.
     Offer createOffer(String offerId,
                       String currencyCode,
                       Direction direction,
@@ -177,7 +144,7 @@ class CoreOffersService {
                 price,
                 useDefaultTxFee,
                 useMarketBasedPrice,
-                marketPriceMargin,
+                exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
                 paymentAccount);
 
@@ -189,6 +156,43 @@ class CoreOffersService {
 
         return offer;
     }
+
+    private Offer createAndPlaceOffer(String offerId,
+                                      String currencyCode,
+                                      Direction direction,
+                                      Price price,
+                                      boolean useMarketBasedPrice,
+                                      double marketPriceMargin,
+                                      Coin amount,
+                                      Coin minAmount,
+                                      double buyerSecurityDeposit,
+                                      PaymentAccount paymentAccount,
+                                      boolean useSavingsWallet,
+                                      TransactionResultHandler resultHandler) {
+        Coin useDefaultTxFee = Coin.ZERO;
+
+        Offer offer = createOfferService.createAndGetOffer(offerId,
+                direction,
+                currencyCode,
+                amount,
+                minAmount,
+                price,
+                useDefaultTxFee,
+                useMarketBasedPrice,
+                exactMultiply(marketPriceMargin, 0.01),
+                buyerSecurityDeposit,
+                paymentAccount);
+
+        // TODO give user chance to examine offer before placing it (placeoffer)
+        openOfferManager.placeOffer(offer,
+                buyerSecurityDeposit,
+                useSavingsWallet,
+                resultHandler,
+                log::error);
+
+        return offer;
+    }
+
 
     private long priceStringToLong(String priceAsString, String currencyCode) {
         int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
