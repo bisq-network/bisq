@@ -364,7 +364,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         }
 
         if (trade.hasErrorMessage()) {
-            return Res.get("portfolio.pending.failedTrade.errorMsgSet");
+            return Res.get("portfolio.pending.failedTrade.errorMsgSet", trade.getErrorMessage());
         }
 
         return Res.get("shared.na");

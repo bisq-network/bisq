@@ -42,6 +42,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
@@ -60,6 +61,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 
 import javafx.geometry.Insets;
 
@@ -170,7 +174,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), paymentMethodText);
 
         // second group
-        rows = 9;
+        rows = 7;
         PaymentAccountPayload buyerPaymentAccountPayload = null;
         PaymentAccountPayload sellerPaymentAccountPayload = null;
 
@@ -189,6 +193,10 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 rows++;
         }
 
+        boolean showXmrProofResult = checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR") &&
+                trade.getAssetTxProofResult() != null &&
+                trade.getAssetTxProofResult() != AssetTxProofResult.UNDEFINED;
+
         if (trade.getPayoutTx() != null)
             rows++;
         boolean showDisputedTx = arbitrationManager.findOwnDispute(trade.getId()).isPresent() &&
@@ -198,6 +206,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (trade.hasFailed())
             rows += 2;
         if (trade.getTradingPeerNodeAddress() != null)
+            rows++;
+        if (showXmrProofResult)
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
@@ -231,20 +241,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
                     trade.getTradingPeerNodeAddress().getFullAddress());
 
-        if (checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR") &&
-                trade.getAssetTxProofResult() != null &&
-                trade.getAssetTxProofResult() != AssetTxProofResult.UNDEFINED) {
+        if (showXmrProofResult) {
             // As the window is already overloaded we replace the tradingPeersPubKeyHash field with the auto-conf state
             // if XMR is the currency
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                     Res.get("portfolio.pending.step3_seller.autoConf.status.label"),
                     GUIUtil.getProofResultAsString(trade.getAssetTxProofResult()));
-        } else {
-            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
-                    Res.get("tradeDetailsWindow.tradingPeersPubKeyHash"),
-                    trade.getContract() != null ? Utils.HEX.encode(trade.getContract().getPeersPubKeyRing(
-                            tradeManager.getKeyRing().getPubKeyRing()).getSignaturePubKeyBytes()) :
-                            Res.get("shared.na"));
         }
 
         if (contract != null) {
@@ -298,10 +300,38 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.disputedPayoutTxId"),
                     arbitrationManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
 
+        if (trade.hasFailed()) {
+            textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "", 0).second;
+            textArea.setText(trade.getErrorMessage());
+            textArea.setEditable(false);
+            //TODO paint red
+
+            IntegerProperty count = new SimpleIntegerProperty(20);
+            int rowHeight = 10;
+            textArea.prefHeightProperty().bindBidirectional(count);
+            changeListener = (ov, old, newVal) -> {
+                if (newVal.intValue() > rowHeight)
+                    count.setValue(count.get() + newVal.intValue() + 10);
+            };
+            textArea.scrollTopProperty().addListener(changeListener);
+            textArea.setScrollTop(30);
+
+            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"), trade.getState().getPhase().name());
+        }
+
+        Tuple3<Button, Button, HBox> tuple = add2ButtonsWithBox(gridPane, ++rowIndex,
+                Res.get("shared.viewContractAsJson"), Res.get("shared.close"), 15, false);
+        Button viewContractButton = tuple.first;
+        viewContractButton.setMaxWidth(Region.USE_COMPUTED_SIZE);
+        Button closeButton = tuple.second;
+        closeButton.setMaxWidth(Region.USE_COMPUTED_SIZE);
+        HBox hBox = tuple.third;
+        GridPane.setColumnSpan(hBox, 2);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        hBox.getChildren().add(0, spacer);
+
         if (contract != null) {
-            Button viewContractButton = addConfirmationLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
-                    Res.get("shared.viewContractAsJson"), 0).second;
-            viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new BisqTextArea();
                 textArea.setText(trade.getContractAsJson());
@@ -349,29 +379,6 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             });
         }
 
-        if (trade.hasFailed()) {
-            textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "", 0).second;
-            textArea.setText(trade.getErrorMessage());
-            textArea.setEditable(false);
-            //TODO paint red
-
-            IntegerProperty count = new SimpleIntegerProperty(20);
-            int rowHeight = 10;
-            textArea.prefHeightProperty().bindBidirectional(count);
-            changeListener = (ov, old, newVal) -> {
-                if (newVal.intValue() > rowHeight)
-                    count.setValue(count.get() + newVal.intValue() + 10);
-            };
-            textArea.scrollTopProperty().addListener(changeListener);
-            textArea.setScrollTop(30);
-
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"), trade.getState().getPhase().name());
-        }
-
-        Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
-        GridPane.setColumnSpan(closeButton, 2);
-        //TODO app wide focus
-        //closeButton.requestFocus();
         closeButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(Runnable::run);
             hide();
