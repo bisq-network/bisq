@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -29,7 +29,7 @@ public class QMCoin extends Coin {
     }
 
 
-    public static class QMCoinAddressValidator extends Base58BitcoinAddressValidator {
+    public static class QMCoinAddressValidator extends Base58AddressValidator {
 
         public QMCoinAddressValidator() {
             super(new QMCoinParams());

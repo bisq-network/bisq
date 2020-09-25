@@ -17,13 +17,13 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Kore extends Coin {
     public Kore() {
-        super("Kore", "KORE", new Base58BitcoinAddressValidator(new KoreMainNetParams()));
+        super("Kore", "KORE", new Base58AddressValidator(new KoreMainNetParams()));
      }
 
     public static class KoreMainNetParams extends NetworkParametersAdapter {

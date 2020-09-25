@@ -17,16 +17,16 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Doichain extends Coin {
 
     public Doichain() {
-        super("Doichain", "DOI", new Base58BitcoinAddressValidator(new DoichainParams()));
+        super("Doichain", "DOI", new Base58AddressValidator(new DoichainParams()));
     }
-        
+
     public static class DoichainParams extends NetworkParametersAdapter {
         public DoichainParams() {
             addressHeader = 52;

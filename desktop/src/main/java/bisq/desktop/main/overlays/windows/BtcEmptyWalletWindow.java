@@ -160,7 +160,7 @@ public final class BtcEmptyWalletWindow extends Overlay<BtcEmptyWalletWindow> {
         emptyWalletButton.setDisable(true);
         openOfferManager.removeAllOpenOffers(() -> {
             try {
-                btcWalletService.emptyWallet(addressInputTextField.getText(),
+                btcWalletService.emptyBtcWallet(addressInputTextField.getText(),
                         aesKey,
                         () -> {
                             closeButton.updateText(Res.get("shared.close"));

@@ -17,7 +17,7 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -31,6 +31,6 @@ public class Bitmark extends Coin {
     }
 
     public Bitmark() {
-        super("Bitmark", "BTM", new Base58BitcoinAddressValidator(new BitmarkParams()));
+        super("Bitmark", "BTM", new Base58AddressValidator(new BitmarkParams()));
     }
 }

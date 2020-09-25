@@ -123,7 +123,7 @@ public class BtcWalletService extends WalletService {
     @Override
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
-        addressEntryList.getAddressEntriesAsListImmutable().stream().forEach(e -> {
+        addressEntryList.getAddressEntriesAsListImmutable().forEach(e -> {
             DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
@@ -134,7 +134,7 @@ public class BtcWalletService extends WalletService {
     @Override
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
-        getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
+        getAddressEntryListAsImmutableList().forEach(e -> sb.append(e.toString()).append("\n"));
         return "Address entry list:\n" +
                 sb.toString() +
                 "\n\n" +
@@ -1058,7 +1058,7 @@ public class BtcWalletService extends WalletService {
         final Coin receiverAmount = amount.subtract(fee);
         Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, LegacyAddress.fromBase58(params, toAddress));
+        tx.addOutput(receiverAmount, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1089,7 +1089,7 @@ public class BtcWalletService extends WalletService {
         checkArgument(Restrictions.isAboveDust(netValue),
                 "The amount is too low (dust limit).");
 
-        tx.addOutput(netValue, LegacyAddress.fromBase58(params, toAddress));
+        tx.addOutput(netValue, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1154,14 +1154,14 @@ public class BtcWalletService extends WalletService {
             Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
                     "The buyerAmount is too low (dust limit).");
 
-            tx.addOutput(buyerAmount, LegacyAddress.fromBase58(params, buyerAddressString));
+            tx.addOutput(buyerAmount, Address.fromString(params, buyerAddressString));
         }
         // sellerAmount can be 0
         if (sellerAmount.isPositive()) {
             Preconditions.checkArgument(Restrictions.isAboveDust(sellerAmount),
                     "The sellerAmount is too low (dust limit).");
 
-            tx.addOutput(sellerAmount, LegacyAddress.fromBase58(params, sellerAddressString));
+            tx.addOutput(sellerAmount, Address.fromString(params, sellerAddressString));
         }
 
         SendRequest sendRequest = SendRequest.forTx(tx);

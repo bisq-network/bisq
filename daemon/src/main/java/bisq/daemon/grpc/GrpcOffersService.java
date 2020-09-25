@@ -52,7 +52,7 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
         // The client cannot see bisq.core.Offer or its fromProto method.
         // We use the lighter weight OfferInfo proto wrapper instead, containing just
         // enough fields to view and create offers.
-        List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getFiatCurrencyCode())
+        List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
                 .stream().map(offer -> new OfferInfo.OfferInfoBuilder()
                         .withId(offer.getId())
                         .withDirection(offer.getDirection().name())

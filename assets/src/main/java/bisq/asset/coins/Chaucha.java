@@ -17,18 +17,18 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Chaucha extends Coin {
 
     public Chaucha() {
-        super("Chaucha", "CHA", new Base58BitcoinAddressValidator(new ChauchaParams()));
+        super("Chaucha", "CHA", new Base58AddressValidator(new ChauchaParams()));
     }
 
 	public static class ChauchaParams extends NetworkParametersAdapter {
-	
+
 	    public ChauchaParams() {
 	        addressHeader = 88;
 	        p2shHeader = 50;

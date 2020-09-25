@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Faircoin extends Coin {
 
     public Faircoin() {
-        super("Faircoin", "FAIR", new Base58BitcoinAddressValidator(new Faircoin.FaircoinParams()));
+        super("Faircoin", "FAIR", new Base58AddressValidator(new Faircoin.FaircoinParams()));
     }
 
     public static class FaircoinParams extends NetworkParametersAdapter {

@@ -17,13 +17,13 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Hatch extends Coin {
     public Hatch() {
-        super("Hatch", "HATCH", new Base58BitcoinAddressValidator(new HatchMainNetParams()), Network.MAINNET);
+        super("Hatch", "HATCH", new Base58AddressValidator(new HatchMainNetParams()), Network.MAINNET);
     }
 
     public static class HatchMainNetParams extends NetworkParametersAdapter {

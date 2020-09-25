@@ -103,12 +103,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final TradeDetailsWindow tradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
 
-    private WalletCoinsReceivedEventListener walletCoinsReceivedEventListener;
-    private WalletCoinsSentEventListener walletCoinsSentEventListener;
-    private WalletReorganizeEventListener walletReorganizeEventListener;
-    private TransactionConfidenceEventListener transactionConfidenceEventListener;
-    private KeyChainEventListener keyChainEventListener;
-    private ScriptsChangeEventListener scriptsChangeEventListener;
     private WalletChangeEventListener walletChangeEventListener;
 
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -173,23 +167,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        walletCoinsReceivedEventListener = (wallet, tx, prevBalance, newBalance) -> {
-            displayedTransactions.update();
-        };
-        walletCoinsSentEventListener =  (wallet, tx, prevBalance, newBalance) -> {
-            displayedTransactions.update();
-        };
-        walletReorganizeEventListener = wallet -> {
-            displayedTransactions.update();
-        };
-        transactionConfidenceEventListener = (wallet, tx) -> {
-        };
-        keyChainEventListener = keys -> {
-            displayedTransactions.update();
-        };
-        scriptsChangeEventListener = (wallet, scripts, isAddingScripts) -> {
-            displayedTransactions.update();
-        };
         walletChangeEventListener = wallet -> {
             displayedTransactions.update();
         };
@@ -215,12 +192,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedDisplayedTransactions);
         displayedTransactions.update();
 
-        btcWalletService.addCoinsReceivedEventListener(walletCoinsReceivedEventListener);
-        btcWalletService.addCoinsSentEventListener(walletCoinsSentEventListener);
-        btcWalletService.addReorganizeEventListener(walletReorganizeEventListener);
-        btcWalletService.addTransactionConfidenceEventListener(transactionConfidenceEventListener);
-        btcWalletService.addKeyChainEventListener(keyChainEventListener);
-        btcWalletService.addScriptChangeEventListener(scriptsChangeEventListener);
         btcWalletService.addChangeEventListener(walletChangeEventListener);
 
         scene = root.getScene();
@@ -257,12 +228,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         sortedDisplayedTransactions.comparatorProperty().unbind();
         displayedTransactions.forEach(TransactionsListItem::cleanup);
-        btcWalletService.removeCoinsReceivedEventListener(walletCoinsReceivedEventListener);
-        btcWalletService.removeCoinsSentEventListener(walletCoinsSentEventListener);
-        btcWalletService.removeReorganizeEventListener(walletReorganizeEventListener);
-        btcWalletService.removeTransactionConfidenceEventListener(transactionConfidenceEventListener);
-        btcWalletService.removeKeyChainEventListener(keyChainEventListener);
-        btcWalletService.removeScriptChangeEventListener(scriptsChangeEventListener);
         btcWalletService.removeChangeEventListener(walletChangeEventListener);
 
         if (scene != null)

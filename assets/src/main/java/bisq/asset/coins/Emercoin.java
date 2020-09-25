@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Emercoin extends Coin {
 
     public Emercoin() {
-        super("Emercoin", "EMC", new Base58BitcoinAddressValidator(new EmercoinMainNetParams()), Network.MAINNET);
+        super("Emercoin", "EMC", new Base58AddressValidator(new EmercoinMainNetParams()), Network.MAINNET);
     }
 
     public static class EmercoinMainNetParams extends NetworkParametersAdapter {

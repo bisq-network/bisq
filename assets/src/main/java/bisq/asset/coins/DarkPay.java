@@ -17,13 +17,13 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class DarkPay extends Coin {
     public DarkPay() {
-        super("DarkPay", "D4RK", new Base58BitcoinAddressValidator(new DarkPayMainNetParams()));
+        super("DarkPay", "D4RK", new Base58AddressValidator(new DarkPayMainNetParams()));
     }
 
     public static class DarkPayMainNetParams extends NetworkParametersAdapter {

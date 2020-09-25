@@ -17,13 +17,13 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Galilel extends Coin {
     public Galilel() {
-        super("Galilel", "GALI", new Base58BitcoinAddressValidator(new GalilelMainNetParams()));
+        super("Galilel", "GALI", new Base58AddressValidator(new GalilelMainNetParams()));
     }
 
     public static class GalilelMainNetParams extends NetworkParametersAdapter {
