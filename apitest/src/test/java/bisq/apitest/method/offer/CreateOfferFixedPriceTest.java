@@ -22,8 +22,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.OfferInfo;
 
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.MethodOrderer;
@@ -39,9 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CreateOfferFixedPriceTest extends AbstractCreateOfferTest {
-
-    // Incremented every time a new offer is created.
-    private static int expectedOffersCount = 0;
 
     @Test
     @Order(1)
@@ -71,9 +66,7 @@ public class CreateOfferFixedPriceTest extends AbstractCreateOfferTest {
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
-        List<OfferInfo> offers = getOffersSortedByDate("buy", "usd");
-        assertEquals(++expectedOffersCount, offers.size());
-        OfferInfo offer = offers.get(expectedOffersCount - 1);
+        OfferInfo offer = getMostRecentOffer("buy", "usd");
         assertEquals(newOfferId, offer.getId());
         assertEquals("BUY", offer.getDirection());
         assertFalse(offer.getUseMarketBasedPrice());
@@ -114,9 +107,7 @@ public class CreateOfferFixedPriceTest extends AbstractCreateOfferTest {
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
-        List<OfferInfo> offers = getOffersSortedByDate("buy", "usd");
-        assertEquals(++expectedOffersCount, offers.size());
-        OfferInfo offer = offers.get(expectedOffersCount - 1);
+        OfferInfo offer = getMostRecentOffer("buy", "usd");
         assertEquals(newOfferId, offer.getId());
         assertEquals("BUY", offer.getDirection());
         assertFalse(offer.getUseMarketBasedPrice());

@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeAll;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -64,6 +65,14 @@ abstract class AbstractCreateOfferTest extends MethodTest {
         } catch (Exception ex) {
             fail(ex);
         }
+    }
+
+    protected final OfferInfo getMostRecentOffer(String direction, String currencyCode) {
+        List<OfferInfo> offerInfoList = getOffersSortedByDate(direction, currencyCode);
+        if (offerInfoList.isEmpty())
+            fail(format("No %s offers found for currency %s", direction, currencyCode));
+
+        return offerInfoList.get(offerInfoList.size() - 1);
     }
 
     protected final List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {

@@ -22,8 +22,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.OfferInfo;
 
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.MethodOrderer;
@@ -40,12 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTest {
 
-    // Incremented every time a new offer is created.
-    private static int expectedOffersCount = 0;
-
     @Test
     @Order(1)
-    public void testCreateUSDBTCBuyOfferUsingMarketPriceMargin() {
+    public void testCreateUSDBTCBuyOffer5PctPriceMargin() {
         var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
                 .setPaymentAccountId(paymentAccount.getId())
@@ -54,11 +49,13 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setAmount(10000000)
                 .setMinAmount(10000000)
                 .setUseMarketBasedPrice(true)
-                .setMarketPriceMargin(0.00)
+                .setMarketPriceMargin(5.00)
                 .setPrice("0")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = alice.offersService.createOffer(req).getOffer();
+        log.info(newOffer.toString());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals("BUY", newOffer.getDirection());
@@ -70,9 +67,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
-        List<OfferInfo> offers = getOffersSortedByDate("buy", "usd");
-        assertEquals(++expectedOffersCount, offers.size());
-        OfferInfo offer = offers.get(expectedOffersCount - 1);
+        OfferInfo offer = getMostRecentOffer("buy", "usd");
         assertEquals(newOfferId, offer.getId());
         assertEquals("BUY", offer.getDirection());
         assertTrue(offer.getUseMarketBasedPrice());
@@ -82,5 +77,46 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("", offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("USD", offer.getCounterCurrencyCode());
+    }
+
+    @Test
+    @Order(2)
+    public void testCreateNZDBTCBuyOfferMinus2PctPriceMargin() {
+        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
+        var req = CreateOfferRequest.newBuilder()
+                .setPaymentAccountId(paymentAccount.getId())
+                .setDirection("buy")
+                .setCurrencyCode("nzd")
+                .setAmount(10000000)
+                .setMinAmount(10000000)
+                .setUseMarketBasedPrice(true)
+                .setMarketPriceMargin(-2.00)
+                .setPrice("0")
+                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .build();
+        var newOffer = alice.offersService.createOffer(req).getOffer();
+        log.info(newOffer.toString());
+
+        String newOfferId = newOffer.getId();
+        assertNotEquals("", newOfferId);
+        assertEquals("BUY", newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("NZD", newOffer.getCounterCurrencyCode());
+
+        OfferInfo offer = getMostRecentOffer("buy", "nzd");
+        assertEquals(newOfferId, offer.getId());
+        assertEquals("BUY", offer.getDirection());
+        assertTrue(offer.getUseMarketBasedPrice());
+        assertEquals(10000000, offer.getAmount());
+        assertEquals(10000000, offer.getMinAmount());
+        assertEquals(1500000, offer.getBuyerSecurityDeposit());
+        assertEquals("", offer.getPaymentAccountId());
+        assertEquals("BTC", offer.getBaseCurrencyCode());
+        assertEquals("NZD", offer.getCounterCurrencyCode());
     }
 }
