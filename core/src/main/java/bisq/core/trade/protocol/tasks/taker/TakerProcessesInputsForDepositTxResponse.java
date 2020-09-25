@@ -55,7 +55,8 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
             tradingPeer.setRawTransactionInputs(checkNotNull(response.getMakerInputs()));
-            processModel.setPreparedDepositTx(checkNotNull(response.getPreparedDepositTx()));
+            byte[] preparedDepositTx = checkNotNull(response.getPreparedDepositTx());
+            processModel.setPreparedDepositTx(preparedDepositTx);
             long lockTime = response.getLockTime();
             if (Config.baseCurrencyNetwork().isMainnet()) {
                 int myLockTime = processModel.getBtcWalletService().getBestChainHeight() +
@@ -72,7 +73,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a
             // challenge protocol for passing the nonce we want to get signed.
-            tradingPeer.setAccountAgeWitnessNonce(checkNotNull(response.getPreparedDepositTx()));
+            tradingPeer.setAccountAgeWitnessNonce(preparedDepositTx);
             tradingPeer.setAccountAgeWitnessSignature(checkNotNull(response.getAccountAgeWitnessSignatureOfPreparedDepositTx()));
 
             tradingPeer.setCurrentDate(response.getCurrentDate());

@@ -29,7 +29,11 @@ import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSendsDepositTxMessage;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
@@ -104,10 +108,17 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                 .executeTasks();
     }
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
-    @Override
     protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        super.handle(message, peer);
+        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(
+                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
+                        BuyerVerifiesPreparedDelayedPayoutTx.class,
+                        BuyerSignsDelayedPayoutTx.class,
+                        BuyerSendsDelayedPayoutTxSignatureResponse.class)
+                        .withTimeout(30))
+                .executeTasks();
     }
 
     // We keep the handler here in as well to make it more transparent which messages we expect

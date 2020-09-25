@@ -26,17 +26,13 @@ import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSignPayoutTx;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesFinalDelayedPayoutTx;
-import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -88,18 +84,7 @@ public abstract class BuyerProtocol extends MediationProtocol {
         }
     }
 
-    protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
-                .with(message)
-                .from(peer))
-                .setup(tasks(
-                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
-                        BuyerVerifiesPreparedDelayedPayoutTx.class,
-                        BuyerSignsDelayedPayoutTx.class,
-                        BuyerSendsDelayedPayoutTxSignatureResponse.class)
-                        .withTimeout(30))
-                .executeTasks();
-    }
+    protected abstract void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer);
 
     // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
     // be also with from the network once published.

@@ -26,11 +26,16 @@ import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerRemovesOpenOffer;
 import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 
@@ -89,10 +94,18 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
     // Incoming messages Take offer process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
-    @Override
     protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        super.handle(message, peer);
+        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(
+                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
+                        MakerRemovesOpenOffer.class,
+                        BuyerVerifiesPreparedDelayedPayoutTx.class,
+                        BuyerSignsDelayedPayoutTx.class,
+                        BuyerSendsDelayedPayoutTxSignatureResponse.class)
+                        .withTimeout(30))
+                .executeTasks();
     }
 
     // We keep the handler here in as well to make it more transparent which messages we expect
