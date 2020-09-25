@@ -22,6 +22,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.provider.price.MarketPrice;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -50,6 +51,7 @@ public class CoreApi {
     private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
+    private final CorePriceService corePriceService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
@@ -57,10 +59,12 @@ public class CoreApi {
     public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
+                   CorePriceService corePriceService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
+        this.corePriceService = corePriceService;
         this.paymentAccountsService = paymentAccountsService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
@@ -151,6 +155,14 @@ public class CoreApi {
 
     public Set<PaymentAccount> getPaymentAccounts() {
         return paymentAccountsService.getPaymentAccounts();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Prices
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public double getMarketPrice(String currencyCode) {
+        return corePriceService.getMarketPrice(currencyCode);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

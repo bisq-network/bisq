@@ -22,6 +22,7 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
@@ -75,6 +76,10 @@ public class MethodTest extends ApiTestCase {
         return GetFundingAddressesRequest.newBuilder().build();
     }
 
+    protected final MarketPriceRequest createMarketPriceRequest(String currencyCode) {
+        return MarketPriceRequest.newBuilder().setCurrencyCode(currencyCode).build();
+    }
+
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
     protected final long getBalance(BisqAppConfig bisqAppConfig) {
@@ -115,15 +120,20 @@ public class MethodTest extends ApiTestCase {
     }
 
     protected final PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
-        var getPaymentAccountsRequest = GetPaymentAccountsRequest.newBuilder().build();
+        var req = GetPaymentAccountsRequest.newBuilder().build();
         var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
-        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(getPaymentAccountsRequest)
+        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(req)
                 .getPaymentAccountsList()
                 .stream()
                 .sorted(comparing(PaymentAccount::getCreationDate))
                 .collect(Collectors.toList()).get(0);
         assertEquals("PerfectMoney dummy", paymentAccount.getAccountName());
         return paymentAccount;
+    }
+
+    protected final double getMarketPrice(BisqAppConfig bisqAppConfig, String currencyCode) {
+        var req = createMarketPriceRequest(currencyCode);
+        return grpcStubs(bisqAppConfig).priceService.getMarketPrice(req).getPrice();
     }
 
     // Static conveniences for test methods and test case fixture setups.

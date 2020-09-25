@@ -17,8 +17,6 @@
 
 package bisq.daemon.grpc;
 
-import bisq.core.api.CoreApi;
-
 import bisq.common.config.Config;
 
 import io.grpc.Server;
@@ -36,24 +34,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GrpcServer {
 
-    private final CoreApi coreApi;
     private final Server server;
 
     @Inject
     public GrpcServer(Config config,
-                      CoreApi coreApi,
                       PasswordAuthInterceptor passwordAuthInterceptor,
                       GrpcDisputeAgentsService disputeAgentsService,
                       GrpcOffersService offersService,
                       GrpcPaymentAccountsService paymentAccountsService,
+                      GrpcPriceService priceService,
                       GrpcVersionService versionService,
                       GrpcGetTradeStatisticsService tradeStatisticsService,
                       GrpcWalletsService walletsService) {
-        this.coreApi = coreApi;
         this.server = ServerBuilder.forPort(config.apiPort)
                 .addService(disputeAgentsService)
                 .addService(offersService)
                 .addService(paymentAccountsService)
+                .addService(priceService)
                 .addService(tradeStatisticsService)
                 .addService(versionService)
                 .addService(walletsService)

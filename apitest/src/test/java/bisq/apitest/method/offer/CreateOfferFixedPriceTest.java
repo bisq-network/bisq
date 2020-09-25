@@ -53,7 +53,7 @@ public class CreateOfferFixedPriceTest extends AbstractCreateOfferTest {
                 .setPrice("10000")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
-        var newOffer = alice.offersService.createOffer(req).getOffer();
+        var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals("BUY", newOffer.getDirection());
@@ -94,7 +94,7 @@ public class CreateOfferFixedPriceTest extends AbstractCreateOfferTest {
                 .setPrice("10000.1234")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
-        var newOffer = alice.offersService.createOffer(req).getOffer();
+        var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals("BUY", newOffer.getDirection());

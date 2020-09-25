@@ -45,7 +45,7 @@ import bisq.cli.GrpcStubs;
 @Slf4j
 abstract class AbstractCreateOfferTest extends MethodTest {
 
-    protected static GrpcStubs alice;
+    protected static GrpcStubs aliceStubs;
 
     @BeforeAll
     public static void setUp() {
@@ -56,7 +56,7 @@ abstract class AbstractCreateOfferTest extends MethodTest {
         try {
             // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,alicedaemon", "--enableBisqDebugging", "true"});
             setUpScaffold(bitcoind, seednode, alicedaemon);
-            alice = grpcStubs(alicedaemon);
+            aliceStubs = grpcStubs(alicedaemon);
 
             // Generate 1 regtest block for alice's wallet to show 10 BTC balance,
             // and give alicedaemon time to parse the new block.
@@ -79,7 +79,7 @@ abstract class AbstractCreateOfferTest extends MethodTest {
         var req = GetOffersRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode).build();
-        var reply = alice.offersService.getOffers(req);
+        var reply = aliceStubs.offersService.getOffers(req);
         return sortOffersByDate(reply.getOffersList());
     }
 
@@ -87,6 +87,10 @@ abstract class AbstractCreateOfferTest extends MethodTest {
         return offerInfoList.stream()
                 .sorted(comparing(OfferInfo::getDate))
                 .collect(Collectors.toList());
+    }
+
+    protected final double getPrice(String currencyCode) {
+        return getMarketPrice(alicedaemon, currencyCode);
     }
 
     @AfterAll
