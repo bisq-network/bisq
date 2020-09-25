@@ -225,7 +225,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
     }
 
     private void assertMarketBasedPriceDiff(OfferInfo offer, double priceMarginPctInput) {
-        // Assert the mkt price margin difference ( %) is < 1% from the expected difference.
+        // Assert the mkt price margin difference (%) is < 1% from the expected difference.
         String counterCurrencyCode = offer.getCounterCurrencyCode();
         double lastPrice = getPrice(counterCurrencyCode);
         int precision = isCryptoCurrency(counterCurrencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
@@ -236,7 +236,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                     ? getPercentageDifference(scaledOfferPrice, lastPrice)
                     : getPercentageDifference(lastPrice, scaledOfferPrice);
             double diff = expectedPriceMarginPct - actualPriceMarginPct;
-            if (diff > 0.0001) {
+            if (Math.abs(diff) > 0.0001) {
                 String priceCalculationWarning = format("The calculated price was %.2f%s off"
                                 + " mkt price, not the expected %.2f%s off mkt price.%n"
                                 + "Offer %s",
