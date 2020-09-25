@@ -43,6 +43,7 @@ import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
@@ -578,18 +579,20 @@ public class BtcWalletService extends WalletService {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
+//          Disable reusing unused AVAILABLE entries until segwit support in mandatory in Bisq
             // We try to use available and not yet used entries
-            Optional<AddressEntry> emptyAvailableAddressEntry = getAddressEntryListAsImmutableList().stream()
-                    .filter(e -> AddressEntry.Context.AVAILABLE == e.getContext())
-                    .filter(e -> isAddressUnused(e.getAddress()))
-                    .findAny();
-            if (emptyAvailableAddressEntry.isPresent()) {
-                return addressEntryList.swapAvailableToAddressEntryWithOfferId(emptyAvailableAddressEntry.get(), context, offerId);
-            } else {
-                AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, offerId, true);
+//            Optional<AddressEntry> emptyAvailableAddressEntry = getAddressEntryListAsImmutableList().stream()
+//                    .filter(e -> AddressEntry.Context.AVAILABLE == e.getContext())
+//                    .filter(e -> isAddressUnused(e.getAddress()))
+//                    .findAny();
+//            if (emptyAvailableAddressEntry.isPresent()) {
+//                return addressEntryList.swapAvailableToAddressEntryWithOfferId(emptyAvailableAddressEntry.get(), context, offerId);
+//            } else {
+                DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
+                AddressEntry entry = new AddressEntry(key, context, offerId, false);
                 addressEntryList.addAddressEntry(entry);
                 return entry;
-            }
+//            }
         }
     }
 
@@ -619,7 +622,16 @@ public class BtcWalletService extends WalletService {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
-            AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, true);
+            DeterministicKey key;
+            boolean segwit;
+            if (AddressEntry.Context.AVAILABLE.equals(context)) {
+                key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2WPKH));
+                segwit = true;
+            } else {
+                key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
+                segwit = false;
+            }
+            AddressEntry entry = new AddressEntry(key, context, segwit);
             addressEntryList.addAddressEntry(entry);
             return entry;
         }
