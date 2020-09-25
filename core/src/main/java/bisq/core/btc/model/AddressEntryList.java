@@ -137,7 +137,8 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             toBeRemoved.forEach(entrySet::remove);
         } else {
             // As long the old arbitration domain is not removed from the code base we still support it here.
-            entrySet.add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR, true));
+            DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
+            entrySet.add(new AddressEntry(key, AddressEntry.Context.ARBITRATOR, false));
         }
 
         // In case we restore from seed words and have balance we need to add the relevant addresses to our list.
