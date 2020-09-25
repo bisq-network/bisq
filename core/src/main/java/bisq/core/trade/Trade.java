@@ -1154,9 +1154,20 @@ public abstract class Trade implements Tradable, Model {
         return payoutTx;
     }
 
+    public boolean hasErrorMessage() {
+        return getErrorMessage() != null && !getErrorMessage().isEmpty();
+    }
+
     @Nullable
     public String getErrorMessage() {
         return errorMessageProperty.get();
+    }
+
+    public boolean isTxChainInvalid() {
+        return offer.getOfferFeePaymentTxId() == null ||
+                getTakerFeeTxId() == null ||
+                getDepositTxId() == null ||
+                getDelayedPayoutTxBytes() == null;
     }
 
     public byte[] getArbitratorBtcPubKey() {

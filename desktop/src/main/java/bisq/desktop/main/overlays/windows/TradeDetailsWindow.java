@@ -353,6 +353,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "", 0).second;
             textArea.setText(trade.getErrorMessage());
             textArea.setEditable(false);
+            //TODO paint red
 
             IntegerProperty count = new SimpleIntegerProperty(20);
             int rowHeight = 10;

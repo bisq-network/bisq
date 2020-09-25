@@ -36,6 +36,7 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.support.traderchat.TraderChatManager;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -45,6 +46,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -74,6 +76,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -309,30 +312,16 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void updateMoveTradeToFailedColumnState() {
-        moveTradeToFailedColumn.setVisible(model.dataModel.list.stream().anyMatch(item -> isInvalidState(item.getTrade())));
+        moveTradeToFailedColumn.setVisible(model.dataModel.list.stream().anyMatch(item -> isMaybeInvalidTrade(item.getTrade())));
     }
 
-    private boolean isInvalidState(Trade trade) {
-        String errorMessage = trade.getErrorMessage();
-        boolean hasErrorMsg = errorMessage != null && !errorMessage.isEmpty();
-        return hasErrorMsg ||
-                trade.getDepositTxId() == null ||
-                trade.getDelayedPayoutTxBytes() == null;
+    private boolean isMaybeInvalidTrade(Trade trade) {
+        return trade.isTxChainInvalid() || trade.hasErrorMessage();
     }
 
-    private void onMoveTradeToFailedTrades(Trade trade) {
-        String reason;
-        String errorMessage = trade.getErrorMessage();
-        if (errorMessage != null && !errorMessage.isEmpty()) {
-            reason = errorMessage;
-        } else if (trade.getDepositTxId() == null) {
-            reason = Res.get("trade.error.depositTxIsNull");
-        } else if (trade.getDelayedPayoutTxBytes() == null) {
-            reason = Res.get("trade.error.delayedPayoutTxIsNull");
-        } else {
-            reason = Res.get("shared.na");
-        }
-        new Popup().attention(Res.get("portfolio.pending.moveToFailed.popup", reason))
+    private void onMoveInvalidTradeToFailedTrades(Trade trade) {
+        new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.moveToFailed",
+                getInvalidTradeDetails(trade)))
                 .onAction(() -> {
                     model.dataModel.moveTradeToFailedTrades(trade);
                     updateMoveTradeToFailedColumnState();
@@ -340,6 +329,45 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 .actionButtonText(Res.get("shared.yes"))
                 .closeButtonText(Res.get("shared.no"))
                 .show();
+    }
+
+    private void onShowInfoForInvalidTrade(Trade trade) {
+        new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.info.popup",
+                getInvalidTradeDetails(trade)))
+                .show();
+    }
+
+    private String getInvalidTradeDetails(Trade trade) {
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return Res.get("portfolio.pending.failedTrade.missingContract");
+        }
+
+        PubKeyRing myPubKeyRing = model.dataModel.getPubKeyRing();
+        boolean isMyRoleBuyer = contract.isMyRoleBuyer(myPubKeyRing);
+        boolean isMyRoleMaker = contract.isMyRoleMaker(myPubKeyRing);
+
+        if (trade.getTakerFeeTxId() == null) {
+            return isMyRoleMaker ?
+                    Res.get("portfolio.pending.failedTrade.maker.missingTakerFeeTx") :
+                    Res.get("portfolio.pending.failedTrade.taker.missingTakerFeeTx");
+        }
+
+        if (trade.getDepositTx() == null) {
+            return Res.get("portfolio.pending.failedTrade.missingDepositTx");
+        }
+
+        if (trade.getDelayedPayoutTx() == null) {
+            return isMyRoleBuyer ?
+                    Res.get("portfolio.pending.failedTrade.buyer.existingDepositTxButMissingDelayedPayoutTx") :
+                    Res.get("portfolio.pending.failedTrade.seller.existingDepositTxButMissingDelayedPayoutTx");
+        }
+
+        if (trade.hasErrorMessage()) {
+            return Res.get("portfolio.pending.failedTrade.errorMsgSet");
+        }
+
+        return Res.get("shared.na");
     }
 
 
@@ -533,7 +561,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (isInvalidState(item.getTrade())) {
+                                    if (isMaybeInvalidTrade(item.getTrade())) {
                                         field = new HyperlinkWithIcon(item.getTrade().getShortId(), AwesomeIcon.WARNING_SIGN);
                                         field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
                                         field.setTooltip(new Tooltip(Res.get("tooltip.invalidTradeState.warning")));
@@ -826,15 +854,33 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             @Override
                             public void updateItem(PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
-                                if (!empty && newItem != null && isInvalidState(newItem.getTrade())) {
-                                    Label icon = FormBuilder.getIcon(AwesomeIcon.TRASH);
-                                    icon.getStyleClass().addAll("icon", "error-icon");
-                                    JFXButton iconButton = new JFXButton("", icon);
-                                    iconButton.setStyle("-fx-cursor: hand;");
-                                    iconButton.getStyleClass().add("hidden-icon-button");
-                                    iconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.moveTradeToFailed")));
-                                    iconButton.setOnAction(e -> onMoveTradeToFailedTrades(newItem.getTrade()));
-                                    setGraphic(iconButton);
+                                if (!empty && newItem != null && isMaybeInvalidTrade(newItem.getTrade())) {
+                                    Trade trade = newItem.getTrade();
+
+                                    Label warnIcon = FormBuilder.getIcon(AwesomeIcon.WARNING_SIGN);
+                                    warnIcon.getStyleClass().addAll("icon", "error-icon");
+                                    JFXButton warnIconButton = new JFXButton("", warnIcon);
+                                    warnIconButton.setStyle("-fx-cursor: hand;");
+                                    warnIconButton.getStyleClass().add("hidden-icon-button");
+                                    warnIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.warningIcon.tooltip")));
+                                    warnIconButton.setOnAction(e -> onShowInfoForInvalidTrade(trade));
+
+                                    Label trashIcon = FormBuilder.getIcon(AwesomeIcon.TRASH);
+                                    trashIcon.getStyleClass().addAll("icon", "error-icon");
+                                    JFXButton trashIconButton = new JFXButton("", trashIcon);
+                                    trashIconButton.setStyle("-fx-cursor: hand;");
+                                    trashIconButton.getStyleClass().add("hidden-icon-button");
+                                    trashIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.moveTradeToFailedIcon.tooltip")));
+                                    trashIconButton.setOnAction(e -> onMoveInvalidTradeToFailedTrades(trade));
+
+                                    // We only allow to move to failed trade if the txs are invalid.
+                                    // Otherwise the trade has to be completed.
+                                    trashIconButton.setDisable(!trade.isTxChainInvalid());
+
+                                    HBox hBox = new HBox();
+                                    hBox.setSpacing(0);
+                                    hBox.getChildren().addAll(warnIconButton, trashIconButton);
+                                    setGraphic(hBox);
                                 } else {
                                     setGraphic(null);
                                 }
