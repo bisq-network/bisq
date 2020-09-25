@@ -193,7 +193,7 @@ class CoreOffersService {
 
         return offer;
     }
-    
+
     private long priceStringToLong(String priceAsString, String currencyCode) {
         int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
         double priceAsDouble = new BigDecimal(priceAsString).doubleValue();
