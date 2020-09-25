@@ -70,7 +70,8 @@ class CoreOffersService {
         List<Offer> offers = offerBookService.getOffers().stream()
                 .filter(o -> {
                     var offerOfWantedDirection = o.getDirection().name().equalsIgnoreCase(direction);
-                    var offerInWantedCurrency = o.getOfferPayload().getCounterCurrencyCode().equalsIgnoreCase(currencyCode);
+                    var offerInWantedCurrency = o.getOfferPayload().getCounterCurrencyCode()
+                            .equalsIgnoreCase(currencyCode);
                     return offerOfWantedDirection && offerInWantedCurrency;
                 })
                 .collect(Collectors.toList());
@@ -96,10 +97,10 @@ class CoreOffersService {
                       double buyerSecurityDeposit,
                       String paymentAccountId,
                       TransactionResultHandler resultHandler) {
-        currencyCode = currencyCode.toUpperCase();
+        String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
-        Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
+        Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
@@ -108,7 +109,7 @@ class CoreOffersService {
 
         //noinspection ConstantConditions
         return createAndPlaceOffer(offerId,
-                currencyCode,
+                upperCaseCurrencyCode,
                 direction,
                 price,
                 useMarketBasedPrice,
@@ -192,8 +193,7 @@ class CoreOffersService {
 
         return offer;
     }
-
-
+    
     private long priceStringToLong(String priceAsString, String currencyCode) {
         int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
         double priceAsDouble = new BigDecimal(priceAsString).doubleValue();
