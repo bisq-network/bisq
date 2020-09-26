@@ -19,12 +19,9 @@ package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.trade.protocol.BuyerProtocol;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
@@ -33,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -84,16 +80,10 @@ public abstract class BuyerTrade extends Trade {
                 btcWalletService);
     }
 
-    public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkArgument(tradeProtocol instanceof BuyerProtocol, "Check failed:  tradeProtocol instanceof BuyerProtocol");
-        ((BuyerProtocol) tradeProtocol).onPaymentStarted(resultHandler, errorMessageHandler);
-    }
-
     @Override
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
-
-        return getOffer().getBuyerSecurityDeposit().add(getTradeAmount());
+        return checkNotNull(getOffer()).getBuyerSecurityDeposit().add(getTradeAmount());
     }
 
 }
