@@ -112,17 +112,11 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private Transaction depositTx;
 
 
-    // Persistable Immutable (private setter only used by PB method)
-
-    //todo make final
-    @Setter
-    private TradingPeer tradingPeer = new TradingPeer();
-    @Setter
-    private String offerId;
-    @Setter
-    private String accountId;
-    @Setter
-    private PubKeyRing pubKeyRing;
+    // Persistable Immutable
+    private final TradingPeer tradingPeer;
+    private final String offerId;
+    private final String accountId;
+    private final PubKeyRing pubKeyRing;
 
     // Persistable Mutable
     @Nullable
@@ -171,9 +165,25 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
-    public ProcessModel() {
+    public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
+        this(offerId, accountId, pubKeyRing, new TradingPeer());
     }
 
+    public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing, TradingPeer tradingPeer) {
+        this.offerId = offerId;
+        this.accountId = accountId;
+        this.pubKeyRing = pubKeyRing;
+        // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
+        this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
+    }
+
+    public void applyTransient(ProcessModelServiceProvider processModelServiceProvider,
+                               TradeManager tradeManager,
+                               Offer offer) {
+        this.offer = offer;
+        this.provider = processModelServiceProvider;
+        this.tradeManager = tradeManager;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -207,11 +217,9 @@ public class ProcessModel implements Model, PersistablePayload {
     }
 
     public static ProcessModel fromProto(protobuf.ProcessModel proto, CoreProtoResolver coreProtoResolver) {
-        ProcessModel processModel = new ProcessModel();
-        processModel.setTradingPeer(proto.hasTradingPeer() ? TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver) : null);
-        processModel.setOfferId(proto.getOfferId());
-        processModel.setAccountId(proto.getAccountId());
-        processModel.setPubKeyRing(PubKeyRing.fromProto(proto.getPubKeyRing()));
+        TradingPeer tradingPeer = TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
+        PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
+        ProcessModel processModel = new ProcessModel(proto.getOfferId(), proto.getAccountId(), pubKeyRing, tradingPeer);
         processModel.setChangeOutputValue(proto.getChangeOutputValue());
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
         processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
@@ -242,23 +250,6 @@ public class ProcessModel implements Model, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void init(Offer offer,
-                     ProcessModelServiceProvider processModelServiceProvider,
-                     TradeManager tradeManager,
-                     boolean useSavingsWallet,
-                     Coin fundsNeededForTrade) {
-        this.offer = offer;
-        this.provider = processModelServiceProvider;
-        this.tradeManager = tradeManager;
-        this.useSavingsWallet = useSavingsWallet;
-        fundsNeededForTradeAsLong = fundsNeededForTrade.value;
-
-        offerId = offer.getId();
-        accountId = getUser().getAccountId();
-        pubKeyRing = getKeyRing().getPubKeyRing();
-    }
-
 
     public void removeMailboxMessageAfterProcessing(Trade trade) {
         if (tradeMessage instanceof MailboxMessage &&

@@ -285,10 +285,10 @@ public abstract class Trade implements Tradable, Model {
     private final long takerFeeAsLong;
     @Setter
     private long takeOfferDate;
-    @Getter
     @Setter
+    @Getter
+    @Nullable
     private ProcessModel processModel;
-
     //  Mutable
     @Nullable
     @Getter
@@ -487,7 +487,6 @@ public abstract class Trade implements Tradable, Model {
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
         takeOfferDate = new Date().getTime();
-        processModel = new ProcessModel();
         lastRefreshRequestDate = takeOfferDate;
         refreshInterval = Math.min(offer.getPaymentMethod().getMaxTradePeriod() / 5, MAX_REFRESH_INTERVAL);
     }
@@ -631,15 +630,15 @@ public abstract class Trade implements Tradable, Model {
         this.btcWalletService = btcWalletService;
     }
 
-    public void init(ProcessModelServiceProvider processModelServiceProvider,
-                     TradeManager tradeManager,
-                     boolean useSavingsWallet,
-                     Coin fundsNeededForTrade) {
-        processModel.init(checkNotNull(offer, "offer must not be null"),
-                processModelServiceProvider,
+    public void setupProcessModel(ProcessModelServiceProvider processModelServiceProvider,
+                                  TradeManager tradeManager) {
+        processModel = getOrCreateProcessModel(processModelServiceProvider);
+        processModel.applyTransient(processModelServiceProvider,
                 tradeManager,
-                useSavingsWallet,
-                fundsNeededForTrade);
+                checkNotNull(offer));
+    }
+
+    public void init(ProcessModelServiceProvider processModelServiceProvider) {
 
         processModelServiceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
@@ -667,6 +666,15 @@ public abstract class Trade implements Tradable, Model {
         set.forEach(msg -> tradeProtocol.applyMailboxMessage(msg));
 
         isInitialized = true;
+    }
+
+    public ProcessModel getOrCreateProcessModel(ProcessModelServiceProvider processModelServiceProvider) {
+        if (processModel == null) {
+            processModel = new ProcessModel(checkNotNull(offer).getId(),
+                    processModelServiceProvider.getUser().getAccountId(),
+                    processModelServiceProvider.getKeyRing().getPubKeyRing());
+        }
+        return processModel;
     }
 
 

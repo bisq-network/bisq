@@ -100,6 +100,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeManager implements PersistedDataHost, DecryptedDirectMessageListener, DecryptedMailboxListener {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
@@ -253,7 +254,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                             tradableListStorage,
                             btcWalletService);
 
-            initTrade(trade);
+            initNewMakerTrade(trade);
             tradableList.add(trade);
             ((MakerProtocol) trade.getTradeProtocol()).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
@@ -292,14 +293,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     public void onAllServicesInitialized() {
         if (p2PService.isBootstrapped())
-            initPendingTrades();
+            initPersistedTrades();
         else
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
                 public void onUpdatedDataReceived() {
                     // Get called after onMailboxMessageAdded from initial data request
                     // The mailbox message will be removed inside the tasks after they are processed successfully
-                    initPendingTrades();
+                    initPersistedTrades();
                 }
             });
 
@@ -327,27 +328,30 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // Init pending trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void initPendingTrades() {
-        tradableList.forEach(this::initPendingTrade);
+    private void initPersistedTrades() {
+        tradableList.forEach(this::initPersistedTrade);
         pendingTradesInitialized.set(true);
     }
 
-    private void initPendingTrade(Trade trade) {
+    private void initPersistedTrade(Trade trade) {
         initTrade(trade);
         trade.updateDepositTxFromWallet();
     }
 
-    private void initTrade(Trade trade) {
-        initTrade(trade,
-                trade.getProcessModel().isUseSavingsWallet(),
-                trade.getProcessModel().getFundsNeededForTrade());
+    private void initNewMakerTrade(Trade trade) {
+        initTrade(trade);
     }
 
-    private void initTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
-        trade.init(processModelServiceProvider,
-                this,
-                useSavingsWallet,
-                fundsNeededForTrade);
+    private void initNewTakerTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
+        initTrade(trade);
+
+        checkNotNull(trade.getProcessModel()).setUseSavingsWallet(useSavingsWallet);
+        trade.getProcessModel().setFundsNeededForTradeAsLong(fundsNeededForTrade.value);
+    }
+
+    private void initTrade(Trade trade) {
+        trade.setupProcessModel(processModelServiceProvider, this);
+        trade.init(processModelServiceProvider);
     }
 
 
@@ -442,7 +446,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         tradableListStorage,
                         btcWalletService);
         trade.setTakerPaymentAccountId(paymentAccountId);
-        initTrade(trade, useSavingsWallet, fundsNeededForTrade);
+        initNewTakerTrade(trade, useSavingsWallet, fundsNeededForTrade);
         return trade;
     }
 
@@ -566,7 +570,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     public void addFailedTradeToPendingTrades(Trade trade) {
         if (!trade.isInitialized()) {
-            initPendingTrade(trade);
+            initPersistedTrade(trade);
         }
         addTrade(trade);
     }
@@ -621,7 +625,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return false;
         }
 
-        initPendingTrade(trade);
+        initPersistedTrade(trade);
 
         if (!tradableList.contains(trade)) {
             tradableList.add(trade);
