@@ -314,6 +314,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
 
     private void cleanup() {
         stopTimeout();
-        processModel.getP2PService().removeDecryptedDirectMessageListener(this);
+        // We do not remove the decryptedDirectMessageListener as in case of not critical failures we want allow to receive
+        // follow-up messages still
     }
 }
