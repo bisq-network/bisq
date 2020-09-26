@@ -35,6 +35,7 @@ import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
@@ -253,7 +254,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
             initTrade(trade);
             tradableList.add(trade);
-            ((MakerTrade) trade).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
+            ((MakerProtocol) trade.getTradeProtocol()).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
                     takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
             });
