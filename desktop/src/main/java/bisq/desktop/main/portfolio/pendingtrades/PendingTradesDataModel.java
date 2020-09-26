@@ -683,7 +683,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public void moveTradeToFailedTrades(Trade trade) {
-        tradeManager.moveTradeToFailedTrades(trade);
+        tradeManager.movePendingTradeToFailedTrades(trade);
     }
 
     public boolean isSignWitnessTrade() {

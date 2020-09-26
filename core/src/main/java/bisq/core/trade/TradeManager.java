@@ -342,6 +342,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         // Do nothing here
     }
 
+    public void persistTrades() {
+        tradableList.persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Init pending trade
@@ -493,7 +497,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade
+    // Complete trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey,
@@ -535,55 +539,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         // TODO The address entry should have been removed already. Check and if its the case remove that.
         btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
-    }
-
-    // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
-    // we move the trade to failedTradesManager
-    public void moveTradeToFailedTrades(Trade trade) {
-        removeTrade(trade);
-        failedTradesManager.add(trade);
-    }
-
-    public void addFailedTradeToPending(Trade trade) {
-        if (!trade.isInitialized()) {
-            initPendingTrade(trade);
-        }
-        tradableList.add(trade);
-    }
-
-    // If trade still has funds locked up it might come back from failed trades
-    // Aborts unfailing if the address entries needed are not available
-    private boolean unfailTrade(Trade trade) {
-        if (!recoverAddresses(trade)) {
-            log.warn("Failed to recover address during unfail trade");
-            return false;
-        }
-
-        initPendingTrade(trade);
-
-        if (!tradableList.contains(trade)) {
-            tradableList.add(trade);
-        }
-        return true;
-    }
-
-    // The trade is added to pending trades if the associated address entries are AVAILABLE and
-    // the relevant entries are changed, otherwise it's not added and no address entries are changed
-    private boolean recoverAddresses(Trade trade) {
-        // Find addresses associated with this trade.
-        var entries = TradeUtils.getAvailableAddresses(trade, btcWalletService, keyRing);
-        if (entries == null)
-            return false;
-
-        btcWalletService.recoverAddressEntry(trade.getId(), entries.first,
-                AddressEntry.Context.MULTI_SIG);
-        btcWalletService.recoverAddressEntry(trade.getId(), entries.second,
-                AddressEntry.Context.TRADE_PAYOUT);
-        return true;
-    }
-
-    private void removeTrade(Trade trade) {
-        tradableList.remove(trade);
     }
 
 
@@ -665,46 +620,62 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         });
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // Trade period state
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Trade> getTradesAsObservableList() {
-        return tradableList.getList();
+    public void applyTradePeriodState() {
+        updateTradePeriodState();
+        clockWatcher.addListener(new ClockWatcher.Listener() {
+            @Override
+            public void onSecondTick() {
+            }
+
+            @Override
+            public void onMinuteTick() {
+                updateTradePeriodState();
+            }
+        });
     }
 
-    public BooleanProperty pendingTradesInitializedProperty() {
-        return pendingTradesInitialized;
+    private void updateTradePeriodState() {
+        getTradesAsObservableList().forEach(trade -> {
+            if (!trade.isPayoutPublished()) {
+                Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
+                Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
+                if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
+                    Date now = new Date();
+                    if (now.after(maxTradePeriodDate))
+                        trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+                    else if (now.after(halfTradePeriodDate))
+                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
+                }
+            }
+        });
     }
 
-    public boolean isMyOffer(Offer offer) {
-        return offer.isMyOffer(keyRing);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Failed trade handling
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
+    // we move the trade to failedTradesManager
+    public void movePendingTradeToFailedTrades(Trade trade) {
+        removeTrade(trade);
+        failedTradesManager.add(trade);
     }
 
-    public boolean isBuyer(Offer offer) {
-        // If I am the maker, we use the OfferPayload.Direction, otherwise the mirrored direction
-        if (isMyOffer(offer))
-            return offer.isBuyOffer();
-        else
-            return offer.getDirection() == OfferPayload.Direction.SELL;
-    }
-
-    public Optional<Trade> getTradeById(String tradeId) {
-        return tradableList.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
-    }
-
-    public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
-        Stream<AddressEntry> availableOrPayout = Stream.concat(btcWalletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
-                .stream(), btcWalletService.getFundedAvailableAddressEntries().stream());
-        Stream<AddressEntry> available = Stream.concat(availableOrPayout,
-                btcWalletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
-        available = Stream.concat(available, btcWalletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
-        return available.filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
+    public void addFailedTradeToPendingTrades(Trade trade) {
+        if (!trade.isInitialized()) {
+            initPendingTrade(trade);
+        }
+        addTrade(trade);
     }
 
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {
-        return getTradesAsObservableList().stream()
-                .filter(Trade::isFundsLockedIn);
+        return getTradesAsObservableList().stream().filter(Trade::isFundsLockedIn);
     }
 
     public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedInFunds() throws TradeTxException {
@@ -745,34 +716,81 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         return tradesIdSet;
     }
 
-    public void applyTradePeriodState() {
-        updateTradePeriodState();
-        clockWatcher.addListener(new ClockWatcher.Listener() {
-            @Override
-            public void onSecondTick() {
-            }
+    // If trade still has funds locked up it might come back from failed trades
+    // Aborts unfailing if the address entries needed are not available
+    private boolean unfailTrade(Trade trade) {
+        if (!recoverAddresses(trade)) {
+            log.warn("Failed to recover address during unfail trade");
+            return false;
+        }
 
-            @Override
-            public void onMinuteTick() {
-                updateTradePeriodState();
-            }
-        });
+        initPendingTrade(trade);
+
+        if (!tradableList.contains(trade)) {
+            tradableList.add(trade);
+        }
+        return true;
     }
 
-    private void updateTradePeriodState() {
-        getTradesAsObservableList().forEach(trade -> {
-            if (!trade.isPayoutPublished()) {
-                Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
-                Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
-                if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
-                    Date now = new Date();
-                    if (now.after(maxTradePeriodDate))
-                        trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                    else if (now.after(halfTradePeriodDate))
-                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
-                }
-            }
-        });
+    // The trade is added to pending trades if the associated address entries are AVAILABLE and
+    // the relevant entries are changed, otherwise it's not added and no address entries are changed
+    private boolean recoverAddresses(Trade trade) {
+        // Find addresses associated with this trade.
+        var entries = TradeUtils.getAvailableAddresses(trade, btcWalletService, keyRing);
+        if (entries == null)
+            return false;
+
+        btcWalletService.recoverAddressEntry(trade.getId(), entries.first,
+                AddressEntry.Context.MULTI_SIG);
+        btcWalletService.recoverAddressEntry(trade.getId(), entries.second,
+                AddressEntry.Context.TRADE_PAYOUT);
+        return true;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters, Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ObservableList<Trade> getTradesAsObservableList() {
+        return tradableList.getList();
+    }
+
+    public BooleanProperty pendingTradesInitializedProperty() {
+        return pendingTradesInitialized;
+    }
+
+    public boolean isMyOffer(Offer offer) {
+        return offer.isMyOffer(keyRing);
+    }
+
+    public boolean wasOfferAlreadyUsedInTrade(String offerId) {
+        return getTradeById(offerId).isPresent() ||
+                failedTradesManager.getTradeById(offerId).isPresent() ||
+                closedTradableManager.getTradableById(offerId).isPresent();
+    }
+
+    public boolean isBuyer(Offer offer) {
+        // If I am the maker, we use the OfferPayload.Direction, otherwise the mirrored direction
+        if (isMyOffer(offer))
+            return offer.isBuyOffer();
+        else
+            return offer.getDirection() == OfferPayload.Direction.SELL;
+    }
+
+    public Optional<Trade> getTradeById(String tradeId) {
+        return tradableList.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
+    }
+
+
+    private void removeTrade(Trade trade) {
+        tradableList.remove(trade);
+    }
+
+    private void addTrade(Trade trade) {
+        if (!tradableList.contains(trade)) {
+            tradableList.add(trade);
+        }
     }
 
     // TODO Remove once tradableList is refactored to a final field
@@ -781,13 +799,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.numPendingTrades.set(getTradesAsObservableList().size());
     }
 
-    public void persistTrades() {
-        tradableList.persist();
+    // TODO move to wallet domain
+    public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
+        Stream<AddressEntry> availableAndPayout = Stream.concat(btcWalletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
+                .stream(), btcWalletService.getFundedAvailableAddressEntries().stream());
+        Stream<AddressEntry> available = Stream.concat(availableAndPayout,
+                btcWalletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
+        available = Stream.concat(available, btcWalletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
+        return available.filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
     }
 
-    public boolean wasOfferAlreadyUsedInTrade(String offerId) {
-        return getTradeById(offerId).isPresent() ||
-                failedTradesManager.getTradeById(offerId).isPresent() ||
-                closedTradableManager.getTradableById(offerId).isPresent();
-    }
 }
