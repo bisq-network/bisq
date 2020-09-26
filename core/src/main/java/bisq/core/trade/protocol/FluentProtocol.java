@@ -24,8 +24,11 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.Task;
 
+import java.text.MessageFormat;
+
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 // Main class. Contains the condition and setup, if condition is valid it will execute the
 // taskRunner and the optional runnable.
 public class FluentProtocol {
+
+
     interface Event {
         String name();
     }
@@ -45,6 +50,7 @@ public class FluentProtocol {
     private final TradeProtocol tradeProtocol;
     private Condition condition;
     private Setup setup;
+    private Consumer<Condition.Result> resultHandler;
 
     public FluentProtocol(TradeProtocol tradeProtocol) {
         this.tradeProtocol = tradeProtocol;
@@ -60,16 +66,26 @@ public class FluentProtocol {
         return this;
     }
 
+
+    public FluentProtocol resultHandler(Consumer<Condition.Result> resultHandler) {
+        this.resultHandler = resultHandler;
+        return this;
+    }
+
     // Can be used before or after executeTasks
     public FluentProtocol run(Runnable runnable) {
-        if (condition.isValid()) {
+        Condition.Result result = condition.getResult();
+        if (result.isValid) {
             runnable.run();
+        } else if (resultHandler != null) {
+            resultHandler.accept(result);
         }
         return this;
     }
 
     public FluentProtocol executeTasks() {
-        if (condition.isValid()) {
+        Condition.Result result = condition.getResult();
+        if (result.isValid) {
             if (setup.getTimeoutSec() > 0) {
                 tradeProtocol.startTimeout(setup.getTimeoutSec());
             }
@@ -87,6 +103,8 @@ public class FluentProtocol {
             TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());
             taskRunner.addTasks(setup.getTasks());
             taskRunner.run();
+        } else if (resultHandler != null) {
+            resultHandler.accept(result);
         }
         return this;
     }
@@ -98,10 +116,37 @@ public class FluentProtocol {
 
     @Slf4j
     public static class Condition {
+        enum Result {
+            VALID(true),
+            INVALID_PHASE,
+            INVALID_STATE,
+            INVALID_PRE_CONDITION,
+            INVALID_TRADE_ID;
+
+            @Getter
+            private boolean isValid;
+            @Getter
+            private String info;
+
+            Result() {
+            }
+
+            Result(boolean isValid) {
+                this.isValid = isValid;
+            }
+
+            public Result info(String info) {
+                this.info = info;
+                return this;
+            }
+        }
+
         private final Set<Trade.Phase> expectedPhases = new HashSet<>();
         private final Set<Trade.State> expectedStates = new HashSet<>();
         private final Set<Boolean> preConditions = new HashSet<>();
         private final Trade trade;
+        @Nullable
+        private Result result;
 
         @Nullable
         @Getter
@@ -115,97 +160,110 @@ public class FluentProtocol {
         @Nullable
         private Runnable preConditionFailedHandler;
 
-        private boolean isValid;
-        private boolean isValidated; // We validate only once
 
         public Condition(Trade trade) {
             this.trade = trade;
         }
 
         public Condition phase(Trade.Phase expectedPhase) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             this.expectedPhases.add(expectedPhase);
             return this;
         }
 
         public Condition anyPhase(Trade.Phase... expectedPhases) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             this.expectedPhases.addAll(Set.of(expectedPhases));
             return this;
         }
 
         public Condition state(Trade.State state) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             this.expectedStates.add(state);
             return this;
         }
 
         public Condition anyState(Trade.State... states) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             this.expectedStates.addAll(Set.of(states));
             return this;
         }
 
         public Condition with(TradeMessage message) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             this.message = message;
             return this;
         }
 
         public Condition with(Event event) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             this.event = event;
             return this;
         }
 
         public Condition from(NodeAddress peer) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             this.peer = peer;
             return this;
         }
 
         public Condition preCondition(boolean preCondition) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             preConditions.add(preCondition);
             return this;
         }
 
         public Condition preCondition(boolean preCondition, Runnable conditionFailedHandler) {
-            checkArgument(!isValidated);
+            checkArgument(result == null);
             preCondition(preCondition);
 
             this.preConditionFailedHandler = conditionFailedHandler;
             return this;
         }
 
-        public boolean isValid() {
-            if (!isValidated) {
-                boolean isPhaseValid = isPhaseValid();
-                boolean isStateValid = isStateValid();
+        public Result getResult() {
+            if (result == null) {
+                boolean isTradeIdValid = message == null || isTradeIdValid(trade.getId(), message);
+                if (!isTradeIdValid) {
+                    String info = MessageFormat.format("TradeId does not match tradeId in message, TradeId={0}, tradeId in message={1}",
+                            trade.getId(), message.getTradeId());
+                    result = Result.INVALID_TRADE_ID.info(info);
+                    return result;
+                }
+
+
+                Result phaseValidationResult = getPhaseResult();
+                if (!phaseValidationResult.isValid) {
+                    result = phaseValidationResult;
+                    return result;
+                }
+
+                Result stateResult = getStateResult();
+                if (!stateResult.isValid) {
+                    result = stateResult;
+                    return result;
+                }
 
                 boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
-                boolean isTradeIdValid = message == null || isTradeIdValid(trade.getId(), message);
-
                 if (!allPreConditionsMet) {
-                    log.error("PreConditions not met. preConditions={}, this={}, tradeId={}", preConditions, this, trade.getId());
+                    String info = MessageFormat.format("PreConditions not met. preConditions={0}, this={1}, tradeId={2}",
+                            preConditions, this, trade.getId());
+                    result = Result.INVALID_PRE_CONDITION.info(info);
+
                     if (preConditionFailedHandler != null) {
                         preConditionFailedHandler.run();
                     }
-                }
-                if (!isTradeIdValid) {
-                    log.error("TradeId does not match tradeId in message, TradeId={}, tradeId in message={}",
-                            trade.getId(), message.getTradeId());
+                    return result;
                 }
 
-                isValid = isPhaseValid && isStateValid && allPreConditionsMet && isTradeIdValid;
-                isValidated = true;
+                result = Result.VALID;
             }
-            return isValid;
+            return result;
         }
 
-        private boolean isPhaseValid() {
+        private Result getPhaseResult() {
             if (expectedPhases.isEmpty()) {
-                return true;
+                return Result.VALID;
             }
 
             boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getPhase());
@@ -215,27 +273,28 @@ public class FluentProtocol {
                             event.name() + " event" :
                             "";
             if (isPhaseValid) {
-                log.info("We received {} at phase {} and state {}, tradeId={}",
+                String info = MessageFormat.format("We received {0} at phase {1} and state {2}, tradeId={3}",
                         trigger,
                         trade.getPhase(),
                         trade.getState(),
                         trade.getId());
+                log.info(info);
+                return Result.VALID.info(info);
             } else {
-                log.error("We received {} but we are are not in the expected phase. Expected phases={}, " +
-                                "Trade phase={}, Trade state= {}, tradeId={}",
+                String info = MessageFormat.format("We received {0} but we are are not in the expected phase. " +
+                                "Expected phases={1}, Trade phase={2}, Trade state= {3}, tradeId={4}",
                         trigger,
                         expectedPhases,
                         trade.getPhase(),
                         trade.getState(),
                         trade.getId());
+                return Result.INVALID_PHASE.info(info);
             }
-
-            return isPhaseValid;
         }
 
-        private boolean isStateValid() {
+        private Result getStateResult() {
             if (expectedStates.isEmpty()) {
-                return true;
+                return Result.VALID;
             }
 
             boolean isStateValid = expectedStates.stream().anyMatch(e -> e == trade.getState());
@@ -245,20 +304,21 @@ public class FluentProtocol {
                             event.name() + " event" :
                             "";
             if (isStateValid) {
-                log.info("We received {} at state {}, tradeId={}",
+                String info = MessageFormat.format("We received {0} at state {1}, tradeId={2}",
                         trigger,
                         trade.getState(),
                         trade.getId());
+                log.info(info);
+                return Result.VALID.info(info);
             } else {
-                log.error("We received {} but we are are not in the expected state. Expected states={}, " +
-                                "Trade state= {}, tradeId={}",
+                String info = MessageFormat.format("We received {0} but we are are not in the expected state. " +
+                                "Expected states={1}, Trade state= {2}, tradeId={3}",
                         trigger,
                         expectedStates,
                         trade.getState(),
                         trade.getId());
+                return Result.INVALID_STATE.info(info);
             }
-
-            return isStateValid;
         }
     }
 

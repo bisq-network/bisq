@@ -55,6 +55,8 @@ public abstract class BuyerProtocol extends MediationProtocol {
     public BuyerProtocol(BuyerTrade trade) {
         super(trade);
 
+        // We get called the constructor with any possible state and phase. As we don't want to log an error for such
+        // cases we use the alternative 'given' method instead of 'expect'.
         given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(BuyerEvent.STARTUP))
                 .setup(tasks(BuyerSetupDepositTxListener.class))
@@ -95,7 +97,7 @@ public abstract class BuyerProtocol extends MediationProtocol {
     // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
     // in the hope to reach the buyer directly.
     protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
-        given(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
+        expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
                 .with(message)
                 .from(peer)
                 .preCondition(trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null,
@@ -126,7 +128,7 @@ public abstract class BuyerProtocol extends MediationProtocol {
 
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
-        given(phase(Trade.Phase.DEPOSIT_CONFIRMED)
+        expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .with(event)
                 .preCondition(!wasDisputed()))
                 .setup(tasks(ApplyFilter.class,
@@ -152,7 +154,7 @@ public abstract class BuyerProtocol extends MediationProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(PayoutTxPublishedMessage message, NodeAddress peer) {
-        given(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
+        expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(BuyerProcessPayoutTxPublishedMessage.class))

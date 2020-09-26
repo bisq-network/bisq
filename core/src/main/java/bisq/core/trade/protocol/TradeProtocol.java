@@ -117,8 +117,24 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
     // FluentProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // We log an error if condition is not met and call the protocol error handler
+    protected FluentProtocol expect(FluentProtocol.Condition condition) {
+        return new FluentProtocol(this)
+                .condition(condition)
+                .resultHandler(result -> {
+                    if (!result.isValid()) {
+                        log.error(result.getInfo());
+                        handleTaskRunnerFault(null,
+                                result.name(),
+                                result.getInfo());
+                    }
+                });
+    }
+
+    // We execute only if condition is met but do not log an error.
     protected FluentProtocol given(FluentProtocol.Condition condition) {
-        return new FluentProtocol(this).condition(condition);
+        return new FluentProtocol(this)
+                .condition(condition);
     }
 
     protected FluentProtocol.Condition phase(Trade.Phase expectedPhase) {
@@ -277,13 +293,13 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleTaskRunnerSuccess(@Nullable TradeMessage message, String source) {
-        log.info("TaskRunner successfully completed. Triggered from {}", source);
+        log.info("TaskRunner successfully completed. Triggered from {}, tradeId={}", source, trade.getId());
         if (message != null) {
             sendAckMessage(message, true, null);
         }
     }
 
-    private void handleTaskRunnerFault(@Nullable TradeMessage message, String source, String errorMessage) {
+    void handleTaskRunnerFault(@Nullable TradeMessage message, String source, String errorMessage) {
         log.error("Task runner failed with error {}. Triggered from {}", errorMessage, source);
 
         if (message != null) {

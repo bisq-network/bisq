@@ -74,7 +74,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
 
     @Override
     public void onTakeOffer() {
-        given(phase(Trade.Phase.INIT)
+        expect(phase(Trade.Phase.INIT)
                 .with(TakerEvent.TAKE_OFFER))
                 .setup(tasks(
                         ApplyFilter.class,
@@ -93,7 +93,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(InputsForDepositTxResponse message, NodeAddress peer) {
-        given(phase(Trade.Phase.INIT)
+        expect(phase(Trade.Phase.INIT)
                 .with(message)
                 .from(peer))
                 .setup(tasks(TakerProcessesInputsForDepositTxResponse.class,
@@ -109,7 +109,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
     }
 
     protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(

@@ -69,7 +69,7 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
 
     @Override
     public void onTakeOffer() {
-        given(phase(Trade.Phase.INIT)
+        expect(phase(Trade.Phase.INIT)
                 .with(TakerEvent.TAKE_OFFER)
                 .from(trade.getTradingPeerNodeAddress()))
                 .setup(tasks(
@@ -88,7 +88,7 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(InputsForDepositTxResponse message, NodeAddress peer) {
-        given(phase(Trade.Phase.INIT)
+        expect(phase(Trade.Phase.INIT)
                 .with(message)
                 .from(peer))
                 .setup(tasks(

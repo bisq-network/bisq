@@ -71,7 +71,7 @@ public abstract class SellerProtocol extends MediationProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
-        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(SellerProcessDelayedPayoutTxSignatureResponse.class,
@@ -97,7 +97,7 @@ public abstract class SellerProtocol extends MediationProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
-        given(phase(Trade.Phase.DEPOSIT_CONFIRMED)
+        expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .with(message)
                 .from(peer)
                 .preCondition(trade.getPayoutTx() == null,
@@ -121,7 +121,7 @@ public abstract class SellerProtocol extends MediationProtocol {
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
-        given(phase(Trade.Phase.FIAT_SENT)
+        expect(phase(Trade.Phase.FIAT_SENT)
                 .with(event)
                 .preCondition(!wasDisputed()))
                 .setup(tasks(

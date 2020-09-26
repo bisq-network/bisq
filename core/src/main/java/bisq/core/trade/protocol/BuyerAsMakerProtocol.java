@@ -66,7 +66,7 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
     public void handleTakeOfferRequest(InputsForDepositTxRequest message,
                                        NodeAddress peer,
                                        ErrorMessageHandler errorMessageHandler) {
-        given(phase(Trade.Phase.INIT)
+        expect(phase(Trade.Phase.INIT)
                 .with(message)
                 .from(peer))
                 .setup(tasks(
@@ -95,7 +95,7 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(

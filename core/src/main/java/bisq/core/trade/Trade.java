@@ -730,8 +730,9 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Transaction getDepositTx() {
-        if (depositTx == null)
+        if (depositTx == null) {
             depositTx = depositTxId != null ? btcWalletService.getTransaction(depositTxId) : null;
+        }
         return depositTx;
     }
 
@@ -985,9 +986,9 @@ public abstract class Trade implements Tradable, Model {
     }
 
     private long getTradeStartTime() {
-        final long now = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
         long startTime;
-        final Transaction depositTx = getDepositTx();
+        Transaction depositTx = getDepositTx();
         if (depositTx != null && getTakeOfferDate() != null) {
             if (depositTx.getConfidence().getDepthInBlocks() > 0) {
                 final long tradeTime = getTakeOfferDate().getTime();
