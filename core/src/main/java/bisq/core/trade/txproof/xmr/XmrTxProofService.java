@@ -80,7 +80,7 @@ public class XmrTxProofService implements AssetTxProofService {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Map<String, XmrTxProofRequestsPerTrade> servicesByTradeId = new HashMap<>();
     private AutoConfirmSettings autoConfirmSettings;
-    private Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
+    private final Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
     private ChangeListener<Number> btcPeersListener, btcBlockListener;
     private BootstrapListener bootstrapListener;
     private MonadicBinding<Boolean> p2pNetworkAndWalletReady;

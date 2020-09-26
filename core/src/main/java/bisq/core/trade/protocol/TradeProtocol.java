@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
 public abstract class TradeProtocol implements DecryptedDirectMessageListener {
 
     protected final ProcessModel processModel;
-    protected Trade trade;
+    protected final Trade trade;
     private Timer timeoutTimer;
 
 

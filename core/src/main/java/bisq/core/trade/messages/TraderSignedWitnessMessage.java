@@ -27,6 +27,7 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+@SuppressWarnings("ALL")
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class TraderSignedWitnessMessage extends TradeMessage implements MailboxMessage {

@@ -55,8 +55,8 @@ public class DisputeProtocol extends TradeProtocol {
         super(trade);
     }
 
-    protected boolean wasDisputed() {
-        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
+    protected boolean notDisputed() {
+        return trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE;
     }
 
 

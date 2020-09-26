@@ -180,7 +180,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         p2PService.addDecryptedDirectMessageListener(this);
         p2PService.addDecryptedMailboxListener(this);
 
-        failedTradesManager.setUnfailTradeCallback(this::unFailTrade);
+        failedTradesManager.setUnFailTradeCallback(this::unFailTrade);
     }
 
 
@@ -313,10 +313,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
-    }
-
-    public void shutDown() {
-        // Do nothing here
     }
 
     public void persistTrades() {
@@ -621,7 +617,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // Aborts unfailing if the address entries needed are not available
     private boolean unFailTrade(Trade trade) {
         if (!recoverAddresses(trade)) {
-            log.warn("Failed to recover address during unfail trade");
+            log.warn("Failed to recover address during unFail trade");
             return false;
         }
 

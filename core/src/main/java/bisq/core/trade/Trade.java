@@ -119,7 +119,7 @@ public abstract class Trade implements Tradable, Model {
 
         // #################### Phase DEPOSIT_PUBLISHED
         // We changes order in trade protocol of publishing deposit tx and sending it to the peer.
-        // Now we send it first to the peer and only if that succeeds we publish it to avoid likelyhood of
+        // Now we send it first to the peer and only if that succeeds we publish it to avoid likelihood of
         // failed trades. We do not want to change the order of the enum though so we keep it here as it was originally.
         SELLER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PUBLISHED),
 
@@ -438,7 +438,7 @@ public abstract class Trade implements Tradable, Model {
     @Setter
     private long lastRefreshRequestDate;
     @Getter
-    private long refreshInterval;
+    private final long refreshInterval;
     private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
 
     // Added at v1.3.8
@@ -756,8 +756,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey))
-            decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
+        decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {

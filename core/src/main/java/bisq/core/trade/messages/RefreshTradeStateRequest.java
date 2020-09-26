@@ -28,6 +28,7 @@ import lombok.Value;
  * We do the re-sending of the payment sent message via the BuyerSendCounterCurrencyTransferStartedMessage task on the
  * buyer side, so seller do not need to do anything interactively.
  */
+@SuppressWarnings("deprecation")
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class RefreshTradeStateRequest extends TradeMessage implements MailboxMessage {
