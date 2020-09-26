@@ -133,10 +133,10 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
+    // We keep the handler here in as well to make it more transparent which events we expect
     @Override
-    public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        super.onFiatPaymentStarted(resultHandler, errorMessageHandler);
+    public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        super.onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
 

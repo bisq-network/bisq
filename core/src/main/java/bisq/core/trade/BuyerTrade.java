@@ -84,9 +84,9 @@ public abstract class BuyerTrade extends Trade {
                 btcWalletService);
     }
 
-    public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkArgument(tradeProtocol instanceof BuyerProtocol, "Check failed:  tradeProtocol instanceof BuyerProtocol");
-        ((BuyerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorMessageHandler);
+        ((BuyerProtocol) tradeProtocol).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     @Override

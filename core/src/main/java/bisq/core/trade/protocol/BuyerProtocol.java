@@ -126,7 +126,7 @@ public abstract class BuyerProtocol extends MediationProtocol {
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
         expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .with(event)
