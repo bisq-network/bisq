@@ -234,7 +234,55 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
         // The maker received a TakeOfferRequest
         if (networkEnvelope instanceof TakeOfferRequest) {
-            handleTakeOfferRequest((TakeOfferRequest) networkEnvelope, peer);
+            TakeOfferRequest takeOfferRequest = (TakeOfferRequest) networkEnvelope;
+            log.info("Received TakeOfferRequest from {} with tradeId {} and uid {}",
+                    peer, takeOfferRequest.getTradeId(), takeOfferRequest.getUid());
+
+            try {
+                Validator.nonEmptyStringOf(takeOfferRequest.getTradeId());
+            } catch (Throwable t) {
+                log.warn("Invalid TakeOfferRequest " + takeOfferRequest.toString());
+                return;
+            }
+
+            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(takeOfferRequest.getTradeId());
+            if (!openOfferOptional.isPresent()) {
+                return;
+            }
+
+            OpenOffer openOffer = openOfferOptional.get();
+            if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
+                return;
+            }
+
+            Offer offer = openOffer.getOffer();
+            openOfferManager.reserveOpenOffer(openOffer);
+            Trade trade = offer.isBuyOffer() ?
+                    new BuyerAsMakerTrade(offer,
+                            Coin.valueOf(takeOfferRequest.getTxFee()),
+                            Coin.valueOf(takeOfferRequest.getTakerFee()),
+                            takeOfferRequest.isCurrencyForTakerFeeBtc(),
+                            openOffer.getArbitratorNodeAddress(),
+                            openOffer.getMediatorNodeAddress(),
+                            openOffer.getRefundAgentNodeAddress(),
+                            tradableListStorage,
+                            btcWalletService) :
+                    new SellerAsMakerTrade(offer,
+                            Coin.valueOf(takeOfferRequest.getTxFee()),
+                            Coin.valueOf(takeOfferRequest.getTakerFee()),
+                            takeOfferRequest.isCurrencyForTakerFeeBtc(),
+                            openOffer.getArbitratorNodeAddress(),
+                            openOffer.getMediatorNodeAddress(),
+                            openOffer.getRefundAgentNodeAddress(),
+                            tradableListStorage,
+                            btcWalletService);
+
+            initTrade(trade);
+            tradableList.add(trade);
+            ((MakerTrade) trade).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
+                if (takeOfferRequestErrorMessageHandler != null)
+                    takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+            });
         }
     }
 
@@ -292,62 +340,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     public void shutDown() {
         // Do nothing here
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Maker received taker offer request
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void handleTakeOfferRequest(TakeOfferRequest takeOfferRequest, NodeAddress peer) {
-        log.info("Received TakeOfferRequest from {} with tradeId {} and uid {}",
-                peer, takeOfferRequest.getTradeId(), takeOfferRequest.getUid());
-
-        try {
-            Validator.nonEmptyStringOf(takeOfferRequest.getTradeId());
-        } catch (Throwable t) {
-            log.warn("Invalid TakeOfferRequest " + takeOfferRequest.toString());
-            return;
-        }
-
-        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(takeOfferRequest.getTradeId());
-        if (!openOfferOptional.isPresent()) {
-            return;
-        }
-
-        OpenOffer openOffer = openOfferOptional.get();
-        if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
-            return;
-        }
-
-        Offer offer = openOffer.getOffer();
-        openOfferManager.reserveOpenOffer(openOffer);
-        Trade trade = offer.isBuyOffer() ?
-                new BuyerAsMakerTrade(offer,
-                        Coin.valueOf(takeOfferRequest.getTxFee()),
-                        Coin.valueOf(takeOfferRequest.getTakerFee()),
-                        takeOfferRequest.isCurrencyForTakerFeeBtc(),
-                        openOffer.getArbitratorNodeAddress(),
-                        openOffer.getMediatorNodeAddress(),
-                        openOffer.getRefundAgentNodeAddress(),
-                        tradableListStorage,
-                        btcWalletService) :
-                new SellerAsMakerTrade(offer,
-                        Coin.valueOf(takeOfferRequest.getTxFee()),
-                        Coin.valueOf(takeOfferRequest.getTakerFee()),
-                        takeOfferRequest.isCurrencyForTakerFeeBtc(),
-                        openOffer.getArbitratorNodeAddress(),
-                        openOffer.getMediatorNodeAddress(),
-                        openOffer.getRefundAgentNodeAddress(),
-                        tradableListStorage,
-                        btcWalletService);
-
-        initTrade(trade);
-        tradableList.add(trade);
-        ((MakerTrade) trade).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
-            if (takeOfferRequestErrorMessageHandler != null)
-                takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
-        });
     }
 
 
