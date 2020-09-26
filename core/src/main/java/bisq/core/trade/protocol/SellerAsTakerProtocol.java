@@ -71,7 +71,8 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
     public void onTakeOffer() {
         expect(phase(Trade.Phase.INIT)
                 .with(TakerEvent.TAKE_OFFER)
-                .from(trade.getTradingPeerNodeAddress()))
+                .from(trade.getTradingPeerNodeAddress())
+                .preCondition(!processModel.getTradeManager().wasOfferAlreadyUsedInTrade(trade.getId())))
                 .setup(tasks(
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),

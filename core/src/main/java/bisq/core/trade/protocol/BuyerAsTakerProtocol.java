@@ -75,7 +75,8 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
     @Override
     public void onTakeOffer() {
         expect(phase(Trade.Phase.INIT)
-                .with(TakerEvent.TAKE_OFFER))
+                .with(TakerEvent.TAKE_OFFER)
+                .preCondition(!processModel.getTradeManager().wasOfferAlreadyUsedInTrade(trade.getId())))
                 .setup(tasks(
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),

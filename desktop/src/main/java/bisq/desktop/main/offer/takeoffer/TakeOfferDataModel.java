@@ -320,6 +320,8 @@ class TakeOfferDataModel extends OfferDataModel {
             new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else if (filterManager.requireUpdateToNewVersionForTrading()) {
             new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+        } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
+            new Popup().warning(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,

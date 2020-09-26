@@ -105,6 +105,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
@@ -413,7 +415,10 @@ public class TradeManager implements PersistedDataHost {
                             boolean useSavingsWallet,
                             TradeResultHandler tradeResultHandler,
                             ErrorMessageHandler errorMessageHandler) {
-        final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
+
+        checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
+
+        OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
@@ -774,5 +779,11 @@ public class TradeManager implements PersistedDataHost {
 
     public void persistTrades() {
         tradableList.persist();
+    }
+
+    public boolean wasOfferAlreadyUsedInTrade(String offerId) {
+        return getTradeById(offerId).isPresent() ||
+                failedTradesManager.getTradeById(offerId).isPresent() ||
+                closedTradableManager.getTradableById(offerId).isPresent();
     }
 }
