@@ -19,12 +19,9 @@ package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.trade.protocol.SellerProtocol;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
@@ -32,8 +29,6 @@ import org.bitcoinj.core.Coin;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class SellerTrade extends Trade {
@@ -81,11 +76,6 @@ public abstract class SellerTrade extends Trade {
                 refundAgentNodeAddress,
                 storage,
                 btcWalletService);
-    }
-
-    public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkArgument(tradeProtocol instanceof SellerProtocol, "tradeProtocol NOT instanceof SellerProtocol");
-        ((SellerProtocol) tradeProtocol).onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     @Override
