@@ -51,6 +51,7 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.protocol.MediationProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 
@@ -641,8 +642,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
             //todo add UI spinner as it can take a bit if peer is offline
-            tradeManager.publishDelayedPayoutTx(tradeId,
-                    () -> {
+            ((MediationProtocol) trade.getTradeProtocol()).onPublishDelayedPayoutTx(() -> {
                         log.info("DelayedPayoutTx published and message sent to peer");
                         disputeManager.sendOpenNewDisputeMessage(dispute,
                                 false,

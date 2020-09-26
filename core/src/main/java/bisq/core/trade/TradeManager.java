@@ -19,13 +19,10 @@ package bisq.core.trade;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.exceptions.AddressEntryException;
-import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -41,7 +38,6 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
-import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -56,7 +52,6 @@ import bisq.network.p2p.DecryptedDirectMessageListener;
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 
 import bisq.common.ClockWatcher;
@@ -93,7 +88,6 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -554,74 +548,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             onTradeCompleted(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Publish delayed payout tx
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    //TODO move to protocol
-    public void publishDelayedPayoutTx(String tradeId,
-                                       ResultHandler resultHandler,
-                                       ErrorMessageHandler errorMessageHandler) {
-        getTradeById(tradeId).ifPresent(trade -> {
-            Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
-            if (delayedPayoutTx == null) {
-                return;
-            }
-
-            // We have spent the funds from the deposit tx with the delayedPayoutTx
-            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-            // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
-
-            Transaction committedDelayedPayoutTx = WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, btcWalletService.getWallet());
-
-            tradeWalletService.broadcastTx(committedDelayedPayoutTx, new TxBroadcaster.Callback() {
-                @Override
-                public void onSuccess(Transaction transaction) {
-                    log.info("publishDelayedPayoutTx onSuccess " + transaction);
-                    NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-                    PeerPublishedDelayedPayoutTxMessage msg = new PeerPublishedDelayedPayoutTxMessage(UUID.randomUUID().toString(),
-                            tradeId,
-                            tradingPeerNodeAddress);
-                    p2PService.sendEncryptedMailboxMessage(
-                            tradingPeerNodeAddress,
-                            trade.getProcessModel().getTradingPeer().getPubKeyRing(),
-                            msg,
-                            new SendMailboxMessageListener() {
-                                @Override
-                                public void onArrived() {
-                                    resultHandler.handleResult();
-                                    log.info("SendMailboxMessageListener onArrived tradeId={} at peer {}",
-                                            tradeId, tradingPeerNodeAddress);
-                                }
-
-                                @Override
-                                public void onStoredInMailbox() {
-                                    resultHandler.handleResult();
-                                    log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {}",
-                                            tradeId, tradingPeerNodeAddress);
-                                }
-
-                                @Override
-                                public void onFault(String errorMessage) {
-                                    log.error("SendMailboxMessageListener onFault tradeId={} at peer {}",
-                                            tradeId, tradingPeerNodeAddress);
-                                    errorMessageHandler.handleErrorMessage(errorMessage);
-                                }
-                            }
-                    );
-                }
-
-                @Override
-                public void onFailure(TxBroadcastException exception) {
-                    log.error("publishDelayedPayoutTx onFailure", exception);
-                    errorMessageHandler.handleErrorMessage(exception.toString());
-                }
-            });
-
-        });
     }
 
 
