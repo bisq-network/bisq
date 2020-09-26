@@ -192,7 +192,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Trade must be instance of SellerTrade");
-        tradeManager.onUserConfirmedFiatPaymentReceived((SellerTrade) getTrade(), resultHandler, errorMessageHandler);
+        tradeManager.onPaymentReceived((SellerTrade) getTrade(), resultHandler, errorMessageHandler);
     }
 
     public void onWithdrawRequest(String toAddress,

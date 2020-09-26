@@ -83,9 +83,9 @@ public abstract class SellerTrade extends Trade {
                 btcWalletService);
     }
 
-    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkArgument(tradeProtocol instanceof SellerProtocol, "tradeProtocol NOT instanceof SellerProtocol");
-        ((SellerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorMessageHandler);
+        ((SellerProtocol) tradeProtocol).onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     @Override

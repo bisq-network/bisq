@@ -232,6 +232,11 @@ public class TradeManager implements PersistedDataHost {
         failedTradesManager.setUnfailTradeCallback(this::unfailTrade);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedDataHost
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void readPersisted() {
         tradableList = new TradableList<>(tradableListStorage, "PendingTrades");
@@ -247,7 +252,7 @@ public class TradeManager implements PersistedDataHost {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
@@ -278,6 +283,11 @@ public class TradeManager implements PersistedDataHost {
         // Do nothing here
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void initPendingTrades() {
         tradableList.forEach(this::initPendingTrade);
         pendingTradesInitialized.set(true);
@@ -290,10 +300,10 @@ public class TradeManager implements PersistedDataHost {
         trade.updateDepositTxFromWallet();
     }
 
-    public void onUserConfirmedFiatPaymentReceived(SellerTrade sellerTrade,
-                                                   ResultHandler resultHandler,
-                                                   ErrorMessageHandler errorMessageHandler) {
-        sellerTrade.onFiatPaymentReceived(resultHandler, errorMessageHandler);
+    public void onPaymentReceived(SellerTrade sellerTrade,
+                                  ResultHandler resultHandler,
+                                  ErrorMessageHandler errorMessageHandler) {
+        sellerTrade.onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     private void onTradesChanged() {

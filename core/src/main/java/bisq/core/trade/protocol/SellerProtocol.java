@@ -119,7 +119,7 @@ public abstract class SellerProtocol extends MediationProtocol {
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
         expect(phase(Trade.Phase.FIAT_SENT)
                 .with(event)

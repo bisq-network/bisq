@@ -132,8 +132,8 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
 
     // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
-    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        super.onFiatPaymentReceived(resultHandler, errorMessageHandler);
+    public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        super.onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
 
