@@ -57,9 +57,16 @@ task getJpackageJDKDownloadURL {
         binariesFolderPath.mkdirs();
         ext.binariesFolderPath = binariesFolderPath
 
-        def apiEndpointLatestRelease = 'https://api.github.com/repos/AdoptOpenJDK/openjdk15-binaries/releases/latest'
-        def apiEndpointLatestReleaseJSON = new groovy.json.JsonSlurper().parseText(apiEndpointLatestRelease.toURL().text)
-        def latestReleaseTag = apiEndpointLatestReleaseJSON.tag_name
+        def apiEndpointLatestReleases = 'https://api.github.com/repos/AdoptOpenJDK/openjdk15-binaries/releases'
+        def apiEndpointLatestReleasesJSON = new groovy.json.JsonSlurper().parseText(apiEndpointLatestReleases.toURL().text)
+        def finalHotspotReleases = apiEndpointLatestReleasesJSON.findAll {
+            // Filter out the pre-releases (nightly builds)
+            (it.prerelease == false) &&
+                    // Filter our openj9 builds (for now stick to the hotspot ones)
+                    (! it.body.contains('openj9'))
+        }
+        def latestReleaseJSON = finalHotspotReleases.first()
+        def latestReleaseTag = latestReleaseJSON.tag_name
         println "Latest AdoptOpenJDK release is ${latestReleaseTag}"
 
         // AdoptOpenJDK only offer the latest release version for download (but none of the previous ones)
@@ -169,8 +176,8 @@ task packageGetJpackagePath {
 task packageInstallers {
     description 'Call jpackage to prepare platform-specific binaries for this platform'
     dependsOn 'packageGetJpackagePath'
-    // We need :clean and :shadowJar to make sure we have a fresh, current jar for the installers
-    dependsOn ':clean'
+    // Clean all previous artefacts and create a fresh shadowJar for the installers
+    dependsOn rootProject.clean
     dependsOn ':desktop:shadowJar'
 
     doLast {
