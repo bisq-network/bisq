@@ -17,8 +17,14 @@
 
 package bisq.apitest.method.offer;
 
+import bisq.core.monetary.Altcoin;
+
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OfferInfo;
+
+import org.bitcoinj.utils.Fiat;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,7 +37,11 @@ import org.junit.jupiter.api.BeforeAll;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static bisq.common.util.MathUtils.roundDouble;
+import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
+import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static java.lang.String.format;
+import static java.math.RoundingMode.HALF_UP;
 import static java.util.Comparator.comparing;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -89,8 +99,19 @@ abstract class AbstractCreateOfferTest extends MethodTest {
                 .collect(Collectors.toList());
     }
 
-    protected final double getPrice(String currencyCode) {
+    protected double getScaledOfferPrice(double offerPrice, String currencyCode) {
+        int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
+        return scaleDownByPowerOf10(offerPrice, precision);
+    }
+
+    protected final double getMarketPrice(String currencyCode) {
         return getMarketPrice(alicedaemon, currencyCode);
+    }
+
+    protected final double getPercentageDifference(double price1, double price2) {
+        return BigDecimal.valueOf(roundDouble((1 - (price1 / price2)), 5))
+                .setScale(4, HALF_UP)
+                .doubleValue();
     }
 
     @AfterAll

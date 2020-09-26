@@ -18,15 +18,11 @@
 package bisq.apitest.method.offer;
 
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.monetary.Altcoin;
 
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.OfferInfo;
 
-import org.bitcoinj.utils.Fiat;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.text.DecimalFormat;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,10 +32,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
-import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -49,6 +44,10 @@ import static protobuf.OfferPayload.Direction.BUY;
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTest {
+
+    private static final DecimalFormat PCT_FORMAT = new DecimalFormat("##0.00");
+    private static final double MKT_PRICE_MARGIN_ERROR_TOLERANCE = 0.0050;      // 0.50%
+    private static final double MKT_PRICE_MARGIN_WARNING_TOLERANCE = 0.0001;    // 0.01%
 
     @Test
     @Order(1)
@@ -90,7 +89,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("USD", offer.getCounterCurrencyCode());
 
-        assertMarketBasedPriceDiff(offer, priceMarginPctInput);
+        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
     }
 
     @Test
@@ -133,7 +132,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("NZD", offer.getCounterCurrencyCode());
 
-        assertMarketBasedPriceDiff(offer, priceMarginPctInput);
+        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
     }
 
     @Test
@@ -153,7 +152,6 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
-        log.info(newOffer.toString());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -177,7 +175,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("GBP", offer.getCounterCurrencyCode());
 
-        assertMarketBasedPriceDiff(offer, priceMarginPctInput);
+        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
     }
 
     @Test
@@ -197,7 +195,6 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
-        log.info(newOffer.toString());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -221,45 +218,77 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("BRL", offer.getCounterCurrencyCode());
 
-        assertMarketBasedPriceDiff(offer, priceMarginPctInput);
+        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
     }
 
-    private void assertMarketBasedPriceDiff(OfferInfo offer, double priceMarginPctInput) {
-        // Assert the mkt price margin difference (%) is < 1% from the expected difference.
-        String counterCurrencyCode = offer.getCounterCurrencyCode();
-        double lastPrice = getPrice(counterCurrencyCode);
-        int precision = isCryptoCurrency(counterCurrencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
-        double scaledOfferPrice = scaleDownByPowerOf10(offer.getPrice(), precision);
+    private void assertCalculatedPriceIsCorrect(OfferInfo offer, double priceMarginPctInput) {
         assertTrue(() -> {
-            double expectedPriceMarginPct = scaleDownByPowerOf10(priceMarginPctInput, 2);
-            double actualPriceMarginPct = offer.getDirection().equals(BUY.name())
-                    ? getPercentageDifference(scaledOfferPrice, lastPrice)
-                    : getPercentageDifference(lastPrice, scaledOfferPrice);
-            double diff = expectedPriceMarginPct - actualPriceMarginPct;
-            if (Math.abs(diff) > 0.0001) {
-                String priceCalculationWarning = format("The calculated price was %.2f%s off"
-                                + " mkt price, not the expected %.2f%s off mkt price.%n"
-                                + "Offer %s",
-                        scaleUpByPowerOf10(actualPriceMarginPct, 2), "%",
-                        priceMarginPctInput, "%",
-                        offer);
-                double onePercent = 0.01;
-                if (diff > Math.abs(onePercent)) {
-                    log.error(priceCalculationWarning);
-                    return false;
-                } else {
-                    log.warn(priceCalculationWarning);
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            String counterCurrencyCode = offer.getCounterCurrencyCode();
+            double mktPrice = getMarketPrice(counterCurrencyCode);
+            double scaledOfferPrice = getScaledOfferPrice(offer.getPrice(), counterCurrencyCode);
+            double expectedDiffPct = scaleDownByPowerOf10(priceMarginPctInput, 2);
+            double actualDiffPct = offer.getDirection().equals(BUY.name())
+                    ? getPercentageDifference(scaledOfferPrice, mktPrice)
+                    : getPercentageDifference(mktPrice, scaledOfferPrice);
+            double pctDiffDelta = abs(expectedDiffPct) - abs(actualDiffPct);
+            return isCalculatedPriceWithinErrorTolerance(pctDiffDelta,
+                    expectedDiffPct,
+                    actualDiffPct,
+                    mktPrice,
+                    scaledOfferPrice,
+                    offer);
         });
     }
 
-    private double getPercentageDifference(double price1, double price2) {
-        return new BigDecimal(roundDouble((1 - (price1 / price2)), 5))
-                .setScale(4, RoundingMode.HALF_UP)
-                .doubleValue();
+    private boolean isCalculatedPriceWithinErrorTolerance(double delta,
+                                                          double expectedDiffPct,
+                                                          double actualDiffPct,
+                                                          double mktPrice,
+                                                          double scaledOfferPrice,
+                                                          OfferInfo offer) {
+        if (abs(delta) > MKT_PRICE_MARGIN_ERROR_TOLERANCE) {
+            logCalculatedPricePoppedErrorTolerance(expectedDiffPct,
+                    actualDiffPct,
+                    mktPrice,
+                    scaledOfferPrice);
+            log.error(offer.toString());
+            return false;
+        }
+
+        if (abs(delta) >= MKT_PRICE_MARGIN_WARNING_TOLERANCE) {
+            logCalculatedPricePoppedWarningTolerance(expectedDiffPct,
+                    actualDiffPct,
+                    mktPrice,
+                    scaledOfferPrice);
+            log.warn(offer.toString());
+        }
+
+        return true;
+    }
+
+    private void logCalculatedPricePoppedWarningTolerance(double expectedDiffPct,
+                                                          double actualDiffPct,
+                                                          double mktPrice,
+                                                          double scaledOfferPrice) {
+        log.warn(format("Calculated price %.4f & mkt price %.4f differ by ~ %s%s,"
+                        + " not by %s%s, outside the %s%s warning tolerance,"
+                        + " but within the %s%s error tolerance.",
+                scaledOfferPrice, mktPrice,
+                PCT_FORMAT.format(scaleUpByPowerOf10(actualDiffPct, 2)), "%",
+                PCT_FORMAT.format(scaleUpByPowerOf10(expectedDiffPct, 2)), "%",
+                PCT_FORMAT.format(scaleUpByPowerOf10(MKT_PRICE_MARGIN_WARNING_TOLERANCE, 2)), "%",
+                PCT_FORMAT.format(scaleUpByPowerOf10(MKT_PRICE_MARGIN_ERROR_TOLERANCE, 2)), "%"));
+    }
+
+    private void logCalculatedPricePoppedErrorTolerance(double expectedDiffPct,
+                                                        double actualDiffPct,
+                                                        double mktPrice,
+                                                        double scaledOfferPrice) {
+        log.error(format("Calculated price %.4f & mkt price %.4f differ by ~ %s%s,"
+                        + " not by %s%s, outside the %s%s error tolerance.",
+                scaledOfferPrice, mktPrice,
+                PCT_FORMAT.format(scaleUpByPowerOf10(actualDiffPct, 2)), "%",
+                PCT_FORMAT.format(scaleUpByPowerOf10(expectedDiffPct, 2)), "%",
+                PCT_FORMAT.format(scaleUpByPowerOf10(MKT_PRICE_MARGIN_ERROR_TOLERANCE, 2)), "%"));
     }
 }
