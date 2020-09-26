@@ -80,7 +80,7 @@ public class HyperlinkWithIcon extends Hyperlink {
         setGraphic(null);
     }
 
-    private void setIcon(Node icon) {
+    public void setIcon(Node icon) {
         this.icon = icon;
         setGraphic(icon);
 

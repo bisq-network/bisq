@@ -52,7 +52,6 @@ import bisq.common.util.Utilities;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXBadge;
@@ -68,7 +67,6 @@ import javafx.stage.Window;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -80,6 +78,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -320,8 +319,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void onMoveInvalidTradeToFailedTrades(Trade trade) {
-        new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.moveToFailed",
-                getInvalidTradeDetails(trade)))
+        String msg = trade.isTxChainInvalid() ?
+                Res.get("portfolio.pending.failedTrade.txChainInvalid.moveToFailed",
+                        getInvalidTradeDetails(trade)) :
+                Res.get("portfolio.pending.failedTrade.txChainValid.moveToFailed",
+                        getInvalidTradeDetails(trade));
+        new Popup().width(900).attention(msg)
                 .onAction(() -> {
                     model.dataModel.onMoveInvalidTradeToFailedTrades(trade);
                     updateMoveTradeToFailedColumnState();
@@ -532,10 +535,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             // Select and focus selectedItem from model
             int index = tableView.getItems().indexOf(selectedItemFromModel);
             UserThread.execute(() -> {
-                //TODO app wide focus
                 tableView.getSelectionModel().select(index);
-                //table.requestFocus();
-                //UserThread.execute(() -> table.getFocusModel().focus(index));
             });
         }
     }
@@ -566,16 +566,20 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (isMaybeInvalidTrade(item.getTrade())) {
-                                        field = new HyperlinkWithIcon(item.getTrade().getShortId(), AwesomeIcon.WARNING_SIGN);
-                                        field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
+                                    Trade trade = item.getTrade();
+                                    if (isMaybeInvalidTrade(trade)) {
+                                        field = new HyperlinkWithIcon(trade.getShortId());
+                                        field.setIcon(FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE));
+                                        field.setOnAction(event -> tradeDetailsWindow.show(trade));
                                         field.setTooltip(new Tooltip(Res.get("tooltip.invalidTradeState.warning")));
-                                        //FIXME icon does not take red color ;-(
-                                        field.getIcon().getStyleClass().clear();
-                                        field.getIcon().getStyleClass().addAll("hyperlink", "error");
+                                        if (trade.isTxChainInvalid()) {
+                                            field.getIcon().getStyleClass().addAll("icon", "error-icon");
+                                        } else {
+                                            field.getIcon().getStyleClass().addAll("icon", "warn-icon");
+                                        }
                                     } else {
-                                        field = new HyperlinkWithIcon(item.getTrade().getShortId());
-                                        field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
+                                        field = new HyperlinkWithIcon(trade.getShortId());
+                                        field.setOnAction(event -> tradeDetailsWindow.show(trade));
                                         field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     }
                                     setGraphic(field);
@@ -861,28 +865,25 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(newItem, empty);
                                 if (!empty && newItem != null && isMaybeInvalidTrade(newItem.getTrade())) {
                                     Trade trade = newItem.getTrade();
+                                    Text warnIcon = FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE);
+                                    Text trashIcon = FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ARROW_RIGHT_BOLD_BOX_OUTLINE);
+                                    if (trade.isTxChainInvalid()) {
+                                        trashIcon.getStyleClass().addAll("icon", "error-icon");
+                                        warnIcon.getStyleClass().addAll("icon", "error-icon");
+                                    } else {
+                                        trashIcon.getStyleClass().addAll("icon", "warn-icon");
+                                        warnIcon.getStyleClass().addAll("icon", "warn-icon");
+                                    }
 
-                                    Label warnIcon = FormBuilder.getIcon(AwesomeIcon.WARNING_SIGN);
-                                    warnIcon.getStyleClass().addAll("icon", "error-icon");
                                     JFXButton warnIconButton = new JFXButton("", warnIcon);
-                                    warnIconButton.setStyle("-fx-cursor: hand;");
                                     warnIconButton.getStyleClass().add("hidden-icon-button");
                                     warnIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.warningIcon.tooltip")));
                                     warnIconButton.setOnAction(e -> onShowInfoForInvalidTrade(trade));
 
-                                    Label trashIcon = FormBuilder.getIcon(AwesomeIcon.TRASH);
-                                    trashIcon.getStyleClass().addAll("icon", "error-icon");
                                     JFXButton trashIconButton = new JFXButton("", trashIcon);
-                                    trashIconButton.setStyle("-fx-cursor: hand;");
                                     trashIconButton.getStyleClass().add("hidden-icon-button");
                                     trashIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.moveTradeToFailedIcon.tooltip")));
                                     trashIconButton.setOnAction(e -> onMoveInvalidTradeToFailedTrades(trade));
-
-                                    // We only allow to move to failed trade if the txs are invalid.
-                                    // Otherwise the trade has to be completed.
-                                    boolean isTxChainValid = !trade.isTxChainInvalid();
-                                    boolean paidOut = trade.getPayoutTxId() != null;
-                                    trashIconButton.setDisable(isTxChainValid || paidOut);
 
                                     HBox hBox = new HBox();
                                     hBox.setSpacing(0);

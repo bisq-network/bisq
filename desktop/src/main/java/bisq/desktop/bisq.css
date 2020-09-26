@@ -85,11 +85,6 @@
     -fx-fill: -bs-color-gray-6;
 }
 
-.error-icon {
-    -fx-text-fill: -bs-rd-error-red;
-    -fx-fill: -bs-rd-error-red;
-}
-
 .zero-decimals {
     -fx-text-fill: -bs-color-gray-3;
 }
@@ -1135,6 +1130,27 @@ textfield */
     -fx-text-fill: -bs-text-color;
     -fx-fill: -bs-text-color;
 }
+
+.warn-icon {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warn-icon:hover {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.error-icon {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+.error-icon:hover {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
 
 /*******************************************************************************
  *                                                                             *
