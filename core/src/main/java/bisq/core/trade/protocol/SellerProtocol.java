@@ -121,7 +121,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
 
     public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
-        expect(phase(Trade.Phase.FIAT_SENT)
+        expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
                 .with(event)
                 .preCondition(notDisputed()))
                 .setup(tasks(
