@@ -41,8 +41,8 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
+import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -201,8 +201,8 @@ public class TradeManager implements PersistedDataHost {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
 
             // Handler for incoming initial network_messages from taker
-            if (networkEnvelope instanceof InputsForDepositTxRequest) {
-                handlePayDepositRequest((InputsForDepositTxRequest) networkEnvelope, peerNodeAddress);
+            if (networkEnvelope instanceof TakeOfferRequest) {
+                handlePayDepositRequest((TakeOfferRequest) networkEnvelope, peerNodeAddress);
             }
         });
 
@@ -306,18 +306,18 @@ public class TradeManager implements PersistedDataHost {
         this.numPendingTrades.set(getTradesAsObservableList().size());
     }
 
-    private void handlePayDepositRequest(InputsForDepositTxRequest inputsForDepositTxRequest, NodeAddress peer) {
+    private void handlePayDepositRequest(TakeOfferRequest takeOfferRequest, NodeAddress peer) {
         log.info("Received PayDepositRequest from {} with tradeId {} and uid {}",
-                peer, inputsForDepositTxRequest.getTradeId(), inputsForDepositTxRequest.getUid());
+                peer, takeOfferRequest.getTradeId(), takeOfferRequest.getUid());
 
         try {
-            Validator.nonEmptyStringOf(inputsForDepositTxRequest.getTradeId());
+            Validator.nonEmptyStringOf(takeOfferRequest.getTradeId());
         } catch (Throwable t) {
-            log.warn("Invalid requestDepositTxInputsMessage " + inputsForDepositTxRequest.toString());
+            log.warn("Invalid requestDepositTxInputsMessage " + takeOfferRequest.toString());
             return;
         }
 
-        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(inputsForDepositTxRequest.getTradeId());
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(takeOfferRequest.getTradeId());
         if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
             OpenOffer openOffer = openOfferOptional.get();
             Offer offer = openOffer.getOffer();
@@ -325,9 +325,9 @@ public class TradeManager implements PersistedDataHost {
             Trade trade;
             if (offer.isBuyOffer())
                 trade = new BuyerAsMakerTrade(offer,
-                        Coin.valueOf(inputsForDepositTxRequest.getTxFee()),
-                        Coin.valueOf(inputsForDepositTxRequest.getTakerFee()),
-                        inputsForDepositTxRequest.isCurrencyForTakerFeeBtc(),
+                        Coin.valueOf(takeOfferRequest.getTxFee()),
+                        Coin.valueOf(takeOfferRequest.getTakerFee()),
+                        takeOfferRequest.isCurrencyForTakerFeeBtc(),
                         openOffer.getArbitratorNodeAddress(),
                         openOffer.getMediatorNodeAddress(),
                         openOffer.getRefundAgentNodeAddress(),
@@ -335,9 +335,9 @@ public class TradeManager implements PersistedDataHost {
                         btcWalletService);
             else
                 trade = new SellerAsMakerTrade(offer,
-                        Coin.valueOf(inputsForDepositTxRequest.getTxFee()),
-                        Coin.valueOf(inputsForDepositTxRequest.getTakerFee()),
-                        inputsForDepositTxRequest.isCurrencyForTakerFeeBtc(),
+                        Coin.valueOf(takeOfferRequest.getTxFee()),
+                        Coin.valueOf(takeOfferRequest.getTakerFee()),
+                        takeOfferRequest.isCurrencyForTakerFeeBtc(),
                         openOffer.getArbitratorNodeAddress(),
                         openOffer.getMediatorNodeAddress(),
                         openOffer.getRefundAgentNodeAddress(),
@@ -346,7 +346,7 @@ public class TradeManager implements PersistedDataHost {
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
             tradableList.add(trade);
-            ((MakerTrade) trade).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
+            ((MakerTrade) trade).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
                     takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
             });

@@ -21,7 +21,7 @@ import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.user.User;
@@ -51,7 +51,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            InputsForDepositTxRequest request = (InputsForDepositTxRequest) processModel.getTradeMessage();
+            TakeOfferRequest request = (TakeOfferRequest) processModel.getTradeMessage();
             checkNotNull(request);
             checkTradeId(processModel.getOfferId(), request);
 

@@ -21,8 +21,8 @@ import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
+import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
@@ -63,7 +63,7 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(InputsForDepositTxRequest message,
+    public void handleTakeOfferRequest(TakeOfferRequest message,
                                        NodeAddress peer,
                                        ErrorMessageHandler errorMessageHandler) {
         expect(phase(Trade.Phase.INIT)

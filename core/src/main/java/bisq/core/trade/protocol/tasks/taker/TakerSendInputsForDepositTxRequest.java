@@ -21,7 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.user.User;
 
@@ -99,7 +99,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             byte[] signatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
                     offerId.getBytes(Charsets.UTF_8));
 
-            InputsForDepositTxRequest request = new InputsForDepositTxRequest(
+            TakeOfferRequest request = new TakeOfferRequest(
                     offerId,
                     processModel.getMyNodeAddress(),
                     tradeAmount.value,
