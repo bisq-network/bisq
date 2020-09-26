@@ -108,11 +108,11 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
             Set<AddressEntry> toBeRemoved = new HashSet<>();
             entrySet.forEach(addressEntry -> {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(
-                                                                                addressEntry.getPubKeyHash(),
-                                                                                Script.ScriptType.P2PKH);
+                        addressEntry.getPubKeyHash(),
+                        Script.ScriptType.P2PKH);
                 if (keyFromPubHash != null) {
                     Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(),
-                                                                   keyFromPubHash);
+                            keyFromPubHash);
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
@@ -173,6 +173,18 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     }
 
     public void addAddressEntry(AddressEntry addressEntry) {
+        boolean entryWithSameOfferIdAndContextAlreadyExist = entrySet.stream().anyMatch(e -> {
+            if (addressEntry.getOfferId() != null) {
+                return addressEntry.getOfferId().equals(e.getOfferId()) && addressEntry.getContext() == e.getContext();
+            }
+            return false;
+        });
+        if (entryWithSameOfferIdAndContextAlreadyExist) {
+            log.error("We have an address entry with the same offer ID and context. We do not add the new one. " +
+                    "addressEntry={}, entrySet={}", addressEntry, entrySet);
+            return;
+        }
+
         boolean setChangedByAdd = entrySet.add(addressEntry);
         if (setChangedByAdd)
             persist();
@@ -181,7 +193,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     public void swapToAvailable(AddressEntry addressEntry) {
         boolean setChangedByRemove = entrySet.remove(addressEntry);
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
-                                                                AddressEntry.Context.AVAILABLE));
+                AddressEntry.Context.AVAILABLE));
         if (setChangedByRemove || setChangedByAdd) {
             persist();
         }
@@ -215,7 +227,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                 .filter(Objects::nonNull)
                 .filter(this::isAddressNotInEntries)
                 .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(),
-                                                                                Script.ScriptType.P2PKH))
+                        Script.ScriptType.P2PKH))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
                 .forEach(this::addAddressEntry);
