@@ -37,6 +37,7 @@ import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
+import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
@@ -398,7 +399,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                 useSavingsWallet,
                                 model);
                         tradableList.add(trade);
-                        ((TakerTrade) trade).onTakeOffer();
+                        ((TakerProtocol) trade.getTradeProtocol()).onTakeOffer();
                         tradeResultHandler.handleResult(trade);
                     }
                 },

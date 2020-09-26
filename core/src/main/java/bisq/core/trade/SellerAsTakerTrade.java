@@ -21,7 +21,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.SellerAsTakerProtocol;
-import bisq.core.trade.protocol.TakerProtocol;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -32,8 +31,6 @@ import org.bitcoinj.core.Coin;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade {
@@ -111,11 +108,5 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     @Override
     protected void createTradeProtocol() {
         tradeProtocol = new SellerAsTakerProtocol(this);
-    }
-
-    @Override
-    public void onTakeOffer() {
-        checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
-        ((TakerProtocol) tradeProtocol).onTakeOffer();
     }
 }
