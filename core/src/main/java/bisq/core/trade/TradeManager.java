@@ -311,7 +311,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
@@ -344,7 +344,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Init pending trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initPendingTrades() {
@@ -356,13 +356,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         initTrade(trade);
         trade.updateDepositTxFromWallet();
     }
-
-    // TODO Remove once tradableList is refactored to a final field
-    //  (part of the persistence refactor PR)
-    private void onTradesChanged() {
-        this.numPendingTrades.set(getTradesAsObservableList().size());
-    }
-
 
     private void initTrade(Trade trade) {
         initTrade(trade,
@@ -458,34 +451,31 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                               String paymentAccountId,
                               boolean useSavingsWallet,
                               OfferAvailabilityModel model) {
-        Trade trade;
-        if (offer.isBuyOffer()) {
-            trade = new SellerAsTakerTrade(offer,
-                    amount,
-                    txFee,
-                    takerFee,
-                    isCurrencyForTakerFeeBtc,
-                    tradePrice,
-                    model.getPeerNodeAddress(),
-                    model.getSelectedArbitrator(),
-                    model.getSelectedMediator(),
-                    model.getSelectedRefundAgent(),
-                    tradableListStorage,
-                    btcWalletService);
-        } else {
-            trade = new BuyerAsTakerTrade(offer,
-                    amount,
-                    txFee,
-                    takerFee,
-                    isCurrencyForTakerFeeBtc,
-                    tradePrice,
-                    model.getPeerNodeAddress(),
-                    model.getSelectedArbitrator(),
-                    model.getSelectedMediator(),
-                    model.getSelectedRefundAgent(),
-                    tradableListStorage,
-                    btcWalletService);
-        }
+        Trade trade = offer.isBuyOffer() ?
+                new SellerAsTakerTrade(offer,
+                        amount,
+                        txFee,
+                        takerFee,
+                        isCurrencyForTakerFeeBtc,
+                        tradePrice,
+                        model.getPeerNodeAddress(),
+                        model.getSelectedArbitrator(),
+                        model.getSelectedMediator(),
+                        model.getSelectedRefundAgent(),
+                        tradableListStorage,
+                        btcWalletService) :
+                new BuyerAsTakerTrade(offer,
+                        amount,
+                        txFee,
+                        takerFee,
+                        isCurrencyForTakerFeeBtc,
+                        tradePrice,
+                        model.getPeerNodeAddress(),
+                        model.getSelectedArbitrator(),
+                        model.getSelectedMediator(),
+                        model.getSelectedRefundAgent(),
+                        tradableListStorage,
+                        btcWalletService);
         trade.setTakerPaymentAccountId(paymentAccountId);
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
         return trade;
@@ -783,6 +773,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 }
             }
         });
+    }
+
+    // TODO Remove once tradableList is refactored to a final field
+    //  (part of the persistence refactor PR)
+    private void onTradesChanged() {
+        this.numPendingTrades.set(getTradesAsObservableList().size());
     }
 
     public void persistTrades() {
