@@ -268,7 +268,7 @@ public class TradeManager implements PersistedDataHost {
                 }
             });
 
-        tradableList.getList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
+        getTradableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
 
         getAddressEntriesForAvailableBalanceStream()
@@ -301,7 +301,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void onTradesChanged() {
-        this.numPendingTrades.set(tradableList.getList().size());
+        this.numPendingTrades.set(getTradableList().size());
     }
 
     private void handlePayDepositRequest(InputsForDepositTxRequest inputsForDepositTxRequest, NodeAddress peer) {
@@ -766,7 +766,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void updateTradePeriodState() {
-        tradableList.getList().forEach(trade -> {
+        getTradableList().forEach(trade -> {
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
