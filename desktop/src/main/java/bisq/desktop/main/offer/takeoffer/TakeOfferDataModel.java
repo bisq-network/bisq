@@ -246,31 +246,6 @@ class TakeOfferDataModel extends OfferDataModel {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
-
-                /*if (isMainNet.get()) {
-                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getTxId().toString());
-                    Futures.addCallback(future, new FutureCallback<Coin>() {
-                        public void onSuccess(Coin fee) {
-                            UserThread.execute(() -> setFeeFromFundingTx(fee));
-                        }
-
-                        public void onFailure(@NotNull Throwable throwable) {
-                            UserThread.execute(() -> new Popup<>()
-                                    .warning("We did not get a response for the request of the mining fee used " +
-                                            "in the funding transaction.\n\n" +
-                                            "Are you sure you used a sufficiently high fee of at least " +
-                                            formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + "?")
-                                    .actionButtonText("Yes, I used a sufficiently high fee.")
-                                    .onAction(() -> setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx()))
-                                    .closeButtonText("No. Let's cancel that payment.")
-                                    .onClose(() -> setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI))
-                                    .show());
-                        }
-                    }, MoreExecutors.directExecutor());
-                } else {
-                    setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx());
-                    isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);
-                }*/
             }
         };
 
@@ -293,6 +268,14 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     public void onClose() {
+        // We do not wait until the offer got removed by a network remove message but remove it
+        // directly from the offer book. The broadcast gets now bundled and has 2 sec. delay so the
+        // removal from the network is a bit slower as it has been before. To avoid that the taker gets
+        // confused to see the same offer still in the offerbook we remove it manually. This removal has
+        // only local effect. Other trader might see the offer for a few seconds
+        // still (but cannot take it).
+        offerBook.removeOffer(checkNotNull(offer), tradeManager);
+
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
 
@@ -333,17 +316,7 @@ class TakeOfferDataModel extends OfferDataModel {
                     offer,
                     paymentAccount.getId(),
                     useSavingsWallet,
-                    trade -> {
-                        // We do not wait until the offer got removed by a network remove message but remove it
-                        // directly from the offer book. The broadcast gets now bundled and has 2 sec. delay so the
-                        // removal from the network is a bit slower as it has been before. To avoid that the taker gets
-                        // confused to see the same offer still in the offerbook we remove it manually. This removal has
-                        // only local effect. Other trader might see the offer for a few seconds
-                        // still (but cannot take it).
-                        offerBook.removeOffer(checkNotNull(trade.getOffer()), tradeManager);
-
-                        tradeResultHandler.handleResult(trade);
-                    },
+                    tradeResultHandler::handleResult,
                     errorMessage -> {
                         log.warn(errorMessage);
                         new Popup().warning(errorMessage).show();
