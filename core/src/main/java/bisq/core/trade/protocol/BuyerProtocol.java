@@ -42,7 +42,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BuyerProtocol extends MediationProtocol {
+public abstract class BuyerProtocol extends DisputeProtocol {
     enum BuyerEvent implements FluentProtocol.Event {
         STARTUP,
         PAYMENT_SENT

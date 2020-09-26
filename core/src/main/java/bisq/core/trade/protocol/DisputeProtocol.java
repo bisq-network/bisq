@@ -43,7 +43,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MediationProtocol extends TradeProtocol {
+public class DisputeProtocol extends TradeProtocol {
 
     enum DisputeEvent implements FluentProtocol.Event {
         MEDIATION_RESULT_ACCEPTED,
@@ -51,7 +51,7 @@ public class MediationProtocol extends TradeProtocol {
         ARBITRATION_REQUESTED
     }
 
-    public MediationProtocol(Trade trade) {
+    public DisputeProtocol(Trade trade) {
         super(trade);
     }
 
