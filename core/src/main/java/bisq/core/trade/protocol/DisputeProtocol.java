@@ -87,8 +87,7 @@ public class DisputeProtocol extends TradeProtocol {
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(event, errorMessage);
-                                }))
-                        .withTimeout(30))
+                                })))
                 .executeTasks();
     }
 
@@ -114,8 +113,7 @@ public class DisputeProtocol extends TradeProtocol {
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(event, errorMessage);
-                                }))
-                        .withTimeout(30))
+                                })))
                 .executeTasks();
     }
 
@@ -130,8 +128,7 @@ public class DisputeProtocol extends TradeProtocol {
                 Trade.Phase.FIAT_RECEIVED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(ProcessMediatedPayoutSignatureMessage.class)
-                        .withTimeout(30))
+                .setup(tasks(ProcessMediatedPayoutSignatureMessage.class))
                 .executeTasks();
     }
 
@@ -141,8 +138,7 @@ public class DisputeProtocol extends TradeProtocol {
                 Trade.Phase.FIAT_RECEIVED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class)
-                        .withTimeout(30))
+                .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class))
                 .executeTasks();
     }
 
@@ -167,8 +163,7 @@ public class DisputeProtocol extends TradeProtocol {
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(event, errorMessage);
-                                }))
-                        .withTimeout(30))
+                                })))
                 .executeTasks();
     }
 
@@ -183,8 +178,7 @@ public class DisputeProtocol extends TradeProtocol {
                 Trade.Phase.FIAT_RECEIVED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(ProcessPeerPublishedDelayedPayoutTxMessage.class)
-                        .withTimeout(30))
+                .setup(tasks(ProcessPeerPublishedDelayedPayoutTxMessage.class))
                 .executeTasks();
     }
 
