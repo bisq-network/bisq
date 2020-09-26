@@ -300,12 +300,6 @@ public class TradeManager implements PersistedDataHost {
         trade.updateDepositTxFromWallet();
     }
 
-    public void onPaymentReceived(SellerTrade sellerTrade,
-                                  ResultHandler resultHandler,
-                                  ErrorMessageHandler errorMessageHandler) {
-        sellerTrade.onPaymentReceived(resultHandler, errorMessageHandler);
-    }
-
     private void onTradesChanged() {
         this.numPendingTrades.set(tradableList.getList().size());
     }
