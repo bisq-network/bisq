@@ -39,7 +39,7 @@ task jpackageSanityChecks {
     }
 }
 
-task getJpackageJDKDownloadURL {
+task getJavaBinariesDownloadURLs {
     description 'Find out which JDK will be used for jpackage and prepare to download it'
     dependsOn 'jpackageSanityChecks'
 
@@ -57,88 +57,89 @@ task getJpackageJDKDownloadURL {
         binariesFolderPath.mkdirs();
         ext.binariesFolderPath = binariesFolderPath
 
-        def apiEndpointLatestReleases = 'https://api.github.com/repos/AdoptOpenJDK/openjdk15-binaries/releases'
-        def apiEndpointLatestReleasesJSON = new groovy.json.JsonSlurper().parseText(apiEndpointLatestReleases.toURL().text)
-        def finalHotspotReleases = apiEndpointLatestReleasesJSON.findAll {
-            // Filter out the pre-releases (nightly builds)
-            (it.prerelease == false) &&
-                    // Filter our openj9 builds (for now stick to the hotspot ones)
-                    (! it.body.contains('openj9'))
-        }
-        def latestReleaseJSON = finalHotspotReleases.first()
-        def latestReleaseTag = latestReleaseJSON.tag_name
-        println "Latest AdoptOpenJDK release is ${latestReleaseTag}"
-
-        // AdoptOpenJDK only offer the latest release version for download (but none of the previous ones)
-        // This means we cannot hardcode a download URL for a specific version, because it will likely not work
-        // when the next release is out
-        // Therefore, we always query the latest version and download it (to use its jpackage)
-
         // TODO Extend script logic to alternatively allow a local (separate, v14+) JDK for jpackage
         // TODO Another option is to use the local JDK for everything: build jars and use jpackage (but then it has to be v14+)
 
-        // See details of latest release available
-        // See https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/latest for binaries available
-        // https://adoptopenjdk.net/releases.html?variant=openjdk15&jvmVariant=hotspot
+        // It seems only the latest version of each JDK is available for download
+        // Therefore, if at any future AdoptOpenJDK release these download links won't work, simply update them
+        // See https://adoptopenjdk.net/releases.html?variant=openjdk15&jvmVariant=hotspot for latest download URLs
+        // The links must be for: x64 + JDK + zip (for windows) or tar.gz (for mac/linux)
+        Map jdk15DownloadURLs = [
+//            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_linux_hotspot_15_36.tar.gz',
+//            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_mac_hotspot_15_36.tar.gz',
+//            'windows' : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_windows_hotspot_15_36.zip'
 
-        def latestReleaseAssetsEndpoint = "https://api.github.com/repos/AdoptOpenJDK/openjdk15-binaries/releases/tags/${latestReleaseTag}"
-        def latestReleaseAssetsJSON = new groovy.json.JsonSlurper().parseText(latestReleaseAssetsEndpoint.toURL().text)
-        def latestReleaseAssets = latestReleaseAssetsJSON.assets.findAll {
-            // We could generate installers for other platforms as well, but for now just x64
-            it.name.contains('OpenJDK15U-jdk_x64_') &&
-                    // They distribute the JDK archive as zip for windows, tar.gz for mac/linux
-                    ( it.name.endsWith('tar.gz') || it.name.endsWith('zip') )
-        }
-
-        def latestReleaseAssetsMap = [
-                linux: latestReleaseAssets.find {it.name.contains('linux')}.browser_download_url,
-                mac: latestReleaseAssets.find {it.name.contains('mac')}.browser_download_url,
-                windows: latestReleaseAssets.find {it.name.contains('windows')}.browser_download_url
+            // TODO For some reason, using "--runtime-image jdk-11" does NOT work with a v15 jpackage, but works with v14
+            // v14
+            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_linux_hotspot_14.0.2_12.tar.gz',
+            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz',
+            'windows' : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_windows_hotspot_14.0.2_12.zip'
         ]
 
-        // Ensure we got the 3 we want
-        assert latestReleaseAssets.size() == 3
-        assert latestReleaseAssetsMap['linux'] != null
-        assert latestReleaseAssetsMap['mac'] != null
-        assert latestReleaseAssetsMap['windows'] != null
+        // https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot
+        // The links must be for: x64 + JDK + zip (for windows) or tar.gz (for mac/linux)
+        Map jdk11DownloadURLs = [
+                'linux'   : 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.8_10.tar.gz',
+                'mac'     : 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_mac_hotspot_11.0.8_10.tar.gz',
+                'windows' : 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_windows_hotspot_11.0.8_10.zip'
+        ]
 
-        String downloadURL
+        String osKey
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            downloadURL = latestReleaseAssetsMap['windows']
+            osKey = 'windows'
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
-            downloadURL = latestReleaseAssetsMap['mac']
+            osKey = 'mac'
         } else {
-            downloadURL = latestReleaseAssetsMap['linux']
+            osKey = 'linux'
         }
 
-        // The download URL can be manually overwritten here, if necessary
-        // downloadURL = 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_linux_hotspot_14.0.2_12.tar.gz';
+        ext.jdk15DownloadURL = jdk15DownloadURLs[osKey]
+        ext.jdk11DownloadURL = jdk11DownloadURLs[osKey]
 
-        ext.downloadURL = downloadURL
+        // The download URLs can be manually overwritten here, if necessary
+        // ext.jdk15DownloadURL = ...
+        // ext.jdk11DownloadURL = ...
     }
 }
 
-task packageGetJpackagePath {
-    description 'Retrieve JDK for jpackage and extract it'
-    dependsOn 'getJpackageJDKDownloadURL'
+task retrieveAndExtractJavaBinaries {
+    description 'Retrieve necessary Java binaries and extract them'
+    dependsOn 'getJavaBinariesDownloadURLs'
 
     doLast {
+        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir")
+
         // Folder where the jpackage JDK archive will be downloaded and extracted
-        String jdkForJpackageDirName = "jpackage-jdk"
-        File jdkForJpackageDir = new File(getJpackageJDKDownloadURL.property("tempRootDir"), jdkForJpackageDirName)
+        String jdkForJpackageDirName = "jdk-jpackage"
+        File jdkForJpackageDir = new File(tempRootDir, jdkForJpackageDirName)
         jdkForJpackageDir.mkdirs();
 
-        String archiveURL = getJpackageJDKDownloadURL.property('downloadURL')
-        String archiveFileName = archiveURL.tokenize('/').last()
-        File jdkArchiveFile = new File(jdkForJpackageDir, archiveFileName)
-        String jpackageBinaryFileName
+        // Folder where the app-runtime JDK (v11) archive will be downloaded and extracted
+        String jdkForAppRuntimeDirName = "jdk-app-runtime"
+        File jdkForAppRuntimeDir = new File(tempRootDir, jdkForAppRuntimeDirName)
+        jdkForAppRuntimeDir.mkdirs();
 
-        ext.downloadJpackageJDKArchive(archiveURL, jdkArchiveFile)
+        String jdkForJpackageArchiveURL = getJavaBinariesDownloadURLs.property('jdk15DownloadURL')
+        String jdkForJpackageArchiveFileName = jdkForJpackageArchiveURL.tokenize('/').last()
+        File jdkForJpackageFile = new File(jdkForJpackageDir, jdkForJpackageArchiveFileName)
+
+        String jdkForAppRuntimeArchiveURL = getJavaBinariesDownloadURLs.property('jdk11DownloadURL')
+        String jdkForAppRuntimeArchiveFileName = jdkForAppRuntimeArchiveURL.tokenize('/').last()
+        File jdkForAppRuntimeFile = new File(jdkForAppRuntimeDir, jdkForAppRuntimeArchiveFileName)
+
+        // Download necessary JDK binaries
+        ext.downloadArchive(jdkForJpackageArchiveURL, jdkForJpackageFile)
+        ext.downloadArchive(jdkForAppRuntimeArchiveURL, jdkForAppRuntimeFile)
+
+        // Extract them
+        String jpackageBinaryFileName
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ext.extractJpackageJDKArchiveZip(jdkArchiveFile, jdkForJpackageDir)
+            ext.extractArchiveZip(jdkForJpackageFile, jdkForJpackageDir)
+            ext.extractArchiveZip(jdkForAppRuntimeFile, jdkForAppRuntimeDir)
             jpackageBinaryFileName = 'jpackage.exe'
         } else {
-            ext.extractJpackageJDKArchiveTarGz(jdkArchiveFile, jdkForJpackageDir)
+            ext.extractArchiveTarGz(jdkForJpackageFile, jdkForJpackageDir)
+            ext.extractArchiveTarGz(jdkForAppRuntimeFile, jdkForAppRuntimeDir)
             jpackageBinaryFileName = 'jpackage'
         }
 
@@ -148,42 +149,46 @@ task packageGetJpackagePath {
             println 'Using jpackage binary from ' + it
             ext.jpackageFilePath = it.path
         }
+
+        // After the JDK was extracted, find the path to the extracted folder (the app runtime JDK folder)
+        jdkForAppRuntimeDir.traverse(type: DIRECTORIES, maxDepth: 0) {ext.jdkForAppRuntimePath = it.path }
     }
 
-    ext.downloadJpackageJDKArchive = {String archiveURL, File jdkArchiveFile ->
+    ext.downloadArchive = {String archiveURL, File destinationArchiveFile ->
         println "Downloading ${archiveURL}"
-        ant.get(src: archiveURL, dest: jdkArchiveFile)
-        println 'Download saved to ' + jdkArchiveFile
+        ant.get(src: archiveURL, dest: destinationArchiveFile)
+        println 'Download saved to ' + destinationArchiveFile
     }
 
-    ext.extractJpackageJDKArchiveTarGz = {File jdkArchiveFile, File separateJdkForJpackageDir ->
-        println "Extracting tar.gz ${jdkArchiveFile}"
+    ext.extractArchiveTarGz = {File tarGzFile, File destinationDir ->
+        println "Extracting tar.gz ${tarGzFile}"
         // Gradle's tar extraction preserves permissions (crucial for jpackage to function correctly)
         copy {
-            from tarTree(resources.gzip(jdkArchiveFile))
-            into separateJdkForJpackageDir
+            from tarTree(resources.gzip(tarGzFile))
+            into destinationDir
         }
-        println "Extracted to ${separateJdkForJpackageDir}"
+        println "Extracted to ${destinationDir}"
     }
 
-    ext.extractJpackageJDKArchiveZip = {File jdkArchiveFile, File separateJdkForJpackageDir ->
-        println "Extracting zip ${jdkArchiveFile}..."
-        ant.unzip(src: jdkArchiveFile, dest: separateJdkForJpackageDir)
-        println "Extracted to ${separateJdkForJpackageDir}"
+    ext.extractArchiveZip = {File zipFile, File destinationDir ->
+        println "Extracting zip ${zipFile}..."
+        ant.unzip(src: zipFile, dest: destinationDir)
+        println "Extracted to ${destinationDir}"
     }
 }
 
 task packageInstallers {
     description 'Call jpackage to prepare platform-specific binaries for this platform'
-    dependsOn 'packageGetJpackagePath'
+    dependsOn 'retrieveAndExtractJavaBinaries'
     // Clean all previous artefacts and create a fresh shadowJar for the installers
     dependsOn rootProject.clean
     dependsOn ':desktop:shadowJar'
 
     doLast {
-        String jPackageFilePath = "${packageGetJpackagePath.property('jpackageFilePath')}"
+        String jPackageFilePath = retrieveAndExtractJavaBinaries.property('jpackageFilePath')
         String licenseFilePath = "${rootProject.projectDir}/LICENSE"
-        File binariesFolderPath = file(getJpackageJDKDownloadURL.property('binariesFolderPath'))
+        File binariesFolderPath = file(getJavaBinariesDownloadURLs.property('binariesFolderPath'))
+        String jdkForAppRuntimePath = retrieveAndExtractJavaBinaries.property('jdkForAppRuntimePath')
 
         // ALL contents of this folder will be included in the resulting installers
         // However, the fat jar is the only one we need
@@ -219,7 +224,8 @@ task packageInstallers {
                 " --java-options -XX:MaxRAM=4g" +
                 " --java-options -Djava.net.preferIPv4Stack=true" +
                 // Options for creating the application package
-                " --license-file \"${licenseFilePath}\"" ;
+                " --license-file \"${licenseFilePath}\"" +
+                " --runtime-image \"${jdkForAppRuntimePath}\"";
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             String windowsOpts =
