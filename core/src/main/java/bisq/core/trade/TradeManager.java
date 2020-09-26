@@ -52,9 +52,12 @@ import bisq.core.util.Validator;
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.BootstrapListener;
+import bisq.network.p2p.DecryptedDirectMessageListener;
+import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.messaging.DecryptedMailboxListener;
 
 import bisq.common.ClockWatcher;
 import bisq.common.config.Config;
@@ -107,7 +110,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class TradeManager implements PersistedDataHost {
+public class TradeManager implements PersistedDataHost, DecryptedDirectMessageListener, DecryptedMailboxListener {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
@@ -197,37 +200,9 @@ public class TradeManager implements PersistedDataHost {
 
         tradableListStorage = storage;
 
-        p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            // The maker received a TakeOfferRequest
-            if (networkEnvelope instanceof TakeOfferRequest) {
-                handleTakeOfferRequest((TakeOfferRequest) networkEnvelope, peerNodeAddress);
-            }
-        });
+        p2PService.addDecryptedDirectMessageListener(this);
+        p2PService.addDecryptedMailboxListener(this);
 
-        // Might get called at startup after HS is published. Can be before or after initPendingTrades.
-        p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderNodeAddress) -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            if (networkEnvelope instanceof TradeMessage) {
-                TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-                String tradeId = tradeMessage.getTradeId();
-                Optional<Trade> tradeOptional = tradableList.stream().filter(e -> e.getId().equals(tradeId)).findAny();
-                // The mailbox message will be removed inside the tasks after they are processed successfully
-                tradeOptional.ifPresent(trade -> trade.addDecryptedMessageWithPubKey(decryptedMessageWithPubKey));
-            } else if (networkEnvelope instanceof AckMessage) {
-                AckMessage ackMessage = (AckMessage) networkEnvelope;
-                if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE) {
-                    if (ackMessage.isSuccess()) {
-                        log.info("Received AckMessage for {} with tradeId {} and uid {}",
-                                ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getSourceUid());
-                    } else {
-                        log.warn("Received AckMessage with error state for {} with tradeId {} and errorMessage={}",
-                                ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getErrorMessage());
-                    }
-                    p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
-                }
-            }
-        });
         failedTradesManager.setUnfailTradeCallback(this::unfailTrade);
     }
 
@@ -249,6 +224,43 @@ public class TradeManager implements PersistedDataHost {
         dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(tradableList, "delayed_payout_txs_pending");
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DecryptedDirectMessageListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onDirectMessage(DecryptedMessageWithPubKey message, NodeAddress peer) {
+        NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
+        // The maker received a TakeOfferRequest
+        if (networkEnvelope instanceof TakeOfferRequest) {
+            handleTakeOfferRequest((TakeOfferRequest) networkEnvelope, peer);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DecryptedMailboxListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Might get called at startup after HS is published. Can be before or after initPendingTrades.
+    @Override
+    public void onMailboxMessageAdded(DecryptedMessageWithPubKey message, NodeAddress peer) {
+        NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
+        if (networkEnvelope instanceof TradeMessage) {
+            TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
+            // The mailbox message will be removed inside the tasks after they are processed successfully
+            getTradeById(tradeMessage.getTradeId())
+                    .ifPresent(trade -> trade.addDecryptedMessageWithPubKey(message));
+        } else if (networkEnvelope instanceof AckMessage) {
+            AckMessage ackMessage = (AckMessage) networkEnvelope;
+            if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE) {
+                // We remove here the message not in the trade protocol as it might be that the trade is already
+                // completed and the protocol is not listening.
+                p2PService.removeEntryFromMailbox(message);
+            }
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
