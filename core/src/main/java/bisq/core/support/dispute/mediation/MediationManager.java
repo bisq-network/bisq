@@ -222,9 +222,9 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         return dispute.getContract().getMediatorNodeAddress();
     }
 
-    public void acceptMediationResult(Trade trade,
-                                      ResultHandler resultHandler,
-                                      ErrorMessageHandler errorMessageHandler) {
+    public void onAcceptMediationResult(Trade trade,
+                                        ResultHandler resultHandler,
+                                        ErrorMessageHandler errorMessageHandler) {
         String tradeId = trade.getId();
         Optional<Dispute> optionalDispute = findDispute(tradeId);
         checkArgument(optionalDispute.isPresent(), "dispute must be present");

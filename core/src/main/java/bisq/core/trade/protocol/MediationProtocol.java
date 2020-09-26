@@ -56,61 +56,64 @@ public class MediationProtocol extends TradeProtocol {
         return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // User interaction: Trader accepts mediation result
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Trader has not yet received the peer's signature but has clicked the accept button.
     public void onAcceptMediationResult(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null) {
-            errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
-            return;
-        }
         DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess(event);
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(event, errorMessage);
-                });
-        taskRunner.addTasks(
-                ApplyFilter.class,
-                SignMediatedPayoutTx.class,
-                SendMediatedPayoutSignatureMessage.class,
-                SetupMediatedPayoutTxListener.class
-        );
-        taskRunner.run();
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(event)
+                .preCondition(trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() == null,
+                        () -> errorMessageHandler.handleErrorMessage("We have received already the signature from the peer."))
+                .preCondition(trade.getPayoutTx() == null,
+                        () -> errorMessageHandler.handleErrorMessage("Payout tx is already published.")))
+                .setup(tasks(ApplyFilter.class,
+                        SignMediatedPayoutTx.class,
+                        SendMediatedPayoutSignatureMessage.class,
+                        SetupMediatedPayoutTxListener.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    resultHandler.handleResult();
+                                    handleTaskRunnerSuccess(event);
+                                },
+                                errorMessage -> {
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                    handleTaskRunnerFault(event, errorMessage);
+                                }))
+                        .withTimeout(30))
+                .executeTasks();
     }
-
 
     // Trader has already received the peer's signature and has clicked the accept button as well.
     public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.getPayoutTx() != null) {
-            errorMessageHandler.handleErrorMessage("Payout tx is already published.");
-            return;
-        }
-
         DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess(event);
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(event, errorMessage);
-                });
-        taskRunner.addTasks(
-                ApplyFilter.class,
-                SignMediatedPayoutTx.class,
-                FinalizeMediatedPayoutTx.class,
-                BroadcastMediatedPayoutTx.class,
-                SendMediatedPayoutTxPublishedMessage.class
-        );
-        taskRunner.run();
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(event)
+                .preCondition(trade.getPayoutTx() == null,
+                        () -> errorMessageHandler.handleErrorMessage("Payout tx is already published.")))
+                .setup(tasks(ApplyFilter.class,
+                        SignMediatedPayoutTx.class,
+                        FinalizeMediatedPayoutTx.class,
+                        BroadcastMediatedPayoutTx.class,
+                        SendMediatedPayoutTxPublishedMessage.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    resultHandler.handleResult();
+                                    handleTaskRunnerSuccess(event);
+                                },
+                                errorMessage -> {
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                    handleTaskRunnerFault(event, errorMessage);
+                                }))
+                        .withTimeout(30))
+                .executeTasks();
     }
 
 
@@ -119,31 +122,25 @@ public class MediationProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
-        processModel.setTradeMessage(message);
-        processModel.setTempTradingPeerNodeAddress(peer);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(message),
-                errorMessage -> handleTaskRunnerFault(message, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessMediatedPayoutSignatureMessage.class
-        );
-        taskRunner.run();
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(ProcessMediatedPayoutSignatureMessage.class)
+                        .withTimeout(30))
+                .executeTasks();
     }
 
     protected void handle(MediatedPayoutTxPublishedMessage message, NodeAddress peer) {
-        processModel.setTradeMessage(message);
-        processModel.setTempTradingPeerNodeAddress(peer);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(message),
-                errorMessage -> handleTaskRunnerFault(message, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessMediatedPayoutTxPublishedMessage.class
-        );
-        taskRunner.run();
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class)
+                        .withTimeout(30))
+                .executeTasks();
     }
 
 
@@ -152,17 +149,14 @@ public class MediationProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(PeerPublishedDelayedPayoutTxMessage message, NodeAddress peer) {
-        processModel.setTradeMessage(message);
-        processModel.setTempTradingPeerNodeAddress(peer);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                () -> handleTaskRunnerSuccess(message),
-                errorMessage -> handleTaskRunnerFault(message, errorMessage));
-
-        taskRunner.addTasks(
-                ProcessPeerPublishedDelayedPayoutTxMessage.class
-        );
-        taskRunner.run();
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(ProcessPeerPublishedDelayedPayoutTxMessage.class)
+                        .withTimeout(30))
+                .executeTasks();
     }
 
 

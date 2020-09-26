@@ -642,7 +642,7 @@ public abstract class TradeStepView extends AnchorPane {
                 .instruction(message)
                 .actionButtonText(actionButtonText)
                 .onAction(() -> {
-                    model.dataModel.mediationManager.acceptMediationResult(trade,
+                    model.dataModel.mediationManager.onAcceptMediationResult(trade,
                             () -> {
                                 log.info("onAcceptMediationResult completed");
                                 acceptMediationResultPopup = null;
