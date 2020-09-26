@@ -53,8 +53,8 @@ public class CreateTakerFeeTx extends TradeTask {
             // appear as unused and therefore selected for the outputs for the MS tx.
             // That would cause incorrect display of the balance as
             // the change output would be considered as not available balance (part of the locked trade amount).
-            walletService.getNewAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            walletService.getNewAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+            walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
 
             AddressEntry fundingAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING);
             AddressEntry reservedForTradeAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
