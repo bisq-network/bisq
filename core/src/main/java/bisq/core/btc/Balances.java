@@ -102,7 +102,7 @@ public class Balances {
     }
 
     private void updateAvailableBalance() {
-        long sum = tradeManager.getAddressEntriesForAvailableBalanceStream()
+        long sum = btcWalletService.getAddressEntriesForAvailableBalanceStream()
                 .mapToLong(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).value)
                 .sum();
         availableBalance.set(Coin.valueOf(sum));

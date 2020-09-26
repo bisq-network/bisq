@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -736,6 +737,15 @@ public class BtcWalletService extends WalletService {
         return Coin.valueOf(getFundedAvailableAddressEntries().stream()
                 .mapToLong(addressEntry -> getBalanceForAddress(addressEntry.getAddress()).value)
                 .sum());
+    }
+
+    public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
+        Stream<AddressEntry> availableAndPayout = Stream.concat(getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
+                .stream(), getFundedAvailableAddressEntries().stream());
+        Stream<AddressEntry> available = Stream.concat(availableAndPayout,
+                getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
+        available = Stream.concat(available, getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
+        return available.filter(addressEntry -> getBalanceForAddress(addressEntry.getAddress()).isPositive());
     }
 
 

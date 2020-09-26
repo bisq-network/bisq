@@ -330,7 +330,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         getTradesAsObservableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
 
-        getAddressEntriesForAvailableBalanceStream()
+        btcWalletService.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
                 .forEach(addressEntry -> {
                     log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
@@ -801,15 +801,4 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private void onTradesChanged() {
         this.numPendingTrades.set(getTradesAsObservableList().size());
     }
-
-    // TODO move to wallet domain
-    public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
-        Stream<AddressEntry> availableAndPayout = Stream.concat(btcWalletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
-                .stream(), btcWalletService.getFundedAvailableAddressEntries().stream());
-        Stream<AddressEntry> available = Stream.concat(availableAndPayout,
-                btcWalletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
-        available = Stream.concat(available, btcWalletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
-        return available.filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
-    }
-
 }
