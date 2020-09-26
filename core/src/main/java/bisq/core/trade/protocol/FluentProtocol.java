@@ -273,7 +273,7 @@ public class FluentProtocol {
                             event.name() + " event" :
                             "";
             if (isPhaseValid) {
-                String info = MessageFormat.format("We received {0} at phase {1} and state {2}, tradeId={3}",
+                String info = MessageFormat.format("We received a {0} at phase {1} and state {2}, tradeId={3}",
                         trigger,
                         trade.getPhase(),
                         trade.getState(),
@@ -281,7 +281,7 @@ public class FluentProtocol {
                 log.info(info);
                 return Result.VALID.info(info);
             } else {
-                String info = MessageFormat.format("We received {0} but we are are not in the expected phase. " +
+                String info = MessageFormat.format("We received a {0} but we are are not in the expected phase. " +
                                 "Expected phases={1}, Trade phase={2}, Trade state= {3}, tradeId={4}",
                         trigger,
                         expectedPhases,
@@ -304,14 +304,14 @@ public class FluentProtocol {
                             event.name() + " event" :
                             "";
             if (isStateValid) {
-                String info = MessageFormat.format("We received {0} at state {1}, tradeId={2}",
+                String info = MessageFormat.format("We received a {0} at state {1}, tradeId={2}",
                         trigger,
                         trade.getState(),
                         trade.getId());
                 log.info(info);
                 return Result.VALID.info(info);
             } else {
-                String info = MessageFormat.format("We received {0} but we are are not in the expected state. " +
+                String info = MessageFormat.format("We received a {0} but we are are not in the expected state. " +
                                 "Expected states={1}, Trade state= {2}, tradeId={3}",
                         trigger,
                         expectedStates,
