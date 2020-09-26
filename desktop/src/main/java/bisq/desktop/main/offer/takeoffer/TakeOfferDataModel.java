@@ -179,8 +179,9 @@ class TakeOfferDataModel extends OfferDataModel {
     @Override
     protected void deactivate() {
         removeListeners();
-        if (offer != null)
-            tradeManager.onCancelAvailabilityRequest(offer);
+        if (offer != null) {
+            offer.cancelAvailabilityRequest();
+        }
     }
 
 

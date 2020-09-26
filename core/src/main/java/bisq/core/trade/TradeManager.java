@@ -400,7 +400,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
 
-        if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
+        if (btcWalletService.isUnconfirmedTransactionsLimitHit() ||
+                bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
             String errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
             errorMessageHandler.handleErrorMessage(errorMessage);
             log.warn(errorMessage);
@@ -408,11 +409,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         }
 
         offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler, errorMessageHandler);
-    }
-
-    // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
-    public void onCancelAvailabilityRequest(Offer offer) {
-        offer.cancelAvailabilityRequest();
     }
 
     // First we check if offer is still available then we create the trade with the protocol
