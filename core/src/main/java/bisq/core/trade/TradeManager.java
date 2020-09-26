@@ -199,10 +199,9 @@ public class TradeManager implements PersistedDataHost {
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-
-            // Handler for incoming initial network_messages from taker
+            // The maker received a TakeOfferRequest
             if (networkEnvelope instanceof TakeOfferRequest) {
-                handlePayDepositRequest((TakeOfferRequest) networkEnvelope, peerNodeAddress);
+                handleTakeOfferRequest((TakeOfferRequest) networkEnvelope, peerNodeAddress);
             }
         });
 
@@ -294,9 +293,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void initPendingTrade(Trade trade) {
-        initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
-                trade.getProcessModel().getFundsNeededForTrade());
-
+        initTrade(trade);
         trade.updateDepositTxFromWallet();
     }
 
@@ -306,25 +303,31 @@ public class TradeManager implements PersistedDataHost {
         this.numPendingTrades.set(getTradesAsObservableList().size());
     }
 
-    private void handlePayDepositRequest(TakeOfferRequest takeOfferRequest, NodeAddress peer) {
-        log.info("Received PayDepositRequest from {} with tradeId {} and uid {}",
+    private void handleTakeOfferRequest(TakeOfferRequest takeOfferRequest, NodeAddress peer) {
+        log.info("Received TakeOfferRequest from {} with tradeId {} and uid {}",
                 peer, takeOfferRequest.getTradeId(), takeOfferRequest.getUid());
 
         try {
             Validator.nonEmptyStringOf(takeOfferRequest.getTradeId());
         } catch (Throwable t) {
-            log.warn("Invalid requestDepositTxInputsMessage " + takeOfferRequest.toString());
+            log.warn("Invalid TakeOfferRequest " + takeOfferRequest.toString());
             return;
         }
 
         Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(takeOfferRequest.getTradeId());
-        if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
-            OpenOffer openOffer = openOfferOptional.get();
-            Offer offer = openOffer.getOffer();
-            openOfferManager.reserveOpenOffer(openOffer);
-            Trade trade;
-            if (offer.isBuyOffer())
-                trade = new BuyerAsMakerTrade(offer,
+        if (!openOfferOptional.isPresent()) {
+            return;
+        }
+
+        OpenOffer openOffer = openOfferOptional.get();
+        if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
+            return;
+        }
+
+        Offer offer = openOffer.getOffer();
+        openOfferManager.reserveOpenOffer(openOffer);
+        Trade trade = offer.isBuyOffer() ?
+                new BuyerAsMakerTrade(offer,
                         Coin.valueOf(takeOfferRequest.getTxFee()),
                         Coin.valueOf(takeOfferRequest.getTakerFee()),
                         takeOfferRequest.isCurrencyForTakerFeeBtc(),
@@ -332,9 +335,8 @@ public class TradeManager implements PersistedDataHost {
                         openOffer.getMediatorNodeAddress(),
                         openOffer.getRefundAgentNodeAddress(),
                         tradableListStorage,
-                        btcWalletService);
-            else
-                trade = new SellerAsMakerTrade(offer,
+                        btcWalletService) :
+                new SellerAsMakerTrade(offer,
                         Coin.valueOf(takeOfferRequest.getTxFee()),
                         Coin.valueOf(takeOfferRequest.getTakerFee()),
                         takeOfferRequest.isCurrencyForTakerFeeBtc(),
@@ -344,16 +346,18 @@ public class TradeManager implements PersistedDataHost {
                         tradableListStorage,
                         btcWalletService);
 
-            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
-            tradableList.add(trade);
-            ((MakerTrade) trade).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
-                if (takeOfferRequestErrorMessageHandler != null)
-                    takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
-            });
-        } else {
-            // TODO respond
-            log.debug("We received a take offer request but don't have that offer anymore.");
-        }
+        initTrade(trade);
+        tradableList.add(trade);
+        ((MakerTrade) trade).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
+            if (takeOfferRequestErrorMessageHandler != null)
+                takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+        });
+    }
+
+    private void initTrade(Trade trade) {
+        initTrade(trade,
+                trade.getProcessModel().isUseSavingsWallet(),
+                trade.getProcessModel().getFundsNeededForTrade());
     }
 
     private void initTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
