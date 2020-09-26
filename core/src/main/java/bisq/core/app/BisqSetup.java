@@ -762,7 +762,7 @@ public class BisqSetup {
                                     }, 1);
                                 });
 
-                        tradeManager.getTradableList().stream()
+                        tradeManager.getTradesAsObservableList().stream()
                                 .filter(trade -> trade.getOffer() != null)
                                 .forEach(trade -> {
                                     String details = null;

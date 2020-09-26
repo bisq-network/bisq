@@ -392,7 +392,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             log.error("onWithdraw transaction is null");
                                         }
 
-                                        List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
+                                        List<Trade> trades = new ArrayList<>(tradeManager.getTradesAsObservableList());
                                         trades.stream()
                                                 .filter(Trade::isPayoutPublished)
                                                 .forEach(trade -> walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)

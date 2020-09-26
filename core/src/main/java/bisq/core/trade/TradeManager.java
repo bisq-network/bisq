@@ -268,7 +268,7 @@ public class TradeManager implements PersistedDataHost {
                 }
             });
 
-        getTradableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
+        getTradesAsObservableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
 
         getAddressEntriesForAvailableBalanceStream()
@@ -301,7 +301,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void onTradesChanged() {
-        this.numPendingTrades.set(getTradableList().size());
+        this.numPendingTrades.set(getTradesAsObservableList().size());
     }
 
     private void handlePayDepositRequest(InputsForDepositTxRequest inputsForDepositTxRequest, NodeAddress peer) {
@@ -675,7 +675,7 @@ public class TradeManager implements PersistedDataHost {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Trade> getTradableList() {
+    public ObservableList<Trade> getTradesAsObservableList() {
         return tradableList.getList();
     }
 
@@ -709,7 +709,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {
-        return getTradableList().stream()
+        return getTradesAsObservableList().stream()
                 .filter(Trade::isFundsLockedIn);
     }
 
@@ -766,7 +766,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void updateTradePeriodState() {
-        getTradableList().forEach(trade -> {
+        getTradesAsObservableList().forEach(trade -> {
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();

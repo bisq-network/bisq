@@ -159,7 +159,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        tradeManager.getTradableList().addListener(tradesListChangeListener);
+        tradeManager.getTradesAsObservableList().addListener(tradesListChangeListener);
         onListChanged();
         if (selectedItemProperty.get() != null)
             notificationCenter.setSelectedTradeId(selectedItemProperty.get().getTrade().getId());
@@ -169,7 +169,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        tradeManager.getTradableList().removeListener(tradesListChangeListener);
+        tradeManager.getTradesAsObservableList().removeListener(tradesListChangeListener);
         notificationCenter.setSelectedTradeId(null);
         activated = false;
     }
@@ -373,7 +373,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     private void onListChanged() {
         list.clear();
-        list.addAll(tradeManager.getTradableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getTradesAsObservableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
