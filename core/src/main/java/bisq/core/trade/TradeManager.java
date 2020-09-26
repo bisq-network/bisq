@@ -284,24 +284,8 @@ public class TradeManager implements PersistedDataHost {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Maker received taker offer request
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void initPendingTrades() {
-        tradableList.forEach(this::initPendingTrade);
-        pendingTradesInitialized.set(true);
-    }
-
-    private void initPendingTrade(Trade trade) {
-        initTrade(trade);
-        trade.updateDepositTxFromWallet();
-    }
-
-    // TODO Remove once tradableList is refactored to a final field
-    //  (part of the persistence refactor PR)
-    private void onTradesChanged() {
-        this.numPendingTrades.set(getTradesAsObservableList().size());
-    }
 
     private void handleTakeOfferRequest(TakeOfferRequest takeOfferRequest, NodeAddress peer) {
         log.info("Received TakeOfferRequest from {} with tradeId {} and uid {}",
@@ -353,6 +337,28 @@ public class TradeManager implements PersistedDataHost {
                 takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
         });
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void initPendingTrades() {
+        tradableList.forEach(this::initPendingTrade);
+        pendingTradesInitialized.set(true);
+    }
+
+    private void initPendingTrade(Trade trade) {
+        initTrade(trade);
+        trade.updateDepositTxFromWallet();
+    }
+
+    // TODO Remove once tradableList is refactored to a final field
+    //  (part of the persistence refactor PR)
+    private void onTradesChanged() {
+        this.numPendingTrades.set(getTradesAsObservableList().size());
+    }
+
 
     private void initTrade(Trade trade) {
         initTrade(trade,
