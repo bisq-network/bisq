@@ -113,7 +113,7 @@ public class BtcWalletService extends WalletService {
     void decryptWallet(@NotNull KeyParameter key) {
         super.decryptWallet(key);
 
-        addressEntryList.getAddressEntriesAsListImmutable().stream().forEach(e -> {
+        addressEntryList.getAddressEntriesAsListImmutable().forEach(e -> {
             DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
@@ -591,6 +591,16 @@ public class BtcWalletService extends WalletService {
         }
     }
 
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
+        if (addressEntry.isPresent()) {
+            return addressEntry.get();
+        } else {
+            AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context);
+            addressEntryList.addAddressEntry(entry);
+            return entry;
+        }
+    }
+
     public AddressEntry getArbitratorAddressEntry() {
         AddressEntry.Context context = AddressEntry.Context.ARBITRATOR;
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
@@ -611,16 +621,6 @@ public class BtcWalletService extends WalletService {
     public void recoverAddressEntry(String offerId, String address, AddressEntry.Context context) {
         findAddressEntry(address, AddressEntry.Context.AVAILABLE).ifPresent(addressEntry ->
                 addressEntryList.swapAvailableToAddressEntryWithOfferId(addressEntry, context, offerId));
-    }
-
-    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
-        if (addressEntry.isPresent()) {
-            return addressEntry.get();
-        } else {
-            AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context);
-            addressEntryList.addAddressEntry(entry);
-            return entry;
-        }
     }
 
     private Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {
