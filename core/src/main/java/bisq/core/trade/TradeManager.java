@@ -177,7 +177,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         p2PService.addDecryptedDirectMessageListener(this);
         p2PService.addDecryptedMailboxListener(this);
 
-        failedTradesManager.setUnfailTradeCallback(this::unfailTrade);
+        failedTradesManager.setUnfailTradeCallback(this::unFailTrade);
     }
 
 
@@ -557,7 +557,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
     // we move the trade to failedTradesManager
-    public void movePendingTradeToFailedTrades(Trade trade) {
+    public void onMoveInvalidTradeToFailedTrades(Trade trade) {
         removeTrade(trade);
         failedTradesManager.add(trade);
     }
@@ -613,7 +613,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     // If trade still has funds locked up it might come back from failed trades
     // Aborts unfailing if the address entries needed are not available
-    private boolean unfailTrade(Trade trade) {
+    private boolean unFailTrade(Trade trade) {
         if (!recoverAddresses(trade)) {
             log.warn("Failed to recover address during unfail trade");
             return false;

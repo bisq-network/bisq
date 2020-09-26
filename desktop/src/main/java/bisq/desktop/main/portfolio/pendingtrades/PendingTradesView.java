@@ -323,7 +323,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.moveToFailed",
                 getInvalidTradeDetails(trade)))
                 .onAction(() -> {
-                    model.dataModel.moveTradeToFailedTrades(trade);
+                    model.dataModel.onMoveInvalidTradeToFailedTrades(trade);
                     updateMoveTradeToFailedColumnState();
                 })
                 .actionButtonText(Res.get("shared.yes"))

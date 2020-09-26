@@ -187,10 +187,14 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     private void onRevertTrade(Trade trade) {
         new Popup().attention(Res.get("portfolio.failed.revertToPending.popup"))
-                .onAction(() -> model.dataModel.moveTradeToPendingTrades(trade))
+                .onAction(() -> onMoveTradeToPendingTrades(trade))
                 .actionButtonText(Res.get("shared.yes"))
                 .closeButtonText(Res.get("shared.no"))
                 .show();
+    }
+
+    private void onMoveTradeToPendingTrades(Trade trade) {
+        model.dataModel.onMoveTradeToPendingTrades(trade);
     }
 
     private void setTradeIdColumnCellFactory() {

@@ -682,8 +682,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
-    public void moveTradeToFailedTrades(Trade trade) {
-        tradeManager.movePendingTradeToFailedTrades(trade);
+    public void onMoveInvalidTradeToFailedTrades(Trade trade) {
+        tradeManager.onMoveInvalidTradeToFailedTrades(trade);
     }
 
     public boolean isSignWitnessTrade() {

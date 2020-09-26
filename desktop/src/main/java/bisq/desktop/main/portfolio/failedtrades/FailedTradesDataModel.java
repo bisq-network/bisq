@@ -77,7 +77,7 @@ class FailedTradesDataModel extends ActivatableDataModel {
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
     }
 
-    public void moveTradeToPendingTrades(Trade trade) {
+    public void onMoveTradeToPendingTrades(Trade trade) {
         failedTradesManager.removeTrade(trade);
         tradeManager.addFailedTradeToPendingTrades(trade);
     }
