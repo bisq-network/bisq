@@ -73,29 +73,19 @@ import javax.annotation.Nullable;
 
 // Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
 // persist them.
-//todo clean up older fields as well to make most transient
+
+/**
+ * This is the base model for the trade protocol. It is persisted with the trade (non transient fields).
+ * It uses the {@link ProcessModelServiceProvider} for access to domain services.
+ */
 
 @Getter
 @Slf4j
 public class ProcessModel implements Model, PersistablePayload {
     // Transient/Immutable (net set in constructor so they are not final, but at init)
+    transient private ProcessModelServiceProvider provider;
     transient private TradeManager tradeManager;
-    transient private OpenOfferManager openOfferManager;
-    transient private BtcWalletService btcWalletService;
-    transient private BsqWalletService bsqWalletService;
-    transient private TradeWalletService tradeWalletService;
-    transient private DaoFacade daoFacade;
     transient private Offer offer;
-    transient private User user;
-    transient private FilterManager filterManager;
-    transient private AccountAgeWitnessService accountAgeWitnessService;
-    transient private TradeStatisticsManager tradeStatisticsManager;
-    transient private ArbitratorManager arbitratorManager;
-    transient private MediatorManager mediatorManager;
-    transient private RefundAgentManager refundAgentManager;
-    transient private KeyRing keyRing;
-    transient private P2PService p2PService;
-    transient private ReferralIdService referralIdService;
 
     // Transient/Mutable
     transient private Transaction takeOfferFeeTx;
@@ -117,9 +107,14 @@ public class ProcessModel implements Model, PersistablePayload {
     // It is used only in a task which would not be executed after restart, so no need to persist it.
     @Setter
     transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+    @Setter
+    @Getter
+    transient private Transaction depositTx;
 
 
     // Persistable Immutable (private setter only used by PB method)
+
+    //todo make final
     @Setter
     private TradingPeer tradingPeer = new TradingPeer();
     @Setter
@@ -169,10 +164,6 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private long sellerPayoutAmountFromMediation;
 
-    // Added in v 1.4.0
-    @Setter
-    @Getter
-    transient private Transaction depositTx;
 
     // We want to indicate the user the state of the message delivery of the
     // CounterCurrencyTransferStartedMessage. As well we do an automatic re-send in case it was not ACKed yet.
@@ -252,56 +243,29 @@ public class ProcessModel implements Model, PersistablePayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized(Offer offer,
-                                         TradeManager tradeManager,
-                                         OpenOfferManager openOfferManager,
-                                         P2PService p2PService,
-                                         BtcWalletService walletService,
-                                         BsqWalletService bsqWalletService,
-                                         TradeWalletService tradeWalletService,
-                                         DaoFacade daoFacade,
-                                         ReferralIdService referralIdService,
-                                         User user,
-                                         FilterManager filterManager,
-                                         AccountAgeWitnessService accountAgeWitnessService,
-                                         TradeStatisticsManager tradeStatisticsManager,
-                                         ArbitratorManager arbitratorManager,
-                                         MediatorManager mediatorManager,
-                                         RefundAgentManager refundAgentManager,
-                                         KeyRing keyRing,
-                                         boolean useSavingsWallet,
-                                         Coin fundsNeededForTrade) {
+    public void init(Offer offer,
+                     ProcessModelServiceProvider processModelServiceProvider,
+                     TradeManager tradeManager,
+                     boolean useSavingsWallet,
+                     Coin fundsNeededForTrade) {
         this.offer = offer;
+        this.provider = processModelServiceProvider;
         this.tradeManager = tradeManager;
-        this.openOfferManager = openOfferManager;
-        this.btcWalletService = walletService;
-        this.bsqWalletService = bsqWalletService;
-        this.tradeWalletService = tradeWalletService;
-        this.daoFacade = daoFacade;
-        this.referralIdService = referralIdService;
-        this.user = user;
-        this.filterManager = filterManager;
-        this.accountAgeWitnessService = accountAgeWitnessService;
-        this.tradeStatisticsManager = tradeStatisticsManager;
-        this.arbitratorManager = arbitratorManager;
-        this.mediatorManager = mediatorManager;
-        this.refundAgentManager = refundAgentManager;
-        this.keyRing = keyRing;
-        this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
-
         fundsNeededForTradeAsLong = fundsNeededForTrade.value;
+
         offerId = offer.getId();
-        accountId = user.getAccountId();
-        pubKeyRing = keyRing.getPubKeyRing();
+        accountId = getUser().getAccountId();
+        pubKeyRing = getKeyRing().getPubKeyRing();
     }
+
 
     public void removeMailboxMessageAfterProcessing(Trade trade) {
         if (tradeMessage instanceof MailboxMessage &&
                 decryptedMessageWithPubKey != null &&
                 decryptedMessageWithPubKey.getNetworkEnvelope().equals(tradeMessage)) {
             log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMessageWithPubKey);
-            p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
+            getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
             trade.removeDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
         }
     }
@@ -324,9 +288,9 @@ public class ProcessModel implements Model, PersistablePayload {
     public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
         PaymentAccount paymentAccount;
         if (trade instanceof MakerTrade)
-            paymentAccount = user.getPaymentAccount(offer.getMakerPaymentAccountId());
+            paymentAccount = getUser().getPaymentAccount(offer.getMakerPaymentAccountId());
         else
-            paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
+            paymentAccount = getUser().getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
@@ -337,15 +301,15 @@ public class ProcessModel implements Model, PersistablePayload {
     public Transaction resolveTakeOfferFeeTx(Trade trade) {
         if (takeOfferFeeTx == null) {
             if (!trade.isCurrencyForTakerFeeBtc())
-                takeOfferFeeTx = bsqWalletService.getTransaction(takeOfferFeeTxId);
+                takeOfferFeeTx = getBsqWalletService().getTransaction(takeOfferFeeTxId);
             else
-                takeOfferFeeTx = btcWalletService.getTransaction(takeOfferFeeTxId);
+                takeOfferFeeTx = getBtcWalletService().getTransaction(takeOfferFeeTxId);
         }
         return takeOfferFeeTx;
     }
 
     public NodeAddress getMyNodeAddress() {
-        return p2PService.getAddress();
+        return getP2PService().getAddress();
     }
 
     void setPaymentStartedAckMessage(AckMessage ackMessage) {
@@ -371,6 +335,71 @@ public class ProcessModel implements Model, PersistablePayload {
     }
 
     void witnessDebugLog(Trade trade) {
-        accountAgeWitnessService.getAccountAgeWitnessUtils().witnessDebugLog(trade, null);
+        getAccountAgeWitnessService().getAccountAgeWitnessUtils().witnessDebugLog(trade, null);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public BtcWalletService getBtcWalletService() {
+        return provider.getBtcWalletService();
+    }
+
+    public AccountAgeWitnessService getAccountAgeWitnessService() {
+        return provider.getAccountAgeWitnessService();
+    }
+
+    public P2PService getP2PService() {
+        return provider.getP2PService();
+    }
+
+    public BsqWalletService getBsqWalletService() {
+        return provider.getBsqWalletService();
+    }
+
+    public TradeWalletService getTradeWalletService() {
+        return provider.getTradeWalletService();
+    }
+
+    public User getUser() {
+        return provider.getUser();
+    }
+
+    public OpenOfferManager getOpenOfferManager() {
+        return provider.getOpenOfferManager();
+    }
+
+    public ReferralIdService getReferralIdService() {
+        return provider.getReferralIdService();
+    }
+
+    public FilterManager getFilterManager() {
+        return provider.getFilterManager();
+    }
+
+    public TradeStatisticsManager getTradeStatisticsManager() {
+        return provider.getTradeStatisticsManager();
+    }
+
+    public ArbitratorManager getArbitratorManager() {
+        return provider.getArbitratorManager();
+    }
+
+    public MediatorManager getMediatorManager() {
+        return provider.getMediatorManager();
+    }
+
+    public RefundAgentManager getRefundAgentManager() {
+        return provider.getRefundAgentManager();
+    }
+
+    public KeyRing getKeyRing() {
+        return provider.getKeyRing();
+    }
+
+    public DaoFacade getDaoFacade() {
+        return provider.getDaoFacade();
     }
 }

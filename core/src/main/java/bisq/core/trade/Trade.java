@@ -17,39 +17,26 @@
 
 package bisq.core.trade;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.DaoFacade;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
-import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationResultState;
-import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundResultState;
-import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
+import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.statistics.ReferralIdService;
-import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.trade.txproof.AssetTxProofResult;
-import bisq.core.user.User;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.P2PService;
 
-import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.storage.Storage;
@@ -644,56 +631,28 @@ public abstract class Trade implements Tradable, Model {
         this.btcWalletService = btcWalletService;
     }
 
-    public void init(P2PService p2PService,
-                     BtcWalletService btcWalletService,
-                     BsqWalletService bsqWalletService,
-                     TradeWalletService tradeWalletService,
-                     DaoFacade daoFacade,
+    public void init(ProcessModelServiceProvider processModelServiceProvider,
                      TradeManager tradeManager,
-                     OpenOfferManager openOfferManager,
-                     ReferralIdService referralIdService,
-                     User user,
-                     FilterManager filterManager,
-                     AccountAgeWitnessService accountAgeWitnessService,
-                     TradeStatisticsManager tradeStatisticsManager,
-                     ArbitratorManager arbitratorManager,
-                     MediatorManager mediatorManager,
-                     RefundAgentManager refundAgentManager,
-                     KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
-        processModel.onAllServicesInitialized(checkNotNull(offer, "offer must not be null"),
+        processModel.init(checkNotNull(offer, "offer must not be null"),
+                processModelServiceProvider,
                 tradeManager,
-                openOfferManager,
-                p2PService,
-                btcWalletService,
-                bsqWalletService,
-                tradeWalletService,
-                daoFacade,
-                referralIdService,
-                user,
-                filterManager,
-                accountAgeWitnessService,
-                tradeStatisticsManager,
-                arbitratorManager,
-                mediatorManager,
-                refundAgentManager,
-                keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
 
-        arbitratorManager.getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
+        processModelServiceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
             persist();
         });
 
-        mediatorManager.getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
+        processModelServiceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
             mediatorPubKeyRing = mediator.getPubKeyRing();
             persist();
         });
 
-        refundAgentManager.getDisputeAgentByNodeAddress(refundAgentNodeAddress).ifPresent(refundAgent -> {
+        processModelServiceProvider.getRefundAgentManager().getDisputeAgentByNodeAddress(refundAgentNodeAddress).ifPresent(refundAgent -> {
             refundAgentPubKeyRing = refundAgent.getPubKeyRing();
             persist();
         });

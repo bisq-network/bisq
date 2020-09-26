@@ -17,14 +17,10 @@
 
 package bisq.core.trade;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.DaoFacade;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -34,13 +30,12 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.statistics.ReferralIdService;
+import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
@@ -112,21 +107,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final KeyRing keyRing;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private final TradeWalletService tradeWalletService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
-    private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final ReferralIdService referralIdService;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
-    private final RefundAgentManager refundAgentManager;
-    private final DaoFacade daoFacade;
+    private final ProcessModelServiceProvider processModelServiceProvider;
     private final ClockWatcher clockWatcher;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
@@ -152,20 +142,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         KeyRing keyRing,
                         BtcWalletService btcWalletService,
                         BsqWalletService bsqWalletService,
-                        TradeWalletService tradeWalletService,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
-                        FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
-                        ReferralIdService referralIdService,
-                        AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
-                        RefundAgentManager refundAgentManager,
-                        DaoFacade daoFacade,
+                        ProcessModelServiceProvider processModelServiceProvider,
                         ClockWatcher clockWatcher,
                         Storage<TradableList<Trade>> storage,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
@@ -174,20 +159,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
-        this.tradeWalletService = tradeWalletService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
-        this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.referralIdService = referralIdService;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
-        this.refundAgentManager = refundAgentManager;
-        this.daoFacade = daoFacade;
+        this.processModelServiceProvider = processModelServiceProvider;
         this.clockWatcher = clockWatcher;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
@@ -362,22 +342,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     private void initTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
-        trade.init(p2PService,
-                btcWalletService,
-                bsqWalletService,
-                tradeWalletService,
-                daoFacade,
+        trade.init(processModelServiceProvider,
                 this,
-                openOfferManager,
-                referralIdService,
-                user,
-                filterManager,
-                accountAgeWitnessService,
-                tradeStatisticsManager,
-                arbitratorManager,
-                mediatorManager,
-                refundAgentManager,
-                keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
     }
@@ -390,7 +356,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public void checkOfferAvailability(Offer offer,
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
-
         if (btcWalletService.isUnconfirmedTransactionsLimitHit() ||
                 bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
             String errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
