@@ -608,11 +608,6 @@ public class BtcWalletService extends WalletService {
         return getOrCreateAddressEntry(context, addressEntry);
     }
 
-    public void getNewAddressEntry(String offerId, AddressEntry.Context context) {
-        AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, offerId);
-        addressEntryList.addAddressEntry(entry);
-    }
-
     public void recoverAddressEntry(String offerId, String address, AddressEntry.Context context) {
         findAddressEntry(address, AddressEntry.Context.AVAILABLE).ifPresent(addressEntry ->
                 addressEntryList.swapAvailableToAddressEntryWithOfferId(addressEntry, context, offerId));
