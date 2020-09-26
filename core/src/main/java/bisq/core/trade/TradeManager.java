@@ -561,62 +561,66 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // Publish delayed payout tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO move to protocol
     public void publishDelayedPayoutTx(String tradeId,
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         getTradeById(tradeId).ifPresent(trade -> {
             Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
-            if (delayedPayoutTx != null) {
-                // We have spent the funds from the deposit tx with the delayedPayoutTx
-                btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-                // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
-
-                Transaction committedDelayedPayoutTx = WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, btcWalletService.getWallet());
-
-                tradeWalletService.broadcastTx(committedDelayedPayoutTx, new TxBroadcaster.Callback() {
-                    @Override
-                    public void onSuccess(Transaction transaction) {
-                        log.info("publishDelayedPayoutTx onSuccess " + transaction);
-                        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-                        PeerPublishedDelayedPayoutTxMessage msg = new PeerPublishedDelayedPayoutTxMessage(UUID.randomUUID().toString(),
-                                tradeId,
-                                tradingPeerNodeAddress);
-                        p2PService.sendEncryptedMailboxMessage(
-                                tradingPeerNodeAddress,
-                                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
-                                msg,
-                                new SendMailboxMessageListener() {
-                                    @Override
-                                    public void onArrived() {
-                                        resultHandler.handleResult();
-                                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {}",
-                                                tradeId, tradingPeerNodeAddress);
-                                    }
-
-                                    @Override
-                                    public void onStoredInMailbox() {
-                                        resultHandler.handleResult();
-                                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {}",
-                                                tradeId, tradingPeerNodeAddress);
-                                    }
-
-                                    @Override
-                                    public void onFault(String errorMessage) {
-                                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {}",
-                                                tradeId, tradingPeerNodeAddress);
-                                        errorMessageHandler.handleErrorMessage(errorMessage);
-                                    }
-                                }
-                        );
-                    }
-
-                    @Override
-                    public void onFailure(TxBroadcastException exception) {
-                        log.error("publishDelayedPayoutTx onFailure", exception);
-                        errorMessageHandler.handleErrorMessage(exception.toString());
-                    }
-                });
+            if (delayedPayoutTx == null) {
+                return;
             }
+
+            // We have spent the funds from the deposit tx with the delayedPayoutTx
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+            // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
+
+            Transaction committedDelayedPayoutTx = WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, btcWalletService.getWallet());
+
+            tradeWalletService.broadcastTx(committedDelayedPayoutTx, new TxBroadcaster.Callback() {
+                @Override
+                public void onSuccess(Transaction transaction) {
+                    log.info("publishDelayedPayoutTx onSuccess " + transaction);
+                    NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+                    PeerPublishedDelayedPayoutTxMessage msg = new PeerPublishedDelayedPayoutTxMessage(UUID.randomUUID().toString(),
+                            tradeId,
+                            tradingPeerNodeAddress);
+                    p2PService.sendEncryptedMailboxMessage(
+                            tradingPeerNodeAddress,
+                            trade.getProcessModel().getTradingPeer().getPubKeyRing(),
+                            msg,
+                            new SendMailboxMessageListener() {
+                                @Override
+                                public void onArrived() {
+                                    resultHandler.handleResult();
+                                    log.info("SendMailboxMessageListener onArrived tradeId={} at peer {}",
+                                            tradeId, tradingPeerNodeAddress);
+                                }
+
+                                @Override
+                                public void onStoredInMailbox() {
+                                    resultHandler.handleResult();
+                                    log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {}",
+                                            tradeId, tradingPeerNodeAddress);
+                                }
+
+                                @Override
+                                public void onFault(String errorMessage) {
+                                    log.error("SendMailboxMessageListener onFault tradeId={} at peer {}",
+                                            tradeId, tradingPeerNodeAddress);
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                }
+                            }
+                    );
+                }
+
+                @Override
+                public void onFailure(TxBroadcastException exception) {
+                    log.error("publishDelayedPayoutTx onFailure", exception);
+                    errorMessageHandler.handleErrorMessage(exception.toString());
+                }
+            });
+
         });
     }
 
@@ -781,7 +785,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public Optional<Trade> getTradeById(String tradeId) {
         return tradableList.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
     }
-
 
     private void removeTrade(Trade trade) {
         tradableList.remove(trade);
