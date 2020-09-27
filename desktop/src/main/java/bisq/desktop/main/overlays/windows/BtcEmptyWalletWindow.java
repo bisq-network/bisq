@@ -36,7 +36,7 @@ import javafx.scene.layout.HBox;
 
 import javafx.geometry.Insets;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.concurrent.TimeUnit;
 
@@ -160,7 +160,7 @@ public final class BtcEmptyWalletWindow extends Overlay<BtcEmptyWalletWindow> {
         emptyWalletButton.setDisable(true);
         openOfferManager.removeAllOpenOffers(() -> {
             try {
-                btcWalletService.emptyWallet(addressInputTextField.getText(),
+                btcWalletService.emptyBtcWallet(addressInputTextField.getText(),
                         aesKey,
                         () -> {
                             closeButton.updateText(Res.get("shared.close"));

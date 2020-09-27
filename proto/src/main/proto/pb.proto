@@ -794,6 +794,7 @@ message Dispute {
     SupportType support_type = 24;
     string mediators_dispute_result = 25;
     string delayed_payout_tx_id = 26;
+    string donation_address_of_delayed_payout_tx = 27;
 }
 
 message Attachment {

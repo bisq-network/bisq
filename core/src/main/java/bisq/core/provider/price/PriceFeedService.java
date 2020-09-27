@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import javafx.beans.property.IntegerProperty;
@@ -403,6 +404,6 @@ public class PriceFeedService {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 }

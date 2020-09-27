@@ -35,6 +35,7 @@ import bisq.network.Socks5ProxyProvider;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
+import bisq.common.app.Version;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.FileUtil;
@@ -48,7 +49,9 @@ import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.RejectMessage;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
@@ -196,15 +199,8 @@ public class WalletsSetup {
         log.info("Socks5Proxy for bitcoinj: socks5Proxy=" + socks5Proxy);
 
         walletConfig = new WalletConfig(params,
-                socks5Proxy,
                 walletDir,
-                config,
-                localBitcoinNode,
-                userAgent,
-                numConnectionsForBtc,
-                btcWalletFileName,
-                BSQ_WALLET_FILE_NAME,
-                SPV_CHAIN_FILE_NAME) {
+                "bisq") {
             @Override
             protected void onSetupCompleted() {
                 //We are here in the btcj thread Thread[ STARTING,5,main]
@@ -251,20 +247,40 @@ public class WalletsSetup {
 
                 // Map to user thread
                 UserThread.execute(() -> {
-                    addressEntryList.onWalletReady(walletConfig.getBtcWallet());
+                    addressEntryList.onWalletReady(walletConfig.btcWallet());
                     timeoutTimer.stop();
-                    setupCompletedHandlers.stream().forEach(Runnable::run);
+                    setupCompletedHandlers.forEach(Runnable::run);
                 });
 
                 // onSetupCompleted in walletAppKit is not the called on the last invocations, so we add a bit of delay
                 UserThread.runAfter(resultHandler::handleResult, 100, TimeUnit.MILLISECONDS);
             }
         };
+        walletConfig.setSocks5Proxy(socks5Proxy);
+        walletConfig.setConfig(config);
+        walletConfig.setLocalBitcoinNode(localBitcoinNode);
+        walletConfig.setUserAgent(userAgent, Version.VERSION);
+        walletConfig.setNumConnectionsForBtc(numConnectionsForBtc);
+
+        String checkpointsPath = null;
+        if (params.equals(MainNetParams.get())) {
+            // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
+            // in the checkpoints file and then download the rest from the network. It makes things much faster.
+            // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
+            // last months worth or more (takes a few seconds).
+            checkpointsPath = "/wallet/checkpoints.txt";
+        } else if (params.equals(TestNet3Params.get())) {
+            checkpointsPath = "/wallet/checkpoints.testnet.txt";
+        }
+        if (checkpointsPath != null) {
+            walletConfig.setCheckpoints(getClass().getResourceAsStream(checkpointsPath));
+        }
+
 
         if (params == RegTestParams.get()) {
             walletConfig.setMinBroadcastConnections(1);
             if (regTestHost == RegTestHost.LOCALHOST) {
-                walletConfig.setPeerNodesForLocalHost();
+                walletConfig.connectToLocalHost();
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
                 configPeerNodesForRegTestServer();
             } else {
@@ -279,7 +295,7 @@ public class WalletsSetup {
             }
         } else if (localBitcoinNode.shouldBeUsed()) {
             walletConfig.setMinBroadcastConnections(1);
-            walletConfig.setPeerNodesForLocalHost();
+            walletConfig.connectToLocalHost();
         } else {
             try {
                 configPeerNodes(socks5Proxy);
@@ -291,11 +307,12 @@ public class WalletsSetup {
             }
         }
 
-        walletConfig.setDownloadListener(downloadListener)
-                .setBlockingStartup(false);
+        walletConfig.setDownloadListener(downloadListener);
 
         // If seed is non-null it means we are restoring from backup.
-        walletConfig.setSeed(seed);
+        if (seed != null) {
+            walletConfig.restoreWalletFromSeed(seed);
+        }
 
         walletConfig.addListener(new Service.Listener() {
             @Override
@@ -363,7 +380,7 @@ public class WalletsSetup {
             if (RegTestHost.HOST.endsWith(".onion")) {
                 walletConfig.setPeerNodes(new PeerAddress(RegTestHost.HOST, params.getPort()));
             } else {
-                walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.HOST), params.getPort()));
+                walletConfig.setPeerNodes(new PeerAddress(params, InetAddress.getByName(RegTestHost.HOST), params.getPort()));
             }
         } catch (UnknownHostException e) {
             log.error(e.toString());
@@ -447,12 +464,12 @@ public class WalletsSetup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Wallet getBtcWallet() {
-        return walletConfig.getBtcWallet();
+        return walletConfig.btcWallet();
     }
 
     @Nullable
     public Wallet getBsqWallet() {
-        return walletConfig.getBsqWallet();
+        return walletConfig.bsqWallet();
     }
 
     public NetworkParameters getParams() {

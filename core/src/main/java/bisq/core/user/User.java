@@ -189,6 +189,12 @@ public class User implements PersistedDataHost {
     // Collection operations
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void addPaymentAccountIfNotExists(PaymentAccount paymentAccount) {
+        if (!paymentAccountExists(paymentAccount)) {
+            addPaymentAccount(paymentAccount);
+        }
+    }
+
     public void addPaymentAccount(PaymentAccount paymentAccount) {
         paymentAccount.onAddToUser();
 
@@ -492,5 +498,9 @@ public class User implements PersistedDataHost {
 
     public boolean isPaymentAccountImport() {
         return isPaymentAccountImport;
+    }
+
+    private boolean paymentAccountExists(PaymentAccount paymentAccount) {
+        return getPaymentAccountsAsObservable().stream().anyMatch(e -> e.equals(paymentAccount));
     }
 }

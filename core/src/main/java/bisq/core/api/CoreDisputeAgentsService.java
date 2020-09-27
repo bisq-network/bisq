@@ -68,7 +68,7 @@ class CoreDisputeAgentsService {
         this.languageCodes = Arrays.asList("de", "en", "es", "fr");
     }
 
-    public void registerDisputeAgent(String disputeAgentType, String registrationKey) {
+    void registerDisputeAgent(String disputeAgentType, String registrationKey) {
         if (!p2PService.isBootstrapped())
             throw new IllegalStateException("p2p service is not bootstrapped yet");
 

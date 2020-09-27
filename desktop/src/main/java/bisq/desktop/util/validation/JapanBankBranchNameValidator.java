@@ -17,8 +17,11 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.core.util.validation.InputValidator;
 import bisq.desktop.components.paymentmethods.data.JapanBankData;
+
+import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.RegexValidator;
+
 import javax.inject.Inject;
 
 public final class JapanBankBranchNameValidator extends InputValidator

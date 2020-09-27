@@ -19,10 +19,10 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.locale.Res;
 import bisq.core.trade.txproof.xmr.XmrTxProofModel;
+import bisq.core.util.validation.RegexValidator;
 
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -36,8 +36,8 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 import static bisq.common.app.DevEnv.isDevMode;
-import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class SetXmrTxKeyWindow extends Overlay<SetXmrTxKeyWindow> {

@@ -38,12 +38,14 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.ECKey.ECDSASignature;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.ScriptChunk;
+import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.RiskAnalysis;
 import org.bitcoinj.wallet.Wallet;
 
@@ -112,6 +114,13 @@ public class BisqRiskAnalysis implements RiskAnalysis {
         // Transactions we create ourselves are, by definition, not at risk of double spending against us.
         if (tx.getConfidence().getSource() == TransactionConfidence.Source.SELF)
             return Result.OK;
+
+        // Commented out to accept replace-by-fee txs.
+        // // We consider transactions that opt into replace-by-fee at risk of double spending.
+        // if (tx.isOptInFullRBF()) {
+        //     nonFinal = tx;
+        //     return Result.NON_FINAL;
+        // }
 
         // Relative time-locked transactions are risky too. We can't check the locks because usually we don't know the
         // spent outputs (to know when they were created).
@@ -197,7 +206,7 @@ public class BisqRiskAnalysis implements RiskAnalysis {
      */
     public static RuleViolation isOutputStandard(TransactionOutput output) {
         // OP_RETURN has usually output value zero, so we exclude that from the MIN_ANALYSIS_NONDUST_OUTPUT check
-        if (!output.getScriptPubKey().isOpReturn()
+        if (!ScriptPattern.isOpReturn(output.getScriptPubKey())
                 && output.getValue().compareTo(MIN_ANALYSIS_NONDUST_OUTPUT) < 0)
             return RuleViolation.DUST;
         for (ScriptChunk chunk : output.getScriptPubKey().getChunks()) {
@@ -216,7 +225,7 @@ public class BisqRiskAnalysis implements RiskAnalysis {
                 ECDSASignature signature;
                 try {
                     signature = ECKey.ECDSASignature.decodeFromDER(chunk.data);
-                } catch (RuntimeException x) {
+                } catch (SignatureDecodeException x) {
                     // Doesn't look like a signature.
                     signature = null;
                 }
@@ -269,11 +278,11 @@ public class BisqRiskAnalysis implements RiskAnalysis {
     @Override
     public String toString() {
         if (!analyzed)
-            return "Pending risk analysis for " + tx.getHashAsString();
+            return "Pending risk analysis for " + tx.getTxId().toString();
         else if (nonFinal != null)
-            return "Risky due to non-finality of " + nonFinal.getHashAsString();
+            return "Risky due to non-finality of " + nonFinal.getTxId().toString();
         else if (nonStandard != null)
-            return "Risky due to non-standard tx " + nonStandard.getHashAsString();
+            return "Risky due to non-standard tx " + nonStandard.getTxId().toString();
         else
             return "Non-risky";
     }

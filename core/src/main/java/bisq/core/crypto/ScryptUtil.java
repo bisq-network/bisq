@@ -25,7 +25,7 @@ import com.google.protobuf.ByteString;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.Protos;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

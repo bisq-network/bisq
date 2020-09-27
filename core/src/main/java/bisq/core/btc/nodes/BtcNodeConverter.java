@@ -55,17 +55,7 @@ class BtcNodeConverter {
     PeerAddress convertOnionHost(BtcNode node) {
         // no DNS lookup for onion addresses
         String onionAddress = Objects.requireNonNull(node.getOnionAddress());
-        try {
-            // OnionCatConverter.onionHostToInetAddress converts onion to ipv6 representation
-            // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
-            InetAddress inetAddress = facade.onionHostToInetAddress(onionAddress);
-            PeerAddress result = new PeerAddress(onionAddress, node.getPort());
-            result.setAddr(inetAddress);
-            return result;
-        } catch (UnknownHostException e) {
-            log.error("Failed to convert node", e);
-            return null;
-        }
+        return new PeerAddress(onionAddress, node.getPort());
     }
 
     @Nullable
@@ -78,7 +68,7 @@ class BtcNodeConverter {
             if (address != null) {
                 result = create(address, port);
             } else {
-                log.warn("Lookup failed, no address for node", node);
+                log.warn("Lookup failed, no address for node {}", node);
             }
         }
         return result;
@@ -94,7 +84,7 @@ class BtcNodeConverter {
             if (address != null) {
                 result = create(proxy, address, port);
             } else {
-                log.warn("Lookup failed, no address for node", node);
+                log.warn("Lookup failed, no address for node {}", node);
             }
         }
         return result;
@@ -107,7 +97,7 @@ class BtcNodeConverter {
             // Blocking call. takes about 600 ms ;-(
             InetAddress lookupAddress = facade.torLookup(proxy, host);
             InetSocketAddress address = new InetSocketAddress(lookupAddress, port);
-            return new PeerAddress(address.getAddress(), address.getPort());
+            return new PeerAddress(address);
         } catch (Exception e) {
             log.error("Failed to create peer address", e);
             return null;
@@ -118,7 +108,7 @@ class BtcNodeConverter {
     private static PeerAddress create(String hostName, int port) {
         try {
             InetSocketAddress address = new InetSocketAddress(hostName, port);
-            return new PeerAddress(address.getAddress(), address.getPort());
+            return new PeerAddress(address);
         } catch (Exception e) {
             log.error("Failed to create peer address", e);
             return null;
