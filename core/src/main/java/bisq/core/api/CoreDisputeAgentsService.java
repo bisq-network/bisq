@@ -87,7 +87,8 @@ class CoreDisputeAgentsService {
         if (disputeAgentType.isPresent()) {
             ECKey ecKey;
             String signature;
-            switch ((disputeAgentType.get())) {
+            DisputeAgentType validDisputeAgentType = disputeAgentType.get();
+            switch (validDisputeAgentType) {
                 case ARBITRATOR:
                     throw new IllegalArgumentException("arbitrators must be registered in a Bisq UI");
                 case MEDIATOR:
@@ -99,7 +100,6 @@ class CoreDisputeAgentsService {
                     ecKey = refundAgentManager.getRegistrationKey(registrationKey);
                     signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
                     registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
-                    return;
             }
         } else {
             throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentTypeString);
