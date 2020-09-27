@@ -74,7 +74,7 @@ public class CreateOfferFixedPriceTest extends AbstractCreateOfferTest {
         assertEquals(10000000, offer.getAmount());
         assertEquals(10000000, offer.getMinAmount());
         assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals("", offer.getPaymentAccountId());
+        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("USD", offer.getCounterCurrencyCode());
     }
@@ -115,7 +115,7 @@ public class CreateOfferFixedPriceTest extends AbstractCreateOfferTest {
         assertEquals(10000000, offer.getAmount());
         assertEquals(10000000, offer.getMinAmount());
         assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals("", offer.getPaymentAccountId());
+        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("USD", offer.getCounterCurrencyCode());
     }

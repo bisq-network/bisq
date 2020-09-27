@@ -66,7 +66,6 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
-
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals("BUY", newOffer.getDirection());
@@ -85,7 +84,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, offer.getAmount());
         assertEquals(10000000, offer.getMinAmount());
         assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals("", offer.getPaymentAccountId());
+        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("USD", offer.getCounterCurrencyCode());
 
@@ -109,7 +108,6 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
-
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals("BUY", newOffer.getDirection());
@@ -128,7 +126,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, offer.getAmount());
         assertEquals(10000000, offer.getMinAmount());
         assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals("", offer.getPaymentAccountId());
+        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("NZD", offer.getCounterCurrencyCode());
 
@@ -171,7 +169,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, offer.getAmount());
         assertEquals(10000000, offer.getMinAmount());
         assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals("", offer.getPaymentAccountId());
+        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("GBP", offer.getCounterCurrencyCode());
 
@@ -214,7 +212,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, offer.getAmount());
         assertEquals(10000000, offer.getMinAmount());
         assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals("", offer.getPaymentAccountId());
+        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
         assertEquals("BTC", offer.getBaseCurrencyCode());
         assertEquals("BRL", offer.getCounterCurrencyCode());
 
