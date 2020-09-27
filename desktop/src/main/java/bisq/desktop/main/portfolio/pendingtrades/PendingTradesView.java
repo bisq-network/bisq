@@ -683,6 +683,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                         String volume = DisplayUtils.formatVolumeWithCode(item.getTrade().getTradeVolume());
                                         setGraphic(new AutoTooltipLabel(volume));
                                     } catch (Throwable ignore) {
+                                        log.debug(ignore.toString()); // Stupidity to make Codacy happy
                                     }
                                 } else
                                     setGraphic(null);
