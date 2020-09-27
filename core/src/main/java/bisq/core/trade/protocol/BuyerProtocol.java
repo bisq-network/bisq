@@ -54,7 +54,11 @@ public abstract class BuyerProtocol extends DisputeProtocol {
 
     public BuyerProtocol(BuyerTrade trade) {
         super(trade);
+    }
 
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
         // We get called the constructor with any possible state and phase. As we don't want to log an error for such
         // cases we use the alternative 'given' method instead of 'expect'.
         given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)

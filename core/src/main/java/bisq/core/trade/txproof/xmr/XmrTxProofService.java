@@ -264,7 +264,7 @@ public class XmrTxProofService implements AssetTxProofService {
                         log.info("We auto-confirm trade {} as our all our services for the tx proof completed successfully", trade.getShortId());
                         log.info("###########################################################################################");
 
-                        ((SellerProtocol) trade.getTradeProtocol()).onPaymentReceived(() -> {
+                        ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(() -> {
                         }, errorMessage -> {
                         });
                     }

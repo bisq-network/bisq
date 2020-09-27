@@ -31,7 +31,6 @@ import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
-import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.txproof.AssetTxProofResult;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;
@@ -384,8 +383,6 @@ public abstract class Trade implements Tradable, Model {
     transient final private StringProperty errorMessageProperty = new SimpleStringProperty();
 
     //  Mutable
-    @Getter
-    transient protected TradeProtocol tradeProtocol;
     @Nullable
     transient private Transaction depositTx;
     @Getter
@@ -402,6 +399,7 @@ public abstract class Trade implements Tradable, Model {
 
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
+    @Getter
     final transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
 
     // Added in v1.1.6
@@ -631,10 +629,6 @@ public abstract class Trade implements Tradable, Model {
         this.btcWalletService = btcWalletService;
     }
 
-    public void setupProcessModel(ProcessModelServiceProvider serviceProvider, TradeManager tradeManager) {
-        processModel.applyTransient(serviceProvider, tradeManager, offer);
-    }
-
     public void init(ProcessModelServiceProvider serviceProvider) {
         serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
@@ -651,15 +645,6 @@ public abstract class Trade implements Tradable, Model {
             refundAgentPubKeyRing = refundAgent.getPubKeyRing();
             persist();
         });
-
-        createTradeProtocol();
-
-        // If we have already received a msg we apply it.
-        // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context
-        // or async calls there.
-        // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
-        HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
-        set.forEach(msg -> tradeProtocol.applyMailboxMessage(msg));
 
         isInitialized = true;
     }
@@ -727,21 +712,6 @@ public abstract class Trade implements Tradable, Model {
         return delayedPayoutTx;
     }
 
-    // We don't need to persist the msg as if we don't apply it it will not be removed from the P2P network and we
-    // will receive it again on next startup. This might happen in edge cases when the user shuts down after we
-    // received the msg but before the init is called.
-    void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
-            decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
-
-            // If we have already initialized we apply.
-            // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context
-            // or async calls there.
-            if (tradeProtocol != null)
-                tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey);
-        }
-    }
-
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
@@ -794,8 +764,6 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected abstract void createTradeProtocol();
 
     public abstract Coin getPayoutAmount();
 
@@ -1234,7 +1202,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     disputeStateProperty=" + disputeStateProperty +
                 ",\n     tradePeriodStateProperty=" + tradePeriodStateProperty +
                 ",\n     errorMessageProperty=" + errorMessageProperty +
-                ",\n     tradeProtocol=" + tradeProtocol +
                 ",\n     depositTx=" + depositTx +
                 ",\n     delayedPayoutTx=" + delayedPayoutTx +
                 ",\n     payoutTx=" + payoutTx +

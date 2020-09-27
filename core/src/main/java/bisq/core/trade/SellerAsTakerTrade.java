@@ -21,7 +21,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.SellerAsTakerProtocol;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -103,15 +102,5 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                         processModel),
                 proto,
                 coreProtoResolver);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void createTradeProtocol() {
-        tradeProtocol = new SellerAsTakerProtocol(this);
     }
 }

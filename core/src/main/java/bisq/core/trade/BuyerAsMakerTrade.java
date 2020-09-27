@@ -20,7 +20,6 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
@@ -99,15 +98,5 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
         return fromProto(trade,
                 proto,
                 coreProtoResolver);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void createTradeProtocol() {
-        tradeProtocol = new BuyerAsMakerProtocol(this);
     }
 }

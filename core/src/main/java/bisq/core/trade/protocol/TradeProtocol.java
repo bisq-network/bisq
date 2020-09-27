@@ -17,7 +17,9 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
@@ -36,6 +38,8 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.taskrunner.Task;
 
+import java.util.HashSet;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -46,6 +50,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
     protected final ProcessModel processModel;
     protected final Trade trade;
     private Timer timeoutTimer;
+    private boolean initialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +60,6 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
     public TradeProtocol(Trade trade) {
         this.trade = trade;
         this.processModel = trade.getProcessModel();
-
-        if (!trade.isWithdrawn()) {
-            processModel.getP2PService().addDecryptedDirectMessageListener(this);
-        }
     }
 
 
@@ -66,12 +67,28 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void initialize(ProcessModelServiceProvider serviceProvider, TradeManager tradeManager, Offer offer) {
+        processModel.applyTransient(serviceProvider, tradeManager, offer);
+        initialized = true;
+        onInitialized();
+    }
+
+    protected void onInitialized() {
+        if (!trade.isWithdrawn()) {
+            processModel.getP2PService().addDecryptedDirectMessageListener(this);
+        }
+
+        // Apply mailbox messages
+        // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
+        new HashSet<>(trade.getDecryptedMessageWithPubKeySet()).forEach(this::applyMailboxMessage);
+    }
+
     public void onWithdrawCompleted() {
         cleanup();
     }
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey message) {
-        if (isPubKeyValid(message)) {
+        if (initialized && isPubKeyValid(message)) {
             NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
             if (networkEnvelope instanceof MailboxMessage &&
                     networkEnvelope instanceof TradeMessage) {

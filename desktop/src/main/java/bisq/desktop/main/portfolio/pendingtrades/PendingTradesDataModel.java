@@ -189,13 +189,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
-        ((BuyerProtocol) trade.getTradeProtocol()).onPaymentStarted(resultHandler, errorMessageHandler);
+        ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkNotNull(getTrade(), "trade must not be null");
-        checkArgument(getTrade() instanceof SellerTrade, "Trade must be instance of SellerTrade");
-        ((SellerProtocol) getTrade().getTradeProtocol()).onPaymentReceived(resultHandler, errorMessageHandler);
+        Trade trade = getTrade();
+        checkNotNull(trade, "trade must not be null");
+        checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
+        ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     public void onWithdrawRequest(String toAddress,
@@ -643,8 +644,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
-            //todo add UI spinner as it can take a bit if peer is offline
-            ((DisputeProtocol) trade.getTradeProtocol()).onPublishDelayedPayoutTx(() -> {
+            ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(() -> {
                         log.info("DelayedPayoutTx published and message sent to peer");
                         disputeManager.sendOpenNewDisputeMessage(dispute,
                                 false,

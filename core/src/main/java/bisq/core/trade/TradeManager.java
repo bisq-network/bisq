@@ -39,6 +39,8 @@ import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.protocol.TakerProtocol;
+import bisq.core.trade.protocol.TradeProtocol;
+import bisq.core.trade.protocol.TradeProtocolFactory;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
@@ -84,6 +86,8 @@ import javafx.collections.ObservableList;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -124,9 +128,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final ClockWatcher clockWatcher;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
+    private final Map<String, TradeProtocol> tradeProtocolByTradeId = new HashMap<>();
     private TradableList<Trade> tradableList;
     @Getter
-    private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
+    private final BooleanProperty persistedTradesInitialized = new SimpleBooleanProperty();
     @Setter
     @Nullable
     private ErrorMessageHandler takeOfferRequestErrorMessageHandler;
@@ -210,60 +215,68 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     @Override
     public void onDirectMessage(DecryptedMessageWithPubKey message, NodeAddress peer) {
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
-        // The maker received a TakeOfferRequest
         if (networkEnvelope instanceof TakeOfferRequest) {
-            TakeOfferRequest takeOfferRequest = (TakeOfferRequest) networkEnvelope;
-            log.info("Received TakeOfferRequest from {} with tradeId {} and uid {}",
-                    peer, takeOfferRequest.getTradeId(), takeOfferRequest.getUid());
-
-            try {
-                Validator.nonEmptyStringOf(takeOfferRequest.getTradeId());
-            } catch (Throwable t) {
-                log.warn("Invalid TakeOfferRequest " + takeOfferRequest.toString());
-                return;
-            }
-
-            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(takeOfferRequest.getTradeId());
-            if (!openOfferOptional.isPresent()) {
-                return;
-            }
-
-            OpenOffer openOffer = openOfferOptional.get();
-            if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
-                return;
-            }
-
-            Offer offer = openOffer.getOffer();
-            openOfferManager.reserveOpenOffer(openOffer);
-            Trade trade = offer.isBuyOffer() ?
-                    new BuyerAsMakerTrade(offer,
-                            Coin.valueOf(takeOfferRequest.getTxFee()),
-                            Coin.valueOf(takeOfferRequest.getTakerFee()),
-                            takeOfferRequest.isCurrencyForTakerFeeBtc(),
-                            openOffer.getArbitratorNodeAddress(),
-                            openOffer.getMediatorNodeAddress(),
-                            openOffer.getRefundAgentNodeAddress(),
-                            tradableListStorage,
-                            btcWalletService,
-                            getNewProcessModel(offer)) :
-                    new SellerAsMakerTrade(offer,
-                            Coin.valueOf(takeOfferRequest.getTxFee()),
-                            Coin.valueOf(takeOfferRequest.getTakerFee()),
-                            takeOfferRequest.isCurrencyForTakerFeeBtc(),
-                            openOffer.getArbitratorNodeAddress(),
-                            openOffer.getMediatorNodeAddress(),
-                            openOffer.getRefundAgentNodeAddress(),
-                            tradableListStorage,
-                            btcWalletService,
-                            getNewProcessModel(offer));
-
-            initNewMakerTrade(trade);
-            tradableList.add(trade);
-            ((MakerProtocol) trade.getTradeProtocol()).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
-                if (takeOfferRequestErrorMessageHandler != null)
-                    takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
-            });
+            handleTakeOfferRequest(peer, (TakeOfferRequest) networkEnvelope);
         }
+    }
+
+    // The maker received a TakeOfferRequest
+    private void handleTakeOfferRequest(NodeAddress peer, TakeOfferRequest takeOfferRequest) {
+        log.info("Received TakeOfferRequest from {} with tradeId {} and uid {}",
+                peer, takeOfferRequest.getTradeId(), takeOfferRequest.getUid());
+
+        try {
+            Validator.nonEmptyStringOf(takeOfferRequest.getTradeId());
+        } catch (Throwable t) {
+            log.warn("Invalid TakeOfferRequest " + takeOfferRequest.toString());
+            return;
+        }
+
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(takeOfferRequest.getTradeId());
+        if (!openOfferOptional.isPresent()) {
+            return;
+        }
+
+        OpenOffer openOffer = openOfferOptional.get();
+        if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
+            return;
+        }
+
+        Offer offer = openOffer.getOffer();
+        openOfferManager.reserveOpenOffer(openOffer);
+        Trade trade;
+        if (offer.isBuyOffer()) {
+            trade = new BuyerAsMakerTrade(offer,
+                    Coin.valueOf(takeOfferRequest.getTxFee()),
+                    Coin.valueOf(takeOfferRequest.getTakerFee()),
+                    takeOfferRequest.isCurrencyForTakerFeeBtc(),
+                    openOffer.getArbitratorNodeAddress(),
+                    openOffer.getMediatorNodeAddress(),
+                    openOffer.getRefundAgentNodeAddress(),
+                    tradableListStorage,
+                    btcWalletService,
+                    getNewProcessModel(offer));
+        } else {
+            trade = new SellerAsMakerTrade(offer,
+                    Coin.valueOf(takeOfferRequest.getTxFee()),
+                    Coin.valueOf(takeOfferRequest.getTakerFee()),
+                    takeOfferRequest.isCurrencyForTakerFeeBtc(),
+                    openOffer.getArbitratorNodeAddress(),
+                    openOffer.getMediatorNodeAddress(),
+                    openOffer.getRefundAgentNodeAddress(),
+                    tradableListStorage,
+                    btcWalletService,
+                    getNewProcessModel(offer));
+        }
+        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
+        tradeProtocolByTradeId.put(trade.getId(), tradeProtocol);
+        tradableList.add(trade);
+        initTradeAndProtocol(trade, tradeProtocol);
+
+        ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
+            if (takeOfferRequestErrorMessageHandler != null)
+                takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+        });
     }
 
 
@@ -277,9 +290,23 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
         if (networkEnvelope instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-            // The mailbox message will be removed inside the tasks after they are processed successfully
             getTradeById(tradeMessage.getTradeId())
-                    .ifPresent(trade -> trade.addDecryptedMessageWithPubKey(message));
+                    .ifPresent(trade -> {
+                        // We don't need to persist the msg as if we don't processes the message it will not be
+                        // removed from the P2P network and we will receive it again on next startup.
+                        // This might happen in edge cases when the user shuts down after we received the msg but
+                        // before it is processed.
+                        //TODO
+                        Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = trade.getDecryptedMessageWithPubKeySet();
+                        if (!decryptedMessageWithPubKeySet.contains(message)) {
+                            decryptedMessageWithPubKeySet.add(message);
+
+                            // The message will be removed after processed
+                            TradeProtocol tradeProtocol = getTradeProtocol(trade);
+                            tradeProtocol.applyMailboxMessage(message);
+                        }
+
+                    });
         } else if (networkEnvelope instanceof AckMessage) {
             AckMessage ackMessage = (AckMessage) networkEnvelope;
             if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE) {
@@ -322,6 +349,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         tradableList.persist();
     }
 
+    public TradeProtocol getTradeProtocol(Trade trade) {
+        if (tradeProtocolByTradeId.containsKey(trade.getId())) {
+            return tradeProtocolByTradeId.get(trade.getId());
+        } else {
+            TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
+            tradeProtocolByTradeId.put(trade.getId(), tradeProtocol);
+            return tradeProtocol;
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Init pending trade
@@ -329,27 +366,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     private void initPersistedTrades() {
         tradableList.forEach(this::initPersistedTrade);
-        pendingTradesInitialized.set(true);
+        persistedTradesInitialized.set(true);
     }
 
     private void initPersistedTrade(Trade trade) {
-        initTrade(trade);
+        initTradeAndProtocol(trade, getTradeProtocol(trade));
         trade.updateDepositTxFromWallet();
     }
 
-    private void initNewMakerTrade(Trade trade) {
-        initTrade(trade);
-    }
-
-    private void initNewTakerTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
-        initTrade(trade);
-
-        trade.getProcessModel().setUseSavingsWallet(useSavingsWallet);
-        trade.getProcessModel().setFundsNeededForTradeAsLong(fundsNeededForTrade.value);
-    }
-
-    private void initTrade(Trade trade) {
-        trade.setupProcessModel(processModelServiceProvider, this);
+    private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
+        tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
         trade.init(processModelServiceProvider);
     }
 
@@ -391,64 +417,51 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
-                        Trade trade = getNewTrade(amount,
-                                txFee,
-                                takerFee,
-                                isCurrencyForTakerFeeBtc,
-                                tradePrice,
-                                fundsNeededForTrade,
-                                offer,
-                                paymentAccountId,
-                                useSavingsWallet,
-                                model);
+                        Trade trade;
+                        if (offer.isBuyOffer()) {
+                            trade = new SellerAsTakerTrade(offer,
+                                    amount,
+                                    txFee,
+                                    takerFee,
+                                    isCurrencyForTakerFeeBtc,
+                                    tradePrice,
+                                    model.getPeerNodeAddress(),
+                                    model.getSelectedArbitrator(),
+                                    model.getSelectedMediator(),
+                                    model.getSelectedRefundAgent(),
+                                    tradableListStorage,
+                                    btcWalletService,
+                                    getNewProcessModel(offer));
+                        } else {
+                            trade = new BuyerAsTakerTrade(offer,
+                                    amount,
+                                    txFee,
+                                    takerFee,
+                                    isCurrencyForTakerFeeBtc,
+                                    tradePrice,
+                                    model.getPeerNodeAddress(),
+                                    model.getSelectedArbitrator(),
+                                    model.getSelectedMediator(),
+                                    model.getSelectedRefundAgent(),
+                                    tradableListStorage,
+                                    btcWalletService,
+                                    getNewProcessModel(offer));
+                        }
+                        trade.getProcessModel().setUseSavingsWallet(useSavingsWallet);
+                        trade.getProcessModel().setFundsNeededForTradeAsLong(fundsNeededForTrade.value);
+                        trade.setTakerPaymentAccountId(paymentAccountId);
+
+                        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
+                        tradeProtocolByTradeId.put(trade.getId(), tradeProtocol);
                         tradableList.add(trade);
-                        ((TakerProtocol) trade.getTradeProtocol()).onTakeOffer();
+
+                        initTradeAndProtocol(trade, tradeProtocol);
+
+                        ((TakerProtocol) tradeProtocol).onTakeOffer();
                         tradeResultHandler.handleResult(trade);
                     }
                 },
                 errorMessageHandler);
-    }
-
-    private Trade getNewTrade(Coin amount,
-                              Coin txFee,
-                              Coin takerFee,
-                              boolean isCurrencyForTakerFeeBtc,
-                              long tradePrice,
-                              Coin fundsNeededForTrade,
-                              Offer offer,
-                              String paymentAccountId,
-                              boolean useSavingsWallet,
-                              OfferAvailabilityModel model) {
-        Trade trade = offer.isBuyOffer() ?
-                new SellerAsTakerTrade(offer,
-                        amount,
-                        txFee,
-                        takerFee,
-                        isCurrencyForTakerFeeBtc,
-                        tradePrice,
-                        model.getPeerNodeAddress(),
-                        model.getSelectedArbitrator(),
-                        model.getSelectedMediator(),
-                        model.getSelectedRefundAgent(),
-                        tradableListStorage,
-                        btcWalletService,
-                        getNewProcessModel(offer)) :
-                new BuyerAsTakerTrade(offer,
-                        amount,
-                        txFee,
-                        takerFee,
-                        isCurrencyForTakerFeeBtc,
-                        tradePrice,
-                        model.getPeerNodeAddress(),
-                        model.getSelectedArbitrator(),
-                        model.getSelectedMediator(),
-                        model.getSelectedRefundAgent(),
-                        tradableListStorage,
-                        btcWalletService,
-                        getNewProcessModel(offer));
-        trade.setTakerPaymentAccountId(paymentAccountId);
-        initNewTakerTrade(trade, useSavingsWallet, fundsNeededForTrade);
-        return trade;
     }
 
     private ProcessModel getNewProcessModel(Offer offer) {
@@ -483,7 +496,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     onTradeCompleted(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
-                    trade.getTradeProtocol().onWithdrawCompleted();
+                    getTradeProtocol(trade).onWithdrawCompleted();
                     resultHandler.handleResult();
                 }
             }
@@ -664,8 +677,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         return tradableList.getList();
     }
 
-    public BooleanProperty pendingTradesInitializedProperty() {
-        return pendingTradesInitialized;
+    public BooleanProperty persistedTradesInitializedProperty() {
+        return persistedTradesInitialized;
     }
 
     public boolean isMyOffer(Offer offer) {

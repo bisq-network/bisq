@@ -222,17 +222,17 @@ public abstract class TradeStepView extends AnchorPane {
             infoLabel.setText(getInfoText());
         }
 
-        BooleanProperty pendingTradesInitialized = model.dataModel.tradeManager.getPendingTradesInitialized();
-        if (pendingTradesInitialized.get()) {
+        BooleanProperty initialized = model.dataModel.tradeManager.getPersistedTradesInitialized();
+        if (initialized.get()) {
             onPendingTradesInitialized();
         } else {
             pendingTradesInitializedListener = (observable, oldValue, newValue) -> {
                 if (newValue) {
                     onPendingTradesInitialized();
-                    UserThread.execute(() -> pendingTradesInitialized.removeListener(pendingTradesInitializedListener));
+                    UserThread.execute(() -> initialized.removeListener(pendingTradesInitializedListener));
                 }
             };
-            pendingTradesInitialized.addListener(pendingTradesInitializedListener);
+            initialized.addListener(pendingTradesInitializedListener);
         }
     }
 

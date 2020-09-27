@@ -234,7 +234,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         ProcessModel processModel = trade.getProcessModel();
         processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
         processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
-        DisputeProtocol tradeProtocol = (DisputeProtocol) trade.getTradeProtocol();
+        DisputeProtocol tradeProtocol = (DisputeProtocol) tradeManager.getTradeProtocol(trade);
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
 

@@ -214,7 +214,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @Override
     public void onSetupComplete() {
         // We handle the trade period here as we display a global popup if we reached dispute time
-        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
+        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.persistedTradesInitializedProperty(),
+                (a, b) -> a && b);
         tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
             if (newValue) {
                 tradeManager.applyTradePeriodState();
