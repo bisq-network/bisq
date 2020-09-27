@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.BuyerAsTakerProtocol;
+import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -50,7 +51,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                              @Nullable NodeAddress mediatorNodeAddress,
                              @Nullable NodeAddress refundAgentNodeAddress,
                              Storage<? extends TradableList> storage,
-                             BtcWalletService btcWalletService) {
+                             BtcWalletService btcWalletService,
+                             ProcessModel processModel) {
         super(offer,
                 tradeAmount,
                 txFee,
@@ -62,7 +64,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
     }
 
 
@@ -83,6 +86,7 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         protobuf.Trade proto = buyerAsTakerTradeProto.getTrade();
+        ProcessModel processModel = ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver);
         return fromProto(new BuyerAsTakerTrade(
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),
@@ -95,7 +99,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                         proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                         proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                         storage,
-                        btcWalletService),
+                        btcWalletService,
+                        processModel),
                 proto,
                 coreProtoResolver);
     }

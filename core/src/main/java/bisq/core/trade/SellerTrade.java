@@ -19,6 +19,7 @@ package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -45,7 +46,8 @@ public abstract class SellerTrade extends Trade {
                 @Nullable NodeAddress mediatorNodeAddress,
                 @Nullable NodeAddress refundAgentNodeAddress,
                 Storage<? extends TradableList> storage,
-                BtcWalletService btcWalletService) {
+                BtcWalletService btcWalletService,
+                ProcessModel processModel) {
         super(offer,
                 tradeAmount,
                 txFee,
@@ -57,7 +59,8 @@ public abstract class SellerTrade extends Trade {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
     }
 
     SellerTrade(Offer offer,
@@ -68,7 +71,8 @@ public abstract class SellerTrade extends Trade {
                 @Nullable NodeAddress mediatorNodeAddress,
                 @Nullable NodeAddress refundAgentNodeAddress,
                 Storage<? extends TradableList> storage,
-                BtcWalletService btcWalletService) {
+                BtcWalletService btcWalletService,
+                ProcessModel processModel) {
         super(offer,
                 txFee,
                 takeOfferFee,
@@ -77,7 +81,8 @@ public abstract class SellerTrade extends Trade {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
     }
 
     @Override

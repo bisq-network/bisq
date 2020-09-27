@@ -36,6 +36,7 @@ import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.MakerProtocol;
+import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -243,7 +244,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                             openOffer.getMediatorNodeAddress(),
                             openOffer.getRefundAgentNodeAddress(),
                             tradableListStorage,
-                            btcWalletService) :
+                            btcWalletService,
+                            getNewProcessModel(offer)) :
                     new SellerAsMakerTrade(offer,
                             Coin.valueOf(takeOfferRequest.getTxFee()),
                             Coin.valueOf(takeOfferRequest.getTakerFee()),
@@ -252,7 +254,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                             openOffer.getMediatorNodeAddress(),
                             openOffer.getRefundAgentNodeAddress(),
                             tradableListStorage,
-                            btcWalletService);
+                            btcWalletService,
+                            getNewProcessModel(offer));
 
             initNewMakerTrade(trade);
             tradableList.add(trade);
@@ -341,7 +344,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private void initNewTakerTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
         initTrade(trade);
 
-        checkNotNull(trade.getProcessModel()).setUseSavingsWallet(useSavingsWallet);
+        trade.getProcessModel().setUseSavingsWallet(useSavingsWallet);
         trade.getProcessModel().setFundsNeededForTradeAsLong(fundsNeededForTrade.value);
     }
 
@@ -428,7 +431,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         model.getSelectedMediator(),
                         model.getSelectedRefundAgent(),
                         tradableListStorage,
-                        btcWalletService) :
+                        btcWalletService,
+                        getNewProcessModel(offer)) :
                 new BuyerAsTakerTrade(offer,
                         amount,
                         txFee,
@@ -440,10 +444,17 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         model.getSelectedMediator(),
                         model.getSelectedRefundAgent(),
                         tradableListStorage,
-                        btcWalletService);
+                        btcWalletService,
+                        getNewProcessModel(offer));
         trade.setTakerPaymentAccountId(paymentAccountId);
         initNewTakerTrade(trade, useSavingsWallet, fundsNeededForTrade);
         return trade;
+    }
+
+    private ProcessModel getNewProcessModel(Offer offer) {
+        return new ProcessModel(checkNotNull(offer).getId(),
+                processModelServiceProvider.getUser().getAccountId(),
+                processModelServiceProvider.getKeyRing().getPubKeyRing());
     }
 
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {

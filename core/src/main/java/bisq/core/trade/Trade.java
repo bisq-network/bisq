@@ -274,7 +274,8 @@ public abstract class Trade implements Tradable, Model {
 
     // Persistable
     // Immutable
-    @Nullable
+    @Getter
+    private final ProcessModel processModel;
     @Getter
     private final Offer offer;
     @Getter
@@ -285,10 +286,7 @@ public abstract class Trade implements Tradable, Model {
     private final long takerFeeAsLong;
     @Setter
     private long takeOfferDate;
-    @Setter
-    @Getter
-    @Nullable
-    private ProcessModel processModel;
+
     //  Mutable
     @Nullable
     @Getter
@@ -473,16 +471,18 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
                     Storage<? extends TradableList> storage,
-                    BtcWalletService btcWalletService) {
+                    BtcWalletService btcWalletService,
+                    ProcessModel processModel) {
         this.offer = offer;
         this.txFee = txFee;
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
-        this.storage = storage;
-        this.btcWalletService = btcWalletService;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.refundAgentNodeAddress = refundAgentNodeAddress;
+        this.storage = storage;
+        this.btcWalletService = btcWalletService;
+        this.processModel = processModel;
 
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
@@ -505,7 +505,8 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
                     Storage<? extends TradableList> storage,
-                    BtcWalletService btcWalletService) {
+                    BtcWalletService btcWalletService,
+                    ProcessModel processModel) {
 
         this(offer,
                 txFee,
@@ -515,7 +516,8 @@ public abstract class Trade implements Tradable, Model {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
 
@@ -530,7 +532,7 @@ public abstract class Trade implements Tradable, Model {
     @Override
     public Message toProtoMessage() {
         protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
-                .setOffer(checkNotNull(offer).toProtoMessage())
+                .setOffer(offer.toProtoMessage())
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
@@ -577,7 +579,6 @@ public abstract class Trade implements Tradable, Model {
 
     public static Trade fromProto(Trade trade, protobuf.Trade proto, CoreProtoResolver coreProtoResolver) {
         trade.setTakeOfferDate(proto.getTakeOfferDate());
-        trade.setProcessModel(ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver));
         trade.setState(State.fromProto(proto.getState()));
         trade.setDisputeState(DisputeState.fromProto(proto.getDisputeState()));
         trade.setTradePeriodState(TradePeriodState.fromProto(proto.getTradePeriodState()));
@@ -630,28 +631,23 @@ public abstract class Trade implements Tradable, Model {
         this.btcWalletService = btcWalletService;
     }
 
-    public void setupProcessModel(ProcessModelServiceProvider processModelServiceProvider,
-                                  TradeManager tradeManager) {
-        processModel = getOrCreateProcessModel(processModelServiceProvider);
-        processModel.applyTransient(processModelServiceProvider,
-                tradeManager,
-                checkNotNull(offer));
+    public void setupProcessModel(ProcessModelServiceProvider serviceProvider, TradeManager tradeManager) {
+        processModel.applyTransient(serviceProvider, tradeManager, offer);
     }
 
-    public void init(ProcessModelServiceProvider processModelServiceProvider) {
-
-        processModelServiceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
+    public void init(ProcessModelServiceProvider serviceProvider) {
+        serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
             persist();
         });
 
-        processModelServiceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
+        serviceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
             mediatorPubKeyRing = mediator.getPubKeyRing();
             persist();
         });
 
-        processModelServiceProvider.getRefundAgentManager().getDisputeAgentByNodeAddress(refundAgentNodeAddress).ifPresent(refundAgent -> {
+        serviceProvider.getRefundAgentManager().getDisputeAgentByNodeAddress(refundAgentNodeAddress).ifPresent(refundAgent -> {
             refundAgentPubKeyRing = refundAgent.getPubKeyRing();
             persist();
         });
@@ -666,15 +662,6 @@ public abstract class Trade implements Tradable, Model {
         set.forEach(msg -> tradeProtocol.applyMailboxMessage(msg));
 
         isInitialized = true;
-    }
-
-    public ProcessModel getOrCreateProcessModel(ProcessModelServiceProvider processModelServiceProvider) {
-        if (processModel == null) {
-            processModel = new ProcessModel(checkNotNull(offer).getId(),
-                    processModelServiceProvider.getUser().getAccountId(),
-                    processModelServiceProvider.getKeyRing().getPubKeyRing());
-        }
-        return processModel;
     }
 
 
@@ -1132,7 +1119,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isTxChainInvalid() {
-        return checkNotNull(offer).getOfferFeePaymentTxId() == null ||
+        return offer.getOfferFeePaymentTxId() == null ||
                 getTakerFeeTxId() == null ||
                 getDepositTxId() == null ||
                 getDelayedPayoutTxBytes() == null;
