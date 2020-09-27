@@ -215,6 +215,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
+
         Set<byte[]> excludedKeys = getKeysAsByteSet(getMapForDataRequest());
         Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsByteSet(map);
 
@@ -228,24 +229,26 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public GetDataResponse buildGetDataResponse(
             GetDataRequest getDataRequest,
             int maxEntriesPerType,
-            AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
-            AtomicBoolean outProtectedStorageEntryOutputTruncated,
+            AtomicBoolean wasPersistableNetworkPayloadsTruncated,
+            AtomicBoolean wasProtectedStorageEntriesTruncated,
             Capabilities peerCapabilities) {
 
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
-        // Pre v 1.3.9 requests do not have set the requestersVersion field so it is null.
+        // Pre v 1.4.0 requests do not have set the requesters version field so it is null.
         // The methods in splitStoreService will return all historical data in that case.
-        Map<ByteArray, PersistableNetworkPayload> splitStoreMapSinceVersion = getMapForDataResponse(getDataRequest.getVersion());
+        // mapForDataResponse contains the filtered by version data from splitStoreService as well as all other
+        // maps of the remaining appendOnlyDataStoreServices.
+        Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
-                        splitStoreMapSinceVersion,
+                        mapForDataResponse,
                         Function.identity(),
                         excludedKeysAsByteArray,
                         peerCapabilities,
                         maxEntriesPerType,
-                        outPersistableNetworkPayloadOutputTruncated);
+                        wasPersistableNetworkPayloadsTruncated);
 
         Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
                 filterKnownHashes(
@@ -254,7 +257,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         excludedKeysAsByteArray,
                         peerCapabilities,
                         maxEntriesPerType,
-                        outProtectedStorageEntryOutputTruncated);
+                        wasProtectedStorageEntriesTruncated);
 
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
@@ -274,6 +277,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .forEach(service -> {
                     if (service instanceof SplitStoreService) {
                         var splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
+                        // As we add the version to our request we only use the live data. Eventually missing data will be
+                        // derived from the version.
                         map.putAll(splitStoreService.getMapOfLiveData());
                     } else {
                         map.putAll(service.getMap());
@@ -307,25 +312,25 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * by a given set of keys and peer capabilities.
      */
     static private <T extends NetworkPayload> Set<T> filterKnownHashes(
-            Map<ByteArray, T> toFilter,
-            Function<T, ? extends NetworkPayload> objToPayload,
+            Map<ByteArray, T> mapToFilter,
+            Function<T, ? extends NetworkPayload> objToPayloadFunction,
             Set<ByteArray> knownHashes,
             Capabilities peerCapabilities,
             int maxEntries,
-            AtomicBoolean outTruncated) {
+            AtomicBoolean wasTruncated) {
 
         AtomicInteger limit = new AtomicInteger(maxEntries);
 
-        Set<T> filteredResults = toFilter.entrySet().stream()
+        Set<T> filteredResults = mapToFilter.entrySet().stream()
                 .filter(e -> !knownHashes.contains(e.getKey()))
                 .filter(e -> limit.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
                 .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
-                        objToPayload.apply(networkPayload)))
+                        objToPayloadFunction.apply(networkPayload)))
                 .collect(Collectors.toSet());
 
         if (limit.get() < 0)
-            outTruncated.set(true);
+            wasTruncated.set(true);
 
         return filteredResults;
     }

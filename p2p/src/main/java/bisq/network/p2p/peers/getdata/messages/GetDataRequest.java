@@ -37,7 +37,8 @@ public abstract class GetDataRequest extends NetworkEnvelope implements Extended
     // Keys for ProtectedStorageEntry items to be excluded from the request because the peer has them already
     protected final Set<byte[]> excludedKeys;
 
-    // Added at v1.3.9
+    // Added at v1.4.0
+    // The version of the requester. Used for response to send potentially missing historical data
     @Nullable
     protected final String version;
 

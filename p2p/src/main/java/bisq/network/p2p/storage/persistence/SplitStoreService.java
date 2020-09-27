@@ -18,18 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Manages historical data stores tagged with the release versions.
  * New data is added to the default map in the store (live data). Historical data is created from resource files.
- * For initial data requests we only use the live data as the version is sent with the
+ * For initial data requests we only use the live data as the users version is sent with the
  * request so the responding (seed)node can figure out if we miss any of the historical data.
  */
 @Slf4j
 public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore> extends MapStoreService<T, PersistableNetworkPayload> {
     private ImmutableMap<String, PersistableNetworkPayloadStore> storesByVersion;
+    // Cache to avoid that we have to recreate the historical data at each request
     private ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     public SplitStoreService(File storageDir, Storage<T> storage) {
         super(storageDir, storage);
     }
@@ -42,13 +44,19 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     // We give back a map of our live map and all historical maps newer than the requested version.
     // If requestersVersion is null we return all historical data.
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapSinceVersion(String requestersVersion) {
+        // We add all our live data
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
+
+        // If we have a store with a newer version than the requesters version we will add those as well.
         storesByVersion.entrySet().stream()
                 .filter(entry -> {
+                    // Old nodes not sending the version will get delivered all data
                     if (requestersVersion == null) {
                         return true;
                     }
 
+                    // Otherwise we only add data if the requesters version is older then
+                    // the version of the particular store.
                     String storeVersion = entry.getKey();
                     return Version.isNewVersion(storeVersion, requestersVersion);
                 })
@@ -62,7 +70,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfAllData() {
-        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(getMapOfLiveData());
         result.putAll(allHistoricalPayloads);
         return result;
     }
@@ -89,7 +97,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
             return;
         }
 
-        store.getMap().put(hash, payload);
+        getMapOfLiveData().put(hash, payload);
         persist();
     }
 
@@ -99,7 +107,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
             return null;
         }
 
-        PersistableNetworkPayload previous = store.getMap().put(hash, payload);
+        PersistableNetworkPayload previous = getMapOfLiveData().put(hash, payload);
         persist();
         return previous;
     }
@@ -145,11 +153,11 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     }
 
     private void pruneStore(PersistableNetworkPayloadStore historicalStore) {
-        store.getMap().keySet().removeAll(historicalStore.getMap().keySet());
+        getMapOfLiveData().keySet().removeAll(historicalStore.getMap().keySet());
         storage.queueUpForSave(store);
     }
 
     private boolean anyMapContainsKey(P2PDataStorage.ByteArray hash) {
-        return store.getMap().containsKey(hash) || allHistoricalPayloads.containsKey(hash);
+        return getMapOfLiveData().containsKey(hash) || allHistoricalPayloads.containsKey(hash);
     }
 }
