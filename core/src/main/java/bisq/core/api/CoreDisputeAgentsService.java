@@ -32,15 +32,18 @@ import org.bitcoinj.core.ECKey;
 
 import javax.inject.Inject;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType;
 import static java.net.InetAddress.getLoopbackAddress;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 
 @Slf4j
 class CoreDisputeAgentsService {
@@ -65,10 +68,10 @@ class CoreDisputeAgentsService {
         this.refundAgentManager = refundAgentManager;
         this.p2PService = p2PService;
         this.nodeAddress = new NodeAddress(getLoopbackAddress().getHostAddress(), config.nodePort);
-        this.languageCodes = Arrays.asList("de", "en", "es", "fr");
+        this.languageCodes = asList("de", "en", "es", "fr");
     }
 
-    void registerDisputeAgent(String disputeAgentType, String registrationKey) {
+    void registerDisputeAgent(String disputeAgentTypeString, String registrationKey) {
         if (!p2PService.isBootstrapped())
             throw new IllegalStateException("p2p service is not bootstrapped yet");
 
@@ -80,23 +83,26 @@ class CoreDisputeAgentsService {
         if (!registrationKey.equals(DEV_PRIVILEGE_PRIV_KEY))
             throw new IllegalArgumentException("invalid registration key");
 
-        ECKey ecKey;
-        String signature;
-        switch (disputeAgentType) {
-            case "arbitrator":
-                throw new IllegalArgumentException("arbitrators must be registered in a Bisq UI");
-            case "mediator":
-                ecKey = mediatorManager.getRegistrationKey(registrationKey);
-                signature = mediatorManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
-                registerMediator(nodeAddress, languageCodes, ecKey, signature);
-                return;
-            case "refundagent":
-                ecKey = refundAgentManager.getRegistrationKey(registrationKey);
-                signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
-                registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
-                return;
-            default:
-                throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentType);
+        Optional<DisputeAgentType> disputeAgentType = getDisputeAgentTypeForString(disputeAgentTypeString);
+        if (disputeAgentType.isPresent()) {
+            ECKey ecKey;
+            String signature;
+            switch ((disputeAgentType.get())) {
+                case ARBITRATOR:
+                    throw new IllegalArgumentException("arbitrators must be registered in a Bisq UI");
+                case MEDIATOR:
+                    ecKey = mediatorManager.getRegistrationKey(registrationKey);
+                    signature = mediatorManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
+                    registerMediator(nodeAddress, languageCodes, ecKey, signature);
+                    return;
+                case REFUND_AGENT:
+                    ecKey = refundAgentManager.getRegistrationKey(registrationKey);
+                    signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
+                    registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
+                    return;
+            }
+        } else {
+            throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentTypeString);
         }
     }
 
@@ -140,5 +146,12 @@ class CoreDisputeAgentsService {
         });
         refundAgentManager.getDisputeAgentByNodeAddress(nodeAddress).orElseThrow(() ->
                 new IllegalStateException("could not register refund agent"));
+    }
+
+    private Optional<DisputeAgentType> getDisputeAgentTypeForString(String disputeAgentTypeString) {
+        return stream(DisputeAgentType.values())
+                .filter(da -> da.name().equalsIgnoreCase(disputeAgentTypeString)
+                        || da.alternateName().equalsIgnoreCase(disputeAgentTypeString))
+                .findFirst();
     }
 }

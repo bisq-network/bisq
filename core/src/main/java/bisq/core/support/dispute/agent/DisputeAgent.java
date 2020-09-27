@@ -46,7 +46,13 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
     public enum DisputeAgentType {
         ARBITRATOR,
         MEDIATOR,
-        REFUNDAGENT
+        REFUND_AGENT;
+
+        public String alternateName() {
+            return this.equals(REFUND_AGENT)
+                    ? REFUND_AGENT.name().replace("_", "")
+                    : this.name();
+        }
     }
 
     protected final NodeAddress nodeAddress;
