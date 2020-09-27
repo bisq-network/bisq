@@ -624,7 +624,7 @@ public abstract class Trade implements Tradable, Model {
         this.btcWalletService = btcWalletService;
     }
 
-    public void init(ProcessModelServiceProvider serviceProvider) {
+    public void initialize(ProcessModelServiceProvider serviceProvider) {
         serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
@@ -773,7 +773,9 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setState(State state) {
-        log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
+        if (isInitialized) {
+            log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
+        }
         if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
             String message = "We got a state change to a previous phase.\n" +
                     "Old state is: " + this.state + ". New state is: " + state;

@@ -280,17 +280,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        if (p2PService.isBootstrapped())
+        if (p2PService.isBootstrapped()) {
             initPersistedTrades();
-        else
+        } else {
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
                 public void onUpdatedDataReceived() {
-                    // Get called after onMailboxMessageAdded from initial data request
-                    // The mailbox message will be removed inside the tasks after they are processed successfully
                     initPersistedTrades();
                 }
             });
+        }
 
         getTradesAsObservableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
@@ -334,7 +333,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
         tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
-        trade.init(processModelServiceProvider);
+        trade.initialize(processModelServiceProvider);
     }
 
 

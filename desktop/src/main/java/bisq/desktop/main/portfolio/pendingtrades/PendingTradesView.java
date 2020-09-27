@@ -559,35 +559,44 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
                             PendingTradesListItem> column) {
                         return new TableCell<>() {
-                            private HyperlinkWithIcon field;
+                            private Trade trade;
+                            private ChangeListener<Trade.State> listener;
 
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    Trade trade = item.getTrade();
-                                    if (isMaybeInvalidTrade(trade)) {
-                                        field = new HyperlinkWithIcon(trade.getShortId());
-                                        field.setIcon(FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE));
-                                        field.setOnAction(event -> tradeDetailsWindow.show(trade));
-                                        field.setTooltip(new Tooltip(Res.get("tooltip.invalidTradeState.warning")));
-                                        if (trade.isTxChainInvalid()) {
-                                            field.getIcon().getStyleClass().addAll("icon", "error-icon");
-                                        } else {
-                                            field.getIcon().getStyleClass().addAll("icon", "warn-icon");
-                                        }
-                                    } else {
-                                        field = new HyperlinkWithIcon(trade.getShortId());
-                                        field.setOnAction(event -> tradeDetailsWindow.show(trade));
-                                        field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
-                                    }
-                                    setGraphic(field);
+                                    trade = item.getTrade();
+                                    listener = (observable, oldValue, newValue) -> update();
+                                    trade.stateProperty().addListener(listener);
+                                    update();
                                 } else {
                                     setGraphic(null);
-                                    if (field != null)
-                                        field.setOnAction(null);
+                                    if (trade != null && listener != null) {
+                                        trade.stateProperty().removeListener(listener);
+                                    }
                                 }
+                            }
+
+                            private void update() {
+                                HyperlinkWithIcon field;
+                                if (isMaybeInvalidTrade(trade)) {
+                                    field = new HyperlinkWithIcon(trade.getShortId());
+                                    field.setIcon(FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE));
+                                    field.setOnAction(event -> tradeDetailsWindow.show(trade));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.invalidTradeState.warning")));
+                                    if (trade.isTxChainInvalid()) {
+                                        field.getIcon().getStyleClass().addAll("icon", "error-icon");
+                                    } else {
+                                        field.getIcon().getStyleClass().addAll("icon", "warn-icon");
+                                    }
+                                } else {
+                                    field = new HyperlinkWithIcon(trade.getShortId());
+                                    field.setOnAction(event -> tradeDetailsWindow.show(trade));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                }
+                                setGraphic(field);
                             }
                         };
                     }
@@ -859,12 +868,25 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
                             PendingTradesListItem> column) {
                         return new TableCell<>() {
+                            private Trade trade;
+                            private JFXButton warnIconButton, trashIconButton;
+                            private ChangeListener<Trade.State> listener;
 
                             @Override
                             public void updateItem(PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
-                                if (!empty && newItem != null && isMaybeInvalidTrade(newItem.getTrade())) {
-                                    Trade trade = newItem.getTrade();
+                                if (!empty && newItem != null) {
+                                    trade = newItem.getTrade();
+                                    listener = (observable, oldValue, newValue) -> update();
+                                    trade.stateProperty().addListener(listener);
+                                    update();
+                                } else {
+                                    cleanup();
+                                }
+                            }
+
+                            private void update() {
+                                if (isMaybeInvalidTrade(trade)) {
                                     Text warnIcon = FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE);
                                     Text trashIcon = FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ARROW_RIGHT_BOLD_BOX_OUTLINE);
                                     if (trade.isTxChainInvalid()) {
@@ -875,12 +897,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                         warnIcon.getStyleClass().addAll("icon", "warn-icon");
                                     }
 
-                                    JFXButton warnIconButton = new JFXButton("", warnIcon);
+                                    warnIconButton = new JFXButton("", warnIcon);
                                     warnIconButton.getStyleClass().add("hidden-icon-button");
                                     warnIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.warningIcon.tooltip")));
                                     warnIconButton.setOnAction(e -> onShowInfoForInvalidTrade(trade));
 
-                                    JFXButton trashIconButton = new JFXButton("", trashIcon);
+                                    trashIconButton = new JFXButton("", trashIcon);
                                     trashIconButton.getStyleClass().add("hidden-icon-button");
                                     trashIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.moveTradeToFailedIcon.tooltip")));
                                     trashIconButton.setOnAction(e -> onMoveInvalidTradeToFailedTrades(trade));
@@ -890,8 +912,23 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     hBox.getChildren().addAll(warnIconButton, trashIconButton);
                                     setGraphic(hBox);
                                 } else {
-                                    setGraphic(null);
+                                    cleanup();
                                 }
+
+                                updateMoveTradeToFailedColumnState();
+                            }
+
+                            private void cleanup() {
+                                if (warnIconButton != null) {
+                                    warnIconButton.setOnAction(null);
+                                }
+                                if (trashIconButton != null) {
+                                    trashIconButton.setOnAction(null);
+                                }
+                                if (listener != null && trade != null) {
+                                    trade.stateProperty().removeListener(listener);
+                                }
+                                setGraphic(null);
                             }
                         };
                     }

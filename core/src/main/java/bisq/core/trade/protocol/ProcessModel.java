@@ -173,13 +173,14 @@ public class ProcessModel implements Model, PersistablePayload {
         this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
     }
 
-    public void applyTransient(ProcessModelServiceProvider processModelServiceProvider,
+    public void applyTransient(ProcessModelServiceProvider provider,
                                TradeManager tradeManager,
                                Offer offer) {
         this.offer = offer;
-        this.provider = processModelServiceProvider;
+        this.provider = provider;
         this.tradeManager = tradeManager;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
