@@ -111,7 +111,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                                     "arrive and the peer repeats sending us the message. We send another ACK msg.");
                             stopTimeout();
                             sendAckMessage(message, true, null);
-                            processModel.removeMailboxMessageAfterProcessing(trade);
+                            removeMailboxMessageAfterProcessing(message);
                         }))
                 .setup(tasks(BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
                         BuyerVerifiesFinalDelayedPayoutTx.class,

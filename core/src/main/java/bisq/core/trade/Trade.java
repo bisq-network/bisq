@@ -33,7 +33,6 @@ import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.txproof.AssetTxProofResult;
 
-import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
@@ -69,9 +68,7 @@ import javafx.collections.ObservableList;
 import java.time.temporal.ChronoUnit;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -399,8 +396,6 @@ public abstract class Trade implements Tradable, Model {
 
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
-    @Getter
-    final transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
 
     // Added in v1.1.6
     @Getter
@@ -710,10 +705,6 @@ public abstract class Trade implements Tradable, Model {
             delayedPayoutTx = btcWalletService.getTxFromSerializedTx(delayedPayoutTxBytes);
         }
         return delayedPayoutTx;
-    }
-
-    public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
@@ -1208,7 +1199,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     tradeAmount=" + tradeAmount +
                 ",\n     tradeAmountProperty=" + tradeAmountProperty +
                 ",\n     tradeVolumeProperty=" + tradeVolumeProperty +
-                ",\n     decryptedMessageWithPubKeySet=" + decryptedMessageWithPubKeySet +
                 ",\n     mediationResultState=" + mediationResultState +
                 ",\n     mediationResultStateProperty=" + mediationResultStateProperty +
                 ",\n     lockTime=" + lockTime +

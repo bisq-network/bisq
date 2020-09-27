@@ -34,7 +34,6 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.TakeOfferRequest;
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
@@ -45,14 +44,11 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
 
-import bisq.network.p2p.AckMessage;
-import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.DecryptedDirectMessageListener;
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.messaging.DecryptedMailboxListener;
 
 import bisq.common.ClockWatcher;
 import bisq.common.config.Config;
@@ -107,7 +103,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class TradeManager implements PersistedDataHost, DecryptedDirectMessageListener, DecryptedMailboxListener {
+public class TradeManager implements PersistedDataHost, DecryptedDirectMessageListener {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
@@ -184,7 +180,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         tradableListStorage = storage;
 
         p2PService.addDecryptedDirectMessageListener(this);
-        p2PService.addDecryptedMailboxListener(this);
 
         failedTradesManager.setUnFailTradeCallback(this::unFailTrade);
     }
@@ -279,43 +274,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DecryptedMailboxListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Might get called at startup after HS is published. Can be before or after initPendingTrades.
-    @Override
-    public void onMailboxMessageAdded(DecryptedMessageWithPubKey message, NodeAddress peer) {
-        NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
-        if (networkEnvelope instanceof TradeMessage) {
-            TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-            getTradeById(tradeMessage.getTradeId())
-                    .ifPresent(trade -> {
-                        // We don't need to persist the msg as if we don't processes the message it will not be
-                        // removed from the P2P network and we will receive it again on next startup.
-                        // This might happen in edge cases when the user shuts down after we received the msg but
-                        // before it is processed.
-                        //TODO
-                        Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = trade.getDecryptedMessageWithPubKeySet();
-                        if (!decryptedMessageWithPubKeySet.contains(message)) {
-                            decryptedMessageWithPubKeySet.add(message);
-
-                            // The message will be removed after processed
-                            TradeProtocol tradeProtocol = getTradeProtocol(trade);
-                            tradeProtocol.applyMailboxMessage(message);
-                        }
-
-                    });
-        } else if (networkEnvelope instanceof AckMessage) {
-            AckMessage ackMessage = (AckMessage) networkEnvelope;
-            if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE) {
-                // We remove here the message not in the trade protocol as it might be that the trade is already
-                // completed and the protocol is not listening.
-                p2PService.removeEntryFromMailbox(message);
-            }
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle

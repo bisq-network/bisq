@@ -42,8 +42,6 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.AckMessage;
-import bisq.network.p2p.DecryptedMessageWithPubKey;
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
@@ -91,8 +89,6 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private Transaction takeOfferFeeTx;
     @Setter
     transient private TradeMessage tradeMessage;
-    @Setter
-    transient private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
     // Added in v1.2.0
     @Setter
@@ -250,16 +246,6 @@ public class ProcessModel implements Model, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void removeMailboxMessageAfterProcessing(Trade trade) {
-        if (tradeMessage instanceof MailboxMessage &&
-                decryptedMessageWithPubKey != null &&
-                decryptedMessageWithPubKey.getNetworkEnvelope().equals(tradeMessage)) {
-            log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMessageWithPubKey);
-            getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
-            trade.removeDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
-        }
-    }
 
     @Override
     public void persist() {

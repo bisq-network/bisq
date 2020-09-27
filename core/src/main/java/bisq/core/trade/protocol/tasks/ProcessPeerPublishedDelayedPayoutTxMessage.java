@@ -52,13 +52,9 @@ public class ProcessPeerPublishedDelayedPayoutTxMessage extends TradeTask {
             Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
             WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, processModel.getBtcWalletService().getWallet());
 
-            // todo trade.setState
-
             complete();
         } catch (Throwable t) {
             failed(t);
-        } finally {
-            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }

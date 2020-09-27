@@ -106,7 +106,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                                     "so we ignore the message. This can happen if the ACK message to the peer did not " +
                                     "arrive and the peer repeats sending us the message. We send another ACK msg.");
                             sendAckMessage(message, true, null);
-                            processModel.removeMailboxMessageAfterProcessing(trade);
+                            removeMailboxMessageAfterProcessing(message);
                         }))
                 .setup(tasks(
                         SellerProcessCounterCurrencyTransferStartedMessage.class,

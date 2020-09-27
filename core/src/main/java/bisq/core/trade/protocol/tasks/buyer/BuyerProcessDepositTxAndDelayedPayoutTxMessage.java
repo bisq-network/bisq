@@ -76,8 +76,6 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             complete();
         } catch (Throwable t) {
             failed(t);
-        } finally {
-            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }

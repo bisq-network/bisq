@@ -31,6 +31,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.messaging.DecryptedMailboxListener;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -38,19 +39,18 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.taskrunner.Task;
 
-import java.util.HashSet;
+import java.security.PublicKey;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class TradeProtocol implements DecryptedDirectMessageListener {
+public abstract class TradeProtocol implements DecryptedDirectMessageListener, DecryptedMailboxListener {
 
     protected final ProcessModel processModel;
     protected final Trade trade;
     private Timer timeoutTimer;
-    private boolean initialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +69,6 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
 
     public void initialize(ProcessModelServiceProvider serviceProvider, TradeManager tradeManager, Offer offer) {
         processModel.applyTransient(serviceProvider, tradeManager, offer);
-        initialized = true;
         onInitialized();
     }
 
@@ -77,27 +76,14 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
         if (!trade.isWithdrawn()) {
             processModel.getP2PService().addDecryptedDirectMessageListener(this);
         }
-
-        // Apply mailbox messages
-        // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
-        new HashSet<>(trade.getDecryptedMessageWithPubKeySet()).forEach(this::applyMailboxMessage);
+        processModel.getP2PService().addDecryptedMailboxListener(this);
+        processModel.getP2PService().getMailboxMap().values()
+                .stream().map(e -> e.second)
+                .forEach(this::handleDecryptedMessageWithPubKey);
     }
 
     public void onWithdrawCompleted() {
         cleanup();
-    }
-
-    public void applyMailboxMessage(DecryptedMessageWithPubKey message) {
-        if (initialized && isPubKeyValid(message)) {
-            NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
-            if (networkEnvelope instanceof MailboxMessage &&
-                    networkEnvelope instanceof TradeMessage) {
-                processModel.setDecryptedMessageWithPubKey(message);
-                TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-                NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
-                onMailboxMessage(tradeMessage, peerNodeAddress);
-            }
-        }
     }
 
     protected void onMailboxMessage(TradeMessage message, NodeAddress peerNodeAddress) {
@@ -117,8 +103,72 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
             if (networkEnvelope instanceof TradeMessage && isMyTradeMessage((TradeMessage) networkEnvelope)) {
                 onTradeMessage((TradeMessage) networkEnvelope, peer);
             } else if (networkEnvelope instanceof AckMessage) {
-                onAckMessage((AckMessage) networkEnvelope, peer);
+                AckMessage ackMessage = (AckMessage) networkEnvelope;
+                if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE) {
+                    onAckMessage((AckMessage) networkEnvelope, peer);
+                }
             }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DecryptedMailboxListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMailboxMessageAdded(DecryptedMessageWithPubKey message, NodeAddress peer) {
+        handleDecryptedMessageWithPubKey(message, peer);
+    }
+
+    private void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
+        NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
+        handleDecryptedMessageWithPubKey(decryptedMessageWithPubKey, senderNodeAddress);
+    }
+
+    protected void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey,
+                                                    NodeAddress peer) {
+        if (!isPubKeyValid(decryptedMessageWithPubKey)) {
+            return;
+        }
+
+        NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+        if (networkEnvelope instanceof TradeMessage) {
+            TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
+            if (!isMyTradeMessage(tradeMessage)) {
+                return;
+            }
+
+            if (trade.isWithdrawn()) {
+                processModel.getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
+                log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
+                return;
+            }
+
+            onMailboxMessage(tradeMessage, peer);
+        } else if (networkEnvelope instanceof AckMessage) {
+            AckMessage ackMessage = (AckMessage) networkEnvelope;
+            if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
+                    ackMessage.getSourceId().equals(trade.getId())) {
+                if (!trade.isWithdrawn()) {
+                    onAckMessage((AckMessage) networkEnvelope, peer);
+                }
+                processModel.getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
+                log.info("Remove {} from the P2P network.", ackMessage.getClass().getSimpleName());
+            }
+        }
+    }
+
+    public void removeMailboxMessageAfterProcessing(TradeMessage tradeMessage) {
+        if (tradeMessage instanceof MailboxMessage &&
+                processModel.getTradingPeer() != null &&
+                processModel.getTradingPeer().getPubKeyRing() != null &&
+                processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey() != null) {
+            PublicKey sigPubKey = processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey();
+            // We reconstruct the DecryptedMessageWithPubKey from the message and the peers signature pubKey
+            DecryptedMessageWithPubKey decryptedMessageWithPubKey = new DecryptedMessageWithPubKey(tradeMessage, sigPubKey);
+            processModel.getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
+            log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
         }
     }
 
@@ -313,6 +363,11 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener {
         log.info("TaskRunner successfully completed. Triggered from {}, tradeId={}", source, trade.getId());
         if (message != null) {
             sendAckMessage(message, true, null);
+
+            // Once a taskRunner is completed we remove the mailbox message. To not remove it directly at the task
+            // adds some resilience in case of minor errors, so after a restart the mailbox message can be applied
+            // again.
+            removeMailboxMessageAfterProcessing(message);
         }
     }
 

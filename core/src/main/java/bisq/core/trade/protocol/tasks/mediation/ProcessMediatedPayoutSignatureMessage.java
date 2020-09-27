@@ -54,8 +54,6 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
             complete();
         } catch (Throwable t) {
             failed(t);
-        } finally {
-            processModel.removeMailboxMessageAfterProcessing(trade);
         }
     }
 }
