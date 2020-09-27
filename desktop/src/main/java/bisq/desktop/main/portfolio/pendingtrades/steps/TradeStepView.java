@@ -727,13 +727,15 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private void checkIfLockTimeIsOver() {
-        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
-        if (delayedPayoutTx != null) {
-            long lockTime = delayedPayoutTx.getLockTime();
-            int bestChainHeight = model.dataModel.btcWalletService.getBestChainHeight();
-            long remaining = lockTime - bestChainHeight;
-            if (remaining <= 0) {
-                openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
+        if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED) {
+            Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+            if (delayedPayoutTx != null) {
+                long lockTime = delayedPayoutTx.getLockTime();
+                int bestChainHeight = model.dataModel.btcWalletService.getBestChainHeight();
+                long remaining = lockTime - bestChainHeight;
+                if (remaining <= 0) {
+                    openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
+                }
             }
         }
     }
