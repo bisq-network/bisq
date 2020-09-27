@@ -249,12 +249,6 @@ public abstract class WalletService {
         }
     }
 
-    public static void removeSignatures(Transaction transaction) {
-        for (TransactionInput input : transaction.getInputs()) {
-            input.setScriptSig(new Script(new byte[]{}));
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Sign tx
