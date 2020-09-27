@@ -193,7 +193,7 @@ public abstract class Trade implements Tradable, Model {
         public boolean isValidTransitionTo(State newState) {
             Phase newPhase = newState.getPhase();
             Phase currentPhase = this.getPhase();
-            return currentPhase.isValidTransitionTo(newPhase) || newPhase == currentPhase;
+            return currentPhase.isValidTransitionTo(newPhase) || newPhase.equals(currentPhase);
         }
     }
 
