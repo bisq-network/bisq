@@ -88,7 +88,6 @@ public class GetDataRequestHandler {
                 .map(e -> "node address " + e.getFullAddress())
                 .orElseGet(() -> "connection UID " + connection.getUid());
 
-        //todo use handlers
         AtomicBoolean wasPersistableNetworkPayloadsTruncated = new AtomicBoolean(false);
         AtomicBoolean wasProtectedStorageEntriesTruncated = new AtomicBoolean(false);
         GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(
