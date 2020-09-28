@@ -585,10 +585,6 @@ public abstract class WalletService {
         return wallet.checkAESKey(aesKey);
     }
 
-    public DeterministicKey freshKey(KeyChain.KeyPurpose purpose) {
-        return wallet.freshKey(purpose);
-    }
-
     @Nullable
     public DeterministicKey findKeyFromPubKeyHash(byte[] pubKeyHash) {
         return wallet.getActiveKeyChain().findKeyFromPubHash(pubKeyHash);
