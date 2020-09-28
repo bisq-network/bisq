@@ -321,7 +321,7 @@ public class WalletConfig extends AbstractIdleService {
             wallet = loadWallet(shouldReplayWallet, walletFile, isBsqWallet);
         } else {
             wallet = createWallet(isBsqWallet);
-            wallet.freshReceiveKey();
+            //wallet.freshReceiveKey();
 
             // Currently the only way we can be sure that an extension is aware of its containing wallet is by
             // deserializing the extension (see WalletExtension#deserializeWalletExtension(Wallet, byte[]))
