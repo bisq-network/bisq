@@ -87,6 +87,7 @@ public class ApiTestCase {
         // delimited app list value, e.g., "bitcoind,seednode,arbdaemon".
         scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
+        bitcoinCli = new BitcoinCliHelper((config));
     }
 
     public static void tearDownScaffold() {
