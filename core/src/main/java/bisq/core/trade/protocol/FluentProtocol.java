@@ -85,27 +85,30 @@ public class FluentProtocol {
 
     public FluentProtocol executeTasks() {
         Condition.Result result = condition.getResult();
-        if (result.isValid) {
-            if (setup.getTimeoutSec() > 0) {
-                tradeProtocol.startTimeout(setup.getTimeoutSec());
+        if (!result.isValid) {
+            if (resultHandler != null) {
+                resultHandler.accept(result);
             }
-
-            NodeAddress peer = condition.getPeer();
-            if (peer != null) {
-                tradeProtocol.processModel.setTempTradingPeerNodeAddress(peer);
-            }
-
-            TradeMessage message = condition.getMessage();
-            if (message != null) {
-                tradeProtocol.processModel.setTradeMessage(message);
-            }
-
-            TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());
-            taskRunner.addTasks(setup.getTasks());
-            taskRunner.run();
-        } else if (resultHandler != null) {
-            resultHandler.accept(result);
+            return this;
         }
+
+        if (setup.getTimeoutSec() > 0) {
+            tradeProtocol.startTimeout(setup.getTimeoutSec());
+        }
+
+        NodeAddress peer = condition.getPeer();
+        if (peer != null) {
+            tradeProtocol.processModel.setTempTradingPeerNodeAddress(peer);
+        }
+
+        TradeMessage message = condition.getMessage();
+        if (message != null) {
+            tradeProtocol.processModel.setTradeMessage(message);
+        }
+
+        TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());
+        taskRunner.addTasks(setup.getTasks());
+        taskRunner.run();
         return this;
     }
 
