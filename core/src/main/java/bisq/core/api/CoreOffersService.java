@@ -104,7 +104,7 @@ class CoreOffersService {
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
         Coin useDefaultTxFee = Coin.ZERO;
-        Offer offer = createOfferService.createAndGetOffer(offerId,
+        return createOfferService.createAndGetOffer(offerId,
                 direction,
                 upperCaseCurrencyCode,
                 amount,
@@ -115,7 +115,6 @@ class CoreOffersService {
                 exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
                 paymentAccount);
-        return offer;
     }
 
     // Create offer for given offer id.
@@ -154,6 +153,9 @@ class CoreOffersService {
                 useSavingsWallet,
                 resultHandler,
                 log::error);
+        if (offer.getErrorMessage() != null)
+            throw new IllegalStateException(offer.getErrorMessage());
+
         return offer;
     }
 
