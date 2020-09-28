@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * in case that does not happen in 4 seconds or if the message was stored in mailbox or failed. We keep repeating that
  * with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached. If never successful we fail and
  * do not continue the protocol with publishing the deposit tx. That way we avoid that a deposit tx is published but the
- * buyer does not has the delayed payout tx and would not be able to open arbitration.
+ * buyer does not have the delayed payout tx and would not be able to open arbitration.
  */
 @Slf4j
 public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMessageTask {

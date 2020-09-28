@@ -71,7 +71,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
-            // message bu that cannot be changed due backward compatibility issues. It is a left over from the
+            // message but that cannot be changed due backward compatibility issues. It is a left over from the
             // old trade protocol.
             processModel.setTakeOfferFeeTxId(nonEmptyStringOf(request.getTakerFeeTxId()));
 
