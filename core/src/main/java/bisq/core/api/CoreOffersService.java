@@ -95,8 +95,7 @@ class CoreOffersService {
                       long amountAsLong,
                       long minAmountAsLong,
                       double buyerSecurityDeposit,
-                      String paymentAccountId,
-                      TransactionResultHandler resultHandler) {
+                      String paymentAccountId) {
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
@@ -104,25 +103,23 @@ class CoreOffersService {
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
-        // We don't support atm funding from external wallet to keep it simple
-        boolean useSavingsWallet = true;
-
-        //noinspection ConstantConditions
-        return createAndPlaceOffer(offerId,
-                upperCaseCurrencyCode,
+        Coin useDefaultTxFee = Coin.ZERO;
+        Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
-                price,
-                useMarketBasedPrice,
-                marketPriceMargin,
+                upperCaseCurrencyCode,
                 amount,
                 minAmount,
+                price,
+                useDefaultTxFee,
+                useMarketBasedPrice,
+                exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
-                paymentAccount,
-                useSavingsWallet,
-                resultHandler);
+                paymentAccount);
+        return offer;
     }
 
     // Create offer for given offer id.
+    // Not used yet, should be renamed for a new placeoffer api method.
     Offer createOffer(String offerId,
                       String currencyCode,
                       Direction direction,
@@ -132,11 +129,8 @@ class CoreOffersService {
                       Coin amount,
                       Coin minAmount,
                       double buyerSecurityDeposit,
-                      PaymentAccount paymentAccount,
-                      boolean useSavingsWallet,
-                      TransactionResultHandler resultHandler) {
+                      PaymentAccount paymentAccount) {
         Coin useDefaultTxFee = Coin.ZERO;
-
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
                 currencyCode.toUpperCase(),
@@ -148,49 +142,18 @@ class CoreOffersService {
                 exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
                 paymentAccount);
-
-        openOfferManager.placeOffer(offer,
-                buyerSecurityDeposit,
-                useSavingsWallet,
-                resultHandler,
-                log::error);
-
         return offer;
     }
 
-    private Offer createAndPlaceOffer(String offerId,
-                                      String currencyCode,
-                                      Direction direction,
-                                      Price price,
-                                      boolean useMarketBasedPrice,
-                                      double marketPriceMargin,
-                                      Coin amount,
-                                      Coin minAmount,
-                                      double buyerSecurityDeposit,
-                                      PaymentAccount paymentAccount,
-                                      boolean useSavingsWallet,
-                                      TransactionResultHandler resultHandler) {
-        Coin useDefaultTxFee = Coin.ZERO;
-
-        Offer offer = createOfferService.createAndGetOffer(offerId,
-                direction,
-                currencyCode,
-                amount,
-                minAmount,
-                price,
-                useDefaultTxFee,
-                useMarketBasedPrice,
-                exactMultiply(marketPriceMargin, 0.01),
-                buyerSecurityDeposit,
-                paymentAccount);
-
-        // TODO give user chance to examine offer before placing it (placeoffer)
+    Offer placeOffer(Offer offer,
+                     double buyerSecurityDeposit,
+                     boolean useSavingsWallet,
+                     TransactionResultHandler resultHandler) {
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
                 resultHandler,
                 log::error);
-
         return offer;
     }
 

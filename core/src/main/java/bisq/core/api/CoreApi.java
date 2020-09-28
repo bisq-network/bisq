@@ -98,8 +98,7 @@ public class CoreApi {
                              long amountAsLong,
                              long minAmountAsLong,
                              double buyerSecurityDeposit,
-                             String paymentAccountId,
-                             TransactionResultHandler resultHandler) {
+                             String paymentAccountId) {
         return coreOffersService.createOffer(currencyCode,
                 directionAsString,
                 priceAsString,
@@ -108,10 +107,10 @@ public class CoreApi {
                 amountAsLong,
                 minAmountAsLong,
                 buyerSecurityDeposit,
-                paymentAccountId,
-                resultHandler);
+                paymentAccountId);
     }
 
+    // Not used yet, should be renamed for a new placeoffer api method.
     public Offer createOffer(String offerId,
                              String currencyCode,
                              OfferPayload.Direction direction,
@@ -121,9 +120,7 @@ public class CoreApi {
                              Coin amount,
                              Coin minAmount,
                              double buyerSecurityDeposit,
-                             PaymentAccount paymentAccount,
-                             boolean useSavingsWallet,
-                             TransactionResultHandler resultHandler) {
+                             PaymentAccount paymentAccount) {
         return coreOffersService.createOffer(offerId,
                 currencyCode,
                 direction,
@@ -133,9 +130,18 @@ public class CoreApi {
                 amount,
                 minAmount,
                 buyerSecurityDeposit,
-                paymentAccount,
+                paymentAccount);
+    }
+
+    public Offer placeOffer(Offer offer,
+                            double buyerSecurityDeposit,
+                            boolean useSavingsWallet,
+                            TransactionResultHandler resultHandler) {
+        coreOffersService.placeOffer(offer,
+                buyerSecurityDeposit,
                 useSavingsWallet,
                 resultHandler);
+        return offer;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
