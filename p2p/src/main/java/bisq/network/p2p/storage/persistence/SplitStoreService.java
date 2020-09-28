@@ -52,13 +52,21 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
                 .filter(entry -> {
                     // Old nodes not sending the version will get delivered all data
                     if (requestersVersion == null) {
+                        log.info("The requester did not send a version. This is expected for not updated nodes.");
                         return true;
                     }
 
                     // Otherwise we only add data if the requesters version is older then
                     // the version of the particular store.
                     String storeVersion = entry.getKey();
-                    return Version.isNewVersion(storeVersion, requestersVersion);
+                    boolean newVersion = Version.isNewVersion(storeVersion, requestersVersion);
+                    String details = newVersion ?
+                            "As our historical store is a newer version we add the data to our result map." :
+                            "As the requester version is not older as our historical store we do not " +
+                                    "add the data to the result map.";
+                    log.info("The requester had version {}. Our historical data store has version {}.\n{}",
+                            storeVersion, requestersVersion, details);
+                    return newVersion;
                 })
                 .map(e -> e.getValue().getMap())
                 .forEach(result::putAll);
@@ -143,6 +151,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
         // If resource file does not exist we return null. We do not create a new store as it would never get filled.
         PersistableNetworkPayloadStore historicalStore = storage.getPersisted(fileName);
         if (historicalStore == null) {
+            log.warn("Resource file with file name {} does not exits.", fileName);
             return;
         }
 
@@ -153,7 +162,15 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     }
 
     private void pruneStore(PersistableNetworkPayloadStore historicalStore) {
+        int preLive = getMapOfLiveData().keySet().size();
         getMapOfLiveData().keySet().removeAll(historicalStore.getMap().keySet());
+        int postLive = getMapOfLiveData().size();
+        if (preLive > postLive) {
+            log.info("We pruned data from our live data store which are already contained in a historical data store. " +
+                    "We had {} map entries before pruning and have {} entries afterwards.", preLive, postLive);
+        } else {
+            log.info("No pruning from historical data was applied");
+        }
         storage.queueUpForSave(store);
     }
 
