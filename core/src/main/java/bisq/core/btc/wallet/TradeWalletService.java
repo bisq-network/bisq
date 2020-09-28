@@ -1091,7 +1091,7 @@ public class TradeWalletService {
         checkNotNull(input.getValue(), "input.getValue() must not be null");
 
         return new RawTransactionInput(input.getOutpoint().getIndex(),
-                input.getConnectedOutput().getParentTransaction().bitcoinSerialize(),
+                input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false),
                 input.getValue().value);
     }
 
