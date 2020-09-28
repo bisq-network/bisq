@@ -100,6 +100,10 @@ class CoreDisputeAgentsService {
                     signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
                     registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
                     return;
+                default:
+                    // Codacy requires default label in switch, Intellij does not.
+                    //noinspection UnnecessaryReturnStatement
+                    return;
             }
         } else {
             throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentTypeString);
