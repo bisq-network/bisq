@@ -985,7 +985,7 @@ public class BtcWalletService extends WalletService {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
                 // We use a dummy address for the output
-                final String dummyReceiver = getFreshAddressEntry().getAddressString();
+                final String dummyReceiver = LegacyAddress.fromKey(params, new ECKey()).toBase58();
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, dummyReceiver, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
