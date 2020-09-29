@@ -146,13 +146,11 @@ public abstract class NetworkNode implements MessageListener {
                         existingConnection = getOutboundConnection(peersNodeAddress);
 
                     if (existingConnection != null) {
-
                         log.debug("We found in the meantime a connection for peersNodeAddress {}, " +
                                         "so we use that for sending the message.\n" +
                                         "That can happen if Tor needs long for creating a new outbound connection.\n" +
                                         "We might have got a new inbound or outbound connection.",
                                 peersNodeAddress.getFullAddress());
-
 
                         try {
                             socket.close();

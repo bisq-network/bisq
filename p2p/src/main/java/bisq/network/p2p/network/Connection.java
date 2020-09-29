@@ -232,7 +232,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 try {
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
-
                     if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                         setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -524,6 +523,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             //noinspection UnstableApiUsage
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
+            //noinspection UnstableApiUsage
             MoreExecutors.shutdownAndAwaitTermination(bundleSender, 500, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete {}", this.toString());
