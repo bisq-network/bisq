@@ -31,6 +31,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
+import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
@@ -333,7 +334,9 @@ public class OfferUtil {
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
-                                                      String currencyCode) {
+                                                      String currencyCode,
+                                                      Preferences preferences,
+                                                      OfferPayload.Direction direction) {
         Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
@@ -350,6 +353,13 @@ public class OfferUtil {
         }
 
         extraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+        if (currencyCode.equals("XMR") && direction == OfferPayload.Direction.SELL) {
+            preferences.getAutoConfirmSettingsList().stream()
+                    .filter(e -> e.getCurrencyCode().equals("XMR"))
+                    .filter(AutoConfirmSettings::isEnabled)
+                    .forEach(e -> extraDataMap.put(OfferPayload.XMR_AUTO_CONF, "1"));
+        }
 
         return extraDataMap.isEmpty() ? null : extraDataMap;
     }
