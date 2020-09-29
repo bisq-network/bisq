@@ -33,6 +33,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Random;
@@ -153,7 +154,7 @@ public class RequestBlocksHandler implements MessageListener {
                                 "Might be caused by a previous timeout.");
                     }
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } else {
             log.warn("We have stopped already. We ignore that requestData call.");
         }

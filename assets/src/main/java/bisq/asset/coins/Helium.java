@@ -17,15 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Helium extends Coin {
 
     public Helium() {
-        super("Helium", "HLM", new Base58BitcoinAddressValidator(new HeliumParams()));
+        super("Helium", "HLM", new Base58AddressValidator(new HeliumParams()));
     }
 
     public static class HeliumParams extends NetworkParametersAdapter {
@@ -33,7 +32,6 @@ public class Helium extends Coin {
         public HeliumParams() {
             addressHeader = 63;
             p2shHeader = 5;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

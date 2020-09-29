@@ -18,8 +18,6 @@
 package bisq.asset.coins;
 
 import bisq.asset.*;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
 
 public class Genesis extends Coin {
 
@@ -27,7 +25,7 @@ public class Genesis extends Coin {
         super("Genesis", "GENX", new GenesisAddressValidator());
     }
 
-    public static class GenesisAddressValidator extends Base58BitcoinAddressValidator {
+    public static class GenesisAddressValidator extends Base58AddressValidator {
 
         public GenesisAddressValidator() {
             super(new GenesisParams());
@@ -51,7 +49,6 @@ public class Genesis extends Coin {
         public GenesisParams() {
             addressHeader = 28;
             p2shHeader = 63;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

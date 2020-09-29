@@ -74,13 +74,14 @@ public class TakerPublishFeeTx extends TradeTask {
                 // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(takeOfferFeeTx));
 
+                // We use a short timeout as there are issues with BSQ txs. See comment in TxBroadcaster
                 bsqWalletService.broadcastTx(takeOfferFeeTx,
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(@Nullable Transaction transaction) {
                                 if (!completed) {
                                     if (transaction != null) {
-                                        trade.setTakerFeeTxId(transaction.getHashAsString());
+                                        trade.setTakerFeeTxId(transaction.getTxId().toString());
                                         processModel.setTakeOfferFeeTx(transaction);
                                         trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
 
@@ -104,7 +105,8 @@ public class TakerPublishFeeTx extends TradeTask {
                                     log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                                 }
                             }
-                        });
+                        },
+                        1);
             }
         } catch (Throwable t) {
             failed(t);

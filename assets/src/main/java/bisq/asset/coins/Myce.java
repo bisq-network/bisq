@@ -17,21 +17,20 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Myce extends Coin {
 
     public Myce() {
-        super("Myce", "YCE", new Base58BitcoinAddressValidator(new MyceParams()));
+        super("Myce", "YCE", new Base58AddressValidator(new MyceParams()));
     }
-        
+
     public static class MyceParams extends NetworkParametersAdapter {
         public MyceParams() {
             addressHeader = 50;
             p2shHeader = 85;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

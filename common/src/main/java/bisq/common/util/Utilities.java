@@ -170,6 +170,19 @@ public class Utilities {
         return getOSName().contains("win");
     }
 
+    /**
+     * @return True, if Bisq is running on a virtualized OS within Qubes, false otherwise
+     */
+    public static boolean isQubesOS() {
+        // For Linux qubes, "os.version" looks like "4.19.132-1.pvops.qubes.x86_64"
+        // The presence of the "qubes" substring indicates this Linux is running as a qube
+        // This is the case for all 3 virtualization modes (PV, PVH, HVM)
+        // In addition, this works for both simple AppVMs, as well as for StandaloneVMs
+        // TODO This might not work for detecting Qubes virtualization for other OSes
+        // like Windows
+        return getOSVersion().contains("qubes");
+    }
+
     public static boolean isOSX() {
         return getOSName().contains("mac") || getOSName().contains("darwin");
     }

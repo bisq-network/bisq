@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -27,7 +27,7 @@ public class DeepOnion extends Coin {
         super("DeepOnion", "ONION", new DeepOnionAddressValidator());
     }
 
-    public static class DeepOnionAddressValidator extends Base58BitcoinAddressValidator {
+    public static class DeepOnionAddressValidator extends Base58AddressValidator {
 
         public DeepOnionAddressValidator() {
             super(new DeepOnionParams());
@@ -48,7 +48,6 @@ public class DeepOnion extends Coin {
             super();
             addressHeader = 31;
             p2shHeader = 78;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

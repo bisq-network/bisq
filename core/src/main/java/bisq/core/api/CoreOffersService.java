@@ -58,7 +58,7 @@ class CoreOffersService {
         this.user = user;
     }
 
-    public List<Offer> getOffers(String direction, String fiatCurrencyCode) {
+    List<Offer> getOffers(String direction, String fiatCurrencyCode) {
         List<Offer> offers = offerBookService.getOffers().stream()
                 .filter(o -> {
                     var offerOfWantedDirection = o.getDirection().name().equalsIgnoreCase(direction);
@@ -77,16 +77,16 @@ class CoreOffersService {
         return offers;
     }
 
-    public void createOffer(String currencyCode,
-                            String directionAsString,
-                            long priceAsLong,
-                            boolean useMarketBasedPrice,
-                            double marketPriceMargin,
-                            long amountAsLong,
-                            long minAmountAsLong,
-                            double buyerSecurityDeposit,
-                            String paymentAccountId,
-                            TransactionResultHandler resultHandler) {
+    void createOffer(String currencyCode,
+                     String directionAsString,
+                     long priceAsLong,
+                     boolean useMarketBasedPrice,
+                     double marketPriceMargin,
+                     long amountAsLong,
+                     long minAmountAsLong,
+                     double buyerSecurityDeposit,
+                     String paymentAccountId,
+                     TransactionResultHandler resultHandler) {
         String offerId = createOfferService.getRandomOfferId();
         OfferPayload.Direction direction = OfferPayload.Direction.valueOf(directionAsString);
         Price price = Price.valueOf(currencyCode, priceAsLong);
@@ -111,18 +111,18 @@ class CoreOffersService {
                 resultHandler);
     }
 
-    public void createOffer(String offerId,
-                            String currencyCode,
-                            OfferPayload.Direction direction,
-                            Price price,
-                            boolean useMarketBasedPrice,
-                            double marketPriceMargin,
-                            Coin amount,
-                            Coin minAmount,
-                            double buyerSecurityDeposit,
-                            PaymentAccount paymentAccount,
-                            boolean useSavingsWallet,
-                            TransactionResultHandler resultHandler) {
+    void createOffer(String offerId,
+                     String currencyCode,
+                     OfferPayload.Direction direction,
+                     Price price,
+                     boolean useMarketBasedPrice,
+                     double marketPriceMargin,
+                     Coin amount,
+                     Coin minAmount,
+                     double buyerSecurityDeposit,
+                     PaymentAccount paymentAccount,
+                     boolean useSavingsWallet,
+                     TransactionResultHandler resultHandler) {
         Coin useDefaultTxFee = Coin.ZERO;
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,

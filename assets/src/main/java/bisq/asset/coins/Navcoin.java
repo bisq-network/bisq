@@ -17,20 +17,19 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Navcoin extends Coin {
     public Navcoin() {
-        super("Navcoin", "NAV", new Base58BitcoinAddressValidator(new NavcoinParams()));
+        super("Navcoin", "NAV", new Base58AddressValidator(new NavcoinParams()));
     }
 
     public static class NavcoinParams extends NetworkParametersAdapter {
         public NavcoinParams() {
             this.addressHeader = 53;
             this.p2shHeader = 85;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

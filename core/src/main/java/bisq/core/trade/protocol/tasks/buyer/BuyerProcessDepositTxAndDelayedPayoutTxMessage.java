@@ -70,7 +70,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             // If we got already the confirmation we don't want to apply an earlier state
-            if (trade.getState() != Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK)
+            if (trade.getState().ordinal() < Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK.ordinal())
                 trade.setState(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
 
             processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);

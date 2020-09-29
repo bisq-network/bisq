@@ -59,7 +59,7 @@ public class BuyerSetupDepositTxListener extends TradeTask {
                 final NetworkParameters params = walletService.getParams();
                 Transaction preparedDepositTx = new Transaction(params, processModel.getPreparedDepositTx());
                 checkArgument(!preparedDepositTx.getOutputs().isEmpty(), "preparedDepositTx.getOutputs() must not be empty");
-                Address depositTxAddress = preparedDepositTx.getOutput(0).getAddressFromP2SH(params);
+                Address depositTxAddress = preparedDepositTx.getOutput(0).getScriptPubKey().getToAddress(params);
                 final TransactionConfidence confidence = walletService.getConfidenceForAddress(depositTxAddress);
                 if (isInNetwork(confidence)) {
                     applyConfidence(confidence);

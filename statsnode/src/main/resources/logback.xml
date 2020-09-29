@@ -13,5 +13,6 @@
     <logger name="bisq.common.persistence.PersistenceManager" level="WARN"/>
 
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
+    <logger name="com.neemre.btcdcli4j" level="WARN"/>
 
 </configuration>

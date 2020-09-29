@@ -103,7 +103,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.io.IOException;
 
@@ -229,6 +229,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Runnable osxKeyLoggerWarningHandler;
+    @Setter
+    @Nullable
+    private Runnable qubesOSInfoHandler;
 
     @Getter
     final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
@@ -354,6 +357,7 @@ public class BisqSetup {
         checkCryptoSetup();
         checkForCorrectOSArchitecture();
         checkOSXVersion();
+        checkIfRunningOnQubesOS();
     }
 
     private void step3() {
@@ -674,6 +678,17 @@ public class BisqSetup {
             } catch (InvalidVersionException | NumberFormatException e) {
                 log.warn(e.getMessage());
             }
+        }
+    }
+
+    /**
+     * If Bisq is running on an OS that is virtualized under Qubes, show info popup with
+     * link to the Setup Guide. The guide documents what other steps are needed, in
+     * addition to installing the Linux package (qube sizing, etc)
+     */
+    private void checkIfRunningOnQubesOS() {
+        if (Utilities.isQubesOS() && qubesOSInfoHandler != null) {
+            qubesOSInfoHandler.run();
         }
     }
 

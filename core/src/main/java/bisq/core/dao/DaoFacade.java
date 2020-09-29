@@ -73,6 +73,7 @@ import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.asset.Asset;
 
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
@@ -95,9 +96,14 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -423,8 +429,16 @@ public class DaoFacade implements DaoSetupService {
             case RESULT:
                 break;
         }
-
         return firstBlock;
+    }
+
+    public Map<Integer, Date> getBlockStartDateByCycleIndex() {
+        AtomicInteger index = new AtomicInteger();
+        Map<Integer, Date> map = new HashMap<>();
+        periodService.getCycles()
+                .forEach(cycle -> daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+                        .ifPresent(block -> map.put(index.getAndIncrement(), new Date(block.getTime()))));
+        return map;
     }
 
     // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
@@ -749,5 +763,33 @@ public class DaoFacade implements DaoSetupService {
         long requiredBondUnit = bondedRoleType.getRequiredBondUnit();
         long baseFactor = daoStateService.getParamValueAsCoin(Param.BONDED_ROLE_FACTOR, height).value;
         return requiredBondUnit * baseFactor;
+    }
+
+    public Set<String> getAllPastParamValues(Param param) {
+        Set<String> set = new HashSet<>();
+        periodService.getCycles().forEach(cycle -> {
+            set.add(getParamValue(param, cycle.getHeightOfFirstBlock()));
+        });
+        return set;
+    }
+
+    public Set<String> getAllDonationAddresses() {
+        // We support any of the past addresses as well as in case the peer has not enabled the DAO or is out of sync we
+        // do not want to break validation.
+        Set<String> allPastParamValues = getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
+
+        // If Dao is deactivated we need to add the default address as getAllPastParamValues will not return us any.
+        if (allPastParamValues.isEmpty()) {
+            allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
+        }
+
+        if (Config.baseCurrencyNetwork().isMainnet()) {
+            // If Dao is deactivated we need to add the past addresses used as well.
+            // This list need to be updated once a new address gets defined.
+            allPastParamValues.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"); // burning man 2019
+            allPastParamValues.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV"); // burningman2
+        }
+
+        return allPastParamValues;
     }
 }

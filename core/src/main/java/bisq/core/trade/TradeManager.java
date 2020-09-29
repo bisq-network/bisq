@@ -86,7 +86,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -135,6 +135,7 @@ public class TradeManager implements PersistedDataHost {
 
     private final PersistenceManager<TradableList<Trade>> persistenceManager;
     private final TradableList<Trade> tradableList = new TradableList<>();
+    @Getter
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
     private List<Trade> tradesForStatistics;
     @Setter
@@ -309,15 +310,11 @@ public class TradeManager implements PersistedDataHost {
                     }
 
                     try {
-                        DelayedPayoutTxValidation.validatePayoutTx(trade,
+                        TradeDataValidation.validatePayoutTx(trade,
                                 trade.getDelayedPayoutTx(),
                                 daoFacade,
                                 btcWalletService);
-                    } catch (DelayedPayoutTxValidation.DonationAddressException |
-                            DelayedPayoutTxValidation.InvalidTxException |
-                            DelayedPayoutTxValidation.InvalidLockTimeException |
-                            DelayedPayoutTxValidation.MissingDelayedPayoutTxException |
-                            DelayedPayoutTxValidation.AmountMismatchException e) {
+                    } catch (TradeDataValidation.ValidationException e) {
                         log.warn("Delayed payout tx exception, trade {}, exception {}", trade.getId(), e.getMessage());
                         if (!allowFaultyDelayedTxs) {
                             // We move it to failed trades so it cannot be continued.
@@ -592,7 +589,7 @@ public class TradeManager implements PersistedDataHost {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
-                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     resultHandler.handleResult();
@@ -817,7 +814,7 @@ public class TradeManager implements PersistedDataHost {
                 .map(trade -> {
                     Transaction depositTx = trade.getDepositTx();
                     if (depositTx != null) {
-                        TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(depositTx.getHashAsString());
+                        TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(depositTx.getTxId().toString());
                         if (confidence != null && confidence.getConfidenceType() != TransactionConfidence.ConfidenceType.BUILDING) {
                             tradeTxException.set(new TradeTxException(Res.get("error.closedTradeWithUnconfirmedDepositTx", trade.getShortId())));
                         } else {
