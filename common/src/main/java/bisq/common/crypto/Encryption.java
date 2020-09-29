@@ -17,8 +17,8 @@
 
 package bisq.common.crypto;
 
-import bisq.common.util.Utilities;
 import bisq.common.util.Hex;
+import bisq.common.util.Utilities;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -66,7 +66,6 @@ public class Encryption {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ASYM_KEY_ALGO);
             keyPairGenerator.initialize(2048);
             KeyPair keyPair = keyPairGenerator.genKeyPair();
-            log.trace("Generate msgEncryptionKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
         } catch (Throwable e) {
             log.error("Could not create key.", e);

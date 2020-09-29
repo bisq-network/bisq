@@ -508,7 +508,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         try {
             socket.close();
         } catch (SocketException e) {
-            log.trace("SocketException at shutdown might be expected " + e.getMessage());
+            log.trace("SocketException at shutdown might be expected {}", e.getMessage());
         } catch (IOException e) {
             log.error("Exception at shutdown. " + e.getMessage());
             e.printStackTrace();

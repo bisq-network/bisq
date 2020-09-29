@@ -17,8 +17,8 @@
 
 package bisq.common.crypto;
 
-import bisq.common.util.Utilities;
 import bisq.common.util.Base64;
+import bisq.common.util.Utilities;
 
 import com.google.common.base.Charsets;
 
@@ -61,7 +61,6 @@ public class Sig {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO);
             keyPairGenerator.initialize(1024);
             KeyPair keyPair = keyPairGenerator.genKeyPair();
-            log.trace("Generate msgSignatureKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
         } catch (NoSuchAlgorithmException e) {
             log.error("Could not create key.", e);
