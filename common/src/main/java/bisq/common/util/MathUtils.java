@@ -115,10 +115,10 @@ public class MathUtils {
     }
 
     public static class MovingAverage {
-        Deque<Long> window;
-        private int size;
+        final Deque<Long> window;
+        private final int size;
         private long sum;
-        private double outlier;
+        private final double outlier;
 
         // Outlier as ratio
         public MovingAverage(int size, double outlier) {
