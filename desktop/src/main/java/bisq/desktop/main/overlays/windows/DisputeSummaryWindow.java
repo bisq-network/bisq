@@ -805,7 +805,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void doClose(Button closeTicketButton) {
-        DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager = getDisputeManager(dispute);
+        DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
         if (disputeManager == null) {
             return;
         }
@@ -850,7 +850,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             summaryText += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
         }
 
-        var disputeManager = checkNotNull(getDisputeManager(dispute));
         disputeManager.sendDisputeResultMessage(disputeResult, dispute, summaryText);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {

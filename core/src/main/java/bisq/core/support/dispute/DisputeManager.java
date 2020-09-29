@@ -265,7 +265,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         tryApplyMessages();
         cleanupDisputes();
 
-        ObservableList<Dispute> disputes = getDisputeList().getList();
+        List<Dispute> disputes = getDisputeList().getList();
         disputes.forEach(dispute -> {
             try {
                 TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
