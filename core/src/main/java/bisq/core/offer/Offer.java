@@ -504,6 +504,21 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return offerPayload.isUseReOpenAfterAutoClose();
     }
 
+    public boolean isXmrAutoConf() {
+        if (!isXmr()) {
+            return false;
+        }
+        if (getExtraDataMap() == null || !getExtraDataMap().containsKey(OfferPayload.XMR_AUTO_CONF)) {
+            return false;
+        }
+
+        return getExtraDataMap().get(OfferPayload.XMR_AUTO_CONF).equals(OfferPayload.XMR_AUTO_CONF_ENABLED_VALUE);
+    }
+
+    public boolean isXmr() {
+        return getCurrencyCode().equals("XMR");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

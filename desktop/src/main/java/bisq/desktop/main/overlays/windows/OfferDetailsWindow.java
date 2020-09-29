@@ -87,7 +87,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter, User user, KeyRing keyRing,
+    public OfferDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                              User user,
+                              KeyRing keyRing,
                               Navigation navigation) {
         this.formatter = formatter;
         this.user = user;
@@ -148,7 +150,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private void addContent() {
         gridPane.getColumnConstraints().get(0).setMinWidth(224);
 
-        int rows = 5;
+        int rows = 6;
         List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
@@ -255,6 +257,14 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), method);
             }
         }
+
+        if (offer.isXmr()) {
+            String isAutoConf = offer.isXmrAutoConf() ?
+                    Res.get("shared.yes") :
+                    Res.get("shared.no");
+            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerbook.xmrAutoConf"), isAutoConf);
+        }
+
         if (showAcceptedBanks) {
             if (paymentMethod.equals(PaymentMethod.SAME_BANK)) {
                 addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.bankId"), acceptedBanks.get(0));

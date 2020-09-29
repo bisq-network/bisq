@@ -235,7 +235,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
                     trade.getTradingPeerNodeAddress().getFullAddress());
 
-        if (checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR") &&
+        if (checkNotNull(trade.getOffer()).isXmr() &&
                 trade.getAssetTxProofResult() != null &&
                 trade.getAssetTxProofResult() != AssetTxProofResult.UNDEFINED) {
             // As the window is already overloaded we replace the tradingPeersPubKeyHash field with the auto-conf state

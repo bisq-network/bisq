@@ -358,7 +358,7 @@ public class OfferUtil {
             preferences.getAutoConfirmSettingsList().stream()
                     .filter(e -> e.getCurrencyCode().equals("XMR"))
                     .filter(AutoConfirmSettings::isEnabled)
-                    .forEach(e -> extraDataMap.put(OfferPayload.XMR_AUTO_CONF, "1"));
+                    .forEach(e -> extraDataMap.put(OfferPayload.XMR_AUTO_CONF, OfferPayload.XMR_AUTO_CONF_ENABLED_VALUE));
         }
 
         return extraDataMap.isEmpty() ? null : extraDataMap;
