@@ -60,8 +60,7 @@ public class Sig {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO);
             keyPairGenerator.initialize(1024);
-            KeyPair keyPair = keyPairGenerator.genKeyPair();
-            return keyPair;
+            return keyPairGenerator.genKeyPair();
         } catch (NoSuchAlgorithmException e) {
             log.error("Could not create key.", e);
             throw new RuntimeException("Could not create key.");

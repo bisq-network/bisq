@@ -65,8 +65,7 @@ public class Encryption {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ASYM_KEY_ALGO);
             keyPairGenerator.initialize(2048);
-            KeyPair keyPair = keyPairGenerator.genKeyPair();
-            return keyPair;
+            return keyPairGenerator.genKeyPair();
         } catch (Throwable e) {
             log.error("Could not create key.", e);
             throw new RuntimeException("Could not create key.");

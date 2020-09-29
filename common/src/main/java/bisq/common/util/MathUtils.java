@@ -72,7 +72,7 @@ public class MathUtils {
     }
 
     public static long doubleToLong(double value) {
-        return new Double(value).longValue();
+        return Double.valueOf(value).longValue();
     }
 
     public static double scaleUpByPowerOf10(double value, int exponent) {

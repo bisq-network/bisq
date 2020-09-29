@@ -815,6 +815,7 @@ public class Config {
     private static String randomAppName() {
         try {
             File file = Files.createTempFile("Bisq", "Temp").toFile();
+            //noinspection ResultOfMethodCallIgnored
             file.delete();
             return file.toPath().getFileName().toString();
         } catch (IOException ex) {
