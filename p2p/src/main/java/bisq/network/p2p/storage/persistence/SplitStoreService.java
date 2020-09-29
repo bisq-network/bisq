@@ -65,7 +65,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
                             "As the requester version is not older as our historical store we do not " +
                                     "add the data to the result map.";
                     log.info("The requester had version {}. Our historical data store has version {}.\n{}",
-                            storeVersion, requestersVersion, details);
+                            requestersVersion, storeVersion, details);
                     return newVersion;
                 })
                 .map(e -> e.getValue().getMap())
