@@ -17,8 +17,6 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.btc.wallet.Restrictions;
-
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.OfferInfo;
 
@@ -34,6 +32,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -63,7 +62,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         String newOfferId = newOffer.getId();
@@ -77,18 +76,22 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
-        OfferInfo offer = getMostRecentOffer("buy", "usd");
-        assertEquals(newOfferId, offer.getId());
-        assertEquals("BUY", offer.getDirection());
-        assertTrue(offer.getUseMarketBasedPrice());
-        assertEquals(10000000, offer.getAmount());
-        assertEquals(10000000, offer.getMinAmount());
-        assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
-        assertEquals("BTC", offer.getBaseCurrencyCode());
-        assertEquals("USD", offer.getCounterCurrencyCode());
+        aliceStubs.offersService.placeOffer(
+                createPlaceOfferRequest(newOfferId,
+                        getDefaultBuyerSecurityDepositAsPercent()));
 
-        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
+        newOffer = getMostRecentOffer("buy", "usd");
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals("BUY", newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("USD", newOffer.getCounterCurrencyCode());
+
+        assertCalculatedPriceIsCorrect(newOffer, priceMarginPctInput);
     }
 
     @Test
@@ -105,7 +108,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         String newOfferId = newOffer.getId();
@@ -119,18 +122,22 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("NZD", newOffer.getCounterCurrencyCode());
 
-        OfferInfo offer = getMostRecentOffer("buy", "nzd");
-        assertEquals(newOfferId, offer.getId());
-        assertEquals("BUY", offer.getDirection());
-        assertTrue(offer.getUseMarketBasedPrice());
-        assertEquals(10000000, offer.getAmount());
-        assertEquals(10000000, offer.getMinAmount());
-        assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
-        assertEquals("BTC", offer.getBaseCurrencyCode());
-        assertEquals("NZD", offer.getCounterCurrencyCode());
+        aliceStubs.offersService.placeOffer(
+                createPlaceOfferRequest(newOfferId,
+                        getDefaultBuyerSecurityDepositAsPercent()));
 
-        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
+        newOffer = getMostRecentOffer("buy", "nzd");
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals("BUY", newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("NZD", newOffer.getCounterCurrencyCode());
+
+        assertCalculatedPriceIsCorrect(newOffer, priceMarginPctInput);
     }
 
     @Test
@@ -147,7 +154,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
 
@@ -162,18 +169,22 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("GBP", newOffer.getCounterCurrencyCode());
 
-        OfferInfo offer = getMostRecentOffer("sell", "gbp");
-        assertEquals(newOfferId, offer.getId());
-        assertEquals("SELL", offer.getDirection());
-        assertTrue(offer.getUseMarketBasedPrice());
-        assertEquals(10000000, offer.getAmount());
-        assertEquals(10000000, offer.getMinAmount());
-        assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
-        assertEquals("BTC", offer.getBaseCurrencyCode());
-        assertEquals("GBP", offer.getCounterCurrencyCode());
+        aliceStubs.offersService.placeOffer(
+                createPlaceOfferRequest(newOfferId,
+                        getDefaultBuyerSecurityDepositAsPercent()));
 
-        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
+        newOffer = getMostRecentOffer("sell", "gbp");
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals("SELL", newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("GBP", newOffer.getCounterCurrencyCode());
+
+        assertCalculatedPriceIsCorrect(newOffer, priceMarginPctInput);
     }
 
     @Test
@@ -190,7 +201,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
 
@@ -205,18 +216,22 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("BRL", newOffer.getCounterCurrencyCode());
 
-        OfferInfo offer = getMostRecentOffer("sell", "brl");
-        assertEquals(newOfferId, offer.getId());
-        assertEquals("SELL", offer.getDirection());
-        assertTrue(offer.getUseMarketBasedPrice());
-        assertEquals(10000000, offer.getAmount());
-        assertEquals(10000000, offer.getMinAmount());
-        assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
-        assertEquals("BTC", offer.getBaseCurrencyCode());
-        assertEquals("BRL", offer.getCounterCurrencyCode());
+        aliceStubs.offersService.placeOffer(
+                createPlaceOfferRequest(newOfferId,
+                        getDefaultBuyerSecurityDepositAsPercent()));
 
-        assertCalculatedPriceIsCorrect(offer, priceMarginPctInput);
+        newOffer = getMostRecentOffer("sell", "brl");
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals("SELL", newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("BRL", newOffer.getCounterCurrencyCode());
+
+        assertCalculatedPriceIsCorrect(newOffer, priceMarginPctInput);
     }
 
     private void assertCalculatedPriceIsCorrect(OfferInfo offer, double priceMarginPctInput) {

@@ -26,6 +26,8 @@ import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OffersGrpc;
+import bisq.proto.grpc.PlaceOfferReply;
+import bisq.proto.grpc.PlaceOfferRequest;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -78,21 +80,30 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     req.getMinAmount(),
                     req.getBuyerSecurityDeposit(),
                     req.getPaymentAccountId());
+            OfferInfo offerInfo = toOfferInfo(offer);
+            CreateOfferReply reply = CreateOfferReply.newBuilder()
+                    .setOffer(offerInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
 
+    @Override
+    public void placeOffer(PlaceOfferRequest req,
+                           StreamObserver<PlaceOfferReply> responseObserver) {
+        try {
             // We don't support atm funding from external wallet to keep it simple.
             boolean useSavingsWallet = true;
             //noinspection ConstantConditions
-            coreApi.placeOffer(offer,
-                    req.getBuyerSecurityDeposit(),
-                    useSavingsWallet,
-                    transaction -> {
-                        OfferInfo offerInfo = toOfferInfo(offer);
-                        CreateOfferReply reply = CreateOfferReply.newBuilder()
-                                .setOffer(offerInfo.toProtoMessage())
-                                .build();
-                        responseObserver.onNext(reply);
-                        responseObserver.onCompleted();
-                    });
+            coreApi.placeOffer(req.getId(), req.getBuyerSecurityDeposit(), useSavingsWallet);
+            PlaceOfferReply reply = PlaceOfferReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

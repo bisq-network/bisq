@@ -17,9 +17,8 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.btc.wallet.Restrictions;
-
 import bisq.proto.grpc.CreateOfferRequest;
+import bisq.proto.grpc.OfferInfo;
 
 import io.grpc.StatusRuntimeException;
 
@@ -31,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -46,16 +46,19 @@ public class ValidateCreateOfferTest extends AbstractCreateOfferTest {
                 .setPaymentAccountId(paymentAccount.getId())
                 .setDirection("buy")
                 .setCurrencyCode("usd")
-                .setAmount(100000000000L)       // 1.0 BTC
-                .setMinAmount(100000000000L)    // 1.0 BTC
+                .setAmount(100000000000L)
+                .setMinAmount(100000000000L)
                 .setUseMarketBasedPrice(false)
                 .setMarketPriceMargin(0.00)
                 .setPrice("10000.0000")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .build();
+        OfferInfo newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                aliceStubs.offersService.createOffer(req).getOffer());
-        assertEquals("UNKNOWN: An error occurred at task ValidateOffer: Amount is larger than 1.00 BTC",
+            aliceStubs.offersService.placeOffer(
+                    createPlaceOfferRequest(newOffer.getId(),
+                            getDefaultBuyerSecurityDepositAsPercent())));
+        assertEquals("UNKNOWN: Error at taskRunner: An error occurred at task ValidateOffer: Amount is larger than 1.00 BTC",
                 exception.getMessage());
     }
 }

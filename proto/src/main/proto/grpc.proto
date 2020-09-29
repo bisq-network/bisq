@@ -49,6 +49,8 @@ service Offers {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
+    rpc PlaceOffer (PlaceOfferRequest) returns (PlaceOfferReply) {
+    }
 }
 
 message GetOffersRequest {
@@ -74,6 +76,14 @@ message CreateOfferRequest {
 
 message CreateOfferReply {
     OfferInfo offer = 1;
+}
+
+message PlaceOfferRequest {
+    string id = 1;
+    double buyerSecurityDeposit = 2;
+}
+
+message PlaceOfferReply {
 }
 
 message OfferInfo {

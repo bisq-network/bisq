@@ -26,6 +26,7 @@ import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.PlaceOfferRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
@@ -67,6 +68,7 @@ public class CliMain {
 
     private enum Method {
         createoffer,
+        placeoffer,
         getoffers,
         createpaymentacct,
         getpaymentaccts,
@@ -223,6 +225,26 @@ public class CliMain {
                     out.println(formatOfferTable(singletonList(reply.getOffer()), currencyCode));
                     return;
                 }
+                case placeoffer: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("incorrect parameter count,"
+                                + " expecting offer-id, security deposit (%)");
+
+                    var offerId = nonOptionArgs.get(1);
+                    double buyerSecurityDeposit;
+                    try {
+                        buyerSecurityDeposit = Double.parseDouble(nonOptionArgs.get(2));
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
+                    }
+                    var request = PlaceOfferRequest.newBuilder()
+                            .setId(offerId)
+                            .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                            .build();
+                    offersService.placeOffer(request);
+                    out.println("offer placed");
+                    return;
+                }
                 case getoffers: {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("incorrect parameter count,"
@@ -360,10 +382,11 @@ public class CliMain {
             stream.format(rowFormat, "getbalance", "", "Get server wallet balance");
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
-            stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
+            stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
             stream.format(rowFormat, "", "security deposit (%)", "");
+            stream.format(rowFormat, "placeoffer", "offer id, security deposit (%)", "Place an offer");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");

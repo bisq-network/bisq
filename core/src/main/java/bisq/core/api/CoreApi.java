@@ -110,7 +110,7 @@ public class CoreApi {
                 paymentAccountId);
     }
 
-    // Not used yet, should be renamed for a new placeoffer api method.
+    @Deprecated
     public Offer createOffer(String offerId,
                              String currencyCode,
                              OfferPayload.Direction direction,
@@ -133,6 +133,11 @@ public class CoreApi {
                 paymentAccount);
     }
 
+    public void placeOffer(String offerId, double buyerSecurityDeposit, boolean useSavingsWallet) {
+        coreOffersService.placeOffer(offerId, buyerSecurityDeposit, useSavingsWallet);
+    }
+
+    @Deprecated
     public Offer placeOffer(Offer offer,
                             double buyerSecurityDeposit,
                             boolean useSavingsWallet,

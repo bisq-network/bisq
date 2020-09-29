@@ -23,6 +23,7 @@ import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
+import bisq.proto.grpc.PlaceOfferRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
@@ -78,6 +79,13 @@ public class MethodTest extends ApiTestCase {
 
     protected final MarketPriceRequest createMarketPriceRequest(String currencyCode) {
         return MarketPriceRequest.newBuilder().setCurrencyCode(currencyCode).build();
+    }
+
+    protected final PlaceOfferRequest createPlaceOfferRequest(String offerId, double buyerSecurityDeposit) {
+        return PlaceOfferRequest.newBuilder()
+                .setId(offerId)
+                .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                .build();
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
