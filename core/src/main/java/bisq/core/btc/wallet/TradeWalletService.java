@@ -36,6 +36,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
@@ -44,6 +45,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -601,6 +603,9 @@ public class TradeWalletService {
             for (int i = 0; i < buyerInputs.size(); i++) {
                 TransactionInput transactionInput = makersDepositTx.getInputs().get(i);
                 depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(transactionInput), buyerInputs.get(i)));
+                if (!TransactionWitness.EMPTY.equals(transactionInput.getWitness())) {
+                    depositTx.getInput(depositTx.getInputs().size()-1).setWitness(transactionInput.getWitness());
+                }
             }
 
             // Add seller inputs
@@ -665,6 +670,10 @@ public class TradeWalletService {
             TransactionInput input = takersDepositTx.getInput(i);
             Script scriptSig = input.getScriptSig();
             myDepositTx.getInput(i).setScriptSig(scriptSig);
+            TransactionWitness witness = input.getWitness();
+            if (!TransactionWitness.EMPTY.equals(witness)) {
+                myDepositTx.getInput(i).setWitness(witness);
+            }
         }
 
         WalletService.printTx("sellerAsMakerFinalizesDepositTx", myDepositTx);
@@ -1165,13 +1174,27 @@ public class TradeWalletService {
         if (sigKey.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
-        TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
-        if (ScriptPattern.isP2PK(scriptPubKey)) {
-            input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        } else if (ScriptPattern.isP2PKH(scriptPubKey)) {
-            input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
+
+        if (ScriptPattern.isP2PK(scriptPubKey) || ScriptPattern.isP2PKH(scriptPubKey)) {
+            Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
+            ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
+            TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
+            if (ScriptPattern.isP2PK(scriptPubKey)) {
+                input.setScriptSig(ScriptBuilder.createInputScript(txSig));
+            } else if (ScriptPattern.isP2PKH(scriptPubKey)) {
+                input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
+            }
+        } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
+            // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
+            // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(sigKey)
+            Script scriptCode = new ScriptBuilder().data(
+                    ScriptBuilder.createOutputScript(LegacyAddress.fromKey(transaction.getParams(), sigKey)).getProgram())
+                    .build();
+            Coin value = input.getValue();
+            TransactionSignature txSig = transaction.calculateWitnessSignature(inputIndex, sigKey, scriptCode, value,
+                    Transaction.SigHash.ALL, false);
+            input.setScriptSig(ScriptBuilder.createEmpty());
+            input.setWitness(TransactionWitness.redeemP2WPKH(txSig, sigKey));
         } else {
             throw new SigningException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }
