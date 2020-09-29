@@ -70,6 +70,9 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
                 })
                 .map(e -> e.getValue().getMap())
                 .forEach(result::putAll);
+
+        log.info("We found {} entries since requesters version {}",
+                result.size(), requestersVersion);
         return result;
     }
 
@@ -123,8 +126,8 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
 
     @Override
     protected void readFromResources(String postFix) {
-        // We create the store for the live data
-        super.readFromResources(postFix);
+        readStore();
+        log.info("We have created the store for the live data: {}", getFileName());
 
         // Now we add our historical data stores. As they are immutable after created we use an ImmutableMap
         ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
@@ -167,7 +170,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
         int postLive = getMapOfLiveData().size();
         if (preLive > postLive) {
             log.info("We pruned data from our live data store which are already contained in a historical data store. " +
-                    "We had {} map entries before pruning and have {} entries afterwards.", preLive, postLive);
+                    "The live map had {} entries before pruning and has {} entries afterwards.", preLive, postLive);
         } else {
             log.info("No pruning from historical data was applied");
         }
