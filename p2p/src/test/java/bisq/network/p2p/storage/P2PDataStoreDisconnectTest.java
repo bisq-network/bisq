@@ -37,10 +37,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static bisq.network.p2p.storage.TestState.SavedTestState;
+import static bisq.network.p2p.storage.TestState.getTestNodeAddress;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static bisq.network.p2p.storage.TestState.*;
 
 /**
  * Tests of the P2PDataStore ConnectionListener interface.
