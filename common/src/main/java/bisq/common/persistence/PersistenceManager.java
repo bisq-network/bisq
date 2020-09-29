@@ -346,7 +346,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         }
     }
 
-    public ExecutorService getWriteToDiskExecutor() {
+    private ExecutorService getWriteToDiskExecutor() {
         if (writeToDiskExecutor == null) {
             String name = "Write-" + fileName + "_to-disk";
             writeToDiskExecutor = Utilities.getSingleThreadExecutor(name);
