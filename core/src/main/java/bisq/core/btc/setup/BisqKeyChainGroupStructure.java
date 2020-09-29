@@ -47,10 +47,11 @@ public class BisqKeyChainGroupStructure implements KeyChainGroupStructure {
             new ChildNumber(142, true),
             ChildNumber.ZERO_HARDENED);
 
-    public static final ImmutableList<ChildNumber> BIP44_BSQ_SEGWIT_ACCOUNT_PATH = ImmutableList.of(
-            new ChildNumber(44, true),
-            new ChildNumber(142, true),
-            ChildNumber.ONE_HARDENED);
+    // We don't use segwit for BSQ
+    // public static final ImmutableList<ChildNumber> BIP44_BSQ_SEGWIT_ACCOUNT_PATH = ImmutableList.of(
+    //        new ChildNumber(44, true),
+    //        new ChildNumber(142, true),
+    //        ChildNumber.ONE_HARDENED);
 
     private boolean isBsqWallet;
 
@@ -71,7 +72,8 @@ public class BisqKeyChainGroupStructure implements KeyChainGroupStructure {
             if (outputScriptType == null || outputScriptType == Script.ScriptType.P2PKH)
                 return BIP44_BSQ_NON_SEGWIT_ACCOUNT_PATH;
             else if (outputScriptType == Script.ScriptType.P2WPKH)
-                return BIP44_BSQ_SEGWIT_ACCOUNT_PATH;
+                //return BIP44_BSQ_SEGWIT_ACCOUNT_PATH;
+                throw new IllegalArgumentException(outputScriptType.toString());
             else
                 throw new IllegalArgumentException(outputScriptType.toString());
         }
