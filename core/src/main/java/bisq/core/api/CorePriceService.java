@@ -24,6 +24,8 @@ import bisq.common.util.MathUtils;
 
 import javax.inject.Inject;
 
+import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static java.lang.String.format;
@@ -41,10 +43,10 @@ class CorePriceService {
 
     public double getMarketPrice(String currencyCode) {
         if (!priceFeedService.hasPrices())
-            throw new IllegalStateException(format("price feed service has no prices"));
+            throw new IllegalStateException("price feed service has no prices");
 
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode.toUpperCase());
-        if (marketPrice.isPriceAvailable()) {
+        if (Objects.requireNonNull(marketPrice).isPriceAvailable()) {
             return MathUtils.roundDouble(marketPrice.getPrice(), 4);
         } else {
             throw new IllegalStateException(format("'%s' price is not available", currencyCode));
