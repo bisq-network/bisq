@@ -28,10 +28,8 @@ import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
-import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
-import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -234,32 +232,18 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 try {
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
-                    protobuf.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
-                    log.trace("Sending message: {}", Utilities.toTruncatedString(proto.toString(), 10000));
 
-                    if (networkEnvelope instanceof Ping || networkEnvelope instanceof RefreshOfferMessage) {
-                        // pings and offer refresh msg we don't want to log in production
-                        log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Sending direct message to peer" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, proto.toString(), proto.getSerializedSize());
-                    } else if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
-                        setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+                  if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
+                      setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
-                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Sending direct message to peer" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), -1);
-                    } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
-                        setPeerType(Connection.PeerType.PEER);
-                    } else {
-                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), proto.getSerializedSize());
-                    }
+                      log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                      "Sending direct message to peer" +
+                                      "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                      "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                              peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), -1);
+                  } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
+                      setPeerType(Connection.PeerType.PEER);
+                  }
 
                     // Throttle outbound network_messages
                     long now = System.currentTimeMillis();
