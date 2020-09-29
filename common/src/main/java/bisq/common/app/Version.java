@@ -35,10 +35,7 @@ public class Version {
     /**
      * Holds a list of the versions of tagged resource files for optimizing the getData requests.
      */
-    // TODO For dev testing
-    public static final List<String> HISTORY = Arrays.asList("1.3.8", "1.3.9");
-    // For release
-    //public static final List<String> HISTORY = Arrays.asList("1.4.0");
+    public static final List<String> HISTORY = Arrays.asList("1.4.0");
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
