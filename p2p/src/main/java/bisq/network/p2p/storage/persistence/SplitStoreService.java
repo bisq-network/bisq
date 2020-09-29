@@ -127,7 +127,8 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     @Override
     protected void readFromResources(String postFix) {
         readStore();
-        log.info("We have created the store for the live data: {}", getFileName());
+        log.info("We have created the {} store for the live data and filled it with {} entries from the persisted data.",
+                getFileName(), getMapOfLiveData().size());
 
         // Now we add our historical data stores. As they are immutable after created we use an ImmutableMap
         ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
@@ -149,7 +150,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
                                                   ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalDataBuilder,
                                                   ImmutableMap.Builder<String, PersistableNetworkPayloadStore> storesByVersionBuilder) {
         String fileName = getFileName() + "_" + version;
-        makeFileFromResourceFile(fileName, postFix);
+        boolean wasCreatedFromResources = makeFileFromResourceFile(fileName, postFix);
 
         // If resource file does not exist we return null. We do not create a new store as it would never get filled.
         PersistableNetworkPayloadStore historicalStore = storage.getPersisted(fileName);
@@ -161,18 +162,21 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
         storesByVersionBuilder.put(version, historicalStore);
         allHistoricalDataBuilder.putAll(historicalStore.getMap());
 
-        pruneStore(historicalStore);
+        if (wasCreatedFromResources) {
+            pruneStore(historicalStore, version);
+        }
     }
 
-    private void pruneStore(PersistableNetworkPayloadStore historicalStore) {
+    private void pruneStore(PersistableNetworkPayloadStore historicalStore, String version) {
         int preLive = getMapOfLiveData().keySet().size();
         getMapOfLiveData().keySet().removeAll(historicalStore.getMap().keySet());
         int postLive = getMapOfLiveData().size();
         if (preLive > postLive) {
-            log.info("We pruned data from our live data store which are already contained in a historical data store. " +
-                    "The live map had {} entries before pruning and has {} entries afterwards.", preLive, postLive);
+            log.info("We pruned data from our live data store which are already contained in the historical data store with version {}. " +
+                            "The live map had {} entries before pruning and has {} entries afterwards.",
+                    version, preLive, postLive);
         } else {
-            log.info("No pruning from historical data was applied");
+            log.info("No pruning from historical data store with version {} was applied", version);
         }
         storage.queueUpForSave(store);
     }

@@ -96,7 +96,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         }
     }
 
-    protected void makeFileFromResourceFile(String fileName, String postFix) {
+    protected boolean makeFileFromResourceFile(String fileName, String postFix) {
         String resourceFileName = fileName + postFix;
         File dbDir = new File(absolutePathOfStorageDir);
         if (!dbDir.exists() && !dbDir.mkdir())
@@ -107,6 +107,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
             try {
                 log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
                 FileUtil.resourceToFile(resourceFileName, destinationFile);
+                return true;
             } catch (ResourceNotFoundException e) {
                 log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
             } catch (Throwable e) {
@@ -117,6 +118,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         } else {
             log.info("No resource file have been copied. {} exists already.", fileName);
         }
+        return false;
     }
 
     protected T getStore(String fileName) {
