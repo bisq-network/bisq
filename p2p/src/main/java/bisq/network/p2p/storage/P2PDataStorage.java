@@ -47,11 +47,11 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
+import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
-import bisq.network.p2p.storage.persistence.SplitStoreService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -237,8 +237,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
         // Pre v 1.4.0 requests do not have set the requesters version field so it is null.
-        // The methods in splitStoreService will return all historical data in that case.
-        // mapForDataResponse contains the filtered by version data from splitStoreService as well as all other
+        // The methods in HistoricalDataStoreService will return all historical data in that case.
+        // mapForDataResponse contains the filtered by version data from HistoricalDataStoreService as well as all other
         // maps of the remaining appendOnlyDataStoreServices.
         Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
@@ -280,11 +280,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
                     Map<ByteArray, PersistableNetworkPayload> serviceMap;
-                    if (service instanceof SplitStoreService) {
-                        var splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
+                    if (service instanceof HistoricalDataStoreService) {
+                        var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
                         // As we add the version to our request we only use the live data. Eventually missing data will be
                         // derived from the version.
-                        serviceMap = splitStoreService.getMapOfLiveData();
+                        serviceMap = historicalDataStoreService.getMapOfLiveData();
                         map.putAll(serviceMap);
                     } else {
                         serviceMap = service.getMap();
@@ -301,9 +301,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
                     Map<ByteArray, PersistableNetworkPayload> serviceMap;
-                    if (service instanceof SplitStoreService) {
-                        var splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
-                        serviceMap = splitStoreService.getMapSinceVersion(requestersVersion);
+                    if (service instanceof HistoricalDataStoreService) {
+                        var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
+                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion);
                         map.putAll(serviceMap);
                     } else {
                         serviceMap = service.getMap();

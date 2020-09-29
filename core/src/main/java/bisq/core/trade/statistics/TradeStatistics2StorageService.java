@@ -18,7 +18,7 @@
 package bisq.core.trade.statistics;
 
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.SplitStoreService;
+import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.storage.Storage;
@@ -31,7 +31,7 @@ import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeStatistics2StorageService extends SplitStoreService<TradeStatistics2Store> {
+public class TradeStatistics2StorageService extends HistoricalDataStoreService<TradeStatistics2Store> {
     private static final String FILE_NAME = "TradeStatistics2Store";
 
 

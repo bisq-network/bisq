@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * request so the responding (seed)node can figure out if we miss any of the historical data.
  */
 @Slf4j
-public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore> extends MapStoreService<T, PersistableNetworkPayload> {
+public abstract class HistoricalDataStoreService<T extends PersistableNetworkPayloadStore> extends MapStoreService<T, PersistableNetworkPayload> {
     private ImmutableMap<String, PersistableNetworkPayloadStore> storesByVersion;
     // Cache to avoid that we have to recreate the historical data at each request
     private ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
@@ -32,7 +32,7 @@ public abstract class SplitStoreService<T extends PersistableNetworkPayloadStore
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SplitStoreService(File storageDir, Storage<T> storage) {
+    public HistoricalDataStoreService(File storageDir, Storage<T> storage) {
         super(storageDir, storage);
     }
 
