@@ -348,7 +348,6 @@ public class TradeWalletService {
                 "Reserve amount does not equal input amount");
         dummyTX.addInput(reservedForTradeOutput);
 
-        WalletService.removeSignatures(dummyTX);
         WalletService.verifyTransaction(dummyTX);
 
         //WalletService.printTx("dummyTX", dummyTX);
