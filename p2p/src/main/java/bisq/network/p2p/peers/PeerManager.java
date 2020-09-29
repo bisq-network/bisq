@@ -36,9 +36,8 @@ import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -224,8 +223,10 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         boolean seedNode = isSeedNode(connection);
         Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
         if (log.isDebugEnabled()) {
+            String peer = addressOptional.map(NodeAddress::getFullAddress).orElseGet(() ->
+                    "not known yet (connection id=" + connection.getUid() + ")");
             log.debug("onConnection: peer = {}{}",
-                    (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
+                    peer,
                     seedNode ? " (SeedNode)" : "");
         }
 
