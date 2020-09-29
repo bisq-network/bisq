@@ -139,8 +139,14 @@ public class CoreApi {
     // PaymentAccounts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
-        paymentAccountsService.createPaymentAccount(accountName, accountNumber, fiatCurrencyCode);
+    public void createPaymentAccount(String paymentMethodId,
+                                     String accountName,
+                                     String accountNumber,
+                                     String currencyCode) {
+        paymentAccountsService.createPaymentAccount(paymentMethodId,
+                accountName,
+                accountNumber,
+                currencyCode);
     }
 
     public Set<PaymentAccount> getPaymentAccounts() {

@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -53,9 +54,12 @@ import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -88,11 +92,13 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                               TradeManager tradeManager,
                               ClosedTradableManager closedTradableManager,
                               OpenOfferManager openOfferManager,
-                              PubKeyRing pubKeyRing,
+                              DaoFacade daoFacade,
+                              KeyRing keyRing,
                               ArbitrationDisputeListService arbitrationDisputeListService,
+                              Config config,
                               PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, arbitrationDisputeListService, priceFeedService);
+                openOfferManager, daoFacade, keyRing, arbitrationDisputeListService, config, priceFeedService);
     }
 
 
@@ -134,7 +140,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     }
 
     @Override
-    protected Trade.DisputeState getDisputeState_StartedByPeer() {
+    protected Trade.DisputeState getDisputeStateStartedByPeer() {
         return Trade.DisputeState.DISPUTE_STARTED_BY_PEER;
     }
 
@@ -277,7 +283,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                             @Override
                             public void onSuccess(Transaction transaction) {
                                 // after successful publish we send peer the tx
-                                dispute.setDisputePayoutTxId(transaction.getHashAsString());
+                                dispute.setDisputePayoutTxId(transaction.getTxId().toString());
                                 sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
                                 updateTradeOrOpenOfferManager(tradeId);
                             }
@@ -297,7 +303,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 } else {
                     log.warn("We already got a payout tx. That might be the case if the other peer did not get the " +
                             "payout tx and opened a dispute. TradeId = " + tradeId);
-                    dispute.setDisputePayoutTxId(payoutTx.getHashAsString());
+                    dispute.setDisputePayoutTxId(payoutTx.getTxId().toString());
                     sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);
 
                     success = true;
@@ -321,7 +327,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             updateTradeOrOpenOfferManager(tradeId);
 
             throw new RuntimeException(errorMessage);
-        } catch (AddressFormatException | WalletException e) {
+        } catch (AddressFormatException | WalletException | SignatureDecodeException e) {
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
             log.error(errorMessage, e);
             success = false;
@@ -362,7 +368,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
         Transaction committedDisputePayoutTx = WalletService.maybeAddNetworkTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction(), btcWalletService.getWallet());
 
-        dispute.setDisputePayoutTxId(committedDisputePayoutTx.getHashAsString());
+        dispute.setDisputePayoutTxId(committedDisputePayoutTx.getTxId().toString());
         BtcWalletService.printTx("Disputed payoutTx received from peer", committedDisputePayoutTx);
 
         // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute

@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -100,6 +101,15 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     @Setter
     @Nullable
     private String delayedPayoutTxId;
+
+    // Added at v1.3.9
+    @Setter
+    @Nullable
+    private String donationAddressOfDelayedPayoutTx;
+    // We do not persist uid, it is only used by dispute agents to guarantee an uid.
+    @Setter
+    @Nullable
+    private transient String uid;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +199,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         this.supportType = supportType;
 
         id = tradeId + "_" + traderId;
+        uid = UUID.randomUUID().toString();
     }
 
     @Override
@@ -225,6 +236,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         Optional.ofNullable(supportType).ifPresent(result -> builder.setSupportType(SupportType.toProtoMessage(supportType)));
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
+        Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
         return builder.build();
     }
 
@@ -266,6 +278,11 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         String delayedPayoutTxId = proto.getDelayedPayoutTxId();
         if (!delayedPayoutTxId.isEmpty()) {
             dispute.setDelayedPayoutTxId(delayedPayoutTxId);
+        }
+
+        String donationAddressOfDelayedPayoutTx = proto.getDonationAddressOfDelayedPayoutTx();
+        if (!donationAddressOfDelayedPayoutTx.isEmpty()) {
+            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx);
         }
 
         return dispute;
@@ -339,6 +356,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         return "Dispute{" +
                 "\n     tradeId='" + tradeId + '\'' +
                 ",\n     id='" + id + '\'' +
+                ",\n     uid='" + uid + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
                 ",\n     disputeOpenerIsMaker=" + disputeOpenerIsMaker +
@@ -363,6 +381,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 ",\n     supportType=" + supportType +
                 ",\n     mediatorsDisputeResult='" + mediatorsDisputeResult + '\'' +
                 ",\n     delayedPayoutTxId='" + delayedPayoutTxId + '\'' +
+                ",\n     donationAddressOfDelayedPayoutTx='" + donationAddressOfDelayedPayoutTx + '\'' +
                 "\n}";
     }
 }

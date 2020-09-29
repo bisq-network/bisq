@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -29,7 +29,7 @@ public class IdaPay extends Coin {
     }
 
 
-    public static class IdaPayAddressValidator extends Base58BitcoinAddressValidator {
+    public static class IdaPayAddressValidator extends Base58AddressValidator {
 
         public IdaPayAddressValidator() {
             super(new IdaPayParams());
@@ -51,7 +51,6 @@ public class IdaPay extends Coin {
             super();
             addressHeader = 29;
             p2shHeader = 36;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

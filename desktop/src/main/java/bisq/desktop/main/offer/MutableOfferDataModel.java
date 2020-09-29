@@ -174,7 +174,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
         useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
-        buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent(null));
+        buyerSecurityDeposit.set(Restrictions.getMinBuyerSecurityDepositAsPercent());
 
         btcBalanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -334,10 +334,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     private void setSuggestedSecurityDeposit(PaymentAccount paymentAccount) {
-        var minSecurityDeposit = preferences.getBuyerSecurityDepositAsPercent(getPaymentAccount());
+        var minSecurityDeposit = Restrictions.getMinBuyerSecurityDepositAsPercent();
         try {
             if (getTradeCurrency() == null) {
-                setBuyerSecurityDeposit(minSecurityDeposit, false);
+                setBuyerSecurityDeposit(minSecurityDeposit);
                 return;
             }
             // Get average historic prices over for the prior trade period equaling the lock time
@@ -360,7 +360,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             var min = extremes[0];
             var max = extremes[1];
             if (min == 0d || max == 0d) {
-                setBuyerSecurityDeposit(minSecurityDeposit, false);
+                setBuyerSecurityDeposit(minSecurityDeposit);
                 return;
             }
             // Suggested deposit is double the trade range over the previous lock time period, bounded by min/max deposit
@@ -640,12 +640,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.volume.set(volume);
     }
 
-    void setBuyerSecurityDeposit(double value, boolean persist) {
+    void setBuyerSecurityDeposit(double value) {
         this.buyerSecurityDeposit.set(value);
-        if (persist) {
-            // Only expected to persist for manually changed deposit values
-            preferences.setBuyerSecurityDepositAsPercent(value, getPaymentAccount());
-        }
     }
 
     protected boolean isUseMarketBasedPriceValue() {

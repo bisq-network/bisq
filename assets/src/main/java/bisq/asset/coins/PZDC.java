@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -29,7 +29,7 @@ public class PZDC extends Coin {
     }
 
 
-    public static class PZDCAddressValidator extends Base58BitcoinAddressValidator {
+    public static class PZDCAddressValidator extends Base58AddressValidator {
 
         public PZDCAddressValidator() {
             super(new PZDCParams());
@@ -50,7 +50,6 @@ public class PZDC extends Coin {
         public PZDCParams() {
             addressHeader = 55;
             p2shHeader = 13;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

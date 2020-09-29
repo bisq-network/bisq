@@ -18,18 +18,18 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Dextro extends Coin {
 
     public Dextro() {
-        super("Dextro", "DXO", new Base58BitcoinAddressValidator(new DextroParams()));
+        super("Dextro", "DXO", new Base58AddressValidator(new DextroParams()));
     }
 
 
-    public static class DextroAddressValidator extends Base58BitcoinAddressValidator {
+    public static class DextroAddressValidator extends Base58AddressValidator {
 
         public DextroAddressValidator() {
             super(new DextroParams());
@@ -44,14 +44,13 @@ public class Dextro extends Coin {
         }
     }
 
-    
+
     public static class DextroParams extends NetworkParametersAdapter {
 
         public DextroParams() {
             super();
             addressHeader = 30;
             p2shHeader = 90;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

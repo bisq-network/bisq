@@ -17,7 +17,7 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 import bisq.asset.AddressValidationResult;
@@ -32,10 +32,9 @@ public class Particl extends Coin {
         public ParticlMainNetParams() {
             this.addressHeader = 56;
             this.p2shHeader = 60;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
-   public static class ParticlMainNetAddressValidator extends Base58BitcoinAddressValidator {
+   public static class ParticlMainNetAddressValidator extends Base58AddressValidator {
 
         public ParticlMainNetAddressValidator() {
             super(new ParticlMainNetParams());
@@ -49,5 +48,5 @@ public class Particl extends Coin {
             return super.validate(address);
         }
     }
-    
+
 }

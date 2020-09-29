@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
+import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
@@ -68,15 +70,21 @@ public class ApiTestCase {
     // gRPC service stubs are used by method & scenario tests, but not e2e tests.
     private static final Map<BisqAppConfig, GrpcStubs> grpcStubsCache = new HashMap<>();
 
-    public static void setUpScaffold(String supportingApps)
+    public static void setUpScaffold(Enum<?>... supportingApps)
             throws InterruptedException, ExecutionException, IOException {
-        scaffold = new Scaffold(supportingApps).setUp();
+        scaffold = new Scaffold(stream(supportingApps).map(Enum::name)
+                .collect(Collectors.joining(",")))
+                .setUp();
         config = scaffold.config;
         bitcoinCli = new BitcoinCliHelper((config));
     }
 
     public static void setUpScaffold(String[] params)
             throws InterruptedException, ExecutionException, IOException {
+        // Test cases needing to pass more than just an ApiTestConfig
+        // --supportingApps option will use this setup method, but the
+        // --supportingApps option will need to be passed too, with its comma
+        // delimited app list value, e.g., "bitcoind,seednode,arbdaemon".
         scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
     }

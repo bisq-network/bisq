@@ -204,7 +204,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             byte[] opReturnData = getOpReturnData(encryptedVotes);
             Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             Transaction blindVoteTx = getBlindVoteTx(stake, blindVoteFee, opReturnData);
-            String blindVoteTxId = blindVoteTx.getHashAsString();
+            String blindVoteTxId = blindVoteTx.getTxId().toString();
 
             byte[] encryptedMeritList = getEncryptedMeritList(blindVoteTxId, secretKey);
 
@@ -338,7 +338,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         walletsManager.publishAndCommitBsqTx(blindVoteTx, TxType.BLIND_VOTE, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("BlindVote tx published. txId={}", transaction.getHashAsString());
+                log.info("BlindVote tx published. txId={}", transaction.getTxId().toString());
                 resultHandler.handleResult();
             }
 

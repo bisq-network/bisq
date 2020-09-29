@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -29,7 +29,7 @@ public class MonetaryUnit extends Coin {
     }
 
 
-    public static class MonetaryUnitAddressValidator extends Base58BitcoinAddressValidator {
+    public static class MonetaryUnitAddressValidator extends Base58AddressValidator {
 
         public MonetaryUnitAddressValidator() {
             super(new MonetaryUnitParams());
@@ -50,7 +50,6 @@ public class MonetaryUnit extends Coin {
         public MonetaryUnitParams() {
             addressHeader = 16;
             p2shHeader = 76;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

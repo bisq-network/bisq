@@ -17,11 +17,15 @@
 
 package bisq.daemon.grpc;
 
+import bisq.common.config.Config;
+
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.StatusRuntimeException;
+
+import javax.inject.Inject;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Metadata.Key;
@@ -36,12 +40,13 @@ import static java.lang.String.format;
  */
 class PasswordAuthInterceptor implements ServerInterceptor {
 
-    public static final String PASSWORD_KEY = "password";
+    private static final String PASSWORD_KEY = "password";
 
     private final String expectedPasswordValue;
 
-    public PasswordAuthInterceptor(String expectedPasswordValue) {
-        this.expectedPasswordValue = expectedPasswordValue;
+    @Inject
+    public PasswordAuthInterceptor(Config config) {
+        this.expectedPasswordValue = config.apiPassword;
     }
 
     @Override
