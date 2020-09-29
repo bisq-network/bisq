@@ -249,6 +249,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         peerCapabilities,
                         maxEntriesPerType,
                         wasPersistableNetworkPayloadsTruncated);
+        log.info("{} PersistableNetworkPayload entries remained after filtered by excluded keys. Original map had {} entries.",
+                filteredPersistableNetworkPayloads.size(), mapForDataResponse.size());
 
         Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
                 filterKnownHashes(
@@ -258,6 +260,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         peerCapabilities,
                         maxEntriesPerType,
                         wasProtectedStorageEntriesTruncated);
+        log.info("{} ProtectedStorageEntry entries remained after filtered by excluded keys. Original map had {} entries.",
+                filteredProtectedStorageEntries.size(), map.size());
 
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
@@ -275,14 +279,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
+                    Map<ByteArray, PersistableNetworkPayload> serviceMap;
                     if (service instanceof SplitStoreService) {
                         var splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
                         // As we add the version to our request we only use the live data. Eventually missing data will be
                         // derived from the version.
-                        map.putAll(splitStoreService.getMapOfLiveData());
+                        serviceMap = splitStoreService.getMapOfLiveData();
+                        map.putAll(serviceMap);
                     } else {
-                        map.putAll(service.getMap());
+                        serviceMap = service.getMap();
+                        map.putAll(serviceMap);
                     }
+                    log.info("We added {} entries from {} to the excluded key set of our request",
+                            serviceMap.size(), service.getClass().getSimpleName());
                 });
         return map;
     }
@@ -291,12 +300,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
+                    Map<ByteArray, PersistableNetworkPayload> serviceMap;
                     if (service instanceof SplitStoreService) {
                         var splitStoreService = (SplitStoreService<? extends PersistableNetworkPayloadStore>) service;
-                        map.putAll(splitStoreService.getMapSinceVersion(requestersVersion));
+                        serviceMap = splitStoreService.getMapSinceVersion(requestersVersion);
+                        map.putAll(serviceMap);
                     } else {
-                        map.putAll(service.getMap());
+                        serviceMap = service.getMap();
+                        map.putAll(serviceMap);
                     }
+                    log.info("We added {} entries from {} to be filtered by excluded keys",
+                            serviceMap.size(), service.getClass().getSimpleName());
                 });
         return map;
     }
@@ -329,8 +343,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         objToPayloadFunction.apply(networkPayload)))
                 .collect(Collectors.toSet());
 
-        if (limit.get() < 0)
+        if (limit.get() < 0) {
             wasTruncated.set(true);
+        }
 
         return filteredResults;
     }

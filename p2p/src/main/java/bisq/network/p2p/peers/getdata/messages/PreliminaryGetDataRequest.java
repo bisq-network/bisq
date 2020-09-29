@@ -69,26 +69,29 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        final protobuf.PreliminaryGetDataRequest.Builder builder = protobuf.PreliminaryGetDataRequest.newBuilder()
+        protobuf.PreliminaryGetDataRequest.Builder builder = protobuf.PreliminaryGetDataRequest.newBuilder()
                 .addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities))
                 .setNonce(nonce)
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
         Optional.ofNullable(version).ifPresent(builder::setVersion);
-
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setPreliminaryGetDataRequest(builder)
                 .build();
-        log.info("Sending a PreliminaryGetDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        log.info("Sending a PreliminaryGetDataRequest with {} kB and {} excluded key entries. Requesters version={}",
+                proto.getSerializedSize() / 1000d, excludedKeys.size(), version);
         return proto;
     }
 
     public static PreliminaryGetDataRequest fromProto(protobuf.PreliminaryGetDataRequest proto, int messageVersion) {
-        log.info("Received a PreliminaryGetDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        Set<byte[]> excludedKeys = ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList());
+        String requestersVersion = ProtoUtil.stringOrNullFromProto(proto.getVersion());
+        log.info("Received a PreliminaryGetDataRequest with {} kB and {} excluded key entries. Requesters version={}",
+                proto.getSerializedSize() / 1000d, excludedKeys.size(), requestersVersion);
         return new PreliminaryGetDataRequest(proto.getNonce(),
-                ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
-                ProtoUtil.stringOrNullFromProto(proto.getVersion()),
+                excludedKeys,
+                requestersVersion,
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
     }

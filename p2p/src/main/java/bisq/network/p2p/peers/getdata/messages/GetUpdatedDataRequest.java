@@ -37,8 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
@@ -69,33 +67,35 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
                 nonce,
                 excludedKeys,
                 version);
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetUpdatedDataRequest");
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        final protobuf.GetUpdatedDataRequest.Builder builder = protobuf.GetUpdatedDataRequest.newBuilder()
+        protobuf.GetUpdatedDataRequest.Builder builder = protobuf.GetUpdatedDataRequest.newBuilder()
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setNonce(nonce)
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
         Optional.ofNullable(version).ifPresent(builder::setVersion);
-
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
                 .build();
-        log.info("Sending a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        log.info("Sending a GetUpdatedDataRequest with {} kB and {} excluded key entries. Requesters version={}",
+                proto.getSerializedSize() / 1000d, excludedKeys.size(), version);
         return proto;
     }
 
     public static GetUpdatedDataRequest fromProto(protobuf.GetUpdatedDataRequest proto, int messageVersion) {
-        log.info("Received a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        Set<byte[]> excludedKeys = ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList());
+        String requestersVersion = ProtoUtil.stringOrNullFromProto(proto.getVersion());
+        log.info("Received a GetUpdatedDataRequest with {} kB and {} excluded key entries. Requesters version={}",
+                proto.getSerializedSize() / 1000d, excludedKeys.size(), requestersVersion);
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
-                ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
-                ProtoUtil.stringOrNullFromProto(proto.getVersion()),
+                excludedKeys,
+                requestersVersion,
                 messageVersion);
     }
 }
