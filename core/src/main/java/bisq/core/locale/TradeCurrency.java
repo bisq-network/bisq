@@ -38,7 +38,12 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
 
     public TradeCurrency(String code, String name) {
         this.code = code;
-        this.name = name;
+        // TODO: remove when upgraded to java 11
+        if (code.equals("VES") && Runtime.version().feature() == 10) {
+            this.name = Res.get("shared.temp.ves"); // Venezuelan bolívar soberano
+        } else {
+            this.name = name;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

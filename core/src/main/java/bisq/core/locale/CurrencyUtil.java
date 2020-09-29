@@ -409,6 +409,10 @@ public class CurrencyUtil {
             return getCryptoCurrency(currencyCode).map(TradeCurrency::getName).orElse(btcOrRemovedAsset);
         }
         try {
+            // TODO: remove when upgraded to java 11
+            if (currencyCode.equals("VES") && Runtime.version().feature() == 10) {
+                return Res.get("shared.temp.ves"); // Venezuelan bolívar soberano
+            }
             return Currency.getInstance(currencyCode).getDisplayName();
         } catch (Throwable t) {
             log.debug("No currency name available {}", t.getMessage());

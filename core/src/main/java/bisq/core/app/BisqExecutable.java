@@ -44,9 +44,12 @@ import bisq.common.util.Utilities;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import org.apache.commons.io.FileUtils;
+
 import java.nio.file.Paths;
 
 import java.io.File;
+import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,6 +81,22 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     public void execute(String[] args) {
+        // It's pretty ugly to have this code at this location, but it is important that this property is set before
+        // the Currency classes are loaded. This is only temporarily necessary until upgraded to Java 11
+        // TODO: remove when upgraded to Java 11
+        if (Runtime.version().feature() == 10) {
+            try {
+                File tmpFile = File.createTempFile("CurrencyData", ".properties");
+                FileUtils.copyURLToFile(this.getClass().getResource("/CurrencyData.properties"), tmpFile);
+                System.setProperty("java.util.currency.data", tmpFile.getAbsolutePath());
+            } catch (IOException ex) {
+                System.err.println("fault: An unexpected error occurred. " +
+                        "Please file a report at https://bisq.network/issues");
+                ex.printStackTrace(System.err);
+                System.exit(EXIT_FAILURE);
+            }
+        }
+
         try {
             config = new Config(appName, osUserDataDir(), args);
             if (config.helpRequested) {
