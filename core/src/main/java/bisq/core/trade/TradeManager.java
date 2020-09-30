@@ -456,6 +456,7 @@ public class TradeManager implements PersistedDataHost {
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
+        requestPersistence();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -595,6 +596,7 @@ public class TradeManager implements PersistedDataHost {
                     log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
+                    requestPersistence();
                     resultHandler.handleResult();
                 }
             }
@@ -690,6 +692,7 @@ public class TradeManager implements PersistedDataHost {
             trade.setDisputeState(disputeState);
             addTradeToClosedTrades(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+            requestPersistence();
         }
     }
 

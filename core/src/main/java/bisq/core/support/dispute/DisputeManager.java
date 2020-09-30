@@ -137,7 +137,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void persist() {
+    public void requestPersistence() {
         disputeListService.requestPersistence();
     }
 
@@ -293,10 +293,6 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
-    public void requestPersistence() {
-        disputeListService.getPersistenceManager().requestPersistence();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
@@ -421,6 +417,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         }
 
         sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), errorMessage == null, errorMessage);
+        requestPersistence();
     }
 
 

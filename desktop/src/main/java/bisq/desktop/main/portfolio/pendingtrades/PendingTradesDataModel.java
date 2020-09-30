@@ -719,6 +719,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }
+        tradeManager.requestPersistence();
     }
 
     public boolean isReadyForTxBroadcast() {

@@ -257,9 +257,11 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                 resultHandler.handleResult();
             }, errorMessageHandler);
         }
+        requestPersistence();
     }
 
     public void rejectMediationResult(Trade trade) {
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_REJECTED);
+        requestPersistence();
     }
 }

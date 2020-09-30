@@ -74,7 +74,7 @@ public class TraderChatManager extends SupportManager {
     }
 
     @Override
-    public void persist() {
+    public void requestPersistence() {
         tradeManager.requestPersistence();
     }
 

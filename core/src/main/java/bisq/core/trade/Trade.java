@@ -653,17 +653,14 @@ public abstract class Trade implements Tradable, Model {
         arbitratorManager.getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-            persist();
         });
 
         mediatorManager.getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
             mediatorPubKeyRing = mediator.getPubKeyRing();
-            persist();
         });
 
         refundAgentManager.getDisputeAgentByNodeAddress(refundAgentNodeAddress).ifPresent(refundAgent -> {
             refundAgentPubKeyRing = refundAgent.getPubKeyRing();
-            persist();
         });
 
         createTradeProtocol();
@@ -691,7 +688,6 @@ public abstract class Trade implements Tradable, Model {
         this.depositTx = tx;
         depositTxId = depositTx.getTxId().toString();
         setupConfidenceListener();
-        persist();
     }
 
     @Nullable
@@ -704,12 +700,10 @@ public abstract class Trade implements Tradable, Model {
     public void applyDelayedPayoutTx(Transaction delayedPayoutTx) {
         this.delayedPayoutTx = delayedPayoutTx;
         this.delayedPayoutTxBytes = delayedPayoutTx.bitcoinSerialize();
-        persist();
     }
 
     public void applyDelayedPayoutTxBytes(byte[] delayedPayoutTxBytes) {
         this.delayedPayoutTxBytes = delayedPayoutTxBytes;
-        persist();
     }
 
     @Nullable
@@ -785,14 +779,6 @@ public abstract class Trade implements Tradable, Model {
 
     @Override
     public void onComplete() {
-        persist();
-    }
-
-    //todo remove
-    public void persist() {
-        // We do not persist inside the trade anymore.
-        // TODO
-        // We might remove that interface requirement in a future refactoring.
     }
 
 
@@ -817,49 +803,33 @@ public abstract class Trade implements Tradable, Model {
             log.warn(message);
         }
 
-        boolean changed = this.state != state;
         this.state = state;
         stateProperty.set(state);
         statePhaseProperty.set(state.getPhase());
 
         if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
             tradeProtocol.completed();
-
-        if (changed)
-            persist();
     }
 
     public void setDisputeState(DisputeState disputeState) {
-        boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
-        if (changed)
-            persist();
     }
 
     public void setMediationResultState(MediationResultState mediationResultState) {
-        boolean changed = this.mediationResultState != mediationResultState;
         this.mediationResultState = mediationResultState;
         mediationResultStateProperty.set(mediationResultState);
-        if (changed)
-            persist();
     }
 
     public void setRefundResultState(RefundResultState refundResultState) {
-        boolean changed = this.refundResultState != refundResultState;
         this.refundResultState = refundResultState;
         refundResultStateProperty.set(refundResultState);
-        if (changed)
-            persist();
     }
 
 
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
-        boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
         tradePeriodStateProperty.set(tradePeriodState);
-        if (changed)
-            persist();
     }
 
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
@@ -889,7 +859,6 @@ public abstract class Trade implements Tradable, Model {
     public void setAssetTxProofResult(@Nullable AssetTxProofResult assetTxProofResult) {
         this.assetTxProofResult = assetTxProofResult;
         assetTxProofResultUpdateProperty.set(assetTxProofResultUpdateProperty.get() + 1);
-        persist();
     }
 
 
