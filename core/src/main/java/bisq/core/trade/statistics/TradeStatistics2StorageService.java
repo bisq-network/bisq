@@ -25,11 +25,13 @@ import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.io.File;
 
 import lombok.extern.slf4j.Slf4j;
 
+@Singleton
 @Slf4j
 public class TradeStatistics2StorageService extends HistoricalDataStoreService<TradeStatistics2Store> {
     private static final String FILE_NAME = "TradeStatistics2Store";

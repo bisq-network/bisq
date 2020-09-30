@@ -30,6 +30,7 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
@@ -54,18 +55,68 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * This new trade statistics class uses only the bare minimum of data.
+ * Data size is about 50 bytes in average
+ */
 @Slf4j
 @Value
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload {
 
+    // This enum must not change the order as we use the ordinal for storage to reduce data size.
+    // The payment method string can be quite long and would consume 15% more space.
+    // When we get a new payment method we can add it to the enum at the end. Old users would add it as string if not
+    // recognized.
+    private enum PaymentMethodMapper {
+        OK_PAY,
+        CASH_APP,
+        VENMO,
+        AUSTRALIA_PAYID, // seems there is a dev trade
+        UPHOLD,
+        MONEY_BEAM,
+        POPMONEY,
+        REVOLUT,
+        PERFECT_MONEY,
+        SEPA,
+        SEPA_INSTANT,
+        FASTER_PAYMENTS,
+        NATIONAL_BANK,
+        JAPAN_BANK,
+        SAME_BANK,
+        SPECIFIC_BANKS,
+        SWISH,
+        ALI_PAY,
+        WECHAT_PAY,
+        CLEAR_X_CHANGE,
+        CHASE_QUICK_PAY,
+        INTERAC_E_TRANSFER,
+        US_POSTAL_MONEY_ORDER,
+        CASH_DEPOSIT,
+        MONEY_GRAM,
+        WESTERN_UNION,
+        HAL_CASH,
+        F2F,
+        BLOCK_CHAINS,
+        PROMPT_PAY,
+        ADVANCED_CASH,
+        BLOCK_CHAINS_INSTANT
+    }
+
     private final String currency;
     private final long price;
     private final long amount;
+
     private final String paymentMethod;
     //We use takers trade date
     private final long date;
-    private final String mediator;
+
+    // Old converted trade stat objects might not have it set
+    @Nullable
+    @JsonExclude
+    private final String mediator;  // todo entries from old data could be pruned
+    @Nullable
+    @JsonExclude
     private final String refundAgent;
 
     // todo should we add referrerId as well? get added to extra map atm but not used so far
@@ -108,14 +159,20 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                             long amount,
                             String paymentMethod,
                             long date,
-                            String mediator,
-                            String refundAgent,
+                            @Nullable String mediator,
+                            @Nullable String refundAgent,
                             @Nullable Map<String, String> extraDataMap,
                             @Nullable byte[] hash) {
         this.currency = currency;
         this.price = price;
         this.amount = amount;
-        this.paymentMethod = paymentMethod;
+        String tempPaymentMethod;
+        try {
+            tempPaymentMethod = String.valueOf(PaymentMethodMapper.valueOf(paymentMethod).ordinal());
+        } catch (Throwable t) {
+            tempPaymentMethod = paymentMethod;
+        }
+        this.paymentMethod = tempPaymentMethod;
         this.date = date;
         this.mediator = mediator;
         this.refundAgent = refundAgent;
@@ -138,9 +195,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 .setAmount(amount)
                 .setPaymentMethod(paymentMethod)
                 .setDate(date)
-                .setMediator(mediator)
-                .setRefundAgent(refundAgent)
                 .setHash(ByteString.copyFrom(hash));
+        Optional.ofNullable(mediator).ifPresent(builder::setMediator);
+        Optional.ofNullable(refundAgent).ifPresent(builder::setRefundAgent);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return builder;
     }
@@ -155,15 +212,14 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public static TradeStatistics3 fromProto(protobuf.TradeStatistics3 proto) {
-
         return new TradeStatistics3(
                 proto.getCurrency(),
                 proto.getPrice(),
                 proto.getAmount(),
                 proto.getPaymentMethod(),
                 proto.getDate(),
-                proto.getMediator(),
-                proto.getRefundAgent(),
+                ProtoUtil.stringOrNullFromProto(proto.getMediator()),
+                ProtoUtil.stringOrNullFromProto(proto.getRefundAgent()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
                 proto.getHash().toByteArray());
     }
@@ -182,6 +238,19 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     public boolean verifyHashSize() {
         checkNotNull(hash, "hash must not be null");
         return hash.length == 20;
+    }
+
+    @Override
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.TRADE_STATISTICS_3);
+    }
+
+    public String getPaymentMethod() {
+        try {
+            return PaymentMethodMapper.values()[Integer.parseInt(paymentMethod)].name();
+        } catch (Throwable ignore) {
+            return paymentMethod;
+        }
     }
 
     public Date getTradeDate() {
@@ -204,15 +273,4 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
             return OfferUtil.getRoundedFiatVolume(volume);
         }
     }
-
-    // With v1.2.0 we changed the way how the hash is created. To not create too heavy load for seed nodes from
-    // requests from old nodes we use the TRADE_STATISTICS_HASH_UPDATE capability to send trade statistics only to new
-    // nodes. As trade statistics are only used for informational purpose it will not have any critical issue for the
-    // old nodes beside that they don't see the latest trades. We added TRADE_STATISTICS_HASH_UPDATE in v1.2.2 to fix a
-    // problem of not handling the hashes correctly.
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.TRADE_STATISTICS_3);
-    }
-
 }

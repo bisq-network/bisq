@@ -50,6 +50,7 @@ public class TradeStatisticsManager {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final TradeStatistics3StorageService tradeStatistics3StorageService;
+    private final TradeStatisticsConverter tradeStatisticsConverter;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics3> observableTradeStatisticsSet = FXCollections.observableSet();
 
@@ -58,11 +59,13 @@ public class TradeStatisticsManager {
                                   PriceFeedService priceFeedService,
                                   TradeStatistics3StorageService tradeStatistics3StorageService,
                                   AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                  TradeStatisticsConverter tradeStatisticsConverter,
                                   @Named(Config.STORAGE_DIR) File storageDir,
                                   @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.tradeStatistics3StorageService = tradeStatistics3StorageService;
+        this.tradeStatisticsConverter = tradeStatisticsConverter;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
 
@@ -70,6 +73,8 @@ public class TradeStatisticsManager {
     }
 
     public void onAllServicesInitialized() {
+        tradeStatisticsConverter.onAllServicesInitialized();
+
         p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
             if (payload instanceof TradeStatistics3)
                 addToSet((TradeStatistics3) payload);
