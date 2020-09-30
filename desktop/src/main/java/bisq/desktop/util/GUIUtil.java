@@ -58,7 +58,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -209,11 +209,11 @@ public class GUIUtil {
                                       Preferences preferences,
                                       Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                      CorruptedStorageFileHandler corruptedStorageFileHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (!directory.isEmpty()) {
-                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
+                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
                 PaymentAccountList paymentAccounts = new PaymentAccountList(accounts);
                 persistenceManager.initialize(paymentAccounts, fileName);
                 persistenceManager.persistNow(() -> {
@@ -233,7 +233,7 @@ public class GUIUtil {
                                       Preferences preferences,
                                       Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                      CorruptedStorageFileHandler corruptedStorageFileHandler) {
         FileChooser fileChooser = new FileChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -246,7 +246,7 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                PersistenceManager<PaymentAccountList> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
+                PersistenceManager<PaymentAccountList> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
                 PaymentAccountList persisted = persistenceManager.getPersisted(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();

@@ -27,7 +27,7 @@ import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
@@ -59,7 +59,7 @@ public class MockNode {
         this.maxConnections = maxConnections;
         networkNode = mock(NetworkNode.class);
         File storageDir = Files.createTempDirectory("storage").toFile();
-        PersistenceManager<PeerList> persistenceManager = new PersistenceManager<>(storageDir, mock(PersistenceProtoResolver.class), mock(CorruptedDatabaseFilesHandler.class));
+        PersistenceManager<PeerList> persistenceManager = new PersistenceManager<>(storageDir, mock(PersistenceProtoResolver.class), mock(CorruptedStorageFileHandler.class));
         peerManager = new PeerManager(networkNode, mock(SeedNodeRepository.class), new ClockWatcher(), maxConnections, persistenceManager);
         connections = new HashSet<>();
         when(networkNode.getAllConnections()).thenReturn(connections);
