@@ -150,7 +150,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private void addContent() {
         gridPane.getColumnConstraints().get(0).setMinWidth(224);
 
-        int rows = 6;
+        int rows = 5;
         List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
@@ -164,6 +164,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             rows++;
         if (isF2F)
             rows += 2;
+
+        if (offer.isXmr()) {
+            rows++;
+        }
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.Offer"));
 
