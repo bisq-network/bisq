@@ -44,7 +44,10 @@ public class TaskRunner<T extends Model> {
         this(sharedModel, (Class<T>) sharedModel.getClass(), resultHandler, errorMessageHandler);
     }
 
-    public TaskRunner(T sharedModel, Class<T> sharedModelClass, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public TaskRunner(T sharedModel,
+                      Class<T> sharedModelClass,
+                      ResultHandler resultHandler,
+                      ErrorMessageHandler errorMessageHandler) {
         this.sharedModel = sharedModel;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
@@ -67,9 +70,9 @@ public class TaskRunner<T extends Model> {
                     currentTask = tasks.poll();
                     log.info("Run task: " + currentTask.getSimpleName());
                     currentTask.getDeclaredConstructor(TaskRunner.class, sharedModelClass).newInstance(this, sharedModel).run();
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                    handleErrorMessage("Error at taskRunner: " + throwable.getMessage());
+                } catch (Throwable t) {
+                    log.error("Error at taskRunner: ", t);
+                    handleErrorMessage(t.getMessage());
                 }
             } else {
                 resultHandler.handleResult();
