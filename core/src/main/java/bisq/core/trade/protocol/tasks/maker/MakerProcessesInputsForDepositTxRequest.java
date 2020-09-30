@@ -103,7 +103,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-            trade.persist();
+            processModel.getTradeManager().requestPersistence();
 
             complete();
         } catch (Throwable t) {

@@ -346,6 +346,9 @@ public class TradeManager implements PersistedDataHost {
         pendingTradesInitialized.set(true);
     }
 
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
+    }
 
     public void onUserConfirmedFiatPaymentReceived(SellerTrade sellerTrade,
                                                    ResultHandler resultHandler,
@@ -863,9 +866,4 @@ public class TradeManager implements PersistedDataHost {
             }
         });
     }
-
-    private void requestPersistence() {
-        persistenceManager.requestPersistence();
-    }
-
 }

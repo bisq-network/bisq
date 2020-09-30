@@ -340,7 +340,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         }
 
         trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
-        trade.persist();
+        model.dataModel.getTradeManager().requestPersistence();
         tradeIdOfOpenChat = trade.getId();
 
         ChatView chatView = new ChatView(traderChatManager, formatter);
@@ -399,7 +399,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             chatView.deactivate();
             // at close we set all as displayed. While open we ignore updates of the numNewMsg in the list icon.
             trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
-            trade.persist();
+            model.dataModel.getTradeManager().requestPersistence();
             tradeIdOfOpenChat = null;
 
             if (xPositionListener != null) {
