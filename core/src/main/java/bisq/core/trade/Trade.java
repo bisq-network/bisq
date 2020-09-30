@@ -788,7 +788,7 @@ public abstract class Trade implements Tradable, Model {
         persist();
     }
 
-    @Override
+    //todo remove
     public void persist() {
         // We do not persist inside the trade anymore.
         // TODO
