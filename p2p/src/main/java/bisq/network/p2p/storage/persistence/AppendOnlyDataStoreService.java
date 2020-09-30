@@ -24,9 +24,9 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AppendOnlyDataStoreService {
     @Getter
-    private final List<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
+    private final Set<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

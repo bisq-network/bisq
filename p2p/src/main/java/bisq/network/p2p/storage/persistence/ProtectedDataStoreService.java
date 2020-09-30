@@ -24,9 +24,9 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProtectedDataStoreService {
-    private List<MapStoreService<? extends PersistableEnvelope, ProtectedStorageEntry>> services = new ArrayList<>();
+    private Set<MapStoreService<? extends PersistableEnvelope, ProtectedStorageEntry>> services = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
