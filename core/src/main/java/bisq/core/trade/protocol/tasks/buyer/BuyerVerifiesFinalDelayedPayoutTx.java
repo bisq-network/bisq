@@ -44,7 +44,7 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
             checkNotNull(delayedPayoutTx, "trade.getDelayedPayoutTx() must not be null");
             // Check again tx
-            TradeDataValidation.validatePayoutTx(trade,
+            TradeDataValidation.validateDelayedPayoutTx(trade,
                     delayedPayoutTx,
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());

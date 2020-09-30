@@ -382,7 +382,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     private void sendPeerPublishedPayoutTxMessage(Transaction transaction, Dispute dispute, Contract contract) {
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
         NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerNodeAddress() : contract.getBuyerNodeAddress();
-        log.trace("sendPeerPublishedPayoutTxMessage to peerAddress " + peersNodeAddress);
+        log.trace("sendPeerPublishedPayoutTxMessage to peerAddress {}", peersNodeAddress);
         PeerPublishedDisputePayoutTxMessage message = new PeerPublishedDisputePayoutTxMessage(transaction.bitcoinSerialize(),
                 dispute.getTradeId(),
                 p2PService.getAddress(),
