@@ -46,7 +46,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateMakerFeeTx.class);
 
     @SuppressWarnings({"unused"})
-    public CreateMakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
+    public CreateMakerFeeTx(TaskRunner<PlaceOfferModel> taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 

@@ -37,7 +37,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(ValidateOffer.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public ValidateOffer(TaskRunner taskHandler, PlaceOfferModel model) {
+    public ValidateOffer(TaskRunner<PlaceOfferModel> taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 

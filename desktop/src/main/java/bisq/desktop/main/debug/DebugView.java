@@ -19,7 +19,6 @@ package bisq.desktop.main.debug;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.InitializableView;
-import bisq.desktop.components.TitledGroupBg;
 
 import bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
@@ -54,6 +53,7 @@ import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
+import bisq.common.taskrunner.Model;
 import bisq.common.taskrunner.Task;
 import bisq.common.util.Tuple2;
 
@@ -79,7 +79,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
 public class DebugView extends InitializableView<GridPane, Void> {
 
     @FXML
-    TitledGroupBg titledGroupBg;
     private int rowIndex = 0;
 
     @Inject
@@ -200,20 +199,20 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 ));
     }
 
-    private void addGroup(String title, ObservableList<Class<? extends Task>> list) {
-        final Tuple2<Label, ComboBox<Class<? extends Task>>> selectTaskToIntercept =
+    private void addGroup(String title, ObservableList<Class<? extends Task<? extends Model>>> list) {
+        final Tuple2<Label, ComboBox<Class<? extends Task<? extends Model>>>> selectTaskToIntercept =
                 addTopLabelComboBox(root, ++rowIndex, title, "Select task to intercept", 15);
-        ComboBox<Class<? extends Task>> comboBox = selectTaskToIntercept.second;
+        ComboBox<Class<? extends Task<? extends Model>>> comboBox = selectTaskToIntercept.second;
         comboBox.setVisibleRowCount(list.size());
         comboBox.setItems(list);
         comboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Class<? extends Task> item) {
+            public String toString(Class<? extends Task<? extends Model>> item) {
                 return item.getSimpleName();
             }
 
             @Override
-            public Class<? extends Task> fromString(String s) {
+            public Class<? extends Task<? extends Model>> fromString(String s) {
                 return null;
             }
         });
