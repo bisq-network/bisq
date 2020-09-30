@@ -101,7 +101,7 @@ public class WalletAppSetup {
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
         log.info("Initialize WalletAppSetup with BitcoinJ version {} and hash of BitcoinJ commit {}",
-                VersionMessage.BITCOINJ_VERSION, "5312aa3");
+                VersionMessage.BITCOINJ_VERSION, "44ddbdc");
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
