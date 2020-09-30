@@ -27,6 +27,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 
 import org.bitcoinj.core.Address;
@@ -579,18 +580,17 @@ public class BtcWalletService extends WalletService {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
-            // We still use non-segwit addresses for the trade protocol.
             // We try to use available and not yet used entries
             Optional<AddressEntry> emptyAvailableAddressEntry = getAddressEntryListAsImmutableList().stream()
                     .filter(e -> AddressEntry.Context.AVAILABLE == e.getContext())
                     .filter(e -> isAddressUnused(e.getAddress()))
-                    .filter(e -> Script.ScriptType.P2PKH.equals(e.getAddress().getOutputScriptType()))
+                    .filter(e -> Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType()))
                     .findAny();
             if (emptyAvailableAddressEntry.isPresent()) {
                 return addressEntryList.swapAvailableToAddressEntryWithOfferId(emptyAvailableAddressEntry.get(), context, offerId);
             } else {
-                DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
-                AddressEntry entry = new AddressEntry(key, context, offerId, false);
+                DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2WPKH));
+                AddressEntry entry = new AddressEntry(key, context, offerId, true);
                 addressEntryList.addAddressEntry(entry);
                 return entry;
             }
