@@ -75,10 +75,10 @@ class FailedTradesDataModel extends ActivatableDataModel {
     }
 
     public void unfailTrade(Trade trade) {
-        failedTradesManager.unfailTrade(trade);
+        failedTradesManager.unFailTrade(trade);
     }
 
     public String checkUnfail(Trade trade) {
-        return failedTradesManager.checkUnfail(trade);
+        return failedTradesManager.checkUnFail(trade);
     }
 }

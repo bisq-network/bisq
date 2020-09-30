@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonFileManager {
-    private final ThreadPoolExecutor executor = Utilities.getThreadPoolExecutor("saveToDiscExecutor", 5, 50, 60);
+    private final ThreadPoolExecutor executor = Utilities.getThreadPoolExecutor("JsonFileManagerExecutor", 5, 50, 60);
     private final File dir;
 
 
@@ -46,7 +46,7 @@ public class JsonFileManager {
                 log.warn("make dir failed");
 
         Runtime.getRuntime().addShutdownHook(new Thread(JsonFileManager.this::shutDown,
-                "WriteOnlyFileManager.ShutDownHook"));
+                "JsonFileManager.ShutDownHook"));
     }
 
     public void shutDown() {

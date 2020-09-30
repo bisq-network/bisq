@@ -118,8 +118,8 @@ public class MultipleHolderNameDetection {
     // Key is hex of hash of sig pubKey which we consider a trader identity. We could use onion address as well but
     // once we support multiple onion addresses that would not work anymore.
     @Getter
-    private Map<String, List<Dispute>> suspiciousDisputesByTraderMap = new HashMap<>();
-    private List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final Map<String, List<Dispute>> suspiciousDisputesByTraderMap = new HashMap<>();
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

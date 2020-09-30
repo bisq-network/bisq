@@ -158,6 +158,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
+        this.persistenceManager = persistenceManager;
         this.clock = clock;
         this.maxSequenceNumberMapSizeBeforePurge = maxSequenceNumberBeforePurge;
 
@@ -165,7 +166,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
-        this.persistenceManager = persistenceManager;
         persistenceManager.initialize(sequenceNumberMap, PersistenceManager.Priority.LOW);
     }
 

@@ -53,7 +53,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.persistence.PersistenceManager;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 
@@ -182,7 +181,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         findDispute(message).ifPresent(dispute -> {
             if (dispute.getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 dispute.addAndPersistChatMessage(message);
-                getStorage().requestPersistence();
+                requestPersistence();
             } else {
                 log.warn("We got a chatMessage that we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
@@ -218,10 +217,6 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
     public IntegerProperty getNumOpenDisputes() {
         return disputeListService.getNumOpenDisputes();
-    }
-
-    public PersistenceManager<? extends DisputeList> getStorage() {
-        return disputeListService.getPersistenceManager();
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
@@ -297,6 +292,11 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         }
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
+
+    public void requestPersistence() {
+        disputeListService.getPersistenceManager().requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler

@@ -62,6 +62,7 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     public DisputeListService(PersistenceManager<T> persistenceManager) {
         this.persistenceManager = persistenceManager;
         disputeList = getConcreteDisputeList();
+
         this.persistenceManager.initialize(disputeList, PersistenceManager.Priority.HIGH);
     }
 

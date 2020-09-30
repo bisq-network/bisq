@@ -44,14 +44,19 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
 
     @Inject
     public TradeStatistics2StorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                          PersistenceManager<TradeStatistics2Store> persistableNetworkPayloadMapPersistenceManager) {
-        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
+                                          PersistenceManager<TradeStatistics2Store> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+    }
 
     @Override
     public String getFileName() {
@@ -76,15 +81,5 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     protected TradeStatistics2Store createStore() {
         return new TradeStatistics2Store();
-    }
-
-    @Override
-    protected void readStore() {
-        super.readStore();
-    }
-
-    @Override
-    protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
     }
 }

@@ -116,7 +116,6 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
-                        persist();
                     } else {
                         log.error("We found an address entry without key but cannot apply the key as the address " +
                                         "is not matching. " +
@@ -165,6 +164,8 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         wallet.addCoinsSentEventListener((wallet1, tx, prevBalance, newBalance) -> {
             maybeAddNewAddressEntry(tx);
         });
+
+        persist();
     }
 
     public ImmutableList<AddressEntry> getAddressEntriesAsListImmutable() {
@@ -213,8 +214,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                 .map(output -> output.getScriptPubKey().getToAddress(wallet.getNetworkParameters()))
                 .filter(Objects::nonNull)
                 .filter(this::isAddressNotInEntries)
-                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(),
-                                                                                Script.ScriptType.P2PKH))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(), Script.ScriptType.P2PKH))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
                 .forEach(this::addAddressEntry);

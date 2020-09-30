@@ -44,8 +44,8 @@ public class ProposalStorageService extends MapStoreService<ProposalStore, Persi
 
     @Inject
     public ProposalStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                  PersistenceManager<ProposalStore> persistableNetworkPayloadMapPersistenceManager) {
-        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
+                                  PersistenceManager<ProposalStore> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

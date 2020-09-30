@@ -44,8 +44,8 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
 
     @Inject
     public TempProposalStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                      PersistenceManager<TempProposalStore> persistableNetworkPayloadMapPersistenceManager) {
-        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
+                                      PersistenceManager<TempProposalStore> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

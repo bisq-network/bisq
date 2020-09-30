@@ -51,8 +51,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public StoreService(File storageDir,
-                        PersistenceManager<T> persistenceManager) {
+    public StoreService(File storageDir, PersistenceManager<T> persistenceManager) {
         this.persistenceManager = persistenceManager;
         absolutePathOfStorageDir = storageDir.getAbsolutePath();
     }

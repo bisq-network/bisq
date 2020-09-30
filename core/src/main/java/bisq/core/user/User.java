@@ -67,8 +67,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @AllArgsConstructor
 @Singleton
 public class User implements PersistedDataHost {
-    final private PersistenceManager<UserPayload> persistenceManager;
-    final private KeyRing keyRing;
+    private final PersistenceManager<UserPayload> persistenceManager;
+    private final KeyRing keyRing;
 
     private ObservableSet<PaymentAccount> paymentAccountsAsObservable;
     private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;

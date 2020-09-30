@@ -74,6 +74,7 @@ public final class Navigation implements PersistedDataHost {
     @Inject
     public Navigation(PersistenceManager<NavigationPath> persistenceManager) {
         this.persistenceManager = persistenceManager;
+
         persistenceManager.initialize(navigationPath, PersistenceManager.Priority.LOW);
     }
 
@@ -134,12 +135,12 @@ public final class Navigation implements PersistedDataHost {
 
         currentPath = newPath;
         previousPath = currentPath;
-        queueUpForSave();
+        requestPersistence();
         listeners.forEach((e) -> e.onNavigationRequested(currentPath));
         listeners.forEach((e) -> e.onNavigationRequested(currentPath, data));
     }
 
-    private void queueUpForSave() {
+    private void requestPersistence() {
         if (currentPath.tip() != null) {
             navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toUnmodifiableList()));
         }

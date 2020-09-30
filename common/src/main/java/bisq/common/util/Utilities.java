@@ -98,11 +98,7 @@ public class Utilities {
     }
 
     public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
-                .setDaemon(true)
-                .build();
-        return MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
+        return MoreExecutors.listeningDecorator(getSingleThreadExecutor(name));
     }
 
     public static ListeningExecutorService getListeningExecutorService(String name,

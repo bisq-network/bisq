@@ -198,8 +198,8 @@ public class TradeManager implements PersistedDataHost {
         this.clockWatcher = clockWatcher;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
-
         this.persistenceManager = persistenceManager;
+
         this.persistenceManager.initialize(tradableList, "PendingTrades", PersistenceManager.Priority.HIGH);
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
@@ -234,7 +234,7 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
-        failedTradesManager.setUnfailTradeCallback(this::unfailTrade);
+        failedTradesManager.setUnFailTradeCallback(this::unFailTrade);
     }
 
     @Override
@@ -631,7 +631,7 @@ public class TradeManager implements PersistedDataHost {
 
     // If trade still has funds locked up it might come back from failed trades
     // Aborts unfailing if the address entries needed are not available
-    private boolean unfailTrade(Trade trade) {
+    private boolean unFailTrade(Trade trade) {
         if (!recoverAddresses(trade)) {
             log.warn("Failed to recover address during unfail trade");
             return false;

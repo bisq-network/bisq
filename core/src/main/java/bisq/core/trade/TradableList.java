@@ -54,6 +54,7 @@ public final class TradableList<T extends Tradable> extends PersistableList<T> {
         return (ObservableList<T>) getList();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +90,8 @@ public final class TradableList<T extends Tradable> extends PersistableList<T> {
                             return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), btcWalletService, coreProtoResolver);
                         default:
                             log.error("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
-                            throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
+                            throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " +
+                                    tradable.getMessageCase());
                     }
                 })
                 .collect(Collectors.toList());

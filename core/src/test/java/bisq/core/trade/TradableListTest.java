@@ -21,15 +21,9 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 
-import java.nio.file.Files;
-
-import java.io.File;
-import java.io.IOException;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static protobuf.PersistableEnvelope.MessageCase.TRADABLE_LIST;
@@ -37,17 +31,15 @@ import static protobuf.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 public class TradableListTest {
 
     @Test
-    public void protoTesting() throws IOException {
+    public void protoTesting() {
         OfferPayload offerPayload = mock(OfferPayload.class, RETURNS_DEEP_STUBS);
-        File storageDir = Files.createTempDirectory("storage").toFile();
         TradableList<OpenOffer> openOfferTradableList = new TradableList<>();
         protobuf.PersistableEnvelope message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
-        assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
+        assertEquals(message.getMessageCase(), TRADABLE_LIST);
 
         // test adding an OpenOffer and convert toProto
         Offer offer = new Offer(offerPayload);
         OpenOffer openOffer = new OpenOffer(offer);
-        //openOfferTradableList = new TradableList<OpenOffer>(storage,Lists.newArrayList(openOffer));
         openOfferTradableList.add(openOffer);
         message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
         assertEquals(message.getMessageCase(), TRADABLE_LIST);

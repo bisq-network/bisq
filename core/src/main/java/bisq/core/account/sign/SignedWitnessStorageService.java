@@ -33,8 +33,6 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class SignedWitnessStorageService extends MapStoreService<SignedWitnessStore, PersistableNetworkPayload> {
     private static final String FILE_NAME = "SignedWitnessStore";
@@ -46,13 +44,18 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
 
     @Inject
     public SignedWitnessStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                       PersistenceManager<SignedWitnessStore> persistableNetworkPayloadMapPersistenceManager) {
-        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
+                                       PersistenceManager<SignedWitnessStore> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+    }
 
     @Override
     public String getFileName() {
@@ -77,18 +80,5 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
     @Override
     protected SignedWitnessStore createStore() {
         return new SignedWitnessStore();
-    }
-
-    @Override
-    protected void readStore() {
-        super.readStore();
-        checkArgument(store instanceof SignedWitnessStore,
-                "Store is not instance of SignedWitnessStore. That can happen if the ProtoBuffer " +
-                        "file got changed. We cleared the data store and recreated it again.");
-    }
-
-    @Override
-    protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
     }
 }

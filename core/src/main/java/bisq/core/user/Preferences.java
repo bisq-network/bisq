@@ -254,13 +254,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
-            switch (baseCurrencyNetwork.getCurrencyCode()) {
-                case "BTC":
-                    setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
-                    setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
-                    break;
-                default:
-                    throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
+            if ("BTC".equals(baseCurrencyNetwork.getCurrencyCode())) {
+                setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
+                setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
+            } else {
+                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
             }
 
             prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
