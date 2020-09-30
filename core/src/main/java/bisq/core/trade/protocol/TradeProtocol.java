@@ -98,18 +98,18 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     @Override
     public void onDirectMessage(DecryptedMessageWithPubKey message, NodeAddress peer) {
-        if (isPubKeyValid(message)) {
-            NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
-            if (networkEnvelope instanceof TradeMessage && isMyTradeMessage((TradeMessage) networkEnvelope)) {
-                onTradeMessage((TradeMessage) networkEnvelope, peer);
-            } else if (networkEnvelope instanceof AckMessage) {
-                AckMessage ackMessage = (AckMessage) networkEnvelope;
-                if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE) {
-                    onAckMessage((AckMessage) networkEnvelope, peer);
-                }
-            }
+        NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
+        if (networkEnvelope instanceof TradeMessage &&
+                isMyMessage((TradeMessage) networkEnvelope) &&
+                isPubKeyValid(message)) {
+            onTradeMessage((TradeMessage) networkEnvelope, peer);
+        } else if (networkEnvelope instanceof AckMessage &&
+                isMyMessage((AckMessage) networkEnvelope) &&
+                isPubKeyValid(message)) {
+            onAckMessage((AckMessage) networkEnvelope, peer);
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DecryptedMailboxListener
@@ -128,17 +128,14 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     protected void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey,
                                                     NodeAddress peer) {
-        if (!isPubKeyValid(decryptedMessageWithPubKey)) {
-            return;
-        }
-
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-        if (networkEnvelope instanceof TradeMessage) {
+        if (networkEnvelope instanceof TradeMessage &&
+                isMyMessage((TradeMessage) networkEnvelope) &&
+                isPubKeyValid(decryptedMessageWithPubKey)) {
             TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-            if (!isMyTradeMessage(tradeMessage)) {
-                return;
-            }
 
+            // We only remove here if we have already completed the trade.
+            // Otherwise removal is done after successfully applied the task runner.
             if (trade.isWithdrawn()) {
                 processModel.getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
                 log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
@@ -146,16 +143,16 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
             }
 
             onMailboxMessage(tradeMessage, peer);
-        } else if (networkEnvelope instanceof AckMessage) {
-            AckMessage ackMessage = (AckMessage) networkEnvelope;
-            if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
-                    ackMessage.getSourceId().equals(trade.getId())) {
-                if (!trade.isWithdrawn()) {
-                    onAckMessage((AckMessage) networkEnvelope, peer);
-                }
-                processModel.getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
-                log.info("Remove {} from the P2P network.", ackMessage.getClass().getSimpleName());
+        } else if (networkEnvelope instanceof AckMessage &&
+                isMyMessage((AckMessage) networkEnvelope) &&
+                isPubKeyValid(decryptedMessageWithPubKey)) {
+            if (!trade.isWithdrawn()) {
+                // We only apply the msg if we have not already completed the trade
+                onAckMessage((AckMessage) networkEnvelope, peer);
             }
+            // In any case we remove the msg
+            processModel.getP2PService().removeEntryFromMailbox(decryptedMessageWithPubKey);
+            log.info("Remove {} from the P2P network.", networkEnvelope.getClass().getSimpleName());
         }
     }
 
@@ -223,23 +220,20 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
-        if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
-                ackMessage.getSourceId().equals(trade.getId())) {
-            // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
-            // as we support automatic re-send of the msg in case it was not ACKed after a certain time
-            if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
-                processModel.setPaymentStartedAckMessage(ackMessage);
-            } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
-                processModel.setDepositTxSentAckMessage(ackMessage);
-            }
+        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
+        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
+        if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
+            processModel.setPaymentStartedAckMessage(ackMessage);
+        } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
+            processModel.setDepositTxSentAckMessage(ackMessage);
+        }
 
-            if (ackMessage.isSuccess()) {
-                log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
-                        ackMessage.getSourceMsgClassName(), peer, trade.getId(), ackMessage.getSourceUid());
-            } else {
-                log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
-                        ackMessage.getSourceMsgClassName(), peer, trade.getId(), ackMessage.getErrorMessage());
-            }
+        if (ackMessage.isSuccess()) {
+            log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
+                    ackMessage.getSourceMsgClassName(), peer, trade.getId(), ackMessage.getSourceUid());
+        } else {
+            log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
+                    ackMessage.getSourceMsgClassName(), peer, trade.getId(), ackMessage.getErrorMessage());
         }
     }
 
@@ -380,8 +374,13 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         cleanup();
     }
 
-    private boolean isMyTradeMessage(TradeMessage message) {
+    private boolean isMyMessage(TradeMessage message) {
         return message.getTradeId().equals(trade.getId());
+    }
+
+    private boolean isMyMessage(AckMessage ackMessage) {
+        return ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
+                ackMessage.getSourceId().equals(trade.getId());
     }
 
     private void cleanup() {
