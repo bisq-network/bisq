@@ -85,7 +85,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     public void addMyProofOfBurn(MyProofOfBurn myProofOfBurn) {
         if (!myProofOfBurnList.contains(myProofOfBurn)) {
             myProofOfBurnList.add(myProofOfBurn);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -98,7 +98,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 }

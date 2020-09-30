@@ -420,7 +420,7 @@ public class TradeManager implements PersistedDataHost {
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             if (tradableList.add(trade)) {
-                persistenceManager.requestPersistence();
+                requestPersistence();
             }
             ((MakerTrade) trade).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
@@ -560,7 +560,7 @@ public class TradeManager implements PersistedDataHost {
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
 
         if (tradableList.add(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
         ((TakerTrade) trade).takeAvailableOffer();
         tradeResultHandler.handleResult(trade);
@@ -640,7 +640,7 @@ public class TradeManager implements PersistedDataHost {
         initPendingTrade(trade);
 
         if (tradableList.add(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
         return true;
     }
@@ -671,7 +671,7 @@ public class TradeManager implements PersistedDataHost {
 
     private void removeTrade(Trade trade) {
         if (tradableList.remove(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
@@ -864,7 +864,8 @@ public class TradeManager implements PersistedDataHost {
         });
     }
 
-    public void persistTrades() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
+
 }

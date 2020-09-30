@@ -75,7 +75,7 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public void persist() {
-        tradeManager.persistTrades();
+        tradeManager.requestPersistence();
     }
 
     @Override
@@ -121,7 +121,7 @@ public class TraderChatManager extends SupportManager {
                     addSystemMsg(trade);
                 }
                 trade.addAndPersistChatMessage(message);
-                tradeManager.persistTrades();
+                tradeManager.requestPersistence();
             } else {
                 log.warn("Trade got a chatMessage that we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());

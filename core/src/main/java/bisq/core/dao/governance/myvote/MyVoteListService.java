@@ -88,13 +88,13 @@ public class MyVoteListService implements PersistedDataHost {
         MyVote myVote = new MyVote(daoStateService.getChainHeight(), sortedBallotListForCycle, secretKeyBytes, blindVote);
         log.info("Add new MyVote to myVotesList list.\nMyVote=" + myVote);
         myVoteList.add(myVote);
-        persist();
+        requestPersistence();
     }
 
     public void applyRevealTxId(MyVote myVote, String voteRevealTxId) {
         myVote.setRevealTxId(voteRevealTxId);
         log.info("Applied revealTxId to myVote.\nmyVote={}\nvoteRevealTxId={}", myVote, voteRevealTxId);
-        persist();
+        requestPersistence();
     }
 
     public Tuple2<Long, Long> getMeritAndStakeForProposal(String proposalTxId, MyBlindVoteListService myBlindVoteListService) {
@@ -130,7 +130,7 @@ public class MyVoteListService implements PersistedDataHost {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 }

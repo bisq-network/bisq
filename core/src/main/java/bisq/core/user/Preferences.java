@@ -194,30 +194,30 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
-            persist();
+            requestPersistence();
         });
 
         cssThemeProperty.addListener((ov) -> {
             prefPayload.setCssTheme(cssThemeProperty.get());
-            persist();
+            requestPersistence();
         });
 
         useStandbyModeProperty.addListener((ov) -> {
             prefPayload.setUseStandbyMode(useStandbyModeProperty.get());
-            persist();
+            requestPersistence();
         });
 
         fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
             prefPayload.getFiatCurrencies().clear();
             prefPayload.getFiatCurrencies().addAll(fiatCurrenciesAsObservable);
             prefPayload.getFiatCurrencies().sort(TradeCurrency::compareTo);
-            persist();
+            requestPersistence();
         });
         cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
             prefPayload.getCryptoCurrencies().clear();
             prefPayload.getCryptoCurrencies().addAll(cryptoCurrenciesAsObservable);
             prefPayload.getCryptoCurrencies().sort(TradeCurrency::compareTo);
-            persist();
+            requestPersistence();
         });
 
         fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
@@ -335,7 +335,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         CoreNetworkCapabilities.maybeApplyDaoFullMode(config);
 
         initialReadDone = true;
-        persist();
+        requestPersistence();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -344,13 +344,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void dontShowAgain(String key, boolean dontShowAgain) {
         prefPayload.getDontShowAgainMap().put(key, dontShowAgain);
-        persist();
+        requestPersistence();
         dontShowAgainMapAsObservable.put(key, dontShowAgain);
     }
 
     public void resetDontShowAgain() {
         prefPayload.getDontShowAgainMap().clear();
-        persist();
+        requestPersistence();
         dontShowAgainMapAsObservable.clear();
     }
 
@@ -410,12 +410,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setTacAccepted(boolean tacAccepted) {
         prefPayload.setTacAccepted(tacAccepted);
-        persist();
+        requestPersistence();
     }
 
     public void setTacAcceptedV120(boolean tacAccepted) {
         prefPayload.setTacAcceptedV120(tacAccepted);
-        persist();
+        requestPersistence();
     }
 
     public Optional<AutoConfirmSettings> findAutoConfirmSettings(String currencyCode) {
@@ -427,32 +427,32 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void setAutoConfServiceAddresses(String currencyCode, List<String> serviceAddresses) {
         findAutoConfirmSettings(currencyCode).ifPresent(e -> {
             e.setServiceAddresses(serviceAddresses);
-            persist();
+            requestPersistence();
         });
     }
 
     public void setAutoConfEnabled(String currencyCode, boolean enabled) {
         findAutoConfirmSettings(currencyCode).ifPresent(e -> {
             e.setEnabled(enabled);
-            persist();
+            requestPersistence();
         });
     }
 
     public void setAutoConfRequiredConfirmations(String currencyCode, int requiredConfirmations) {
         findAutoConfirmSettings(currencyCode).ifPresent(e -> {
             e.setRequiredConfirmations(requiredConfirmations);
-            persist();
+            requestPersistence();
         });
     }
 
     public void setAutoConfTradeLimit(String currencyCode, long tradeLimit) {
         findAutoConfirmSettings(currencyCode).ifPresent(e -> {
             e.setTradeLimit(tradeLimit);
-            persist();
+            requestPersistence();
         });
     }
 
-    private void persist() {
+    private void requestPersistence() {
         if (initialReadDone)
             persistenceManager.requestPersistence();
     }
@@ -461,112 +461,112 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         prefPayload.setUserLanguage(userLanguageCode);
         if (prefPayload.getUserCountry() != null && prefPayload.getUserLanguage() != null)
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-        persist();
+        requestPersistence();
     }
 
     public void setUserCountry(@NotNull Country userCountry) {
         prefPayload.setUserCountry(userCountry);
         if (prefPayload.getUserLanguage() != null)
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), userCountry.code));
-        persist();
+        requestPersistence();
     }
 
     public void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency) {
         if (preferredTradeCurrency != null) {
             prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
             GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
-            persist();
+            requestPersistence();
         }
     }
 
     public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
         prefPayload.setUseTorForBitcoinJ(useTorForBitcoinJ);
-        persist();
+        requestPersistence();
     }
 
     public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
         prefPayload.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook);
-        persist();
+        requestPersistence();
     }
 
     public void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
         prefPayload.setMaxPriceDistanceInPercent(maxPriceDistanceInPercent);
-        persist();
+        requestPersistence();
     }
 
     public void setBackupDirectory(String backupDirectory) {
         prefPayload.setBackupDirectory(backupDirectory);
-        persist();
+        requestPersistence();
     }
 
     public void setAutoSelectArbitrators(boolean autoSelectArbitrators) {
         prefPayload.setAutoSelectArbitrators(autoSelectArbitrators);
-        persist();
+        requestPersistence();
     }
 
     public void setUsePercentageBasedPrice(boolean usePercentageBasedPrice) {
         prefPayload.setUsePercentageBasedPrice(usePercentageBasedPrice);
-        persist();
+        requestPersistence();
     }
 
     public void setTagForPeer(String fullAddress, String tag) {
         prefPayload.getPeerTagMap().put(fullAddress, tag);
-        persist();
+        requestPersistence();
     }
 
     public void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode) {
         prefPayload.setOfferBookChartScreenCurrencyCode(offerBookChartScreenCurrencyCode);
-        persist();
+        requestPersistence();
     }
 
     public void setBuyScreenCurrencyCode(String buyScreenCurrencyCode) {
         prefPayload.setBuyScreenCurrencyCode(buyScreenCurrencyCode);
-        persist();
+        requestPersistence();
     }
 
     public void setSellScreenCurrencyCode(String sellScreenCurrencyCode) {
         prefPayload.setSellScreenCurrencyCode(sellScreenCurrencyCode);
-        persist();
+        requestPersistence();
     }
 
     public void setIgnoreTradersList(List<String> ignoreTradersList) {
         prefPayload.setIgnoreTradersList(ignoreTradersList);
-        persist();
+        requestPersistence();
     }
 
     public void setDirectoryChooserPath(String directoryChooserPath) {
         prefPayload.setDirectoryChooserPath(directoryChooserPath);
-        persist();
+        requestPersistence();
     }
 
     public void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode) {
         prefPayload.setTradeChartsScreenCurrencyCode(tradeChartsScreenCurrencyCode);
-        persist();
+        requestPersistence();
     }
 
     public void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex) {
         prefPayload.setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex);
-        persist();
+        requestPersistence();
     }
 
     public void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically) {
         prefPayload.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically);
-        persist();
+        requestPersistence();
     }
 
     public void setBitcoinNodes(String bitcoinNodes) {
         prefPayload.setBitcoinNodes(bitcoinNodes);
-        persist();
+        requestPersistence();
     }
 
     public void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee) {
         prefPayload.setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee);
-        persist();
+        requestPersistence();
     }
 
     public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) {
         prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
-        persist();
+        requestPersistence();
     }
 
     public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent, PaymentAccount paymentAccount) {
@@ -577,17 +577,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             prefPayload.setBuyerSecurityDepositAsPercentForCrypto(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
         else
             prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
-        persist();
+        requestPersistence();
     }
 
     public void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount) {
         prefPayload.setSelectedPaymentAccountForCreateOffer(paymentAccount);
-        persist();
+        requestPersistence();
     }
 
     public void setPayFeeInBtc(boolean payFeeInBtc) {
         prefPayload.setPayFeeInBtc(payFeeInBtc);
-        persist();
+        requestPersistence();
     }
 
     private void setFiatCurrencies(List<FiatCurrency> currencies) {
@@ -602,85 +602,85 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
         prefPayload.setBsqBlockChainExplorer(bsqBlockChainExplorer);
-        persist();
+        requestPersistence();
     }
 
     private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         prefPayload.setBlockChainExplorerTestNet(blockChainExplorerTestNet);
-        persist();
+        requestPersistence();
     }
 
     private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         prefPayload.setBlockChainExplorerMainNet(blockChainExplorerMainNet);
-        persist();
+        requestPersistence();
     }
 
     public void setResyncSpvRequested(boolean resyncSpvRequested) {
         prefPayload.setResyncSpvRequested(resyncSpvRequested);
         // We call that before shutdown so we dont want a delay here
-        persist();
+        requestPersistence();
     }
 
     public void setBridgeAddresses(List<String> bridgeAddresses) {
         prefPayload.setBridgeAddresses(bridgeAddresses);
         // We call that before shutdown so we dont want a delay here
-        persist();
+        requestPersistence();
     }
 
     // Only used from PB but keep it explicit as it may be used from the client and then we want to persist
     public void setPeerTagMap(Map<String, String> peerTagMap) {
         prefPayload.setPeerTagMap(peerTagMap);
-        persist();
+        requestPersistence();
     }
 
     public void setBridgeOptionOrdinal(int bridgeOptionOrdinal) {
         prefPayload.setBridgeOptionOrdinal(bridgeOptionOrdinal);
-        persist();
+        requestPersistence();
     }
 
     public void setTorTransportOrdinal(int torTransportOrdinal) {
         prefPayload.setTorTransportOrdinal(torTransportOrdinal);
-        persist();
+        requestPersistence();
     }
 
     public void setCustomBridges(String customBridges) {
         prefPayload.setCustomBridges(customBridges);
-        persist();
+        requestPersistence();
     }
 
     public void setBitcoinNodesOptionOrdinal(int bitcoinNodesOptionOrdinal) {
         prefPayload.setBitcoinNodesOptionOrdinal(bitcoinNodesOptionOrdinal);
-        persist();
+        requestPersistence();
     }
 
     public void setReferralId(String referralId) {
         prefPayload.setReferralId(referralId);
-        persist();
+        requestPersistence();
     }
 
     public void setPhoneKeyAndToken(String phoneKeyAndToken) {
         prefPayload.setPhoneKeyAndToken(phoneKeyAndToken);
-        persist();
+        requestPersistence();
     }
 
     public void setUseSoundForMobileNotifications(boolean value) {
         prefPayload.setUseSoundForMobileNotifications(value);
-        persist();
+        requestPersistence();
     }
 
     public void setUseTradeNotifications(boolean value) {
         prefPayload.setUseTradeNotifications(value);
-        persist();
+        requestPersistence();
     }
 
     public void setUseMarketNotifications(boolean value) {
         prefPayload.setUseMarketNotifications(value);
-        persist();
+        requestPersistence();
     }
 
     public void setUsePriceNotifications(boolean value) {
         prefPayload.setUsePriceNotifications(value);
-        persist();
+        requestPersistence();
     }
 
     public void setUseStandbyMode(boolean useStandbyMode) {
@@ -689,14 +689,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setTakeOfferSelectedPaymentAccountId(String value) {
         prefPayload.setTakeOfferSelectedPaymentAccountId(value);
-        persist();
+        requestPersistence();
     }
 
     public void setDaoFullNode(boolean value) {
         // We only persist if we have not set the program argument
         if (config.fullDaoNodeOptionSetExplicitly) {
             prefPayload.setDaoFullNode(value);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -704,17 +704,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // We only persist if we have not set the program argument
         if (!rpcUserFromOptions.isEmpty()) {
             prefPayload.setRpcUser(value);
-            persist();
+            requestPersistence();
         }
         prefPayload.setRpcUser(value);
-        persist();
+        requestPersistence();
     }
 
     public void setRpcPw(String value) {
         // We only persist if we have not set the program argument
         if (rpcPwFromOptions.isEmpty()) {
             prefPayload.setRpcPw(value);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -722,13 +722,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // We only persist if we have not set the program argument
         if (blockNotifyPortFromOptions == Config.UNSPECIFIED_PORT) {
             prefPayload.setBlockNotifyPort(value);
-            persist();
+            requestPersistence();
         }
     }
 
     public void setIgnoreDustThreshold(int value) {
         prefPayload.setIgnoreDustThreshold(value);
-        persist();
+        requestPersistence();
     }
 
 

@@ -158,7 +158,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         if (!getList().contains(proposal)) {
             myProposalList.add(proposal);
             listeners.forEach(l -> l.onListChanged(getList()));
-            persist();
+            requestPersistence();
         }
     }
 
@@ -170,7 +170,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
 
             if (myProposalList.remove(proposal)) {
                 listeners.forEach(l -> l.onListChanged(getList()));
-                persist();
+                requestPersistence();
             } else {
                 log.warn("We called remove at a proposal which was not in our list");
             }
@@ -235,7 +235,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         }
     }
 
-    private void persist() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 

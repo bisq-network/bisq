@@ -95,7 +95,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
                     .map(ProposalPayload::getProposal)
                     .filter(this::isNewProposal)
                     .forEach(this::registerProposalAsBallot);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -146,7 +146,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
 
     public void setVote(Ballot ballot, @Nullable Vote vote) {
         ballot.setVote(vote);
-        persist();
+        requestPersistence();
     }
 
     public void addListener(BallotListChangeListener listener) {
@@ -171,7 +171,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 }

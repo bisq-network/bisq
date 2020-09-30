@@ -275,7 +275,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     }
                 }
         );
-        tradeManager.persistTrades();
+        tradeManager.requestPersistence();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

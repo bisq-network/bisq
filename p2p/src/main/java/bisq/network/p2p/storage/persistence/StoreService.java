@@ -61,7 +61,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void persist() {
+    protected void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 

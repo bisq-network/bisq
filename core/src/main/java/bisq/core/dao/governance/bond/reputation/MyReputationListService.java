@@ -84,7 +84,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     public void addReputation(MyReputation reputation) {
         if (!myReputationList.contains(reputation)) {
             myReputationList.add(reputation);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -97,7 +97,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 }

@@ -404,11 +404,11 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     private void addBlindVoteToList(BlindVote blindVote) {
         if (!myBlindVoteList.getList().contains(blindVote)) {
             myBlindVoteList.add(blindVote);
-            persist();
+            requestPersistence();
         }
     }
 
-    private void persist() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 }

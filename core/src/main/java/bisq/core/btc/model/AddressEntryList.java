@@ -165,7 +165,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             maybeAddNewAddressEntry(tx);
         });
 
-        persist();
+        requestPersistence();
     }
 
     public ImmutableList<AddressEntry> getAddressEntriesAsListImmutable() {
@@ -175,7 +175,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public void addAddressEntry(AddressEntry addressEntry) {
         boolean setChangedByAdd = entrySet.add(addressEntry);
         if (setChangedByAdd)
-            persist();
+            requestPersistence();
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
@@ -183,7 +183,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
                                                                 AddressEntry.Context.AVAILABLE));
         if (setChangedByRemove || setChangedByAdd) {
-            persist();
+            requestPersistence();
         }
     }
 
@@ -194,12 +194,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         final AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId);
         boolean setChangedByAdd = entrySet.add(newAddressEntry);
         if (setChangedByRemove || setChangedByAdd)
-            persist();
+            requestPersistence();
 
         return newAddressEntry;
     }
 
-    public void persist() {
+    public void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 
