@@ -55,7 +55,9 @@ import java.math.BigInteger;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import java.lang.reflect.Method;
@@ -96,6 +98,7 @@ public class FilterManager {
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private final List<String> publicKeys;
     private ECKey filterSigningKey;
+    private final Set<Filter> invalidFilters = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +248,26 @@ public class FilterManager {
         user.setDevelopersFilter(filterWithSig);
 
         p2PService.addProtectedStorageEntry(filterWithSig);
+
+        // Cleanup potential old filters created in the past with same priv key
+        invalidFilters.forEach(filter -> {
+            removeInvalidFilters(filter, privKeyString);
+        });
+    }
+
+    public void addToInvalidFilters(Filter filter) {
+        invalidFilters.add(filter);
+    }
+
+    public void removeInvalidFilters(Filter filter, String privKeyString) {
+        log.info("Remove invalid filter {}", filter);
+        setFilterSigningKey(privKeyString);
+        String signatureAsBase64 = getSignature(Filter.cloneWithoutSig(filter));
+        Filter filterWithSig = Filter.cloneWithSig(filter, signatureAsBase64);
+        boolean result = p2PService.removeData(filterWithSig);
+        if (!result) {
+            log.warn("Could not remove filter {}", filter);
+        }
     }
 
     public boolean canRemoveDevFilter(String privKeyString) {
@@ -420,7 +443,16 @@ public class FilterManager {
                                 "New filer={}\n" +
                                 "Old filter={}",
                         newFilter, filterProperty.get());
+
+                addToInvalidFilters(newFilter);
                 return;
+            } else {
+                log.warn("We received a new filter from the network and the creation date is newer than the " +
+                                "filter we have already. We ignore the old filter.\n" +
+                                "New filer={}\n" +
+                                "Old filter={}",
+                        newFilter, filterProperty.get());
+                addToInvalidFilters(currentFilter);
             }
 
             if (isPrivilegedDevPubKeyBanned(newFilter.getSignerPubKeyAsHex())) {
