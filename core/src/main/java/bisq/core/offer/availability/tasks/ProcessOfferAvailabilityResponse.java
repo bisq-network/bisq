@@ -34,7 +34,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityModel> {
-    public ProcessOfferAvailabilityResponse(TaskRunner taskHandler, OfferAvailabilityModel model) {
+    public ProcessOfferAvailabilityResponse(TaskRunner<OfferAvailabilityModel> taskHandler,
+                                            OfferAvailabilityModel model) {
         super(taskHandler, model);
     }
 
