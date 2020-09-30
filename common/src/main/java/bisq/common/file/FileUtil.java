@@ -201,7 +201,7 @@ public class FileUtil {
         FileUtils.copyDirectory(source, destination);
     }
 
-    static File createNewFile(Path path) throws IOException {
+    public static File createNewFile(Path path) throws IOException {
         File file = path.toFile();
         if (!file.createNewFile()) {
             throw new IOException("There already exists a file with path: " + path);
