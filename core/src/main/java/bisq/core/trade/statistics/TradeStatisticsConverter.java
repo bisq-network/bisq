@@ -35,21 +35,22 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-//todo add network listeners for old data arriving from old nodes to convert them to the new class
 @Slf4j
 public class TradeStatisticsConverter {
+    private final P2PDataStorage p2PDataStorage;
     private final TradeStatistics2StorageService tradeStatistics2StorageService;
     private final TradeStatistics3StorageService tradeStatistics3StorageService;
-    @org.jetbrains.annotations.NotNull
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
     private final File tradeStatistics2Store;
 
     @Inject
-    public TradeStatisticsConverter(TradeStatistics2StorageService tradeStatistics2StorageService,
+    public TradeStatisticsConverter(P2PDataStorage p2PDataStorage,
+                                    TradeStatistics2StorageService tradeStatistics2StorageService,
                                     TradeStatistics3StorageService tradeStatistics3StorageService,
                                     AppendOnlyDataStoreService appendOnlyDataStoreService,
                                     @Named(Config.STORAGE_DIR) File storageDir
     ) {
+        this.p2PDataStorage = p2PDataStorage;
         this.tradeStatistics2StorageService = tradeStatistics2StorageService;
         this.tradeStatistics3StorageService = tradeStatistics3StorageService;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
@@ -60,24 +61,26 @@ public class TradeStatisticsConverter {
     }
 
     public void onAllServicesInitialized() {
+        convertExistingStore();
+
+        // We listen to old TradeStatistics2 objects, convert and store them and rebroadcast.
+        p2PDataStorage.addAppendOnlyDataStoreListener(payload -> {
+            if (payload instanceof TradeStatistics2) {
+                TradeStatistics3 tradeStatistics3 = convertToTradeStatistics3((TradeStatistics2) payload);
+                // We add it to the p2PDataStorage, which handles to get the data stored in the maps and maybe
+                // re-broadcast as tradeStatistics3 object if not already received.
+                p2PDataStorage.addPersistableNetworkPayload(tradeStatistics3, null, true);
+            }
+        });
+    }
+
+    protected void convertExistingStore() {
         if (tradeStatistics2Store.exists()) {
             Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = tradeStatistics3StorageService.getMap();
             tradeStatistics2StorageService.getMapOfAllData().values().stream()
                     .filter(e -> e instanceof TradeStatistics2)
                     .map(e -> (TradeStatistics2) e)
-                    .map(e -> {
-                        Map<String, String> extraDataMap = e.getExtraDataMap();
-                        String mediator = extraDataMap != null ? extraDataMap.get(TradeStatistics2.MEDIATOR_ADDRESS) : null;
-                        String refundAgent = extraDataMap != null ? extraDataMap.get(TradeStatistics2.REFUND_AGENT_ADDRESS) : null;
-                        return new TradeStatistics3(e.getCurrencyCode(),
-                                e.getTradePrice().getValue(),
-                                e.getTradeAmount().getValue(),
-                                e.getOfferPaymentMethod(),
-                                e.getTradeDate().getTime(),
-                                mediator,
-                                refundAgent,
-                                null);
-                    })
+                    .map(this::convertToTradeStatistics3)
                     .forEach(e -> appendOnlyDataStoreService.put(new P2PDataStorage.ByteArray(e.getHash()), e));
             try {
                 FileUtil.deleteFileIfExists(tradeStatistics2Store);
@@ -85,5 +88,19 @@ public class TradeStatisticsConverter {
                 e.printStackTrace();
             }
         }
+    }
+
+    protected TradeStatistics3 convertToTradeStatistics3(TradeStatistics2 e) {
+        Map<String, String> extraDataMap = e.getExtraDataMap();
+        String mediator = extraDataMap != null ? extraDataMap.get(TradeStatistics2.MEDIATOR_ADDRESS) : null;
+        String refundAgent = extraDataMap != null ? extraDataMap.get(TradeStatistics2.REFUND_AGENT_ADDRESS) : null;
+        return new TradeStatistics3(e.getCurrencyCode(),
+                e.getTradePrice().getValue(),
+                e.getTradeAmount().getValue(),
+                e.getOfferPaymentMethod(),
+                e.getTradeDate().getTime(),
+                mediator,
+                refundAgent,
+                null);
     }
 }
