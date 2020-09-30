@@ -85,13 +85,14 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private final PubKeyRing agentPubKeyRing; // dispute agent
     private final boolean isSupportTicket;
     private final ObservableList<ChatMessage> chatMessages = FXCollections.observableArrayList();
-    private BooleanProperty isClosedProperty = new SimpleBooleanProperty();
+    private final BooleanProperty isClosedProperty = new SimpleBooleanProperty();
     // disputeResultProperty.get is Nullable!
-    private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>();
+    private final long openingDate;
     @Nullable
+    @Setter
     private String disputePayoutTxId;
-    private long openingDate;
-
+    @Setter
     // Added v1.2.0
     private SupportType supportType;
     // Only used at refundAgent so that he knows how the mediator resolved the case
@@ -135,50 +136,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                    PubKeyRing agentPubKeyRing,
                    boolean isSupportTicket,
                    SupportType supportType) {
-        this(tradeId,
-                traderId,
-                disputeOpenerIsBuyer,
-                disputeOpenerIsMaker,
-                traderPubKeyRing,
-                tradeDate,
-                contract,
-                contractHash,
-                depositTxSerialized,
-                payoutTxSerialized,
-                depositTxId,
-                payoutTxId,
-                contractAsJson,
-                makerContractSignature,
-                takerContractSignature,
-                agentPubKeyRing,
-                isSupportTicket,
-                supportType);
         this.openingDate = openingDate;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Dispute(String tradeId,
-                   int traderId,
-                   boolean disputeOpenerIsBuyer,
-                   boolean disputeOpenerIsMaker,
-                   PubKeyRing traderPubKeyRing,
-                   long tradeDate,
-                   Contract contract,
-                   @Nullable byte[] contractHash,
-                   @Nullable byte[] depositTxSerialized,
-                   @Nullable byte[] payoutTxSerialized,
-                   @Nullable String depositTxId,
-                   @Nullable String payoutTxId,
-                   String contractAsJson,
-                   @Nullable String makerContractSignature,
-                   @Nullable String takerContractSignature,
-                   PubKeyRing agentPubKeyRing,
-                   boolean isSupportTicket,
-                   SupportType supportType) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.disputeOpenerIsBuyer = disputeOpenerIsBuyer;
@@ -201,6 +159,11 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         id = tradeId + "_" + traderId;
         uid = UUID.randomUUID().toString();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public protobuf.Dispute toProtoMessage() {
@@ -241,7 +204,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     }
 
     public static Dispute fromProto(protobuf.Dispute proto, CoreProtoResolver coreProtoResolver) {
-        Dispute dispute = new Dispute(proto.getTradeId(),
+        Dispute dispute = new Dispute(proto.getOpeningDate(),
+                proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getDisputeOpenerIsBuyer(),
                 proto.getDisputeOpenerIsMaker(),
@@ -264,7 +228,6 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
-        dispute.openingDate = proto.getOpeningDate();
         dispute.isClosedProperty.set(proto.getIsClosed());
         if (proto.hasDisputeResult())
             dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
@@ -314,13 +277,6 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         disputeResultProperty.set(disputeResult);
     }
 
-    public void setDisputePayoutTxId(String disputePayoutTxId) {
-        this.disputePayoutTxId = disputePayoutTxId;
-    }
-
-    public void setSupportType(SupportType supportType) {
-        this.supportType = supportType;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
