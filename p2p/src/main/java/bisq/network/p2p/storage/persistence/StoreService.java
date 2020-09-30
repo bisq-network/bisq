@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.storage.persistence;
 
-import bisq.common.persistence.FileUtil;
+import bisq.common.file.FileUtil;
+import bisq.common.file.ResourceNotFoundException;
 import bisq.common.persistence.PersistenceManager;
-import bisq.common.persistence.ResourceNotFoundException;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
 import java.nio.file.Paths;

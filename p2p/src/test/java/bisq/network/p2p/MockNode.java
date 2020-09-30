@@ -27,7 +27,7 @@ import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
-import bisq.common.persistence.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 

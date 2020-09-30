@@ -18,7 +18,7 @@
 package bisq.core.trade;
 
 import bisq.common.config.Config;
-import bisq.common.persistence.JsonFileManager;
+import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;

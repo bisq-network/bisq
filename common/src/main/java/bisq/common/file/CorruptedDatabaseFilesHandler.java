@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.persistence;
+package bisq.common.file;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

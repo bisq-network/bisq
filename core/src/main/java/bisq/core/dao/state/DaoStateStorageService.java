@@ -25,7 +25,7 @@ import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
 import bisq.common.config.Config;
-import bisq.common.persistence.FileUtil;
+import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;

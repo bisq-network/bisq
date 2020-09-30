@@ -69,7 +69,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.persistence.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
 

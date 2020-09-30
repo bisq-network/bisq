@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.network;
 
-import bisq.common.persistence.FileUtil;
+import bisq.common.file.FileUtil;
 
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;

@@ -32,7 +32,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
-import bisq.common.persistence.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import com.google.inject.Inject;

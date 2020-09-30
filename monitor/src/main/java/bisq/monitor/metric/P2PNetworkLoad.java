@@ -39,7 +39,7 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
 import bisq.common.config.Config;
-import bisq.common.persistence.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;

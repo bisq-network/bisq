@@ -3,9 +3,9 @@ package bisq.core.offer;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
 
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.persistence.CorruptedDatabaseFilesHandler;
 import bisq.common.persistence.PersistenceManager;
 
 import java.nio.file.Files;
