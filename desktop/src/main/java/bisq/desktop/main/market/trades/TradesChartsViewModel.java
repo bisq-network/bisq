@@ -34,7 +34,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Altcoin;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
@@ -100,15 +100,15 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private PriceFeedService priceFeedService;
     private Navigation navigation;
 
-    private final SetChangeListener<TradeStatistics2> setChangeListener;
+    private final SetChangeListener<TradeStatistics3> setChangeListener;
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
     private final CurrencyList currencyListItems;
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""), -1);
-    final ObservableList<TradeStatistics2> tradeStatisticsByCurrency = FXCollections.observableArrayList();
+    final ObservableList<TradeStatistics3> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
-    private Map<Long, Pair<Date, Set<TradeStatistics2>>> itemsPerInterval;
+    private Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval;
 
     TickUnit tickUnit;
     final int maxTicks = 90;
@@ -145,7 +145,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void fillTradeCurrencies() {
         // Don't use a set as we need all entries
         List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .flatMap(e -> CurrencyUtil.getTradeCurrency(e.getCurrencyCode()).stream())
+                .flatMap(e -> CurrencyUtil.getTradeCurrency(e.getCurrency()).stream())
                 .collect(Collectors.toList());
 
         currencyListItems.updateWithCurrencies(tradeCurrencyList, showAllCurrencyListItem);
@@ -241,15 +241,15 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void updateChartData() {
         tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrencyCode().equals(getCurrencyCode()))
+                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(getCurrencyCode()))
                 .collect(Collectors.toList()));
 
         // Generate date range and create sets for all ticks
         itemsPerInterval = new HashMap<>();
         Date time = new Date();
         for (long i = maxTicks + 1; i >= 0; --i) {
-            Set<TradeStatistics2> set = new HashSet<>();
-            Pair<Date, Set<TradeStatistics2>> pair = new Pair<>((Date) time.clone(), set);
+            Set<TradeStatistics3> set = new HashSet<>();
+            Pair<Date, Set<TradeStatistics3>> pair = new Pair<>((Date) time.clone(), set);
             itemsPerInterval.put(i, pair);
             time.setTime(time.getTime() - 1);
             time = roundToTick(time, tickUnit);
@@ -258,7 +258,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         // Get all entries for the defined time interval
         tradeStatisticsByCurrency.forEach(e -> {
             for (long i = maxTicks; i > 0; --i) {
-                Pair<Date, Set<TradeStatistics2>> p = itemsPerInterval.get(i);
+                Pair<Date, Set<TradeStatistics3>> p = itemsPerInterval.get(i);
                 if (e.getTradeDate().after(p.getKey())) {
                     p.getValue().add(e);
                     break;
@@ -283,7 +283,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     @VisibleForTesting
-    CandleData getCandleData(long tick, Set<TradeStatistics2> set) {
+    CandleData getCandleData(long tick, Set<TradeStatistics3> set) {
         long open = 0;
         long close = 0;
         long high = 0;
@@ -293,7 +293,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long numTrades = set.size();
         List<Long> tradePrices = new ArrayList<>(set.size());
 
-        for (TradeStatistics2 item : set) {
+        for (TradeStatistics3 item : set) {
             long tradePriceAsLong = item.getTradePrice().getValue();
             // Previously a check was done which inverted the low and high for cryptocurrencies.
             low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
@@ -305,8 +305,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
         Collections.sort(tradePrices);
 
-        List<TradeStatistics2> list = new ArrayList<>(set);
-        list.sort(Comparator.comparingLong(o -> o.getTradeDate().getTime()));
+        List<TradeStatistics3> list = new ArrayList<>(set);
+        list.sort(Comparator.comparingLong(TradeStatistics3::getDate));
         if (list.size() > 0) {
             open = list.get(0).getTradePrice().getValue();
             close = list.get(list.size() - 1).getTradePrice().getValue();

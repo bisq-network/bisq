@@ -35,7 +35,6 @@ import bisq.common.taskrunner.TaskRunner;
 import com.google.common.base.Charsets;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -113,7 +112,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion(),
                     sig,
-                    new Date().getTime());
+                    trade.getTakeOfferDate().getTime());
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     message.getClass().getSimpleName(), message.getTradeId(),
                     message.getUid(), trade.getTradingPeerNodeAddress());

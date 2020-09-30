@@ -61,7 +61,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Serialized size is about 180-210 byte. Nov 2017 we have 5500 objects
  */
-
+@Deprecated
 @Slf4j
 @Value
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,

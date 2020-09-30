@@ -75,8 +75,10 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
             tradingPeer.setAccountAgeWitnessNonce(trade.getId().getBytes(Charsets.UTF_8));
             tradingPeer.setAccountAgeWitnessSignature(inputsForDepositTxRequest.getAccountAgeWitnessSignatureOfOfferId());
-            tradingPeer.setCurrentDate(inputsForDepositTxRequest.getCurrentDate());
-
+            long peersDate = inputsForDepositTxRequest.getCurrentDate();
+            tradingPeer.setCurrentDate(peersDate);
+            // We use takers take offer time to have same data when publishing statistics
+            trade.setTakeOfferDate(peersDate);
             User user = checkNotNull(processModel.getUser(), "User must not be null");
 
             NodeAddress mediatorNodeAddress = checkNotNull(inputsForDepositTxRequest.getMediatorNodeAddress(),

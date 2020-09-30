@@ -277,6 +277,7 @@ public abstract class Trade implements Tradable, Model {
     private final long txFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
+    // Maker sets initially own date and once the first message gets processes we set the takers take offer date
     @Setter
     private long takeOfferDate;
     @Getter

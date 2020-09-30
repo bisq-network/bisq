@@ -20,7 +20,7 @@ package bisq.core.trade.protocol.tasks;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.NetworkNode;
@@ -51,27 +51,33 @@ public class PublishTradeStatistics extends TradeTask {
                     extraDataMap.put(OfferPayload.REFERRAL_ID, processModel.getReferralIdService().getOptionalReferralId().get());
                 }
 
-                NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
-                if (mediatorNodeAddress != null) {
-                    // The first 4 chars are sufficient to identify a mediator.
-                    // For testing with regtest/localhost we use the full address as its localhost and would result in
-                    // same values for multiple mediators.
-                    NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
-                    String address = networkNode instanceof TorNetworkNode ?
-                            mediatorNodeAddress.getFullAddress().substring(0, 4) :
-                            mediatorNodeAddress.getFullAddress();
-                    extraDataMap.put(TradeStatistics2.MEDIATOR_ADDRESS, address);
-                }
+                NodeAddress mediatorNodeAddress = checkNotNull(trade.getMediatorNodeAddress());
+                // The first 4 chars are sufficient to identify a mediator.
+                // For testing with regtest/localhost we use the full address as its localhost and would result in
+                // same values for multiple mediators.
+                NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
+                String truncatedMediatorNodeAddress = networkNode instanceof TorNetworkNode ?
+                        mediatorNodeAddress.getFullAddress().substring(0, 4) :
+                        mediatorNodeAddress.getFullAddress();
+
+                NodeAddress refundAgentNodeAddress = checkNotNull(trade.getRefundAgentNodeAddress());
+                String truncatedRefundAgentNodeAddress = networkNode instanceof TorNetworkNode ?
+                        refundAgentNodeAddress.getFullAddress().substring(0, 4) :
+                        refundAgentNodeAddress.getFullAddress();
+
 
                 Offer offer = trade.getOffer();
                 checkNotNull(offer, "offer must not ne null");
                 checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
-                TradeStatistics2 tradeStatistics = new TradeStatistics2(offer.getOfferPayload(),
-                        trade.getTradePrice(),
-                        trade.getTradeAmount(),
-                        trade.getDate(),
-                        trade.getDepositTxId(),
+                TradeStatistics3 tradeStatistics = new TradeStatistics3(offer.getCurrencyCode(),
+                        trade.getTradePrice().getValue(),
+                        trade.getTradeAmountAsLong(),
+                        offer.getPaymentMethod().getId(),
+                        trade.getTakeOfferDate().getTime(),
+                        truncatedMediatorNodeAddress,
+                        truncatedRefundAgentNodeAddress,
                         extraDataMap);
+
                 processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
             }
             complete();
