@@ -17,7 +17,6 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
@@ -33,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class TradeStatistics2Store extends PersistableNetworkPayloadStore {
+public class TradeStatistics2Store extends PersistableNetworkPayloadStore<TradeStatistics2> {
 
     TradeStatistics2Store() {
     }
@@ -44,7 +43,7 @@ public class TradeStatistics2Store extends PersistableNetworkPayloadStore {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TradeStatistics2Store(List<TradeStatistics2> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -65,9 +64,5 @@ public class TradeStatistics2Store extends PersistableNetworkPayloadStore {
         List<TradeStatistics2> list = proto.getItemsList().stream()
                 .map(TradeStatistics2::fromProto).collect(Collectors.toList());
         return new TradeStatistics2Store(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }
