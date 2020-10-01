@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state;
+package bisq.core.dao.state.storage;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;

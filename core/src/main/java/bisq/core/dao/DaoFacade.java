@@ -54,7 +54,6 @@ import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalFactory;
 import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -70,6 +69,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
+import bisq.core.dao.state.storage.DaoStateStorageService;
 
 import bisq.asset.Asset;
 

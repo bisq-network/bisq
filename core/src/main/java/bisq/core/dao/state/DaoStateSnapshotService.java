@@ -22,6 +22,7 @@ import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.storage.DaoStateStorageService;
 
 import javax.inject.Inject;
 
