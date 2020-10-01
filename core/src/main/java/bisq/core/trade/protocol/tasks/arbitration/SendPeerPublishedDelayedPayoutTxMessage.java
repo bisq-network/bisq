@@ -15,34 +15,55 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.taker;
+package bisq.core.trade.protocol.tasks.arbitration;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
+
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TakerVerifyMakerAccount extends TradeTask {
+public class SendPeerPublishedDelayedPayoutTxMessage extends SendMailboxMessageTask {
 
-    @SuppressWarnings({"unused"})
-    public TakerVerifyMakerAccount(TaskRunner taskHandler, Trade trade) {
+    public SendPeerPublishedDelayedPayoutTxMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
+    }
+
+    @Override
+    protected TradeMessage getMessage(String id) {
+        return new PeerPublishedDelayedPayoutTxMessage(UUID.randomUUID().toString(),
+                trade.getId(),
+                trade.getTradingPeerNodeAddress());
+    }
+
+    @Override
+    protected void setStateSent() {
+    }
+
+    @Override
+    protected void setStateArrived() {
+    }
+
+    @Override
+    protected void setStateStoredInMailbox() {
+    }
+
+    @Override
+    protected void setStateFault() {
     }
 
     @Override
     protected void run() {
         try {
             runInterceptHook();
-           /* if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),
-                    processModel.tradingPeer.getPaymentAccountPayload())) {
-                failed("Taker is blacklisted.");
-            }
-            else {*/
-            complete();
-            //  }
+
+            super.run();
         } catch (Throwable t) {
             failed(t);
         }

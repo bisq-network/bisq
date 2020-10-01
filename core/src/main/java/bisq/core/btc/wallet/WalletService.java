@@ -249,12 +249,6 @@ public abstract class WalletService {
         }
     }
 
-    public static void removeSignatures(Transaction transaction) {
-        for (TransactionInput input : transaction.getInputs()) {
-            input.setScriptSig(new Script(new byte[]{}));
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Sign tx
@@ -589,10 +583,6 @@ public abstract class WalletService {
 
     public boolean checkAESKey(KeyParameter aesKey) {
         return wallet.checkAESKey(aesKey);
-    }
-
-    public DeterministicKey freshKey(KeyChain.KeyPurpose purpose) {
-        return wallet.freshKey(purpose);
     }
 
     @Nullable

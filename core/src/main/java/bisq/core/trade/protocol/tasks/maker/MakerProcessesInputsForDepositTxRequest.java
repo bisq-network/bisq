@@ -43,8 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public MakerProcessesInputsForDepositTxRequest(TaskRunner taskHandler, Trade trade) {
+    public MakerProcessesInputsForDepositTxRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -52,35 +51,40 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("current trade state " + trade.getState());
-            InputsForDepositTxRequest inputsForDepositTxRequest = (InputsForDepositTxRequest) processModel.getTradeMessage();
-            checkNotNull(inputsForDepositTxRequest);
-            checkTradeId(processModel.getOfferId(), inputsForDepositTxRequest);
+            InputsForDepositTxRequest request = (InputsForDepositTxRequest) processModel.getTradeMessage();
+            checkNotNull(request);
+            checkTradeId(processModel.getOfferId(), request);
 
-            final TradingPeer tradingPeer = processModel.getTradingPeer();
-            tradingPeer.setPaymentAccountPayload(checkNotNull(inputsForDepositTxRequest.getTakerPaymentAccountPayload()));
-            tradingPeer.setRawTransactionInputs(checkNotNull(inputsForDepositTxRequest.getRawTransactionInputs()));
-            checkArgument(inputsForDepositTxRequest.getRawTransactionInputs().size() > 0);
+            TradingPeer tradingPeer = processModel.getTradingPeer();
+            tradingPeer.setPaymentAccountPayload(checkNotNull(request.getTakerPaymentAccountPayload()));
+            tradingPeer.setRawTransactionInputs(checkNotNull(request.getRawTransactionInputs()));
+            checkArgument(request.getRawTransactionInputs().size() > 0);
 
-            tradingPeer.setChangeOutputValue(inputsForDepositTxRequest.getChangeOutputValue());
-            tradingPeer.setChangeOutputAddress(inputsForDepositTxRequest.getChangeOutputAddress());
+            tradingPeer.setChangeOutputValue(request.getChangeOutputValue());
+            tradingPeer.setChangeOutputAddress(request.getChangeOutputAddress());
 
-            tradingPeer.setMultiSigPubKey(checkNotNull(inputsForDepositTxRequest.getTakerMultiSigPubKey()));
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(inputsForDepositTxRequest.getTakerPayoutAddressString()));
-            tradingPeer.setPubKeyRing(checkNotNull(inputsForDepositTxRequest.getTakerPubKeyRing()));
+            tradingPeer.setMultiSigPubKey(checkNotNull(request.getTakerMultiSigPubKey()));
+            tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
+            tradingPeer.setPubKeyRing(checkNotNull(request.getTakerPubKeyRing()));
 
-            tradingPeer.setAccountId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerAccountId()));
-            trade.setTakerFeeTxId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerFeeTxId()));
+            tradingPeer.setAccountId(nonEmptyStringOf(request.getTakerAccountId()));
 
-            // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
+            // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
+            // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
+            // message but that cannot be changed due backward compatibility issues. It is a left over from the
+            // old trade protocol.
+            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(request.getTakerFeeTxId()));
+
+            // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for
+            // passing the nonce we want to get signed)
             tradingPeer.setAccountAgeWitnessNonce(trade.getId().getBytes(Charsets.UTF_8));
-            tradingPeer.setAccountAgeWitnessSignature(inputsForDepositTxRequest.getAccountAgeWitnessSignatureOfOfferId());
-            tradingPeer.setCurrentDate(inputsForDepositTxRequest.getCurrentDate());
+            tradingPeer.setAccountAgeWitnessSignature(request.getAccountAgeWitnessSignatureOfOfferId());
+            tradingPeer.setCurrentDate(request.getCurrentDate());
 
             User user = checkNotNull(processModel.getUser(), "User must not be null");
 
-            NodeAddress mediatorNodeAddress = checkNotNull(inputsForDepositTxRequest.getMediatorNodeAddress(),
-                    "payDepositRequest.getMediatorNodeAddress() must not be null");
+            NodeAddress mediatorNodeAddress = checkNotNull(request.getMediatorNodeAddress(),
+                    "InputsForDepositTxRequest.getMediatorNodeAddress() must not be null");
             trade.setMediatorNodeAddress(mediatorNodeAddress);
             Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
                     "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
@@ -89,7 +93,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             try {
-                long takersTradePrice = inputsForDepositTxRequest.getTradePrice();
+                long takersTradePrice = request.getTradePrice();
                 offer.checkTradePriceTolerance(takersTradePrice);
                 trade.setTradePrice(takersTradePrice);
             } catch (TradePriceOutOfToleranceException e) {
@@ -98,8 +102,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                 failed(e2);
             }
 
-            checkArgument(inputsForDepositTxRequest.getTradeAmount() > 0);
-            trade.setTradeAmount(Coin.valueOf(inputsForDepositTxRequest.getTradeAmount()));
+            checkArgument(request.getTradeAmount() > 0);
+            trade.setTradeAmount(Coin.valueOf(request.getTradeAmount()));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 

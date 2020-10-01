@@ -149,7 +149,7 @@ class RequestDataHandler implements MessageListener {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.trace("Send " + getDataRequest + " to " + nodeAddress + " succeeded.");
+                        log.trace("Send {} to {} succeeded.", getDataRequest, nodeAddress);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");

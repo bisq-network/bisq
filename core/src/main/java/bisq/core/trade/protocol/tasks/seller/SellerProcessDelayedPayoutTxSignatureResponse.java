@@ -30,8 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SellerProcessDelayedPayoutTxSignatureResponse(TaskRunner taskHandler, Trade trade) {
+    public SellerProcessDelayedPayoutTxSignatureResponse(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -39,17 +38,14 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            DelayedPayoutTxSignatureResponse delayedPayoutTxSignatureResponse = (DelayedPayoutTxSignatureResponse) processModel.getTradeMessage();
-            checkNotNull(delayedPayoutTxSignatureResponse);
-            checkTradeId(processModel.getOfferId(), delayedPayoutTxSignatureResponse);
+            DelayedPayoutTxSignatureResponse response = (DelayedPayoutTxSignatureResponse) processModel.getTradeMessage();
+            checkNotNull(response);
+            checkTradeId(processModel.getOfferId(), response);
 
-            byte[] delayedPayoutTxSignature = checkNotNull(delayedPayoutTxSignatureResponse.getDelayedPayoutTxSignature());
-            processModel.getTradingPeer().setDelayedPayoutTxSignature(delayedPayoutTxSignature);
+            processModel.getTradingPeer().setDelayedPayoutTxSignature(checkNotNull(response.getDelayedPayoutTxSignature()));
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-
-            // todo trade.setState
 
             complete();
         } catch (Throwable t) {

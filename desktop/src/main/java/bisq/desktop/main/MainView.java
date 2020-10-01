@@ -117,7 +117,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 90;
     private Label versionLabel;
     @Setter
-    private Runnable onUiReadyHandler;
+    private Runnable onApplicationStartedHandler;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -405,7 +405,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         daoStateMonitoringService.addListener(this);
 
         // Delay a bit to give time for rendering the splash screen
-        UserThread.execute(() -> onUiReadyHandler.run());
+        UserThread.execute(() -> onApplicationStartedHandler.run());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

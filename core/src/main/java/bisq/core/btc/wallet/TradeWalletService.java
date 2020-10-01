@@ -61,7 +61,6 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -349,7 +348,6 @@ public class TradeWalletService {
                 "Reserve amount does not equal input amount");
         dummyTX.addInput(reservedForTradeOutput);
 
-        WalletService.removeSignatures(dummyTX);
         WalletService.verifyTransaction(dummyTX);
 
         //WalletService.printTx("dummyTX", dummyTX);

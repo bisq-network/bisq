@@ -33,6 +33,9 @@ import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.ARBITRATOR;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.MEDIATOR;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUNDAGENT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -43,10 +46,6 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
 public class RegisterDisputeAgentsTest extends MethodTest {
-
-    private static final String ARBITRATOR = "arbitrator";
-    private static final String MEDIATOR = "mediator";
-    private static final String REFUNDAGENT = "refundagent";
 
     @BeforeAll
     public static void setUp() {
@@ -61,7 +60,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(1)
     public void testRegisterArbitratorShouldThrowException() {
         var req =
-                createRegisterDisputeAgentRequest(ARBITRATOR);
+                createRegisterDisputeAgentRequest(ARBITRATOR.name());
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req));
         assertEquals("INVALID_ARGUMENT: arbitrators must be registered in a Bisq UI",
@@ -83,7 +82,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(3)
     public void testInvalidRegistrationKeyArgShouldThrowException() {
         var req = RegisterDisputeAgentRequest.newBuilder()
-                .setDisputeAgentType(REFUNDAGENT)
+                .setDisputeAgentType(REFUNDAGENT.name().toLowerCase())
                 .setRegistrationKey("invalid" + DEV_PRIVILEGE_PRIV_KEY).build();
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req));
@@ -95,7 +94,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(4)
     public void testRegisterMediator() {
         var req =
-                createRegisterDisputeAgentRequest(MEDIATOR);
+                createRegisterDisputeAgentRequest(MEDIATOR.name());
         grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req);
     }
 
@@ -103,7 +102,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(5)
     public void testRegisterRefundAgent() {
         var req =
-                createRegisterDisputeAgentRequest(REFUNDAGENT);
+                createRegisterDisputeAgentRequest(REFUNDAGENT.name());
         grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req);
     }
 

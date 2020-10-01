@@ -30,8 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SellerAsMakerProcessDepositTxMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerAsMakerProcessDepositTxMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -43,10 +42,14 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
             DepositTxMessage message = (DepositTxMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
-            checkNotNull(message.getDepositTx());
 
-            processModel.getTradingPeer().setPreparedDepositTx(message.getDepositTx());
+            processModel.getTradingPeer().setPreparedDepositTx(checkNotNull(message.getDepositTx()));
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
+
+            // When we receive that message the taker has published the taker fee, so we apply it to the trade.
+            // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
+            // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
+            trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
 
             complete();
         } catch (Throwable t) {

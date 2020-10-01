@@ -27,12 +27,13 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ApplyFilter extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public ApplyFilter(TaskRunner taskHandler, Trade trade) {
+    public ApplyFilter(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -41,11 +42,12 @@ public class ApplyFilter extends TradeTask {
         try {
             runInterceptHook();
 
-            NodeAddress nodeAddress = processModel.getTempTradingPeerNodeAddress();
-            PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload());
+            NodeAddress nodeAddress = checkNotNull(processModel.getTempTradingPeerNodeAddress());
+            @Nullable
+            PaymentAccountPayload paymentAccountPayload = processModel.getTradingPeer().getPaymentAccountPayload();
 
             FilterManager filterManager = processModel.getFilterManager();
-            if (nodeAddress != null && filterManager.isNodeAddressBanned(nodeAddress)) {
+            if (filterManager.isNodeAddressBanned(nodeAddress)) {
                 failed("Other trader is banned by their node address.\n" +
                         "tradingPeerNodeAddress=" + nodeAddress);
             } else if (filterManager.isOfferIdBanned(trade.getId())) {
@@ -57,7 +59,7 @@ public class ApplyFilter extends TradeTask {
             } else if (filterManager.isPaymentMethodBanned(checkNotNull(trade.getOffer()).getPaymentMethod())) {
                 failed("Payment method is banned.\n" +
                         "Payment method=" + trade.getOffer().getPaymentMethod().getId());
-            } else if (filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload)) {
+            } else if (paymentAccountPayload != null && filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload)) {
                 failed("Other trader is banned by their trading account data.\n" +
                         "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails());
             } else if (filterManager.requireUpdateToNewVersionForTrading()) {

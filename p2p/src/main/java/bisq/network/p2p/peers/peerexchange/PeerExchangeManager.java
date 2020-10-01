@@ -276,7 +276,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 peerExchangeHandler.sendGetPeersRequestAfterRandomDelay(nodeAddress);
             } else {
                 log.trace("We have started already a peerExchangeHandler. " +
-                        "We ignore that call. nodeAddress=" + nodeAddress);
+                        "We ignore that call. nodeAddress={}", nodeAddress);
             }
         } else {
             log.trace("We have stopped already. We ignore that requestReportedPeers call.");

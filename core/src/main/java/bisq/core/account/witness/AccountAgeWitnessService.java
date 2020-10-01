@@ -35,14 +35,11 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
-import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
@@ -76,7 +73,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -202,7 +198,7 @@ public class AccountAgeWitnessService {
 
     private void onBootStrapped() {
         republishAllFiatAccounts();
-        signSameNameAccounts();
+        signAndPublishSameNameAccounts();
     }
 
 
@@ -271,8 +267,11 @@ public class AccountAgeWitnessService {
 
     private Optional<AccountAgeWitness> findTradePeerWitness(Trade trade) {
         TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
-        return (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) ?
-                Optional.empty() : findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
+        return (tradingPeer == null ||
+                tradingPeer.getPaymentAccountPayload() == null ||
+                tradingPeer.getPubKeyRing() == null) ?
+                Optional.empty() :
+                findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
     private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
@@ -562,9 +561,9 @@ public class AccountAgeWitnessService {
     }
 
     private boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
-        final boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) <= TimeUnit.DAYS.toMillis(1);
+        boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) <= TimeUnit.DAYS.toMillis(1);
         if (!result) {
-            final String msg = "Peers current date is further than 1 day off to our current date. " +
+            String msg = "Peers current date is further than 1 day off to our current date. " +
                     "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date();
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
@@ -643,7 +642,7 @@ public class AccountAgeWitnessService {
                                                 AccountAgeWitness accountAgeWitness,
                                                 ECKey key,
                                                 PublicKey peersPubKey) {
-        signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
+        signedWitnessService.signAndPublishAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
     }
 
     public String arbitratorSignOrphanWitness(AccountAgeWitness accountAgeWitness,
@@ -655,7 +654,7 @@ public class AccountAgeWitnessService {
                 .findAny()
                 .orElse(null);
         checkNotNull(signedWitness);
-        return signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, signedWitness.getWitnessOwnerPubKey(),
+        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key, signedWitness.getWitnessOwnerPubKey(),
                 time);
     }
 
@@ -669,10 +668,10 @@ public class AccountAgeWitnessService {
                                                 ECKey key,
                                                 byte[] tradersPubKey,
                                                 long time) {
-        signedWitnessService.signAccountAgeWitness(accountAgeWitness, key, tradersPubKey, time);
+        signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key, tradersPubKey, time);
     }
 
-    public Optional<SignedWitness> traderSignPeersAccountAgeWitness(Trade trade) {
+    public Optional<SignedWitness> traderSignAndPublishPeersAccountAgeWitness(Trade trade) {
         AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
         Coin tradeAmount = trade.getTradeAmount();
         checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
@@ -682,7 +681,7 @@ public class AccountAgeWitnessService {
         checkNotNull(peersPubKey, "Peers pub key must not be null");
 
         try {
-            return signedWitnessService.signAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
+            return signedWitnessService.signAndPublishAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
         } catch (CryptoException e) {
             log.warn("Trader failed to sign witness, exception {}", e.toString());
         }
@@ -827,7 +826,7 @@ public class AccountAgeWitnessService {
                 .collect(Collectors.toSet());
     }
 
-    public void signSameNameAccounts() {
+    public void signAndPublishSameNameAccounts() {
         // Collect accounts that have ownerId to sign unsigned accounts with the same ownderId
         var signerAccounts = Objects.requireNonNull(user.getPaymentAccounts()).stream()
                 .filter(account -> account.getOwnerId() != null &&
@@ -842,7 +841,7 @@ public class AccountAgeWitnessService {
         signerAccounts.forEach(signer -> unsignedAccounts.forEach(unsigned -> {
             if (signer.getOwnerId().equals(unsigned.getOwnerId())) {
                 try {
-                    signedWitnessService.selfSignAccountAgeWitness(
+                    signedWitnessService.selfSignAndPublishAccountAgeWitness(
                             getMyWitness(unsigned.getPaymentAccountPayload()));
                 } catch (CryptoException e) {
                     log.warn("Self signing failed, exception {}", e.toString());
@@ -867,45 +866,5 @@ public class AccountAgeWitnessService {
         return accountIsSigner(myWitness) &&
                 !peerHasSignedWitness(trade) &&
                 tradeAmountIsSufficient(trade.getTradeAmount());
-    }
-
-    public void maybeSignWitness(Trade trade) {
-        if (isSignWitnessTrade(trade)) {
-            var signedWitnessOptional = traderSignPeersAccountAgeWitness(trade);
-            signedWitnessOptional.ifPresent(signedWitness -> sendSignedWitnessToPeer(signedWitness, trade));
-        }
-    }
-
-    private void sendSignedWitnessToPeer(SignedWitness signedWitness, Trade trade) {
-        if (trade == null) return;
-
-        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-        var traderSignedWitnessMessage = new TraderSignedWitnessMessage(UUID.randomUUID().toString(), trade.getId(),
-                tradingPeerNodeAddress, signedWitness);
-
-        p2PService.sendEncryptedMailboxMessage(
-                tradingPeerNodeAddress,
-                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
-                traderSignedWitnessMessage,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {} SignedWitness {}",
-                                trade.getId(), tradingPeerNodeAddress, signedWitness);
-                    }
-                }
-        );
     }
 }

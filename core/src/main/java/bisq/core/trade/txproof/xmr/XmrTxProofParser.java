@@ -144,6 +144,8 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
                     amountMatches = jsonAmount == model.getAmount();
                     if (amountMatches) {
                         break;
+                    } else {
+                        log.warn("amount {}, expected: {}", jsonAmount, model.getAmount());
                     }
                 }
             }

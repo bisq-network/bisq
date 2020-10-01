@@ -23,12 +23,10 @@ import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.config.Config;
 
-import com.google.common.collect.*;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.*;
 import org.bitcoinj.core.listeners.*;
 import org.bitcoinj.core.*;
-import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.*;
 import org.bitcoinj.script.Script;
@@ -42,8 +40,6 @@ import org.slf4j.*;
 import javax.annotation.*;
 import java.io.*;
 import java.net.*;
-import java.nio.channels.*;
-import java.util.*;
 import java.util.concurrent.*;
 
 import lombok.Getter;
@@ -95,7 +91,6 @@ public class WalletConfig extends AbstractIdleService {
     protected DownloadProgressTracker downloadListener;
     protected InputStream checkpoints;
     protected String userAgent, version;
-    protected WalletProtobufSerializer.WalletFactory walletFactory;
     @Nullable protected DeterministicSeed restoreFromSeed;
     @Nullable protected PeerDiscovery discovery;
 
@@ -351,10 +346,7 @@ public class WalletConfig extends AbstractIdleService {
             WalletExtension[] extArray = new WalletExtension[]{};
             Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
             final WalletProtobufSerializer serializer;
-            if (walletFactory != null)
-                serializer = new WalletProtobufSerializer(walletFactory);
-            else
-                serializer = new WalletProtobufSerializer();
+            serializer = new WalletProtobufSerializer();
             // Hack to convert bitcoinj 0.14 wallets to bitcoinj 0.15 format
             serializer.setKeyChainFactory(new BisqKeyChainFactory(isBsqWallet));
             wallet = serializer.readWallet(params, extArray, proto);
@@ -371,24 +363,20 @@ public class WalletConfig extends AbstractIdleService {
         // Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
         Script.ScriptType preferredOutputScriptType = Script.ScriptType.P2PKH;
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
-        KeyChainGroup.Builder kcg = KeyChainGroup.builder(params, structure);
+        KeyChainGroup.Builder kcgBuilder = KeyChainGroup.builder(params, structure);
         if (restoreFromSeed != null) {
-            kcg.fromSeed(restoreFromSeed, preferredOutputScriptType).build();
+            kcgBuilder.fromSeed(restoreFromSeed, preferredOutputScriptType);
         } else {
             // new wallet
             if (!isBsqWallet) {
                 // btc wallet uses a new random seed.
-                kcg.fromRandom(preferredOutputScriptType);
+                kcgBuilder.fromRandom(preferredOutputScriptType);
             } else {
                 // bsq wallet uses btc wallet's seed created a few milliseconds ago.
-                kcg.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
+                kcgBuilder.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
             }
         }
-        if (walletFactory != null) {
-            return walletFactory.create(params, kcg.build());
-        } else {
-            return new Wallet(params, kcg.build()); // default
-        }
+        return new Wallet(params, kcgBuilder.build());
     }
 
     private void maybeMoveOldWalletOutOfTheWay(File walletFile) {

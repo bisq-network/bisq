@@ -87,17 +87,17 @@ public class CoreApi {
         return coreOffersService.getOffers(direction, fiatCurrencyCode);
     }
 
-    public void createOffer(String currencyCode,
-                            String directionAsString,
-                            long priceAsLong,
-                            boolean useMarketBasedPrice,
-                            double marketPriceMargin,
-                            long amountAsLong,
-                            long minAmountAsLong,
-                            double buyerSecurityDeposit,
-                            String paymentAccountId,
-                            TransactionResultHandler resultHandler) {
-        coreOffersService.createOffer(currencyCode,
+    public Offer createOffer(String currencyCode,
+                             String directionAsString,
+                             long priceAsLong,
+                             boolean useMarketBasedPrice,
+                             double marketPriceMargin,
+                             long amountAsLong,
+                             long minAmountAsLong,
+                             double buyerSecurityDeposit,
+                             String paymentAccountId,
+                             TransactionResultHandler resultHandler) {
+        return coreOffersService.createOffer(currencyCode,
                 directionAsString,
                 priceAsLong,
                 useMarketBasedPrice,
@@ -109,19 +109,19 @@ public class CoreApi {
                 resultHandler);
     }
 
-    public void createOffer(String offerId,
-                            String currencyCode,
-                            OfferPayload.Direction direction,
-                            Price price,
-                            boolean useMarketBasedPrice,
-                            double marketPriceMargin,
-                            Coin amount,
-                            Coin minAmount,
-                            double buyerSecurityDeposit,
-                            PaymentAccount paymentAccount,
-                            boolean useSavingsWallet,
-                            TransactionResultHandler resultHandler) {
-        coreOffersService.createOffer(offerId,
+    public Offer createOffer(String offerId,
+                             String currencyCode,
+                             OfferPayload.Direction direction,
+                             Price price,
+                             boolean useMarketBasedPrice,
+                             double marketPriceMargin,
+                             Coin amount,
+                             Coin minAmount,
+                             double buyerSecurityDeposit,
+                             PaymentAccount paymentAccount,
+                             boolean useSavingsWallet,
+                             TransactionResultHandler resultHandler) {
+        return coreOffersService.createOffer(offerId,
                 currencyCode,
                 direction,
                 price,

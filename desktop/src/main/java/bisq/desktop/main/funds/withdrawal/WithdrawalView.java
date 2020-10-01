@@ -41,9 +41,9 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -100,7 +100,6 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -126,7 +125,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Label amountLabel;
     private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField;
 
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
@@ -156,7 +155,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private WithdrawalView(BtcWalletService walletService,
+    private WithdrawalView(BtcWalletService btcWalletService,
                            TradeManager tradeManager,
                            P2PService p2PService,
                            WalletsSetup walletsSetup,
@@ -164,7 +163,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            Preferences preferences,
                            BtcAddressValidator btcAddressValidator,
                            WalletPasswordWindow walletPasswordWindow) {
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -296,7 +295,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         amountTextField.textProperty().addListener(amountListener);
         amountTextField.focusedProperty().addListener(amountFocusListener);
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(balanceListener);
         feeToggleGroup.selectedToggleProperty().addListener(feeToggleGroupListener);
         inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
 
@@ -314,7 +313,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         observableList.forEach(WithdrawalListItem::cleanup);
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(balanceListener);
         amountTextField.textProperty().removeListener(amountListener);
         amountTextField.focusedProperty().removeListener(amountFocusListener);
         feeToggleGroup.selectedToggleProperty().removeListener(feeToggleGroupListener);
@@ -330,10 +329,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
                 // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
-                Transaction feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
+                Transaction feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
                 if (feeExcluded && feeEstimationTransaction != null) {
                     sendersAmount = amountAsCoin.add(feeEstimationTransaction.getFee());
-                    feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
+                    feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
 
@@ -393,13 +392,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             log.error("onWithdraw transaction is null");
                                         }
 
-                                        List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
+                                        List<Trade> trades = new ArrayList<>(tradeManager.getTradesAsObservableList());
                                         trades.stream()
                                                 .filter(Trade::isPayoutPublished)
-                                                .forEach(trade -> walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
+                                                .forEach(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
                                                         .ifPresent(addressEntry -> {
-                                                            if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
-                                                                tradeManager.addTradeToClosedTrades(trade);
+                                                            if (btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
+                                                                tradeManager.onTradeCompleted(trade);
                                                         }));
                                     }
 
@@ -480,15 +479,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(WithdrawalListItem::cleanup);
-        observableList.setAll(tradeManager.getAddressEntriesForAvailableBalanceStream()
-                .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
+        observableList.setAll(btcWalletService.getAddressEntriesForAvailableBalanceStream()
+                .map(addressEntry -> new WithdrawalListItem(addressEntry, btcWalletService, formatter))
                 .collect(Collectors.toList()));
 
         updateInputSelection();
     }
 
     private void doWithdraw(Coin amount, Coin fee, FutureCallback<Transaction> callback) {
-        if (walletService.isEncrypted()) {
+        if (btcWalletService.isEncrypted()) {
             UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
                     sendFunds(amount, fee, aesKey, callback))
                     .show(), 300, TimeUnit.MILLISECONDS);
@@ -499,7 +498,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
-            walletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, fee, null, aesKey, callback);
+            btcWalletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, fee, null, aesKey, callback);
             reset();
             updateList();
         } catch (AddressFormatException e) {

@@ -36,8 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerSignsDelayedPayoutTx extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SellerSignsDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerSignsDelayedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -58,7 +57,8 @@ public class SellerSignsDelayedPayoutTx extends TradeTask {
                     "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
             byte[] buyerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
 
-            byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(preparedDelayedPayoutTx,
+            byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(
+                    preparedDelayedPayoutTx,
                     myMultiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey);

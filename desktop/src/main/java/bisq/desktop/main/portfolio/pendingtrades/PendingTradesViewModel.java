@@ -369,7 +369,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onTradeStateChanged(Trade.State tradeState) {
-        log.debug("UI tradeState={}, id={}",
+        log.info("UI tradeState={}, id={}",
                 tradeState,
                 trade != null ? trade.getShortId() : "trade is null");
 

@@ -183,13 +183,13 @@ public class TradeDataValidation {
         }
     }
 
-    public static void validatePayoutTx(Trade trade,
-                                        Transaction delayedPayoutTx,
-                                        DaoFacade daoFacade,
-                                        BtcWalletService btcWalletService)
+    public static void validateDelayedPayoutTx(Trade trade,
+                                               Transaction delayedPayoutTx,
+                                               DaoFacade daoFacade,
+                                               BtcWalletService btcWalletService)
             throws AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validatePayoutTx(trade,
+        validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
                 null,
                 daoFacade,
@@ -197,14 +197,14 @@ public class TradeDataValidation {
                 null);
     }
 
-    public static void validatePayoutTx(Trade trade,
-                                        Transaction delayedPayoutTx,
-                                        @Nullable Dispute dispute,
-                                        DaoFacade daoFacade,
-                                        BtcWalletService btcWalletService)
+    public static void validateDelayedPayoutTx(Trade trade,
+                                               Transaction delayedPayoutTx,
+                                               @Nullable Dispute dispute,
+                                               DaoFacade daoFacade,
+                                               BtcWalletService btcWalletService)
             throws AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validatePayoutTx(trade,
+        validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
                 dispute,
                 daoFacade,
@@ -212,14 +212,14 @@ public class TradeDataValidation {
                 null);
     }
 
-    public static void validatePayoutTx(Trade trade,
-                                        Transaction delayedPayoutTx,
-                                        DaoFacade daoFacade,
-                                        BtcWalletService btcWalletService,
-                                        @Nullable Consumer<String> addressConsumer)
+    public static void validateDelayedPayoutTx(Trade trade,
+                                               Transaction delayedPayoutTx,
+                                               DaoFacade daoFacade,
+                                               BtcWalletService btcWalletService,
+                                               @Nullable Consumer<String> addressConsumer)
             throws AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validatePayoutTx(trade,
+        validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
                 null,
                 daoFacade,
@@ -227,12 +227,12 @@ public class TradeDataValidation {
                 addressConsumer);
     }
 
-    public static void validatePayoutTx(Trade trade,
-                                        Transaction delayedPayoutTx,
-                                        @Nullable Dispute dispute,
-                                        DaoFacade daoFacade,
-                                        BtcWalletService btcWalletService,
-                                        @Nullable Consumer<String> addressConsumer)
+    public static void validateDelayedPayoutTx(Trade trade,
+                                               Transaction delayedPayoutTx,
+                                               @Nullable Dispute dispute,
+                                               DaoFacade daoFacade,
+                                               BtcWalletService btcWalletService,
+                                               @Nullable Consumer<String> addressConsumer)
             throws AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         String errorMsg;

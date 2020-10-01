@@ -42,8 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BuyerAsTakerSignsDepositTx extends TradeTask {
 
-    @SuppressWarnings({"unused"})
-    public BuyerAsTakerSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerAsTakerSignsDepositTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -87,7 +86,7 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     sellerInputs,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey);
-            trade.applyDepositTx(depositTx);
+            processModel.setDepositTx(depositTx);
 
             complete();
         } catch (Throwable t) {

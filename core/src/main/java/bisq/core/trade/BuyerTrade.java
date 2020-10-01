@@ -19,12 +19,10 @@ package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.trade.protocol.BuyerProtocol;
+import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
@@ -33,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -49,7 +46,8 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
                Storage<? extends TradableList> storage,
-               BtcWalletService btcWalletService) {
+               BtcWalletService btcWalletService,
+               ProcessModel processModel) {
         super(offer,
                 tradeAmount,
                 txFee,
@@ -61,7 +59,8 @@ public abstract class BuyerTrade extends Trade {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
     }
 
     BuyerTrade(Offer offer,
@@ -72,7 +71,8 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
                Storage<? extends TradableList> storage,
-               BtcWalletService btcWalletService) {
+               BtcWalletService btcWalletService,
+               ProcessModel processModel) {
         super(offer,
                 txFee,
                 takerFee,
@@ -81,19 +81,14 @@ public abstract class BuyerTrade extends Trade {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 storage,
-                btcWalletService);
-    }
-
-    public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkArgument(tradeProtocol instanceof BuyerProtocol, "Check failed:  tradeProtocol instanceof BuyerProtocol");
-        ((BuyerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorMessageHandler);
+                btcWalletService,
+                processModel);
     }
 
     @Override
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
-
-        return getOffer().getBuyerSecurityDeposit().add(getTradeAmount());
+        return checkNotNull(getOffer()).getBuyerSecurityDeposit().add(getTradeAmount());
     }
 
 }

@@ -62,8 +62,6 @@ class CorePaymentAccountsService {
                 accountNumber,
                 currencyCode);
 
-        // TODO not sure if there is more to do at account creation.
-        //  Need to check all the flow when its created from UI.
         user.addPaymentAccountIfNotExists(paymentAccount);
 
         // Don't do this on mainnet until thoroughly tested.

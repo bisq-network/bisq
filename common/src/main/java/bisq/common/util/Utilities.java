@@ -43,6 +43,8 @@ import javafx.scene.input.KeyEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import java.nio.file.Paths;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -196,6 +198,20 @@ public class Utilities {
 
     public static String getOSVersion() {
         return System.getProperty("os.version").toLowerCase(Locale.US);
+    }
+
+    /**
+     * Returns the well-known "user data directory" for the current operating system.
+     */
+    public static File getUserDataDir() {
+        if (Utilities.isWindows())
+            return new File(System.getenv("APPDATA"));
+
+        if (Utilities.isOSX())
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
+
+        // *nix
+        return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
     }
 
     public static int getMinorVersion() throws InvalidVersionException {
@@ -425,13 +441,13 @@ public class Utilities {
         return toTruncatedString(message, maxLength, true);
     }
 
-    public static String toTruncatedString(Object message, int maxLength, boolean removeLinebreaks) {
+    public static String toTruncatedString(Object message, int maxLength, boolean removeLineBreaks) {
         if (message == null)
             return "null";
 
 
         String result = StringUtils.abbreviate(message.toString(), maxLength);
-        if (removeLinebreaks)
+        if (removeLineBreaks)
             return result.replace("\n", "");
 
         return result;

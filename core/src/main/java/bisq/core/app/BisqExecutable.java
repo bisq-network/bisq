@@ -25,7 +25,6 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.trade.TradeManager;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 
 import bisq.network.p2p.P2PService;
@@ -38,24 +37,18 @@ import bisq.common.config.Config;
 import bisq.common.config.ConfigException;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.setup.CommonSetup;
 import bisq.common.setup.GracefulShutDownHandler;
+import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import java.nio.file.Paths;
-
-import java.io.File;
-
 import lombok.extern.slf4j.Slf4j;
 
-
-
-import sun.misc.Signal;
-
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener, UncaughtExceptionHandler {
 
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
@@ -79,7 +72,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     public void execute(String[] args) {
         try {
-            config = new Config(appName, osUserDataDir(), args);
+            config = new Config(appName, Utilities.getUserDataDir(), args);
             if (config.helpRequested) {
                 config.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
                 System.exit(EXIT_SUCCESS);
@@ -102,20 +95,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doExecute() {
-        AsciiLogo.showAsciiLogo();
-        configUserThread();
+        CommonSetup.setup(config, this);
         CoreSetup.setup(config);
+
+        configUserThread();
         addCapabilities();
-
-        Signal.handle(new Signal("INT"), signal -> {
-            gracefulShutDown(() -> {
-            });
-        });
-
-        Signal.handle(new Signal("TERM"), signal -> {
-            gracefulShutDown(() -> {
-            });
-        });
 
         // If application is JavaFX application we need to wait until it is initialized
         launchApplication();
@@ -137,7 +121,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     // Headless versions can call inside launchApplication the onApplicationLaunched() manually
     protected void onApplicationLaunched() {
+        // As the handler method might be overwritten by subclasses and they use the application as handler
+        // we need to setup the handler after the application is created.
+        CommonSetup.setupUncaughtExceptionHandler(this);
+
         setupGuice();
+        setupAvoidStandbyMode();
         startApplication();
     }
 
@@ -159,14 +148,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void applyInjector() {
-        setupDevEnv();
-
         setupPersistedDataHosts(injector);
-    }
-
-    protected void setupDevEnv() {
-        DevEnv.setDevMode(config.useDevMode);
-        DevEnv.setDaoActivated(config.daoActivated);
     }
 
     protected void setupPersistedDataHosts(Injector injector) {
@@ -183,14 +165,17 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
     }
 
+    protected void setupAvoidStandbyMode() {
+    }
+
     protected abstract void startApplication();
 
     // Once the application is ready we get that callback and we start the setup
     protected void onApplicationStarted() {
-        startAppSetup();
+        runBisqSetup();
     }
 
-    protected void startAppSetup() {
+    protected void runBisqSetup() {
         BisqSetup bisqSetup = injector.getInstance(BisqSetup.class);
         bisqSetup.addBisqSetupListener(this);
         bisqSetup.start();
@@ -221,7 +206,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         try {
             injector.getInstance(ArbitratorManager.class).shutDown();
-            injector.getInstance(TradeManager.class).shutDown();
             injector.getInstance(XmrTxProofService.class).shutDown();
             injector.getInstance(DaoSetup.class).shutDown();
             injector.getInstance(AvoidStandbyModeService.class).shutDown();
@@ -262,17 +246,16 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
     }
 
-    /**
-     * Returns the well-known "user data directory" for the current operating system.
-     */
-    private static File osUserDataDir() {
-        if (Utilities.isWindows())
-            return new File(System.getenv("APPDATA"));
 
-        if (Utilities.isOSX())
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UncaughtExceptionHandler implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        // *nix
-        return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        log.error(throwable.toString());
+
+        if (doShutDown)
+            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
     }
 }

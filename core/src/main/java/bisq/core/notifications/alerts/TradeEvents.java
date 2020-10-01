@@ -53,13 +53,13 @@ public class TradeEvents {
     }
 
     public void onAllServicesInitialized() {
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> {
+        tradeManager.getTradesAsObservableList().addListener((ListChangeListener<Trade>) c -> {
             c.next();
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(this::setTradePhaseListener);
             }
         });
-        tradeManager.getTradableList().forEach(this::setTradePhaseListener);
+        tradeManager.getTradesAsObservableList().forEach(this::setTradePhaseListener);
     }
 
     private void setTradePhaseListener(Trade trade) {
