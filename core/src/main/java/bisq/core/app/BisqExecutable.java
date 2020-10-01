@@ -52,10 +52,6 @@ import java.io.File;
 
 import lombok.extern.slf4j.Slf4j;
 
-
-
-import sun.misc.Signal;
-
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener, UncaughtExceptionHandler {
 
@@ -104,21 +100,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doExecute() {
-        CommonSetup.setup(config);
+        CommonSetup.setup(config, this);
         CoreSetup.setup(config);
 
         configUserThread();
         addCapabilities();
-
-        Signal.handle(new Signal("INT"), signal -> {
-            gracefulShutDown(() -> {
-            });
-        });
-
-        Signal.handle(new Signal("TERM"), signal -> {
-            gracefulShutDown(() -> {
-            });
-        });
 
         // If application is JavaFX application we need to wait until it is initialized
         launchApplication();

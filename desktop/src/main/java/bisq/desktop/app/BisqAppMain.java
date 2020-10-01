@@ -46,7 +46,7 @@ public class BisqAppMain extends BisqExecutable {
         super("Bisq Desktop", "bisq-desktop", DEFAULT_APP_NAME, Version.VERSION);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         // For some reason the JavaFX launch process results in us losing the thread
         // context class loader: reset it. In order to work around a bug in JavaFX 8u25
         // and below, you must include the following code as the first line of your

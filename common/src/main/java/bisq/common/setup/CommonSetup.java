@@ -32,12 +32,29 @@ import java.security.NoSuchAlgorithmException;
 
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import sun.misc.Signal;
+
 @Slf4j
 public class CommonSetup {
 
-    public static void setup(Config config) {
+    public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         AsciiLogo.showAsciiLogo();
         setSystemProperties();
+        setupSigIntHandlers(gracefulShutDownHandler);
+    }
+
+    protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {
+        Signal.handle(new Signal("INT"), signal -> {
+            gracefulShutDownHandler.gracefulShutDown(() -> {
+            });
+        });
+
+        Signal.handle(new Signal("TERM"), signal -> {
+            gracefulShutDownHandler.gracefulShutDown(() -> {
+            });
+        });
     }
 
     public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
