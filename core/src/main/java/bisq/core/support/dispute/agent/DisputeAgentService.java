@@ -100,8 +100,11 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
         } else {
             bannedDisputeAgents = null;
         }
-        if (bannedDisputeAgents != null)
+
+        if (bannedDisputeAgents != null && !bannedDisputeAgents.isEmpty()) {
             log.warn("bannedDisputeAgents=" + bannedDisputeAgents);
+        }
+
         Set<T> disputeAgentSet = getDisputeAgentSet(bannedDisputeAgents);
 
         Map<NodeAddress, T> map = new HashMap<>();

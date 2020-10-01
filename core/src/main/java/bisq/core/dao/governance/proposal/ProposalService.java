@@ -216,6 +216,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         p2PService.getDataMap().values().forEach(e -> onProtectedDataAdded(e, false));
     }
 
+    //todo use proposalStorageService
     private void fillListFromAppendOnlyDataStore() {
         p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
     }

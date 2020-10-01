@@ -44,8 +44,8 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
 
     @Inject
     public TempProposalStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                      PersistenceManager<TempProposalStore> persistableNetworkPayloadMapPersistenceManager) {
-        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
+                                      PersistenceManager<TempProposalStore> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +65,12 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
     @Override
     public boolean canHandle(ProtectedStorageEntry entry) {
         return entry.getProtectedStoragePayload() instanceof TempProposalPayload;
+    }
+
+    @Override
+    protected void readFromResources(String postFix) {
+        // We do not have a resource file for that store, so we just call the readStore method instead.
+        readStore();
     }
 
 

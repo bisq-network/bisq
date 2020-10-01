@@ -260,15 +260,16 @@ class RequestDataHandler implements MessageListener {
 
         // Log different data types
         StringBuilder sb = new StringBuilder();
-        sb.append("\n#################################################################\n");
-        sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
+        String sep = System.lineSeparator();
+        sb.append(sep).append("#################################################################").append(sep);
+        sb.append("Connected to node: ").append(peersNodeAddress.getFullAddress()).append(sep);
         int items = dataSet.size() + persistableNetworkPayloadSet.size();
         sb.append("Received ").append(items).append(" instances from a ")
-                .append(getDataRequestType).append("\n");
+                .append(getDataRequestType).append(sep);
         payloadByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")
                 .append(value.size())
-                .append("\n"));
+                .append(sep));
         sb.append("#################################################################");
         log.info(sb.toString());
     }

@@ -50,8 +50,8 @@ public class BlindVoteStorageService extends MapStoreService<BlindVoteStore, Per
 
     @Inject
     public BlindVoteStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                   PersistenceManager<BlindVoteStore> persistableNetworkPayloadMapPersistenceManager) {
-        super(storageDir, persistableNetworkPayloadMapPersistenceManager);
+                                   PersistenceManager<BlindVoteStore> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

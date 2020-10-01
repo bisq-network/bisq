@@ -51,8 +51,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public StoreService(File storageDir,
-                        PersistenceManager<T> persistenceManager) {
+    public StoreService(File storageDir, PersistenceManager<T> persistenceManager) {
         this.persistenceManager = persistenceManager;
         absolutePathOfStorageDir = storageDir.getAbsolutePath();
     }
@@ -62,7 +61,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void persist() {
+    protected void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 
@@ -78,27 +77,28 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void readFromResources(String postFix) {
-        makeFileFromResourceFile(postFix);
+        String fileName = getFileName();
+        makeFileFromResourceFile(fileName, postFix);
         try {
             readStore();
         } catch (Throwable t) {
-            makeFileFromResourceFile(postFix);
+            makeFileFromResourceFile(fileName, postFix);
             readStore();
         }
     }
 
-    protected void makeFileFromResourceFile(String postFix) {
-        String fileName = getFileName();
+    protected boolean makeFileFromResourceFile(String fileName, String postFix) {
         String resourceFileName = fileName + postFix;
         File dbDir = new File(absolutePathOfStorageDir);
         if (!dbDir.exists() && !dbDir.mkdir())
             log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
 
-        final File destinationFile = new File(Paths.get(absolutePathOfStorageDir, fileName).toString());
+        File destinationFile = new File(Paths.get(absolutePathOfStorageDir, fileName).toString());
         if (!destinationFile.exists()) {
             try {
                 log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
                 FileUtil.resourceToFile(resourceFileName, destinationFile);
+                return true;
             } catch (ResourceNotFoundException e) {
                 log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
             } catch (Throwable e) {
@@ -107,25 +107,27 @@ public abstract class StoreService<T extends PersistableEnvelope> {
                 e.printStackTrace();
             }
         } else {
-            log.debug(fileName + " file exists already.");
+            log.info("No resource file have been copied. {} exists already.", fileName);
         }
+        return false;
     }
 
-
-    protected void readStore() {
-        String fileName = getFileName();
-        T persisted = persistenceManager.getPersisted(fileName);
-        if (persisted != null) {
-            store = persisted;
-
+    protected T getStore(String fileName) {
+        T store = persistenceManager.getPersisted(fileName);
+        if (store != null) {
             int length = store.toProtoMessage().toByteArray().length;
             double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;
             String unit = length > 1_000_000D ? "MB" : "KB";
             log.info("{}: size of {}: {} {}", this.getClass().getSimpleName(),
-                    persisted.getClass().getSimpleName(), size, unit);
+                    store.getClass().getSimpleName(), size, unit);
         } else {
             store = createStore();
         }
+        return store;
+    }
+
+    protected void readStore() {
+        store = getStore(getFileName());
         initializePersistenceManager();
     }
 

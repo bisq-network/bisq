@@ -35,8 +35,6 @@ import bisq.common.app.Capabilities;
 import bisq.common.config.Config;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
-
 
 import javax.inject.Inject;
 import javax.inject.Named;

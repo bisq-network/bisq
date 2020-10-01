@@ -35,13 +35,15 @@ import java.security.NoSuchAlgorithmException;
 
 import java.util.Set;
 
+import org.mockito.MockitoAnnotations;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.mockito.MockitoAnnotations;
-
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class P2PDataStorageRequestDataTest {
     private TestState testState;
