@@ -32,6 +32,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
+import bisq.common.app.AsciiLogo;
 import bisq.common.app.DevEnv;
 import bisq.common.config.BisqHelpFormatter;
 import bisq.common.config.Config;
