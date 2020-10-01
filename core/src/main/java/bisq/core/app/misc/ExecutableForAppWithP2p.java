@@ -189,7 +189,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         int maxMemory = config.maxMemory;
         UserThread.runPeriodically(() -> {
-            Profiler.printSystemLoad(log);
+            Profiler.printSystemLoad();
             if (!stopped) {
                 long usedMemoryInMB = Profiler.getUsedMemoryInMB();
                 double warningTrigger = maxMemory * 0.8;
@@ -199,7 +199,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             (int) warningTrigger, usedMemoryInMB, Profiler.getFreeMemoryInMB());
                     System.gc();
-                    Profiler.printSystemLoad(log);
+                    Profiler.printSystemLoad();
                 }
 
                 UserThread.runAfter(() -> {
