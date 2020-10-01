@@ -18,14 +18,14 @@
 package bisq.core.trade.protocol;
 
 
-import bisq.core.trade.messages.TakeOfferRequest;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 
 public interface MakerProtocol {
-    void handleTakeOfferRequest(TakeOfferRequest message,
+    void handleTakeOfferRequest(InputsForDepositTxRequest message,
                                 NodeAddress taker,
                                 ErrorMessageHandler errorMessageHandler);
 }

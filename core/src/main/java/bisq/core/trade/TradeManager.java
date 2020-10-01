@@ -33,7 +33,7 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
-import bisq.core.trade.messages.TakeOfferRequest;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
@@ -210,24 +210,24 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     @Override
     public void onDirectMessage(DecryptedMessageWithPubKey message, NodeAddress peer) {
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
-        if (networkEnvelope instanceof TakeOfferRequest) {
-            handleTakeOfferRequest(peer, (TakeOfferRequest) networkEnvelope);
+        if (networkEnvelope instanceof InputsForDepositTxRequest) {
+            handleTakeOfferRequest(peer, (InputsForDepositTxRequest) networkEnvelope);
         }
     }
 
     // The maker received a TakeOfferRequest
-    private void handleTakeOfferRequest(NodeAddress peer, TakeOfferRequest takeOfferRequest) {
-        log.info("Received TakeOfferRequest from {} with tradeId {} and uid {}",
-                peer, takeOfferRequest.getTradeId(), takeOfferRequest.getUid());
+    private void handleTakeOfferRequest(NodeAddress peer, InputsForDepositTxRequest inputsForDepositTxRequest) {
+        log.info("Received inputsForDepositTxRequest from {} with tradeId {} and uid {}",
+                peer, inputsForDepositTxRequest.getTradeId(), inputsForDepositTxRequest.getUid());
 
         try {
-            Validator.nonEmptyStringOf(takeOfferRequest.getTradeId());
+            Validator.nonEmptyStringOf(inputsForDepositTxRequest.getTradeId());
         } catch (Throwable t) {
-            log.warn("Invalid TakeOfferRequest " + takeOfferRequest.toString());
+            log.warn("Invalid inputsForDepositTxRequest " + inputsForDepositTxRequest.toString());
             return;
         }
 
-        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(takeOfferRequest.getTradeId());
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(inputsForDepositTxRequest.getTradeId());
         if (!openOfferOptional.isPresent()) {
             return;
         }
@@ -242,9 +242,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         Trade trade;
         if (offer.isBuyOffer()) {
             trade = new BuyerAsMakerTrade(offer,
-                    Coin.valueOf(takeOfferRequest.getTxFee()),
-                    Coin.valueOf(takeOfferRequest.getTakerFee()),
-                    takeOfferRequest.isCurrencyForTakerFeeBtc(),
+                    Coin.valueOf(inputsForDepositTxRequest.getTxFee()),
+                    Coin.valueOf(inputsForDepositTxRequest.getTakerFee()),
+                    inputsForDepositTxRequest.isCurrencyForTakerFeeBtc(),
                     openOffer.getArbitratorNodeAddress(),
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
@@ -253,9 +253,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     getNewProcessModel(offer));
         } else {
             trade = new SellerAsMakerTrade(offer,
-                    Coin.valueOf(takeOfferRequest.getTxFee()),
-                    Coin.valueOf(takeOfferRequest.getTakerFee()),
-                    takeOfferRequest.isCurrencyForTakerFeeBtc(),
+                    Coin.valueOf(inputsForDepositTxRequest.getTxFee()),
+                    Coin.valueOf(inputsForDepositTxRequest.getTakerFee()),
+                    inputsForDepositTxRequest.isCurrencyForTakerFeeBtc(),
                     openOffer.getArbitratorNodeAddress(),
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
@@ -268,7 +268,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         tradableList.add(trade);
         initTradeAndProtocol(trade, tradeProtocol);
 
-        ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(takeOfferRequest, peer, errorMessage -> {
+        ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
             if (takeOfferRequestErrorMessageHandler != null)
                 takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
         });

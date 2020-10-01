@@ -23,7 +23,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.messages.DepositTxMessage;
-import bisq.core.trade.messages.TakeOfferRequest;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -64,7 +64,7 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TakeOfferRequest message,
+    public void handleTakeOfferRequest(InputsForDepositTxRequest message,
                                        NodeAddress peer,
                                        ErrorMessageHandler errorMessageHandler) {
         expect(phase(Trade.Phase.INIT)

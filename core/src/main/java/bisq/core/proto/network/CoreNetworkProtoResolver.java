@@ -51,13 +51,13 @@ import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.DepositTxMessage;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
-import bisq.core.trade.messages.TakeOfferRequest;
 import bisq.core.trade.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.statistics.TradeStatistics;
 
@@ -147,7 +147,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case REFRESH_TRADE_STATE_REQUEST:
                     return RefreshTradeStateRequest.fromProto(proto.getRefreshTradeStateRequest(), messageVersion);
                 case INPUTS_FOR_DEPOSIT_TX_REQUEST:
-                    return TakeOfferRequest.fromProto(proto.getInputsForDepositTxRequest(), this, messageVersion);
+                    return InputsForDepositTxRequest.fromProto(proto.getInputsForDepositTxRequest(), this, messageVersion);
                 case INPUTS_FOR_DEPOSIT_TX_RESPONSE:
                     return InputsForDepositTxResponse.fromProto(proto.getInputsForDepositTxResponse(), this, messageVersion);
                 case DEPOSIT_TX_MESSAGE:
