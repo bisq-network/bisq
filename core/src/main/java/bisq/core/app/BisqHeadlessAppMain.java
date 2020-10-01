@@ -22,8 +22,6 @@ import bisq.common.app.AppModule;
 import bisq.common.app.Version;
 import bisq.common.setup.CommonSetup;
 
-import joptsimple.OptionSet;
-
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.Executors;
@@ -72,7 +70,7 @@ public class BisqHeadlessAppMain extends BisqExecutable {
     @Override
     protected void launchApplication() {
         headlessApp = new BisqHeadlessApp();
-        CommonSetup.setup(BisqHeadlessAppMain.this.headlessApp);
+        CommonSetup.setupUncaughtExceptionHandler(BisqHeadlessAppMain.this.headlessApp);
 
         UserThread.execute(this::onApplicationLaunched);
     }

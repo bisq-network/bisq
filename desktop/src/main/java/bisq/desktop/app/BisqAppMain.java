@@ -78,7 +78,7 @@ public class BisqAppMain extends BisqExecutable {
             BisqAppMain.this.application = (BisqApp) application;
 
             // Necessary to do the setup at this point to prevent Bouncy Castle errors
-            CommonSetup.setup(BisqAppMain.this.application);
+            CommonSetup.setupUncaughtExceptionHandler(BisqAppMain.this.application);
             // Map to user thread!
             UserThread.execute(this::onApplicationLaunched);
         });

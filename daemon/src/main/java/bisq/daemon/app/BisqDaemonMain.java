@@ -62,7 +62,7 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
     @Override
     protected void launchApplication() {
         headlessApp = new BisqDaemon();
-        CommonSetup.setup(BisqDaemonMain.this.headlessApp);
+        CommonSetup.setupUncaughtExceptionHandler(BisqDaemonMain.this.headlessApp);
 
         UserThread.execute(this::onApplicationLaunched);
     }

@@ -50,7 +50,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-        CommonSetup.setup(this);
+        CommonSetup.setupUncaughtExceptionHandler(this);
 
         keepRunning();
     }

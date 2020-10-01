@@ -40,16 +40,7 @@ public class CommonSetup {
         setSystemProperties();
     }
 
-    public static void setup(UncaughtExceptionHandler uncaughtExceptionHandler) {
-        setupErrorHandler(uncaughtExceptionHandler);
-    }
-
-    protected static void setSystemProperties() {
-        if (Utilities.isLinux())
-            System.setProperty("prism.lcdtext", "false");
-    }
-
-    private static void setupErrorHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
+    public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             // Might come from another thread
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
@@ -69,7 +60,15 @@ public class CommonSetup {
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
+    }
 
+    protected static void setSystemProperties() {
+        if (Utilities.isLinux())
+            System.setProperty("prism.lcdtext", "false");
+    }
+
+    //TODO not needed anymore
+    private static void checkCryptoPolicySetup(UncaughtExceptionHandler uncaughtExceptionHandler) {
         try {
             CryptoUtils.checkCryptoPolicySetup();
         } catch (NoSuchAlgorithmException | LimitedKeyStrengthException e) {
