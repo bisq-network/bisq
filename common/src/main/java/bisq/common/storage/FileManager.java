@@ -239,7 +239,6 @@ public class FileManager<T extends PersistableEnvelope> {
             try {
                 if (fileOutputStream != null)
                     fileOutputStream.close();
-                //noinspection ConstantConditions,ConstantConditions
                 if (printWriter != null)
                     printWriter.close();
             } catch (IOException e) {

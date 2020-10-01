@@ -36,7 +36,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            TradeDataValidation.validatePayoutTx(trade,
+            TradeDataValidation.validateDelayedPayoutTx(trade,
                     processModel.getPreparedDelayedPayoutTx(),
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());

@@ -39,7 +39,7 @@ public enum BaseCurrencyNetwork {
     @Getter
     private final String network;
     @Getter
-    private String currencyName;
+    private final String currencyName;
 
     BaseCurrencyNetwork(NetworkParameters parameters, String currencyCode, String network, String currencyName) {
         this.parameters = parameters;

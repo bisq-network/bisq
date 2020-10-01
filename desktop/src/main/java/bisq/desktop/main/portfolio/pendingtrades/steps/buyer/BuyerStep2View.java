@@ -620,7 +620,7 @@ public class BuyerStep2View extends TradeStepView {
 
     private void validatePayoutTx() {
         try {
-            TradeDataValidation.validatePayoutTx(trade,
+            TradeDataValidation.validateDelayedPayoutTx(trade,
                     trade.getDelayedPayoutTx(),
                     model.dataModel.daoFacade,
                     model.dataModel.btcWalletService);

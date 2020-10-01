@@ -60,6 +60,7 @@ import static java.util.Collections.singletonList;
 public class CliMain {
 
     private enum Method {
+        createoffer,
         getoffers,
         createpaymentacct,
         getpaymentaccts,
@@ -165,6 +166,11 @@ public class CliMain {
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletsService.getFundingAddresses(request);
                     out.println(formatAddressBalanceTbl(reply.getAddressBalanceInfoList()));
+                    return;
+                }
+                case createoffer: {
+                    // TODO
+                    out.println("offer created");
                     return;
                 }
                 case getoffers: {
@@ -303,6 +309,7 @@ public class CliMain {
             stream.format("%-22s%-50s%s%n", "getbalance", "", "Get server wallet balance");
             stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
             stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
+            stream.format("%-22s%-50s%s%n", "createoffer", "", "Create and place an offer");
             stream.format("%-22s%-50s%s%n", "getoffers", "buy | sell, fiat currency code", "Get current offers");
             stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format("%-22s%-50s%s%n", "getpaymentaccts", "", "Get user payment accounts");
