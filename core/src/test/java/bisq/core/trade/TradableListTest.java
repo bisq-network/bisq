@@ -21,7 +21,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.storage.Storage;
 
 import java.nio.file.Files;
@@ -43,7 +43,7 @@ public class TradableListTest {
     public void protoTesting() throws IOException {
         OfferPayload offerPayload = mock(OfferPayload.class, RETURNS_DEEP_STUBS);
         File storageDir = Files.createTempDirectory("storage").toFile();
-        Storage<TradableList<OpenOffer>> storage = new Storage<>(storageDir, null, mock(CorruptedDatabaseFilesHandler.class));
+        Storage<TradableList<OpenOffer>> storage = new Storage<>(storageDir, null, mock(CorruptedStorageFileHandler.class));
         TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
         protobuf.PersistableEnvelope message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
         assertTrue(message.getMessageCase().equals(TRADABLE_LIST));

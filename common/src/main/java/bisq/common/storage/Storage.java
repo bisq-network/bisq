@@ -19,7 +19,7 @@ package bisq.common.storage;
 
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
@@ -54,7 +54,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Storage<T extends PersistableEnvelope> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
 
-    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final CorruptedStorageFileHandler corruptedStorageFileHandler;
 
     private final File dir;
     private FileManager<T> fileManager;
@@ -72,10 +72,10 @@ public class Storage<T extends PersistableEnvelope> {
     @Inject
     public Storage(@Named(Config.STORAGE_DIR) File dir,
                    PersistenceProtoResolver persistenceProtoResolver,
-                   CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                   CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.dir = checkDir(dir);
         this.persistenceProtoResolver = persistenceProtoResolver;
-        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.corruptedStorageFileHandler = corruptedStorageFileHandler;
     }
 
     @Nullable
@@ -176,8 +176,8 @@ public class Storage<T extends PersistableEnvelope> {
                     log.error(e1.getMessage());
                     // We swallow Exception if backup fails
                 }
-                if (corruptedDatabaseFilesHandler != null)
-                    corruptedDatabaseFilesHandler.onFileCorrupted(storageFile.getName());
+                if (corruptedStorageFileHandler != null)
+                    corruptedStorageFileHandler.onFileCorrupted(storageFile.getName());
             }
         }
         return null;

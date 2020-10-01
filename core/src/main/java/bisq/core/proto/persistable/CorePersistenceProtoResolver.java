@@ -46,7 +46,7 @@ import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.config.Config;
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.NavigationPath;
@@ -71,18 +71,18 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     private final Provider<BtcWalletService> btcWalletService;
     private final NetworkProtoResolver networkProtoResolver;
     private final File storageDir;
-    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final CorruptedStorageFileHandler corruptedStorageFileHandler;
 
     @Inject
     public CorePersistenceProtoResolver(Provider<BtcWalletService> btcWalletService,
                                         NetworkProtoResolver networkProtoResolver,
                                         @Named(Config.STORAGE_DIR) File storageDir,
-                                        CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                        CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.btcWalletService = btcWalletService;
         this.networkProtoResolver = networkProtoResolver;
         this.storageDir = storageDir;
 
-        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.corruptedStorageFileHandler = corruptedStorageFileHandler;
     }
 
     @Override
@@ -98,20 +98,20 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case TRADABLE_LIST:
                     return TradableList.fromProto(proto.getTradableList(),
                             this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler),
+                            new Storage<>(storageDir, this, corruptedStorageFileHandler),
                             btcWalletService.get());
                 case ARBITRATION_DISPUTE_LIST:
                     return ArbitrationDisputeList.fromProto(proto.getArbitrationDisputeList(),
                             this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                            new Storage<>(storageDir, this, corruptedStorageFileHandler));
                 case MEDIATION_DISPUTE_LIST:
                     return MediationDisputeList.fromProto(proto.getMediationDisputeList(),
                             this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                            new Storage<>(storageDir, this, corruptedStorageFileHandler));
                 case REFUND_DISPUTE_LIST:
                     return RefundDisputeList.fromProto(proto.getRefundDisputeList(),
                             this,
-                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                            new Storage<>(storageDir, this, corruptedStorageFileHandler));
                 case PREFERENCES_PAYLOAD:
                     return PreferencesPayload.fromProto(proto.getPreferencesPayload(), this);
                 case USER_PAYLOAD:

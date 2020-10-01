@@ -68,7 +68,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 
 import com.google.inject.Inject;
 
@@ -127,7 +127,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
-    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final CorruptedStorageFileHandler corruptedStorageFileHandler;
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
@@ -169,7 +169,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          LocalBitcoinNode localBitcoinNode,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
-                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                         CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.user = user;
@@ -192,7 +192,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.localBitcoinNode = localBitcoinNode;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
-        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.corruptedStorageFileHandler = corruptedStorageFileHandler;
 
         TxIdTextField.setPreferences(preferences);
 
@@ -401,7 +401,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             }
         });
 
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
+        corruptedStorageFileHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()
                 .show());

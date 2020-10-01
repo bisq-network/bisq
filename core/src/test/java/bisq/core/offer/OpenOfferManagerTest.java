@@ -3,7 +3,7 @@ package bisq.core.offer;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
 
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.Storage;
@@ -26,12 +26,12 @@ import static org.mockito.Mockito.*;
 
 public class OpenOfferManagerTest {
 
-    private CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private CorruptedStorageFileHandler corruptedStorageFileHandler;
     private File storageDir;
 
     @Before
     public void setUp() throws Exception {
-        corruptedDatabaseFilesHandler = mock(CorruptedDatabaseFilesHandler.class);
+        corruptedStorageFileHandler = mock(CorruptedStorageFileHandler.class);
         storageDir = Files.createTempDirectory("storage").toFile();
     }
 
@@ -46,7 +46,7 @@ public class OpenOfferManagerTest {
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                new Storage<>(storageDir, null, corruptedStorageFileHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -82,7 +82,7 @@ public class OpenOfferManagerTest {
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                new Storage<>(storageDir, null, corruptedStorageFileHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -110,7 +110,7 @@ public class OpenOfferManagerTest {
                 null, null, null, offerBookService,
                 null, null, null,
                 null, null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                new Storage<>(storageDir, null, corruptedStorageFileHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 

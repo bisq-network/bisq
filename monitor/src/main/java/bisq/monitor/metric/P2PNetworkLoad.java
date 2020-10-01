@@ -40,7 +40,7 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
 import bisq.common.config.Config;
-import bisq.common.file.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.storage.Storage;
@@ -127,14 +127,14 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             File storageDir = torHiddenServiceDir;
             try {
                 Config config = new Config();
-                CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = new CorruptedDatabaseFilesHandler();
+                CorruptedStorageFileHandler corruptedStorageFileHandler = new CorruptedStorageFileHandler();
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
-                        networkProtoResolver, storageDir, corruptedDatabaseFilesHandler);
+                        networkProtoResolver, storageDir, corruptedStorageFileHandler);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(config);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new ClockWatcher(),
-                        maxConnections, new Storage<PeerList>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler));
+                        maxConnections, new Storage<PeerList>(storageDir, persistenceProtoResolver, corruptedStorageFileHandler));
 
                 // init file storage
                 peerManager.readPersisted();
