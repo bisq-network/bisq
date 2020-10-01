@@ -23,7 +23,7 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
-import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
+import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
@@ -41,7 +41,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class TradableList<T extends Tradable> implements UserThreadMappedPersistableEnvelope {
+public final class TradableList<T extends Tradable> implements PersistableEnvelope {
     transient final private Storage<TradableList<T>> storage;
     @Getter
     private final ObservableList<T> list = FXCollections.observableArrayList();
