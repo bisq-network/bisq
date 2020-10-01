@@ -24,10 +24,9 @@ import bisq.core.dao.state.model.DaoState;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
-import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,13 +43,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
-    // We needed to rename the db file as we have a new file structure with the hashChain feature and need to enforce the
-    // new file to be used.
-    // We can rename to DaoStateStore before mainnet launch again.
-    // Another update due to some data field changes which would cause diff. hashes, so to enforce users to get the new
-    // data we rename it to DaoStateStore
-    private static final String FILE_NAME = "DaoStateStore";
-
     private final DaoState daoState;
     private final DaoStateMonitoringService daoStateMonitoringService;
 
@@ -65,8 +56,8 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                                   DaoState daoState,
                                   DaoStateMonitoringService daoStateMonitoringService,
                                   @Named(Config.STORAGE_DIR) File storageDir,
-                                  Storage<DaoStateStore> daoSnapshotStorage) {
-        super(storageDir, daoSnapshotStorage);
+                                  PersistenceManager<DaoStateStore> persistenceManager) {
+        super(storageDir, persistenceManager);
         this.daoState = daoState;
         this.daoStateMonitoringService = daoStateMonitoringService;
 
@@ -80,19 +71,13 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     public String getFileName() {
-        return FILE_NAME;
+        return "DaoStateStore";
     }
 
-    public void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
-        persist(daoState, daoStateHashChain, 200);
-    }
-
-    private void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, long delayInMilli) {
-        store.modifySynchronized(() -> {
-            store.setDaoState(daoState);
-            store.setDaoStateHashChain(daoStateHashChain);
-        });
-        storage.queueUpForSave(store, delayInMilli);
+    public void persistNow(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, Runnable completeHandler) {
+        store.setDaoState(daoState);
+        store.setDaoStateHashChain(daoStateHashChain);
+        persistenceManager.persistNow(completeHandler);
     }
 
     public DaoState getPersistedBsqState() {
@@ -104,8 +89,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        persist(new DaoState(), new LinkedList<>(), 1);
-        UserThread.runAfter(resultHandler, 300, TimeUnit.MILLISECONDS);
+        persistNow(new DaoState(), new LinkedList<>(), resultHandler);
     }
 
     public void resyncDaoStateFromResources(File storageDir) throws IOException {
@@ -138,5 +122,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     @Override
     protected DaoStateStore createStore() {
         return new DaoStateStore(DaoState.getClone(daoState), new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain()));
+    }
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
     }
 }
