@@ -17,7 +17,6 @@
 
 package bisq.common.file;
 
-import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import java.nio.file.Paths;
@@ -26,13 +25,12 @@ import java.io.File;
 import java.io.PrintWriter;
 
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonFileManager {
-    private final ThreadPoolExecutor executor = Utilities.getThreadPoolExecutor("saveToDiscExecutor", 5, 50, 60);
+    private final ThreadPoolExecutor executor = Utilities.getThreadPoolExecutor("JsonFileManagerExecutor", 5, 50, 60);
     private final File dir;
 
 
@@ -47,18 +45,12 @@ public class JsonFileManager {
             if (!dir.mkdir())
                 log.warn("make dir failed");
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            UserThread.execute(JsonFileManager.this::shutDown);
-        }, "WriteOnlyFileManager.ShutDownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(JsonFileManager.this::shutDown,
+                "JsonFileManager.ShutDownHook"));
     }
 
     public void shutDown() {
         executor.shutdown();
-        try {
-            executor.awaitTermination(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     public void writeToDisc(String json, String fileName) {
