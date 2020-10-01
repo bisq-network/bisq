@@ -604,7 +604,7 @@ public class TradeWalletService {
                 TransactionInput transactionInput = makersDepositTx.getInputs().get(i);
                 depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(transactionInput), buyerInputs.get(i)));
                 if (!TransactionWitness.EMPTY.equals(transactionInput.getWitness())) {
-                    depositTx.getInput(depositTx.getInputs().size()-1).setWitness(transactionInput.getWitness());
+                    depositTx.getInput(depositTx.getInputs().size() - 1).setWitness(transactionInput.getWitness());
                 }
             }
 
