@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -70,12 +71,10 @@ public class ProtectedDataStoreService {
     }
 
     public ProtectedStorageEntry remove(P2PDataStorage.ByteArray hash, ProtectedStorageEntry protectedStorageEntry) {
-        final ProtectedStorageEntry[] result = new ProtectedStorageEntry[1];
+        AtomicReference<ProtectedStorageEntry> result = new AtomicReference<>();
         services.stream()
                 .filter(service -> service.canHandle(protectedStorageEntry))
-                .forEach(service -> {
-                    result[0] = service.remove(hash);
-                });
-        return result[0];
+                .forEach(service -> result.set(service.remove(hash)));
+        return result.get();
     }
 }

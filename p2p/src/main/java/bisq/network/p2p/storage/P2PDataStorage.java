@@ -624,7 +624,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (allowBroadcast)
             broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, listener);
 
-        // Persist ProtectedStorageEntrys carrying PersistablePayload payloads
+        // Persist ProtectedStorageEntries carrying PersistablePayload payloads
         if (protectedStoragePayload instanceof PersistablePayload)
             protectedDataStoreService.put(hashOfPayload, protectedStorageEntry);
 
@@ -854,7 +854,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             if (protectedStoragePayload instanceof PersistablePayload) {
                 ProtectedStorageEntry previous = protectedDataStoreService.remove(hashOfPayload, protectedStorageEntry);
                 if (previous == null)
-                    log.error("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
+                    log.warn("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
             }
         });
 
