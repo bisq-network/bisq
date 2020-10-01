@@ -42,10 +42,6 @@ public class SequenceNumberMap implements PersistableEnvelope {
     public SequenceNumberMap() {
     }
 
-    public static SequenceNumberMap clone(SequenceNumberMap map) {
-        return new SequenceNumberMap(map.getMap());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
