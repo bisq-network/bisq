@@ -46,10 +46,6 @@ import bisq.common.util.Utilities;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import java.nio.file.Paths;
-
-import java.io.File;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -77,7 +73,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     public void execute(String[] args) {
         try {
-            config = new Config(appName, osUserDataDir(), args);
+            config = new Config(appName, Utilities.getUserDataDir(), args);
             if (config.helpRequested) {
                 config.printHelp(System.out, new BisqHelpFormatter(fullName, scriptName, version));
                 System.exit(EXIT_SUCCESS);
@@ -155,7 +151,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected void applyInjector() {
         setupPersistedDataHosts(injector);
     }
-
 
     protected void setupPersistedDataHosts(Injector injector) {
         try {
@@ -264,19 +259,5 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         if (doShutDown)
             gracefulShutDown(() -> log.info("gracefulShutDown complete"));
-    }
-
-    /**
-     * Returns the well-known "user data directory" for the current operating system.
-     */
-    private static File osUserDataDir() {
-        if (Utilities.isWindows())
-            return new File(System.getenv("APPDATA"));
-
-        if (Utilities.isOSX())
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
-
-        // *nix
-        return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
     }
 }
