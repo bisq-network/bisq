@@ -78,11 +78,16 @@ public class Storage<T extends PersistableEnvelope> {
     }
 
     @Nullable
+    public T getPersisted(String fileName) {
+        return getPersisted(new File(dir, fileName));
+    }
+
+    @Nullable
     public T initAndGetPersistedWithFileName(String fileName, long delay) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, delay, persistenceProtoResolver);
-        return getPersisted();
+        return getPersisted(storageFile);
     }
 
     @Nullable
@@ -96,7 +101,7 @@ public class Storage<T extends PersistableEnvelope> {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, delay, persistenceProtoResolver);
-        return getPersisted();
+        return getPersisted(storageFile);
     }
 
     public void queueUpForSave() {
@@ -144,7 +149,7 @@ public class Storage<T extends PersistableEnvelope> {
     // We do the file read on the UI thread to avoid problems from multi threading.
     // Data are small and read is done only at startup, so it is no performance issue.
     @Nullable
-    private T getPersisted() {
+    private T getPersisted(File storageFile) {
         if (storageFile.exists()) {
             long now = System.currentTimeMillis();
             try {
