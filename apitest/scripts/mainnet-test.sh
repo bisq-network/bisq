@@ -45,17 +45,19 @@
 }
 
 @test "test getversion call with quoted password" {
+  load 'version-parser'
   run ./bisq-cli --password="xyz" getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.9" ]
+  [ "$output" = "$CURRENT_VERSION" ]
 }
 
 @test "test getversion" {
+  load 'version-parser'
   run ./bisq-cli --password=xyz getversion
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "1.3.9" ]
+  [ "$output" = "$CURRENT_VERSION" ]
 }
 
 @test "test setwalletpassword \"a b c\"" {

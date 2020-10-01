@@ -77,16 +77,16 @@ class CoreOffersService {
         return offers;
     }
 
-    void createOffer(String currencyCode,
-                     String directionAsString,
-                     long priceAsLong,
-                     boolean useMarketBasedPrice,
-                     double marketPriceMargin,
-                     long amountAsLong,
-                     long minAmountAsLong,
-                     double buyerSecurityDeposit,
-                     String paymentAccountId,
-                     TransactionResultHandler resultHandler) {
+    Offer createOffer(String currencyCode,
+                      String directionAsString,
+                      long priceAsLong,
+                      boolean useMarketBasedPrice,
+                      double marketPriceMargin,
+                      long amountAsLong,
+                      long minAmountAsLong,
+                      double buyerSecurityDeposit,
+                      String paymentAccountId,
+                      TransactionResultHandler resultHandler) {
         String offerId = createOfferService.getRandomOfferId();
         OfferPayload.Direction direction = OfferPayload.Direction.valueOf(directionAsString);
         Price price = Price.valueOf(currencyCode, priceAsLong);
@@ -97,7 +97,7 @@ class CoreOffersService {
         boolean useSavingsWallet = true;
 
         //noinspection ConstantConditions
-        createOffer(offerId,
+        return createAndPlaceOffer(offerId,
                 currencyCode,
                 direction,
                 price,
@@ -111,19 +111,56 @@ class CoreOffersService {
                 resultHandler);
     }
 
-    void createOffer(String offerId,
-                     String currencyCode,
-                     OfferPayload.Direction direction,
-                     Price price,
-                     boolean useMarketBasedPrice,
-                     double marketPriceMargin,
-                     Coin amount,
-                     Coin minAmount,
-                     double buyerSecurityDeposit,
-                     PaymentAccount paymentAccount,
-                     boolean useSavingsWallet,
-                     TransactionResultHandler resultHandler) {
+    Offer createAndPlaceOffer(String offerId,
+                              String currencyCode,
+                              OfferPayload.Direction direction,
+                              Price price,
+                              boolean useMarketBasedPrice,
+                              double marketPriceMargin,
+                              Coin amount,
+                              Coin minAmount,
+                              double buyerSecurityDeposit,
+                              PaymentAccount paymentAccount,
+                              boolean useSavingsWallet,
+                              TransactionResultHandler resultHandler) {
         Coin useDefaultTxFee = Coin.ZERO;
+
+        Offer offer = createOfferService.createAndGetOffer(offerId,
+                direction,
+                currencyCode,
+                amount,
+                minAmount,
+                price,
+                useDefaultTxFee,
+                useMarketBasedPrice,
+                marketPriceMargin,
+                buyerSecurityDeposit,
+                paymentAccount);
+
+        // TODO give user chance to examine offer before placing it (placeoffer)
+        openOfferManager.placeOffer(offer,
+                buyerSecurityDeposit,
+                useSavingsWallet,
+                resultHandler,
+                log::error);
+
+        return offer;
+    }
+
+    Offer createOffer(String offerId,
+                      String currencyCode,
+                      OfferPayload.Direction direction,
+                      Price price,
+                      boolean useMarketBasedPrice,
+                      double marketPriceMargin,
+                      Coin amount,
+                      Coin minAmount,
+                      double buyerSecurityDeposit,
+                      PaymentAccount paymentAccount,
+                      boolean useSavingsWallet,
+                      TransactionResultHandler resultHandler) {
+        Coin useDefaultTxFee = Coin.ZERO;
+
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
                 currencyCode,
@@ -141,5 +178,7 @@ class CoreOffersService {
                 useSavingsWallet,
                 resultHandler,
                 log::error);
+
+        return offer;
     }
 }
