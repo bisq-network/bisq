@@ -114,7 +114,7 @@ public class CoreApi {
                 paymentAccountId);
     }
 
-    @Deprecated
+    // For editing open offer?
     public Offer createOffer(String offerId,
                              String currencyCode,
                              OfferPayload.Direction direction,
