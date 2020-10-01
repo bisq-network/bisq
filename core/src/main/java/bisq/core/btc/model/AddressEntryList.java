@@ -18,9 +18,9 @@
 package bisq.core.btc.model;
 
 import bisq.common.config.Config;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
@@ -41,28 +41,28 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * The AddressEntries was previously stored as list, now as hashSet. We still keep the old name to reflect the
  * associated protobuf message.
  */
-@ToString
 @Slf4j
 public final class AddressEntryList implements PersistableEnvelope, PersistedDataHost {
-    transient private Storage<AddressEntryList> storage;
+    transient private PersistenceManager<AddressEntryList> persistenceManager;
     transient private Wallet wallet;
     private final Set<AddressEntry> entrySet = new CopyOnWriteArraySet<>();
 
     @Inject
-    public AddressEntryList(Storage<AddressEntryList> storage) {
-        this.storage = storage;
+    public AddressEntryList(PersistenceManager<AddressEntryList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+
+        persistenceManager.initialize(this, PersistenceManager.Priority.HIGH);
     }
 
     @Override
     public void readPersisted() {
-        AddressEntryList persisted = storage.initAndGetPersisted(this, 50);
+        AddressEntryList persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             entrySet.clear();
             entrySet.addAll(persisted.entrySet);
@@ -164,7 +164,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             maybeAddNewAddressEntry(tx);
         });
 
-        persist();
+        requestPersistence();
     }
 
     public ImmutableList<AddressEntry> getAddressEntriesAsListImmutable() {
@@ -186,7 +186,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
 
         boolean setChangedByAdd = entrySet.add(addressEntry);
         if (setChangedByAdd)
-            persist();
+            requestPersistence();
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
@@ -194,7 +194,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
                 AddressEntry.Context.AVAILABLE));
         if (setChangedByRemove || setChangedByAdd) {
-            persist();
+            requestPersistence();
         }
     }
 
@@ -205,13 +205,13 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         final AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId);
         boolean setChangedByAdd = entrySet.add(newAddressEntry);
         if (setChangedByRemove || setChangedByAdd)
-            persist();
+            requestPersistence();
 
         return newAddressEntry;
     }
 
-    public void persist() {
-        storage.queueUpForSave(50);
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
 
@@ -234,5 +234,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
 
     private boolean isAddressNotInEntries(Address address) {
         return entrySet.stream().noneMatch(e -> address.equals(e.getAddress()));
+    }
+
+    @Override
+    public String toString() {
+        return "AddressEntryList{" +
+                ",\n     entrySet=" + entrySet +
+                "\n}";
     }
 }
