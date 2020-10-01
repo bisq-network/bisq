@@ -36,6 +36,10 @@ public class CommonSetup {
     public static void setup(UncaughtExceptionHandler uncaughtExceptionHandler) {
         setupErrorHandler(uncaughtExceptionHandler);
 
+        setSystemProperties();
+    }
+
+    protected static void setSystemProperties() {
         if (Utilities.isLinux())
             System.setProperty("prism.lcdtext", "false");
     }
