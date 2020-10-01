@@ -65,7 +65,6 @@ import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
-import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
@@ -75,12 +74,10 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.config.Config;
-import bisq.common.crypto.KeyRing;
 import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.RejectMessage;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -169,8 +166,6 @@ public class BisqSetup {
     private final FeeService feeService;
     private final DaoSetup daoSetup;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
-    private final EncryptionService encryptionService;
-    private final KeyRing keyRing;
     private final Config config;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final SignedWitnessService signedWitnessService;
@@ -238,7 +233,7 @@ public class BisqSetup {
     private boolean allBasicServicesInitialized;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
-    private List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
+    private final List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
 
     @Inject
     public BisqSetup(P2PNetworkSetup p2PNetworkSetup,
@@ -269,8 +264,6 @@ public class BisqSetup {
                      FeeService feeService,
                      DaoSetup daoSetup,
                      UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
-                     EncryptionService encryptionService,
-                     KeyRing keyRing,
                      Config config,
                      AccountAgeWitnessService accountAgeWitnessService,
                      SignedWitnessService signedWitnessService,
@@ -315,8 +308,6 @@ public class BisqSetup {
         this.feeService = feeService;
         this.daoSetup = daoSetup;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
-        this.encryptionService = encryptionService;
-        this.keyRing = keyRing;
         this.config = config;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.signedWitnessService = signedWitnessService;
@@ -679,79 +670,7 @@ public class BisqSetup {
 
         balances.onAllServicesInitialized();
 
-        walletAppSetup.getRejectedTxException().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null || newValue.getTxId() == null) {
-                return;
-            }
-
-            RejectMessage rejectMessage = newValue.getRejectMessage();
-            log.warn("We received reject message: {}", rejectMessage);
-
-            // TODO: Find out which reject messages are critical and which not.
-            // We got a report where a "tx already known" message caused a failed trade but the deposit tx was valid.
-            // To avoid such false positives we only handle reject messages which we consider clearly critical.
-
-            switch (rejectMessage.getReasonCode()) {
-                case OBSOLETE:
-                case DUPLICATE:
-                case NONSTANDARD:
-                case CHECKPOINT:
-                case OTHER:
-                    // We ignore those cases to avoid that not critical reject messages trigger a failed trade.
-                    log.warn("We ignore that reject message as it is likely not critical.");
-                    break;
-                case MALFORMED:
-                case INVALID:
-                case DUST:
-                case INSUFFICIENTFEE:
-                    // We delay as we might get the rejected tx error before we have completed the create offer protocol
-                    log.warn("We handle that reject message as it is likely critical.");
-                    UserThread.runAfter(() -> {
-                        String txId = newValue.getTxId();
-                        openOfferManager.getObservableList().stream()
-                                .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
-                                .forEach(openOffer -> {
-                                    // We delay to avoid concurrent modification exceptions
-                                    UserThread.runAfter(() -> {
-                                        openOffer.getOffer().setErrorMessage(newValue.getMessage());
-                                        if (rejectedTxErrorMessageHandler != null) {
-                                            rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
-                                        }
-                                        openOfferManager.removeOpenOffer(openOffer, () -> {
-                                            log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
-                                                    "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
-                                        }, log::warn);
-                                    }, 1);
-                                });
-
-                        tradeManager.getTradableList().stream()
-                                .filter(trade -> trade.getOffer() != null)
-                                .forEach(trade -> {
-                                    String details = null;
-                                    if (txId.equals(trade.getDepositTxId())) {
-                                        details = Res.get("popup.warning.trade.txRejected.deposit");
-                                    }
-                                    if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
-                                        details = Res.get("popup.warning.trade.txRejected.tradeFee");
-                                    }
-
-                                    if (details != null) {
-                                        // We delay to avoid concurrent modification exceptions
-                                        String finalDetails = details;
-                                        UserThread.runAfter(() -> {
-                                            trade.setErrorMessage(newValue.getMessage());
-                                            if (rejectedTxErrorMessageHandler != null) {
-                                                rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
-                                                        finalDetails, trade.getShortId(), txId));
-                                            }
-                                            tradeManager.addTradeToFailedTrades(trade);
-                                        }, 1);
-                                    }
-                                });
-                    }, 3);
-            }
-        });
-
+        walletAppSetup.setRejectedTxErrorMessageHandler(rejectedTxErrorMessageHandler, openOfferManager, tradeManager);
 
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
@@ -788,32 +707,7 @@ public class BisqSetup {
         priceFeedService.setCurrencyCodeOnInit();
 
         filterManager.onAllServicesInitialized();
-        filterManager.addListener(filter -> {
-            if (filter != null && filterWarningHandler != null) {
-                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
-                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
-                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
-                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
-                }
-
-                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty()) {
-                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
-                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
-                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
-                }
-
-                if (filterManager.requireUpdateToNewVersionForTrading()) {
-                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.trading"));
-                }
-
-                if (filterManager.requireUpdateToNewVersionForDAO()) {
-                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.dao"));
-                }
-                if (filter.isDisableDao()) {
-                    filterWarningHandler.accept(Res.get("popup.warning.disable.dao"));
-                }
-            }
-        });
+        filterManager.setFilterWarningHandler(filterWarningHandler);
 
         voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
             c.next();
