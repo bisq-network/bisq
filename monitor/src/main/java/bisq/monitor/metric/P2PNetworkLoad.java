@@ -40,9 +40,9 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
 import bisq.common.config.Config;
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import java.time.Clock;

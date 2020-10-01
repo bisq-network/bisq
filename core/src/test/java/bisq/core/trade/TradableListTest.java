@@ -21,7 +21,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import java.nio.file.Files;

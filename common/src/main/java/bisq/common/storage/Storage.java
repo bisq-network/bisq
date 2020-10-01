@@ -19,6 +19,7 @@ package bisq.common.storage;
 
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.file.CorruptedDatabaseFilesHandler;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
