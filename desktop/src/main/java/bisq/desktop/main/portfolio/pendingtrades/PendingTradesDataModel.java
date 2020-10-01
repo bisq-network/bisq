@@ -542,7 +542,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         AtomicReference<String> donationAddressString = new AtomicReference<>("");
         Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
         try {
-            TradeDataValidation.validatePayoutTx(trade,
+            TradeDataValidation.validateDelayedPayoutTx(trade,
                     delayedPayoutTx,
                     daoFacade,
                     btcWalletService,

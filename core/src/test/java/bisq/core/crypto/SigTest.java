@@ -82,7 +82,7 @@ public class SigTest {
                 assertTrue(false);
             }
         }
-        log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
+        log.trace("took {} ms.", System.currentTimeMillis() - ts);
     }
 }
 

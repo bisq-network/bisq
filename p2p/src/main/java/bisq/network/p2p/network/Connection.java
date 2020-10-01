@@ -28,10 +28,8 @@ import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
-import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
-import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -234,17 +232,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 try {
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
-                    protobuf.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
-                    log.trace("Sending message: {}", Utilities.toTruncatedString(proto.toString(), 10000));
-
-                    if (networkEnvelope instanceof Ping || networkEnvelope instanceof RefreshOfferMessage) {
-                        // pings and offer refresh msg we don't want to log in production
-                        log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Sending direct message to peer" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, proto.toString(), proto.getSerializedSize());
-                    } else if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
+                    if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                         setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
@@ -254,11 +242,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), -1);
                     } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
                         setPeerType(Connection.PeerType.PEER);
-                    } else {
-                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), proto.getSerializedSize());
                     }
 
                     // Throttle outbound network_messages
@@ -477,7 +460,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
-        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}", this.peersNodeAddressOptional.orElse(null), closeConnectionReason);
+        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}",
+                this.peersNodeAddressOptional.orElse(null), closeConnectionReason);
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -523,7 +507,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         try {
             socket.close();
         } catch (SocketException e) {
-            log.trace("SocketException at shutdown might be expected " + e.getMessage());
+            log.trace("SocketException at shutdown might be expected {}", e.getMessage());
         } catch (IOException e) {
             log.error("Exception at shutdown. " + e.getMessage());
             e.printStackTrace();
@@ -539,9 +523,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             //noinspection UnstableApiUsage
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
+            //noinspection UnstableApiUsage
             MoreExecutors.shutdownAndAwaitTermination(bundleSender, 500, TimeUnit.MILLISECONDS);
 
-            log.debug("Connection shutdown complete " + this.toString());
+            log.debug("Connection shutdown complete {}", this.toString());
             // Use UserThread.execute as its not clear if that is called from a non-UserThread
             if (shutDownCompleteHandler != null)
                 UserThread.execute(shutDownCompleteHandler);
@@ -827,10 +812,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     if (networkEnvelope instanceof CloseConnectionMessage) {
                         // If we get a CloseConnectionMessage we shut down
-                        if (log.isDebugEnabled()) {
-                            log.debug("CloseConnectionMessage received. Reason={}\n\t" +
-                                    "connection={}", proto.getCloseConnectionMessage().getReason(), this);
-                        }
+                        log.debug("CloseConnectionMessage received. Reason={}\n\t" +
+                                "connection={}", proto.getCloseConnectionMessage().getReason(), this);
+
                         if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                             log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
                             shutDown(CloseConnectionReason.PEER_BANNED);

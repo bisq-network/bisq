@@ -380,7 +380,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         Trade trade = optionalTrade.get();
         try {
-            TradeDataValidation.validatePayoutTx(trade,
+            TradeDataValidation.validateDelayedPayoutTx(trade,
                     trade.getDelayedPayoutTx(),
                     dispute,
                     daoFacade,

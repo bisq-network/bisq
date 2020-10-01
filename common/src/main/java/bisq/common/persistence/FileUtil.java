@@ -108,14 +108,14 @@ public class FileUtil {
             File[] files = file.listFiles();
             if (files != null)
                 for (File f : files) {
-                    boolean excludeFileFoundLocal = exclude != null ? f.getAbsolutePath().equals(exclude.getAbsolutePath()) : false;
+                    boolean excludeFileFoundLocal = exclude != null && f.getAbsolutePath().equals(exclude.getAbsolutePath());
                     excludeFileFound |= excludeFileFoundLocal;
                     if (!excludeFileFoundLocal)
                         deleteDirectory(f, exclude, ignoreLockedFiles);
                 }
         }
         // Finally delete main file/dir if exclude file was not found in directory
-        if (!excludeFileFound && !(exclude != null ? file.getAbsolutePath().equals(exclude.getAbsolutePath()) : false)) {
+        if (!excludeFileFound && !(exclude != null && file.getAbsolutePath().equals(exclude.getAbsolutePath()))) {
             try {
                 deleteFileIfExists(file, ignoreLockedFiles);
             } catch (Throwable t) {

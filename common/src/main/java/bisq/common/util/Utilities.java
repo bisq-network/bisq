@@ -434,13 +434,13 @@ public class Utilities {
         return toTruncatedString(message, maxLength, true);
     }
 
-    public static String toTruncatedString(Object message, int maxLength, boolean removeLinebreaks) {
+    public static String toTruncatedString(Object message, int maxLength, boolean removeLineBreaks) {
         if (message == null)
             return "null";
 
 
         String result = StringUtils.abbreviate(message.toString(), maxLength);
-        if (removeLinebreaks)
+        if (removeLineBreaks)
             return result.replace("\n", "");
 
         return result;
