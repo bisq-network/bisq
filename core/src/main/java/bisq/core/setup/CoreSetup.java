@@ -20,16 +20,7 @@ package bisq.core.setup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.app.Log;
-import bisq.common.app.Version;
 import bisq.common.config.Config;
-import bisq.common.util.Utilities;
-
-import java.net.URISyntaxException;
-
-import java.nio.file.Paths;
-
-import ch.qos.logback.classic.Level;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,29 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 public class CoreSetup {
 
     public static void setup(Config config) {
-        setupLog(config);
         CoreNetworkCapabilities.setSupportedCapabilities(config);
         Res.setup();
         CurrencyUtil.setup();
-
-        Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
-        Version.printVersion();
-
-        try {
-            final String pathOfCodeSource = Utilities.getPathOfCodeSource();
-            if (!pathOfCodeSource.endsWith("classes"))
-                log.info("Path to Bisq jar file: " + pathOfCodeSource);
-        } catch (URISyntaxException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-        }
     }
 
-    private static void setupLog(Config config) {
-        String logPath = Paths.get(config.appDataDir.getPath(), "bisq").toString();
-        Log.setup(logPath);
-        log.info("Log files under: {}", logPath);
-        Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(config.logLevel));
-    }
 }

@@ -20,6 +20,8 @@ package bisq.common.setup;
 import bisq.common.UserThread;
 import bisq.common.app.AsciiLogo;
 import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
+import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
@@ -28,7 +30,13 @@ import org.bitcoinj.store.BlockStoreException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.net.URISyntaxException;
+
+import java.nio.file.Paths;
+
 import java.util.concurrent.TimeUnit;
+
+import ch.qos.logback.classic.Level;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,10 +49,16 @@ public class CommonSetup {
 
     public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         AsciiLogo.showAsciiLogo();
+        setupLog(config);
+        Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
+        Version.printVersion();
+        maybePrintPathOfCodeSource();
+        UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), 10, TimeUnit.MINUTES);
+
         setSystemProperties();
         setupSigIntHandlers(gracefulShutDownHandler);
+
         DevEnv.setup(config);
-        UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), 10, TimeUnit.MINUTES);
     }
 
     public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
@@ -69,6 +83,14 @@ public class CommonSetup {
         Thread.currentThread().setUncaughtExceptionHandler(handler);
     }
 
+    private static void setupLog(Config config) {
+        String logPath = Paths.get(config.appDataDir.getPath(), "bisq").toString();
+        Log.setup(logPath);
+        log.info("Log files under: {}", logPath);
+        Utilities.printSysInfo();
+        Log.setLevel(Level.toLevel(config.logLevel));
+    }
+
     protected static void setSystemProperties() {
         if (Utilities.isLinux())
             System.setProperty("prism.lcdtext", "false");
@@ -84,5 +106,16 @@ public class CommonSetup {
             gracefulShutDownHandler.gracefulShutDown(() -> {
             });
         });
+    }
+
+    protected static void maybePrintPathOfCodeSource() {
+        try {
+            final String pathOfCodeSource = Utilities.getPathOfCodeSource();
+            if (!pathOfCodeSource.endsWith("classes"))
+                log.info("Path to Bisq jar file: " + pathOfCodeSource);
+        } catch (URISyntaxException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+        }
     }
 }
