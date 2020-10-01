@@ -21,16 +21,12 @@ import bisq.common.UserThread;
 import bisq.common.app.AsciiLogo;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.crypto.CryptoUtils;
-import bisq.common.crypto.LimitedKeyStrengthException;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.store.BlockStoreException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import java.security.NoSuchAlgorithmException;
 
 import java.util.concurrent.TimeUnit;
 
@@ -88,15 +84,5 @@ public class CommonSetup {
     protected static void setSystemProperties() {
         if (Utilities.isLinux())
             System.setProperty("prism.lcdtext", "false");
-    }
-
-    //TODO not needed anymore
-    private static void checkCryptoPolicySetup(UncaughtExceptionHandler uncaughtExceptionHandler) {
-        try {
-            CryptoUtils.checkCryptoPolicySetup();
-        } catch (NoSuchAlgorithmException | LimitedKeyStrengthException e) {
-            e.printStackTrace();
-            UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(e, true));
-        }
     }
 }
