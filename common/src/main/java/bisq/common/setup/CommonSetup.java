@@ -19,6 +19,7 @@ package bisq.common.setup;
 
 import bisq.common.UserThread;
 import bisq.common.app.AsciiLogo;
+import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoUtils;
 import bisq.common.crypto.LimitedKeyStrengthException;
@@ -43,6 +44,8 @@ public class CommonSetup {
         AsciiLogo.showAsciiLogo();
         setSystemProperties();
         setupSigIntHandlers(gracefulShutDownHandler);
+        DevEnv.setDevMode(config.useDevMode);
+        DevEnv.setDaoActivated(config.daoActivated);
     }
 
     protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {

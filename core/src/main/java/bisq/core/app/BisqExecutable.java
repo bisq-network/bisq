@@ -152,15 +152,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void applyInjector() {
-        setupDevEnv();
-
         setupPersistedDataHosts(injector);
     }
 
-    protected void setupDevEnv() {
-        DevEnv.setDevMode(config.useDevMode);
-        DevEnv.setDaoActivated(config.daoActivated);
-    }
 
     protected void setupPersistedDataHosts(Injector injector) {
         try {
