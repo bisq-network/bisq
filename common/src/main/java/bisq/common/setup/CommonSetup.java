@@ -23,6 +23,7 @@ import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoUtils;
 import bisq.common.crypto.LimitedKeyStrengthException;
+import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.store.BlockStoreException;
@@ -30,6 +31,8 @@ import org.bitcoinj.store.BlockStoreException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.security.NoSuchAlgorithmException;
+
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +48,7 @@ public class CommonSetup {
         setSystemProperties();
         setupSigIntHandlers(gracefulShutDownHandler);
         DevEnv.setup(config);
+        UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), 10, TimeUnit.MINUTES);
     }
 
     protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {

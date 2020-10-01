@@ -41,13 +41,11 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.user.Preferences;
 
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.config.Config;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
-import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Injector;
@@ -74,7 +72,6 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.slf4j.LoggerFactory;
@@ -137,8 +134,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             setupStage(scene);
 
             injector.getInstance(AvoidStandbyModeService.class).init();
-
-            UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             handleUncaughtException(throwable, false);
