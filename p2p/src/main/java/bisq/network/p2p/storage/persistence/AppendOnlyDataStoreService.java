@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AppendOnlyDataStoreService {
-    private final List<MapStoreService<? extends PersistableNetworkPayloadStore, PersistableNetworkPayload>> services = new ArrayList<>();
+    private final List<MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload>> services = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ public class AppendOnlyDataStoreService {
     public AppendOnlyDataStoreService() {
     }
 
-    public void addService(MapStoreService<? extends PersistableNetworkPayloadStore, PersistableNetworkPayload> service) {
+    public void addService(MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload> service) {
         services.add(service);
     }
 
