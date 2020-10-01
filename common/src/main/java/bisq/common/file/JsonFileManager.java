@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.storage;
+package bisq.common.file;
 
 import bisq.common.UserThread;
-import bisq.common.file.FileUtil;
 import bisq.common.util.Utilities;
 
 import java.nio.file.Paths;

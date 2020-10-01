@@ -21,7 +21,7 @@ import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
-import bisq.common.storage.ResourceNotFoundException;
+import bisq.common.file.ResourceNotFoundException;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
