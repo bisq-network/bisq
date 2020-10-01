@@ -235,7 +235,7 @@ public class WalletAppSetup {
                                     }, 1);
                                 });
 
-                        tradeManager.getTradableList().stream()
+                        tradeManager.getTradesAsObservableList().stream()
                                 .filter(trade -> trade.getOffer() != null)
                                 .forEach(trade -> {
                                     String details = null;
@@ -255,7 +255,6 @@ public class WalletAppSetup {
                                                 rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
                                                         finalDetails, trade.getShortId(), txId));
                                             }
-                                            tradeManager.addTradeToFailedTrades(trade);
                                         }, 1);
                                     }
                                 });
