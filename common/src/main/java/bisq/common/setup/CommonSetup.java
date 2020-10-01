@@ -44,8 +44,7 @@ public class CommonSetup {
         AsciiLogo.showAsciiLogo();
         setSystemProperties();
         setupSigIntHandlers(gracefulShutDownHandler);
-        DevEnv.setDevMode(config.useDevMode);
-        DevEnv.setDaoActivated(config.daoActivated);
+        DevEnv.setup(config);
     }
 
     protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {
