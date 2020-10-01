@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.blindvote.storage;
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
@@ -34,8 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class BlindVoteStore extends PersistableNetworkPayloadStore {
-
+public class BlindVoteStore extends PersistableNetworkPayloadStore<BlindVotePayload> {
     BlindVoteStore() {
     }
 
@@ -45,7 +43,7 @@ public class BlindVoteStore extends PersistableNetworkPayloadStore {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private BlindVoteStore(List<BlindVotePayload> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -66,9 +64,5 @@ public class BlindVoteStore extends PersistableNetworkPayloadStore {
         List<BlindVotePayload> list = proto.getItemsList().stream()
                 .map(BlindVotePayload::fromProto).collect(Collectors.toList());
         return new BlindVoteStore(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }

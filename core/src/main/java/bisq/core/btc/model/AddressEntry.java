@@ -155,7 +155,6 @@ public final class AddressEntry implements PersistablePayload {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     // getKeyPair must not be called before wallet is ready (in case we get the object recreated from disk deserialization)
     // If the object is created at runtime it must be always constructed after wallet is ready.
     public DeterministicKey getKeyPair() {

@@ -263,6 +263,10 @@ public abstract class TradeProtocol {
         cleanup();
     }
 
+    public void requestPersistence() {
+        processModel.getTradeManager().requestPersistence();
+    }
+
     private void cleanup() {
         stopTimeout();
         trade.stateProperty().removeListener(stateChangeListener);
@@ -329,10 +333,12 @@ public abstract class TradeProtocol {
         log.debug("handleTaskRunnerSuccess {}", info);
 
         sendAckMessage(tradeMessage, true, null);
+        requestPersistence();
     }
 
     protected void handleTaskRunnerFault(String errorMessage) {
         handleTaskRunnerFault(null, errorMessage);
+        requestPersistence();
     }
 
     protected void handleTaskRunnerFault(@Nullable TradeMessage tradeMessage, String errorMessage) {

@@ -210,7 +210,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
         sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
 
-        getStorage().requestPersistence();
+        requestPersistence();
     }
 
 
@@ -257,9 +257,11 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                 resultHandler.handleResult();
             }, errorMessageHandler);
         }
+        requestPersistence();
     }
 
     public void rejectMediationResult(Trade trade) {
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_REJECTED);
+        requestPersistence();
     }
 }

@@ -21,6 +21,8 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.file.FileUtil;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -140,7 +142,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     private final File dir;
     private final PersistenceProtoResolver persistenceProtoResolver;
-    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final CorruptedStorageFileHandler corruptedStorageFileHandler;
     private File storageFile;
     private T persistable;
     private String fileName;
@@ -159,10 +161,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     @Inject
     public PersistenceManager(@Named(Config.STORAGE_DIR) File dir,
                               PersistenceProtoResolver persistenceProtoResolver,
-                              CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                              CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.dir = checkDir(dir);
         this.persistenceProtoResolver = persistenceProtoResolver;
-        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.corruptedStorageFileHandler = corruptedStorageFileHandler;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -239,8 +241,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 log.error(e1.getMessage());
                 // We swallow Exception if backup fails
             }
-            if (corruptedDatabaseFilesHandler != null) {
-                corruptedDatabaseFilesHandler.onFileCorrupted(storageFile.getName());
+            if (corruptedStorageFileHandler != null) {
+                corruptedStorageFileHandler.addFile(storageFile.getName());
             }
         }
         return null;
@@ -346,7 +348,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         }
     }
 
-    public ExecutorService getWriteToDiskExecutor() {
+    private ExecutorService getWriteToDiskExecutor() {
         if (writeToDiskExecutor == null) {
             String name = "Write-" + fileName + "_to-disk";
             writeToDiskExecutor = Utilities.getSingleThreadExecutor(name);

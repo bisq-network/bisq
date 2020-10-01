@@ -145,7 +145,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
             return;
 
         unconfirmedBsqChangeOutputList.add(txOutput);
-        persist();
+        requestPersistence();
     }
 
     public void onReorganize() {
@@ -191,16 +191,16 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
                 .filter(unconfirmedBsqChangeOutputList::containsTxOutput)
                 .forEach(txOutput -> {
                     unconfirmedBsqChangeOutputList.remove(txOutput);
-                    persist();
+                    requestPersistence();
                 });
     }
 
     private void reset() {
         unconfirmedBsqChangeOutputList.clear();
-        persist();
+        requestPersistence();
     }
 
-    private void persist() {
+    private void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 }

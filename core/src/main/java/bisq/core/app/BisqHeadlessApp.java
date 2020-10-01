@@ -20,7 +20,7 @@ package bisq.core.app;
 import bisq.core.trade.TradeManager;
 
 import bisq.common.UserThread;
-import bisq.common.persistence.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.util.Profiler;
 
@@ -44,7 +44,7 @@ public class BisqHeadlessApp implements HeadlessApp {
     private GracefulShutDownHandler gracefulShutDownHandler;
     private boolean shutDownRequested;
     protected BisqSetup bisqSetup;
-    private CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private CorruptedStorageFileHandler corruptedStorageFileHandler;
     private TradeManager tradeManager;
 
     public BisqHeadlessApp() {
@@ -56,7 +56,7 @@ public class BisqHeadlessApp implements HeadlessApp {
             bisqSetup = injector.getInstance(BisqSetup.class);
             bisqSetup.addBisqSetupListener(this);
 
-            corruptedDatabaseFilesHandler = injector.getInstance(CorruptedDatabaseFilesHandler.class);
+            corruptedStorageFileHandler = injector.getInstance(CorruptedStorageFileHandler.class);
             tradeManager = injector.getInstance(TradeManager.class);
 
             setupHandlers();
@@ -101,7 +101,7 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setQubesOSInfoHandler(() -> log.info("setQubesOSInfoHandler"));
 
         //TODO move to bisqSetup
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
+        corruptedStorageFileHandler.getFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.error("onTakeOfferRequestErrorMessageHandler"));
     }
 

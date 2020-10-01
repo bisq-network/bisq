@@ -52,7 +52,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final PersistenceManager<TradableList<Trade>> persistenceManager;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Setter
-    private Function<Trade, Boolean> unfailTradeCallback;
+    private Function<Trade, Boolean> unFailTradeCallback;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing,
@@ -107,11 +107,11 @@ public class FailedTradesManager implements PersistedDataHost {
                 .filter(Trade::isFundsLockedIn);
     }
 
-    public void unfailTrade(Trade trade) {
-        if (unfailTradeCallback == null)
+    public void unFailTrade(Trade trade) {
+        if (unFailTradeCallback == null)
             return;
 
-        if (unfailTradeCallback.apply(trade)) {
+        if (unFailTradeCallback.apply(trade)) {
             log.info("Unfailing trade {}", trade.getId());
             if (failedTrades.remove(trade)) {
                 persistenceManager.requestPersistence();
@@ -119,7 +119,7 @@ public class FailedTradesManager implements PersistedDataHost {
         }
     }
 
-    public String checkUnfail(Trade trade) {
+    public String checkUnFail(Trade trade) {
         var addresses = TradeUtils.getTradeAddresses(trade, btcWalletService, keyRing);
         if (addresses == null) {
             return "Addresses not found";

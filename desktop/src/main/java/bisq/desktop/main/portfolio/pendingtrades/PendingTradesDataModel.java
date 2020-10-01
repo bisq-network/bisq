@@ -95,6 +95,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesDataModel extends ActivatableDataModel {
+    @Getter
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
     public final MediationManager mediationManager;
@@ -275,7 +276,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     }
                 }
         );
-        tradeManager.persistTrades();
+        tradeManager.requestPersistence();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -718,6 +719,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }
+        tradeManager.requestPersistence();
     }
 
     public boolean isReadyForTxBroadcast() {

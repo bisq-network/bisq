@@ -23,14 +23,14 @@ import org.slf4j.LoggerFactory;
 public abstract class Task<T extends Model> {
     private static final Logger log = LoggerFactory.getLogger(Task.class);
 
-    public static Class<? extends Task> taskToIntercept;
+    public static Class<? extends Task<? extends Model>> taskToIntercept;
 
-    private final TaskRunner taskHandler;
+    private final TaskRunner<T> taskHandler;
     protected final T model;
     protected String errorMessage = "An error occurred at task: " + getClass().getSimpleName();
     protected boolean completed;
 
-    public Task(TaskRunner taskHandler, T model) {
+    public Task(TaskRunner<T> taskHandler, T model) {
         this.taskHandler = taskHandler;
         this.model = model;
     }

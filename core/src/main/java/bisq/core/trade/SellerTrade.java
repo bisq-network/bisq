@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class SellerTrade extends Trade {
@@ -85,7 +86,7 @@ public abstract class SellerTrade extends Trade {
 
     @Override
     public Coin getPayoutAmount() {
-        return getOffer().getSellerSecurityDeposit();
+        return checkNotNull(getOffer()).getSellerSecurityDeposit();
     }
 }
 

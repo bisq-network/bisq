@@ -176,6 +176,7 @@ public class XmrTxProofService implements AssetTxProofService {
                 servicesByTradeId.values().stream().map(XmrTxProofRequestsPerTrade::getTrade).forEach(trade ->
                         trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
                                 .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature"))));
+                tradeManager.requestPersistence();
                 shutDown();
             }
         });
@@ -229,18 +230,21 @@ public class XmrTxProofService implements AssetTxProofService {
         String txHash = trade.getCounterCurrencyExtraData();
         if (is32BitHexStringInValid(txId) || is32BitHexStringInValid(txHash)) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.txKeyOrTxIdInvalid")));
+            tradeManager.requestPersistence();
             return;
         }
 
         if (isAutoConfDisabledByFilter()) {
             trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
                     .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature")));
+            tradeManager.requestPersistence();
             return;
         }
 
         if (wasTxKeyReUsed(trade, tradeManager.getTradableList())) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA
                     .details(Res.get("portfolio.pending.autoConf.state.xmr.txKeyReused")));
+            tradeManager.requestPersistence();
             return;
         }
 
@@ -271,6 +275,8 @@ public class XmrTxProofService implements AssetTxProofService {
                     if (assetTxProofResult.isTerminal()) {
                         servicesByTradeId.remove(trade.getId());
                     }
+
+                    tradeManager.requestPersistence();
                 },
                 (errorMessage, throwable) -> {
                     log.error(errorMessage);

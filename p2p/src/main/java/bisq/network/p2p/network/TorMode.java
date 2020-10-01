@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.network;
 
-import bisq.common.persistence.FileUtil;
+import bisq.common.file.FileUtil;
 
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
@@ -45,11 +45,6 @@ public abstract class TorMode {
     /**
      * @param torDir           points to the place, where we will persist private
      *                         key and address data
-     * @param hiddenServiceDir The directory where the <code>private_key</code> file
-     *                         sits in. Note that, due to the inner workings of the
-     *                         <code>Netlayer</code> dependency, it does not
-     *                         necessarily equal
-     *                         {@link TorMode#getHiddenServiceDirectory()}.
      */
     public TorMode(File torDir) {
         this.torDir = torDir;

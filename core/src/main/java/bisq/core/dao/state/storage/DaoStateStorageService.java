@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state;
+package bisq.core.dao.state.storage;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;
@@ -24,9 +24,8 @@ import bisq.core.dao.state.model.DaoState;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
-import bisq.common.UserThread;
 import bisq.common.config.Config;
-import bisq.common.persistence.FileUtil;
+import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
@@ -36,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,10 +74,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return "DaoStateStore";
     }
 
-    public void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
+    public void persistNow(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, Runnable completeHandler) {
         store.setDaoState(daoState);
         store.setDaoStateHashChain(daoStateHashChain);
-        persistenceManager.requestPersistence();
+        persistenceManager.persistNow(completeHandler);
     }
 
     public DaoState getPersistedBsqState() {
@@ -91,9 +89,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        persist(new DaoState(), new LinkedList<>());
-
-        UserThread.runAfter(resultHandler, 300, TimeUnit.MILLISECONDS);
+        persistNow(new DaoState(), new LinkedList<>(), resultHandler);
     }
 
     public void resyncDaoStateFromResources(File storageDir) throws IOException {

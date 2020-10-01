@@ -20,8 +20,6 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-
 import javax.inject.Inject;
 
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -37,8 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AppendOnlyDataStoreService {
-    @Getter
-    private final List<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
+    private final List<MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload>> services = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +45,7 @@ public class AppendOnlyDataStoreService {
     public AppendOnlyDataStoreService() {
     }
 
-    public void addService(MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload> service) {
+    public void addService(MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload> service) {
         services.add(service);
     }
 

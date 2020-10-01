@@ -83,7 +83,9 @@ public class TestState {
                 this.mockBroadcaster,
                 new AppendOnlyDataStoreServiceFake(),
                 this.protectedDataStoreService, mock(ResourceDataStoreService.class),
-                this.mockSeqNrPersistenceManager, this.clockFake, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
+                this.mockSeqNrPersistenceManager,
+                this.clockFake,
+                MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
 
         this.appendOnlyDataStoreListener = mock(AppendOnlyDataStoreListener.class);
         this.hashMapChangedListener = mock(HashMapChangedListener.class);
@@ -97,8 +99,8 @@ public class TestState {
                 this.hashMapChangedListener,
                 this.appendOnlyDataStoreListener);
 
-        this.mockSeqNrPersistenceManager.initialize(mockedStorage.sequenceNumberMap);
-        this.mockSeqNrPersistenceManager.getPersisted();
+        when(this.mockSeqNrPersistenceManager.getPersisted())
+                .thenReturn(this.mockedStorage.sequenceNumberMap);
     }
 
 
@@ -116,10 +118,8 @@ public class TestState {
                 this.hashMapChangedListener,
                 this.appendOnlyDataStoreListener);
 
-        this.mockSeqNrPersistenceManager.initialize(mockedStorage.sequenceNumberMap);
         when(this.mockSeqNrPersistenceManager.getPersisted())
                 .thenReturn(this.mockedStorage.sequenceNumberMap);
-        this.mockSeqNrPersistenceManager.getPersisted();
     }
 
     private static P2PDataStorage createP2PDataStorageForTest(
@@ -150,7 +150,6 @@ public class TestState {
         reset(this.mockBroadcaster);
         reset(this.appendOnlyDataStoreListener);
         reset(this.hashMapChangedListener);
-        reset(this.mockSeqNrPersistenceManager);
     }
 
     void incrementClock() {
@@ -165,14 +164,7 @@ public class TestState {
      * Common test helpers that verify the correct events were signaled based on the test expectation and before/after states.
      */
     private void verifySequenceNumberMapWriteContains(P2PDataStorage.ByteArray payloadHash, int sequenceNumber) {
-        //final ArgumentCaptor<SequenceNumberMap> captor = ArgumentCaptor.forClass(SequenceNumberMap.class);
-        // FIXME sequenceNumberMap related test are not working anymore due the API changes.
-        // I guess we would need several diffent variation of that method depening on the caller...
-        // verify(this.mockSeqNrPersistenceManager).initialize(mockedStorage.sequenceNumberMap);
-        // verify(this.mockSeqNrPersistenceManager).requestPersistence();
-
-        // SequenceNumberMap savedMap = captor.getValue();
-        // Assert.assertEquals(sequenceNumber, savedMap.get(payloadHash).sequenceNr);
+        Assert.assertEquals(sequenceNumber, mockSeqNrPersistenceManager.getPersisted().get(payloadHash).sequenceNr);
     }
 
     void verifyPersistableAdd(SavedTestState beforeState,
@@ -239,8 +231,6 @@ public class TestState {
 
         if (expectedSequenceNrMapWrite) {
             this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
-        } else {
-            verify(this.mockSeqNrPersistenceManager, never()).requestPersistence();
         }
     }
 
@@ -279,9 +269,6 @@ public class TestState {
         } else {
             verify(this.hashMapChangedListener, never()).onRemoved(any());
         }
-
-        if (!expectedSeqNrWrite)
-            verify(this.mockSeqNrPersistenceManager, never()).requestPersistence();
 
         if (!expectedBroadcast)
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
@@ -346,7 +333,6 @@ public class TestState {
             }
 
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), nullable(NodeAddress.class));
-            verify(this.mockSeqNrPersistenceManager, never()).requestPersistence();
         }
     }
 

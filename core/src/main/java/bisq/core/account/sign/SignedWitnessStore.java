@@ -18,7 +18,6 @@
 package bisq.core.account.sign;
 
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
@@ -35,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class SignedWitnessStore extends PersistableNetworkPayloadStore {
+public class SignedWitnessStore extends PersistableNetworkPayloadStore<SignedWitness> {
 
     SignedWitnessStore() {
     }
@@ -46,7 +45,7 @@ public class SignedWitnessStore extends PersistableNetworkPayloadStore {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private SignedWitnessStore(List<SignedWitness> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -67,9 +66,5 @@ public class SignedWitnessStore extends PersistableNetworkPayloadStore {
         List<SignedWitness> list = proto.getItemsList().stream()
                 .map(SignedWitness::fromProto).collect(Collectors.toList());
         return new SignedWitnessStore(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }

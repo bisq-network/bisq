@@ -76,6 +76,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
         Class<? extends ProtectedStorageEntry> entryClass;
 
         protected abstract ProtectedStoragePayload createInstance(KeyPair payloadOwnerKeys);
+
         protected abstract Class<? extends ProtectedStorageEntry> getEntryClass();
 
         // Used for tests of ProtectedStorageEntry and subclasses
@@ -146,7 +147,9 @@ public class P2PDataStorageProtectedStorageEntryTest {
             }
         }
 
-        ProtectedStorageEntry getProtectedStorageEntryForAdd(int sequenceNumber, boolean validForAdd, boolean matchesRelevantPubKey) {
+        ProtectedStorageEntry getProtectedStorageEntryForAdd(int sequenceNumber,
+                                                             boolean validForAdd,
+                                                             boolean matchesRelevantPubKey) {
             ProtectedStorageEntry stub = mock(entryClass);
             when(stub.getOwnerPubKey()).thenReturn(this.payloadOwnerKeys.getPublic());
             when(stub.isValidForAddOperation()).thenReturn(validForAdd);
@@ -163,7 +166,9 @@ public class P2PDataStorageProtectedStorageEntryTest {
         }
 
         // Return a ProtectedStorageEntry that will pass all validity checks for remove.
-        ProtectedStorageEntry getProtectedStorageEntryForRemove(int sequenceNumber, boolean validForRemove, boolean matchesRelevantPubKey) {
+        ProtectedStorageEntry getProtectedStorageEntryForRemove(int sequenceNumber,
+                                                                boolean validForRemove,
+                                                                boolean matchesRelevantPubKey) {
             ProtectedStorageEntry stub = mock(this.entryClass);
             when(stub.getOwnerPubKey()).thenReturn(this.payloadOwnerKeys.getPublic());
             when(stub.isValidForRemoveOperation()).thenReturn(validForRemove);
@@ -192,7 +197,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (expectedStateChange) {
                 this.testState.verifyProtectedStorageAdd(
                         beforeState, protectedStorageEntry, true, true, true, true);
-            } else{
+            } else {
                 this.testState.verifyProtectedStorageAdd(
                         beforeState, protectedStorageEntry, false, false, false, false);
             }
@@ -476,11 +481,15 @@ public class P2PDataStorageProtectedStorageEntryTest {
             return new RefreshOfferMessage(hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
         }
 
-        RefreshOfferMessage buildRefreshOfferMessage(ProtectedStorageEntry protectedStorageEntry, KeyPair ownerKeys, int sequenceNumber) throws CryptoException {
+        RefreshOfferMessage buildRefreshOfferMessage(ProtectedStorageEntry protectedStorageEntry,
+                                                     KeyPair ownerKeys,
+                                                     int sequenceNumber) throws CryptoException {
             return buildRefreshOfferMessage(protectedStorageEntry.getProtectedStoragePayload(), ownerKeys, sequenceNumber);
         }
 
-        void doRefreshTTLAndVerify(RefreshOfferMessage refreshOfferMessage, boolean expectedReturnValue, boolean expectStateChange) {
+        void doRefreshTTLAndVerify(RefreshOfferMessage refreshOfferMessage,
+                                   boolean expectedReturnValue,
+                                   boolean expectStateChange) {
             SavedTestState beforeState = this.testState.saveTestState(refreshOfferMessage);
 
             boolean returnValue = this.doRefreshTTL(refreshOfferMessage);
@@ -496,7 +505,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
         public void refreshTTL_noExist() throws CryptoException {
             ProtectedStorageEntry entry = this.getProtectedStorageEntryForAdd(1);
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,1), false, false);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 1), false, false);
         }
 
         // TESTCASE: Refresh an entry where seq # is equal to last seq # seen
@@ -505,7 +514,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             ProtectedStorageEntry entry = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entry, true, true);
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,1), false, false);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 1), false, false);
         }
 
         // TESTCASE: Duplicate refresh message (same seq #)
@@ -531,11 +540,11 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
             this.testState.incrementClock();
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,2), true, true);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 2), true, true);
 
             this.testState.incrementClock();
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,3), true, true);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 3), true, true);
         }
 
         // TESTCASE: Duplicate refresh message (lower seq #)
@@ -546,11 +555,11 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
             this.testState.incrementClock();
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,3), true, true);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 3), true, true);
 
             this.testState.incrementClock();
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,2), false, false);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 2), false, false);
         }
 
         // TESTCASE: Refresh previously removed entry
@@ -562,7 +571,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
             doProtectedStorageRemoveAndVerify(entryForRemove, true, true, true, true, true);
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entryForAdd, this.payloadOwnerKeys,3), false, false);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entryForAdd, this.payloadOwnerKeys, 3), false, false);
         }
 
         // TESTCASE: Refresh an entry, but owner doesn't match PubKey of original add owner
@@ -645,8 +654,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             this.testState.simulateRestart();
 
             // Can add equal seqNr only once
-            // FIXME seqNumber tests not working anymore with API changes
-            // doProtectedStorageAddAndVerify(toAdd1, false, false);
+            doProtectedStorageAddAndVerify(toAdd1, false, false);
         }
     }
 

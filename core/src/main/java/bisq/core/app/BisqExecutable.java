@@ -166,6 +166,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void applyInjector() {
+        // Subclassed might configure classes with the injector here
     }
 
     protected void setupDevEnv() {
@@ -227,7 +228,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         isShutdownInProgress = true;
 
         if (injector == null) {
-            log.warn("Shut down called before injector was created");
+            log.info("Shut down called before injector was created");
             resultHandler.handleResult();
             System.exit(EXIT_SUCCESS);
         }

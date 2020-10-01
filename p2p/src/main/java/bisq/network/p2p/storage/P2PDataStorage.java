@@ -683,7 +683,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (allowBroadcast)
             broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, listener);
 
-        // Persist ProtectedStorageEntrys carrying PersistablePayload payloads
+        // Persist ProtectedStorageEntries carrying PersistablePayload payloads
         if (protectedStoragePayload instanceof PersistablePayload)
             protectedDataStoreService.put(hashOfPayload, protectedStorageEntry);
 

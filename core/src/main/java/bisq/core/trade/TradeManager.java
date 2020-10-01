@@ -198,8 +198,8 @@ public class TradeManager implements PersistedDataHost {
         this.clockWatcher = clockWatcher;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
-
         this.persistenceManager = persistenceManager;
+
         this.persistenceManager.initialize(tradableList, "PendingTrades", PersistenceManager.Priority.HIGH);
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
@@ -234,7 +234,7 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
-        failedTradesManager.setUnfailTradeCallback(this::unfailTrade);
+        failedTradesManager.setUnFailTradeCallback(this::unFailTrade);
     }
 
     @Override
@@ -346,6 +346,9 @@ public class TradeManager implements PersistedDataHost {
         pendingTradesInitialized.set(true);
     }
 
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
+    }
 
     public void onUserConfirmedFiatPaymentReceived(SellerTrade sellerTrade,
                                                    ResultHandler resultHandler,
@@ -420,7 +423,7 @@ public class TradeManager implements PersistedDataHost {
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             if (tradableList.add(trade)) {
-                persistenceManager.requestPersistence();
+                requestPersistence();
             }
             ((MakerTrade) trade).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
                 if (takeOfferRequestErrorMessageHandler != null)
@@ -453,6 +456,7 @@ public class TradeManager implements PersistedDataHost {
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
+        requestPersistence();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -560,7 +564,7 @@ public class TradeManager implements PersistedDataHost {
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
 
         if (tradableList.add(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
         ((TakerTrade) trade).takeAvailableOffer();
         tradeResultHandler.handleResult(trade);
@@ -592,6 +596,7 @@ public class TradeManager implements PersistedDataHost {
                     log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
+                    requestPersistence();
                     resultHandler.handleResult();
                 }
             }
@@ -631,7 +636,7 @@ public class TradeManager implements PersistedDataHost {
 
     // If trade still has funds locked up it might come back from failed trades
     // Aborts unfailing if the address entries needed are not available
-    private boolean unfailTrade(Trade trade) {
+    private boolean unFailTrade(Trade trade) {
         if (!recoverAddresses(trade)) {
             log.warn("Failed to recover address during unfail trade");
             return false;
@@ -640,7 +645,7 @@ public class TradeManager implements PersistedDataHost {
         initPendingTrade(trade);
 
         if (tradableList.add(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
         return true;
     }
@@ -671,7 +676,7 @@ public class TradeManager implements PersistedDataHost {
 
     private void removeTrade(Trade trade) {
         if (tradableList.remove(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
@@ -687,6 +692,7 @@ public class TradeManager implements PersistedDataHost {
             trade.setDisputeState(disputeState);
             addTradeToClosedTrades(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+            requestPersistence();
         }
     }
 
@@ -862,9 +868,5 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
-    }
-
-    public void persistTrades() {
-        persistenceManager.requestPersistence();
     }
 }

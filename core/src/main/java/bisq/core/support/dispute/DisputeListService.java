@@ -62,6 +62,7 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     public DisputeListService(PersistenceManager<T> persistenceManager) {
         this.persistenceManager = persistenceManager;
         disputeList = getConcreteDisputeList();
+
         this.persistenceManager.initialize(disputeList, PersistenceManager.Priority.HIGH);
     }
 
@@ -97,10 +98,8 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     public void cleanupDisputes(@Nullable Consumer<String> closedDisputeHandler) {
         disputeList.stream().forEach(dispute -> {
             String tradeId = dispute.getTradeId();
-            if (dispute.isClosed()) {
-                if (closedDisputeHandler != null) {
-                    closedDisputeHandler.accept(tradeId);
-                }
+            if (dispute.isClosed() && closedDisputeHandler != null) {
+                closedDisputeHandler.accept(tradeId);
             }
         });
     }
@@ -171,7 +170,7 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
         });
     }
 
-    public void persist() {
+    public void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 }

@@ -194,7 +194,7 @@ public class MarketAlerts {
                                     // In case we have disabled alerts wasSent is false and we do not
                                     // persist the offer
                                     marketAlertFilter.addAlertId(alertId);
-                                    user.persist();
+                                    user.requestPersistence();
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();

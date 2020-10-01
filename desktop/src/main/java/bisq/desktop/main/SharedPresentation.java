@@ -25,7 +25,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 
 import bisq.common.UserThread;
-import bisq.common.persistence.FileUtil;
+import bisq.common.file.FileUtil;
 
 import org.bitcoinj.wallet.DeterministicSeed;
 

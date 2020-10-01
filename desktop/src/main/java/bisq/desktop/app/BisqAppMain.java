@@ -26,17 +26,12 @@ import bisq.core.app.BisqExecutable;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
-import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.CommonSetup;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
@@ -116,12 +111,8 @@ public class BisqAppMain extends BisqExecutable {
     }
 
     @Override
-    protected void readAllPersisted(@Nullable List<PersistedDataHost> additionalHosts, Runnable completeHandler) {
-        List<PersistedDataHost> hosts = DesktopPersistedDataHost.getPersistedDataHosts(injector);
-        if (additionalHosts != null) {
-            hosts.addAll(additionalHosts);
-        }
-        super.readAllPersisted(hosts, completeHandler);
+    protected void readAllPersisted(Runnable completeHandler) {
+        super.readAllPersisted(DesktopPersistedDataHost.getPersistedDataHosts(injector), completeHandler);
     }
 
     @Override

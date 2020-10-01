@@ -7,7 +7,7 @@ import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
 public class CheckNumberOfUnconfirmedTransactions extends Task<PlaceOfferModel> {
-    public CheckNumberOfUnconfirmedTransactions(TaskRunner taskHandler, PlaceOfferModel model) {
+    public CheckNumberOfUnconfirmedTransactions(TaskRunner<PlaceOfferModel> taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 

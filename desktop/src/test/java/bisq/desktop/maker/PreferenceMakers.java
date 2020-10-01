@@ -32,7 +32,7 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 
 public class PreferenceMakers {
 
-    public static final Property<bisq.core.user.Preferences, PersistenceManager> storage = new Property<>();
+    public static final Property<Preferences, PersistenceManager> storage = new Property<>();
     public static final Property<Preferences, Config> config = new Property<>();
     public static final Property<Preferences, LocalBitcoinNode> localBitcoinNode = new Property<>();
     public static final Property<Preferences, String> useTorFlagFromOptions = new Property<>();

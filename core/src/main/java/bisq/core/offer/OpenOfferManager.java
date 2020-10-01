@@ -115,9 +115,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final FilterManager filterManager;
     private final PersistenceManager<TradableList<OpenOffer>> persistenceManager;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
+    private final TradableList<OpenOffer> openOffers = new TradableList<>();
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
-    private final TradableList<OpenOffer> openOffers = new TradableList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +373,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer);
                     openOffers.add(openOffer);
-                    persistenceManager.requestPersistence();
+                    requestPersistence();
                     resultHandler.handleResult(transaction);
                     if (!stopped) {
                         startPeriodicRepublishOffersTimer();
@@ -410,7 +410,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             offerBookService.activateOffer(offer,
                     () -> {
                         openOffer.setState(OpenOffer.State.AVAILABLE);
-                        persistenceManager.requestPersistence();
+                        requestPersistence();
                         log.debug("activateOpenOffer, offerId={}", offer.getId());
                         resultHandler.handleResult();
                     },
@@ -427,7 +427,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         offerBookService.deactivateOffer(offer.getOfferPayload(),
                 () -> {
                     openOffer.setState(OpenOffer.State.DEACTIVATED);
-                    persistenceManager.requestPersistence();
+                    requestPersistence();
                     log.debug("deactivateOpenOffer, offerId={}", offer.getId());
                     resultHandler.handleResult();
                 },
@@ -496,7 +496,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 republishOffer(editedOpenOffer);
 
             offersToBeEdited.remove(openOffer.getId());
-            persistenceManager.requestPersistence();
+            requestPersistence();
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("There is no offer with this id existing to be published.");
@@ -526,7 +526,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         closedTradableManager.add(openOffer);
         log.info("onRemoved offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
-        persistenceManager.requestPersistence();
+        requestPersistence();
         resultHandler.handleResult();
     }
 
@@ -538,13 +538,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             offerBookService.removeOffer(openOffer.getOffer().getOfferPayload(),
                     () -> log.trace("Successful removed offer"),
                     log::error);
-            persistenceManager.requestPersistence();
+            requestPersistence();
         });
     }
 
     public void reserveOpenOffer(OpenOffer openOffer) {
         openOffer.setState(OpenOffer.State.RESERVED);
-        persistenceManager.requestPersistence();
+        requestPersistence();
     }
 
 
@@ -839,7 +839,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer);
                 updatedOpenOffer.setState(originalOpenOfferState);
                 openOffers.add(updatedOpenOffer);
-                persistenceManager.requestPersistence();
+                requestPersistence();
 
                 log.info("Updating offer completed. id={}", originalOffer.getId());
             }
@@ -966,6 +966,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             }, RETRY_REPUBLISH_DELAY_SEC);
 
         startPeriodicRepublishOffersTimer();
+    }
+
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
 

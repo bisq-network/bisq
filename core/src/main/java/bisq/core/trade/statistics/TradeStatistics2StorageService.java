@@ -51,6 +51,11 @@ public class TradeStatistics2StorageService extends HistoricalDataStoreService<T
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+    }
+
+    @Override
     public String getFileName() {
         return FILE_NAME;
     }
@@ -68,10 +73,5 @@ public class TradeStatistics2StorageService extends HistoricalDataStoreService<T
     @Override
     protected TradeStatistics2Store createStore() {
         return new TradeStatistics2Store();
-    }
-
-    @Override
-    protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.core.account.witness;
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
@@ -34,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class AccountAgeWitnessStore extends PersistableNetworkPayloadStore {
+public class AccountAgeWitnessStore extends PersistableNetworkPayloadStore<AccountAgeWitness> {
 
     AccountAgeWitnessStore() {
     }
@@ -45,7 +44,7 @@ public class AccountAgeWitnessStore extends PersistableNetworkPayloadStore {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private AccountAgeWitnessStore(List<AccountAgeWitness> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -66,9 +65,5 @@ public class AccountAgeWitnessStore extends PersistableNetworkPayloadStore {
         List<AccountAgeWitness> list = proto.getItemsList().stream()
                 .map(AccountAgeWitness::fromProto).collect(Collectors.toList());
         return new AccountAgeWitnessStore(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }

@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-// public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope, Iterable<T> {
+@EqualsAndHashCode
 public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope {
 
     @Getter

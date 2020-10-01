@@ -116,7 +116,6 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
-                        persist();
                     } else {
                         log.error("We found an address entry without key but cannot apply the key as the address " +
                                         "is not matching. " +
@@ -165,6 +164,8 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         wallet.addCoinsSentEventListener((wallet1, tx, prevBalance, newBalance) -> {
             maybeAddNewAddressEntry(tx);
         });
+
+        requestPersistence();
     }
 
     public ImmutableList<AddressEntry> getAddressEntriesAsListImmutable() {
@@ -174,7 +175,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public void addAddressEntry(AddressEntry addressEntry) {
         boolean setChangedByAdd = entrySet.add(addressEntry);
         if (setChangedByAdd)
-            persist();
+            requestPersistence();
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
@@ -182,7 +183,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
                                                                 AddressEntry.Context.AVAILABLE));
         if (setChangedByRemove || setChangedByAdd) {
-            persist();
+            requestPersistence();
         }
     }
 
@@ -193,12 +194,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         final AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId);
         boolean setChangedByAdd = entrySet.add(newAddressEntry);
         if (setChangedByRemove || setChangedByAdd)
-            persist();
+            requestPersistence();
 
         return newAddressEntry;
     }
 
-    public void persist() {
+    public void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 
@@ -213,8 +214,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                 .map(output -> output.getScriptPubKey().getToAddress(wallet.getNetworkParameters()))
                 .filter(Objects::nonNull)
                 .filter(this::isAddressNotInEntries)
-                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(),
-                                                                                Script.ScriptType.P2PKH))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(), Script.ScriptType.P2PKH))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
                 .forEach(this::addAddressEntry);

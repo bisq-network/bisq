@@ -27,6 +27,4 @@ public class MyProposalListServiceTest {
                 mock(PeriodService.class), mock(WalletsManager.class), persistenceManager, mock(PubKeyRing.class)
         );
     }
-
-
 }
