@@ -154,7 +154,7 @@ public class Config {
     public final List<String> bannedPriceRelayNodes;
     public final List<String> bannedSeedNodes;
     public final BaseCurrencyNetwork baseCurrencyNetwork;
-    public final NetworkParameters baseCurrencyNetworkParameters;
+    public final NetworkParameters networkParameters;
     public final boolean ignoreLocalBtcNode;
     public final String bitcoinRegtestHost;
     public final boolean daoActivated;
@@ -702,7 +702,7 @@ public class Config {
             this.bannedPriceRelayNodes = options.valuesOf(bannedPriceRelayNodesOpt);
             this.bannedSeedNodes = options.valuesOf(bannedSeedNodesOpt);
             this.baseCurrencyNetwork = (BaseCurrencyNetwork) options.valueOf(baseCurrencyNetworkOpt);
-            this.baseCurrencyNetworkParameters = baseCurrencyNetwork.getParameters();
+            this.networkParameters = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
