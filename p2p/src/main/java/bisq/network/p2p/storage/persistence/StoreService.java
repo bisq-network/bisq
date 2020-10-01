@@ -116,7 +116,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
                 e.printStackTrace();
             }
         } else {
-            log.info("No resource file have been copied. {} exists already.", fileName);
+            log.info("No resource file was copied. {} exists already.", fileName);
         }
         return false;
     }
