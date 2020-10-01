@@ -33,7 +33,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Profiler;
 import bisq.common.util.RestartUtil;
 
@@ -55,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
+public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
     private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
@@ -177,19 +176,6 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         }, TimeUnit.HOURS.toSeconds(2));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UncaughtExceptionHandler implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
-        log.error(throwable.toString());
-
-        if (doShutDown)
-            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
-    }
-
     @SuppressWarnings("InfiniteLoopStatement")
     protected void keepRunning() {
         while (true) {
@@ -203,7 +189,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         int maxMemory = config.maxMemory;
         UserThread.runPeriodically(() -> {
-            Profiler.printSystemLoad(log);
+            Profiler.printSystemLoad();
             if (!stopped) {
                 long usedMemoryInMB = Profiler.getUsedMemoryInMB();
                 double warningTrigger = maxMemory * 0.8;
@@ -213,7 +199,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             (int) warningTrigger, usedMemoryInMB, Profiler.getFreeMemoryInMB());
                     System.gc();
-                    Profiler.printSystemLoad(log);
+                    Profiler.printSystemLoad();
                 }
 
                 UserThread.runAfter(() -> {

@@ -302,11 +302,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             tacWindow.onAction(acceptedHandler::run).show();
         }, 1));
 
-        bisqSetup.setCryptoSetupFailedHandler(msg -> UserThread.execute(() ->
-                new Popup().warning(msg)
-                        .useShutDownButton()
-                        .useReportBugButton()
-                        .show()));
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
             if (show) {
                 torNetworkSettingsWindow.show();

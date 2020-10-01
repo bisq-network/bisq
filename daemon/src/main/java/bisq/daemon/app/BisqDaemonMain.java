@@ -24,7 +24,6 @@ import bisq.core.app.CoreModule;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.setup.CommonSetup;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -62,7 +61,6 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
     @Override
     protected void launchApplication() {
         headlessApp = new BisqDaemon();
-        CommonSetup.setup(BisqDaemonMain.this.headlessApp);
 
         UserThread.execute(this::onApplicationLaunched);
     }
@@ -72,6 +70,7 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
         super.onApplicationLaunched();
         headlessApp.setGracefulShutDownHandler(this);
     }
+
 
     /////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks

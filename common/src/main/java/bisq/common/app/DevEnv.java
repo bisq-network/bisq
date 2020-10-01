@@ -17,6 +17,8 @@
 
 package bisq.common.app;
 
+import bisq.common.config.Config;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -29,6 +31,11 @@ public class DevEnv {
     // emergency cases only (beside update message and arbitrator registration).
     public static final String DEV_PRIVILEGE_PUB_KEY = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
     public static final String DEV_PRIVILEGE_PRIV_KEY = "6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a";
+
+    public static void setup(Config config) {
+        DevEnv.setDevMode(config.useDevMode);
+        DevEnv.setDaoActivated(config.daoActivated);
+    }
 
     // If set to true we ignore several UI behavior like confirmation popups as well dummy accounts are created and
     // offers are filled with default values. Intended to make dev testing faster.

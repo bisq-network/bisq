@@ -22,9 +22,6 @@ import bisq.core.app.misc.ModuleForAppWithP2p;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
-import bisq.common.setup.CommonSetup;
-
-import joptsimple.OptionSet;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +44,6 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-        CommonSetup.setup(this);
 
         keepRunning();
     }

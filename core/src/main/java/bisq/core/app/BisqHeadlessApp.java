@@ -22,7 +22,6 @@ import bisq.core.trade.TradeManager;
 import bisq.common.UserThread;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.util.Profiler;
 
 import com.google.inject.Injector;
 
@@ -60,8 +59,6 @@ public class BisqHeadlessApp implements HeadlessApp {
             tradeManager = injector.getInstance(TradeManager.class);
 
             setupHandlers();
-
-            UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             handleUncaughtException(throwable, false);
@@ -78,7 +75,6 @@ public class BisqHeadlessApp implements HeadlessApp {
             log.info("onDisplayTacHandler: We accept the tacs automatically in headless mode");
             acceptedHandler.run();
         });
-        bisqSetup.setCryptoSetupFailedHandler(msg -> log.error("onCryptoSetupFailedHandler: msg={}", msg));
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> log.info("onDisplayTorNetworkSettingsHandler: show={}", show));
         bisqSetup.setSpvFileCorruptedHandler(msg -> log.error("onSpvFileCorruptedHandler: msg={}", msg));
         bisqSetup.setChainFileLockedExceptionHandler(msg -> log.error("onChainFileLockedExceptionHandler: msg={}", msg));
