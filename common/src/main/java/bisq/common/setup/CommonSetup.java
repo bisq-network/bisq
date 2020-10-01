@@ -53,7 +53,8 @@ public class CommonSetup {
         Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
         maybePrintPathOfCodeSource();
-        UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), 10, TimeUnit.MINUTES);
+        Profiler.printSystemLoad();
+        UserThread.runPeriodically(Profiler::printSystemLoad, 10, TimeUnit.MINUTES);
 
         setSystemProperties();
         setupSigIntHandlers(gracefulShutDownHandler);
