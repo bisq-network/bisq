@@ -73,7 +73,7 @@ message CreateOfferRequest {
 }
 
 message CreateOfferReply {
-    bool result = 1;
+    OfferInfo offer = 1;
 }
 
 message OfferInfo {
@@ -107,7 +107,7 @@ service PaymentAccounts {
 }
 
 message CreatePaymentAccountRequest {
-string paymentMethodId = 1;
+    string paymentMethodId = 1;
     string accountName = 2;
     string accountNumber = 3;
     // TODO  Support all currencies. Maybe add a repeated and if only one is used its a singletonList.

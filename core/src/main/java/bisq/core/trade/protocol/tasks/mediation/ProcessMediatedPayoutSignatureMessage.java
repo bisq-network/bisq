@@ -31,8 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public ProcessMediatedPayoutSignatureMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessMediatedPayoutSignatureMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -49,7 +48,6 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setMediationResultState(MediationResultState.RECEIVED_SIG_MSG);
 

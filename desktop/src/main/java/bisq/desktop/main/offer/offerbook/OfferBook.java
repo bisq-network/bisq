@@ -107,8 +107,7 @@ public class OfferBook {
         // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
         offer.setState(Offer.State.REMOVED);
 
-        // clean up possible references in openOfferManager
-        tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
+        offer.cancelAvailabilityRequest();
         // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
         Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
                 .filter(item -> item.getOffer().getId().equals(offer.getId()))

@@ -2084,6 +2084,10 @@ public class FormBuilder {
         return getIcon(icon, "2em");
     }
 
+    public static Text getMediumSizeIcon(GlyphIcons icon) {
+        return getIcon(icon, "1.5em");
+    }
+
     public static Text getIcon(GlyphIcons icon, String iconSize) {
         Text textIcon;
 

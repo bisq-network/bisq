@@ -25,7 +25,6 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
-import bisq.common.crypto.Hash;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
@@ -42,8 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerAsTakerSignsDepositTx extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SellerAsTakerSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerAsTakerSignsDepositTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -51,21 +49,15 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("\n\n------------------------------------------------------------\n"
-                    + "Contract as json\n"
-                    + trade.getContractAsJson()
-                    + "\n------------------------------------------------------------\n");
 
-            byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
-            trade.setContractHash(contractHash);
-
-            List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(), "sellerInputs must not be null");
+            List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(),
+                    "sellerInputs must not be null");
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
-            AddressEntry sellerMultiSigAddressEntry = addressEntryOptional.get();
+            Optional<AddressEntry> optionalMultiSigAddressEntry = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            checkArgument(optionalMultiSigAddressEntry.isPresent(), "addressEntryOptional must be present");
+            AddressEntry sellerMultiSigAddressEntry = optionalMultiSigAddressEntry.get();
             byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(sellerMultiSigPubKey,
                     sellerMultiSigAddressEntry.getPubKey()),
@@ -73,21 +65,23 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
 
             Coin sellerInput = Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum());
 
-            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInput.subtract(trade.getTxFee().multiply(2)));
+            Coin totalFee = trade.getTxFee().multiply(2); // Fee for deposit and payout tx
+            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInput.subtract(totalFee));
             walletService.saveAddressEntryList();
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,
-                    contractHash,
+                    trade.getContractHash(),
                     processModel.getPreparedDepositTx(),
                     checkNotNull(tradingPeer.getRawTransactionInputs()),
                     sellerInputs,
                     tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigPubKey);
 
-            trade.applyDepositTx(depositTx);
+            // We set the deposit tx to trade once we have it published
+            processModel.setDepositTx(depositTx);
 
             complete();
         } catch (Throwable t) {

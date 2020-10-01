@@ -76,7 +76,7 @@ message NetworkEnvelope {
         DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
         PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
 
-        RefreshTradeStateRequest refresh_trade_state_request = 50;
+        RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true];
         TraderSignedWitnessMessage trader_signed_witness_message = 51;
     }
 }
@@ -309,6 +309,7 @@ message PayoutTxPublishedMessage {
     bytes payout_tx = 2;
     NodeAddress sender_node_address = 3;
     string uid = 4;
+    SignedWitness signed_witness = 5; // Added in v1.4.0
 }
 
 message MediatedPayoutTxPublishedMessage {
@@ -325,17 +326,19 @@ message MediatedPayoutTxSignatureMessage {
     NodeAddress sender_node_address = 4;
 }
 
+// Deprecated since 1.4.0
 message RefreshTradeStateRequest {
-    string uid = 1;
-    string trade_id = 2;
-    NodeAddress sender_node_address = 3;
+    string uid = 1 [deprecated = true];
+    string trade_id = 2 [deprecated = true];
+    NodeAddress sender_node_address = 3 [deprecated = true];
 }
 
+// Deprecated since 1.4.0
 message TraderSignedWitnessMessage {
-    string uid = 1;
-    string trade_id = 2;
-    NodeAddress sender_node_address = 3;
-    SignedWitness signed_witness = 4;
+    string uid = 1 [deprecated = true];
+    string trade_id = 2 [deprecated = true];
+    NodeAddress sender_node_address = 3 [deprecated = true];
+    SignedWitness signed_witness = 4 [deprecated = true];
 }
 
 // dispute

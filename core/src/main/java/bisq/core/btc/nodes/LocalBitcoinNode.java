@@ -6,9 +6,9 @@ import bisq.common.config.Config;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import java.net.Socket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 
 import java.io.IOException;
 
@@ -34,7 +34,7 @@ public class LocalBitcoinNode {
     @Inject
     public LocalBitcoinNode(Config config) {
         this.config = config;
-        this.port = config.baseCurrencyNetworkParameters.getPort();
+        this.port = config.networkParameters.getPort();
     }
 
     /**

@@ -39,7 +39,6 @@ public interface UserThreadMappedPersistableEnvelope extends PersistableEnvelope
     default Message toPersistableMessage() {
         FutureTask<Message> toProtoOnUserThread = new FutureTask<>(this::toProtoMessage);
         UserThread.execute(toProtoOnUserThread);
-        //noinspection UnstableApiUsage
         return Futures.getUnchecked(toProtoOnUserThread);
     }
 }

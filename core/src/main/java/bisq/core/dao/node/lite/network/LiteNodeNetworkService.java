@@ -336,7 +336,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             retryCounter++;
             if (retryCounter <= MAX_RETRY) {
                 retryTimer = UserThread.runAfter(() -> {
-                            log.trace("retryTimer called");
                             stopped = false;
 
                             stopRetryTimer();

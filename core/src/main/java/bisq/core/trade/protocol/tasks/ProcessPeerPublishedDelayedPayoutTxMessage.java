@@ -32,8 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProcessPeerPublishedDelayedPayoutTxMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public ProcessPeerPublishedDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessPeerPublishedDelayedPayoutTxMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -48,13 +47,10 @@ public class ProcessPeerPublishedDelayedPayoutTxMessage extends TradeTask {
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-            processModel.removeMailboxMessageAfterProcessing(trade);
 
             // We add the tx to our wallet.
             Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
             WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, processModel.getBtcWalletService().getWallet());
-
-            // todo trade.setState
 
             complete();
         } catch (Throwable t) {

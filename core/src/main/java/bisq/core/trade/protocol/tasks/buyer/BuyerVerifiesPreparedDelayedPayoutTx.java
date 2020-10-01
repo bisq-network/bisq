@@ -27,8 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public BuyerVerifiesPreparedDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerVerifiesPreparedDelayedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -37,7 +36,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            TradeDataValidation.validatePayoutTx(trade,
+            TradeDataValidation.validateDelayedPayoutTx(trade,
                     processModel.getPreparedDelayedPayoutTx(),
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());

@@ -109,7 +109,7 @@ public class NotificationCenter {
     }
 
     public void onAllServicesAndViewsInitialized() {
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> {
+        tradeManager.getTradesAsObservableList().addListener((ListChangeListener<Trade>) change -> {
             change.next();
             if (change.wasRemoved()) {
                 change.getRemoved().stream().forEach(trade -> {
@@ -147,7 +147,7 @@ public class NotificationCenter {
             }
         });
 
-        tradeManager.getTradableList().stream()
+        tradeManager.getTradesAsObservableList().stream()
                 .forEach(trade -> {
                             String tradeId = trade.getId();
                             Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),

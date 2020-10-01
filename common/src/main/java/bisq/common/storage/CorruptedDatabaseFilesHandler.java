@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class CorruptedDatabaseFilesHandler {
-    private List<String> corruptedDatabaseFiles = new ArrayList<>();
+    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
 
     @Inject
     public CorruptedDatabaseFilesHandler() {

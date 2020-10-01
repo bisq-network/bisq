@@ -31,8 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public BuyerVerifiesFinalDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerVerifiesFinalDelayedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -44,7 +43,7 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
             checkNotNull(delayedPayoutTx, "trade.getDelayedPayoutTx() must not be null");
             // Check again tx
-            TradeDataValidation.validatePayoutTx(trade,
+            TradeDataValidation.validateDelayedPayoutTx(trade,
                     delayedPayoutTx,
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
