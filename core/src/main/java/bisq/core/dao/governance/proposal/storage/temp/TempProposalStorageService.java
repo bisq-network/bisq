@@ -67,6 +67,12 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
         return entry.getProtectedStoragePayload() instanceof TempProposalPayload;
     }
 
+    @Override
+    protected void readFromResources(String postFix) {
+        // We do not have a resource file for that store, so we just call the readStore method instead.
+        readStore();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
