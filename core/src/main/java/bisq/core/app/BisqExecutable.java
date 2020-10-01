@@ -131,6 +131,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         CommonSetup.setupUncaughtExceptionHandler(this);
 
         setupGuice();
+        setupAvoidStandbyMode();
         startApplication();
     }
 
@@ -168,6 +169,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                     throw t;
                 }, 2);
         }
+    }
+
+    protected void setupAvoidStandbyMode() {
     }
 
     protected abstract void startApplication();

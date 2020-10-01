@@ -32,7 +32,6 @@ import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -90,7 +89,6 @@ import static bisq.desktop.util.Layout.MIN_WINDOW_WIDTH;
 
 @Slf4j
 public class BisqApp extends Application implements UncaughtExceptionHandler {
-    private static final long LOG_MEMORY_PERIOD_MIN = 10;
     @Setter
     private static Consumer<Application> appLaunchedHandler;
     @Getter
@@ -132,8 +130,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             mainView.setOnApplicationStartedHandler(onApplicationStartedHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
-
-            injector.getInstance(AvoidStandbyModeService.class).init();
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             handleUncaughtException(throwable, false);

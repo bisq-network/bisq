@@ -21,6 +21,7 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
+import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
@@ -119,6 +120,11 @@ public class BisqAppMain extends BisqExecutable {
     protected void setupPersistedDataHosts(Injector injector) {
         super.setupPersistedDataHosts(injector);
         PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
+    }
+
+    @Override
+    protected void setupAvoidStandbyMode() {
+        injector.getInstance(AvoidStandbyModeService.class).init();
     }
 
     @Override
