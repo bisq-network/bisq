@@ -65,10 +65,8 @@ import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
-import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.ClockWatcher;
@@ -77,10 +75,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.config.Config;
-import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.SealedAndSigned;
-import bisq.common.proto.ProtobufferException;
 import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
 
@@ -355,7 +350,6 @@ public class BisqSetup {
     private void step2() {
         torSetup.cleanupTorFiles();
         readMapsFromResources(this::step3);
-        checkCryptoSetup();
         checkForCorrectOSArchitecture();
         checkOSXVersion();
         checkIfRunningOnQubesOS();
@@ -490,36 +484,6 @@ public class BisqSetup {
             if (newValue)
                 nextStep.run();
         });
-    }
-
-    private void checkCryptoSetup() {
-        // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
-        // and if the unlimited Strength for cryptographic keys is set.
-        // If users compile themselves they might miss that step and then would get an exception in the trade.
-        // To avoid that we add a sample encryption and signing here at startup to see if it doesn't cause an exception.
-        // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
-        new Thread(() -> {
-            try {
-                // just use any simple dummy msg
-                Ping payload = new Ping(1, 1);
-                SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
-                        keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
-                if (tuple.getNetworkEnvelope() instanceof Ping &&
-                        ((Ping) tuple.getNetworkEnvelope()).getNonce() == payload.getNonce() &&
-                        ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
-                    log.debug("Crypto test succeeded");
-                } else {
-                    throw new CryptoException("Payload not correct after decryption");
-                }
-            } catch (CryptoException | ProtobufferException e) {
-                e.printStackTrace();
-                String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
-                log.error(msg);
-                if (cryptoSetupFailedHandler != null)
-                    cryptoSetupFailedHandler.accept(msg);
-            }
-        }, "checkCryptoThread").start();
     }
 
     private void startP2pNetworkAndWallet(Runnable nextStep) {
