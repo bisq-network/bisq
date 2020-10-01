@@ -27,7 +27,7 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.config.Config;
-import bisq.common.storage.FileUtil;
+import bisq.common.file.FileUtil;
 import bisq.common.storage.JsonFileManager;
 import bisq.common.util.Utilities;
 

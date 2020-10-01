@@ -18,7 +18,7 @@
 package bisq.common.crypto;
 
 import bisq.common.config.Config;
-import bisq.common.storage.FileUtil;
+import bisq.common.file.FileUtil;
 
 import com.google.inject.Inject;
 

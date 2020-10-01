@@ -26,7 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
-import bisq.common.storage.FileUtil;
+import bisq.common.file.FileUtil;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 

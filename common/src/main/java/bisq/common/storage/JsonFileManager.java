@@ -18,6 +18,7 @@
 package bisq.common.storage;
 
 import bisq.common.UserThread;
+import bisq.common.file.FileUtil;
 import bisq.common.util.Utilities;
 
 import java.nio.file.Paths;

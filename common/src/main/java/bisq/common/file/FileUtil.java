@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.storage;
+package bisq.common.file;
 
+import bisq.common.storage.ResourceNotFoundException;
 import bisq.common.util.Utilities;
 
 import com.google.common.io.Files;

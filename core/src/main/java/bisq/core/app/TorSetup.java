@@ -18,8 +18,8 @@
 package bisq.core.app;
 
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.storage.FileUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;

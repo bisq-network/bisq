@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.storage.persistence;
 
+import bisq.common.file.FileUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.FileUtil;
 import bisq.common.storage.ResourceNotFoundException;
 import bisq.common.storage.Storage;
 

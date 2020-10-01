@@ -18,6 +18,7 @@
 package bisq.common.storage;
 
 import bisq.common.UserThread;
+import bisq.common.file.FileUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.util.Utilities;

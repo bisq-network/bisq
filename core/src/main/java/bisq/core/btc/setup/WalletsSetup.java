@@ -34,11 +34,11 @@ import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.config.Config;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.FileUtil;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.BlockChain;
