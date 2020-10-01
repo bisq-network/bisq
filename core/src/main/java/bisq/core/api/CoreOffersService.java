@@ -155,10 +155,7 @@ class CoreOffersService {
         return unplacedOffer;
     }
 
-    // Create offer for given offer id.
-    // Not used yet, should be renamed for a new placeoffer api method?
-    // Or should we delete this method?
-    @Deprecated
+    // For editing an open offer?
     Offer createOffer(String offerId,
                       String currencyCode,
                       Direction direction,
