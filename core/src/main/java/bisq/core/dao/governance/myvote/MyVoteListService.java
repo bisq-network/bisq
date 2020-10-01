@@ -25,8 +25,8 @@ import bisq.core.dao.state.model.governance.BallotList;
 
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.Encryption;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MyVoteListService implements PersistedDataHost {
     private final DaoStateService daoStateService;
-    private final Storage<MyVoteList> storage;
+    private final PersistenceManager<MyVoteList> persistenceManager;
     private final MyVoteList myVoteList = new MyVoteList();
 
 
@@ -56,9 +56,11 @@ public class MyVoteListService implements PersistedDataHost {
 
     @Inject
     public MyVoteListService(DaoStateService daoStateService,
-                             Storage<MyVoteList> storage) {
+                             PersistenceManager<MyVoteList> persistenceManager) {
         this.daoStateService = daoStateService;
-        this.storage = storage;
+        this.persistenceManager = persistenceManager;
+
+        this.persistenceManager.initialize(myVoteList, PersistenceManager.Priority.HIGH);
     }
 
 
@@ -69,10 +71,9 @@ public class MyVoteListService implements PersistedDataHost {
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyVoteList persisted = storage.initAndGetPersisted(myVoteList, 100);
+            MyVoteList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
-                this.myVoteList.clear();
-                this.myVoteList.addAll(persisted.getList());
+                this.myVoteList.setAll(persisted.getList());
             }
         }
     }
@@ -87,13 +88,13 @@ public class MyVoteListService implements PersistedDataHost {
         MyVote myVote = new MyVote(daoStateService.getChainHeight(), sortedBallotListForCycle, secretKeyBytes, blindVote);
         log.info("Add new MyVote to myVotesList list.\nMyVote=" + myVote);
         myVoteList.add(myVote);
-        persist();
+        requestPersistence();
     }
 
     public void applyRevealTxId(MyVote myVote, String voteRevealTxId) {
         myVote.setRevealTxId(voteRevealTxId);
         log.info("Applied revealTxId to myVote.\nmyVote={}\nvoteRevealTxId={}", myVote, voteRevealTxId);
-        persist();
+        requestPersistence();
     }
 
     public Tuple2<Long, Long> getMeritAndStakeForProposal(String proposalTxId, MyBlindVoteListService myBlindVoteListService) {
@@ -102,7 +103,7 @@ public class MyVoteListService implements PersistedDataHost {
         List<MyVote> list = new ArrayList<>(myVoteList.getList());
         list.sort(Comparator.comparing(MyVote::getDate));
         for (MyVote myVote : list) {
-            for (Ballot ballot : myVote.getBallotList()) {
+            for (Ballot ballot : myVote.getBallotList().getList()) {
                 if (ballot.getTxId().equals(proposalTxId)) {
                     merit = myVote.getMerit(myBlindVoteListService, daoStateService);
                     stake = myVote.getBlindVote().getStake();
@@ -129,7 +130,7 @@ public class MyVoteListService implements PersistedDataHost {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
-        storage.queueUpForSave();
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

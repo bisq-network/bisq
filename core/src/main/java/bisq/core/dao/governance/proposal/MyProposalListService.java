@@ -35,8 +35,8 @@ import bisq.common.config.Config;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Transaction;
 
@@ -67,7 +67,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     private final DaoStateService daoStateService;
     private final PeriodService periodService;
     private final WalletsManager walletsManager;
-    private final Storage<MyProposalList> storage;
+    private final PersistenceManager<MyProposalList> persistenceManager;
     private final PublicKey signaturePubKey;
 
     private final MyProposalList myProposalList = new MyProposalList();
@@ -84,13 +84,15 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
                                  DaoStateService daoStateService,
                                  PeriodService periodService,
                                  WalletsManager walletsManager,
-                                 Storage<MyProposalList> storage,
+                                 PersistenceManager<MyProposalList> persistenceManager,
                                  PubKeyRing pubKeyRing) {
         this.p2PService = p2PService;
         this.daoStateService = daoStateService;
         this.periodService = periodService;
         this.walletsManager = walletsManager;
-        this.storage = storage;
+        this.persistenceManager = persistenceManager;
+
+        this.persistenceManager.initialize(myProposalList, PersistenceManager.Priority.HIGH);
 
         signaturePubKey = pubKeyRing.getSignaturePubKey();
 
@@ -107,10 +109,9 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyProposalList persisted = storage.initAndGetPersisted(myProposalList, 100);
+            MyProposalList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
-                myProposalList.clear();
-                myProposalList.addAll(persisted.getList());
+                myProposalList.setAll(persisted.getList());
                 listeners.forEach(l -> l.onListChanged(getList()));
             }
         }
@@ -157,7 +158,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         if (!getList().contains(proposal)) {
             myProposalList.add(proposal);
             listeners.forEach(l -> l.onListChanged(getList()));
-            persist();
+            requestPersistence();
         }
     }
 
@@ -169,7 +170,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
 
             if (myProposalList.remove(proposal)) {
                 listeners.forEach(l -> l.onListChanged(getList()));
-                persist();
+                requestPersistence();
             } else {
                 log.warn("We called remove at a proposal which was not in our list");
             }
@@ -234,8 +235,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         }
     }
 
-    private void persist() {
-        storage.queueUpForSave();
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
     private boolean canRemoveProposal(Proposal proposal, DaoStateService daoStateService, PeriodService periodService) {
