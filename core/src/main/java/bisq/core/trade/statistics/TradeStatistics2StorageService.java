@@ -17,8 +17,9 @@
 
 package bisq.core.trade.statistics;
 
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
+import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.storage.Storage;
@@ -28,10 +29,12 @@ import javax.inject.Named;
 
 import java.io.File;
 
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeStatistics2StorageService extends HistoricalDataStoreService<TradeStatistics2Store> {
+public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload> {
     private static final String FILE_NAME = "TradeStatistics2Store";
 
 
@@ -53,6 +56,15 @@ public class TradeStatistics2StorageService extends HistoricalDataStoreService<T
     @Override
     public String getFileName() {
         return FILE_NAME;
+    }
+
+    @Override
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
+        return store.getMap();
+    }
+
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfAllData() {
+        return getMap();
     }
 
     @Override
