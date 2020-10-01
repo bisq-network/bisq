@@ -23,6 +23,8 @@ import bisq.core.offer.Offer;
 
 import bisq.proto.grpc.CreateOfferReply;
 import bisq.proto.grpc.CreateOfferRequest;
+import bisq.proto.grpc.GetOfferReply;
+import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OffersGrpc;
@@ -52,13 +54,24 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     }
 
     @Override
+    public void getOffer(GetOfferRequest req,
+                         StreamObserver<GetOfferReply> responseObserver) {
+        Offer offer = coreApi.getOffer(req.getId());
+        var reply = GetOfferReply.newBuilder()
+                .setOffer(toOfferInfo(offer).toProtoMessage())
+                .build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void getOffers(GetOffersRequest req,
                           StreamObserver<GetOffersReply> responseObserver) {
-        List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
+        List<OfferInfo> offers = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
                 .stream().map(this::toOfferInfo)
                 .collect(Collectors.toList());
         var reply = GetOffersReply.newBuilder()
-                .addAllOffers(result.stream()
+                .addAllOffers(offers.stream()
                         .map(OfferInfo::toProtoMessage)
                         .collect(Collectors.toList()))
                 .build();

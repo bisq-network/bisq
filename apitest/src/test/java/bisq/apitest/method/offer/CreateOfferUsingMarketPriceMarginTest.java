@@ -80,7 +80,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 createPlaceOfferRequest(newOfferId,
                         getDefaultBuyerSecurityDepositAsPercent()));
 
-        newOffer = getMostRecentOffer("buy", "usd");
+        newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("BUY", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -126,7 +126,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 createPlaceOfferRequest(newOfferId,
                         getDefaultBuyerSecurityDepositAsPercent()));
 
-        newOffer = getMostRecentOffer("buy", "nzd");
+        newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("BUY", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -173,7 +173,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 createPlaceOfferRequest(newOfferId,
                         getDefaultBuyerSecurityDepositAsPercent()));
 
-        newOffer = getMostRecentOffer("sell", "gbp");
+        newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("SELL", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -220,7 +220,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
                 createPlaceOfferRequest(newOfferId,
                         getDefaultBuyerSecurityDepositAsPercent()));
 
-        newOffer = getMostRecentOffer("sell", "brl");
+        newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("SELL", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());

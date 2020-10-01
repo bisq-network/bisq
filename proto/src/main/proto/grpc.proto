@@ -45,12 +45,24 @@ message RegisterDisputeAgentReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Offers {
+    rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
+    }
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
     rpc PlaceOffer (PlaceOfferRequest) returns (PlaceOfferReply) {
     }
+    rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
+    }
+}
+
+message GetOfferRequest {
+    string id = 1;
+}
+
+message GetOfferReply {
+    OfferInfo offer = 1;
 }
 
 message GetOffersRequest {
@@ -84,6 +96,14 @@ message PlaceOfferRequest {
 }
 
 message PlaceOfferReply {
+}
+
+message TakeOfferRequest {
+    string id = 1;
+}
+
+message TakeOfferReply {
+    OfferInfo offer = 1;
 }
 
 message OfferInfo {

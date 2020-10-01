@@ -68,7 +68,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractCreateOfferTest {
                 createPlaceOfferRequest(newOfferId,
                         getDefaultBuyerSecurityDepositAsPercent()));
 
-        newOffer = getMostRecentOffer("buy", "aud");
+        newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("BUY", newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -114,7 +114,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractCreateOfferTest {
                         getDefaultBuyerSecurityDepositAsPercent()));
 
 
-        newOffer = getMostRecentOffer("buy", "usd");
+        newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("BUY", newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -159,7 +159,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractCreateOfferTest {
                 createPlaceOfferRequest(newOfferId,
                         getDefaultBuyerSecurityDepositAsPercent()));
 
-        newOffer = getMostRecentOffer("sell", "eur");
+        newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("SELL", newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());

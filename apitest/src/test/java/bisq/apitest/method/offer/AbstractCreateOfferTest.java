@@ -77,6 +77,10 @@ abstract class AbstractCreateOfferTest extends MethodTest {
         }
     }
 
+    protected final OfferInfo getOffer(String offerId) {
+        return aliceStubs.offersService.getOffer(createGetOfferRequest(offerId)).getOffer();
+    }
+
     protected final OfferInfo getMostRecentOffer(String direction, String currencyCode) {
         List<OfferInfo> offerInfoList = getOffersSortedByDate(direction, currencyCode);
         if (offerInfoList.isEmpty())

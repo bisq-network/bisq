@@ -20,9 +20,11 @@ package bisq.apitest.method;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
+import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.PlaceOfferRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
@@ -88,6 +90,10 @@ public class MethodTest extends ApiTestCase {
                 .build();
     }
 
+    protected final GetOfferRequest createGetOfferRequest(String offerId) {
+        return GetOfferRequest.newBuilder().setId(offerId).build();
+    }
+
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
     protected final long getBalance(BisqAppConfig bisqAppConfig) {
@@ -142,6 +148,11 @@ public class MethodTest extends ApiTestCase {
     protected final double getMarketPrice(BisqAppConfig bisqAppConfig, String currencyCode) {
         var req = createMarketPriceRequest(currencyCode);
         return grpcStubs(bisqAppConfig).priceService.getMarketPrice(req).getPrice();
+    }
+
+    protected final OfferInfo getOffer(BisqAppConfig bisqAppConfig, String offerId) {
+        var req = createGetOfferRequest(offerId);
+        return grpcStubs(bisqAppConfig).offersService.getOffer(req).getOffer();
     }
 
     // Static conveniences for test methods and test case fixture setups.
