@@ -191,7 +191,7 @@ public class BisqSetup {
     private Consumer<Runnable> displayTacHandler;
     @Setter
     @Nullable
-    private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
+    private Consumer<String> chainFileLockedExceptionHandler,
             spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
             wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
