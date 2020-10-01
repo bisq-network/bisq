@@ -47,18 +47,6 @@ public class CommonSetup {
         UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), 10, TimeUnit.MINUTES);
     }
 
-    protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {
-        Signal.handle(new Signal("INT"), signal -> {
-            gracefulShutDownHandler.gracefulShutDown(() -> {
-            });
-        });
-
-        Signal.handle(new Signal("TERM"), signal -> {
-            gracefulShutDownHandler.gracefulShutDown(() -> {
-            });
-        });
-    }
-
     public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             // Might come from another thread
@@ -84,5 +72,17 @@ public class CommonSetup {
     protected static void setSystemProperties() {
         if (Utilities.isLinux())
             System.setProperty("prism.lcdtext", "false");
+    }
+
+    protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {
+        Signal.handle(new Signal("INT"), signal -> {
+            gracefulShutDownHandler.gracefulShutDown(() -> {
+            });
+        });
+
+        Signal.handle(new Signal("TERM"), signal -> {
+            gracefulShutDownHandler.gracefulShutDown(() -> {
+            });
+        });
     }
 }
