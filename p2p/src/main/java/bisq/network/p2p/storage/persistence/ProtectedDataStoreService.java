@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProtectedDataStoreService {
-    private List<MapStoreService<? extends PersistableEnvelope, ProtectedStorageEntry>> services = new ArrayList<>();
+    private final List<MapStoreService<? extends PersistableEnvelope, ProtectedStorageEntry>> services = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

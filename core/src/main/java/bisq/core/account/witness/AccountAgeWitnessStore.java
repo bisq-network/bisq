@@ -17,19 +17,13 @@
 
 package bisq.core.account.witness;
 
-import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -39,9 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class AccountAgeWitnessStore implements PersistableEnvelope {
-    @Getter
-    private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
+public class AccountAgeWitnessStore extends PersistableNetworkPayloadStore<AccountAgeWitness> {
 
     AccountAgeWitnessStore() {
     }
@@ -52,7 +44,7 @@ public class AccountAgeWitnessStore implements PersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private AccountAgeWitnessStore(List<AccountAgeWitness> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -73,9 +65,5 @@ public class AccountAgeWitnessStore implements PersistableEnvelope {
         List<AccountAgeWitness> list = proto.getItemsList().stream()
                 .map(AccountAgeWitness::fromProto).collect(Collectors.toList());
         return new AccountAgeWitnessStore(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }
