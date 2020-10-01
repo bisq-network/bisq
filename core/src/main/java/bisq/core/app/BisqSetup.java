@@ -345,8 +345,6 @@ public class BisqSetup {
     }
 
     public void start() {
-        UserThread.runPeriodically(() -> {
-        }, 1);
         maybeReSyncSPVChain();
         maybeShowTac(this::step2);
     }
