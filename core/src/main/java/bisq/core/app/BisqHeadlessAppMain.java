@@ -20,7 +20,6 @@ package bisq.core.app;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
-import bisq.common.setup.CommonSetup;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -70,7 +69,6 @@ public class BisqHeadlessAppMain extends BisqExecutable {
     @Override
     protected void launchApplication() {
         headlessApp = new BisqHeadlessApp();
-        CommonSetup.setupUncaughtExceptionHandler(BisqHeadlessAppMain.this.headlessApp);
 
         UserThread.execute(this::onApplicationLaunched);
     }
@@ -79,6 +77,11 @@ public class BisqHeadlessAppMain extends BisqExecutable {
     protected void onApplicationLaunched() {
         super.onApplicationLaunched();
         headlessApp.setGracefulShutDownHandler(this);
+    }
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        headlessApp.handleUncaughtException(throwable, doShutDown);
     }
 
     @Override

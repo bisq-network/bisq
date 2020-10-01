@@ -27,7 +27,6 @@ import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
-import bisq.common.setup.CommonSetup;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +49,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-        CommonSetup.setupUncaughtExceptionHandler(this);
 
         keepRunning();
     }

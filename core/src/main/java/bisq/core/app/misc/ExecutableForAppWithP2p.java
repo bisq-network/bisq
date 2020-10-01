@@ -33,7 +33,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Profiler;
 import bisq.common.util.RestartUtil;
 
@@ -55,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
+public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
     private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
@@ -175,19 +174,6 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                 }
             }, TimeUnit.MINUTES.toSeconds(10));
         }, TimeUnit.HOURS.toSeconds(2));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UncaughtExceptionHandler implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
-        log.error(throwable.toString());
-
-        if (doShutDown)
-            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
     }
 
     @SuppressWarnings("InfiniteLoopStatement")

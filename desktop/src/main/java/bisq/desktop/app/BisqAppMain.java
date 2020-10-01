@@ -27,7 +27,6 @@ import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.setup.CommonSetup;
 
 import com.google.inject.Injector;
 
@@ -76,9 +75,6 @@ public class BisqAppMain extends BisqExecutable {
     protected void launchApplication() {
         BisqApp.setAppLaunchedHandler(application -> {
             BisqAppMain.this.application = (BisqApp) application;
-
-            // Necessary to do the setup at this point to prevent Bouncy Castle errors
-            CommonSetup.setupUncaughtExceptionHandler(BisqAppMain.this.application);
             // Map to user thread!
             UserThread.execute(this::onApplicationLaunched);
         });
@@ -95,6 +91,12 @@ public class BisqAppMain extends BisqExecutable {
         super.onApplicationLaunched();
         application.setGracefulShutDownHandler(this);
     }
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        application.handleUncaughtException(throwable, doShutDown);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks

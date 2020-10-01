@@ -40,6 +40,7 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.CommonSetup;
 import bisq.common.setup.GracefulShutDownHandler;
+import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Guice;
@@ -56,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 import sun.misc.Signal;
 
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener, UncaughtExceptionHandler {
 
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
@@ -139,6 +140,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     // Headless versions can call inside launchApplication the onApplicationLaunched() manually
     protected void onApplicationLaunched() {
+        // As the handler method might be overwritten by subclasses and they use the application as handler
+        // we need to setup the handler after the application is created.
+        CommonSetup.setupUncaughtExceptionHandler(this);
+
         setupGuice();
         startApplication();
     }
@@ -262,6 +267,19 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             t.printStackTrace();
             System.exit(1);
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UncaughtExceptionHandler implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        log.error(throwable.toString());
+
+        if (doShutDown)
+            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
     }
 
     /**
