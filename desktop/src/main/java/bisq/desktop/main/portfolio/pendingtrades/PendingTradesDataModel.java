@@ -51,13 +51,13 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.messages.RefreshTradeStateRequest;
+import bisq.core.trade.protocol.BuyerProtocol;
+import bisq.core.trade.protocol.DisputeProtocol;
+import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 
-import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -82,7 +82,6 @@ import javafx.collections.ObservableList;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -163,7 +162,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        tradeManager.getTradableList().addListener(tradesListChangeListener);
+        tradeManager.getTradesAsObservableList().addListener(tradesListChangeListener);
         onListChanged();
         if (selectedItemProperty.get() != null)
             notificationCenter.setSelectedTradeId(selectedItemProperty.get().getTrade().getId());
@@ -173,7 +172,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        tradeManager.getTradableList().removeListener(tradesListChangeListener);
+        tradeManager.getTradesAsObservableList().removeListener(tradesListChangeListener);
         notificationCenter.setSelectedTradeId(null);
         activated = false;
     }
@@ -190,13 +189,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
-        ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
+        ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        checkNotNull(getTrade(), "trade must not be null");
-        checkArgument(getTrade() instanceof SellerTrade, "Trade must be instance of SellerTrade");
-        tradeManager.onUserConfirmedFiatPaymentReceived((SellerTrade) getTrade(), resultHandler, errorMessageHandler);
+        Trade trade = getTrade();
+        checkNotNull(trade, "trade must not be null");
+        checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
+        ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     public void onWithdrawRequest(String toAddress,
@@ -235,47 +235,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         tryOpenDispute(true);
     }
 
-    public void onMoveToFailedTrades() {
-        tradeManager.addTradeToFailedTrades(getTrade());
-    }
-
-    // Ask counterparty to resend last action (in case message was lost)
-    public void refreshTradeState() {
-        Trade trade = getTrade();
-        if (trade == null || !trade.allowedRefresh()) return;
-
-        trade.logRefresh();
-        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-
-        RefreshTradeStateRequest refreshReq = new RefreshTradeStateRequest(UUID.randomUUID().toString(),
-                trade.getId(),
-                tradingPeerNodeAddress);
-        p2PService.sendEncryptedMailboxMessage(
-                tradingPeerNodeAddress,
-                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
-                refreshReq,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {}",
-                                trade.getId(), tradingPeerNodeAddress);
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {}",
-                                trade.getId(), tradingPeerNodeAddress);
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {}",
-                                trade.getId(), tradingPeerNodeAddress);
-                    }
-                }
-        );
-        tradeManager.persistTrades();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -418,7 +377,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     private void onListChanged() {
         list.clear();
-        list.addAll(tradeManager.getTradableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getTradesAsObservableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
@@ -685,9 +644,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
-            //todo add UI spinner as it can take a bit if peer is offline
-            tradeManager.publishDelayedPayoutTx(tradeId,
-                    () -> {
+            ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(() -> {
                         log.info("DelayedPayoutTx published and message sent to peer");
                         disputeManager.sendOpenNewDisputeMessage(dispute,
                                 false,
@@ -727,8 +684,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
-    public void addTradeToFailedTrades() {
-        tradeManager.addTradeToFailedTrades(selectedTrade);
+    public void onMoveInvalidTradeToFailedTrades(Trade trade) {
+        tradeManager.onMoveInvalidTradeToFailedTrades(trade);
     }
 
     public boolean isSignWitnessTrade() {

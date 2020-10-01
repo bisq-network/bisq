@@ -102,7 +102,7 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public List<ChatMessage> getAllChatMessages() {
-        return tradeManager.getTradableList().stream()
+        return tradeManager.getTradesAsObservableList().stream()
                 .flatMap(trade -> trade.getChatMessages().stream())
                 .collect(Collectors.toList());
     }

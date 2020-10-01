@@ -42,8 +42,6 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.AckMessage;
-import bisq.network.p2p.DecryptedMessageWithPubKey;
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
@@ -73,36 +71,24 @@ import javax.annotation.Nullable;
 
 // Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
 // persist them.
-//todo clean up older fields as well to make most transient
+
+/**
+ * This is the base model for the trade protocol. It is persisted with the trade (non transient fields).
+ * It uses the {@link ProcessModelServiceProvider} for access to domain services.
+ */
 
 @Getter
 @Slf4j
 public class ProcessModel implements Model, PersistablePayload {
     // Transient/Immutable (net set in constructor so they are not final, but at init)
+    transient private ProcessModelServiceProvider provider;
     transient private TradeManager tradeManager;
-    transient private OpenOfferManager openOfferManager;
-    transient private BtcWalletService btcWalletService;
-    transient private BsqWalletService bsqWalletService;
-    transient private TradeWalletService tradeWalletService;
-    transient private DaoFacade daoFacade;
     transient private Offer offer;
-    transient private User user;
-    transient private FilterManager filterManager;
-    transient private AccountAgeWitnessService accountAgeWitnessService;
-    transient private TradeStatisticsManager tradeStatisticsManager;
-    transient private ArbitratorManager arbitratorManager;
-    transient private MediatorManager mediatorManager;
-    transient private RefundAgentManager refundAgentManager;
-    transient private KeyRing keyRing;
-    transient private P2PService p2PService;
-    transient private ReferralIdService referralIdService;
 
     // Transient/Mutable
     transient private Transaction takeOfferFeeTx;
     @Setter
     transient private TradeMessage tradeMessage;
-    @Setter
-    transient private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
     // Added in v1.2.0
     @Setter
@@ -112,15 +98,25 @@ public class ProcessModel implements Model, PersistablePayload {
     @Nullable
     transient private Transaction preparedDelayedPayoutTx;
 
-    // Persistable Immutable (private setter only used by PB method)
-    private TradingPeer tradingPeer = new TradingPeer();
-    private String offerId;
-    private String accountId;
-    private PubKeyRing pubKeyRing;
+    // Added in v1.4.0
+    // MessageState of the last message sent from the seller to the buyer in the take offer process.
+    // It is used only in a task which would not be executed after restart, so no need to persist it.
+    @Setter
+    transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+    @Setter
+    @Getter
+    transient private Transaction depositTx;
+
+
+    // Persistable Immutable
+    private final TradingPeer tradingPeer;
+    private final String offerId;
+    private final String accountId;
+    private final PubKeyRing pubKeyRing;
 
     // Persistable Mutable
     @Nullable
-    @Setter()
+    @Setter
     private String takeOfferFeeTxId;
     @Nullable
     @Setter
@@ -158,12 +154,31 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private long sellerPayoutAmountFromMediation;
 
-    // The only trade message where we want to indicate the user the state of the message delivery is the
-    // CounterCurrencyTransferStartedMessage. We persist the state with the processModel.
+
+    // We want to indicate the user the state of the message delivery of the
+    // CounterCurrencyTransferStartedMessage. As well we do an automatic re-send in case it was not ACKed yet.
+    // To enable that even after restart we persist the state.
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
-    public ProcessModel() {
+    public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
+        this(offerId, accountId, pubKeyRing, new TradingPeer());
+    }
+
+    public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing, TradingPeer tradingPeer) {
+        this.offerId = offerId;
+        this.accountId = accountId;
+        this.pubKeyRing = pubKeyRing;
+        // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
+        this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
+    }
+
+    public void applyTransient(ProcessModelServiceProvider provider,
+                               TradeManager tradeManager,
+                               Offer offer) {
+        this.offer = offer;
+        this.provider = provider;
+        this.tradeManager = tradeManager;
     }
 
 
@@ -173,7 +188,7 @@ public class ProcessModel implements Model, PersistablePayload {
 
     @Override
     public protobuf.ProcessModel toProtoMessage() {
-        final protobuf.ProcessModel.Builder builder = protobuf.ProcessModel.newBuilder()
+        protobuf.ProcessModel.Builder builder = protobuf.ProcessModel.newBuilder()
                 .setTradingPeer((protobuf.TradingPeer) tradingPeer.toProtoMessage())
                 .setOfferId(offerId)
                 .setAccountId(accountId)
@@ -199,11 +214,9 @@ public class ProcessModel implements Model, PersistablePayload {
     }
 
     public static ProcessModel fromProto(protobuf.ProcessModel proto, CoreProtoResolver coreProtoResolver) {
-        ProcessModel processModel = new ProcessModel();
-        processModel.setTradingPeer(proto.hasTradingPeer() ? TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver) : null);
-        processModel.setOfferId(proto.getOfferId());
-        processModel.setAccountId(proto.getAccountId());
-        processModel.setPubKeyRing(PubKeyRing.fromProto(proto.getPubKeyRing()));
+        TradingPeer tradingPeer = TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
+        PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
+        ProcessModel processModel = new ProcessModel(proto.getOfferId(), proto.getAccountId(), pubKeyRing, tradingPeer);
         processModel.setChangeOutputValue(proto.getChangeOutputValue());
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
         processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
@@ -221,10 +234,12 @@ public class ProcessModel implements Model, PersistablePayload {
         processModel.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
         processModel.setMyMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMyMultiSigPubKey()));
         processModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
-        String paymentStartedMessageState = proto.getPaymentStartedMessageState().isEmpty() ? MessageState.UNDEFINED.name() : proto.getPaymentStartedMessageState();
-        ObjectProperty<MessageState> paymentStartedMessageStateProperty = processModel.getPaymentStartedMessageStateProperty();
-        paymentStartedMessageStateProperty.set(ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageState));
         processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
+
+        String paymentStartedMessageStateString = ProtoUtil.stringOrNullFromProto(proto.getPaymentStartedMessageState());
+        MessageState paymentStartedMessageState = ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageStateString);
+        processModel.setPaymentStartedMessageState(paymentStartedMessageState);
+
         return processModel;
     }
 
@@ -232,60 +247,6 @@ public class ProcessModel implements Model, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void onAllServicesInitialized(Offer offer,
-                                         TradeManager tradeManager,
-                                         OpenOfferManager openOfferManager,
-                                         P2PService p2PService,
-                                         BtcWalletService walletService,
-                                         BsqWalletService bsqWalletService,
-                                         TradeWalletService tradeWalletService,
-                                         DaoFacade daoFacade,
-                                         ReferralIdService referralIdService,
-                                         User user,
-                                         FilterManager filterManager,
-                                         AccountAgeWitnessService accountAgeWitnessService,
-                                         TradeStatisticsManager tradeStatisticsManager,
-                                         ArbitratorManager arbitratorManager,
-                                         MediatorManager mediatorManager,
-                                         RefundAgentManager refundAgentManager,
-                                         KeyRing keyRing,
-                                         boolean useSavingsWallet,
-                                         Coin fundsNeededForTrade) {
-        this.offer = offer;
-        this.tradeManager = tradeManager;
-        this.openOfferManager = openOfferManager;
-        this.btcWalletService = walletService;
-        this.bsqWalletService = bsqWalletService;
-        this.tradeWalletService = tradeWalletService;
-        this.daoFacade = daoFacade;
-        this.referralIdService = referralIdService;
-        this.user = user;
-        this.filterManager = filterManager;
-        this.accountAgeWitnessService = accountAgeWitnessService;
-        this.tradeStatisticsManager = tradeStatisticsManager;
-        this.arbitratorManager = arbitratorManager;
-        this.mediatorManager = mediatorManager;
-        this.refundAgentManager = refundAgentManager;
-        this.keyRing = keyRing;
-        this.p2PService = p2PService;
-        this.useSavingsWallet = useSavingsWallet;
-
-        fundsNeededForTradeAsLong = fundsNeededForTrade.value;
-        offerId = offer.getId();
-        accountId = user.getAccountId();
-        pubKeyRing = keyRing.getPubKeyRing();
-    }
-
-    public void removeMailboxMessageAfterProcessing(Trade trade) {
-        if (tradeMessage instanceof MailboxMessage &&
-                decryptedMessageWithPubKey != null &&
-                decryptedMessageWithPubKey.getNetworkEnvelope().equals(tradeMessage)) {
-            log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMessageWithPubKey);
-            p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
-            trade.removeDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
-        }
-    }
 
     @Override
     public void persist() {
@@ -305,59 +266,118 @@ public class ProcessModel implements Model, PersistablePayload {
     public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
         PaymentAccount paymentAccount;
         if (trade instanceof MakerTrade)
-            paymentAccount = user.getPaymentAccount(offer.getMakerPaymentAccountId());
+            paymentAccount = getUser().getPaymentAccount(offer.getMakerPaymentAccountId());
         else
-            paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
+            paymentAccount = getUser().getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
-    public Coin getFundsNeededForTradeAsLong() {
+    public Coin getFundsNeededForTrade() {
         return Coin.valueOf(fundsNeededForTradeAsLong);
     }
 
     public Transaction resolveTakeOfferFeeTx(Trade trade) {
         if (takeOfferFeeTx == null) {
             if (!trade.isCurrencyForTakerFeeBtc())
-                takeOfferFeeTx = bsqWalletService.getTransaction(takeOfferFeeTxId);
+                takeOfferFeeTx = getBsqWalletService().getTransaction(takeOfferFeeTxId);
             else
-                takeOfferFeeTx = btcWalletService.getTransaction(takeOfferFeeTxId);
+                takeOfferFeeTx = getBtcWalletService().getTransaction(takeOfferFeeTxId);
         }
         return takeOfferFeeTx;
     }
 
     public NodeAddress getMyNodeAddress() {
-        return p2PService.getAddress();
+        return getP2PService().getAddress();
     }
 
     void setPaymentStartedAckMessage(AckMessage ackMessage) {
-        if (ackMessage.isSuccess()) {
-            setPaymentStartedMessageState(MessageState.ACKNOWLEDGED);
-        } else {
-            setPaymentStartedMessageState(MessageState.FAILED);
-        }
+        MessageState messageState = ackMessage.isSuccess() ?
+                MessageState.ACKNOWLEDGED :
+                MessageState.FAILED;
+        setPaymentStartedMessageState(messageState);
     }
 
     public void setPaymentStartedMessageState(MessageState paymentStartedMessageStateProperty) {
         this.paymentStartedMessageStateProperty.set(paymentStartedMessageStateProperty);
     }
 
-    private void setTradingPeer(TradingPeer tradingPeer) {
-        this.tradingPeer = tradingPeer;
+    void setDepositTxSentAckMessage(AckMessage ackMessage) {
+        MessageState messageState = ackMessage.isSuccess() ?
+                MessageState.ACKNOWLEDGED :
+                MessageState.FAILED;
+        setDepositTxMessageState(messageState);
     }
 
-    private void setOfferId(String offerId) {
-        this.offerId = offerId;
+    public void setDepositTxMessageState(MessageState messageState) {
+        this.depositTxMessageStateProperty.set(messageState);
     }
 
-    private void setAccountId(String accountId) {
-        this.accountId = accountId;
+    void witnessDebugLog(Trade trade) {
+        getAccountAgeWitnessService().getAccountAgeWitnessUtils().witnessDebugLog(trade, null);
     }
 
-    private void setPubKeyRing(PubKeyRing pubKeyRing) {
-        this.pubKeyRing = pubKeyRing;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public BtcWalletService getBtcWalletService() {
+        return provider.getBtcWalletService();
     }
 
-    void logTrade(Trade trade) {
-        accountAgeWitnessService.getAccountAgeWitnessUtils().witnessDebugLog(trade, null);
+    public AccountAgeWitnessService getAccountAgeWitnessService() {
+        return provider.getAccountAgeWitnessService();
+    }
+
+    public P2PService getP2PService() {
+        return provider.getP2PService();
+    }
+
+    public BsqWalletService getBsqWalletService() {
+        return provider.getBsqWalletService();
+    }
+
+    public TradeWalletService getTradeWalletService() {
+        return provider.getTradeWalletService();
+    }
+
+    public User getUser() {
+        return provider.getUser();
+    }
+
+    public OpenOfferManager getOpenOfferManager() {
+        return provider.getOpenOfferManager();
+    }
+
+    public ReferralIdService getReferralIdService() {
+        return provider.getReferralIdService();
+    }
+
+    public FilterManager getFilterManager() {
+        return provider.getFilterManager();
+    }
+
+    public TradeStatisticsManager getTradeStatisticsManager() {
+        return provider.getTradeStatisticsManager();
+    }
+
+    public ArbitratorManager getArbitratorManager() {
+        return provider.getArbitratorManager();
+    }
+
+    public MediatorManager getMediatorManager() {
+        return provider.getMediatorManager();
+    }
+
+    public RefundAgentManager getRefundAgentManager() {
+        return provider.getRefundAgentManager();
+    }
+
+    public KeyRing getKeyRing() {
+        return provider.getKeyRing();
+    }
+
+    public DaoFacade getDaoFacade() {
+        return provider.getDaoFacade();
     }
 }

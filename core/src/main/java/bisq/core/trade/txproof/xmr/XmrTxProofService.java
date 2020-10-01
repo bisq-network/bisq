@@ -27,6 +27,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
@@ -79,7 +80,7 @@ public class XmrTxProofService implements AssetTxProofService {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Map<String, XmrTxProofRequestsPerTrade> servicesByTradeId = new HashMap<>();
     private AutoConfirmSettings autoConfirmSettings;
-    private Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
+    private final Map<String, ChangeListener<Trade.State>> tradeStateListenerMap = new HashMap<>();
     private ChangeListener<Number> btcPeersListener, btcBlockListener;
     private BootstrapListener bootstrapListener;
     private MonadicBinding<Boolean> p2pNetworkAndWalletReady;
@@ -181,7 +182,7 @@ public class XmrTxProofService implements AssetTxProofService {
         });
 
         // We listen on new trades
-        ObservableList<Trade> tradableList = tradeManager.getTradableList();
+        ObservableList<Trade> tradableList = tradeManager.getTradesAsObservableList();
         tradableList.addListener((ListChangeListener<Trade>) c -> {
             c.next();
             if (c.wasAdded()) {
@@ -238,7 +239,7 @@ public class XmrTxProofService implements AssetTxProofService {
             return;
         }
 
-        if (wasTxKeyReUsed(trade, tradeManager.getTradableList())) {
+        if (wasTxKeyReUsed(trade, tradeManager.getTradesAsObservableList())) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA
                     .details(Res.get("portfolio.pending.autoConf.state.xmr.txKeyReused")));
             return;
@@ -263,7 +264,7 @@ public class XmrTxProofService implements AssetTxProofService {
                         log.info("We auto-confirm trade {} as our all our services for the tx proof completed successfully", trade.getShortId());
                         log.info("###########################################################################################");
 
-                        trade.onFiatPaymentReceived(() -> {
+                        ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(() -> {
                         }, errorMessage -> {
                         });
                     }

@@ -24,10 +24,11 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
-public class MakerVerifyTakerAccount extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public MakerVerifyTakerAccount(TaskRunner taskHandler, Trade trade) {
+public class MakerRemovesOpenOffer extends TradeTask {
+    public MakerRemovesOpenOffer(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -35,18 +36,14 @@ public class MakerVerifyTakerAccount extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            //TODO impl. missing
-           /* if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),
-                    processModel.tradingPeer.getPaymentAccountPayload())) {
-                log.error("Taker is blacklisted");
-                failed("Taker is blacklisted");
-            }
-            else {*/
+
+            // Once the taker fee is published we remove our open offer
+            checkNotNull(trade.getTakerFeeTxId());
+            processModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
+
             complete();
-            //}
         } catch (Throwable t) {
             failed(t);
         }
     }
 }
-

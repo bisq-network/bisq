@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.tasks.seller_as_taker;
 
 import bisq.core.btc.model.InputsAndChangeOutput;
+import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -31,8 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SellerAsTakerCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {
+    public SellerAsTakerCreatesDepositTxInputs(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -40,25 +40,24 @@ public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (trade.getTradeAmount() != null) {
-                Coin txFee = trade.getTxFee();
-                Coin takerInputAmount = checkNotNull(trade.getOffer()).getSellerSecurityDeposit()
-                        .add(txFee)
-                        .add(txFee)
-                        .add(trade.getTradeAmount());
-                InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
-                        processModel.getTakeOfferFeeTx(),
-                        takerInputAmount,
-                        txFee);
 
-                processModel.setRawTransactionInputs(result.rawTransactionInputs);
-                processModel.setChangeOutputValue(result.changeOutputValue);
-                processModel.setChangeOutputAddress(result.changeOutputAddress);
+            Coin tradeAmount = checkNotNull(trade.getTradeAmount());
+            Offer offer = checkNotNull(trade.getOffer());
+            Coin txFee = trade.getTxFee();
+            Coin takerInputAmount = offer.getSellerSecurityDeposit()
+                    .add(txFee)
+                    .add(txFee) // We add 2 times the fee as one is for the payout tx
+                    .add(tradeAmount);
+            InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
+                    processModel.getTakeOfferFeeTx(),
+                    takerInputAmount,
+                    txFee);
 
-                complete();
-            } else {
-                failed("trade.getTradeAmount() = null");
-            }
+            processModel.setRawTransactionInputs(result.rawTransactionInputs);
+            processModel.setChangeOutputValue(result.changeOutputValue);
+            processModel.setChangeOutputAddress(result.changeOutputAddress);
+
+            complete();
         } catch (Throwable t) {
             failed(t);
         }

@@ -505,20 +505,16 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        // confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
-        if (trade.isFiatSent())
+
+        //TODO seems this was a hack to enable repeated confirm???
+        if (trade.isFiatSent()) {
             trade.setState(Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
+        }
 
         model.dataModel.onPaymentStarted(() -> {
-            // In case the first send failed we got the support button displayed.
-            // If it succeeds at a second try we remove the support button again.
-            //TODO check for support. in case of a dispute we dont want to hide the button
-            //if (notificationGroup != null)
-            //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
-            // confirmButton.setDisable(false);
             busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });

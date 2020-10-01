@@ -903,6 +903,11 @@ textfield */
     -fx-fill: -fx-accent;
 }
 
+.hyperlink.error {
+     -fx-text-fill: -bs-rd-error-red;
+     -fx-fill: -bs-rd-error-red;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Table                                                                       *
@@ -1125,6 +1130,27 @@ textfield */
     -fx-text-fill: -bs-text-color;
     -fx-fill: -bs-text-color;
 }
+
+.warn-icon {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warn-icon:hover {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.error-icon {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+.error-icon:hover {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -1391,6 +1417,12 @@ textfield */
 
 #address-text-field:hover {
     -fx-text-fill: -bs-text-color;
+}
+
+#address-text-field-error {
+    -fx-cursor: hand;
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-prompt-text-fill: -bs-text-color;
 }
 
 /* Account setup */

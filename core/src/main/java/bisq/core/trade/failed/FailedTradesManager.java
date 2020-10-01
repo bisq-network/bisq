@@ -26,14 +26,11 @@ import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeUtils;
 
-import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
@@ -55,7 +52,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Setter
-    private Function<Trade, Boolean> unfailTradeCallback;
+    private Function<Trade, Boolean> unFailTradeCallback;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing,
@@ -90,6 +87,10 @@ public class FailedTradesManager implements PersistedDataHost {
         }
     }
 
+    public void removeTrade(Trade trade) {
+        failedTrades.remove(trade);
+    }
+
     public boolean wasMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }
@@ -107,17 +108,17 @@ public class FailedTradesManager implements PersistedDataHost {
                 .filter(Trade::isFundsLockedIn);
     }
 
-    public void unfailTrade(Trade trade) {
-        if (unfailTradeCallback == null)
+    public void unFailTrade(Trade trade) {
+        if (unFailTradeCallback == null)
             return;
 
-        if (unfailTradeCallback.apply(trade)) {
+        if (unFailTradeCallback.apply(trade)) {
             log.info("Unfailing trade {}", trade.getId());
             failedTrades.remove(trade);
         }
     }
 
-    public String checkUnfail(Trade trade) {
+    public String checkUnFail(Trade trade) {
         var addresses = TradeUtils.getTradeAddresses(trade, btcWalletService, keyRing);
         if (addresses == null) {
             return "Addresses not found";

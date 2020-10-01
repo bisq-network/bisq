@@ -156,7 +156,7 @@ public class TradeStatisticsManager {
     }
 
     static class WrapperTradeStatistics2 {
-        private TradeStatistics2 tradeStatistics;
+        private final TradeStatistics2 tradeStatistics;
 
         public WrapperTradeStatistics2(TradeStatistics2 tradeStatistics) {
             this.tradeStatistics = tradeStatistics;

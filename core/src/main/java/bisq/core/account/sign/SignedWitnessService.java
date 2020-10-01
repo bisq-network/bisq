@@ -216,20 +216,20 @@ public class SignedWitnessService {
     }
 
     // Arbitrators sign with EC key
-    public void signAccountAgeWitness(Coin tradeAmount,
-                                      AccountAgeWitness accountAgeWitness,
-                                      ECKey key,
-                                      PublicKey peersPubKey) {
-        signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey.getEncoded(), new Date().getTime());
+    public void signAndPublishAccountAgeWitness(Coin tradeAmount,
+                                                AccountAgeWitness accountAgeWitness,
+                                                ECKey key,
+                                                PublicKey peersPubKey) {
+        signAndPublishAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey.getEncoded(), new Date().getTime());
     }
 
     // Arbitrators sign with EC key
-    public String signAccountAgeWitness(AccountAgeWitness accountAgeWitness,
-                                        ECKey key,
-                                        byte[] peersPubKey,
-                                        long time) {
+    public String signAndPublishAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+                                                  ECKey key,
+                                                  byte[] peersPubKey,
+                                                  long time) {
         var witnessPubKey = peersPubKey == null ? ownerPubKey(accountAgeWitness) : peersPubKey;
-        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, key, witnessPubKey, time);
+        return signAndPublishAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, key, witnessPubKey, time);
     }
 
     // Arbitrators sign with EC key
@@ -238,15 +238,15 @@ public class SignedWitnessService {
                                    long childSignTime) {
         var time = childSignTime - SIGNER_AGE - 1;
         var dummyAccountAgeWitness = new AccountAgeWitness(Hash.getRipemd160hash(peersPubKey), time);
-        return signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, dummyAccountAgeWitness, key, peersPubKey, time);
+        return signAndPublishAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, dummyAccountAgeWitness, key, peersPubKey, time);
     }
 
     // Arbitrators sign with EC key
-    private String signAccountAgeWitness(Coin tradeAmount,
-                                         AccountAgeWitness accountAgeWitness,
-                                         ECKey key,
-                                         byte[] peersPubKey,
-                                         long time) {
+    private String signAndPublishAccountAgeWitness(Coin tradeAmount,
+                                                   AccountAgeWitness accountAgeWitness,
+                                                   ECKey key,
+                                                   byte[] peersPubKey,
+                                                   long time) {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             var err = "Arbitrator trying to sign already signed accountagewitness " + accountAgeWitness.toString();
             log.warn(err);
@@ -272,16 +272,16 @@ public class SignedWitnessService {
         return "";
     }
 
-    public void selfSignAccountAgeWitness(AccountAgeWitness accountAgeWitness) throws CryptoException {
+    public void selfSignAndPublishAccountAgeWitness(AccountAgeWitness accountAgeWitness) throws CryptoException {
         log.info("Sign own accountAgeWitness {}", accountAgeWitness);
-        signAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness,
+        signAndPublishAccountAgeWitness(MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness,
                 keyRing.getSignatureKeyPair().getPublic());
     }
 
     // Any peer can sign with DSA key
-    public Optional<SignedWitness> signAccountAgeWitness(Coin tradeAmount,
-                                                         AccountAgeWitness accountAgeWitness,
-                                                         PublicKey peersPubKey) throws CryptoException {
+    public Optional<SignedWitness> signAndPublishAccountAgeWitness(Coin tradeAmount,
+                                                                   AccountAgeWitness accountAgeWitness,
+                                                                   PublicKey peersPubKey) throws CryptoException {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
             return Optional.empty();
@@ -494,7 +494,8 @@ public class SignedWitnessService {
     private void publishSignedWitness(SignedWitness signedWitness) {
         if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
             log.info("broadcast signed witness {}", signedWitness.toString());
-            p2PService.addPersistableNetworkPayload(signedWitness, false);
+            // We set reBroadcast to true to achieve better resilience.
+            p2PService.addPersistableNetworkPayload(signedWitness, true);
             addToMap(signedWitness);
         }
     }

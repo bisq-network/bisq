@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PublishTradeStatistics extends TradeTask {
-    public PublishTradeStatistics(TaskRunner taskHandler, Trade trade) {
+    public PublishTradeStatistics(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -45,35 +45,33 @@ public class PublishTradeStatistics extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (trade.getDepositTx() != null) {
-                Map<String, String> extraDataMap = new HashMap<>();
-                if (processModel.getReferralIdService().getOptionalReferralId().isPresent()) {
-                    extraDataMap.put(OfferPayload.REFERRAL_ID, processModel.getReferralIdService().getOptionalReferralId().get());
-                }
 
-                NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
-                if (mediatorNodeAddress != null) {
-                    // The first 4 chars are sufficient to identify a mediator.
-                    // For testing with regtest/localhost we use the full address as its localhost and would result in
-                    // same values for multiple mediators.
-                    NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
-                    String address = networkNode instanceof TorNetworkNode ?
-                            mediatorNodeAddress.getFullAddress().substring(0, 4) :
-                            mediatorNodeAddress.getFullAddress();
-                    extraDataMap.put(TradeStatistics2.MEDIATOR_ADDRESS, address);
-                }
+            checkNotNull(trade.getDepositTx());
 
-                Offer offer = trade.getOffer();
-                checkNotNull(offer, "offer must not ne null");
-                checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
-                TradeStatistics2 tradeStatistics = new TradeStatistics2(offer.getOfferPayload(),
-                        trade.getTradePrice(),
-                        trade.getTradeAmount(),
-                        trade.getDate(),
-                        trade.getDepositTxId(),
-                        extraDataMap);
-                processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
+            Map<String, String> extraDataMap = new HashMap<>();
+            if (processModel.getReferralIdService().getOptionalReferralId().isPresent()) {
+                extraDataMap.put(OfferPayload.REFERRAL_ID, processModel.getReferralIdService().getOptionalReferralId().get());
             }
+
+            NodeAddress mediatorNodeAddress = checkNotNull(trade.getMediatorNodeAddress());
+            // The first 4 chars are sufficient to identify a mediator.
+            // For testing with regtest/localhost we use the full address as its localhost and would result in
+            // same values for multiple mediators.
+            NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
+            String address = networkNode instanceof TorNetworkNode ?
+                    mediatorNodeAddress.getFullAddress().substring(0, 4) :
+                    mediatorNodeAddress.getFullAddress();
+            extraDataMap.put(TradeStatistics2.MEDIATOR_ADDRESS, address);
+
+            Offer offer = checkNotNull(trade.getOffer());
+            TradeStatistics2 tradeStatistics = new TradeStatistics2(offer.getOfferPayload(),
+                    trade.getTradePrice(),
+                    checkNotNull(trade.getTradeAmount()),
+                    trade.getDate(),
+                    trade.getDepositTxId(),
+                    extraDataMap);
+            processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
+
             complete();
         } catch (Throwable t) {
             failed(t);

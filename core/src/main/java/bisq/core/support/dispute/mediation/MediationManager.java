@@ -37,8 +37,8 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.protocol.DisputeProtocol;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.TradeProtocol;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -222,9 +222,9 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         return dispute.getContract().getMediatorNodeAddress();
     }
 
-    public void acceptMediationResult(Trade trade,
-                                      ResultHandler resultHandler,
-                                      ErrorMessageHandler errorMessageHandler) {
+    public void onAcceptMediationResult(Trade trade,
+                                        ResultHandler resultHandler,
+                                        ErrorMessageHandler errorMessageHandler) {
         String tradeId = trade.getId();
         Optional<Dispute> optionalDispute = findDispute(tradeId);
         checkArgument(optionalDispute.isPresent(), "dispute must be present");
@@ -234,7 +234,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         ProcessModel processModel = trade.getProcessModel();
         processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
         processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+        DisputeProtocol tradeProtocol = (DisputeProtocol) tradeManager.getTradeProtocol(trade);
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
 

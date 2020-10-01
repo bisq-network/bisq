@@ -36,8 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SellerSendDelayedPayoutTxSignatureRequest(TaskRunner taskHandler, Trade trade) {
+    public SellerSendDelayedPayoutTxSignatureRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -53,8 +52,6 @@ public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
                     processModel.getMyNodeAddress(),
                     preparedDelayedPayoutTx.bitcoinSerialize());
 
-            // todo trade.setState
-
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
@@ -67,7 +64,6 @@ public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            // todo trade.setState
                             complete();
                         }
 
@@ -75,7 +71,6 @@ public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            // todo trade.setState
                             appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                             failed();
                         }

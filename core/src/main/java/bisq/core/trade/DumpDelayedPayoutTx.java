@@ -40,8 +40,8 @@ public class DumpDelayedPayoutTx {
     }
 
     static class DelayedPayoutHash {
-        String tradeId;
-        String delayedPayoutTx;
+        final String tradeId;
+        final String delayedPayoutTx;
 
         DelayedPayoutHash(String tradeId, String delayedPayoutTx) {
             this.tradeId = tradeId;
