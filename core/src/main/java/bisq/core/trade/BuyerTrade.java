@@ -23,8 +23,6 @@ import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.storage.Storage;
-
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +43,6 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress arbitratorNodeAddress,
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
-               Storage<? extends TradableList> storage,
                BtcWalletService btcWalletService,
                ProcessModel processModel) {
         super(offer,
@@ -58,7 +55,6 @@ public abstract class BuyerTrade extends Trade {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService,
                 processModel);
     }
@@ -70,7 +66,6 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress arbitratorNodeAddress,
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
-               Storage<? extends TradableList> storage,
                BtcWalletService btcWalletService,
                ProcessModel processModel) {
         super(offer,
@@ -80,7 +75,6 @@ public abstract class BuyerTrade extends Trade {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService,
                 processModel);
     }

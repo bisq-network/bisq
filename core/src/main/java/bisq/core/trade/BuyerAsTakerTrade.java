@@ -24,8 +24,6 @@ import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.storage.Storage;
-
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +47,6 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                              @Nullable NodeAddress arbitratorNodeAddress,
                              @Nullable NodeAddress mediatorNodeAddress,
                              @Nullable NodeAddress refundAgentNodeAddress,
-                             Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService,
                              ProcessModel processModel) {
         super(offer,
@@ -62,7 +59,6 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService,
                 processModel);
     }
@@ -81,7 +77,6 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     }
 
     public static Tradable fromProto(protobuf.BuyerAsTakerTrade buyerAsTakerTradeProto,
-                                     Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         protobuf.Trade proto = buyerAsTakerTradeProto.getTrade();
@@ -97,7 +92,6 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                         proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                         proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                         proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
-                        storage,
                         btcWalletService,
                         processModel),
                 proto,
