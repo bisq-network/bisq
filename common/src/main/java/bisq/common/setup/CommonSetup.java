@@ -18,6 +18,8 @@
 package bisq.common.setup;
 
 import bisq.common.UserThread;
+import bisq.common.app.AsciiLogo;
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoUtils;
 import bisq.common.crypto.LimitedKeyStrengthException;
 import bisq.common.util.Utilities;
@@ -33,10 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CommonSetup {
 
+    public static void setup(Config config) {
+        AsciiLogo.showAsciiLogo();
+        setSystemProperties();
+    }
+
     public static void setup(UncaughtExceptionHandler uncaughtExceptionHandler) {
         setupErrorHandler(uncaughtExceptionHandler);
-
-        setSystemProperties();
     }
 
     protected static void setSystemProperties() {

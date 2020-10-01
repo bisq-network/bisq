@@ -32,13 +32,13 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
-import bisq.common.app.AsciiLogo;
 import bisq.common.app.DevEnv;
 import bisq.common.config.BisqHelpFormatter;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigException;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.setup.CommonSetup;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.util.Utilities;
 
@@ -103,9 +103,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doExecute() {
-        AsciiLogo.showAsciiLogo();
-        configUserThread();
+        CommonSetup.setup(config);
         CoreSetup.setup(config);
+
+        configUserThread();
         addCapabilities();
 
         Signal.handle(new Signal("INT"), signal -> {
