@@ -789,7 +789,6 @@ public class BisqSetup {
             }
         });
 
-
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
         refundAgentManager.onAllServicesInitialized();

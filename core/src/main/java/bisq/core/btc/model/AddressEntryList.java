@@ -111,8 +111,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                         addressEntry.getPubKeyHash(),
                         Script.ScriptType.P2PKH);
                 if (keyFromPubHash != null) {
-                    Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(),
-                            keyFromPubHash);
+                    Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash);
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
