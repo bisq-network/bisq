@@ -223,36 +223,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return excludedKeys;
     }
 
-
-    /**
-     * Generic function that can be used to filter a Map<ByteArray, ProtectedStorageEntry || PersistableNetworkPayload>
-     * by a given set of keys and peer capabilities.
-     */
-    static private <T extends NetworkPayload> Set<T> filterKnownHashes(
-            Map<ByteArray, T> mapToFilter,
-            Function<T, ? extends NetworkPayload> objToPayloadFunction,
-            Set<ByteArray> knownHashes,
-            Capabilities peerCapabilities,
-            int maxEntries,
-            AtomicBoolean wasTruncated) {
-
-        AtomicInteger limit = new AtomicInteger(maxEntries);
-
-        Set<T> filteredResults = mapToFilter.entrySet().stream()
-                .filter(e -> !knownHashes.contains(e.getKey()))
-                .filter(e -> limit.decrementAndGet() >= 0)
-                .map(Map.Entry::getValue)
-                .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
-                        objToPayloadFunction.apply(networkPayload)))
-                .collect(Collectors.toSet());
-
-        if (limit.get() < 0) {
-            wasTruncated.set(true);
-        }
-
-        return filteredResults;
-    }
-
     /**
      * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
      */
@@ -343,6 +313,35 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                             serviceMap.size(), service.getClass().getSimpleName());
                 });
         return map;
+    }
+
+    /**
+     * Generic function that can be used to filter a Map<ByteArray, ProtectedStorageEntry || PersistableNetworkPayload>
+     * by a given set of keys and peer capabilities.
+     */
+    static private <T extends NetworkPayload> Set<T> filterKnownHashes(
+            Map<ByteArray, T> mapToFilter,
+            Function<T, ? extends NetworkPayload> objToPayloadFunction,
+            Set<ByteArray> knownHashes,
+            Capabilities peerCapabilities,
+            int maxEntries,
+            AtomicBoolean wasTruncated) {
+
+        AtomicInteger limit = new AtomicInteger(maxEntries);
+
+        Set<T> filteredResults = mapToFilter.entrySet().stream()
+                .filter(e -> !knownHashes.contains(e.getKey()))
+                .filter(e -> limit.decrementAndGet() >= 0)
+                .map(Map.Entry::getValue)
+                .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
+                        objToPayloadFunction.apply(networkPayload)))
+                .collect(Collectors.toSet());
+
+        if (limit.get() < 0) {
+            wasTruncated.set(true);
+        }
+
+        return filteredResults;
     }
 
     private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
