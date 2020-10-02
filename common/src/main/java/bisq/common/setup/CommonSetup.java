@@ -54,12 +54,15 @@ public class CommonSetup {
         Version.printVersion();
         maybePrintPathOfCodeSource();
         Profiler.printSystemLoad();
-        UserThread.runPeriodically(Profiler::printSystemLoad, 10, TimeUnit.MINUTES);
 
         setSystemProperties();
         setupSigIntHandlers(gracefulShutDownHandler);
 
         DevEnv.setup(config);
+    }
+
+    public static void printSystemLoadPeriodically(int delayMin) {
+        UserThread.runPeriodically(Profiler::printSystemLoad, delayMin, TimeUnit.MINUTES);
     }
 
     public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {

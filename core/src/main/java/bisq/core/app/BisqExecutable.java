@@ -98,7 +98,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         CommonSetup.setup(config, this);
         CoreSetup.setup(config);
 
-        configUserThread();
         addCapabilities();
 
         // If application is JavaFX application we need to wait until it is initialized
@@ -121,10 +120,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     // Headless versions can call inside launchApplication the onApplicationLaunched() manually
     protected void onApplicationLaunched() {
+        configUserThread();
+        CommonSetup.printSystemLoadPeriodically(10);
         // As the handler method might be overwritten by subclasses and they use the application as handler
         // we need to setup the handler after the application is created.
         CommonSetup.setupUncaughtExceptionHandler(this);
-
         setupGuice();
         setupAvoidStandbyMode();
         startApplication();
