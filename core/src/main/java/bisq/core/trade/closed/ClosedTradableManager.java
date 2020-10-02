@@ -87,12 +87,12 @@ public class ClosedTradableManager implements PersistedDataHost {
         return offer.isMyOffer(keyRing);
     }
 
-    public ObservableList<Tradable> getClosedTradables() {
+    public ObservableList<Tradable> getObservableList() {
         return closedTradables.getObservableList();
     }
 
     public List<Trade> getClosedTrades() {
-        return ImmutableList.copyOf(getClosedTradables().stream()
+        return ImmutableList.copyOf(getObservableList().stream()
                 .filter(e -> e instanceof Trade)
                 .map(e -> (Trade) e)
                 .collect(Collectors.toList()));

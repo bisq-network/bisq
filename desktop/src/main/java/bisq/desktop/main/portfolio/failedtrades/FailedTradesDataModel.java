@@ -52,12 +52,12 @@ class FailedTradesDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         applyList();
-        failedTradesManager.getFailedTrades().addListener(tradesListChangeListener);
+        failedTradesManager.getObservableList().addListener(tradesListChangeListener);
     }
 
     @Override
     protected void deactivate() {
-        failedTradesManager.getFailedTrades().removeListener(tradesListChangeListener);
+        failedTradesManager.getObservableList().removeListener(tradesListChangeListener);
     }
 
     public ObservableList<FailedTradesListItem> getList() {
@@ -71,7 +71,7 @@ class FailedTradesDataModel extends ActivatableDataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(failedTradesManager.getFailedTrades().stream().map(FailedTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(failedTradesManager.getObservableList().stream().map(FailedTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));

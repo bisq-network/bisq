@@ -374,8 +374,8 @@ public class XmrTxProofService implements AssetTxProofService {
         // We need to prevent that a user tries to scam by reusing a txKey and txHash of a previous XMR trade with
         // the same user (same address) and same amount. We check only for the txKey as a same txHash but different
         // txKey is not possible to get a valid result at proof.
-        Stream<Trade> failedAndOpenTrades = Stream.concat(activeTrades.stream(), failedTradesManager.getFailedTrades().stream());
-        Stream<Trade> closedTrades = closedTradableManager.getClosedTradables().stream()
+        Stream<Trade> failedAndOpenTrades = Stream.concat(activeTrades.stream(), failedTradesManager.getObservableList().stream());
+        Stream<Trade> closedTrades = closedTradableManager.getObservableList().stream()
                 .filter(tradable -> tradable instanceof Trade)
                 .map(tradable -> (Trade) tradable);
         Stream<Trade> allTrades = Stream.concat(failedAndOpenTrades, closedTrades);
