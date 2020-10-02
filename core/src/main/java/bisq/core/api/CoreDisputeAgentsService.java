@@ -99,7 +99,7 @@ class CoreDisputeAgentsService {
                     ecKey = refundAgentManager.getRegistrationKey(registrationKey);
                     signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
                     registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
-                    break;
+                    return;
             }
         } else {
             throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentTypeString);
