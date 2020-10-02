@@ -188,7 +188,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
     }
 
     private void pruneStore(PersistableNetworkPayloadStore historicalStore, String version) {
-        int preLive = getMapOfLiveData().keySet().size();
+        int preLive = getMapOfLiveData().size();
         getMapOfLiveData().keySet().removeAll(historicalStore.getMap().keySet());
         int postLive = getMapOfLiveData().size();
         if (preLive > postLive) {
