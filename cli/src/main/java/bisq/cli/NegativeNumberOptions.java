@@ -35,14 +35,10 @@ class NegativeNumberOptions {
     String[] removeNegativeNumberOptions(String[] args) {
         // Cache any negative number params that will be rejected by the parser.
         // This should be called before command line parsing.
-        for (int i = 0; i < args.length; i++) {
+        for (int i = 1; i < args.length; i++) {
+            // Start at i=1;  args[0] is the method name.
             if (isNegativeNumber.test(args[i])) {
                 String param = args[i];
-                // Copy the negative number found in args[i] to map(i-1) because
-                // args contains the method name, but the cloned map only contains
-                // the method's arguments:
-                //    args[0] = api method name
-                //    negativeNumberParams.get(0) = 1st parameter of api method
                 negativeNumberParams.put(i - 1, new BigDecimal(param).toString());
                 // Substitute a zero placeholder at the index containing the
                 // negative number option value.
