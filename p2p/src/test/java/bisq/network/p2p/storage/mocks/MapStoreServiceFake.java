@@ -67,4 +67,8 @@ public class MapStoreServiceFake extends MapStoreService {
     protected void readFromResources(String postFix) {
         // do nothing. This Fake only supports in-memory storage.
     }
+
+    @Override
+    protected void initializePersistenceManager() {
+    }
 }
