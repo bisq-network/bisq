@@ -94,20 +94,22 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             if (persistenceManager.persistenceRequested) {
                 // We don't know from which thread we are called so we map back to user thread when calling persistNow
                 UserThread.execute(() -> {
+                    // We always get our completeHandler called even if exceptions happen. In case a file write fails
+                    // we still call our shutdown and count down routine as the completeHandler is triggered in any case.
                     persistenceManager.persistNow(() ->
-                            writeCompleted(completeHandler, openInstances, persistenceManager));
+                            onWriteCompleted(completeHandler, openInstances, persistenceManager));
                 });
             } else {
-                writeCompleted(completeHandler, openInstances, persistenceManager);
+                onWriteCompleted(completeHandler, openInstances, persistenceManager);
             }
         });
     }
 
-    protected static void writeCompleted(ResultHandler completeHandler,
+    private static void onWriteCompleted(ResultHandler completeHandler,
                                          AtomicInteger openInstances,
                                          PersistenceManager<?> persistenceManager) {
         persistenceManager.shutdown();
-        openInstances.getAndDecrement();
+        openInstances.decrementAndGet();
         if (openInstances.get() == 0) {
             log.info("flushAllDataToDisk completed");
             UserThread.execute(completeHandler::handleResult);
