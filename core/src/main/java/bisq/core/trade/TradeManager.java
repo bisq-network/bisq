@@ -295,7 +295,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             });
         }
 
-        getTradesAsObservableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
+        getObservableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
 
         btcWalletService.getAddressEntriesForAvailableBalanceStream()
@@ -525,7 +525,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     private void updateTradePeriodState() {
-        getTradesAsObservableList().forEach(trade -> {
+        getObservableList().forEach(trade -> {
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
@@ -560,7 +560,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {
-        return getTradesAsObservableList().stream().filter(Trade::isFundsLockedIn);
+        return getObservableList().stream().filter(Trade::isFundsLockedIn);
     }
 
     public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedInFunds() throws TradeTxException {
@@ -637,7 +637,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // Getters, Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Trade> getTradesAsObservableList() {
+    public ObservableList<Trade> getObservableList() {
         return tradableList.getObservableList();
     }
 
@@ -682,6 +682,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // TODO Remove once tradableList is refactored to a final field
     //  (part of the persistence refactor PR)
     private void onTradesChanged() {
-        this.numPendingTrades.set(getTradesAsObservableList().size());
+        this.numPendingTrades.set(getObservableList().size());
     }
 }

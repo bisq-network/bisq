@@ -183,7 +183,7 @@ public class XmrTxProofService implements AssetTxProofService {
         });
 
         // We listen on new trades
-        ObservableList<Trade> tradableList = tradeManager.getTradesAsObservableList();
+        ObservableList<Trade> tradableList = tradeManager.getObservableList();
         tradableList.addListener((ListChangeListener<Trade>) c -> {
             c.next();
             if (c.wasAdded()) {
@@ -242,7 +242,7 @@ public class XmrTxProofService implements AssetTxProofService {
             return;
         }
 
-        if (wasTxKeyReUsed(trade, tradeManager.getTradesAsObservableList())) {
+        if (wasTxKeyReUsed(trade, tradeManager.getObservableList())) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA
                     .details(Res.get("portfolio.pending.autoConf.state.xmr.txKeyReused")));
             tradeManager.requestPersistence();

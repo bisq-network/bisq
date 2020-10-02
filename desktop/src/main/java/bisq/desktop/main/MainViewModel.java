@@ -220,7 +220,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             if (newValue) {
                 tradeManager.applyTradePeriodState();
 
-                tradeManager.getTradesAsObservableList().forEach(trade -> {
+                tradeManager.getObservableList().forEach(trade -> {
                     Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                     String key;
                     switch (trade.getTradePeriodState()) {
