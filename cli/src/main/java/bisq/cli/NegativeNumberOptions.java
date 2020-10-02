@@ -38,8 +38,15 @@ class NegativeNumberOptions {
         for (int i = 0; i < args.length; i++) {
             if (isNegativeNumber.test(args[i])) {
                 String param = args[i];
+                // Copy the negative number found in args[i] to map(i-1) because
+                // args contains the method name, but the cloned map only contains
+                // the method's arguments:
+                //    args[0] = api method name
+                //    negativeNumberParams.get(0) = 1st parameter of api method
                 negativeNumberParams.put(i - 1, new BigDecimal(param).toString());
-                args[i] = "0";  // Substitute a zero so the options parser won't barf.
+                // Substitute a zero placeholder at the index containing the
+                // negative number option value.
+                args[i] = "0";
             }
         }
         return args;
