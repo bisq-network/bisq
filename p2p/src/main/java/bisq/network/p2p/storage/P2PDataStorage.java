@@ -303,11 +303,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     if (service instanceof HistoricalDataStoreService) {
                         var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
                         serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion);
-                        map.putAll(serviceMap);
                     } else {
                         serviceMap = service.getMap();
-                        map.putAll(serviceMap);
                     }
+                    map.putAll(serviceMap);
                     log.info("We added {} entries from {} to be filtered by excluded keys",
                             serviceMap.size(), service.getClass().getSimpleName());
                 });
