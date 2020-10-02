@@ -46,8 +46,8 @@ public class ValidateCreateOfferTest extends AbstractCreateOfferTest {
                 .setPaymentAccountId(paymentAccount.getId())
                 .setDirection("buy")
                 .setCurrencyCode("usd")
-                .setAmount(100000000000L)       // 1.0 BTC
-                .setMinAmount(100000000000L)    // 1.0 BTC
+                .setAmount(100000000000L)
+                .setMinAmount(100000000000L)
                 .setUseMarketBasedPrice(false)
                 .setMarketPriceMargin(0.00)
                 .setPrice("10000.0000")
@@ -55,7 +55,7 @@ public class ValidateCreateOfferTest extends AbstractCreateOfferTest {
                 .build();
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceStubs.offersService.createOffer(req).getOffer());
-        assertEquals("UNKNOWN: An error occurred at task ValidateOffer: Amount is larger than 1.00 BTC",
+        assertEquals("UNKNOWN: Amount is larger than 1.00 BTC",
                 exception.getMessage());
     }
 }

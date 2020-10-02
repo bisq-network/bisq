@@ -65,7 +65,7 @@ public abstract class Task<T extends Model> {
 
     protected void failed(Throwable t) {
         log.error(errorMessage, t);
-        taskHandler.handleErrorMessage(errorMessage);
+        taskHandler.handleErrorMessage(t.getMessage());
     }
 
     protected void failed() {
