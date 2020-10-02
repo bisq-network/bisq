@@ -73,13 +73,13 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
                         return true;
                     }
 
-                    // Otherwise we only add data if the requesters version is older than
+                    // Otherwise we only add data if the requesters version is older then
                     // the version of the particular store.
                     String storeVersion = entry.getKey();
                     boolean newVersion = Version.isNewVersion(storeVersion, requestersVersion);
                     String details = newVersion ?
                             "As our historical store is a newer version we add the data to our result map." :
-                            "As the requester version is not older than our historical store we do not " +
+                            "As the requester version is not older as our historical store we do not " +
                                     "add the data to the result map.";
                     log.info("The requester had version {}. Our historical data store has version {}.\n{}",
                             requestersVersion, storeVersion, details);
@@ -135,9 +135,12 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
             return null;
         }
 
-        PersistableNetworkPayload previous = getMapOfLiveData().put(hash, payload);
+        // We do not return the value from getMapOfLiveData().put as we checked before that it does not contain any value.
+        // So it will be always null. We still keep the return type as we override the method from MapStoreService which
+        // follow the Map.putIfAbsent signature.
+        getMapOfLiveData().put(hash, payload);
         persist();
-        return previous;
+        return null;
     }
 
 
