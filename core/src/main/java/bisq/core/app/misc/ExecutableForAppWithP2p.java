@@ -234,7 +234,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         stopped = true;
         gracefulShutDownHandler.gracefulShutDown(() -> {
             log.info("Shutdown complete");
-            System.exit(BisqExecutable.EXIT_SUCCESS);
+            System.exit(1);
         });
     }
 }
