@@ -126,7 +126,7 @@ public class NotificationCenter {
                 });
             }
             if (change.wasAdded()) {
-                change.getAddedSubList().stream().forEach(trade -> {
+                change.getAddedSubList().forEach(trade -> {
                     String tradeId = trade.getId();
                     if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
                         log.debug("We have already an entry in disputeStateSubscriptionsMap.");
@@ -147,18 +147,17 @@ public class NotificationCenter {
             }
         });
 
-        tradeManager.getTradesAsObservableList().stream()
-                .forEach(trade -> {
-                            String tradeId = trade.getId();
-                            Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
-                                    disputeState -> onDisputeStateChanged(trade, disputeState));
-                            disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
+        tradeManager.getTradesAsObservableList().forEach(trade -> {
+                    String tradeId = trade.getId();
+                    Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
+                            disputeState -> onDisputeStateChanged(trade, disputeState));
+                    disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
 
-                            Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
-                                    phase -> onTradePhaseChanged(trade, phase));
-                            tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
-                        }
-                );
+                    Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
+                            phase -> onTradePhaseChanged(trade, phase));
+                    tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
+                }
+        );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

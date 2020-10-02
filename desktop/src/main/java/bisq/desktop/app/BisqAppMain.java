@@ -27,9 +27,6 @@ import bisq.core.app.BisqExecutable;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
-import bisq.common.proto.persistable.PersistedDataHost;
-
-import com.google.inject.Injector;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -117,9 +114,8 @@ public class BisqAppMain extends BisqExecutable {
     }
 
     @Override
-    protected void setupPersistedDataHosts(Injector injector) {
-        super.setupPersistedDataHosts(injector);
-        PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
+    protected void readAllPersisted(Runnable completeHandler) {
+        super.readAllPersisted(DesktopPersistedDataHost.getPersistedDataHosts(injector), completeHandler);
     }
 
     @Override

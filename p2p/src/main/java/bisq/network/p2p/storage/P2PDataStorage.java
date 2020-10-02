@@ -167,7 +167,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
-        persistenceManager.initialize(sequenceNumberMap, PersistenceManager.Priority.LOW);
+        this.persistenceManager.initialize(sequenceNumberMap, PersistenceManager.Priority.LOW);
     }
 
     @Override

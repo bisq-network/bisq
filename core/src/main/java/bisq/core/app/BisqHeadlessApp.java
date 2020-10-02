@@ -97,7 +97,7 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setQubesOSInfoHandler(() -> log.info("setQubesOSInfoHandler"));
 
         //TODO move to bisqSetup
-        corruptedStorageFileHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
+        corruptedStorageFileHandler.getFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.error("onTakeOfferRequestErrorMessageHandler"));
     }
 

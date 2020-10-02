@@ -118,7 +118,7 @@ public class BtcWalletService extends WalletService {
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
         });
-        addressEntryList.persist();
+        addressEntryList.requestPersistence();
     }
 
     @Override
@@ -129,7 +129,7 @@ public class BtcWalletService extends WalletService {
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
         });
-        addressEntryList.persist();
+        addressEntryList.requestPersistence();
     }
 
     @Override
@@ -700,7 +700,7 @@ public class BtcWalletService extends WalletService {
     }
 
     public void saveAddressEntryList() {
-        addressEntryList.persist();
+        addressEntryList.requestPersistence();
     }
 
     public DeterministicKey getMultiSigKeyPair(String tradeId, byte[] pubKey) {

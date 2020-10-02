@@ -58,6 +58,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -79,7 +80,6 @@ import static java.awt.Desktop.isDesktopSupported;
 
 @Slf4j
 public class Utilities {
-    // TODO check out Jackson lib
     public static String objectToJson(Object object) {
         Gson gson = new GsonBuilder()
                 .setExclusionStrategies(new AnnotationExclusionStrategy())
@@ -90,12 +90,16 @@ public class Utilities {
         return gson.toJson(object);
     }
 
-    public static ListeningExecutorService getSingleThreadExecutor(String name) {
+    public static ExecutorService getSingleThreadExecutor(String name) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
-        return MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
+        return Executors.newSingleThreadExecutor(threadFactory);
+    }
+
+    public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {
+        return MoreExecutors.listeningDecorator(getSingleThreadExecutor(name));
     }
 
     public static ListeningExecutorService getListeningExecutorService(String name,

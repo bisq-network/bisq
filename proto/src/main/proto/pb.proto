@@ -77,7 +77,7 @@ message NetworkEnvelope {
         PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
 
         RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true];
-        TraderSignedWitnessMessage trader_signed_witness_message = 51;
+        TraderSignedWitnessMessage trader_signed_witness_message = 51 [deprecated = true];
     }
 }
 

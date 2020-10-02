@@ -162,7 +162,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
             File dir = new File(configuration.getProperty(DATABASE_DIR));
             String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
             try {
-                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
+                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(dir, new CorePersistenceProtoResolver(null, null), null);
                 TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) persistenceManager.getPersisted(TradeStatistics2Store.class.getSimpleName() + networkPostfix);
                 hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
 

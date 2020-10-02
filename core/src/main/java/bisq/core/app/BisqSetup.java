@@ -122,15 +122,12 @@ public class BisqSetup {
 
     public interface BisqSetupListener {
         default void onInitP2pNetwork() {
-            log.info("onInitP2pNetwork");
         }
 
         default void onInitWallet() {
-            log.info("onInitWallet");
         }
 
         default void onRequestWalletPassword() {
-            log.info("onRequestWalletPassword");
         }
 
         void onSetupComplete();
@@ -502,6 +499,7 @@ public class BisqSetup {
 
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+        log.info("Init P2P network");
         bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
         p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
 
@@ -530,6 +528,7 @@ public class BisqSetup {
     }
 
     private void initWallet() {
+        log.info("Init wallet");
         bisqSetupListeners.forEach(BisqSetupListener::onInitWallet);
         Runnable walletPasswordHandler = () -> {
             log.info("Wallet password required");

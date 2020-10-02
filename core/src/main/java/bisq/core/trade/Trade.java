@@ -64,8 +64,6 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.time.temporal.ChronoUnit;
-
 import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -421,14 +419,6 @@ public abstract class Trade implements Tradable, Model {
     private RefundResultState refundResultState = RefundResultState.UNDEFINED_REFUND_RESULT;
     transient final private ObjectProperty<RefundResultState> refundResultStateProperty = new SimpleObjectProperty<>(refundResultState);
 
-    // Added in v1.2.6
-    @Getter
-    @Setter
-    private long lastRefreshRequestDate;
-    @Getter
-    private final long refreshInterval;
-    private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
-
     // Added at v1.3.8
     // We use that for the XMR txKey but want to keep it generic to be flexible for other payment methods or assets.
     @Getter
@@ -475,8 +465,6 @@ public abstract class Trade implements Tradable, Model {
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
         takeOfferDate = new Date().getTime();
-        lastRefreshRequestDate = takeOfferDate;
-        refreshInterval = Math.min(offer.getPaymentMethod().getMaxTradePeriod() / 5, MAX_REFRESH_INTERVAL);
     }
 
 
@@ -532,8 +520,7 @@ public abstract class Trade implements Tradable, Model {
                 .addAllChatMessage(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()))
-                .setLockTime(lockTime)
-                .setLastRefreshRequestDate(lastRefreshRequestDate);
+                .setLockTime(lockTime);
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -590,7 +577,6 @@ public abstract class Trade implements Tradable, Model {
         trade.setRefundResultState(RefundResultState.fromProto(proto.getRefundResultState()));
         trade.setDelayedPayoutTxBytes(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxBytes()));
         trade.setLockTime(proto.getLockTime());
-        trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
 
         AssetTxProofResult persistedAssetTxProofResult = ProtoUtil.enumFromProto(AssetTxProofResult.class, proto.getAssetTxProofResult());
@@ -733,6 +719,7 @@ public abstract class Trade implements Tradable, Model {
 
     public void setState(State state) {
         if (isInitialized) {
+            // We don't want to log at startup the setState calls from all persisted trades
             log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         }
         if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
@@ -1149,7 +1136,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundAgentPubKeyRing=" + refundAgentPubKeyRing +
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
-                ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
                 "\n}";
     }
 }

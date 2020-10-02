@@ -93,13 +93,14 @@ public class DaoStateSnapshotService {
             // At trigger event we store the latest snapshotCandidate to disc
             long ts = System.currentTimeMillis();
             if (daoStateSnapshotCandidate != null) {
-                // We clone because storage is in a threaded context and we set the snapshotCandidate to our current
-                // state in the next step
-                DaoState clonedDaoState = daoStateService.getClone(daoStateSnapshotCandidate);
-                LinkedList<DaoStateHash> clonedDaoStateHashChain = new LinkedList<>(daoStateHashChainSnapshotCandidate);
-                daoStateStorageService.persist(clonedDaoState, clonedDaoStateHashChain);
-
-                log.debug("Saved snapshotCandidate with height {} to Disc at height {} took {} ms",
+                // Serialisation happens on the userThread so we do not need to clone the data. Write to disk happens
+                // in a thread but does not interfere with out objects as they got already serialized when passed to the
+                // write thread.
+                daoStateStorageService.persistNow(daoStateSnapshotCandidate,
+                        daoStateHashChainSnapshotCandidate,
+                        () -> {
+                        });
+                log.info("Serializing snapshotCandidate for writing to Disc with height {} at height {} took {} ms",
                         daoStateSnapshotCandidate.getChainHeight(), chainHeight, System.currentTimeMillis() - ts);
             }
 

@@ -82,7 +82,6 @@ public class TaskRunner<T extends Model> {
     }
 
     void handleComplete() {
-        sharedModel.persist();
         next();
     }
 

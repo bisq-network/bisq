@@ -84,7 +84,7 @@ public class UpdateRevolutAccountWindow extends Overlay<UpdateRevolutAccountWind
             String userName = userNameInputTextField.getText();
             if (revolutValidator.validate(userName).isValid) {
                 revolutAccount.setUserName(userName);
-                user.persist();
+                user.requestPersistence();
                 closeHandlerOptional.ifPresent(Runnable::run);
                 hide();
             }

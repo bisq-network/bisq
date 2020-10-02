@@ -17,14 +17,13 @@
 
 package bisq.core.app;
 
-import bisq.common.config.BaseCurrencyNetwork;
-
 import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.UserThread;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
@@ -86,7 +85,7 @@ public class SetupUtils {
             p2PDataStorage.readFromResources(postFix);
             log.info("readFromResources took {} ms", (new Date().getTime() - ts));
             UserThread.execute(() -> result.set(true));
-        }, "readFromResourcesThread").start();
+        }, "BisqSetup-readFromResources").start();
         return result;
     }
 }

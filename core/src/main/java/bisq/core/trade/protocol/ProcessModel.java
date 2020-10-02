@@ -249,11 +249,6 @@ public class ProcessModel implements Model, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void persist() {
-        log.warn("persist is not implemented in that class");
-    }
-
-    @Override
     public void onComplete() {
     }
 

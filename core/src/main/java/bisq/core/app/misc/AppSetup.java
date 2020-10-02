@@ -17,6 +17,7 @@
 
 package bisq.core.app.misc;
 
+import bisq.core.app.BisqExecutable;
 import bisq.core.app.SetupUtils;
 
 import bisq.network.crypto.EncryptionService;
@@ -55,7 +56,7 @@ public abstract class AppSetup {
         }, throwable -> {
             log.error(throwable.getMessage());
             throwable.printStackTrace();
-            System.exit(1);
+            System.exit(BisqExecutable.EXIT_FAILURE);
         });
     }
 

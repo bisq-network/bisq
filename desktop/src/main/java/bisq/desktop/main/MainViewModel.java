@@ -401,7 +401,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             }
         });
 
-        corruptedStorageFileHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
+        corruptedStorageFileHandler.getFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()
                 .show());

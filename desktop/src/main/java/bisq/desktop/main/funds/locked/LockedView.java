@@ -258,7 +258,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             AddressEntry addressEntry = item.getAddressEntry();
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon(Res.get("funds.locked.locked", addressEntry.getShortOfferId()),
+                                field = new HyperlinkWithIcon(Res.get("funds.locked.locked", item.getTrade().getShortId()),
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));

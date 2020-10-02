@@ -135,7 +135,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
-    private Set<WithdrawalListItem> selectedItems = new HashSet<>();
+    private final Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses = new HashSet<>();
     private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;

@@ -30,7 +30,7 @@ import lombok.Getter;
 public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope {
 
     @Getter
-    private final List<T> list = createList();
+    public final List<T> list = createList();
 
     protected List<T> createList() {
         return new ArrayList<>();
