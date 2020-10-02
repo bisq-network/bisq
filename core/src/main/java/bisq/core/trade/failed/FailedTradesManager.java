@@ -70,7 +70,7 @@ public class FailedTradesManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        TradableList<Trade> persisted = persistenceManager.getPersisted("FailedTrades");
+        TradableList<Trade> persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             failedTrades.setAll(persisted.getList());
         }

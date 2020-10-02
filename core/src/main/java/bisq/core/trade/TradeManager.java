@@ -192,7 +192,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     @Override
     public void readPersisted() {
-        TradableList<Trade> persisted = persistenceManager.getPersisted("PendingTrades");
+        TradableList<Trade> persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             tradableList.setAll(persisted.getList());
         }
@@ -274,6 +274,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             if (takeOfferRequestErrorMessageHandler != null)
                 takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
         });
+
+        requestPersistence();
     }
 
 
@@ -314,10 +316,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         }
     }
 
-    public void requestPersistence() {
-        persistenceManager.requestPersistence();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Init pending trade
@@ -336,6 +334,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
         tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
         trade.initialize(processModelServiceProvider);
+    }
+
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
 
@@ -666,13 +668,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     private void removeTrade(Trade trade) {
-        tradableList.remove(trade);
-        requestPersistence();
+        if (tradableList.remove(trade)) {
+            requestPersistence();
+        }
     }
 
     private void addTrade(Trade trade) {
-        if (!tradableList.contains(trade)) {
-            tradableList.add(trade);
+        if (tradableList.add(trade)) {
             requestPersistence();
         }
     }

@@ -61,7 +61,7 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        TradableList<Tradable> persisted = persistenceManager.getPersisted("ClosedTrades");
+        TradableList<Tradable> persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             closedTradables.setAll(persisted.getList());
         }
