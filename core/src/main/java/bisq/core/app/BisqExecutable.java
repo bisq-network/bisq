@@ -171,7 +171,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         hosts.forEach(e -> {
             new Thread(() -> {
                 e.readPersisted();
-                remaining.getAndDecrement();
+                remaining.decrementAndGet();
                 if (remaining.get() == 0) {
                     UserThread.execute(completeHandler);
                 }
