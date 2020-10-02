@@ -21,9 +21,9 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistablePayload;
-import bisq.common.storage.Storage;
 
 import java.io.File;
 
@@ -45,7 +45,7 @@ public class MapStoreServiceFake extends MapStoreService {
     private final Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map;
 
     public MapStoreServiceFake() {
-        super(mock(File.class), mock(Storage.class));
+        super(mock(File.class), mock(PersistenceManager.class));
         this.map = new HashMap<>();
     }
 
