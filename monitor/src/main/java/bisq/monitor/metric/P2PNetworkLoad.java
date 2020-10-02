@@ -130,7 +130,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
-                        networkProtoResolver, storageDir, corruptedStorageFileHandler);
+                        networkProtoResolver);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(config);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new ClockWatcher(),
                         maxConnections, new PersistenceManager<>(storageDir, persistenceProtoResolver, corruptedStorageFileHandler));
