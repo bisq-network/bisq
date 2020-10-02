@@ -26,7 +26,6 @@ import bisq.common.proto.ProtoUtil;
 
 import com.google.protobuf.Message;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +62,7 @@ public final class RefundDisputeList extends DisputeList<Dispute> {
         forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.REFUND), "Support type has to be REFUND"));
 
         return protobuf.PersistableEnvelope.newBuilder().setRefundDisputeList(protobuf.RefundDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(getList()), protobuf.Dispute.class))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(getList(), protobuf.Dispute.class))).build();
     }
 
     public static RefundDisputeList fromProto(protobuf.RefundDisputeList proto,

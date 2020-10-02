@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqHeadlessApp implements HeadlessApp {
-    private static final long LOG_MEMORY_PERIOD_MIN = 10;
     @Getter
     private static Runnable shutDownHandler;
 
@@ -96,7 +95,6 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setOsxKeyLoggerWarningHandler(() -> log.info("setOsxKeyLoggerWarningHandler"));
         bisqSetup.setQubesOSInfoHandler(() -> log.info("setQubesOSInfoHandler"));
 
-        //TODO move to bisqSetup
         corruptedStorageFileHandler.getFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.error("onTakeOfferRequestErrorMessageHandler"));
     }

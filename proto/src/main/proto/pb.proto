@@ -1401,7 +1401,7 @@ message Trade {
     NodeAddress refund_agent_node_address = 33;
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;
-    int64 last_refresh_request_date = 36;
+    int64 last_refresh_request_date = 36 [deprecated = true];
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
 }

@@ -54,8 +54,8 @@ public class ClosedTradableManager implements PersistedDataHost {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
-
         this.persistenceManager = persistenceManager;
+
         this.persistenceManager.initialize(closedTradables, "ClosedTrades");
     }
 
@@ -66,9 +66,7 @@ public class ClosedTradableManager implements PersistedDataHost {
             closedTradables.setAll(persisted.getList());
         }
 
-        closedTradables.forEach(tradable -> {
-            tradable.getOffer().setPriceFeedService(priceFeedService);
-        });
+        closedTradables.forEach(tradable -> tradable.getOffer().setPriceFeedService(priceFeedService));
 
         dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(closedTradables, "delayed_payout_txs_closed");
     }

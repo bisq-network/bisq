@@ -112,7 +112,7 @@ public class NotificationCenter {
         tradeManager.getTradesAsObservableList().addListener((ListChangeListener<Trade>) change -> {
             change.next();
             if (change.wasRemoved()) {
-                change.getRemoved().stream().forEach(trade -> {
+                change.getRemoved().forEach(trade -> {
                     String tradeId = trade.getId();
                     if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
                         disputeStateSubscriptionsMap.get(tradeId).unsubscribe();

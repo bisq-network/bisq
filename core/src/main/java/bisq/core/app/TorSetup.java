@@ -39,7 +39,7 @@ import static bisq.common.util.Preconditions.checkDir;
 @Slf4j
 @Singleton
 public class TorSetup {
-    private File torDir;
+    private final File torDir;
 
     @Inject
     public TorSetup(@Named(Config.TOR_DIR) File torDir) {

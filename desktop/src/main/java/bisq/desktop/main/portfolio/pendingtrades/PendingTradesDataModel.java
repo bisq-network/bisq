@@ -122,7 +122,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private ChangeListener<Trade.State> tradeStateChangeListener;
     private Trade selectedTrade;
     @Getter
-    private PubKeyRing pubKeyRing;
+    private final PubKeyRing pubKeyRing;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization

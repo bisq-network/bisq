@@ -168,7 +168,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
     protected AutoTooltipButton sigCheckButton, reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
-    private Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
+    private final Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
     @Nullable
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
     protected Label alertIconLabel;

@@ -26,7 +26,6 @@ import bisq.common.proto.ProtoUtil;
 
 import com.google.protobuf.Message;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -64,7 +63,7 @@ public final class ArbitrationDisputeList extends DisputeList<Dispute> {
         forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION"));
 
         return protobuf.PersistableEnvelope.newBuilder().setArbitrationDisputeList(protobuf.ArbitrationDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(getList()), protobuf.Dispute.class))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(getList(), protobuf.Dispute.class))).build();
     }
 
     public static ArbitrationDisputeList fromProto(protobuf.ArbitrationDisputeList proto,

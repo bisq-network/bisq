@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TaskRunner<T extends Model> {
-    private final Queue<Class<? extends Task>> tasks = new LinkedBlockingQueue<>();
+    private final Queue<Class<? extends Task<T>>> tasks = new LinkedBlockingQueue<>();
     private final T sharedModel;
     private final Class<T> sharedModelClass;
     private final ResultHandler resultHandler;
@@ -36,7 +36,7 @@ public class TaskRunner<T extends Model> {
     private boolean failed = false;
     private boolean isCanceled;
 
-    private Class<? extends Task> currentTask;
+    private Class<? extends Task<T>> currentTask;
 
 
     public TaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

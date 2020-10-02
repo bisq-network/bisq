@@ -898,6 +898,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             tradeCurrenciesAsObservable.add(change.getAddedSubList().get(0));
         else if (change.wasRemoved() && change.getRemovedSize() == 1 && initialReadDone)
             tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
+
+        requestPersistence();
     }
 
     private boolean blockExplorerExists(ArrayList<BlockChainExplorer> explorers,

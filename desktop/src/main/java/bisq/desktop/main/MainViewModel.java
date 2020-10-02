@@ -130,14 +130,14 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final CorruptedStorageFileHandler corruptedStorageFileHandler;
 
     @Getter
-    private BooleanProperty showAppScreen = new SimpleBooleanProperty();
-    private DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
+    private final BooleanProperty showAppScreen = new SimpleBooleanProperty();
+    private final DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> tradesAndUIReady;
-    private Queue<Overlay<?>> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
+    private final Queue<Overlay<?>> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

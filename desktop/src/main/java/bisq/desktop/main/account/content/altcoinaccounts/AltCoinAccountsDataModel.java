@@ -111,7 +111,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
             else
                 preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
         } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
-            tradeCurrencies.stream().forEach(tradeCurrency -> {
+            tradeCurrencies.forEach(tradeCurrency -> {
                 if (tradeCurrency instanceof FiatCurrency)
                     preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
                 else

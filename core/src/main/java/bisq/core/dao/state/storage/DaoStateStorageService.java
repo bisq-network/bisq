@@ -43,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
+    private static final String FILE_NAME = "DaoStateStore";
+
     private final DaoState daoState;
     private final DaoStateMonitoringService daoStateMonitoringService;
 
@@ -71,7 +73,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     public String getFileName() {
-        return "DaoStateStore";
+        return FILE_NAME;
     }
 
     public void persistNow(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, Runnable completeHandler) {
