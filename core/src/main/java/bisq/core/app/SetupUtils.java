@@ -17,63 +17,21 @@
 
 package bisq.core.app;
 
-import bisq.network.crypto.DecryptedDataTuple;
-import bisq.network.crypto.EncryptionService;
-import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.UserThread;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
-import bisq.common.crypto.CryptoException;
-import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.SealedAndSigned;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.ProtobufferException;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.Date;
-import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SetupUtils {
-
-    public static void checkCryptoSetup(KeyRing keyRing, EncryptionService encryptionService,
-                                        ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
-        // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
-        // and if the unlimited Strength for cryptographic keys is set.
-        // If users compile themselves they might miss that step and then would get an exception in the trade.
-        // To avoid that we add a sample encryption and signing here at startup to see if it doesn't cause an exception.
-        // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
-        Thread checkCryptoThread = new Thread(() -> {
-            try {
-                // just use any simple dummy msg
-                Ping payload = new Ping(1, 1);
-                SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
-                        keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned,
-                        keyRing.getEncryptionKeyPair().getPrivate());
-                if (tuple.getNetworkEnvelope() instanceof Ping &&
-                        ((Ping) tuple.getNetworkEnvelope()).getNonce() == payload.getNonce() &&
-                        ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
-                    log.debug("Crypto test succeeded");
-
-                    UserThread.execute(resultHandler::handleResult);
-                } else {
-                    errorHandler.accept(new CryptoException("Payload not correct after decryption"));
-                }
-            } catch (CryptoException | ProtobufferException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                errorHandler.accept(e);
-            }
-        }, "checkCryptoThread");
-        checkCryptoThread.start();
-    }
 
     public static BooleanProperty readFromResources(P2PDataStorage p2PDataStorage, Config config) {
         BooleanProperty result = new SimpleBooleanProperty();

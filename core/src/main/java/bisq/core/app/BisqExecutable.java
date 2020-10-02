@@ -133,7 +133,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         setupGuice();
         setupAvoidStandbyMode();
         readAllPersisted(this::startApplication);
-        startApplication();
     }
 
 
