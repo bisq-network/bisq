@@ -21,8 +21,6 @@ import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 
 import java.util.List;
 
@@ -47,17 +45,5 @@ public abstract class DisputeList<T extends PersistablePayload> extends Persista
 
     protected DisputeList(List<T> list) {
         super(list);
-    }
-
-    public void addListener(ListChangeListener<T> listener) {
-        ((ObservableList<T>) getList()).addListener(listener);
-    }
-
-    public void removeListener(ListChangeListener<T> listener) {
-        ((ObservableList<T>) getList()).removeListener(listener);
-    }
-
-    public ObservableList<T> getObservableList() {
-        return (ObservableList<T>) getList();
     }
 }

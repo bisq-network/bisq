@@ -28,7 +28,6 @@ import bisq.common.proto.persistable.PersistableList;
 import com.google.protobuf.Message;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,10 +46,6 @@ public final class TradableList<T extends Tradable> extends PersistableList<T> {
 
     protected List<T> createList() {
         return FXCollections.observableArrayList();
-    }
-
-    public ObservableList<T> getObservableList() {
-        return (ObservableList<T>) getList();
     }
 
 

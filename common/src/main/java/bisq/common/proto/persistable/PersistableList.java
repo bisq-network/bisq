@@ -17,6 +17,9 @@
 
 package bisq.common.proto.persistable;
 
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,6 +44,18 @@ public abstract class PersistableList<T extends PersistablePayload> implements P
 
     public PersistableList(List<T> list) {
         setAll(list);
+    }
+
+    public void addListener(ListChangeListener<T> listener) {
+        ((ObservableList<T>) getList()).addListener(listener);
+    }
+
+    public void removeListener(ListChangeListener<T> listener) {
+        ((ObservableList<T>) getList()).removeListener(listener);
+    }
+
+    public ObservableList<T> getObservableList() {
+        return (ObservableList<T>) getList();
     }
 
     public void setAll(Collection<T> collection) {
