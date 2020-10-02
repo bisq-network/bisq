@@ -20,8 +20,6 @@ package bisq.common.taskrunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.lang.String.format;
-
 public abstract class Task<T extends Model> {
     private static final Logger log = LoggerFactory.getLogger(Task.class);
 
@@ -29,7 +27,7 @@ public abstract class Task<T extends Model> {
 
     private final TaskRunner taskHandler;
     protected final T model;
-    protected String errorMessage = "An error occurred at task " + getClass().getSimpleName();
+    protected String errorMessage = "An error occurred at task: " + getClass().getSimpleName();
     protected boolean completed;
 
     public Task(TaskRunner taskHandler, T model) {
@@ -67,7 +65,7 @@ public abstract class Task<T extends Model> {
 
     protected void failed(Throwable t) {
         log.error(errorMessage, t);
-        taskHandler.handleErrorMessage(format("%s: %s", errorMessage, t.getMessage()));
+        taskHandler.handleErrorMessage(errorMessage);
     }
 
     protected void failed() {
