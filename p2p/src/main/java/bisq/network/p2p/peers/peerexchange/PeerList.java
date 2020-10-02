@@ -22,6 +22,7 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import com.google.protobuf.Message;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,10 +32,13 @@ import lombok.Getter;
 @EqualsAndHashCode
 public class PeerList implements PersistableEnvelope {
     @Getter
-    private final List<Peer> list;
+    private final List<Peer> list = new ArrayList<>();
+
+    public PeerList() {
+    }
 
     public PeerList(List<Peer> list) {
-        this.list = list;
+        setAll(list);
     }
 
     public int size() {
@@ -53,5 +57,10 @@ public class PeerList implements PersistableEnvelope {
         return new PeerList(new ArrayList<>(proto.getPeerList().stream()
                 .map(Peer::fromProto)
                 .collect(Collectors.toList())));
+    }
+
+    public void setAll(Collection<Peer> collection) {
+        this.list.clear();
+        this.list.addAll(collection);
     }
 }

@@ -368,7 +368,7 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     transient final private Coin takerFee;
     @Getter
-    final transient private BtcWalletService btcWalletService;
+    transient final private BtcWalletService btcWalletService;
 
     transient final private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
     transient final private ObjectProperty<Phase> statePhaseProperty = new SimpleObjectProperty<>(state.phase);
