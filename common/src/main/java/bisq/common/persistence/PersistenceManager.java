@@ -343,7 +343,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             log.info("Writing the serialized {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
             persistenceRequested = false;
             if (completeHandler != null) {
-                completeHandler.run();
+                UserThread.execute(completeHandler);
             }
         }
     }
