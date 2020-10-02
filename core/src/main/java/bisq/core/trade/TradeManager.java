@@ -56,9 +56,9 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -123,9 +123,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final ProcessModelServiceProvider processModelServiceProvider;
     private final ClockWatcher clockWatcher;
 
-    private final Storage<TradableList<Trade>> tradableListStorage;
     private final Map<String, TradeProtocol> tradeProtocolByTradeId = new HashMap<>();
-    private TradableList<Trade> tradableList;
+    private final PersistenceManager<TradableList<Trade>> persistenceManager;
+    private final TradableList<Trade> tradableList = new TradableList<>();
     @Getter
     private final BooleanProperty persistedTradesInitialized = new SimpleBooleanProperty();
     @Setter
@@ -157,7 +157,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         MediatorManager mediatorManager,
                         ProcessModelServiceProvider processModelServiceProvider,
                         ClockWatcher clockWatcher,
-                        Storage<TradableList<Trade>> storage,
+                        PersistenceManager<TradableList<Trade>> persistenceManager,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         this.user = user;
@@ -176,8 +176,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.clockWatcher = clockWatcher;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
+        this.persistenceManager = persistenceManager;
 
-        tradableListStorage = storage;
+        this.persistenceManager.initialize(tradableList, "PendingTrades", PersistenceManager.Priority.HIGH);
 
         p2PService.addDecryptedDirectMessageListener(this);
 
@@ -191,9 +192,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     @Override
     public void readPersisted() {
-        tradableList = new TradableList<>(tradableListStorage, "PendingTrades");
+        TradableList<Trade> persisted = persistenceManager.getPersisted("PendingTrades");
+        if (persisted != null) {
+            tradableList.setAll(persisted.getList());
+        }
+
         tradableList.forEach(trade -> {
-            trade.setTransientFields(tradableListStorage, btcWalletService);
             Offer offer = trade.getOffer();
             if (offer != null)
                 offer.setPriceFeedService(priceFeedService);
@@ -248,7 +252,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     openOffer.getArbitratorNodeAddress(),
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
-                    tradableListStorage,
                     btcWalletService,
                     getNewProcessModel(offer));
         } else {
@@ -259,7 +262,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     openOffer.getArbitratorNodeAddress(),
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
-                    tradableListStorage,
                     btcWalletService,
                     getNewProcessModel(offer));
         }
@@ -302,10 +304,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 });
     }
 
-    public void persistTrades() {
-        tradableList.persist();
-    }
-
     public TradeProtocol getTradeProtocol(Trade trade) {
         if (tradeProtocolByTradeId.containsKey(trade.getId())) {
             return tradeProtocolByTradeId.get(trade.getId());
@@ -314,6 +312,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             tradeProtocolByTradeId.put(trade.getId(), tradeProtocol);
             return tradeProtocol;
         }
+    }
+
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
 
@@ -386,7 +388,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     model.getSelectedArbitrator(),
                                     model.getSelectedMediator(),
                                     model.getSelectedRefundAgent(),
-                                    tradableListStorage,
                                     btcWalletService,
                                     getNewProcessModel(offer));
                         } else {
@@ -400,7 +401,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     model.getSelectedArbitrator(),
                                     model.getSelectedMediator(),
                                     model.getSelectedRefundAgent(),
-                                    tradableListStorage,
                                     btcWalletService,
                                     getNewProcessModel(offer));
                         }
@@ -419,6 +419,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     }
                 },
                 errorMessageHandler);
+
+        requestPersistence();
     }
 
     private ProcessModel getNewProcessModel(Offer offer) {
@@ -454,6 +456,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     onTradeCompleted(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     getTradeProtocol(trade).onWithdrawCompleted();
+                    requestPersistence();
                     resultHandler.handleResult();
                 }
             }
@@ -481,6 +484,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         // TODO The address entry should have been removed already. Check and if its the case remove that.
         btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
+        requestPersistence();
     }
 
 
@@ -495,6 +499,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             trade.setDisputeState(disputeState);
             onTradeCompleted(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+            requestPersistence();
         }
     }
 
@@ -631,7 +636,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ObservableList<Trade> getTradesAsObservableList() {
-        return tradableList.getList();
+        return tradableList.getObservableList();
     }
 
     public BooleanProperty persistedTradesInitializedProperty() {
@@ -662,11 +667,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     private void removeTrade(Trade trade) {
         tradableList.remove(trade);
+        requestPersistence();
     }
 
     private void addTrade(Trade trade) {
         if (!tradableList.contains(trade)) {
             tradableList.add(trade);
+            requestPersistence();
         }
     }
 
