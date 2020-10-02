@@ -92,9 +92,10 @@ message BundleOfEnvelopes {
 // get data
 
 message PreliminaryGetDataRequest {
-    int32 nonce = 21;
+    int32 nonce = 21; // This was set to 21 instead of 1 in some old commit so we cannot change it.
     repeated bytes excluded_keys = 2;
     repeated int32 supported_capabilities = 3;
+    string version = 4;
 }
 
 message GetDataResponse {
@@ -109,6 +110,7 @@ message GetUpdatedDataRequest {
     NodeAddress sender_node_address = 1;
     int32 nonce = 2;
     repeated bytes excluded_keys = 3;
+    string version = 4;
 }
 
 // peers

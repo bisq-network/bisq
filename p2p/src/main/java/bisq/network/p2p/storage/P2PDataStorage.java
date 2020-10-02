@@ -47,6 +47,8 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
+import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
+import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
@@ -195,14 +197,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * Returns a PreliminaryGetDataRequest that can be sent to a peer node to request missing Payload data.
      */
     public PreliminaryGetDataRequest buildPreliminaryGetDataRequest(int nonce) {
-        return new PreliminaryGetDataRequest(nonce, this.getKnownPayloadHashes());
+        return new PreliminaryGetDataRequest(nonce, getKnownPayloadHashes());
     }
 
     /**
      * Returns a GetUpdatedDataRequest that can be sent to a peer node to request missing Payload data.
      */
     public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
-        return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
+        return new GetUpdatedDataRequest(senderNodeAddress, nonce, getKnownPayloadHashes());
     }
 
     /**
@@ -213,46 +215,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Set<byte[]> excludedKeys = this.appendOnlyDataStoreService.getMap().keySet().stream()
-                .map(e -> e.bytes)
-                .collect(Collectors.toSet());
 
-        Set<byte[]> excludedKeysFromPersistedEntryMap = this.map.keySet()
-                .stream()
-                .map(e -> e.bytes)
-                .collect(Collectors.toSet());
+        Set<byte[]> excludedKeys = getKeysAsByteSet(getMapForDataRequest());
+        Set<byte[]> excludedKeysFromPersistedEntryMap = getKeysAsByteSet(map);
 
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
-
         return excludedKeys;
-    }
-
-    /**
-     * Generic function that can be used to filter a Map<ByteArray, ProtectedStorageEntry || PersistableNetworkPayload>
-     * by a given set of keys and peer capabilities.
-     */
-    static private <T extends NetworkPayload> Set<T> filterKnownHashes(
-            Map<ByteArray, T> toFilter,
-            Function<T, ? extends NetworkPayload> objToPayload,
-            Set<ByteArray> knownHashes,
-            Capabilities peerCapabilities,
-            int maxEntries,
-            AtomicBoolean outTruncated) {
-
-        AtomicInteger limit = new AtomicInteger(maxEntries);
-
-        Set<T> filteredResults = toFilter.entrySet().stream()
-                .filter(e -> !knownHashes.contains(e.getKey()))
-                .filter(e -> limit.decrementAndGet() >= 0)
-                .map(Map.Entry::getValue)
-                .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
-                        objToPayload.apply(networkPayload)))
-                .collect(Collectors.toSet());
-
-        if (limit.get() < 0)
-            outTruncated.set(true);
-
-        return filteredResults;
     }
 
     /**
@@ -261,36 +229,123 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public GetDataResponse buildGetDataResponse(
             GetDataRequest getDataRequest,
             int maxEntriesPerType,
-            AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
-            AtomicBoolean outProtectedStorageEntryOutputTruncated,
+            AtomicBoolean wasPersistableNetworkPayloadsTruncated,
+            AtomicBoolean wasProtectedStorageEntriesTruncated,
             Capabilities peerCapabilities) {
 
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
+        // Pre v 1.4.0 requests do not have set the requesters version field so it is null.
+        // The methods in HistoricalDataStoreService will return all historical data in that case.
+        // mapForDataResponse contains the filtered by version data from HistoricalDataStoreService as well as all other
+        // maps of the remaining appendOnlyDataStoreServices.
+        Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
-                        this.appendOnlyDataStoreService.getMap(),
+                        mapForDataResponse,
                         Function.identity(),
                         excludedKeysAsByteArray,
                         peerCapabilities,
                         maxEntriesPerType,
-                        outPersistableNetworkPayloadOutputTruncated);
+                        wasPersistableNetworkPayloadsTruncated);
+        log.info("{} PersistableNetworkPayload entries remained after filtered by excluded keys. Original map had {} entries.",
+                filteredPersistableNetworkPayloads.size(), mapForDataResponse.size());
 
         Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
                 filterKnownHashes(
-                        this.map,
+                        map,
                         ProtectedStorageEntry::getProtectedStoragePayload,
                         excludedKeysAsByteArray,
                         peerCapabilities,
                         maxEntriesPerType,
-                        outProtectedStorageEntryOutputTruncated);
+                        wasProtectedStorageEntriesTruncated);
+        log.info("{} ProtectedStorageEntry entries remained after filtered by excluded keys. Original map had {} entries.",
+                filteredProtectedStorageEntries.size(), map.size());
 
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
                 filteredPersistableNetworkPayloads,
                 getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils for collecting the exclude hashes
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private Map<ByteArray, PersistableNetworkPayload> getMapForDataRequest() {
+        Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
+        appendOnlyDataStoreService.getServices()
+                .forEach(service -> {
+                    Map<ByteArray, PersistableNetworkPayload> serviceMap;
+                    if (service instanceof HistoricalDataStoreService) {
+                        var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
+                        // As we add the version to our request we only use the live data. Eventually missing data will be
+                        // derived from the version.
+                        serviceMap = historicalDataStoreService.getMapOfLiveData();
+                    } else {
+                        serviceMap = service.getMap();
+                    }
+                    map.putAll(serviceMap);
+                    log.info("We added {} entries from {} to the excluded key set of our request",
+                            serviceMap.size(), service.getClass().getSimpleName());
+                });
+        return map;
+    }
+
+    private Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
+        Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
+        appendOnlyDataStoreService.getServices()
+                .forEach(service -> {
+                    Map<ByteArray, PersistableNetworkPayload> serviceMap;
+                    if (service instanceof HistoricalDataStoreService) {
+                        var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
+                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion);
+                    } else {
+                        serviceMap = service.getMap();
+                    }
+                    map.putAll(serviceMap);
+                    log.info("We added {} entries from {} to be filtered by excluded keys",
+                            serviceMap.size(), service.getClass().getSimpleName());
+                });
+        return map;
+    }
+
+    /**
+     * Generic function that can be used to filter a Map<ByteArray, ProtectedStorageEntry || PersistableNetworkPayload>
+     * by a given set of keys and peer capabilities.
+     */
+    static private <T extends NetworkPayload> Set<T> filterKnownHashes(
+            Map<ByteArray, T> mapToFilter,
+            Function<T, ? extends NetworkPayload> objToPayloadFunction,
+            Set<ByteArray> knownHashes,
+            Capabilities peerCapabilities,
+            int maxEntries,
+            AtomicBoolean wasTruncated) {
+
+        AtomicInteger limit = new AtomicInteger(maxEntries);
+
+        Set<T> filteredResults = mapToFilter.entrySet().stream()
+                .filter(e -> !knownHashes.contains(e.getKey()))
+                .filter(e -> limit.decrementAndGet() >= 0)
+                .map(Map.Entry::getValue)
+                .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
+                        objToPayloadFunction.apply(networkPayload)))
+                .collect(Collectors.toSet());
+
+        if (limit.get() < 0) {
+            wasTruncated.set(true);
+        }
+
+        return filteredResults;
+    }
+
+    private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
+        return map.keySet().stream()
+                .map(e -> e.bytes)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -401,6 +456,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public Map<ByteArray, PersistableNetworkPayload> getAppendOnlyDataStoreMap() {
         return appendOnlyDataStoreService.getMap();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -579,10 +635,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // To avoid that expired data get stored and broadcast we check early for expire date.
         if (protectedStorageEntry.isExpired(clock)) {
-            log.warn("We received an expired protectedStorageEntry from peer {}",
-                    sender != null ? sender.getFullAddress() : "sender is null");
+            String peer = sender != null ? sender.getFullAddress() : "sender is null";
+            log.warn("We received an expired protectedStorageEntry from peer {}. ProtectedStoragePayload={}",
+                    peer, protectedStorageEntry.getProtectedStoragePayload().getClass().getSimpleName());
             log.debug("Expired protectedStorageEntry from peer {}. getCreationTimeStamp={}, protectedStorageEntry={}",
-                    sender != null ? sender.getFullAddress() : "sender is null",
+                    peer,
                     new Date(protectedStorageEntry.getCreationTimeStamp()),
                     protectedStorageEntry);
             return false;
@@ -624,7 +681,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (allowBroadcast)
             broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, listener);
 
-        // Persist ProtectedStorageEntrys carrying PersistablePayload payloads
+        // Persist ProtectedStorageEntries carrying PersistablePayload payloads
         if (protectedStoragePayload instanceof PersistablePayload)
             protectedDataStoreService.put(hashOfPayload, protectedStorageEntry);
 
@@ -733,37 +790,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return true;
     }
 
-
-    /**
-     * This method must be called only from client code not from network messages! We omit the ownership checks
-     * so we must apply it only if it comes from our trusted application code. It is used from client code which detects
-     * that the domain object violates specific domain rules.
-     * We could make it more generic by adding an Interface with a generic validation method.
-     *
-     * @param protectedStorageEntry     The entry to be removed
-     */
-    public void removeInvalidProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry) {
-        log.warn("We remove an invalid protectedStorageEntry: {}", protectedStorageEntry);
-        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
-        ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
-
-        if (!map.containsKey(hashOfPayload)) {
-            return;
-        }
-
-        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
-
-        // We do not update the sequence number as that method is only called if we have received an invalid
-        // protectedStorageEntry from a previous add operation.
-
-        // We do not call maybeAddToRemoveAddOncePayloads to avoid that an invalid object might block a valid object
-        // which we might receive in future (could be potential attack).
-
-        // We do not broadcast as this is a local operation only to avoid our maps get polluted with invalid objects
-        // and as we do not check for ownership a node would not accept such a procedure if it would come from untrusted
-        // source (network).
-    }
-
     public ProtectedStorageEntry getProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
                                                           KeyPair ownerStoragePubKey)
             throws CryptoException {
@@ -823,7 +849,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         appendOnlyDataStoreListeners.add(listener);
     }
 
-    @SuppressWarnings("unused")
     public void removeAppendOnlyDataStoreListener(AppendOnlyDataStoreListener listener) {
         appendOnlyDataStoreListeners.remove(listener);
     }
@@ -1018,7 +1043,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // Util
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        @SuppressWarnings("unused")
         public String getHex() {
             return Utilities.encodeToHex(bytes);
         }

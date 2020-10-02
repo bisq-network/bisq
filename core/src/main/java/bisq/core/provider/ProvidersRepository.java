@@ -79,11 +79,12 @@ public class ProvidersRepository {
         fillProviderList();
         selectNextProviderBaseUrl();
 
-        if (bannedNodes == null)
+        if (bannedNodes == null) {
             log.info("Selected provider baseUrl={}, providerList={}", baseUrl, providerList);
-        else
+        } else if (!bannedNodes.isEmpty()) {
             log.warn("We have banned provider nodes: bannedNodes={}, selected provider baseUrl={}, providerList={}",
                     bannedNodes, baseUrl, providerList);
+        }
     }
 
     public void selectNextProviderBaseUrl() {

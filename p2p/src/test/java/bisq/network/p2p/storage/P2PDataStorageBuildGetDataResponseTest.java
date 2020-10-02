@@ -44,6 +44,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,11 +55,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
-
-
-
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 public class P2PDataStorageBuildGetDataResponseTest {
     abstract static class P2PDataStorageBuildGetDataResponseTestBase {
@@ -240,7 +238,10 @@ public class P2PDataStorageBuildGetDataResponseTest {
             Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
             Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
             Assert.assertEquals(1, getDataResponse.getPersistableNetworkPayloadSet().size());
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().contains(onlyLocal1));
+            Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
+
+            // We use a set at the filter so it is not deterministic which item get truncated
+            Assert.assertEquals(1, persistableNetworkPayloadSet.size());
             Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 

@@ -24,9 +24,8 @@ import bisq.network.p2p.storage.persistence.MapStoreService;
 import bisq.common.config.Config;
 import bisq.common.storage.Storage;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
@@ -64,6 +63,10 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
         return store.getMap();
     }
 
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfAllData() {
+        return getMap();
+    }
+
     @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
         return payload instanceof TradeStatistics2;
@@ -77,10 +80,5 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     protected TradeStatistics2Store createStore() {
         return new TradeStatistics2Store();
-    }
-
-    @Override
-    protected void readStore() {
-        super.readStore();
     }
 }
