@@ -73,7 +73,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
                         return true;
                     }
 
-                    // Otherwise we only add data if the requesters version is older then
+                    // Otherwise we only add data if the requesters version is older than
                     // the version of the particular store.
                     String storeVersion = entry.getKey();
                     boolean newVersion = Version.isNewVersion(storeVersion, requestersVersion);
