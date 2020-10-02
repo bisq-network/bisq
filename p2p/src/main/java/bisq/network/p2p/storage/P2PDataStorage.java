@@ -285,11 +285,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         // As we add the version to our request we only use the live data. Eventually missing data will be
                         // derived from the version.
                         serviceMap = historicalDataStoreService.getMapOfLiveData();
-                        map.putAll(serviceMap);
                     } else {
                         serviceMap = service.getMap();
-                        map.putAll(serviceMap);
                     }
+                    map.putAll(serviceMap);
                     log.info("We added {} entries from {} to the excluded key set of our request",
                             serviceMap.size(), service.getClass().getSimpleName());
                 });
