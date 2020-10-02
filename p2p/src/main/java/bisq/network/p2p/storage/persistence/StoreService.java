@@ -134,9 +134,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         initializePersistenceManager();
     }
 
-    protected void initializePersistenceManager() {
-        persistenceManager.initialize(store);
-    }
+    protected abstract void initializePersistenceManager();
 
     protected abstract T createStore();
 }

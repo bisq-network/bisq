@@ -73,7 +73,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
         this.validatorProvider = validatorProvider;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(ballotList);
+        this.persistenceManager.initialize(ballotList, PersistenceManager.Priority.LOW);
     }
 
 

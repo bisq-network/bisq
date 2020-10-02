@@ -94,7 +94,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             // For Priority.HIGH data we want to write to disk in any case to be on the safe side if we might have missed
             // a requestPersistence call after an important state update. Those are usually rather small data stores.
             // Otherwise we only persist if requestPersistence was called since the last persist call.
-            if (persistenceManager.priority == Priority.HIGH || persistenceManager.persistenceRequested) {
+            if (persistenceManager.priority.flushAtShutDown || persistenceManager.persistenceRequested) {
                 // We don't know from which thread we are called so we map back to user thread when calling persistNow
                 UserThread.execute(() -> {
                     // We always get our completeHandler called even if exceptions happen. In case a file write fails
@@ -125,18 +125,21 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum Priority {
-        LOW(1, TimeUnit.HOURS.toSeconds(1)),
-        MID(4, TimeUnit.MINUTES.toSeconds(30)),
-        HIGH(10, TimeUnit.SECONDS.toSeconds(30));
+        LOW(1, TimeUnit.HOURS.toSeconds(1), false),
+        MID(4, TimeUnit.MINUTES.toSeconds(30), false),
+        HIGH(10, TimeUnit.SECONDS.toSeconds(30), true);
 
         @Getter
         private final int numMaxBackupFiles;
         @Getter
         private final long delayInSec;
+        @Getter
+        private final boolean flushAtShutDown;
 
-        Priority(int numMaxBackupFiles, long delayInSec) {
+        Priority(int numMaxBackupFiles, long delayInSec, boolean flushAtShutDown) {
             this.numMaxBackupFiles = numMaxBackupFiles;
             this.delayInSec = delayInSec;
+            this.flushAtShutDown = flushAtShutDown;
         }
     }
 
@@ -176,16 +179,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(T persistable) {
-        this.initialize(persistable, persistable.getDefaultStorageFileName(), Priority.MID);
-    }
-
     public void initialize(T persistable, Priority priority) {
         this.initialize(persistable, persistable.getDefaultStorageFileName(), priority);
-    }
-
-    public void initialize(T persistable, String fileName) {
-        this.initialize(persistable, fileName, Priority.MID);
     }
 
     public void initialize(T persistable, String fileName, Priority priority) {

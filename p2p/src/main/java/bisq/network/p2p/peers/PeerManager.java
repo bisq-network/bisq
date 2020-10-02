@@ -138,7 +138,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         this.clockWatcher = clockWatcher;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(peerList, PersistenceManager.Priority.LOW);
+        this.persistenceManager.initialize(peerList, PersistenceManager.Priority.MID);
         this.networkNode.addConnectionListener(this);
 
         setConnectionLimits(maxConnections);

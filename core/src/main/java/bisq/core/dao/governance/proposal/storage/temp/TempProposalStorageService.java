@@ -58,6 +58,11 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
     }
 
     @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+    }
+
+    @Override
     public Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> getMap() {
         return store.getMap();
     }

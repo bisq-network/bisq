@@ -57,7 +57,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public AddressEntryList(PersistenceManager<AddressEntryList> persistenceManager) {
         this.persistenceManager = persistenceManager;
 
-        persistenceManager.initialize(this, PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(this, PersistenceManager.Priority.HIGH);
     }
 
     @Override

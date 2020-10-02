@@ -215,7 +215,7 @@ public class GUIUtil {
             if (!directory.isEmpty()) {
                 PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
                 PaymentAccountList paymentAccounts = new PaymentAccountList(accounts);
-                persistenceManager.initialize(paymentAccounts, fileName);
+                persistenceManager.initialize(paymentAccounts, fileName, PersistenceManager.Priority.HIGH);
                 persistenceManager.persistNow(() -> {
                     persistenceManager.shutdown();
                     new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath",

@@ -64,6 +64,11 @@ public class BlindVoteStorageService extends MapStoreService<BlindVoteStore, Per
     }
 
     @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+    }
+
+    @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return store.getMap();
     }
