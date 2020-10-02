@@ -60,7 +60,7 @@ public class MyVoteListService implements PersistedDataHost {
         this.daoStateService = daoStateService;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(myVoteList, PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(myVoteList, PersistenceManager.Source.PRIVATE);
     }
 
 

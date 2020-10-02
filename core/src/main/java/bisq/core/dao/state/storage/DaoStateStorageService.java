@@ -128,6 +128,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
     }
 }

@@ -46,7 +46,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     @Inject
     public MyProofOfBurnListService(PersistenceManager<MyProofOfBurnList> persistenceManager) {
         this.persistenceManager = persistenceManager;
-        persistenceManager.initialize(myProofOfBurnList, PersistenceManager.Priority.HIGH);
+        persistenceManager.initialize(myProofOfBurnList, PersistenceManager.Source.PRIVATE);
     }
 
 

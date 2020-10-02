@@ -265,7 +265,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
 
-        persistenceManager.initialize(prefPayload, PersistenceManager.Priority.HIGH);
+        persistenceManager.initialize(prefPayload, PersistenceManager.Source.PRIVATE);
 
         // We don't want to pass Preferences to all popups where the don't show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.

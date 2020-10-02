@@ -56,7 +56,7 @@ public class ClosedTradableManager implements PersistedDataHost {
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(closedTradables, "ClosedTrades", PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(closedTradables, "ClosedTrades", PersistenceManager.Source.PRIVATE);
     }
 
     @Override

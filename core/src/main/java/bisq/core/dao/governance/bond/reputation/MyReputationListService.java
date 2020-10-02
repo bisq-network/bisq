@@ -46,7 +46,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     @Inject
     public MyReputationListService(PersistenceManager<MyReputationList> persistenceManager) {
         this.persistenceManager = persistenceManager;
-        persistenceManager.initialize(myReputationList, PersistenceManager.Priority.HIGH);
+        persistenceManager.initialize(myReputationList, PersistenceManager.Source.PRIVATE);
     }
 
 

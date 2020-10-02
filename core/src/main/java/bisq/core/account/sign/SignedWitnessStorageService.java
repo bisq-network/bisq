@@ -54,7 +54,7 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
 
     @Override
     protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
     }
 
     @Override

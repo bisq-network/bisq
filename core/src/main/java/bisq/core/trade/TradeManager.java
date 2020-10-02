@@ -178,7 +178,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(tradableList, "PendingTrades", PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(tradableList, "PendingTrades", PersistenceManager.Source.PRIVATE);
 
         p2PService.addDecryptedDirectMessageListener(this);
 

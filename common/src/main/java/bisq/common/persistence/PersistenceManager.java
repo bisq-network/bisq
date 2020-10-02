@@ -57,7 +57,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Responsible for reading persisted data and writing it on disk. We read usually only at start-up and keep data in RAM.
  * We write all data which got a request for persistence at shut down at the very last moment when all other services
- * are shut down, so allowing changes to the data in the very last moment. For critical data we set {@link Priority}
+ * are shut down, so allowing changes to the data in the very last moment. For critical data we set {@link Source}
  * to HIGH which causes a timer to trigger a write to disk after 1 minute. We use that for not very frequently altered
  * data and data which cannot be recovered from the network.
  *
@@ -94,7 +94,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             // For Priority.HIGH data we want to write to disk in any case to be on the safe side if we might have missed
             // a requestPersistence call after an important state update. Those are usually rather small data stores.
             // Otherwise we only persist if requestPersistence was called since the last persist call.
-            if (persistenceManager.priority.flushAtShutDown || persistenceManager.persistenceRequested) {
+            if (persistenceManager.SOURCE.flushAtShutDown || persistenceManager.persistenceRequested) {
                 // We don't know from which thread we are called so we map back to user thread when calling persistNow
                 UserThread.execute(() -> {
                     // We always get our completeHandler called even if exceptions happen. In case a file write fails
@@ -124,10 +124,16 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Priority {
-        LOW(1, TimeUnit.HOURS.toSeconds(1), false),
-        MID(4, TimeUnit.MINUTES.toSeconds(30), false),
-        HIGH(10, TimeUnit.SECONDS.toSeconds(30), true);
+    public enum Source {
+        // For data stores we received from the network and which could be rebuilt. We store only for avoiding too much network traffic.
+        NETWORK(1, TimeUnit.HOURS.toSeconds(1), false),
+
+        // For data stores which are created from private local data. This data could only be rebuilt from backup files.
+        PRIVATE(10, TimeUnit.SECONDS.toSeconds(30), true),
+
+        // For data stores which are created from private local data. Loss of that data would not have any critical consequences.
+        PRIVATE_LOW_PRIO(4, TimeUnit.HOURS.toSeconds(2), false);
+
 
         @Getter
         private final int numMaxBackupFiles;
@@ -136,7 +142,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         @Getter
         private final boolean flushAtShutDown;
 
-        Priority(int numMaxBackupFiles, long delayInSec, boolean flushAtShutDown) {
+        Source(int numMaxBackupFiles, long delayInSec, boolean flushAtShutDown) {
             this.numMaxBackupFiles = numMaxBackupFiles;
             this.delayInSec = delayInSec;
             this.flushAtShutDown = flushAtShutDown;
@@ -154,7 +160,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private File storageFile;
     private T persistable;
     private String fileName;
-    private Priority priority = Priority.MID;
+    private Source SOURCE = SOURCE.PRIVATE_LOW_PRIO;
     private Path usedTempFilePath;
     private volatile boolean persistenceRequested;
     @Nullable
@@ -179,14 +185,14 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(T persistable, Priority priority) {
-        this.initialize(persistable, persistable.getDefaultStorageFileName(), priority);
+    public void initialize(T persistable, Source SOURCE) {
+        this.initialize(persistable, persistable.getDefaultStorageFileName(), SOURCE);
     }
 
-    public void initialize(T persistable, String fileName, Priority priority) {
+    public void initialize(T persistable, String fileName, Source SOURCE) {
         this.persistable = persistable;
         this.fileName = fileName;
-        this.priority = priority;
+        this.SOURCE = SOURCE;
         storageFile = new File(dir, fileName);
         ALL_PERSISTENCE_MANAGERS.put(fileName, this);
     }
@@ -262,7 +268,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             timer = UserThread.runPeriodically(() -> {
                 persistNow(null);
                 UserThread.execute(() -> timer = null);
-            }, priority.delayInSec, TimeUnit.SECONDS);
+            }, SOURCE.delayInSec, TimeUnit.SECONDS);
         }
     }
 
@@ -293,7 +299,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
         try {
             // Before we write we backup existing file
-            FileUtil.rollingBackup(dir, fileName, priority.getNumMaxBackupFiles());
+            FileUtil.rollingBackup(dir, fileName, SOURCE.getNumMaxBackupFiles());
 
             if (!dir.exists() && !dir.mkdir())
                 log.warn("make dir failed {}", fileName);
@@ -364,7 +370,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 ",\n     dir=" + dir +
                 ",\n     storageFile=" + storageFile +
                 ",\n     persistable=" + persistable +
-                ",\n     priority=" + priority +
+                ",\n     priority=" + SOURCE +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
                 ",\n     persistenceRequested=" + persistenceRequested +
                 "\n}";

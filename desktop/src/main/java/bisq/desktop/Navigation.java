@@ -75,7 +75,7 @@ public final class Navigation implements PersistedDataHost {
     public Navigation(PersistenceManager<NavigationPath> persistenceManager) {
         this.persistenceManager = persistenceManager;
 
-        persistenceManager.initialize(navigationPath, PersistenceManager.Priority.MID);
+        persistenceManager.initialize(navigationPath, PersistenceManager.Source.PRIVATE_LOW_PRIO);
     }
 
     @Override

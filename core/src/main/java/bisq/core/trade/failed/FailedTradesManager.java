@@ -66,7 +66,7 @@ public class FailedTradesManager implements PersistedDataHost {
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(failedTrades, "FailedTrades", PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(failedTrades, "FailedTrades", PersistenceManager.Source.PRIVATE);
     }
 
     @Override

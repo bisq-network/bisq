@@ -162,7 +162,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.filterManager = filterManager;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
     }
 
     @Override

@@ -59,7 +59,7 @@ public class ProposalStorageService extends MapStoreService<ProposalStore, Persi
 
     @Override
     protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
     }
 
     @Override

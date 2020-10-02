@@ -136,7 +136,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         this.myVoteListService = myVoteListService;
         this.myProposalListService = myProposalListService;
 
-        this.persistenceManager.initialize(myBlindVoteList, PersistenceManager.Priority.HIGH);
+        this.persistenceManager.initialize(myBlindVoteList, PersistenceManager.Source.PRIVATE);
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> maybeRePublishMyBlindVote();
     }

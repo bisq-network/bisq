@@ -55,7 +55,7 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
 
     @Override
     protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Priority.LOW);
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
     }
 
     @Override
