@@ -337,6 +337,8 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
             sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), success, errorMessage);
         }
+
+        requestPersistence();
     }
 
     // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
@@ -371,6 +373,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
         // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute
         sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);
+        requestPersistence();
     }
 
 
