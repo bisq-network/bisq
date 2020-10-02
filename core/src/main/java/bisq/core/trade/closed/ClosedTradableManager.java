@@ -17,7 +17,6 @@
 
 package bisq.core.trade.closed;
 
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.DumpDelayedPayoutTx;
@@ -26,8 +25,8 @@ import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
 
@@ -41,48 +40,49 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ClosedTradableManager implements PersistedDataHost {
-    private final Storage<TradableList<Tradable>> tradableListStorage;
-    private TradableList<Tradable> closedTradables;
+    private final PersistenceManager<TradableList<Tradable>> persistenceManager;
+    private final TradableList<Tradable> closedTradables = new TradableList<>();
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
-    private final BtcWalletService btcWalletService;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
 
     @Inject
     public ClosedTradableManager(KeyRing keyRing,
                                  PriceFeedService priceFeedService,
-                                 BtcWalletService btcWalletService,
-                                 Storage<TradableList<Tradable>> storage,
+                                 PersistenceManager<TradableList<Tradable>> persistenceManager,
                                  DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
-        this.btcWalletService = btcWalletService;
-        tradableListStorage = storage;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
-        // The ClosedTrades object can become a few MB so we don't keep so many backups
-        tradableListStorage.setNumMaxBackupFiles(3);
+
+        this.persistenceManager = persistenceManager;
+        this.persistenceManager.initialize(closedTradables, "ClosedTrades");
     }
 
     @Override
     public void readPersisted() {
-        closedTradables = new TradableList<>(tradableListStorage, "ClosedTrades");
+        TradableList<Tradable> persisted = persistenceManager.getPersisted("ClosedTrades");
+        if (persisted != null) {
+            closedTradables.setAll(persisted.getList());
+        }
+
         closedTradables.forEach(tradable -> {
             tradable.getOffer().setPriceFeedService(priceFeedService);
-            if (tradable instanceof Trade) {
-                Trade trade = (Trade) tradable;
-                trade.setTransientFields(tradableListStorage, btcWalletService);
-            }
         });
 
         dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(closedTradables, "delayed_payout_txs_closed");
     }
 
     public void add(Tradable tradable) {
-        closedTradables.add(tradable);
+        if (closedTradables.add(tradable)) {
+            persistenceManager.requestPersistence();
+        }
     }
 
     public void remove(Tradable tradable) {
-        closedTradables.remove(tradable);
+        if (closedTradables.remove(tradable)) {
+            persistenceManager.requestPersistence();
+        }
     }
 
     public boolean wasMyOffer(Offer offer) {
@@ -90,7 +90,7 @@ public class ClosedTradableManager implements PersistedDataHost {
     }
 
     public ObservableList<Tradable> getClosedTradables() {
-        return closedTradables.getList();
+        return closedTradables.getObservableList();
     }
 
     public List<Trade> getClosedTrades() {
