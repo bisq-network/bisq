@@ -91,7 +91,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         }
 
         new HashSet<>(ALL_PERSISTENCE_MANAGERS.values()).forEach(persistenceManager -> {
-            if (persistenceManager.persistenceRequested) {
+            // For Priority.HIGH data we want to write to disk in any case to be on the safe side if we might have missed
+            // a requestPersistence call after an important state update. Those are usually rather small data stores.
+            // Otherwise we only persist if requestPersistence was called since the last persist call.
+            if (persistenceManager.priority == Priority.HIGH || persistenceManager.persistenceRequested) {
                 // We don't know from which thread we are called so we map back to user thread when calling persistNow
                 UserThread.execute(() -> {
                     // We always get our completeHandler called even if exceptions happen. In case a file write fails
