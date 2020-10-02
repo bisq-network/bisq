@@ -52,8 +52,7 @@ class NegativeNumberOptions {
             List<String> nonOptionArgsClone = new ArrayList<>(nonOptionArgs);
             negativeNumberParams.forEach((k, v) -> {
                 int idx = k;
-                nonOptionArgsClone.remove(idx);
-                nonOptionArgsClone.add(idx, v);
+                nonOptionArgsClone.set(idx, v);
             });
             return Collections.unmodifiableList(nonOptionArgsClone);
         } else {
