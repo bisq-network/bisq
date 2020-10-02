@@ -94,7 +94,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             // For Priority.HIGH data we want to write to disk in any case to be on the safe side if we might have missed
             // a requestPersistence call after an important state update. Those are usually rather small data stores.
             // Otherwise we only persist if requestPersistence was called since the last persist call.
-            if (persistenceManager.SOURCE.flushAtShutDown || persistenceManager.persistenceRequested) {
+            if (persistenceManager.source.flushAtShutDown || persistenceManager.persistenceRequested) {
                 // We don't know from which thread we are called so we map back to user thread when calling persistNow
                 UserThread.execute(() -> {
                     // We always get our completeHandler called even if exceptions happen. In case a file write fails
@@ -160,7 +160,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private File storageFile;
     private T persistable;
     private String fileName;
-    private Source SOURCE = SOURCE.PRIVATE_LOW_PRIO;
+    private Source source = Source.PRIVATE_LOW_PRIO;
     private Path usedTempFilePath;
     private volatile boolean persistenceRequested;
     @Nullable
@@ -185,14 +185,14 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(T persistable, Source SOURCE) {
-        this.initialize(persistable, persistable.getDefaultStorageFileName(), SOURCE);
+    public void initialize(T persistable, Source sourcce) {
+        this.initialize(persistable, persistable.getDefaultStorageFileName(), sourcce);
     }
 
-    public void initialize(T persistable, String fileName, Source SOURCE) {
+    public void initialize(T persistable, String fileName, Source sourcce) {
         this.persistable = persistable;
         this.fileName = fileName;
-        this.SOURCE = SOURCE;
+        this.source = sourcce;
         storageFile = new File(dir, fileName);
         ALL_PERSISTENCE_MANAGERS.put(fileName, this);
     }
@@ -268,7 +268,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             timer = UserThread.runPeriodically(() -> {
                 persistNow(null);
                 UserThread.execute(() -> timer = null);
-            }, SOURCE.delayInSec, TimeUnit.SECONDS);
+            }, source.delayInSec, TimeUnit.SECONDS);
         }
     }
 
@@ -299,7 +299,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
         try {
             // Before we write we backup existing file
-            FileUtil.rollingBackup(dir, fileName, SOURCE.getNumMaxBackupFiles());
+            FileUtil.rollingBackup(dir, fileName, source.getNumMaxBackupFiles());
 
             if (!dir.exists() && !dir.mkdir())
                 log.warn("make dir failed {}", fileName);
@@ -370,7 +370,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 ",\n     dir=" + dir +
                 ",\n     storageFile=" + storageFile +
                 ",\n     persistable=" + persistable +
-                ",\n     priority=" + SOURCE +
+                ",\n     priority=" + source +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
                 ",\n     persistenceRequested=" + persistenceRequested +
                 "\n}";
