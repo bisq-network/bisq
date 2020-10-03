@@ -18,48 +18,24 @@
 package bisq.core.app;
 
 import bisq.core.account.sign.SignedWitness;
-import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
-import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
-import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.voteresult.VoteResultException;
-import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
-import bisq.core.notifications.MobileNotificationService;
-import bisq.core.notifications.alerts.DisputeMsgEvents;
-import bisq.core.notifications.alerts.MyOfferTakenEvents;
-import bisq.core.notifications.alerts.TradeEvents;
-import bisq.core.notifications.alerts.market.MarketAlerts;
-import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
-import bisq.core.payment.TradeLimits;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.dispute.mediation.MediationManager;
-import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeTxException;
-import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -68,7 +44,6 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.ClockWatcher;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -92,7 +67,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -106,7 +80,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import ch.qos.logback.classic.Level;
 
@@ -135,48 +108,25 @@ public class BisqSetup {
 
     private static final long STARTUP_TIMEOUT_MINUTES = 4;
 
+    private final DomainInitialisation domainInitialisation;
     private final P2PNetworkSetup p2PNetworkSetup;
     private final WalletAppSetup walletAppSetup;
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
-    private final Balances balances;
-    private final PriceFeedService priceFeedService;
-    private final ArbitratorManager arbitratorManager;
-    private final MediatorManager mediatorManager;
-    private final RefundAgentManager refundAgentManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
-    private final ArbitrationManager arbitrationManager;
-    private final MediationManager mediationManager;
-    private final RefundManager refundManager;
-    private final TraderChatManager traderChatManager;
     private final Preferences preferences;
     private final User user;
     private final AlertManager alertManager;
-    private final PrivateNotificationManager privateNotificationManager;
-    private final FilterManager filterManager;
-    private final TradeStatisticsManager tradeStatisticsManager;
-    private final XmrTxProofService xmrTxProofService;
-    private final ClockWatcher clockWatcher;
-    private final FeeService feeService;
-    private final DaoSetup daoSetup;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
     private final Config config;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final SignedWitnessService signedWitnessService;
-    private final MobileNotificationService mobileNotificationService;
-    private final MyOfferTakenEvents myOfferTakenEvents;
-    private final TradeEvents tradeEvents;
-    private final DisputeMsgEvents disputeMsgEvents;
-    private final PriceAlert priceAlert;
-    private final MarketAlerts marketAlerts;
-    private final VoteResultService voteResultService;
     private final TorSetup torSetup;
-    private final TradeLimits tradeLimits;
     private final CoinFormatter formatter;
     private final LocalBitcoinNode localBitcoinNode;
+    private final AppStartupState appStartupState;
 
     @Setter
     @Nullable
@@ -233,92 +183,44 @@ public class BisqSetup {
     private final List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
 
     @Inject
-    public BisqSetup(P2PNetworkSetup p2PNetworkSetup,
+    public BisqSetup(DomainInitialisation domainInitialisation,
+                     P2PNetworkSetup p2PNetworkSetup,
                      WalletAppSetup walletAppSetup,
                      WalletsManager walletsManager,
                      WalletsSetup walletsSetup,
                      BtcWalletService btcWalletService,
-                     Balances balances,
-                     PriceFeedService priceFeedService,
-                     ArbitratorManager arbitratorManager,
-                     MediatorManager mediatorManager,
-                     RefundAgentManager refundAgentManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
-                     ArbitrationManager arbitrationManager,
-                     MediationManager mediationManager,
-                     RefundManager refundManager,
-                     TraderChatManager traderChatManager,
                      Preferences preferences,
                      User user,
                      AlertManager alertManager,
-                     PrivateNotificationManager privateNotificationManager,
-                     FilterManager filterManager,
-                     TradeStatisticsManager tradeStatisticsManager,
-                     XmrTxProofService xmrTxProofService,
-                     ClockWatcher clockWatcher,
-                     FeeService feeService,
-                     DaoSetup daoSetup,
                      UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
                      Config config,
                      AccountAgeWitnessService accountAgeWitnessService,
-                     SignedWitnessService signedWitnessService,
-                     MobileNotificationService mobileNotificationService,
-                     MyOfferTakenEvents myOfferTakenEvents,
-                     TradeEvents tradeEvents,
-                     DisputeMsgEvents disputeMsgEvents,
-                     PriceAlert priceAlert,
-                     MarketAlerts marketAlerts,
-                     VoteResultService voteResultService,
                      TorSetup torSetup,
-                     TradeLimits tradeLimits,
                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
-                     LocalBitcoinNode localBitcoinNode) {
-
+                     LocalBitcoinNode localBitcoinNode,
+                     AppStartupState appStartupState) {
+        this.domainInitialisation = domainInitialisation;
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;
-
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
-        this.balances = balances;
-        this.priceFeedService = priceFeedService;
-        this.arbitratorManager = arbitratorManager;
-        this.mediatorManager = mediatorManager;
-        this.refundAgentManager = refundAgentManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
-        this.arbitrationManager = arbitrationManager;
-        this.mediationManager = mediationManager;
-        this.refundManager = refundManager;
-        this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.user = user;
         this.alertManager = alertManager;
-        this.privateNotificationManager = privateNotificationManager;
-        this.filterManager = filterManager;
-        this.tradeStatisticsManager = tradeStatisticsManager;
-        this.xmrTxProofService = xmrTxProofService;
-        this.clockWatcher = clockWatcher;
-        this.feeService = feeService;
-        this.daoSetup = daoSetup;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.config = config;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.signedWitnessService = signedWitnessService;
-        this.mobileNotificationService = mobileNotificationService;
-        this.myOfferTakenEvents = myOfferTakenEvents;
-        this.tradeEvents = tradeEvents;
-        this.disputeMsgEvents = disputeMsgEvents;
-        this.priceAlert = priceAlert;
-        this.marketAlerts = marketAlerts;
-        this.voteResultService = voteResultService;
         this.torSetup = torSetup;
-        this.tradeLimits = tradeLimits;
         this.formatter = formatter;
         this.localBitcoinNode = localBitcoinNode;
+        this.appStartupState = appStartupState;
     }
 
 
@@ -648,89 +550,26 @@ public class BisqSetup {
     private void initDomainServices() {
         log.info("initDomainServices");
 
-        clockWatcher.start();
-
-        tradeLimits.onAllServicesInitialized();
-
-        arbitrationManager.onAllServicesInitialized();
-        mediationManager.onAllServicesInitialized();
-        refundManager.onAllServicesInitialized();
-        traderChatManager.onAllServicesInitialized();
-
-        tradeManager.onAllServicesInitialized();
-        xmrTxProofService.onAllServicesInitialized();
+        domainInitialisation.initDomainServices(rejectedTxErrorMessageHandler,
+                displayPrivateNotificationHandler,
+                daoErrorMessageHandler,
+                daoWarnMessageHandler,
+                filterWarningHandler,
+                voteResultExceptionHandler,
+                revolutAccountsUpdateHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();
             checkForInvalidMakerFeeTxs();
         }
 
-        openOfferManager.onAllServicesInitialized();
-
-        balances.onAllServicesInitialized();
-
-        walletAppSetup.setRejectedTxErrorMessageHandler(rejectedTxErrorMessageHandler, openOfferManager, tradeManager);
-
-        arbitratorManager.onAllServicesInitialized();
-        mediatorManager.onAllServicesInitialized();
-        refundAgentManager.onAllServicesInitialized();
-
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));
         displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
 
-        privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> {
-            if (displayPrivateNotificationHandler != null)
-                displayPrivateNotificationHandler.accept(newValue);
-        });
-
-        p2PService.onAllServicesInitialized();
-
-        feeService.onAllServicesInitialized();
-
-        if (DevEnv.isDaoActivated()) {
-            daoSetup.onAllServicesInitialized(errorMessage -> {
-                if (daoErrorMessageHandler != null)
-                    daoErrorMessageHandler.accept(errorMessage);
-            }, warningMessage -> {
-                if (daoWarnMessageHandler != null)
-                    daoWarnMessageHandler.accept(warningMessage);
-            });
-        }
-
-        tradeStatisticsManager.onAllServicesInitialized();
-
-        accountAgeWitnessService.onAllServicesInitialized();
-        signedWitnessService.onAllServicesInitialized();
-
-        priceFeedService.setCurrencyCodeOnInit();
-
-        filterManager.onAllServicesInitialized();
-        filterManager.setFilterWarningHandler(filterWarningHandler);
-
-        voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
-            c.next();
-            if (c.wasAdded() && voteResultExceptionHandler != null) {
-                c.getAddedSubList().forEach(e -> voteResultExceptionHandler.accept(e));
-            }
-        });
-
-        mobileNotificationService.onAllServicesInitialized();
-        myOfferTakenEvents.onAllServicesInitialized();
-        tradeEvents.onAllServicesInitialized();
-        disputeMsgEvents.onAllServicesInitialized();
-        priceAlert.onAllServicesInitialized();
-        marketAlerts.onAllServicesInitialized();
-
-        if (revolutAccountsUpdateHandler != null) {
-            revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()
-                    .filter(paymentAccount -> paymentAccount instanceof RevolutAccount)
-                    .map(paymentAccount -> (RevolutAccount) paymentAccount)
-                    .filter(RevolutAccount::userNameNotSet)
-                    .collect(Collectors.toList()));
-        }
-
         allBasicServicesInitialized = true;
+
+        appStartupState.onDomainServicesInitialized();
     }
 
     private void maybeShowSecurityRecommendation() {
