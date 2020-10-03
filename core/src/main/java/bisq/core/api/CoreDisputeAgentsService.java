@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
@@ -40,10 +41,12 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
-import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType;
+import static bisq.core.support.SupportType.ARBITRATION;
+import static bisq.core.support.SupportType.MEDIATION;
+import static bisq.core.support.SupportType.REFUND;
+import static bisq.core.support.SupportType.TRADE;
 import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
 
 @Slf4j
 class CoreDisputeAgentsService {
@@ -71,7 +74,7 @@ class CoreDisputeAgentsService {
         this.languageCodes = asList("de", "en", "es", "fr");
     }
 
-    void registerDisputeAgent(String disputeAgentTypeString, String registrationKey) {
+    void registerDisputeAgent(String disputeAgentType, String registrationKey) {
         if (!p2PService.isBootstrapped())
             throw new IllegalStateException("p2p service is not bootstrapped yet");
 
@@ -83,26 +86,28 @@ class CoreDisputeAgentsService {
         if (!registrationKey.equals(DEV_PRIVILEGE_PRIV_KEY))
             throw new IllegalArgumentException("invalid registration key");
 
-        Optional<DisputeAgentType> disputeAgentType = getDisputeAgentTypeForString(disputeAgentTypeString);
-        if (disputeAgentType.isPresent()) {
+        Optional<SupportType> supportType = getSupportType(disputeAgentType);
+        if (supportType.isPresent()) {
             ECKey ecKey;
             String signature;
-            switch ((disputeAgentType.get())) {
-                case ARBITRATOR:
+            switch (supportType.get()) {
+                case ARBITRATION:
                     throw new IllegalArgumentException("arbitrators must be registered in a Bisq UI");
-                case MEDIATOR:
+                case MEDIATION:
                     ecKey = mediatorManager.getRegistrationKey(registrationKey);
                     signature = mediatorManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
                     registerMediator(nodeAddress, languageCodes, ecKey, signature);
                     return;
-                case REFUND_AGENT:
+                case REFUND:
                     ecKey = refundAgentManager.getRegistrationKey(registrationKey);
                     signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
                     registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
                     return;
+                case TRADE:
+                    throw new IllegalArgumentException("trade agent registration not supported");
             }
         } else {
-            throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentTypeString);
+            throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentType);
         }
     }
 
@@ -148,10 +153,20 @@ class CoreDisputeAgentsService {
                 new IllegalStateException("could not register refund agent"));
     }
 
-    private Optional<DisputeAgentType> getDisputeAgentTypeForString(String disputeAgentTypeString) {
-        return stream(DisputeAgentType.values())
-                .filter(da -> da.name().equalsIgnoreCase(disputeAgentTypeString)
-                        || da.alternateName().equalsIgnoreCase(disputeAgentTypeString))
-                .findFirst();
+    private Optional<SupportType> getSupportType(String disputeAgentType) {
+        switch (disputeAgentType.toLowerCase()) {
+            case "arbitrator":
+                return Optional.of(ARBITRATION);
+            case "mediator":
+                return Optional.of(MEDIATION);
+            case "refundagent":
+            case "refund_agent":
+                return Optional.of(REFUND);
+            case "tradeagent":
+            case "trade_agent":
+                return Optional.of(TRADE);
+            default:
+                return Optional.empty();
+        }
     }
 }
