@@ -35,7 +35,7 @@ import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.ARBITRATOR;
 import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.MEDIATOR;
-import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUNDAGENT;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUND_AGENT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -82,7 +82,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(3)
     public void testInvalidRegistrationKeyArgShouldThrowException() {
         var req = RegisterDisputeAgentRequest.newBuilder()
-                .setDisputeAgentType(REFUNDAGENT.name().toLowerCase())
+                .setDisputeAgentType(REFUND_AGENT.name().toLowerCase())
                 .setRegistrationKey("invalid" + DEV_PRIVILEGE_PRIV_KEY).build();
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req));
@@ -102,7 +102,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(5)
     public void testRegisterRefundAgent() {
         var req =
-                createRegisterDisputeAgentRequest(REFUNDAGENT.name());
+                createRegisterDisputeAgentRequest(REFUND_AGENT.name());
         grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req);
     }
 

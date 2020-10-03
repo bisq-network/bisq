@@ -50,6 +50,7 @@ public class CoreApi {
     private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
+    private final CorePriceService corePriceService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
@@ -57,10 +58,12 @@ public class CoreApi {
     public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
+                   CorePriceService corePriceService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
+        this.corePriceService = corePriceService;
         this.paymentAccountsService = paymentAccountsService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
@@ -83,32 +86,31 @@ public class CoreApi {
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<Offer> getOffers(String direction, String fiatCurrencyCode) {
-        return coreOffersService.getOffers(direction, fiatCurrencyCode);
+    public List<Offer> getOffers(String direction, String currencyCode) {
+        return coreOffersService.getOffers(direction, currencyCode);
     }
 
     public Offer createOffer(String currencyCode,
                              String directionAsString,
-                             long priceAsLong,
+                             String priceAsString,
                              boolean useMarketBasedPrice,
                              double marketPriceMargin,
                              long amountAsLong,
                              long minAmountAsLong,
                              double buyerSecurityDeposit,
-                             String paymentAccountId,
-                             TransactionResultHandler resultHandler) {
+                             String paymentAccountId) {
         return coreOffersService.createOffer(currencyCode,
                 directionAsString,
-                priceAsLong,
+                priceAsString,
                 useMarketBasedPrice,
                 marketPriceMargin,
                 amountAsLong,
                 minAmountAsLong,
                 buyerSecurityDeposit,
-                paymentAccountId,
-                resultHandler);
+                paymentAccountId);
     }
 
+    // Not used yet, should be renamed for a new placeoffer api method.
     public Offer createOffer(String offerId,
                              String currencyCode,
                              OfferPayload.Direction direction,
@@ -118,9 +120,7 @@ public class CoreApi {
                              Coin amount,
                              Coin minAmount,
                              double buyerSecurityDeposit,
-                             PaymentAccount paymentAccount,
-                             boolean useSavingsWallet,
-                             TransactionResultHandler resultHandler) {
+                             PaymentAccount paymentAccount) {
         return coreOffersService.createOffer(offerId,
                 currencyCode,
                 direction,
@@ -130,9 +130,18 @@ public class CoreApi {
                 amount,
                 minAmount,
                 buyerSecurityDeposit,
-                paymentAccount,
+                paymentAccount);
+    }
+
+    public Offer placeOffer(Offer offer,
+                            double buyerSecurityDeposit,
+                            boolean useSavingsWallet,
+                            TransactionResultHandler resultHandler) {
+        coreOffersService.placeOffer(offer,
+                buyerSecurityDeposit,
                 useSavingsWallet,
                 resultHandler);
+        return offer;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +160,14 @@ public class CoreApi {
 
     public Set<PaymentAccount> getPaymentAccounts() {
         return paymentAccountsService.getPaymentAccounts();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Prices
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public double getMarketPrice(String currencyCode) {
+        return corePriceService.getMarketPrice(currencyCode);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

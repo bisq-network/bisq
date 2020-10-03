@@ -22,6 +22,7 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
 import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.MEDIATOR;
-import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUNDAGENT;
+import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUND_AGENT;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -73,6 +74,10 @@ public class MethodTest extends ApiTestCase {
 
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
         return GetFundingAddressesRequest.newBuilder().build();
+    }
+
+    protected final MarketPriceRequest createMarketPriceRequest(String currencyCode) {
+        return MarketPriceRequest.newBuilder().setCurrencyCode(currencyCode).build();
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
@@ -115,15 +120,20 @@ public class MethodTest extends ApiTestCase {
     }
 
     protected final PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
-        var getPaymentAccountsRequest = GetPaymentAccountsRequest.newBuilder().build();
+        var req = GetPaymentAccountsRequest.newBuilder().build();
         var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
-        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(getPaymentAccountsRequest)
+        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(req)
                 .getPaymentAccountsList()
                 .stream()
                 .sorted(comparing(PaymentAccount::getCreationDate))
                 .collect(Collectors.toList()).get(0);
         assertEquals("PerfectMoney dummy", paymentAccount.getAccountName());
         return paymentAccount;
+    }
+
+    protected final double getMarketPrice(BisqAppConfig bisqAppConfig, String currencyCode) {
+        var req = createMarketPriceRequest(currencyCode);
+        return grpcStubs(bisqAppConfig).priceService.getMarketPrice(req).getPrice();
     }
 
     // Static conveniences for test methods and test case fixture setups.
@@ -138,6 +148,6 @@ public class MethodTest extends ApiTestCase {
     protected static void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR.name()));
-        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUNDAGENT.name()));
+        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT.name()));
     }
 }

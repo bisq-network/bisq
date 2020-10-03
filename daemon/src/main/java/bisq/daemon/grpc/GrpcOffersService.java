@@ -20,7 +20,6 @@ package bisq.daemon.grpc;
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.OfferInfo;
 import bisq.core.offer.Offer;
-import bisq.core.trade.handlers.TransactionResultHandler;
 
 import bisq.proto.grpc.CreateOfferReply;
 import bisq.proto.grpc.CreateOfferRequest;
@@ -35,7 +34,7 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -53,35 +52,13 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     @Override
     public void getOffers(GetOffersRequest req,
                           StreamObserver<GetOffersReply> responseObserver) {
-        // The client cannot see bisq.core.Offer or its fromProto method.
-        // We use the lighter weight OfferInfo proto wrapper instead, containing just
-        // enough fields to view and create offers.
         List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
-                .stream().map(offer -> new OfferInfo.OfferInfoBuilder()
-                        .withId(offer.getId())
-                        .withDirection(offer.getDirection().name())
-                        .withPrice(offer.getPrice().getValue())
-                        .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
-                        .withMarketPriceMargin(offer.getMarketPriceMargin())
-                        .withAmount(offer.getAmount().value)
-                        .withMinAmount(offer.getMinAmount().value)
-                        .withVolume(offer.getVolume().getValue())
-                        .withMinVolume(offer.getMinVolume().getValue())
-                        .withBuyerSecurityDeposit(offer.getBuyerSecurityDeposit().value)
-                        .withPaymentAccountId("")  // only used when creating offer (?)
-                        .withPaymentMethodId(offer.getPaymentMethod().getId())
-                        .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
-                        .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
-                        .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
-                        .withDate(offer.getDate().getTime())
-                        .build())
+                .stream().map(this::toOfferInfo)
                 .collect(Collectors.toList());
-
         var reply = GetOffersReply.newBuilder()
-                .addAllOffers(
-                        result.stream()
-                                .map(OfferInfo::toProtoMessage)
-                                .collect(Collectors.toList()))
+                .addAllOffers(result.stream()
+                        .map(OfferInfo::toProtoMessage)
+                        .collect(Collectors.toList()))
                 .build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
@@ -90,11 +67,7 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     @Override
     public void createOffer(CreateOfferRequest req,
                             StreamObserver<CreateOfferReply> responseObserver) {
-        CountDownLatch latch = new CountDownLatch(1);
         try {
-            TransactionResultHandler resultHandler = transaction -> {
-                latch.countDown();
-            };
             Offer offer = coreApi.createOffer(
                     req.getCurrencyCode(),
                     req.getDirection(),
@@ -104,39 +77,50 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     req.getAmount(),
                     req.getMinAmount(),
                     req.getBuyerSecurityDeposit(),
-                    req.getPaymentAccountId(),
-                    resultHandler);
-            try {
-                latch.await();
-            } catch (InterruptedException ignored) {
-                // empty
-            }
+                    req.getPaymentAccountId());
 
-            OfferInfo offerInfo = new OfferInfo.OfferInfoBuilder()
-                    .withId(offer.getId())
-                    .withDirection(offer.getDirection().name())
-                    .withPrice(offer.getPrice().getValue())
-                    .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
-                    .withMarketPriceMargin(offer.getMarketPriceMargin())
-                    .withAmount(offer.getAmount().value)
-                    .withMinAmount(offer.getMinAmount().value)
-                    .withVolume(offer.getVolume().getValue())
-                    .withMinVolume(offer.getMinVolume().getValue())
-                    .withBuyerSecurityDeposit(offer.getBuyerSecurityDeposit().value)
-                    .withPaymentAccountId(offer.getMakerPaymentAccountId())
-                    .withPaymentMethodId(offer.getPaymentMethod().getId())
-                    .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
-                    .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
-                    .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
-                    .withDate(offer.getDate().getTime())
-                    .build();
-            CreateOfferReply reply = CreateOfferReply.newBuilder().setOffer(offerInfo.toProtoMessage()).build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+            // We don't support atm funding from external wallet to keep it simple.
+            boolean useSavingsWallet = true;
+            //noinspection ConstantConditions
+            coreApi.placeOffer(offer,
+                    req.getBuyerSecurityDeposit(),
+                    useSavingsWallet,
+                    transaction -> {
+                        OfferInfo offerInfo = toOfferInfo(offer);
+                        CreateOfferReply reply = CreateOfferReply.newBuilder()
+                                .setOffer(offerInfo.toProtoMessage())
+                                .build();
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    });
         } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
             throw ex;
         }
+    }
+
+    // The client cannot see bisq.core.Offer or its fromProto method.
+    // We use the lighter weight OfferInfo proto wrapper instead, containing just
+    // enough fields to view and create offers.
+    private OfferInfo toOfferInfo(Offer offer) {
+        return new OfferInfo.OfferInfoBuilder()
+                .withId(offer.getId())
+                .withDirection(offer.getDirection().name())
+                .withPrice(Objects.requireNonNull(offer.getPrice()).getValue())
+                .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
+                .withMarketPriceMargin(offer.getMarketPriceMargin())
+                .withAmount(offer.getAmount().value)
+                .withMinAmount(offer.getMinAmount().value)
+                .withVolume(Objects.requireNonNull(offer.getVolume()).getValue())
+                .withMinVolume(Objects.requireNonNull(offer.getMinVolume()).getValue())
+                .withBuyerSecurityDeposit(offer.getBuyerSecurityDeposit().value)
+                .withPaymentAccountId(offer.getMakerPaymentAccountId())
+                .withPaymentMethodId(offer.getPaymentMethod().getId())
+                .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
+                .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
+                .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
+                .withDate(offer.getDate().getTime())
+                .build();
     }
 }

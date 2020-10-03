@@ -63,7 +63,7 @@ message GetOffersReply {
 message CreateOfferRequest {
     string currencyCode = 1;
     string direction = 2;
-    uint64 price = 3;
+    string price = 3;
     bool useMarketBasedPrice = 4;
     double marketPriceMargin = 5;
     uint64 amount = 6;
@@ -122,6 +122,23 @@ message GetPaymentAccountsRequest {
 
 message GetPaymentAccountsReply {
     repeated PaymentAccount paymentAccounts = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Price
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Price {
+    rpc GetMarketPrice (MarketPriceRequest) returns (MarketPriceReply) {
+    }
+}
+
+message MarketPriceRequest {
+    string currencyCode = 1;
+}
+
+message MarketPriceReply {
+    double price = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.cli;
 
 import java.text.DecimalFormat;
@@ -7,6 +24,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import java.util.Locale;
+
+import static java.lang.String.format;
 
 class CurrencyFormat {
 
@@ -43,5 +62,16 @@ class CurrencyFormat {
         NUMBER_FORMAT.setMaximumFractionDigits(0);
         NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
         return NUMBER_FORMAT.format((double) volume / 10000);
+    }
+
+    static long toSatoshis(String btc) {
+        if (btc.startsWith("-"))
+            throw new IllegalArgumentException(format("'%s' is not a positive number", btc));
+
+        try {
+            return new BigDecimal(btc).multiply(SATOSHI_DIVISOR).longValue();
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(format("'%s' is not a number", btc));
+        }
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
@@ -38,11 +39,15 @@ import joptsimple.OptionSet;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import java.math.BigDecimal;
+
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.cli.CurrencyFormat.toSatoshis;
+import static bisq.cli.NegativeNumberOptions.hasNegativeNumberOptions;
 import static bisq.cli.TableFormat.formatAddressBalanceTbl;
 import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.cli.TableFormat.formatPaymentAcctTbl;
@@ -50,6 +55,7 @@ import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.math.BigDecimal.ZERO;
 import static java.util.Collections.singletonList;
 
 /**
@@ -102,6 +108,16 @@ public class CliMain {
         var passwordOpt = parser.accepts("password", "rpc server password")
                 .withRequiredArg();
 
+        var negativeNumberOpts = hasNegativeNumberOptions(args)
+                ? new NegativeNumberOptions()
+                : null;
+
+        // Cache any negative number params that will not be accepted by the parser.
+        if (negativeNumberOpts != null)
+            args = negativeNumberOpts.removeNegativeNumberOptions(args);
+
+        // Parse the options after temporarily removing any negative number params we
+        // do not want the parser recognizing as invalid option arguments, e.g., -0.05.
         OptionSet options = parser.parse(args);
 
         if (options.has(helpOpt)) {
@@ -115,6 +131,10 @@ public class CliMain {
             printHelp(parser, err);
             throw new IllegalArgumentException("no method specified");
         }
+
+        // Restore any cached negative number params to the nonOptionArgs list.
+        if (negativeNumberOpts != null)
+            nonOptionArgs = negativeNumberOpts.restoreNegativeNumberOptions(nonOptionArgs);
 
         var methodName = nonOptionArgs.get(0);
         Method method;
@@ -169,8 +189,38 @@ public class CliMain {
                     return;
                 }
                 case createoffer: {
-                    // TODO
-                    out.println("offer created");
+                    if (nonOptionArgs.size() < 9)
+                        throw new IllegalArgumentException("incorrect parameter count,"
+                                + " expecting payment acct id, buy | sell, currency code, amount, min amount,"
+                                + " use-market-based-price, fixed-price | mkt-price-margin, security-deposit");
+
+                    var paymentAcctId = nonOptionArgs.get(1);
+                    var direction = nonOptionArgs.get(2);
+                    var currencyCode = nonOptionArgs.get(3);
+                    var amount = toSatoshis(nonOptionArgs.get(4));
+                    var minAmount = toSatoshis(nonOptionArgs.get(5));
+                    var useMarketBasedPrice = Boolean.parseBoolean(nonOptionArgs.get(6));
+                    var fixedPrice = ZERO.toString();
+                    var marketPriceMargin = ZERO;
+                    if (useMarketBasedPrice)
+                        marketPriceMargin = new BigDecimal(nonOptionArgs.get(7));
+                    else
+                        fixedPrice = nonOptionArgs.get(7);
+                    var securityDeposit = new BigDecimal(nonOptionArgs.get(8));
+
+                    var request = CreateOfferRequest.newBuilder()
+                            .setDirection(direction)
+                            .setCurrencyCode(currencyCode)
+                            .setAmount(amount)
+                            .setMinAmount(minAmount)
+                            .setUseMarketBasedPrice(useMarketBasedPrice)
+                            .setPrice(fixedPrice)
+                            .setMarketPriceMargin(marketPriceMargin.doubleValue())
+                            .setBuyerSecurityDeposit(securityDeposit.doubleValue())
+                            .setPaymentAccountId(paymentAcctId)
+                            .build();
+                    var reply = offersService.createOffer(request);
+                    out.println(formatOfferTable(singletonList(reply.getOffer()), currencyCode));
                     return;
                 }
                 case getoffers: {
@@ -179,14 +229,14 @@ public class CliMain {
                                 + " expecting direction (buy|sell), currency code");
 
                     var direction = nonOptionArgs.get(1);
-                    var fiatCurrency = nonOptionArgs.get(2);
+                    var currencyCode = nonOptionArgs.get(2);
 
                     var request = GetOffersRequest.newBuilder()
                             .setDirection(direction)
-                            .setCurrencyCode(fiatCurrency)
+                            .setCurrencyCode(currencyCode)
                             .build();
                     var reply = offersService.getOffers(request);
-                    out.println(formatOfferTable(reply.getOffersList(), fiatCurrency));
+                    out.println(formatOfferTable(reply.getOffersList(), currencyCode));
                     return;
                 }
                 case createpaymentacct: {
@@ -303,20 +353,24 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            stream.format("%-22s%-50s%s%n", "Method", "Params", "Description");
-            stream.format("%-22s%-50s%s%n", "------", "------", "------------");
-            stream.format("%-22s%-50s%s%n", "getversion", "", "Get server version");
-            stream.format("%-22s%-50s%s%n", "getbalance", "", "Get server wallet balance");
-            stream.format("%-22s%-50s%s%n", "getaddressbalance", "address", "Get server wallet address balance");
-            stream.format("%-22s%-50s%s%n", "getfundingaddresses", "", "Get BTC funding addresses");
-            stream.format("%-22s%-50s%s%n", "createoffer", "", "Create and place an offer");
-            stream.format("%-22s%-50s%s%n", "getoffers", "buy | sell, fiat currency code", "Get current offers");
-            stream.format("%-22s%-50s%s%n", "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
-            stream.format("%-22s%-50s%s%n", "getpaymentaccts", "", "Get user payment accounts");
-            stream.format("%-22s%-50s%s%n", "lockwallet", "", "Remove wallet password from memory, locking the wallet");
-            stream.format("%-22s%-50s%s%n", "unlockwallet", "password timeout",
+            String rowFormat = "%-22s%-50s%s%n";
+            stream.format(rowFormat, "Method", "Params", "Description");
+            stream.format(rowFormat, "------", "------", "------------");
+            stream.format(rowFormat, "getversion", "", "Get server version");
+            stream.format(rowFormat, "getbalance", "", "Get server wallet balance");
+            stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
+            stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
+            stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
+            stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
+            stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
+            stream.format(rowFormat, "", "security deposit (%)", "");
+            stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
+            stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
+            stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
+            stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");
+            stream.format(rowFormat, "unlockwallet", "password timeout",
                     "Store wallet password in memory for timeout seconds");
-            stream.format("%-22s%-50s%s%n", "setwalletpassword", "password [newpassword]",
+            stream.format(rowFormat, "setwalletpassword", "password [newpassword]",
                     "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.println();
         } catch (IOException ex) {
