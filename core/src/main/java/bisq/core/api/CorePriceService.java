@@ -20,13 +20,13 @@ package bisq.core.api;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 
-import bisq.common.util.MathUtils;
-
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.util.MathUtils.roundDouble;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 
 @Slf4j
@@ -41,11 +41,11 @@ class CorePriceService {
 
     public double getMarketPrice(String currencyCode) {
         if (!priceFeedService.hasPrices())
-            throw new IllegalStateException(format("price feed service has no prices"));
+            throw new IllegalStateException("price feed service has no prices");
 
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode.toUpperCase());
-        if (marketPrice.isPriceAvailable()) {
-            return MathUtils.roundDouble(marketPrice.getPrice(), 4);
+        if (requireNonNull(marketPrice).isPriceAvailable()) {
+            return roundDouble(marketPrice.getPrice(), 4);
         } else {
             throw new IllegalStateException(format("'%s' price is not available", currencyCode));
         }
