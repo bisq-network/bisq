@@ -246,8 +246,6 @@ task packageInstallers {
                 " --mac-package-name Bisq-PR-4242" +
                 " --mac-package-identifier Bisq-PR-4242-ID"
 
-            // TODO Do dmg or pkg? Or both?
-            executeCmd(jPackageFilePath + commonOpts + macOpts + " --type pkg")
             executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
         } else {
             String linuxOpts =
