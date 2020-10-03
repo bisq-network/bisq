@@ -55,7 +55,7 @@ public class ValidateCreateOfferTest extends AbstractCreateOfferTest {
                 .build();
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceStubs.offersService.createOffer(req).getOffer());
-        assertEquals("UNKNOWN: Amount is larger than 1.00 BTC",
+        assertEquals("UNKNOWN: An error occurred at task: ValidateOffer",
                 exception.getMessage());
     }
 }
