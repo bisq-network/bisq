@@ -223,9 +223,31 @@ public class BisqSetup {
         this.appStartupState = appStartupState;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void displayAlertIfPresent(Alert alert, boolean openNewVersionPopup) {
+        if (alert != null) {
+            if (alert.isUpdateInfo()) {
+                user.setDisplayedAlert(alert);
+                final boolean isNewVersion = alert.isNewVersion();
+                newVersionAvailableProperty.set(isNewVersion);
+                String key = "Update_" + alert.getVersion();
+                if (isNewVersion && (preferences.showAgain(key) || openNewVersionPopup) && displayUpdateHandler != null) {
+                    displayUpdateHandler.accept(alert, key);
+                }
+            } else {
+                final Alert displayedAlert = user.getDisplayedAlert();
+                if ((displayedAlert == null || !displayedAlert.equals(alert)) && displayAlertHandler != null)
+                    displayAlertHandler.accept(alert);
+            }
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setup
+    // Main startup tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addBisqSetupListener(BisqSetupListener listener) {
@@ -263,81 +285,7 @@ public class BisqSetup {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void displayAlertIfPresent(Alert alert, boolean openNewVersionPopup) {
-        if (alert != null) {
-            if (alert.isUpdateInfo()) {
-                user.setDisplayedAlert(alert);
-                final boolean isNewVersion = alert.isNewVersion();
-                newVersionAvailableProperty.set(isNewVersion);
-                String key = "Update_" + alert.getVersion();
-                if (isNewVersion && (preferences.showAgain(key) || openNewVersionPopup) && displayUpdateHandler != null) {
-                    displayUpdateHandler.accept(alert, key);
-                }
-            } else {
-                final Alert displayedAlert = user.getDisplayedAlert();
-                if ((displayedAlert == null || !displayedAlert.equals(alert)) && displayAlertHandler != null)
-                    displayAlertHandler.accept(alert);
-            }
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Wallet
-    public StringProperty getBtcInfo() {
-        return walletAppSetup.getBtcInfo();
-    }
-
-    public DoubleProperty getBtcSyncProgress() {
-        return walletAppSetup.getBtcSyncProgress();
-    }
-
-    public StringProperty getWalletServiceErrorMsg() {
-        return walletAppSetup.getWalletServiceErrorMsg();
-    }
-
-    public StringProperty getBtcSplashSyncIconId() {
-        return walletAppSetup.getBtcSplashSyncIconId();
-    }
-
-    public BooleanProperty getUseTorForBTC() {
-        return walletAppSetup.getUseTorForBTC();
-    }
-
-    // P2P
-    public StringProperty getP2PNetworkInfo() {
-        return p2PNetworkSetup.getP2PNetworkInfo();
-    }
-
-    public BooleanProperty getSplashP2PNetworkAnimationVisible() {
-        return p2PNetworkSetup.getSplashP2PNetworkAnimationVisible();
-    }
-
-    public StringProperty getP2pNetworkWarnMsg() {
-        return p2PNetworkSetup.getP2pNetworkWarnMsg();
-    }
-
-    public StringProperty getP2PNetworkIconId() {
-        return p2PNetworkSetup.getP2PNetworkIconId();
-    }
-
-    public BooleanProperty getUpdatedDataReceived() {
-        return p2PNetworkSetup.getUpdatedDataReceived();
-    }
-
-    public StringProperty getP2pNetworkLabelId() {
-        return p2PNetworkSetup.getP2pNetworkLabelId();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Sub tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeReSyncSPVChain() {
@@ -467,6 +415,35 @@ public class BisqSetup {
                 () -> walletInitialized.set(true));
     }
 
+    private void initDomainServices() {
+        log.info("initDomainServices");
+
+        domainInitialisation.initDomainServices(rejectedTxErrorMessageHandler,
+                displayPrivateNotificationHandler,
+                daoErrorMessageHandler,
+                daoWarnMessageHandler,
+                filterWarningHandler,
+                voteResultExceptionHandler,
+                revolutAccountsUpdateHandler);
+
+        if (walletsSetup.downloadPercentageProperty().get() == 1) {
+            checkForLockedUpFunds();
+            checkForInvalidMakerFeeTxs();
+        }
+
+        alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
+                displayAlertIfPresent(newValue, false));
+        displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
+
+        allBasicServicesInitialized = true;
+
+        appStartupState.onDomainServicesInitialized();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void checkForLockedUpFunds() {
         // We check if there are locked up funds in failed or closed trades
@@ -547,31 +524,6 @@ public class BisqSetup {
         }
     }
 
-    private void initDomainServices() {
-        log.info("initDomainServices");
-
-        domainInitialisation.initDomainServices(rejectedTxErrorMessageHandler,
-                displayPrivateNotificationHandler,
-                daoErrorMessageHandler,
-                daoWarnMessageHandler,
-                filterWarningHandler,
-                voteResultExceptionHandler,
-                revolutAccountsUpdateHandler);
-
-        if (walletsSetup.downloadPercentageProperty().get() == 1) {
-            checkForLockedUpFunds();
-            checkForInvalidMakerFeeTxs();
-        }
-
-        alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
-                displayAlertIfPresent(newValue, false));
-        displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
-
-        allBasicServicesInitialized = true;
-
-        appStartupState.onDomainServicesInitialized();
-    }
-
     private void maybeShowSecurityRecommendation() {
         String key = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
@@ -640,4 +592,57 @@ public class BisqSetup {
             displayHandler.accept(key);
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Wallet
+    public StringProperty getBtcInfo() {
+        return walletAppSetup.getBtcInfo();
+    }
+
+    public DoubleProperty getBtcSyncProgress() {
+        return walletAppSetup.getBtcSyncProgress();
+    }
+
+    public StringProperty getWalletServiceErrorMsg() {
+        return walletAppSetup.getWalletServiceErrorMsg();
+    }
+
+    public StringProperty getBtcSplashSyncIconId() {
+        return walletAppSetup.getBtcSplashSyncIconId();
+    }
+
+    public BooleanProperty getUseTorForBTC() {
+        return walletAppSetup.getUseTorForBTC();
+    }
+
+    // P2P
+    public StringProperty getP2PNetworkInfo() {
+        return p2PNetworkSetup.getP2PNetworkInfo();
+    }
+
+    public BooleanProperty getSplashP2PNetworkAnimationVisible() {
+        return p2PNetworkSetup.getSplashP2PNetworkAnimationVisible();
+    }
+
+    public StringProperty getP2pNetworkWarnMsg() {
+        return p2PNetworkSetup.getP2pNetworkWarnMsg();
+    }
+
+    public StringProperty getP2PNetworkIconId() {
+        return p2PNetworkSetup.getP2PNetworkIconId();
+    }
+
+    public BooleanProperty getUpdatedDataReceived() {
+        return p2PNetworkSetup.getUpdatedDataReceived();
+    }
+
+    public StringProperty getP2pNetworkLabelId() {
+        return p2PNetworkSetup.getP2pNetworkLabelId();
+    }
+
+
 }
