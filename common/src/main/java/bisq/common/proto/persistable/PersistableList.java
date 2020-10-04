@@ -17,19 +17,14 @@
 
 package bisq.common.proto.persistable;
 
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-@EqualsAndHashCode
 public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope {
 
     @Getter
@@ -46,18 +41,6 @@ public abstract class PersistableList<T extends PersistablePayload> implements P
         setAll(list);
     }
 
-    public void addListener(ListChangeListener<T> listener) {
-        ((ObservableList<T>) getList()).addListener(listener);
-    }
-
-    public void removeListener(ListChangeListener<T> listener) {
-        ((ObservableList<T>) getList()).removeListener(listener);
-    }
-
-    public ObservableList<T> getObservableList() {
-        return (ObservableList<T>) getList();
-    }
-
     public void setAll(Collection<T> collection) {
         this.list.clear();
         this.list.addAll(collection);
@@ -71,8 +54,8 @@ public abstract class PersistableList<T extends PersistablePayload> implements P
         return false;
     }
 
-    public boolean remove(T tradable) {
-        return list.remove(tradable);
+    public boolean remove(T item) {
+        return list.remove(item);
     }
 
     public Stream<T> stream() {
@@ -83,8 +66,8 @@ public abstract class PersistableList<T extends PersistablePayload> implements P
         return list.size();
     }
 
-    public boolean contains(T thing) {
-        return list.contains(thing);
+    public boolean contains(T item) {
+        return list.contains(item);
     }
 
     public boolean isEmpty() {

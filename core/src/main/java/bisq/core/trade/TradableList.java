@@ -23,11 +23,9 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.PersistableListAsObservable;
 
 import com.google.protobuf.Message;
-
-import javafx.collections.FXCollections;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,17 +33,13 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class TradableList<T extends Tradable> extends PersistableList<T> {
+public final class TradableList<T extends Tradable> extends PersistableListAsObservable<T> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TradableList() {
-    }
-
-    protected List<T> createList() {
-        return FXCollections.observableArrayList();
     }
 
 

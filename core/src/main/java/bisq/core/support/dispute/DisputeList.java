@@ -17,10 +17,8 @@
 
 package bisq.core.support.dispute;
 
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.proto.persistable.PersistableListAsObservable;
 import bisq.common.proto.persistable.PersistablePayload;
-
-import javafx.collections.FXCollections;
 
 import java.util.List;
 
@@ -35,10 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public abstract class DisputeList<T extends PersistablePayload> extends PersistableList<T> {
-    protected List<T> createList() {
-        return FXCollections.observableArrayList();
-    }
+public abstract class DisputeList<T extends PersistablePayload> extends PersistableListAsObservable<T> {
 
     public DisputeList() {
     }
