@@ -207,7 +207,7 @@ task packageInstallers {
         String appVersion = '1.1.1'
         println "Packaging Bisq version ${appVersion}"
 
-        String commonOpts =
+        String commonOpts = (
                 // Generic options
                 " --dest \"${binariesFolderPath}\"" +
                 " --name bisq-pr4242-test" +
@@ -225,14 +225,16 @@ task packageInstallers {
                 " --java-options -Djava.net.preferIPv4Stack=true" +
                 // Options for creating the application package
                 " --license-file \"${licenseFilePath}\"" +
-                " --runtime-image \"${jdkForAppRuntimePath}\"";
+                " --runtime-image \"${jdkForAppRuntimePath}\""
+        )
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            String windowsOpts =
-                " --icon ${project(':desktop').projectDir}/package/windows/Bisq.ico"
+            String windowsOpts = (
+                " --icon ${project(':desktop').projectDir}/package/windows/Bisq.ico" +
                 " --win-per-user-install" +
                 " --win-menu" +
                 " --win-shortcut" // TODO Seems to not work, no shortcuts created
+            )
 
             // TODO How does the current package/windows/Bisq.iss play into this?
 
@@ -241,19 +243,21 @@ task packageInstallers {
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type msi")
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
             // TODO Include signing args, like --mac-sign / -mac-signing-keychain / --mac-signing-key-user-name
-            String macOpts =
-                " --icon ${project(':desktop').projectDir}/package/macosx/Bisq.icns"
+            String macOpts = (
+                " --icon ${project(':desktop').projectDir}/package/macosx/Bisq.icns" +
                 " --mac-package-name Bisq-PR-4242" +
                 " --mac-package-identifier Bisq-PR-4242-ID"
+            )
 
             executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
         } else {
-            String linuxOpts =
-                " --icon ${project(':desktop').projectDir}/package/linux/icon.png"
+            String linuxOpts = (
+                " --icon ${project(':desktop').projectDir}/package/linux/icon.png" +
                 " --linux-package-name bisq-build-test" +
                 " --linux-app-release ${appVersion}" +
                 " --linux-menu-group Network" +
                 " --linux-shortcut"
+            )
 
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
                 " --linux-deb-maintainer contact@bisq.network" +
