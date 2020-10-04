@@ -233,7 +233,7 @@ task packageInstallers {
                 " --icon ${project(':desktop').projectDir}/package/windows/Bisq.ico" +
                 " --win-per-user-install" +
                 " --win-menu" +
-                " --win-shortcut" // TODO Seems to not work, no shortcuts created
+                " --win-shortcut"
             )
 
             // TODO How does the current package/windows/Bisq.iss play into this?
