@@ -4,14 +4,15 @@ tell application "Finder"
     set current view of container window to icon view
     set toolbar visible of container window to false
     set statusbar visible of container window to false
+    set pathbar visible of container window to false
 
-    -- size of window should match size of background
+    -- size of window should match size of background (1034x641)
     set the bounds of container window to {400, 100, 1434, 741}
 
     set theViewOptions to the icon view options of container window
     set arrangement of theViewOptions to not arranged
     set icon size of theViewOptions to 128
-    set background picture of theViewOptions to file ".background:background.png"
+    set background picture of theViewOptions to file ".background:background.tiff"
 
     -- Create alias for install location
     make new alias file at container window to POSIX file "/Applications" with properties {name:"Applications"}

@@ -190,6 +190,12 @@ task packageInstallers {
         File binariesFolderPath = file(getJavaBinariesDownloadURLs.property('binariesFolderPath'))
         String jdkForAppRuntimePath = retrieveAndExtractJavaBinaries.property('jdkForAppRuntimePath')
 
+        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir")
+        // The jpackateTempDir stores temp files used by jpackage for building the installers
+        // It can be inspected in order to troubleshoot the packaging process
+        File jpackateTempDir = new File(tempRootDir, "jpackage-temp")
+        jpackateTempDir.mkdirs();
+
         // ALL contents of this folder will be included in the resulting installers
         // However, the fat jar is the only one we need
         // Therefore, this location should point to a folder that ONLY contains the fat jar
@@ -210,11 +216,12 @@ task packageInstallers {
         String commonOpts = (
                 // Generic options
                 " --dest \"${binariesFolderPath}\"" +
-                " --name bisq-pr4242-test" +
+                " --name Bisq" +
                 " --description \"A decentralized bitcoin exchange network.\"" +
                 " --app-version ${appVersion}" +
                 " --copyright \"© 2020 Bisq\"" +
                 " --vendor Bisq" +
+                " --temp \"${jpackateTempDir}\"" +
                 // Options for creating the application image
                 " --input ${fatJarFolderPath}" +
                 // Options for creating the application launcher
@@ -243,10 +250,12 @@ task packageInstallers {
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type msi")
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
             // TODO Include signing args, like --mac-sign / -mac-signing-keychain / --mac-signing-key-user-name
+
+            // See https://docs.oracle.com/en/java/javase/14/jpackage/override-jpackage-resources.html
+            // for details of "--resource-dir"
+
             String macOpts = (
-                " --icon ${project(':desktop').projectDir}/package/macosx/Bisq.icns" +
-                " --mac-package-name Bisq-PR-4242" +
-                " --mac-package-identifier Bisq-PR-4242-ID"
+                " --resource-dir \"${project(':desktop').projectDir}/package/macosx\""
             )
 
             executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
