@@ -184,8 +184,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(T persistable, Source sourcce) {
-        this.initialize(persistable, persistable.getDefaultStorageFileName(), sourcce);
+    public void initialize(T persistable, Source source) {
+        this.initialize(persistable, persistable.getDefaultStorageFileName(), source);
     }
 
     public void initialize(T persistable, String fileName, Source sourcce) {
