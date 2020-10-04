@@ -264,7 +264,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         // We write to disk with a delay to avoid frequent write operations. Depending on the priority those delays
         // can be rather long.
         if (timer == null) {
-            timer = UserThread.runPeriodically(() -> {
+            timer = UserThread.runAfter(() -> {
                 persistNow(null);
                 UserThread.execute(() -> timer = null);
             }, source.delayInSec, TimeUnit.SECONDS);
