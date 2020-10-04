@@ -188,10 +188,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         this.initialize(persistable, persistable.getDefaultStorageFileName(), source);
     }
 
-    public void initialize(T persistable, String fileName, Source sourcce) {
+    public void initialize(T persistable, String fileName, Source source) {
         this.persistable = persistable;
         this.fileName = fileName;
-        this.source = sourcce;
+        this.source = source;
         storageFile = new File(dir, fileName);
         ALL_PERSISTENCE_MANAGERS.put(fileName, this);
     }
