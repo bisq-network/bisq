@@ -112,8 +112,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                                          AtomicInteger openInstances,
                                          PersistenceManager<?> persistenceManager) {
         persistenceManager.shutdown();
-        openInstances.decrementAndGet();
-        if (openInstances.get() == 0) {
+        if (openInstances.decrementAndGet() == 0) {
             log.info("flushAllDataToDisk completed");
             UserThread.execute(completeHandler::handleResult);
         }
