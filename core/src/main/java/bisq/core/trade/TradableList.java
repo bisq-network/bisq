@@ -27,6 +27,7 @@ import bisq.common.proto.persistable.PersistableListAsObservable;
 
 import com.google.protobuf.Message;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,8 +48,8 @@ public final class TradableList<T extends Tradable> extends PersistableListAsObs
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TradableList(List<T> list) {
-        super(list);
+    protected TradableList(Collection<T> collection) {
+        super(collection);
     }
 
     @Override

@@ -26,6 +26,7 @@ import bisq.common.proto.ProtoUtil;
 
 import com.google.protobuf.Message;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,8 +54,8 @@ public final class RefundDisputeList extends DisputeList<Dispute> {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RefundDisputeList(List<Dispute> list) {
-        super(list);
+    protected RefundDisputeList(Collection<Dispute> collection) {
+        super(collection);
     }
 
     @Override

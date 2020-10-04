@@ -26,6 +26,7 @@ import bisq.common.proto.ProtoUtil;
 
 import com.google.protobuf.Message;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,8 +52,8 @@ public final class MediationDisputeList extends DisputeList<Dispute> {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private MediationDisputeList(List<Dispute> list) {
-        super(list);
+    protected MediationDisputeList(Collection<Dispute> collection) {
+        super(collection);
     }
 
     @Override

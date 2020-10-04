@@ -37,8 +37,8 @@ public abstract class PersistableList<T extends PersistablePayload> implements P
     public PersistableList() {
     }
 
-    public PersistableList(List<T> list) {
-        setAll(list);
+    protected PersistableList(Collection<T> collection) {
+        setAll(collection);
     }
 
     public void setAll(Collection<T> collection) {

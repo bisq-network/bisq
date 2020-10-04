@@ -20,7 +20,7 @@ package bisq.core.support.dispute;
 import bisq.common.proto.persistable.PersistableListAsObservable;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import java.util.List;
+import java.util.Collection;
 
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public abstract class DisputeList<T extends PersistablePayload> extends Persista
     public DisputeList() {
     }
 
-    protected DisputeList(List<T> list) {
-        super(list);
+    protected DisputeList(Collection<T> collection) {
+        super(collection);
     }
 }

@@ -21,6 +21,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.util.Collection;
 import java.util.List;
 
 public abstract class PersistableListAsObservable<T extends PersistablePayload> extends PersistableList<T> {
@@ -28,8 +29,8 @@ public abstract class PersistableListAsObservable<T extends PersistablePayload> 
     public PersistableListAsObservable() {
     }
 
-    protected PersistableListAsObservable(List<T> list) {
-        super(list);
+    protected PersistableListAsObservable(Collection<T> collection) {
+        super(collection);
     }
 
     protected List<T> createList() {
