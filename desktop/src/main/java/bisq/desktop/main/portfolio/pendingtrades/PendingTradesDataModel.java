@@ -82,6 +82,7 @@ import javafx.collections.ObservableList;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -93,6 +94,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesDataModel extends ActivatableDataModel {
+    @Getter
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
     public final MediationManager mediationManager;
@@ -120,7 +122,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private ChangeListener<Trade.State> tradeStateChangeListener;
     private Trade selectedTrade;
     @Getter
-    private PubKeyRing pubKeyRing;
+    private final PubKeyRing pubKeyRing;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -162,7 +164,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        tradeManager.getTradesAsObservableList().addListener(tradesListChangeListener);
+        tradeManager.getObservableList().addListener(tradesListChangeListener);
         onListChanged();
         if (selectedItemProperty.get() != null)
             notificationCenter.setSelectedTradeId(selectedItemProperty.get().getTrade().getId());
@@ -172,7 +174,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        tradeManager.getTradesAsObservableList().removeListener(tradesListChangeListener);
+        tradeManager.getObservableList().removeListener(tradesListChangeListener);
         notificationCenter.setSelectedTradeId(null);
         activated = false;
     }
@@ -377,7 +379,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     private void onListChanged() {
         list.clear();
-        list.addAll(tradeManager.getTradesAsObservableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getObservableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
@@ -489,7 +491,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             payoutTxHashAsString = payoutTx.getTxId().toString();
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
-        DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+        DisputeManager<? extends DisputeList<Dispute>> disputeManager;
         boolean useMediation;
         boolean useRefundAgent;
         // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED
@@ -527,7 +529,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
             checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
-            Dispute dispute = new Dispute(disputeManager.getStorage(),
+            Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -606,7 +608,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             checkNotNull(refundAgentPubKeyRing, "refundAgentPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getTxId().toString();
-            Dispute dispute = new Dispute(disputeManager.getStorage(),
+            Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -674,6 +676,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }
+        tradeManager.requestPersistence();
     }
 
     public boolean isReadyForTxBroadcast() {

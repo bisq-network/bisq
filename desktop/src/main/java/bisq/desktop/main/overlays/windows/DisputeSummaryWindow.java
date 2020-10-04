@@ -661,6 +661,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         cancelButton.setOnAction(e -> {
             dispute.setDisputeResult(disputeResult);
+            checkNotNull(getDisputeManager(dispute)).requestPersistence();
             hide();
         });
     }
@@ -804,7 +805,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void doClose(Button closeTicketButton) {
-        DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager = getDisputeManager(dispute);
+        DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
         if (disputeManager == null) {
             return;
         }
@@ -860,12 +861,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
 
+        disputeManager.requestPersistence();
+
         closeTicketButton.disableProperty().unbind();
 
         hide();
     }
 
-    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
+    private DisputeManager<? extends DisputeList<Dispute>> getDisputeManager(Dispute dispute) {
         if (dispute.getSupportType() != null) {
             switch (dispute.getSupportType()) {
                 case ARBITRATION:

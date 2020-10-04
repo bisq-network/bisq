@@ -36,9 +36,6 @@ public class TradePresentation {
 
     @Inject
     public TradePresentation(TradeManager tradeManager) {
-        // TODO replace for tradeManager.getTradesAsObservableList() once tradableList is refactored to a final field
-        //  (part of the persistence refactor PR)
-
         tradeManager.getNumPendingTrades().addListener((observable, oldValue, newValue) -> {
             long numPendingTrades = (long) newValue;
             if (numPendingTrades > 0)

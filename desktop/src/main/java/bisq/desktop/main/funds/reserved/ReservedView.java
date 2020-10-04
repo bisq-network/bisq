@@ -143,7 +143,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @Override
     protected void activate() {
         openOfferManager.getObservableList().addListener(openOfferListChangeListener);
-        tradeManager.getTradesAsObservableList().addListener(tradeListChangeListener);
+        tradeManager.getObservableList().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -154,7 +154,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @Override
     protected void deactivate() {
         openOfferManager.getObservableList().removeListener(openOfferListChangeListener);
-        tradeManager.getTradesAsObservableList().removeListener(tradeListChangeListener);
+        tradeManager.getObservableList().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(ReservedListItem::cleanup);
         btcWalletService.removeBalanceListener(balanceListener);
@@ -257,7 +257,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                         if (item != null && !empty) {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon(Res.get("funds.reserved.reserved", item.getAddressEntry().getShortOfferId()),
+                                field = new HyperlinkWithIcon(Res.get("funds.reserved.reserved", item.getOpenOffer().getShortId()),
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));

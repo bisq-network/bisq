@@ -80,7 +80,7 @@ public class Balances {
 
     public void onAllServicesInitialized() {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
-        tradeManager.getTradesAsObservableList().addListener((ListChangeListener<Trade>) change -> updateBalance());
+        tradeManager.getObservableList().addListener((ListChangeListener<Trade>) change -> updateBalance());
         refundManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> updateBalance());
         btcWalletService.addBalanceListener(new BalanceListener() {
             @Override

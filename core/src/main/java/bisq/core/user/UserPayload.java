@@ -28,7 +28,7 @@ import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
+import bisq.common.proto.persistable.PersistableEnvelope;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Data
 @AllArgsConstructor
-public class UserPayload implements UserThreadMappedPersistableEnvelope {
+public class UserPayload implements PersistableEnvelope {
     @Nullable
     private String accountId;
     @Nullable

@@ -37,7 +37,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.storage.Storage;
 import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
 
@@ -64,8 +63,6 @@ import javafx.beans.property.StringProperty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
-import java.time.temporal.ChronoUnit;
 
 import java.util.Date;
 import java.util.Optional;
@@ -368,10 +365,8 @@ public abstract class Trade implements Tradable, Model {
     transient final private Coin txFee;
     @Getter
     transient final private Coin takerFee;
-    @Getter // to set in constructor so not final but set at init
-    transient private Storage<? extends TradableList> storage;
-    @Getter // to set in constructor so not final but set at init
-    transient private BtcWalletService btcWalletService;
+    @Getter
+    transient final private BtcWalletService btcWalletService;
 
     transient final private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
     transient final private ObjectProperty<Phase> statePhaseProperty = new SimpleObjectProperty<>(state.phase);
@@ -424,14 +419,6 @@ public abstract class Trade implements Tradable, Model {
     private RefundResultState refundResultState = RefundResultState.UNDEFINED_REFUND_RESULT;
     transient final private ObjectProperty<RefundResultState> refundResultStateProperty = new SimpleObjectProperty<>(refundResultState);
 
-    // Added in v1.2.6
-    @Getter
-    @Setter
-    private long lastRefreshRequestDate;
-    @Getter
-    private final long refreshInterval;
-    private static final long MAX_REFRESH_INTERVAL = 4 * ChronoUnit.HOURS.getDuration().toMillis();
-
     // Added at v1.3.8
     // We use that for the XMR txKey but want to keep it generic to be flexible for other payment methods or assets.
     @Getter
@@ -463,7 +450,6 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress arbitratorNodeAddress,
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
-                    Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService,
                     ProcessModel processModel) {
         this.offer = offer;
@@ -473,15 +459,12 @@ public abstract class Trade implements Tradable, Model {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.refundAgentNodeAddress = refundAgentNodeAddress;
-        this.storage = storage;
         this.btcWalletService = btcWalletService;
         this.processModel = processModel;
 
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
         takeOfferDate = new Date().getTime();
-        lastRefreshRequestDate = takeOfferDate;
-        refreshInterval = Math.min(offer.getPaymentMethod().getMaxTradePeriod() / 5, MAX_REFRESH_INTERVAL);
     }
 
 
@@ -497,7 +480,6 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress arbitratorNodeAddress,
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
-                    Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService,
                     ProcessModel processModel) {
 
@@ -508,7 +490,6 @@ public abstract class Trade implements Tradable, Model {
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
                 btcWalletService,
                 processModel);
         this.tradePrice = tradePrice;
@@ -539,8 +520,7 @@ public abstract class Trade implements Tradable, Model {
                 .addAllChatMessage(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()))
-                .setLockTime(lockTime)
-                .setLastRefreshRequestDate(lastRefreshRequestDate);
+                .setLockTime(lockTime);
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -597,7 +577,6 @@ public abstract class Trade implements Tradable, Model {
         trade.setRefundResultState(RefundResultState.fromProto(proto.getRefundResultState()));
         trade.setDelayedPayoutTxBytes(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxBytes()));
         trade.setLockTime(proto.getLockTime());
-        trade.setLastRefreshRequestDate(proto.getLastRefreshRequestDate());
         trade.setCounterCurrencyExtraData(ProtoUtil.stringOrNullFromProto(proto.getCounterCurrencyExtraData()));
 
         AssetTxProofResult persistedAssetTxProofResult = ProtoUtil.enumFromProto(AssetTxProofResult.class, proto.getAssetTxProofResult());
@@ -619,26 +598,18 @@ public abstract class Trade implements Tradable, Model {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setTransientFields(Storage<? extends TradableList> storage, BtcWalletService btcWalletService) {
-        this.storage = storage;
-        this.btcWalletService = btcWalletService;
-    }
-
     public void initialize(ProcessModelServiceProvider serviceProvider) {
         serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-            persist();
         });
 
         serviceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
             mediatorPubKeyRing = mediator.getPubKeyRing();
-            persist();
         });
 
         serviceProvider.getRefundAgentManager().getDisputeAgentByNodeAddress(refundAgentNodeAddress).ifPresent(refundAgent -> {
             refundAgentPubKeyRing = refundAgent.getPubKeyRing();
-            persist();
         });
 
         isInitialized = true;
@@ -659,7 +630,6 @@ public abstract class Trade implements Tradable, Model {
         this.depositTx = tx;
         depositTxId = depositTx.getTxId().toString();
         setupConfidenceListener();
-        persist();
     }
 
     @Nullable
@@ -673,12 +643,10 @@ public abstract class Trade implements Tradable, Model {
     public void applyDelayedPayoutTx(Transaction delayedPayoutTx) {
         this.delayedPayoutTx = delayedPayoutTx;
         this.delayedPayoutTxBytes = delayedPayoutTx.bitcoinSerialize();
-        persist();
     }
 
     public void applyDelayedPayoutTxBytes(byte[] delayedPayoutTxBytes) {
         this.delayedPayoutTxBytes = delayedPayoutTxBytes;
-        persist();
     }
 
     @Nullable
@@ -710,7 +678,6 @@ public abstract class Trade implements Tradable, Model {
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
         if (!chatMessages.contains(chatMessage)) {
             chatMessages.add(chatMessage);
-            storage.queueUpForSave();
         } else {
             log.error("Trade ChatMessage already exists");
         }
@@ -720,35 +687,13 @@ public abstract class Trade implements Tradable, Model {
         errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
     }
 
-    public boolean allowedRefresh() {
-        var allowRefresh = new Date().getTime() > lastRefreshRequestDate + getRefreshInterval();
-        if (!allowRefresh) {
-            log.info("Refresh not allowed, last refresh at {}", lastRefreshRequestDate);
-        }
-        return allowRefresh;
-    }
-
-    public void logRefresh() {
-        var time = new Date().getTime();
-        log.debug("Log refresh at {}", time);
-        lastRefreshRequestDate = time;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Get called from taskRunner after each completed task
-    @Override
-    public void persist() {
-        if (storage != null)
-            storage.queueUpForSave();
-    }
-
     @Override
     public void onComplete() {
-        persist();
     }
 
 
@@ -774,6 +719,7 @@ public abstract class Trade implements Tradable, Model {
 
     public void setState(State state) {
         if (isInitialized) {
+            // We don't want to log at startup the setState calls from all persisted trades
             log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         }
         if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
@@ -782,46 +728,29 @@ public abstract class Trade implements Tradable, Model {
             log.warn(message);
         }
 
-        boolean changed = this.state != state;
         this.state = state;
         stateProperty.set(state);
         statePhaseProperty.set(state.getPhase());
-
-        if (changed)
-            persist();
     }
 
     public void setDisputeState(DisputeState disputeState) {
-        boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
-        if (changed)
-            persist();
     }
 
     public void setMediationResultState(MediationResultState mediationResultState) {
-        boolean changed = this.mediationResultState != mediationResultState;
         this.mediationResultState = mediationResultState;
         mediationResultStateProperty.set(mediationResultState);
-        if (changed)
-            persist();
     }
 
     public void setRefundResultState(RefundResultState refundResultState) {
-        boolean changed = this.refundResultState != refundResultState;
         this.refundResultState = refundResultState;
         refundResultStateProperty.set(refundResultState);
-        if (changed)
-            persist();
     }
 
-
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
-        boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
         tradePeriodStateProperty.set(tradePeriodState);
-        if (changed)
-            persist();
     }
 
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
@@ -851,7 +780,6 @@ public abstract class Trade implements Tradable, Model {
     public void setAssetTxProofResult(@Nullable AssetTxProofResult assetTxProofResult) {
         this.assetTxProofResult = assetTxProofResult;
         assetTxProofResultUpdateProperty.set(assetTxProofResultUpdateProperty.get() + 1);
-        persist();
     }
 
 
@@ -1188,7 +1116,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     txFee=" + txFee +
                 ",\n     takerFee=" + takerFee +
-                ",\n     storage=" + storage +
                 ",\n     btcWalletService=" + btcWalletService +
                 ",\n     stateProperty=" + stateProperty +
                 ",\n     statePhaseProperty=" + statePhaseProperty +
@@ -1209,7 +1136,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     refundAgentPubKeyRing=" + refundAgentPubKeyRing +
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
-                ",\n     lastRefreshRequestDate=" + lastRefreshRequestDate +
                 "\n}";
     }
 }

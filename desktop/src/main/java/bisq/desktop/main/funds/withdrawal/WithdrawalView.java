@@ -135,7 +135,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
-    private Set<WithdrawalListItem> selectedItems = new HashSet<>();
+    private final Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses = new HashSet<>();
     private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;
@@ -392,7 +392,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             log.error("onWithdraw transaction is null");
                                         }
 
-                                        List<Trade> trades = new ArrayList<>(tradeManager.getTradesAsObservableList());
+                                        List<Trade> trades = new ArrayList<>(tradeManager.getObservableList());
                                         trades.stream()
                                                 .filter(Trade::isPayoutPublished)
                                                 .forEach(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)

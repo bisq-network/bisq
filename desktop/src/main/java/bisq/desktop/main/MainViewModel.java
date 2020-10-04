@@ -68,7 +68,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 
 import com.google.inject.Inject;
 
@@ -127,17 +127,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
-    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final CorruptedStorageFileHandler corruptedStorageFileHandler;
 
     @Getter
-    private BooleanProperty showAppScreen = new SimpleBooleanProperty();
-    private DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
+    private final BooleanProperty showAppScreen = new SimpleBooleanProperty();
+    private final DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> tradesAndUIReady;
-    private Queue<Overlay<?>> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
+    private final Queue<Overlay<?>> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +169,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          LocalBitcoinNode localBitcoinNode,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
-                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                         CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.user = user;
@@ -192,7 +192,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.localBitcoinNode = localBitcoinNode;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
-        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.corruptedStorageFileHandler = corruptedStorageFileHandler;
 
         TxIdTextField.setPreferences(preferences);
 
@@ -220,7 +220,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             if (newValue) {
                 tradeManager.applyTradePeriodState();
 
-                tradeManager.getTradesAsObservableList().forEach(trade -> {
+                tradeManager.getObservableList().forEach(trade -> {
                     Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                     String key;
                     switch (trade.getTradePeriodState()) {
@@ -401,7 +401,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             }
         });
 
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
+        corruptedStorageFileHandler.getFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()
                 .show());

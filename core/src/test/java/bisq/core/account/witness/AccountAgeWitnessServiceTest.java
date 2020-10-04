@@ -177,7 +177,7 @@ public class AccountAgeWitnessServiceTest {
         service.addToMap(sellerAccountAgeWitness);
         long now = new Date().getTime() + 1000;
         Contract contract = mock(Contract.class);
-        disputes.add(new Dispute(
+        disputes.add(new Dispute(new Date().getTime(),
                 "trade1",
                 0,
                 true,

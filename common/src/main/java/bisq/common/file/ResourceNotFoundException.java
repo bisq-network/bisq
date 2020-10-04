@@ -15,17 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.proto.persistable;
+package bisq.common.file;
 
-import java.util.List;
-
-public abstract class UserThreadMappedPersistableList<T extends PersistablePayload> extends PersistableList<T>
-        implements UserThreadMappedPersistableEnvelope {
-
-    public UserThreadMappedPersistableList(List<T> list) {
-        super(list);
-    }
-
-    public UserThreadMappedPersistableList() {
+public class ResourceNotFoundException extends Exception {
+    public ResourceNotFoundException(String path) {
+        super("Resource not found: path = " + path);
     }
 }

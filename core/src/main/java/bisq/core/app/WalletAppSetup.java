@@ -235,7 +235,7 @@ public class WalletAppSetup {
                                     }, 1);
                                 });
 
-                        tradeManager.getTradesAsObservableList().stream()
+                        tradeManager.getObservableList().stream()
                                 .filter(trade -> trade.getOffer() != null)
                                 .forEach(trade -> {
                                     String details = null;

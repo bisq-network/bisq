@@ -177,12 +177,13 @@ public class XmrTxProofService implements AssetTxProofService {
                 servicesByTradeId.values().stream().map(XmrTxProofRequestsPerTrade::getTrade).forEach(trade ->
                         trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
                                 .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature"))));
+                tradeManager.requestPersistence();
                 shutDown();
             }
         });
 
         // We listen on new trades
-        ObservableList<Trade> tradableList = tradeManager.getTradesAsObservableList();
+        ObservableList<Trade> tradableList = tradeManager.getObservableList();
         tradableList.addListener((ListChangeListener<Trade>) c -> {
             c.next();
             if (c.wasAdded()) {
@@ -230,18 +231,21 @@ public class XmrTxProofService implements AssetTxProofService {
         String txHash = trade.getCounterCurrencyExtraData();
         if (is32BitHexStringInValid(txId) || is32BitHexStringInValid(txHash)) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.txKeyOrTxIdInvalid")));
+            tradeManager.requestPersistence();
             return;
         }
 
         if (isAutoConfDisabledByFilter()) {
             trade.setAssetTxProofResult(AssetTxProofResult.FEATURE_DISABLED
                     .details(Res.get("portfolio.pending.autoConf.state.filterDisabledFeature")));
+            tradeManager.requestPersistence();
             return;
         }
 
-        if (wasTxKeyReUsed(trade, tradeManager.getTradesAsObservableList())) {
+        if (wasTxKeyReUsed(trade, tradeManager.getObservableList())) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA
                     .details(Res.get("portfolio.pending.autoConf.state.xmr.txKeyReused")));
+            tradeManager.requestPersistence();
             return;
         }
 
@@ -272,6 +276,8 @@ public class XmrTxProofService implements AssetTxProofService {
                     if (assetTxProofResult.isTerminal()) {
                         servicesByTradeId.remove(trade.getId());
                     }
+
+                    tradeManager.requestPersistence();
                 },
                 (errorMessage, throwable) -> {
                     log.error(errorMessage);
@@ -368,8 +374,8 @@ public class XmrTxProofService implements AssetTxProofService {
         // We need to prevent that a user tries to scam by reusing a txKey and txHash of a previous XMR trade with
         // the same user (same address) and same amount. We check only for the txKey as a same txHash but different
         // txKey is not possible to get a valid result at proof.
-        Stream<Trade> failedAndOpenTrades = Stream.concat(activeTrades.stream(), failedTradesManager.getFailedTrades().stream());
-        Stream<Trade> closedTrades = closedTradableManager.getClosedTradables().stream()
+        Stream<Trade> failedAndOpenTrades = Stream.concat(activeTrades.stream(), failedTradesManager.getObservableList().stream());
+        Stream<Trade> closedTrades = closedTradableManager.getObservableList().stream()
                 .filter(tradable -> tradable instanceof Trade)
                 .map(tradable -> (Trade) tradable);
         Stream<Trade> allTrades = Stream.concat(failedAndOpenTrades, closedTrades);

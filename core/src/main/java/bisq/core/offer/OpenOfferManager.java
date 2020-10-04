@@ -60,9 +60,9 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 
@@ -113,11 +113,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final RefundAgentManager refundAgentManager;
     private final DaoFacade daoFacade;
     private final FilterManager filterManager;
-    private final Storage<TradableList<OpenOffer>> openOfferTradableListStorage;
+    private final PersistenceManager<TradableList<OpenOffer>> persistenceManager;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
+    private final TradableList<OpenOffer> openOffers = new TradableList<>();
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
-    private TradableList<OpenOffer> openOffers;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +142,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
                             FilterManager filterManager,
-                            Storage<TradableList<OpenOffer>> storage) {
+                            PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
         this.user = user;
@@ -160,17 +160,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.filterManager = filterManager;
+        this.persistenceManager = persistenceManager;
 
-        openOfferTradableListStorage = storage;
-
-        // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->
-                UserThread.execute(OpenOfferManager.this::shutDown), "OpenOfferManager.ShutDownHook"));
+        this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
     }
 
     @Override
     public void readPersisted() {
-        openOffers = new TradableList<>(openOfferTradableListStorage, "OpenOffers");
+        TradableList<OpenOffer> persisted = persistenceManager.getPersisted();
+        if (persisted != null) {
+            openOffers.setAll(persisted.getList());
+        }
+
         openOffers.forEach(e -> {
             Offer offer = e.getOffer();
             offer.setPriceFeedService(priceFeedService);
@@ -221,7 +222,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-        int size = openOffers != null ? openOffers.size() : 0;
+        int size = openOffers.size();
         log.info("Remove open offers at shutDown. Number of open offers: {}", size);
         if (offerBookService.isBootstrapped() && size > 0) {
             UserThread.execute(() -> openOffers.forEach(
@@ -240,7 +241,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void removeOpenOffers(List<OpenOffer> openOffers, @Nullable Runnable completeHandler) {
-        final int size = openOffers.size();
+        int size = openOffers.size();
         // Copy list as we remove in the loop
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers);
         openOffersList.forEach(openOffer -> removeOpenOffer(openOffer, () -> {
@@ -370,9 +371,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {
-                    OpenOffer openOffer = new OpenOffer(offer, openOfferTradableListStorage);
+                    OpenOffer openOffer = new OpenOffer(offer);
                     openOffers.add(openOffer);
-                    openOfferTradableListStorage.queueUpForSave();
+                    requestPersistence();
                     resultHandler.handleResult(transaction);
                     if (!stopped) {
                         startPeriodicRepublishOffersTimer();
@@ -406,10 +407,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                   ErrorMessageHandler errorMessageHandler) {
         if (!offersToBeEdited.containsKey(openOffer.getId())) {
             Offer offer = openOffer.getOffer();
-            openOffer.setStorage(openOfferTradableListStorage);
             offerBookService.activateOffer(offer,
                     () -> {
                         openOffer.setState(OpenOffer.State.AVAILABLE);
+                        requestPersistence();
                         log.debug("activateOpenOffer, offerId={}", offer.getId());
                         resultHandler.handleResult();
                     },
@@ -423,10 +424,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                     ResultHandler resultHandler,
                                     ErrorMessageHandler errorMessageHandler) {
         Offer offer = openOffer.getOffer();
-        openOffer.setStorage(openOfferTradableListStorage);
         offerBookService.deactivateOffer(offer.getOfferPayload(),
                 () -> {
                     openOffer.setState(OpenOffer.State.DEACTIVATED);
+                    requestPersistence();
                     log.debug("deactivateOpenOffer, offerId={}", offer.getId());
                     resultHandler.handleResult();
                 },
@@ -439,7 +440,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (!offersToBeEdited.containsKey(openOffer.getId())) {
             Offer offer = openOffer.getOffer();
             if (openOffer.isDeactivated()) {
-                openOffer.setStorage(openOfferTradableListStorage);
                 onRemoved(openOffer, resultHandler, offer);
             } else {
                 offerBookService.removeOffer(offer.getOfferPayload(),
@@ -481,15 +481,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         Optional<OpenOffer> openOfferOptional = getOpenOfferById(editedOffer.getId());
 
         if (openOfferOptional.isPresent()) {
-            final OpenOffer openOffer = openOfferOptional.get();
-
-            openOffer.setStorage(openOfferTradableListStorage);
+            OpenOffer openOffer = openOfferOptional.get();
 
             openOffer.getOffer().setState(Offer.State.REMOVED);
             openOffer.setState(OpenOffer.State.CANCELED);
             openOffers.remove(openOffer);
 
-            final OpenOffer editedOpenOffer = new OpenOffer(editedOffer, openOfferTradableListStorage);
+            OpenOffer editedOpenOffer = new OpenOffer(editedOffer);
             editedOpenOffer.setState(originalState);
 
             openOffers.add(editedOpenOffer);
@@ -498,7 +496,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 republishOffer(editedOpenOffer);
 
             offersToBeEdited.remove(openOffer.getId());
-
+            requestPersistence();
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("There is no offer with this id existing to be published.");
@@ -528,6 +526,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         closedTradableManager.add(openOffer);
         log.info("onRemoved offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+        requestPersistence();
         resultHandler.handleResult();
     }
 
@@ -539,11 +538,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             offerBookService.removeOffer(openOffer.getOffer().getOfferPayload(),
                     () -> log.trace("Successful removed offer"),
                     log::error);
+            requestPersistence();
         });
     }
 
     public void reserveOpenOffer(OpenOffer openOffer) {
         openOffer.setState(OpenOffer.State.RESERVED);
+        requestPersistence();
     }
 
 
@@ -556,7 +557,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public ObservableList<OpenOffer> getObservableList() {
-        return openOffers.getList();
+        return openOffers.getObservableList();
     }
 
     public Optional<OpenOffer> getOpenOfferById(String offerId) {
@@ -828,7 +829,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 // remove old offer
                 originalOffer.setState(Offer.State.REMOVED);
                 originalOpenOffer.setState(OpenOffer.State.CANCELED);
-                originalOpenOffer.setStorage(openOfferTradableListStorage);
                 openOffers.remove(originalOpenOffer);
 
                 // Create new Offer
@@ -836,10 +836,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 updatedOffer.setPriceFeedService(priceFeedService);
                 updatedOffer.setState(originalOfferState);
 
-                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer, openOfferTradableListStorage);
+                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer);
                 updatedOpenOffer.setState(originalOpenOfferState);
-                updatedOpenOffer.setStorage(openOfferTradableListStorage);
                 openOffers.add(updatedOpenOffer);
+                requestPersistence();
 
                 log.info("Updating offer completed. id={}", originalOffer.getId());
             }
@@ -899,7 +899,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
                     }
                 });
-        openOffer.setStorage(openOfferTradableListStorage);
     }
 
     private void startPeriodicRepublishOffersTimer() {
@@ -967,6 +966,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             }, RETRY_REPUBLISH_DELAY_SEC);
 
         startPeriodicRepublishOffersTimer();
+    }
+
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
 

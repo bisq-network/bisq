@@ -19,9 +19,9 @@ package bisq.network.p2p.storage.persistence;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistablePayload;
-import bisq.common.storage.Storage;
 
 import java.io.File;
 
@@ -43,8 +43,8 @@ public abstract class MapStoreService<T extends PersistableEnvelope, R extends P
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public MapStoreService(File storageDir, Storage<T> storage) {
-        super(storageDir, storage);
+    public MapStoreService(File storageDir, PersistenceManager<T> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
 
@@ -58,18 +58,18 @@ public abstract class MapStoreService<T extends PersistableEnvelope, R extends P
 
     void put(P2PDataStorage.ByteArray hash, R payload) {
         getMap().put(hash, payload);
-        persist();
+        requestPersistence();
     }
 
     R putIfAbsent(P2PDataStorage.ByteArray hash, R payload) {
         R previous = getMap().putIfAbsent(hash, payload);
-        persist();
+        requestPersistence();
         return previous;
     }
 
     R remove(P2PDataStorage.ByteArray hash) {
-        final R result = getMap().remove(hash);
-        persist();
+        R result = getMap().remove(hash);
+        requestPersistence();
         return result;
     }
 

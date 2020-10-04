@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-//TODO add repeated msg send
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 public class SellerSendPayoutTxPublishedMessage extends SendMailboxMessageTask {

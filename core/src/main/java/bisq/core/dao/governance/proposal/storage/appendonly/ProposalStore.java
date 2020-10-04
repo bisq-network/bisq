@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.proposal.storage.appendonly;
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
@@ -34,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class ProposalStore extends PersistableNetworkPayloadStore {
+public class ProposalStore extends PersistableNetworkPayloadStore<ProposalPayload> {
 
     ProposalStore() {
     }
@@ -45,7 +44,7 @@ public class ProposalStore extends PersistableNetworkPayloadStore {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ProposalStore(List<ProposalPayload> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -66,9 +65,5 @@ public class ProposalStore extends PersistableNetworkPayloadStore {
         List<ProposalPayload> list = proto.getItemsList().stream()
                 .map(ProposalPayload::fromProto).collect(Collectors.toList());
         return new ProposalStore(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }

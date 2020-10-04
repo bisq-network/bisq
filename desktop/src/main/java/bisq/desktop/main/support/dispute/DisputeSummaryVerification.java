@@ -18,6 +18,7 @@
 package bisq.desktop.main.support.dispute;
 
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
@@ -45,7 +46,7 @@ public class DisputeSummaryVerification {
     private static final String SEPARATOR1 = "\n-----BEGIN SIGNATURE-----\n";
     private static final String SEPARATOR2 = "\n-----END SIGNATURE-----\n";
 
-    public static String signAndApply(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+    public static String signAndApply(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                                       DisputeResult disputeResult,
                                       String textToSign) {
 

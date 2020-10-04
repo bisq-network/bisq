@@ -20,8 +20,8 @@ package bisq.core.dao.state.unconfirmed;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -40,11 +40,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost {
     private final UnconfirmedBsqChangeOutputList unconfirmedBsqChangeOutputList = new UnconfirmedBsqChangeOutputList();
-    private final Storage<UnconfirmedBsqChangeOutputList> storage;
+    private final PersistenceManager<UnconfirmedBsqChangeOutputList> persistenceManager;
 
     @Inject
-    public UnconfirmedBsqChangeOutputListService(Storage<UnconfirmedBsqChangeOutputList> storage) {
-        this.storage = storage;
+    public UnconfirmedBsqChangeOutputListService(PersistenceManager<UnconfirmedBsqChangeOutputList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+
+        this.persistenceManager.initialize(unconfirmedBsqChangeOutputList, PersistenceManager.Source.PRIVATE);
     }
 
 
@@ -55,10 +57,9 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            UnconfirmedBsqChangeOutputList persisted = storage.initAndGetPersisted(unconfirmedBsqChangeOutputList, 100);
+            UnconfirmedBsqChangeOutputList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
-                unconfirmedBsqChangeOutputList.clear();
-                unconfirmedBsqChangeOutputList.addAll(persisted.getList());
+                unconfirmedBsqChangeOutputList.setAll(persisted.getList());
             }
         }
     }
@@ -144,7 +145,7 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
             return;
 
         unconfirmedBsqChangeOutputList.add(txOutput);
-        persist();
+        requestPersistence();
     }
 
     public void onReorganize() {
@@ -190,16 +191,16 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
                 .filter(unconfirmedBsqChangeOutputList::containsTxOutput)
                 .forEach(txOutput -> {
                     unconfirmedBsqChangeOutputList.remove(txOutput);
-                    persist();
+                    requestPersistence();
                 });
     }
 
     private void reset() {
         unconfirmedBsqChangeOutputList.clear();
-        persist();
+        requestPersistence();
     }
 
-    private void persist() {
-        storage.queueUpForSave();
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

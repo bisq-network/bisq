@@ -58,10 +58,10 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.persistence.PersistenceManager;
+import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -209,14 +209,19 @@ public class GUIUtil {
                                       Preferences preferences,
                                       Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                      CorruptedStorageFileHandler corruptedStorageFileHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (!directory.isEmpty()) {
-                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
-                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
-                paymentAccountsStorage.queueUpForSave();
-                new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
+                PaymentAccountList paymentAccounts = new PaymentAccountList(accounts);
+                persistenceManager.initialize(paymentAccounts, fileName, PersistenceManager.Source.PRIVATE_LOW_PRIO);
+                persistenceManager.persistNow(() -> {
+                    persistenceManager.shutdown();
+                    new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath",
+                            Paths.get(directory, fileName).toAbsolutePath()))
+                            .show();
+                });
             }
         } else {
             new Popup().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
@@ -228,7 +233,7 @@ public class GUIUtil {
                                       Preferences preferences,
                                       Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                      CorruptedStorageFileHandler corruptedStorageFileHandler) {
         FileChooser fileChooser = new FileChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -241,8 +246,8 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
-                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
+                PersistenceManager<PaymentAccountList> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
+                PaymentAccountList persisted = persistenceManager.getPersisted(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
                     final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();

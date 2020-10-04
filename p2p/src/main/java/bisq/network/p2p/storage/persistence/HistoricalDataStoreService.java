@@ -21,7 +21,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Version;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -39,8 +39,8 @@ import lombok.extern.slf4j.Slf4j;
  * request so the responding (seed)node can figure out if we miss any of the historical data.
  */
 @Slf4j
-public abstract class HistoricalDataStoreService<T extends PersistableNetworkPayloadStore> extends MapStoreService<T, PersistableNetworkPayload> {
-    private ImmutableMap<String, PersistableNetworkPayloadStore> storesByVersion;
+public abstract class HistoricalDataStoreService<T extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> extends MapStoreService<T, PersistableNetworkPayload> {
+    private ImmutableMap<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersion;
     // Cache to avoid that we have to recreate the historical data at each request
     private ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
 
@@ -49,8 +49,8 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public HistoricalDataStoreService(File storageDir, Storage<T> storage) {
-        super(storageDir, storage);
+    public HistoricalDataStoreService(File storageDir, PersistenceManager<T> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
 
@@ -126,7 +126,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         }
 
         getMapOfLiveData().put(hash, payload);
-        persist();
+        requestPersistence();
     }
 
     @Override
@@ -139,7 +139,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         // So it will be always null. We still keep the return type as we override the method from MapStoreService which
         // follow the Map.putIfAbsent signature.
         getMapOfLiveData().put(hash, payload);
-        persist();
+        requestPersistence();
         return null;
     }
 
@@ -152,7 +152,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
         // Now we add our historical data stores. As they are immutable after created we use an ImmutableMap
         ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
-        ImmutableMap.Builder<String, PersistableNetworkPayloadStore> storesByVersionBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder = ImmutableMap.builder();
 
         Version.HISTORY.forEach(version -> readHistoricalStoreFromResources(version, postFix, allHistoricalPayloadsBuilder, storesByVersionBuilder));
 
@@ -168,12 +168,12 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
     private void readHistoricalStoreFromResources(String version,
                                                   String postFix,
                                                   ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalDataBuilder,
-                                                  ImmutableMap.Builder<String, PersistableNetworkPayloadStore> storesByVersionBuilder) {
+                                                  ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder) {
         String fileName = getFileName() + "_" + version;
         boolean wasCreatedFromResources = makeFileFromResourceFile(fileName, postFix);
 
         // If resource file does not exist we return null. We do not create a new store as it would never get filled.
-        PersistableNetworkPayloadStore historicalStore = storage.getPersisted(fileName);
+        PersistableNetworkPayloadStore<? extends PersistableNetworkPayload> historicalStore = persistenceManager.getPersisted(fileName);
         if (historicalStore == null) {
             log.warn("Resource file with file name {} does not exits.", fileName);
             return;
@@ -187,7 +187,8 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         }
     }
 
-    private void pruneStore(PersistableNetworkPayloadStore historicalStore, String version) {
+    private void pruneStore(PersistableNetworkPayloadStore<? extends PersistableNetworkPayload> historicalStore,
+                            String version) {
         int preLive = getMapOfLiveData().size();
         getMapOfLiveData().keySet().removeAll(historicalStore.getMap().keySet());
         int postLive = getMapOfLiveData().size();
@@ -198,7 +199,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         } else {
             log.info("No pruning from historical data store with version {} was applied", version);
         }
-        storage.queueUpForSave(store);
+        requestPersistence();
     }
 
     private boolean anyMapContainsKey(P2PDataStorage.ByteArray hash) {

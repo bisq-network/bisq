@@ -143,7 +143,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     @Override
     protected void activate() {
         openOfferManager.getObservableList().addListener(openOfferListChangeListener);
-        tradeManager.getTradesAsObservableList().addListener(tradeListChangeListener);
+        tradeManager.getObservableList().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -154,7 +154,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     @Override
     protected void deactivate() {
         openOfferManager.getObservableList().removeListener(openOfferListChangeListener);
-        tradeManager.getTradesAsObservableList().removeListener(tradeListChangeListener);
+        tradeManager.getObservableList().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(LockedListItem::cleanup);
         btcWalletService.removeBalanceListener(balanceListener);
@@ -258,7 +258,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             AddressEntry addressEntry = item.getAddressEntry();
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon(Res.get("funds.locked.locked", addressEntry.getShortOfferId()),
+                                field = new HyperlinkWithIcon(Res.get("funds.locked.locked", item.getTrade().getShortId()),
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));

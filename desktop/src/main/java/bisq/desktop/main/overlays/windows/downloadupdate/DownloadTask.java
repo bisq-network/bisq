@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.overlays.windows.downloadupdate;
 
-import bisq.common.storage.FileUtil;
+import bisq.common.file.FileUtil;
 
 import com.google.common.collect.Lists;
 

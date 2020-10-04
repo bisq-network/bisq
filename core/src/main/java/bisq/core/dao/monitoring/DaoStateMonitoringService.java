@@ -39,7 +39,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
-import bisq.common.storage.FileManager;
+import bisq.common.file.FileUtil;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -419,7 +419,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         File corrupted = new File(storageDir, storeName);
         try {
             if (corrupted.exists()) {
-                FileManager.removeAndBackupFile(storageDir, corrupted, newFileName, backupDirName);
+                FileUtil.removeAndBackupFile(storageDir, corrupted, newFileName, backupDirName);
             }
         } catch (Throwable t) {
             t.printStackTrace();

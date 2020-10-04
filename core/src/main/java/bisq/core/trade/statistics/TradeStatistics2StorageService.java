@@ -22,7 +22,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,14 +44,19 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
 
     @Inject
     public TradeStatistics2StorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                          Storage<TradeStatistics2Store> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+                                          PersistenceManager<TradeStatistics2Store> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
+    }
 
     @Override
     public String getFileName() {

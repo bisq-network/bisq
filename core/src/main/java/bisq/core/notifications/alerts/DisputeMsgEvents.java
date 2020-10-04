@@ -21,6 +21,7 @@ import bisq.core.locale.Res;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
@@ -123,6 +124,11 @@ public class DisputeMsgEvents {
         // trader/mediator/arbitrator who has reopened the case
         if (dispute.isClosed() && !chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
             dispute.setIsClosed(false);
+            if (dispute.getSupportType() == SupportType.MEDIATION) {
+                mediationManager.requestPersistence();
+            } else if (dispute.getSupportType() == SupportType.REFUND) {
+                refundManager.requestPersistence();
+            }
         }
     }
 }
