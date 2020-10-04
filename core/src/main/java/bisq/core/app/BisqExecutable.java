@@ -153,7 +153,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void applyInjector() {
-        // Subclassed might configure classes with the injector here
+        // Subclasses might configure classes with the injector here
     }
 
     protected void readAllPersisted(Runnable completeHandler) {
