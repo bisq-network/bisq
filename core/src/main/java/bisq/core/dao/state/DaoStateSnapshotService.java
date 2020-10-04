@@ -94,12 +94,10 @@ public class DaoStateSnapshotService {
             long ts = System.currentTimeMillis();
             if (daoStateSnapshotCandidate != null) {
                 // Serialisation happens on the userThread so we do not need to clone the data. Write to disk happens
-                // in a thread but does not interfere with out objects as they got already serialized when passed to the
-                // write thread.
-                daoStateStorageService.persistNow(daoStateSnapshotCandidate,
-                        daoStateHashChainSnapshotCandidate,
-                        () -> {
-                        });
+                // in a thread but does not interfere with our objects as they got already serialized when passed to the
+                // write thread. We use requestPersistence so we do not write immediately but at next scheduled interval.
+                // This avoids frequent write at dao sync and better performance.
+                daoStateStorageService.requestPersistence(daoStateSnapshotCandidate, daoStateHashChainSnapshotCandidate);
                 log.info("Serializing snapshotCandidate for writing to Disc with height {} at height {} took {} ms",
                         daoStateSnapshotCandidate.getChainHeight(), chainHeight, System.currentTimeMillis() - ts);
             }

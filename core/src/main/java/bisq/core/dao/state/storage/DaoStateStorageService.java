@@ -76,10 +76,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return FILE_NAME;
     }
 
-    public void persistNow(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, Runnable completeHandler) {
+    public void requestPersistence(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
         store.setDaoState(daoState);
         store.setDaoStateHashChain(daoStateHashChain);
-        persistenceManager.persistNow(completeHandler);
+        persistenceManager.requestPersistence();
     }
 
     public DaoState getPersistedBsqState() {
@@ -91,7 +91,9 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        persistNow(new DaoState(), new LinkedList<>(), resultHandler);
+        store.setDaoState(new DaoState());
+        store.setDaoStateHashChain(new LinkedList<>());
+        persistenceManager.persistNow(resultHandler);
     }
 
     public void resyncDaoStateFromResources(File storageDir) throws IOException {
