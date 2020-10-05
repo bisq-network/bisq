@@ -38,7 +38,6 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
@@ -337,7 +336,7 @@ public class TradeWalletService {
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
         // We don't care about fee calculation differences between the real tx and that dummy tx as we use a static tx fee.
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, SegwitAddress.fromKey(params, new ECKey()));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, LegacyAddress.fromKey(params, new ECKey()));
         dummyTX.addOutput(dummyOutput);
 
         // Find the needed inputs to pay the output, optionally add 1 change output.
@@ -456,7 +455,7 @@ public class TradeWalletService {
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx.
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, SegwitAddress.fromKey(params, new ECKey()));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, LegacyAddress.fromKey(params, new ECKey()));
         dummyTx.addOutput(dummyOutput);
         addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
