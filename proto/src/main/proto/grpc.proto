@@ -45,10 +45,20 @@ message RegisterDisputeAgentReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Offers {
+    rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
+    }
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
+}
+
+message GetOfferRequest {
+    string id = 1;
+}
+
+message GetOfferReply {
+    OfferInfo offer = 1;
 }
 
 message GetOffersRequest {
