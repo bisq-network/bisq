@@ -24,7 +24,6 @@ import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
-import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
@@ -114,8 +113,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                             removeMailboxMessageAfterProcessing(message);
                         }))
                 .setup(tasks(BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
-                        BuyerVerifiesFinalDelayedPayoutTx.class,
-                        PublishTradeStatistics.class)
+                        BuyerVerifiesFinalDelayedPayoutTx.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
