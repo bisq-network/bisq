@@ -19,7 +19,7 @@ package bisq.core.offer.availability;
 
 import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.core.support.dispute.agent.DisputeAgentManager;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.util.Tuple2;
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,22 +45,22 @@ public class DisputeAgentSelection {
                                                                   DisputeAgentManager<T> disputeAgentManager) {
         return getLeastUsedDisputeAgent(tradeStatisticsManager,
                 disputeAgentManager,
-                TradeStatistics2.MEDIATOR_ADDRESS);
+                true);
     }
 
     public static <T extends DisputeAgent> T getLeastUsedRefundAgent(TradeStatisticsManager tradeStatisticsManager,
                                                                      DisputeAgentManager<T> disputeAgentManager) {
         return getLeastUsedDisputeAgent(tradeStatisticsManager,
                 disputeAgentManager,
-                TradeStatistics2.REFUND_AGENT_ADDRESS);
+                false);
     }
 
     private static <T extends DisputeAgent> T getLeastUsedDisputeAgent(TradeStatisticsManager tradeStatisticsManager,
                                                                        DisputeAgentManager<T> disputeAgentManager,
-                                                                       String extraMapKey) {
+                                                                       boolean isMediator) {
         // We take last 100 entries from trade statistics
-        List<TradeStatistics2> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
-        list.sort(Comparator.comparing(TradeStatistics2::getTradeDate));
+        List<TradeStatistics3> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
+        list.sort(Comparator.comparing(TradeStatistics3::getDate));
         Collections.reverse(list);
         if (!list.isEmpty()) {
             int max = Math.min(list.size(), 100);
@@ -70,9 +69,7 @@ public class DisputeAgentSelection {
 
         // We stored only first 4 chars of disputeAgents onion address
         List<String> lastAddressesUsedInTrades = list.stream()
-                .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
-                .map(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(extraMapKey))
-                .filter(Objects::nonNull)
+                .map(tradeStatistics3 -> isMediator ? tradeStatistics3.getMediator() : tradeStatistics3.getRefundAgent())
                 .collect(Collectors.toList());
 
         Set<String> disputeAgents = disputeAgentManager.getObservableMap().values().stream()

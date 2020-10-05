@@ -23,7 +23,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
@@ -206,7 +206,7 @@ public class CoreApi {
         walletsService.removeWalletPassword(password);
     }
 
-    public List<TradeStatistics2> getTradeStatistics() {
+    public List<TradeStatistics3> getTradeStatistics() {
         return new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
     }
 

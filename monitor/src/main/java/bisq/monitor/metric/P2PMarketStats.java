@@ -23,7 +23,7 @@ import bisq.monitor.Reporter;
 import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.offer.OfferPayload;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.trade.statistics.TradeStatistics2Store;
+import bisq.core.trade.statistics.TradeStatistics3Store;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -163,8 +163,8 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
             String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
             try {
                 PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(dir, new CorePersistenceProtoResolver(null, null), null);
-                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) persistenceManager.getPersisted(TradeStatistics2Store.class.getSimpleName() + networkPostfix);
-                hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
+                TradeStatistics3Store tradeStatistics3Store = (TradeStatistics3Store) persistenceManager.getPersisted(TradeStatistics3Store.class.getSimpleName() + networkPostfix);
+                hashes.addAll(tradeStatistics3Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
 
                 AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) persistenceManager.getPersisted(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix);
                 hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
