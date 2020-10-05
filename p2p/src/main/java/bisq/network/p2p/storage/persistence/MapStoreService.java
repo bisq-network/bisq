@@ -61,7 +61,7 @@ public abstract class MapStoreService<T extends PersistableEnvelope, R extends P
         requestPersistence();
     }
 
-    R putIfAbsent(P2PDataStorage.ByteArray hash, R payload) {
+    protected R putIfAbsent(P2PDataStorage.ByteArray hash, R payload) {
         R previous = getMap().putIfAbsent(hash, payload);
         requestPersistence();
         return previous;
