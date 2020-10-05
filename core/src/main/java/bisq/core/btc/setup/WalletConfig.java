@@ -341,8 +341,7 @@ public class WalletConfig extends AbstractIdleService {
 
     private Wallet loadWallet(boolean shouldReplayWallet, File walletFile, boolean isBsqWallet) throws Exception {
         Wallet wallet;
-        FileInputStream walletStream = new FileInputStream(walletFile);
-        try {
+        try (FileInputStream walletStream = new FileInputStream(walletFile)) {
             WalletExtension[] extArray = new WalletExtension[]{};
             Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
             final WalletProtobufSerializer serializer;
@@ -360,8 +359,6 @@ public class WalletConfig extends AbstractIdleService {
                         .accountPath(new BisqKeyChainGroupStructure(isBsqWallet).accountPathFor(Script.ScriptType.P2WPKH)).build();
                 wallet.addAndActivateHDChain(nativeSegwitKeyChain);
             }
-        } finally {
-            walletStream.close();
         }
         return wallet;
     }
