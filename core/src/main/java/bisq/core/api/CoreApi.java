@@ -119,7 +119,7 @@ public class CoreApi {
                            Coin minAmount,
                            double buyerSecurityDeposit,
                            PaymentAccount paymentAccount) {
-        return coreOffersService.createOffer(offerId,
+        return coreOffersService.editOffer(offerId,
                 currencyCode,
                 direction,
                 price,

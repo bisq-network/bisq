@@ -125,7 +125,7 @@ class CoreOffersService {
     }
 
     // Edit a placed offer.
-    Offer createOffer(String offerId,
+    Offer editOffer(String offerId,
                       String currencyCode,
                       Direction direction,
                       Price price,
