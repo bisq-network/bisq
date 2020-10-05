@@ -90,7 +90,8 @@ public class Monitor {
                 Capability.DAO_STATE,
                 Capability.BUNDLE_OF_ENVELOPES,
                 Capability.REFUND_AGENT,
-                Capability.MEDIATION);
+                Capability.MEDIATION,
+                Capability.TRADE_STATISTICS_3);
 
         // assemble Metrics
         // - create reporters

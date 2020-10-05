@@ -40,5 +40,6 @@ public enum Capability {
     SIGNED_ACCOUNT_AGE_WITNESS,         // Supports the signed account age witness feature
     MEDIATION,                          // Supports mediation feature
     REFUND_AGENT,                       // Supports refund agents
-    TRADE_STATISTICS_HASH_UPDATE        // We changed the hash method in 1.2.0 and that requires update to 1.2.2 for handling it correctly, otherwise the seed nodes have to process too much data.
+    @Deprecated TRADE_STATISTICS_HASH_UPDATE,       // We changed the hash method in 1.2.0 and that requires update to 1.2.2
+    TRADE_STATISTICS_3                  // We used a new reduced trade statistics model from v1.4.0 on
 }
