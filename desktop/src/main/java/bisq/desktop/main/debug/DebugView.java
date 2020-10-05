@@ -49,13 +49,13 @@ import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequ
 import bisq.core.trade.protocol.tasks.maker.MakerRemovesOpenOffer;
 import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
-import bisq.core.trade.protocol.tasks.seller.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerCreatesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.seller.SellerPublishesDepositTx;
+import bisq.core.trade.protocol.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.tasks.seller.SellerSendDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
@@ -145,7 +145,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
-                        PublishTradeStatistics.class,
+                        SellerPublishesTradeStatistics.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
                         ApplyFilter.class,
@@ -246,7 +246,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
-                        PublishTradeStatistics.class,
+                        SellerPublishesTradeStatistics.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
                         ApplyFilter.class,
