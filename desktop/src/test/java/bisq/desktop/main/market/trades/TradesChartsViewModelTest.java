@@ -23,8 +23,9 @@ import bisq.desktop.main.market.trades.charts.CandleData;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
@@ -106,6 +107,7 @@ public class TradesChartsViewModelTest {
             null,
             1
     );
+
     @Before
     public void setup() throws IOException {
         tradeStatisticsManager = mock(TradeStatisticsManager.class);
@@ -134,13 +136,45 @@ public class TradesChartsViewModelTest {
         long volume = Fiat.parseFiat("EUR", "2200").value;
         boolean isBullish = true;
 
-        Set<TradeStatistics2> set = new HashSet<>();
+        Set<TradeStatistics3> set = new HashSet<>();
         final Date now = new Date();
 
-        set.add(new TradeStatistics2(offer, Price.parse("EUR", "520"), Coin.parseCoin("1"), new Date(now.getTime()), null, null));
-        set.add(new TradeStatistics2(offer, Price.parse("EUR", "500"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null, null));
-        set.add(new TradeStatistics2(offer, Price.parse("EUR", "600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, null));
-        set.add(new TradeStatistics2(offer, Price.parse("EUR", "580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, null));
+        set.add(new TradeStatistics3(offer.getCurrencyCode(),
+                Price.parse("EUR", "520").getValue(),
+                Coin.parseCoin("1").getValue(),
+                PaymentMethod.BLOCK_CHAINS_ID,
+                now.getTime(),
+                null,
+                null,
+                null,
+                null));
+        set.add(new TradeStatistics3(offer.getCurrencyCode(),
+                Price.parse("EUR", "500").getValue(),
+                Coin.parseCoin("1").getValue(),
+                PaymentMethod.BLOCK_CHAINS_ID,
+                now.getTime() + 100,
+                null,
+                null,
+                null,
+                null));
+        set.add(new TradeStatistics3(offer.getCurrencyCode(),
+                Price.parse("EUR", "600").getValue(),
+                Coin.parseCoin("1").getValue(),
+                PaymentMethod.BLOCK_CHAINS_ID,
+                now.getTime() + 200,
+                null,
+                null,
+                null,
+                null));
+        set.add(new TradeStatistics3(offer.getCurrencyCode(),
+                Price.parse("EUR", "580").getValue(),
+                Coin.parseCoin("1").getValue(),
+                PaymentMethod.BLOCK_CHAINS_ID,
+                now.getTime() + 300,
+                null,
+                null,
+                null,
+                null));
 
         CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set);
         assertEquals(open, candleData.open);
@@ -194,11 +228,19 @@ public class TradesChartsViewModelTest {
         // Two trades 10 seconds apart, different YEAR, MONTH, WEEK, DAY, HOUR, MINUTE_10
         trades.add(new Trade("2017-12-31T23:59:52", "1", "100", "EUR"));
         trades.add(new Trade("2018-01-01T00:00:02", "1", "110", "EUR"));
-        Set<TradeStatistics2> set = new HashSet<>();
+        Set<TradeStatistics3> set = new HashSet<>();
         trades.forEach(t ->
-                set.add(new TradeStatistics2(offer, Price.parse(t.cc, t.price), Coin.parseCoin(t.size), t.date, null, null))
+                set.add(new TradeStatistics3(offer.getCurrencyCode(),
+                        Price.parse(t.cc, t.price).getValue(),
+                        Coin.parseCoin(t.size).getValue(),
+                        PaymentMethod.BLOCK_CHAINS_ID,
+                        t.date.getTime(),
+                        null,
+                        null,
+                        null,
+                        null))
         );
-        ObservableSet<TradeStatistics2> tradeStats = FXCollections.observableSet(set);
+        ObservableSet<TradeStatistics3> tradeStats = FXCollections.observableSet(set);
 
         // Run test for each tick type
         for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
@@ -209,7 +251,7 @@ public class TradesChartsViewModelTest {
 
             // Trigger chart update
             model.setTickUnit(tick);
-            assertEquals(model.selectedTradeCurrencyProperty.get().getCode(), tradeStats.iterator().next().getCurrencyCode());
+            assertEquals(model.selectedTradeCurrencyProperty.get().getCode(), tradeStats.iterator().next().getCurrency());
             assertEquals(2, model.priceItems.size());
             assertEquals(2, model.volumeItems.size());
         }

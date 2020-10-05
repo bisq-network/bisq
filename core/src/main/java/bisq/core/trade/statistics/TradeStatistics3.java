@@ -42,6 +42,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 
 import java.util.Date;
@@ -173,15 +174,16 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TradeStatistics3(String currency,
-                             long price,
-                             long amount,
-                             String paymentMethod,
-                             long date,
-                             @Nullable String mediator,
-                             @Nullable String refundAgent,
-                             @Nullable Map<String, String> extraDataMap,
-                             @Nullable byte[] hash) {
+    @VisibleForTesting
+    public TradeStatistics3(String currency,
+                            long price,
+                            long amount,
+                            String paymentMethod,
+                            long date,
+                            @Nullable String mediator,
+                            @Nullable String refundAgent,
+                            @Nullable Map<String, String> extraDataMap,
+                            @Nullable byte[] hash) {
         this.currency = currency;
         this.price = price;
         this.amount = amount;
