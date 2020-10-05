@@ -35,7 +35,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -82,7 +82,10 @@ public class MarketView extends ActivatableView<TabPane, Void> {
 
 
     @Inject
-    public MarketView(CachingViewLoader viewLoader, P2PService p2PService, OfferBook offerBook, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+    public MarketView(CachingViewLoader viewLoader,
+                      P2PService p2PService,
+                      OfferBook offerBook,
+                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                       Navigation navigation) {
         this.viewLoader = viewLoader;
         this.p2PService = p2PService;
@@ -179,20 +182,19 @@ public class MarketView extends ActivatableView<TabPane, Void> {
         // If both traders had set it the tradeStatistics is only delivered once.
         // If both traders used a different referral ID then we would get 2 objects.
         List<String> list = p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
-                .filter(e -> e instanceof TradeStatistics2)
-                .map(e -> (TradeStatistics2) e)
-                .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
-                .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
-                .map(trade -> {
+                .filter(e -> e instanceof TradeStatistics3)
+                .map(e -> (TradeStatistics3) e)
+                .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap() != null)
+                .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
+                .map(tradeStatistics3 -> {
                     StringBuilder sb = new StringBuilder();
-                    sb.append("Trade ID: ").append(trade.getOfferId()).append("\n")
-                            .append("Date: ").append(DisplayUtils.formatDateTime(trade.getTradeDate())).append("\n")
-                            .append("Market: ").append(CurrencyUtil.getCurrencyPair(trade.getCurrencyCode())).append("\n")
-                            .append("Price: ").append(FormattingUtils.formatPrice(trade.getTradePrice())).append("\n")
-                            .append("Amount: ").append(formatter.formatCoin(trade.getTradeAmount())).append("\n")
-                            .append("Volume: ").append(DisplayUtils.formatVolume(trade.getTradeVolume())).append("\n")
-                            .append("Payment method: ").append(Res.get(trade.getOfferPaymentMethod())).append("\n")
-                            .append("ReferralID: ").append(trade.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
+                    sb.append("Date: ").append(DisplayUtils.formatDateTime(tradeStatistics3.getTradeDate())).append("\n")
+                            .append("Market: ").append(CurrencyUtil.getCurrencyPair(tradeStatistics3.getCurrency())).append("\n")
+                            .append("Price: ").append(FormattingUtils.formatPrice(tradeStatistics3.getTradePrice())).append("\n")
+                            .append("Amount: ").append(formatter.formatCoin(tradeStatistics3.getTradeAmount())).append("\n")
+                            .append("Volume: ").append(DisplayUtils.formatVolume(tradeStatistics3.getTradeVolume())).append("\n")
+                            .append("Payment method: ").append(Res.get(tradeStatistics3.getPaymentMethod())).append("\n")
+                            .append("ReferralID: ").append(tradeStatistics3.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
                     return sb.toString();
                 })
                 .collect(Collectors.toList());

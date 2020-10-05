@@ -1,7 +1,7 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 
 import bisq.proto.grpc.GetTradeStatisticsGrpc;
 import bisq.proto.grpc.GetTradeStatisticsReply;
@@ -27,7 +27,7 @@ class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStati
                                    StreamObserver<GetTradeStatisticsReply> responseObserver) {
 
         var tradeStatistics = coreApi.getTradeStatistics().stream()
-                .map(TradeStatistics2::toProtoTradeStatistics2)
+                .map(TradeStatistics3::toProtoTradeStatistics3)
                 .collect(Collectors.toList());
 
         var reply = GetTradeStatisticsReply.newBuilder().addAllTradeStatistics(tradeStatistics).build();
