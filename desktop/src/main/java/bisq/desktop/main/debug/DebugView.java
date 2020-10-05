@@ -179,7 +179,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
                         BuyerVerifiesFinalDelayedPayoutTx.class,
-                        PublishTradeStatistics.class,
 
                         ApplyFilter.class,
                         MakerVerifyTakerFeePayment.class,
@@ -216,7 +215,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
                         BuyerVerifiesFinalDelayedPayoutTx.class,
-                        PublishTradeStatistics.class,
 
                         ApplyFilter.class,
                         TakerVerifyMakerFeePayment.class,
