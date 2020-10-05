@@ -22,7 +22,6 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -110,17 +109,16 @@ public class CoreApi {
                 paymentAccountId);
     }
 
-    // Not used yet, should be renamed for a new placeoffer api method.
-    public Offer createOffer(String offerId,
-                             String currencyCode,
-                             OfferPayload.Direction direction,
-                             Price price,
-                             boolean useMarketBasedPrice,
-                             double marketPriceMargin,
-                             Coin amount,
-                             Coin minAmount,
-                             double buyerSecurityDeposit,
-                             PaymentAccount paymentAccount) {
+    public Offer editOffer(String offerId,
+                           String currencyCode,
+                           OfferPayload.Direction direction,
+                           Price price,
+                           boolean useMarketBasedPrice,
+                           double marketPriceMargin,
+                           Coin amount,
+                           Coin minAmount,
+                           double buyerSecurityDeposit,
+                           PaymentAccount paymentAccount) {
         return coreOffersService.createOffer(offerId,
                 currencyCode,
                 direction,
@@ -131,17 +129,6 @@ public class CoreApi {
                 minAmount,
                 buyerSecurityDeposit,
                 paymentAccount);
-    }
-
-    public Offer placeOffer(Offer offer,
-                            double buyerSecurityDeposit,
-                            boolean useSavingsWallet,
-                            TransactionResultHandler resultHandler) {
-        coreOffersService.placeOffer(offer,
-                buyerSecurityDeposit,
-                useSavingsWallet,
-                resultHandler);
-        return offer;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

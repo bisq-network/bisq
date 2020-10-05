@@ -78,21 +78,12 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     req.getMinAmount(),
                     req.getBuyerSecurityDeposit(),
                     req.getPaymentAccountId());
-
-            // We don't support atm funding from external wallet to keep it simple.
-            boolean useSavingsWallet = true;
-            //noinspection ConstantConditions
-            coreApi.placeOffer(offer,
-                    req.getBuyerSecurityDeposit(),
-                    useSavingsWallet,
-                    transaction -> {
-                        OfferInfo offerInfo = toOfferInfo(offer);
-                        CreateOfferReply reply = CreateOfferReply.newBuilder()
-                                .setOffer(offerInfo.toProtoMessage())
-                                .build();
-                        responseObserver.onNext(reply);
-                        responseObserver.onCompleted();
-                    });
+            OfferInfo offerInfo = toOfferInfo(offer);
+            CreateOfferReply reply = CreateOfferReply.newBuilder()
+                    .setOffer(offerInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

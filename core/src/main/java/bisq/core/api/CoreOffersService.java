@@ -24,7 +24,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.user.User;
 
 import org.bitcoinj.core.Coin;
@@ -36,6 +35,7 @@ import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +86,7 @@ class CoreOffersService {
         return offers;
     }
 
-    // Create offer with a random offer id.
+    // Create and place new offer.
     Offer createOffer(String currencyCode,
                       String directionAsString,
                       String priceAsString,
@@ -104,7 +104,7 @@ class CoreOffersService {
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
         Coin useDefaultTxFee = Coin.ZERO;
-        return createOfferService.createAndGetOffer(offerId,
+        Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
                 upperCaseCurrencyCode,
                 amount,
@@ -115,10 +115,16 @@ class CoreOffersService {
                 exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
                 paymentAccount);
+
+        // We don't support atm funding from external wallet to keep it simple.
+        boolean useSavingsWallet = true;
+        //noinspection ConstantConditions
+        placeOffer(offer, buyerSecurityDeposit, useSavingsWallet);
+
+        return offer;
     }
 
-    // Create offer for given offer id.
-    // Not used yet, should be renamed for a new placeoffer api method.
+    // Edit a placed offer.
     Offer createOffer(String offerId,
                       String currencyCode,
                       Direction direction,
@@ -130,7 +136,7 @@ class CoreOffersService {
                       double buyerSecurityDeposit,
                       PaymentAccount paymentAccount) {
         Coin useDefaultTxFee = Coin.ZERO;
-        Offer offer = createOfferService.createAndGetOffer(offerId,
+        return createOfferService.createAndGetOffer(offerId,
                 direction,
                 currencyCode.toUpperCase(),
                 amount,
@@ -141,22 +147,27 @@ class CoreOffersService {
                 exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
                 paymentAccount);
-        return offer;
     }
 
-    Offer placeOffer(Offer offer,
-                     double buyerSecurityDeposit,
-                     boolean useSavingsWallet,
-                     TransactionResultHandler resultHandler) {
+    private void placeOffer(Offer offer,
+                            double buyerSecurityDeposit,
+                            boolean useSavingsWallet) {
+        // Place offer is async;  we need to wait for completion.
+        CountDownLatch latch = new CountDownLatch(1);
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
-                resultHandler,
+                transaction -> latch.countDown(),
                 log::error);
+
         if (offer.getErrorMessage() != null)
             throw new IllegalStateException(offer.getErrorMessage());
 
-        return offer;
+        try {
+            latch.await();
+        } catch (InterruptedException ignored) {
+            // empty
+        }
     }
 
     private long priceStringToLong(String priceAsString, String currencyCode) {
