@@ -600,11 +600,13 @@ public class TradeWalletService {
             // Add buyer inputs and apply signature
             // We grab the signature from the makersDepositTx and apply it to the new tx input
             for (int i = 0; i < buyerInputs.size(); i++) {
-                TransactionInput transactionInput = makersDepositTx.getInputs().get(i);
-                depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(transactionInput), buyerInputs.get(i)));
-                if (!TransactionWitness.EMPTY.equals(transactionInput.getWitness())) {
-                    depositTx.getInput(depositTx.getInputs().size() - 1).setWitness(transactionInput.getWitness());
+                TransactionInput makersInput = makersDepositTx.getInputs().get(i);
+                byte[] makersScriptSigProgram = getMakersScriptSigProgram(makersInput);
+                TransactionInput input = getTransactionInput(depositTx, makersScriptSigProgram, buyerInputs.get(i));
+                if (!TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
+                    input.setWitness(makersInput.getWitness());
                 }
+                depositTx.addInput(input);
             }
 
             // Add seller inputs
@@ -666,12 +668,13 @@ public class TradeWalletService {
 
         // We add takers signature from his inputs and add it to out tx which was already signed earlier.
         for (int i = 0; i < numTakersInputs; i++) {
-            TransactionInput input = takersDepositTx.getInput(i);
-            Script scriptSig = input.getScriptSig();
-            myDepositTx.getInput(i).setScriptSig(scriptSig);
-            TransactionWitness witness = input.getWitness();
+            TransactionInput takersInput = takersDepositTx.getInput(i);
+            Script takersScriptSig = takersInput.getScriptSig();
+            TransactionInput txInput = myDepositTx.getInput(i);
+            txInput.setScriptSig(takersScriptSig);
+            TransactionWitness witness = takersInput.getWitness();
             if (!TransactionWitness.EMPTY.equals(witness)) {
-                myDepositTx.getInput(i).setWitness(witness);
+                txInput.setWitness(witness);
             }
         }
 
