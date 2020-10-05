@@ -27,6 +27,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.user.User;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
@@ -35,7 +36,7 @@ import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -87,15 +88,16 @@ class CoreOffersService {
     }
 
     // Create and place new offer.
-    Offer createOffer(String currencyCode,
-                      String directionAsString,
-                      String priceAsString,
-                      boolean useMarketBasedPrice,
-                      double marketPriceMargin,
-                      long amountAsLong,
-                      long minAmountAsLong,
-                      double buyerSecurityDeposit,
-                      String paymentAccountId) {
+    Offer createAndPlaceOffer(String currencyCode,
+                              String directionAsString,
+                              String priceAsString,
+                              boolean useMarketBasedPrice,
+                              double marketPriceMargin,
+                              long amountAsLong,
+                              long minAmountAsLong,
+                              double buyerSecurityDeposit,
+                              String paymentAccountId,
+                              Consumer<Offer> resultHandler) {
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
@@ -119,22 +121,24 @@ class CoreOffersService {
         // We don't support atm funding from external wallet to keep it simple.
         boolean useSavingsWallet = true;
         //noinspection ConstantConditions
-        placeOffer(offer, buyerSecurityDeposit, useSavingsWallet);
-
+        placeOffer(offer,
+                buyerSecurityDeposit,
+                useSavingsWallet,
+                transaction -> resultHandler.accept(offer));
         return offer;
     }
 
     // Edit a placed offer.
     Offer editOffer(String offerId,
-                      String currencyCode,
-                      Direction direction,
-                      Price price,
-                      boolean useMarketBasedPrice,
-                      double marketPriceMargin,
-                      Coin amount,
-                      Coin minAmount,
-                      double buyerSecurityDeposit,
-                      PaymentAccount paymentAccount) {
+                    String currencyCode,
+                    Direction direction,
+                    Price price,
+                    boolean useMarketBasedPrice,
+                    double marketPriceMargin,
+                    Coin amount,
+                    Coin minAmount,
+                    double buyerSecurityDeposit,
+                    PaymentAccount paymentAccount) {
         Coin useDefaultTxFee = Coin.ZERO;
         return createOfferService.createAndGetOffer(offerId,
                 direction,
@@ -151,23 +155,16 @@ class CoreOffersService {
 
     private void placeOffer(Offer offer,
                             double buyerSecurityDeposit,
-                            boolean useSavingsWallet) {
-        // Place offer is async;  we need to wait for completion.
-        CountDownLatch latch = new CountDownLatch(1);
+                            boolean useSavingsWallet,
+                            Consumer<Transaction> resultHandler) {
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
-                transaction -> latch.countDown(),
+                resultHandler::accept,
                 log::error);
 
         if (offer.getErrorMessage() != null)
             throw new IllegalStateException(offer.getErrorMessage());
-
-        try {
-            latch.await();
-        } catch (InterruptedException ignored) {
-            // empty
-        }
     }
 
     private long priceStringToLong(String priceAsString, String currencyCode) {

@@ -68,7 +68,7 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     public void createOffer(CreateOfferRequest req,
                             StreamObserver<CreateOfferReply> responseObserver) {
         try {
-            Offer offer = coreApi.createOffer(
+            coreApi.createAnPlaceOffer(
                     req.getCurrencyCode(),
                     req.getDirection(),
                     req.getPrice(),
@@ -77,13 +77,17 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     req.getAmount(),
                     req.getMinAmount(),
                     req.getBuyerSecurityDeposit(),
-                    req.getPaymentAccountId());
-            OfferInfo offerInfo = toOfferInfo(offer);
-            CreateOfferReply reply = CreateOfferReply.newBuilder()
-                    .setOffer(offerInfo.toProtoMessage())
-                    .build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+                    req.getPaymentAccountId(),
+                    offer -> {
+                        // This result handling consumer's accept operation will return
+                        // the new offer to the gRPC client after async placement is done.
+                        OfferInfo offerInfo = toOfferInfo(offer);
+                        CreateOfferReply reply = CreateOfferReply.newBuilder()
+                                .setOffer(offerInfo.toProtoMessage())
+                                .build();
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    });
         } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

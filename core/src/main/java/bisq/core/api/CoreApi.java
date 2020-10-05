@@ -35,6 +35,7 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,16 +90,17 @@ public class CoreApi {
         return coreOffersService.getOffers(direction, currencyCode);
     }
 
-    public Offer createOffer(String currencyCode,
-                             String directionAsString,
-                             String priceAsString,
-                             boolean useMarketBasedPrice,
-                             double marketPriceMargin,
-                             long amountAsLong,
-                             long minAmountAsLong,
-                             double buyerSecurityDeposit,
-                             String paymentAccountId) {
-        return coreOffersService.createOffer(currencyCode,
+    public Offer createAnPlaceOffer(String currencyCode,
+                                    String directionAsString,
+                                    String priceAsString,
+                                    boolean useMarketBasedPrice,
+                                    double marketPriceMargin,
+                                    long amountAsLong,
+                                    long minAmountAsLong,
+                                    double buyerSecurityDeposit,
+                                    String paymentAccountId,
+                                    Consumer<Offer> resultHandler) {
+        return coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
                 priceAsString,
                 useMarketBasedPrice,
@@ -106,7 +108,8 @@ public class CoreApi {
                 amountAsLong,
                 minAmountAsLong,
                 buyerSecurityDeposit,
-                paymentAccountId);
+                paymentAccountId,
+                resultHandler);
     }
 
     public Offer editOffer(String offerId,
