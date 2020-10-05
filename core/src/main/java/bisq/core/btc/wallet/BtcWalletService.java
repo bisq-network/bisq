@@ -614,7 +614,12 @@ public class BtcWalletService extends WalletService {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .filter(e -> isAddressUnused(e.getAddress()))
-                .filter(e -> Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType()) == segwit)
+                .filter(e -> {
+                        boolean isSegwitOutputScriptType = Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType());
+                        // We need to ensure that we take only addressEntries which matches our segWit flag
+                        boolean isMatchingOutputScriptType = isSegwitOutputScriptType == segwit;
+                        return isMatchingOutputScriptType;
+                })
                 .findAny();
         return getOrCreateAddressEntry(context, addressEntry, segwit);
     }
