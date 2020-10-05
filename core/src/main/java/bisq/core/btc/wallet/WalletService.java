@@ -327,16 +327,22 @@ public abstract class WalletService {
                         log.warn("No private key in keypair for input {}", index);
                     }
                 } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
-                    // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
-                    // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
-                    Script scriptCode = new ScriptBuilder().data(
-                            ScriptBuilder.createOutputScript(LegacyAddress.fromKey(tx.getParams(), key)).getProgram())
-                            .build();
-                    Coin value = txIn.getValue();
-                    TransactionSignature txSig = tx.calculateWitnessSignature(index, key, scriptCode, value,
-                            Transaction.SigHash.ALL, false);
-                    txIn.setScriptSig(ScriptBuilder.createEmpty());
-                    txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
+                    try {
+                        // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
+                        // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
+                        Script scriptCode = new ScriptBuilder().data(
+                                ScriptBuilder.createOutputScript(LegacyAddress.fromKey(tx.getParams(), key)).getProgram())
+                                .build();
+                        Coin value = txIn.getValue();
+                        TransactionSignature txSig = tx.calculateWitnessSignature(index, key, scriptCode, value,
+                                Transaction.SigHash.ALL, false);
+                        txIn.setScriptSig(ScriptBuilder.createEmpty());
+                        txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
+                    } catch (ECKey.KeyIsEncryptedException e1) {
+                        throw e1;
+                    } catch (ECKey.MissingPrivateKeyException e1) {
+                        log.warn("No private key in keypair for input {}", index);
+                    }
                 } else {
                     // log.error("Unexpected script type.");
                     throw new RuntimeException("Unexpected script type.");
