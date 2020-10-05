@@ -46,6 +46,7 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -892,6 +893,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public KeyRing getKeyRing() {
         return keyRing;
     }
+
+    public Optional<Capabilities> findPeersCapabilities(NodeAddress peer) {
+        return networkNode.getConfirmedConnections().stream()
+                .filter(e -> e.getPeersNodeAddressOptional().isPresent())
+                .filter(e -> e.getPeersNodeAddressOptional().get().equals(peer))
+                .map(Connection::getCapabilities)
+                .findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
