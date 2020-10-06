@@ -17,6 +17,8 @@
 
 package bisq.core.trade.statistics;
 
+import bisq.core.offer.availability.DisputeAgentSelection;
+
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -29,18 +31,21 @@ import bisq.common.file.FileUtil;
 import com.google.inject.Inject;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
+@Singleton
 @Slf4j
 public class TradeStatisticsConverter {
 
@@ -91,8 +96,8 @@ public class TradeStatisticsConverter {
         });
     }
 
-    private static Set<PersistableNetworkPayload> convertToTradeStatistics3(Collection<PersistableNetworkPayload> persistableNetworkPayloads) {
-        Set<PersistableNetworkPayload> result = new HashSet<>();
+    private static List<TradeStatistics3> convertToTradeStatistics3(Collection<PersistableNetworkPayload> persistableNetworkPayloads) {
+        List<TradeStatistics3> list = new ArrayList<>();
         long ts = System.currentTimeMillis();
 
         // We might have duplicate entries from both traders as the trade date was different from old clients.
@@ -112,12 +117,20 @@ public class TradeStatisticsConverter {
         mapWithoutDuplicates.values().stream()
                 .map(e -> convertToTradeStatistics3(e, false))
                 .filter(TradeStatistics3::isValid)
-                .forEach(result::add);
+                .forEach(list::add);
 
         log.info("Conversion to {} new trade statistic objects has been completed after {} ms",
-                result.size(), System.currentTimeMillis() - ts);
+                list.size(), System.currentTimeMillis() - ts);
 
-        return result;
+        // We prune mediator and refundAgent data from all objects but the last 100 as we only use the
+        // last 100 entries (DisputeAgentSelection.LOOK_BACK_RANGE).
+        list.sort(Comparator.comparing(TradeStatistics3::getDate));
+        for (int i = list.size() - DisputeAgentSelection.LOOK_BACK_RANGE; i < list.size(); i++) {
+            TradeStatistics3 tradeStatistics3 = list.get(i);
+            tradeStatistics3.pruneOptionalData();
+        }
+
+        return list;
     }
 
     private static TradeStatistics3 convertToTradeStatistics3(TradeStatistics2 tradeStatistics2, boolean fromNetwork) {
