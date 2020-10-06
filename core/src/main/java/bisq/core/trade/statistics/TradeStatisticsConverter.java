@@ -130,23 +130,26 @@ public class TradeStatisticsConverter {
                 .filter(TradeStatistics2::isValid)
                 .forEach(e -> mapWithoutDuplicates.putIfAbsent(new P2PDataStorage.ByteArray(e.getHash()), e));
 
-        log.info("We convert the existing {} trade statistics objects to the new format. " +
-                "This might take a bit but is only done once.", mapWithoutDuplicates.size());
+        log.info("We convert the existing {} trade statistics objects to the new format.", mapWithoutDuplicates.size());
 
         mapWithoutDuplicates.values().stream()
                 .map(e -> convertToTradeStatistics3(e, false))
                 .filter(TradeStatistics3::isValid)
                 .forEach(list::add);
 
+        int size = list.size();
         log.info("Conversion to {} new trade statistic objects has been completed after {} ms",
-                list.size(), System.currentTimeMillis() - ts);
+                size, System.currentTimeMillis() - ts);
 
         // We prune mediator and refundAgent data from all objects but the last 100 as we only use the
         // last 100 entries (DisputeAgentSelection.LOOK_BACK_RANGE).
         list.sort(Comparator.comparing(TradeStatistics3::getDate));
-        for (int i = list.size() - DisputeAgentSelection.LOOK_BACK_RANGE; i < list.size(); i++) {
-            TradeStatistics3 tradeStatistics3 = list.get(i);
-            tradeStatistics3.pruneOptionalData();
+        if (size > DisputeAgentSelection.LOOK_BACK_RANGE) {
+            int start = size - DisputeAgentSelection.LOOK_BACK_RANGE;
+            for (int i = start; i < size; i++) {
+                TradeStatistics3 tradeStatistics3 = list.get(i);
+                tradeStatistics3.pruneOptionalData();
+            }
         }
 
         return list;
