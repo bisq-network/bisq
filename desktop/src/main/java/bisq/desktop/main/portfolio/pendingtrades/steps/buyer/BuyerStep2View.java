@@ -164,7 +164,7 @@ public class BuyerStep2View extends TradeStepView {
                                 break;
                         }
                     } else {
-                        log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
+                        log.warn("Trade contains error message {}", trade.getErrorMessage());
                         statusLabel.setText("");
                     }
                 }
@@ -191,13 +191,6 @@ public class BuyerStep2View extends TradeStepView {
     protected void onPendingTradesInitialized() {
         super.onPendingTradesInitialized();
         validatePayoutTx();
-    }
-
-    @Override
-    protected void updateDisputeState(Trade.DisputeState disputeState) {
-        super.updateDisputeState(disputeState);
-
-        confirmButton.setDisable(!trade.confirmPermitted());
     }
 
 
@@ -371,6 +364,14 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected void applyOnDisputeOpened() {
     }
+
+    @Override
+    protected void updateDisputeState(Trade.DisputeState disputeState) {
+        super.updateDisputeState(disputeState);
+
+        confirmButton.setDisable(!trade.confirmPermitted());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers

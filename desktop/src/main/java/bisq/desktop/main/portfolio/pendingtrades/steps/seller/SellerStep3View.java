@@ -304,13 +304,6 @@ public class SellerStep3View extends TradeStepView {
         statusLabel = tuple.third;
     }
 
-    @Override
-    protected void updateDisputeState(Trade.DisputeState disputeState) {
-        super.updateDisputeState(disputeState);
-
-        confirmButton.setDisable(!trade.confirmPermitted());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
@@ -352,6 +345,14 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected void applyOnDisputeOpened() {
     }
+
+    @Override
+    protected void updateDisputeState(Trade.DisputeState disputeState) {
+        super.updateDisputeState(disputeState);
+
+        confirmButton.setDisable(!trade.confirmPermitted());
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
