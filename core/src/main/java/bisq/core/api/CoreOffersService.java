@@ -88,16 +88,16 @@ class CoreOffersService {
     }
 
     // Create and place new offer.
-    Offer createAndPlaceOffer(String currencyCode,
-                              String directionAsString,
-                              String priceAsString,
-                              boolean useMarketBasedPrice,
-                              double marketPriceMargin,
-                              long amountAsLong,
-                              long minAmountAsLong,
-                              double buyerSecurityDeposit,
-                              String paymentAccountId,
-                              Consumer<Offer> resultHandler) {
+    void createAndPlaceOffer(String currencyCode,
+                             String directionAsString,
+                             String priceAsString,
+                             boolean useMarketBasedPrice,
+                             double marketPriceMargin,
+                             long amountAsLong,
+                             long minAmountAsLong,
+                             double buyerSecurityDeposit,
+                             String paymentAccountId,
+                             Consumer<Offer> resultHandler) {
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
@@ -125,7 +125,6 @@ class CoreOffersService {
                 buyerSecurityDeposit,
                 useSavingsWallet,
                 transaction -> resultHandler.accept(offer));
-        return offer;
     }
 
     // Edit a placed offer.

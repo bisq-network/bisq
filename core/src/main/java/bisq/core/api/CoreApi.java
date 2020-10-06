@@ -90,17 +90,17 @@ public class CoreApi {
         return coreOffersService.getOffers(direction, currencyCode);
     }
 
-    public Offer createAnPlaceOffer(String currencyCode,
-                                    String directionAsString,
-                                    String priceAsString,
-                                    boolean useMarketBasedPrice,
-                                    double marketPriceMargin,
-                                    long amountAsLong,
-                                    long minAmountAsLong,
-                                    double buyerSecurityDeposit,
-                                    String paymentAccountId,
-                                    Consumer<Offer> resultHandler) {
-        return coreOffersService.createAndPlaceOffer(currencyCode,
+    public void createAnPlaceOffer(String currencyCode,
+                                   String directionAsString,
+                                   String priceAsString,
+                                   boolean useMarketBasedPrice,
+                                   double marketPriceMargin,
+                                   long amountAsLong,
+                                   long minAmountAsLong,
+                                   double buyerSecurityDeposit,
+                                   String paymentAccountId,
+                                   Consumer<Offer> resultHandler) {
+        coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
                 priceAsString,
                 useMarketBasedPrice,
