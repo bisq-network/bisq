@@ -1275,11 +1275,8 @@ public class TradeWalletService {
                 input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
             }
         } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
-            // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
-            // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(sigKey)
-            Script scriptCode = new ScriptBuilder().data(
-                    ScriptBuilder.createOutputScript(LegacyAddress.fromKey(transaction.getParams(), sigKey)).getProgram())
-                    .build();
+            // scriptCode is expected to have the format of a legacy P2PKH output script
+            Script scriptCode = ScriptBuilder.createP2PKHOutputScript(sigKey);
             Coin value = input.getValue();
             TransactionSignature txSig = transaction.calculateWitnessSignature(inputIndex, sigKey, scriptCode, value,
                     Transaction.SigHash.ALL, false);
