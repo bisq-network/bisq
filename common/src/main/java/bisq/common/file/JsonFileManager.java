@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonFileManager {
-    private final ThreadPoolExecutor executor = Utilities.getThreadPoolExecutor("JsonFileManagerExecutor", 5, 50, 60);
+    private final ThreadPoolExecutor executor;
     private final File dir;
 
 
@@ -40,6 +40,8 @@ public class JsonFileManager {
 
     public JsonFileManager(File dir) {
         this.dir = dir;
+
+        this.executor = Utilities.getThreadPoolExecutor("JsonFileManagerExecutor", 5, 50, 60);
 
         if (!dir.exists())
             if (!dir.mkdir())

@@ -25,8 +25,10 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
+import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
 
@@ -42,12 +44,15 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 public class TradeStatisticsConverter {
+
+    private ExecutorService executor;
 
     @Inject
     public TradeStatisticsConverter(P2PService p2PService,
@@ -60,24 +65,33 @@ public class TradeStatisticsConverter {
         appendOnlyDataStoreService.addService(tradeStatistics2StorageService);
 
         p2PService.addP2PServiceListener(new BootstrapListener() {
+
             @Override
             public void onTorNodeReady() {
                 if (!tradeStatistics2Store.exists()) {
                     return;
                 }
+                executor = Utilities.getSingleThreadExecutor("TradeStatisticsConverter");
+                executor.submit(() -> {
+                    // We convert early once tor is initialized but still not ready to receive data
+                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> tempMap = new HashMap<>();
+                    convertToTradeStatistics3(tradeStatistics2StorageService.getMapOfAllData().values())
+                            .forEach(e -> tempMap.put(new P2PDataStorage.ByteArray(e.getHash()), e));
 
-                // We convert early once tor is initialized but still not ready to receive data
-                var mapOfLiveData = tradeStatistics3StorageService.getMapOfLiveData();
-                convertToTradeStatistics3(tradeStatistics2StorageService.getMapOfAllData().values())
-                        .forEach(e -> mapOfLiveData.put(new P2PDataStorage.ByteArray(e.getHash()), e));
-                tradeStatistics3StorageService.persistNow();
-                try {
-                    log.info("We delete now the old trade statistics file as it was converted to the new format.");
-                    FileUtil.deleteFileIfExists(tradeStatistics2Store);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    log.error(e.toString());
-                }
+                    // We map to user thread to avoid potential threading issues
+                    UserThread.execute(() -> {
+                        tradeStatistics3StorageService.getMapOfLiveData().putAll(tempMap);
+                        tradeStatistics3StorageService.persistNow();
+                    });
+
+                    try {
+                        log.info("We delete now the old trade statistics file as it was converted to the new format.");
+                        FileUtil.deleteFileIfExists(tradeStatistics2Store);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        log.error(e.toString());
+                    }
+                });
             }
 
             @Override
@@ -94,6 +108,11 @@ public class TradeStatisticsConverter {
                 p2PDataStorage.addPersistableNetworkPayload(tradeStatistics3, null, true);
             }
         });
+    }
+
+    public void shutDown() {
+        if (executor != null)
+            executor.shutdown();
     }
 
     private static List<TradeStatistics3> convertToTradeStatistics3(Collection<PersistableNetworkPayload> persistableNetworkPayloads) {
