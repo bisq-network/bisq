@@ -1171,6 +1171,10 @@ public class TradeWalletService {
                 "input.getConnectedOutput().getParentTransaction() must not be null");
         checkNotNull(input.getValue(), "input.getValue() must not be null");
 
+        // bitcoinSerialize(false) is used just in case the serialized tx is parsed by a bisq node still using
+        // bitcoinj 0.14. This is not supposed to happen ever since Version.TRADE_PROTOCOL_VERSION was set to 3,
+        // but it costs nothing to be on the safe side.
+        // The serialized tx is just used to obtain its hash, so the witness data is not relevant.
         return new RawTransactionInput(input.getOutpoint().getIndex(),
                 input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false),
                 input.getValue().value);
