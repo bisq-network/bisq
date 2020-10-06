@@ -45,11 +45,12 @@ import org.bitcoinj.utils.Fiat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.Value;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -61,7 +62,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Data size is about 50 bytes in average
  */
 @Slf4j
-@Value
+@Getter
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload {
 
@@ -114,10 +115,10 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // Old converted trade stat objects might not have it set
     @Nullable
     @JsonExclude
-    private final String mediator;  // todo entries from old data could be pruned
+    private String mediator;
     @Nullable
     @JsonExclude
-    private final String refundAgent;
+    private String refundAgent;
 
     // todo should we add referrerId as well? get added to extra map atm but not used so far
 
@@ -129,7 +130,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     @JsonExclude
-    private Map<String, String> extraDataMap;
+    private final Map<String, String> extraDataMap;
 
     public TradeStatistics3(String currency,
                             long price,
@@ -266,6 +267,11 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         return new Capabilities(Capability.TRADE_STATISTICS_3);
     }
 
+    public void pruneOptionalData() {
+        mediator = null;
+        refundAgent = null;
+    }
+
     public String getPaymentMethod() {
         try {
             return PaymentMethodMapper.values()[Integer.parseInt(paymentMethod)].name();
@@ -303,6 +309,33 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 !paymentMethod.isEmpty() &&
                 currency != null &&
                 !currency.isEmpty();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TradeStatistics3)) return false;
+
+        TradeStatistics3 that = (TradeStatistics3) o;
+
+        if (price != that.price) return false;
+        if (amount != that.amount) return false;
+        if (date != that.date) return false;
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
+        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
+            return false;
+        return Arrays.equals(hash, that.hash);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = currency != null ? currency.hashCode() : 0;
+        result = 31 * result + (int) (price ^ (price >>> 32));
+        result = 31 * result + (int) (amount ^ (amount >>> 32));
+        result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
+        result = 31 * result + (int) (date ^ (date >>> 32));
+        result = 31 * result + Arrays.hashCode(hash);
+        return result;
     }
 
     @Override

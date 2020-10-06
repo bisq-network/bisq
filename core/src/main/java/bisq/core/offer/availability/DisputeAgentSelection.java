@@ -41,6 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class DisputeAgentSelection {
+    public static final int LOOK_BACK_RANGE = 100;
     public static <T extends DisputeAgent> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
                                                                   DisputeAgentManager<T> disputeAgentManager) {
         return getLeastUsedDisputeAgent(tradeStatisticsManager,
@@ -63,7 +64,7 @@ public class DisputeAgentSelection {
         list.sort(Comparator.comparing(TradeStatistics3::getDate));
         Collections.reverse(list);
         if (!list.isEmpty()) {
-            int max = Math.min(list.size(), 100);
+            int max = Math.min(list.size(), LOOK_BACK_RANGE);
             list = list.subList(0, max);
         }
 
