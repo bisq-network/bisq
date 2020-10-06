@@ -170,8 +170,6 @@ public class BuyerStep2View extends TradeStepView {
                 }
             });
         }
-
-        confirmButton.setDisable(isDisputed());
     }
 
     @Override
@@ -193,6 +191,13 @@ public class BuyerStep2View extends TradeStepView {
     protected void onPendingTradesInitialized() {
         super.onPendingTradesInitialized();
         validatePayoutTx();
+    }
+
+    @Override
+    protected void updateDisputeState(Trade.DisputeState disputeState) {
+        super.updateDisputeState(disputeState);
+
+        confirmButton.setDisable(!trade.confirmPermitted());
     }
 
 
@@ -627,10 +632,5 @@ public class BuyerStep2View extends TradeStepView {
                 new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
             }
         }
-    }
-
-    @Override
-    protected void updateConfirmButtonDisableState(boolean isDisabled) {
-        confirmButton.setDisable(isDisabled);
     }
 }
