@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,6 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class DisputeAgentSelection {
     public static final int LOOK_BACK_RANGE = 100;
+
     public static <T extends DisputeAgent> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
                                                                   DisputeAgentManager<T> disputeAgentManager) {
         return getLeastUsedDisputeAgent(tradeStatisticsManager,
@@ -71,6 +73,7 @@ public class DisputeAgentSelection {
         // We stored only first 4 chars of disputeAgents onion address
         List<String> lastAddressesUsedInTrades = list.stream()
                 .map(tradeStatistics3 -> isMediator ? tradeStatistics3.getMediator() : tradeStatistics3.getRefundAgent())
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         Set<String> disputeAgents = disputeAgentManager.getObservableMap().values().stream()
