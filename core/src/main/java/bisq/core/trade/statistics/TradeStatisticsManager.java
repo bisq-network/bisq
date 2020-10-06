@@ -83,7 +83,7 @@ public class TradeStatisticsManager {
                 }
                 observableTradeStatisticsSet.add(tradeStatistics);
                 priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-                maybeDump();
+                maybeDumpStatistics();
             }
         });
 
@@ -94,14 +94,14 @@ public class TradeStatisticsManager {
                 .collect(Collectors.toSet());
         observableTradeStatisticsSet.addAll(set);
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-        maybeDump();
+        maybeDumpStatistics();
     }
 
     public ObservableSet<TradeStatistics3> getObservableTradeStatisticsSet() {
         return observableTradeStatisticsSet;
     }
 
-    private void maybeDump() {
+    private void maybeDumpStatistics() {
         if (!dumpStatistics) {
             return;
         }
@@ -130,5 +130,4 @@ public class TradeStatisticsManager {
         list.toArray(array);
         jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
     }
-
 }

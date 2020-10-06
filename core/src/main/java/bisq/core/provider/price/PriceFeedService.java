@@ -307,7 +307,7 @@ public class PriceFeedService {
         mapByCurrencyCode.values().stream()
                 .filter(list -> !list.isEmpty())
                 .forEach(list -> {
-                    list.sort(Comparator.comparing(o -> o.getTradeDate()));
+                    list.sort(Comparator.comparing(TradeStatistics3::getTradeDate));
                     TradeStatistics3 tradeStatistics = list.get(list.size() - 1);
                     setBisqMarketPrice(tradeStatistics.getCurrency(), tradeStatistics.getTradePrice());
                 });
