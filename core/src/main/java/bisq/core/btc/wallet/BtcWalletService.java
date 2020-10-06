@@ -34,7 +34,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
@@ -992,7 +992,9 @@ public class BtcWalletService extends WalletService {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
                 // We use a dummy address for the output
-                final String dummyReceiver = LegacyAddress.fromKey(params, new ECKey()).toBase58();
+                // We don't know here whether the output is segwit or not but we don't care too much because the size of
+                // a segwit ouput is just 3 byte smaller than the size of a legacy ouput.
+                final String dummyReceiver = SegwitAddress.fromKey(params, new ECKey()).toString();
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, dummyReceiver, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
@@ -1021,7 +1023,9 @@ public class BtcWalletService extends WalletService {
     public int getEstimatedFeeTxSize(List<Coin> outputValues, Coin txFee)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction transaction = new Transaction(params);
-        Address dummyAddress = LegacyAddress.fromKey(params, new ECKey());
+        // In reality txs have a mix of segwit/legacy ouputs, but we don't care too much because the size of
+        // a segwit ouput is just 3 byte smaller than the size of a legacy ouput.
+        Address dummyAddress = SegwitAddress.fromKey(params, new ECKey());
         outputValues.forEach(outputValue -> transaction.addOutput(outputValue, dummyAddress));
 
         SendRequest sendRequest = SendRequest.forTx(transaction);
