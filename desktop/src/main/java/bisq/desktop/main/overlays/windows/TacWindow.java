@@ -72,8 +72,7 @@ public class TacWindow extends Overlay<TacWindow> {
 
                 "2. The user is responsible for using the software in compliance with local laws. Don't use the software if using it is not legal in your jurisdiction.\n\n" +
 
-                "3. The " + Res.getBaseCurrencyName() + " market price is delivered by 3rd parties (BitcoinAverage, Poloniex, Coinmarketcap). " +
-                "It is your responsibility to verify the price with other sources for correctness.\n\n" +
+                "3. Any " + Res.getBaseCurrencyName() + " market prices, network fee estimates, or other data obtained from servers operated by the Bisq DAO is provided on an 'as is, as available' basis without representation or warranty of any kind. It is your responsibility to verify any data provided in regards to inaccuracies or omissions.\n\n" +
 
                 "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\" the user confirms " +
                 "to be aware of those risks and in no case will claim legal responsibility to the authors or copyright holders of the software.\n\n" +
@@ -107,8 +106,9 @@ public class TacWindow extends Overlay<TacWindow> {
         super.addMessage();
         String fontStyleClass = smallScreen ? "small-text" : "normal-text";
         messageLabel.getStyleClass().add(fontStyleClass);
+
         HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
-                "https://docs.bisq.network/trading-rules.html#dispute-resolution");
+                "https://bisq.wiki/Dispute_resolution");
         hyperlinkWithIcon.getStyleClass().add(fontStyleClass);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(-6, 0, -20, -4));
     }
