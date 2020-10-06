@@ -109,13 +109,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Getter
     private boolean isInConflictWithSeedNode;
     @Getter
-    private ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
+    private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
-    private List<Checkpoint> checkpoints = Arrays.asList(
+    private final List<Checkpoint> checkpoints = Arrays.asList(
             new Checkpoint(586920, Utilities.decodeFromHex("523aaad4e760f6ac6196fec1b3ec9a2f42e5b272"))
     );
     private boolean checkpointFailed;
-    private boolean ignoreDevMsg;
+    private final boolean ignoreDevMsg;
     private int numCalls;
     private long accumulatedDuration;
 

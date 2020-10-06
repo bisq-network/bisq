@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
@@ -123,7 +124,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
         SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
         expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
                 .with(event)
-                .preCondition(notDisputed()))
+                .preCondition(paymentReceivedEnabled()))
                 .setup(tasks(
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),
@@ -159,4 +160,32 @@ public abstract class SellerProtocol extends DisputeProtocol {
     }
 
     abstract protected Class<? extends TradeTask> getVerifyPeersFeePaymentClass();
+
+    protected boolean paymentReceivedEnabled() {
+        // For altcoin there is no reason to delay BTC release as no chargeback risk
+        if (CurrencyUtil.isCryptoCurrency(trade.getOffer().getCurrencyCode())) {
+            return true;
+        }
+
+        switch (trade.getDisputeState()) {
+            case NO_DISPUTE:
+                return true;
+
+            case DISPUTE_REQUESTED:
+            case DISPUTE_STARTED_BY_PEER:
+            case DISPUTE_CLOSED:
+            case MEDIATION_REQUESTED:
+            case MEDIATION_STARTED_BY_PEER:
+                return false;
+
+            case MEDIATION_CLOSED:
+                return !trade.mediationResultAppliedPenaltyToSeller();
+
+            case REFUND_REQUESTED:
+            case REFUND_REQUEST_STARTED_BY_PEER:
+            case REFUND_REQUEST_CLOSED:
+            default:
+                return false;
+        }
+    }
 }

@@ -244,6 +244,25 @@ public abstract class Trade implements Tradable, Model {
         public static protobuf.Trade.DisputeState toProtoMessage(Trade.DisputeState disputeState) {
             return protobuf.Trade.DisputeState.valueOf(disputeState.name());
         }
+
+        public static boolean isNotDisputed(DisputeState disputeState) {
+            return disputeState == Trade.DisputeState.NO_DISPUTE;
+        }
+
+        public static boolean isMediated(DisputeState disputeState) {
+            return disputeState == Trade.DisputeState.MEDIATION_REQUESTED ||
+                    disputeState == Trade.DisputeState.MEDIATION_STARTED_BY_PEER ||
+                    disputeState == Trade.DisputeState.MEDIATION_CLOSED;
+        }
+
+        public static boolean isArbitrated(DisputeState disputeState) {
+            return disputeState == Trade.DisputeState.DISPUTE_REQUESTED ||
+                    disputeState == Trade.DisputeState.DISPUTE_STARTED_BY_PEER ||
+                    disputeState == Trade.DisputeState.DISPUTE_CLOSED ||
+                    disputeState == Trade.DisputeState.REFUND_REQUESTED ||
+                    disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
+                    disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED;
+        }
     }
 
     public enum TradePeriodState {
@@ -685,6 +704,15 @@ public abstract class Trade implements Tradable, Model {
 
     public void appendErrorMessage(String msg) {
         errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
+    }
+
+    public boolean mediationResultAppliedPenaltyToSeller() {
+        // If mediated payout is same or more then normal payout we enable otherwise a penalty was applied
+        // by mediators and we keep the confirm disabled to avoid that the seller can complete the trade
+        // without the penalty.
+        long payoutAmountFromMediation = processModel.getSellerPayoutAmountFromMediation();
+        long normalPayoutAmount = offer.getSellerSecurityDeposit().value;
+        return payoutAmountFromMediation < normalPayoutAmount;
     }
 
 
