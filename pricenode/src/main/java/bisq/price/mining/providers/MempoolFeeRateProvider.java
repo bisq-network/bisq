@@ -91,7 +91,7 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
 
     private long getEstimatedFeeRate() {
         return getFeeRatePredictions()
-            .filter(p -> p.getKey().equalsIgnoreCase("fastestFee"))
+            .filter(p -> p.getKey().equalsIgnoreCase("halfHourFee"))
             .map(Map.Entry::getValue)
             .findFirst()
             .map(r -> {
