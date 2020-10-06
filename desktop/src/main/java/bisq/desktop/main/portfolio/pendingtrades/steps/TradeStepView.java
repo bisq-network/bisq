@@ -716,10 +716,6 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
-    protected boolean isDisputed() {
-        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
-    }
-
     private void checkIfLockTimeIsOver() {
         if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED) {
             Transaction delayedPayoutTx = trade.getDelayedPayoutTx();

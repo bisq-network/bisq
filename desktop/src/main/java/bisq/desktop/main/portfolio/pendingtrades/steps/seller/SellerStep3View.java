@@ -359,10 +359,6 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentReceived() {
-        if (isDisputed()) {
-            return;
-        }
-
         // The confirmPaymentReceived call will trigger the trade protocol to do the payout tx. We want to be sure that we
         // are well connected to the Bitcoin network before triggering the broadcast.
         if (model.dataModel.isReadyForTxBroadcast()) {
