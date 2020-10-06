@@ -230,6 +230,7 @@ task packageInstallers {
                 " --java-options -Xss1280k" +
                 " --java-options -XX:MaxRAM=4g" +
                 " --java-options -Djava.net.preferIPv4Stack=true" +
+                " --java-options -Djdk.module.illegalAccess=deny" +
                 // Options for creating the application package
                 " --license-file \"${licenseFilePath}\"" +
                 " --runtime-image \"${jdkForAppRuntimePath}\""
