@@ -45,6 +45,7 @@ import static bisq.core.support.SupportType.ARBITRATION;
 import static bisq.core.support.SupportType.MEDIATION;
 import static bisq.core.support.SupportType.REFUND;
 import static bisq.core.support.SupportType.TRADE;
+import static java.lang.String.format;
 import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.asList;
 
@@ -107,7 +108,7 @@ class CoreDisputeAgentsService {
                     throw new IllegalArgumentException("trade agent registration not supported");
             }
         } else {
-            throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentType);
+            throw new IllegalArgumentException(format("unknown dispute agent type '%s'", disputeAgentType));
         }
     }
 
