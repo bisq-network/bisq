@@ -524,14 +524,16 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void applyCapabilities(Connection connection, Capabilities capabilities) {
-        if (capabilities != null && !capabilities.isEmpty()) {
-            connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
-                getAllPeers().stream()
-                        .filter(peer -> peer.getNodeAddress().equals(nodeAddress))
-                        .forEach(peer -> peer.setCapabilities(capabilities));
-            });
-            requestPersistence();
+        if (capabilities == null || capabilities.isEmpty()) {
+            return;
         }
+
+        connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
+            getAllPeers().stream()
+                    .filter(peer -> peer.getNodeAddress().equals(nodeAddress))
+                    .forEach(peer -> peer.setCapabilities(capabilities));
+        });
+        requestPersistence();
     }
 
     private void purgeReportedPeersIfExceeds() {
