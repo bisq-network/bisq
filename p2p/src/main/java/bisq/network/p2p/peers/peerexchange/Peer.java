@@ -42,7 +42,8 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
     private final long date;
     @Setter
     transient private int failedConnectionAttempts = 0;
-    private final Capabilities capabilities = new Capabilities();
+    @Setter
+    private Capabilities capabilities = new Capabilities();
 
     public Peer(NodeAddress nodeAddress, @Nullable Capabilities supportedCapabilities) {
         this(nodeAddress, new Date().getTime(), supportedCapabilities);
@@ -89,6 +90,10 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
 
     public Date getDate() {
         return new Date(date);
+    }
+
+    public long getDateAsLong() {
+        return date;
     }
 
     @Override
