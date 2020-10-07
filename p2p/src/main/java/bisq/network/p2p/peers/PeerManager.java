@@ -287,14 +287,13 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         return seedNodeAddresses.contains(nodeAddress);
     }
 
-    //TODO rename
-    public boolean isNodeBanned(CloseConnectionReason closeConnectionReason, Connection connection) {
+    public boolean isPeerBanned(CloseConnectionReason closeConnectionReason, Connection connection) {
         return closeConnectionReason == CloseConnectionReason.PEER_BANNED &&
                 connection.getPeersNodeAddressOptional().isPresent();
     }
 
     private void maybeRemoveBannedPeer(CloseConnectionReason closeConnectionReason, Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent() && isNodeBanned(closeConnectionReason, connection)) {
+        if (connection.getPeersNodeAddressOptional().isPresent() && isPeerBanned(closeConnectionReason, connection)) {
             NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
             seedNodeAddresses.remove(nodeAddress);
             removePersistedPeer(nodeAddress);

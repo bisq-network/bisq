@@ -180,7 +180,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         closeHandler(connection);
 
-        if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
+        if (peerManager.isPeerBanned(closeConnectionReason, connection)) {
             connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
                 seedNodeAddresses.remove(nodeAddress);
                 removeFromRequestBlocksHandlerMap(nodeAddress);

@@ -147,7 +147,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
             }, RETRY_DELAY_SEC);
         }
 
-        if (peerManager.isNodeBanned(closeConnectionReason, connection))
+        if (peerManager.isPeerBanned(closeConnectionReason, connection))
             seedNodeAddresses.remove(connection.getPeersNodeAddressOptional().get());
     }
 
