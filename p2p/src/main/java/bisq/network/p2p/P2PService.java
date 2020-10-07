@@ -285,13 +285,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         boolean seedNodesAvailable = requestDataManager.requestPreliminaryData();
 
         keepAliveManager.start();
-        p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
+        p2pServiceListeners.forEach(SetupListener::onTorNodeReady);
 
         if (!seedNodesAvailable) {
             isBootstrapped = true;
             // As we do not expect a updated data request response we start here with addHashMapChangedListenerAndApply
             addHashMapChangedListenerAndApply();
-            p2pServiceListeners.stream().forEach(P2PServiceListener::onNoSeedNodeAvailable);
+            p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
         }
     }
 
@@ -301,17 +301,17 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         hiddenServicePublished.set(true);
 
-        p2pServiceListeners.stream().forEach(SetupListener::onHiddenServicePublished);
+        p2pServiceListeners.forEach(SetupListener::onHiddenServicePublished);
     }
 
     @Override
     public void onSetupFailed(Throwable throwable) {
-        p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable));
+        p2pServiceListeners.forEach(e -> e.onSetupFailed(throwable));
     }
 
     @Override
     public void onRequestCustomBridges() {
-        p2pServiceListeners.stream().forEach(SetupListener::onRequestCustomBridges);
+        p2pServiceListeners.forEach(SetupListener::onRequestCustomBridges);
     }
 
     // Called from networkReadyBinding
@@ -353,24 +353,24 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
             // after the hidden service was ready.
             addHashMapChangedListenerAndApply();
-            p2pServiceListeners.stream().forEach(P2PServiceListener::onUpdatedDataReceived);
+            p2pServiceListeners.forEach(P2PServiceListener::onUpdatedDataReceived);
             p2PDataStorage.onBootstrapComplete();
         }
     }
 
     @Override
     public void onNoSeedNodeAvailable() {
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onNoSeedNodeAvailable);
+        p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
     }
 
     @Override
     public void onNoPeersAvailable() {
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onNoPeersAvailable);
+        p2pServiceListeners.forEach(P2PServiceListener::onNoPeersAvailable);
     }
 
     @Override
     public void onDataReceived() {
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onDataReceived);
+        p2pServiceListeners.forEach(P2PServiceListener::onDataReceived);
     }
 
 
@@ -644,7 +644,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
             log.debug("sendEncryptedMailboxMessage msg={},  peersNodeAddress={}", message, peer);
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
+            Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(@Nullable Connection connection) {
                     sendMailboxMessageListener.onArrived();
@@ -670,11 +670,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private boolean capabilityRequiredAndCapabilityNotSupported(NodeAddress peersNodeAddress, NetworkEnvelope message) {
         if (!(message instanceof CapabilityRequiringPayload))
             return false;
-
-        // We only expect AckMessage so far
-        if (!(message instanceof AckMessage))
-            log.warn("We got a CapabilityRequiringPayload for the mailbox message which is not a AckMessage. " +
-                    "peersNodeAddress={}", peersNodeAddress);
 
         Set<Peer> allPeers = peerManager.getPersistedPeers();
         allPeers.addAll(peerManager.getReportedPeers());
@@ -878,8 +873,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void removeP2PServiceListener(P2PServiceListener listener) {
-        if (p2pServiceListeners.contains(listener))
-            p2pServiceListeners.remove(listener);
+        p2pServiceListeners.remove(listener);
     }
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
