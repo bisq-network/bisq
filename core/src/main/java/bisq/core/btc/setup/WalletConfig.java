@@ -27,6 +27,7 @@ import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.*;
 import org.bitcoinj.core.listeners.*;
 import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.*;
 import org.bitcoinj.script.Script;
@@ -34,6 +35,11 @@ import org.bitcoinj.store.*;
 import org.bitcoinj.wallet.*;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import org.slf4j.*;
 
@@ -103,6 +109,8 @@ public class WalletConfig extends AbstractIdleService {
     @Getter
     @Setter
     private int minBroadcastConnections;
+    @Getter
+    private BooleanProperty migratedWalletToSegwit = new SimpleBooleanProperty(false);
 
     /**
      * Creates a new WalletConfig, with a newly created {@link Context}. Files will be stored in the given directory.
@@ -293,23 +301,32 @@ public class WalletConfig extends AbstractIdleService {
             vPeerGroup.addWallet(vBsqWallet);
             onSetupCompleted();
 
-            Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
-                @Override
-                public void onSuccess(@Nullable Object result) {
-                    //completeExtensionInitiations(vPeerGroup);
-                    DownloadProgressTracker tracker = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
-                    vPeerGroup.startBlockChainDownload(tracker);
-                }
+            if (migratedWalletToSegwit.get()) {
+                startPeerGroup();
+            } else {
+                migratedWalletToSegwit.addListener((observable, oldValue, newValue) -> startPeerGroup());
+            }
 
-                @Override
-                public void onFailure(Throwable t) {
-                    throw new RuntimeException(t);
-
-                }
-            }, MoreExecutors.directExecutor());
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
+    }
+
+    private void startPeerGroup() {
+        Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
+            @Override
+            public void onSuccess(@Nullable Object result) {
+                //completeExtensionInitiations(vPeerGroup);
+                DownloadProgressTracker tracker = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
+                vPeerGroup.startBlockChainDownload(tracker);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                throw new RuntimeException(t);
+
+            }
+        }, MoreExecutors.directExecutor());
     }
 
     private Wallet createOrLoadWallet(boolean shouldReplayWallet, File walletFile, boolean isBsqWallet) throws Exception {
@@ -351,13 +368,8 @@ public class WalletConfig extends AbstractIdleService {
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
-            if (!isBsqWallet && BisqKeyChainGroupStructure.BIP44_BTC_NON_SEGWIT_ACCOUNT_PATH.equals(wallet.getActiveKeyChain().getAccountPath())) {
-                // Btc wallet does not have a native segwit keychain, we should add one.
-                DeterministicSeed seed = wallet.getKeyChainSeed();
-                DeterministicKeyChain nativeSegwitKeyChain = DeterministicKeyChain.builder().seed(seed)
-                        .outputScriptType(Script.ScriptType.P2WPKH)
-                        .accountPath(new BisqKeyChainGroupStructure(isBsqWallet).accountPathFor(Script.ScriptType.P2WPKH)).build();
-                wallet.addAndActivateHDChain(nativeSegwitKeyChain);
+            if (!isBsqWallet) {
+                maybeAddSegwitKeychain(wallet, null);
             }
         }
         return wallet;
@@ -490,5 +502,31 @@ public class WalletConfig extends AbstractIdleService {
 
     public File directory() {
         return directory;
+    }
+
+    public void maybeAddSegwitKeychain(Wallet wallet, KeyParameter aesKey) {
+        if (BisqKeyChainGroupStructure.BIP44_BTC_NON_SEGWIT_ACCOUNT_PATH.equals(wallet.getActiveKeyChain().getAccountPath())) {
+            if (wallet.isEncrypted() && aesKey == null) {
+                // wait for the aesKey to be set and this method to be invoked again.
+                return;
+            }
+            // Btc wallet does not have a native segwit keychain, we should add one.
+            DeterministicSeed seed = wallet.getKeyChainSeed();
+            if (aesKey != null) {
+                // If wallet is encrypted, decrypt the seed.
+                KeyCrypter keyCrypter = wallet.getKeyCrypter();
+                seed = seed.decrypt(keyCrypter, DeterministicKeyChain.DEFAULT_PASSPHRASE_FOR_MNEMONIC, aesKey);
+            }
+            DeterministicKeyChain nativeSegwitKeyChain = DeterministicKeyChain.builder().seed(seed)
+                    .outputScriptType(Script.ScriptType.P2WPKH)
+                    .accountPath(new BisqKeyChainGroupStructure(false).accountPathFor(Script.ScriptType.P2WPKH)).build();
+            if (aesKey != null) {
+                // If wallet is encrypted, encrypt the new keychain.
+                KeyCrypter keyCrypter = wallet.getKeyCrypter();
+                nativeSegwitKeyChain = nativeSegwitKeyChain.toEncrypted(keyCrypter, aesKey);
+            }
+            wallet.addAndActivateHDChain(nativeSegwitKeyChain);
+        }
+        migratedWalletToSegwit.set(true);
     }
 }
