@@ -47,7 +47,6 @@ import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
-import static java.lang.String.format;
 
 @Slf4j
 class CoreOffersService {
