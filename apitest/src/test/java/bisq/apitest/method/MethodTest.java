@@ -34,8 +34,6 @@ import java.util.stream.Collectors;
 
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
-import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.MEDIATOR;
-import static bisq.core.support.dispute.agent.DisputeAgent.DisputeAgentType.REFUND_AGENT;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -45,6 +43,10 @@ import bisq.apitest.ApiTestCase;
 import bisq.apitest.config.BisqAppConfig;
 
 public class MethodTest extends ApiTestCase {
+
+    protected static final String ARBITRATOR = "arbitrator";
+    protected static final String MEDIATOR = "mediator";
+    protected static final String REFUND_AGENT = "refundagent";
 
     // Convenience methods for building gRPC request objects
 
@@ -147,7 +149,7 @@ public class MethodTest extends ApiTestCase {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     protected static void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
-        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR.name()));
-        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT.name()));
+        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR));
+        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT));
     }
 }

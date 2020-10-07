@@ -43,18 +43,6 @@ import javax.annotation.Nullable;
 public abstract class DisputeAgent implements ProtectedStoragePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
-    public enum DisputeAgentType {
-        ARBITRATOR,
-        MEDIATOR,
-        REFUND_AGENT;
-
-        public String alternateName() {
-            return this.equals(REFUND_AGENT)
-                    ? REFUND_AGENT.name().replace("_", "")
-                    : this.name();
-        }
-    }
-
     protected final NodeAddress nodeAddress;
     protected final PubKeyRing pubKeyRing;
     protected final List<String> languageCodes;
