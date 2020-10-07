@@ -34,8 +34,8 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
     private final NodeAddress senderNodeAddress;
     private final SealedAndSigned sealedAndSigned;
 
-    // From v1.4.0 on that can be an empty byte array. We cannot use null as not updated nodes would get a nullPointer
-    // at protobuf serialisation.
+    // From v1.4.0 on addressPrefixHash can be an empty byte array.
+    // We cannot make it nullable as not updated nodes would get a nullPointer exception at protobuf serialisation.
     private final byte[] addressPrefixHash;
 
     private final String uid;
@@ -75,7 +75,8 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
                 .build();
     }
 
-    public static PrefixedSealedAndSignedMessage fromProto(protobuf.PrefixedSealedAndSignedMessage proto, int messageVersion) {
+    public static PrefixedSealedAndSignedMessage fromProto(protobuf.PrefixedSealedAndSignedMessage proto,
+                                                           int messageVersion) {
         return new PrefixedSealedAndSignedMessage(NodeAddress.fromProto(proto.getNodeAddress()),
                 SealedAndSigned.fromProto(proto.getSealedAndSigned()),
                 proto.getAddressPrefixHash().toByteArray(),

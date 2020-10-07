@@ -911,5 +911,4 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         NodeAddress nodeAddress = getSenderNodeAddress(networkEnvelope);
         return nodeAddress == null ? "null" : nodeAddress.getFullAddress();
     }
-
 }
