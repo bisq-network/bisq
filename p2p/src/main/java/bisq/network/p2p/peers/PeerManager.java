@@ -43,6 +43,7 @@ import javax.inject.Named;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -108,9 +109,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     // Persistable peerList
     private final PeerList peerList = new PeerList();
-    // Peers we had persisted TODO use peerList instead
-    @Getter
-    private final Set<Peer> persistedPeers = new HashSet<>();
     // Peers we got reported from other peers
     @Getter
     private final Set<Peer> reportedPeers = new HashSet<>();
@@ -188,7 +186,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public void readPersisted() {
         PeerList persisted = persistenceManager.getPersisted();
         if (persisted != null) {
-            this.persistedPeers.addAll(persisted.getList());
+            peerList.setAll(persisted.getList());
         }
     }
 
@@ -251,10 +249,15 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     public Set<Peer> getAllPeers() {
         Set<Peer> allPeers = new HashSet<>(getLivePeers());
-        allPeers.addAll(persistedPeers);
+        allPeers.addAll(peerList.getList());
         allPeers.addAll(reportedPeers);
         return allPeers;
     }
+
+    public Collection<Peer> getPersistedPeers() {
+        return peerList.getList();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
@@ -507,7 +510,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             reportedPeers.addAll(reportedPeersToAdd);
             purgeReportedPeersIfExceeds();
 
-            persistedPeers.addAll(reportedPeersToAdd);
+            peerList.getList().addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             requestPersistence();
 
@@ -582,8 +585,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean removePersistedPeer(Peer persistedPeer) {
-        if (persistedPeers.contains(persistedPeer)) {
-            persistedPeers.remove(persistedPeer);
+        if (peerList.getList().contains(persistedPeer)) {
+            peerList.getList().remove(persistedPeer);
             requestPersistence();
             return true;
         } else {
@@ -592,7 +595,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void requestPersistence() {
-        peerList.setAll(persistedPeers);
         persistenceManager.requestPersistence();
     }
 
@@ -603,27 +605,27 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private Optional<Peer> getOptionalPersistedPeer(NodeAddress nodeAddress) {
-        return persistedPeers.stream()
+        return peerList.getList().stream()
                 .filter(e -> e.getNodeAddress().equals(nodeAddress))
                 .findAny();
     }
 
     private void removeTooOldPersistedPeers() {
-        Set<Peer> persistedPeersToRemove = persistedPeers.stream()
+        Set<Peer> persistedPeersToRemove = peerList.getList().stream()
                 .filter(reportedPeer -> new Date().getTime() - reportedPeer.getDate().getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         persistedPeersToRemove.forEach(this::removePersistedPeer);
     }
 
     private void purgePersistedPeersIfExceeds() {
-        int size = persistedPeers.size();
+        int size = peerList.getList().size();
         int limit = MAX_PERSISTED_PEERS;
         if (size > limit) {
             log.trace("We have already {} persisted peers which exceeds our limit of {}." +
                     "We remove random peers from the persisted peers list.", size, limit);
             int diff = size - limit;
-            List<Peer> list = new ArrayList<>(persistedPeers);
-            // we dont use sorting by lastActivityDate to avoid attack vectors and keep it more random
+            List<Peer> list = new ArrayList<>(peerList.getList());
+            // we don't use sorting by lastActivityDate to avoid attack vectors and keep it more random
             for (int i = 0; i < diff; i++) {
                 if (!list.isEmpty()) {
                     Peer toRemove = list.remove(new Random().nextInt(list.size()));
