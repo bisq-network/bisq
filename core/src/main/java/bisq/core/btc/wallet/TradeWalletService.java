@@ -602,7 +602,10 @@ public class TradeWalletService {
             // We grab the signature from the makersDepositTx and apply it to the new tx input
             for (int i = 0; i < buyerInputs.size(); i++) {
                 TransactionInput makersInput = makersDepositTx.getInputs().get(i);
-                byte[] makersScriptSigProgram = getMakersScriptSigProgram(makersInput);
+                byte[] makersScriptSigProgram = makersInput.getScriptSig().getProgram();
+                if (makersScriptSigProgram.length == 0 && TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
+                    throw new TransactionVerificationException("Inputs from maker not signed.");
+                }
                 TransactionInput input = getTransactionInput(depositTx, makersScriptSigProgram, buyerInputs.get(i));
                 if (!TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
                     input.setWitness(makersInput.getWitness());
@@ -1178,15 +1181,6 @@ public class TradeWalletService {
         return new RawTransactionInput(input.getOutpoint().getIndex(),
                 input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false),
                 input.getValue().value);
-    }
-
-    private byte[] getMakersScriptSigProgram(TransactionInput transactionInput) throws TransactionVerificationException {
-        byte[] scriptProgram = transactionInput.getScriptSig().getProgram();
-        if (scriptProgram.length == 0) {
-            throw new TransactionVerificationException("Inputs from maker not signed.");
-        }
-
-        return scriptProgram;
     }
 
     private TransactionInput getTransactionInput(Transaction depositTx,
