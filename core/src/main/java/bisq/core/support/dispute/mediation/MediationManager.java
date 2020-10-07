@@ -202,6 +202,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             Trade trade = tradeOptional.get();
             if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_REQUESTED ||
                     trade.getDisputeState() == Trade.DisputeState.MEDIATION_STARTED_BY_PEER) {
+                trade.getProcessModel().setBuyerPayoutAmountFromMediation(disputeResult.getBuyerPayoutAmount().value);
+                trade.getProcessModel().setSellerPayoutAmountFromMediation(disputeResult.getSellerPayoutAmount().value);
+                tradeManager.requestPersistence();
+
                 trade.setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
             }
         } else {

@@ -123,7 +123,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
         SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
         expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
                 .with(event)
-                .preCondition(notDisputed()))
+                .preCondition(trade.confirmPermitted()))
                 .setup(tasks(
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),
@@ -159,4 +159,5 @@ public abstract class SellerProtocol extends DisputeProtocol {
     }
 
     abstract protected Class<? extends TradeTask> getVerifyPeersFeePaymentClass();
+
 }

@@ -85,4 +85,8 @@ public abstract class BuyerTrade extends Trade {
         return checkNotNull(getOffer()).getBuyerSecurityDeposit().add(getTradeAmount());
     }
 
+    @Override
+    public boolean confirmPermitted() {
+        return !getDisputeState().isArbitrated();
+    }
 }

@@ -45,6 +45,7 @@ import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.Contract;
+import bisq.core.trade.Trade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -119,12 +120,10 @@ public class SellerStep3View extends TradeStepView {
                         case SELLER_PUBLISHED_PAYOUT_TX:
                         case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
                             busyAnimation.play();
-                            // confirmButton.setDisable(true);
                             statusLabel.setText(Res.get("shared.sendingConfirmation"));
 
                             timeoutTimer = UserThread.runAfter(() -> {
                                 busyAnimation.stop();
-                                // confirmButton.setDisable(false);
                                 statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                             }, 10);
                             break;
@@ -139,19 +138,16 @@ public class SellerStep3View extends TradeStepView {
                         case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
                             // We get a popup and the trade closed, so we dont need to show anything here
                             busyAnimation.stop();
-                            // confirmButton.setDisable(false);
                             statusLabel.setText("");
                             break;
                         default:
                             log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
                             busyAnimation.stop();
-                            // confirmButton.setDisable(false);
                             statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                             break;
                     }
                 } else {
-                    log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
-                    // confirmButton.setDisable(true);
+                    log.warn("Trade contains error message {}", trade.getErrorMessage());
                     statusLabel.setText("");
                 }
             }
@@ -308,11 +304,6 @@ public class SellerStep3View extends TradeStepView {
         statusLabel = tuple.third;
     }
 
-    @Override
-    protected void updateConfirmButtonDisableState(boolean isDisabled) {
-        confirmButton.setDisable(isDisabled);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
@@ -355,15 +346,19 @@ public class SellerStep3View extends TradeStepView {
     protected void applyOnDisputeOpened() {
     }
 
+    @Override
+    protected void updateDisputeState(Trade.DisputeState disputeState) {
+        super.updateDisputeState(disputeState);
+
+        confirmButton.setDisable(!trade.confirmPermitted());
+    }
+
+
     ////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentReceived() {
-        if (isDisputed()) {
-            return;
-        }
-
         // The confirmPaymentReceived call will trigger the trade protocol to do the payout tx. We want to be sure that we
         // are well connected to the Bitcoin network before triggering the broadcast.
         if (model.dataModel.isReadyForTxBroadcast()) {
@@ -459,13 +454,7 @@ public class SellerStep3View extends TradeStepView {
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
 
         model.dataModel.onFiatPaymentReceived(() -> {
-            // In case the first send failed we got the support button displayed.
-            // If it succeeds at a second try we remove the support button again.
-            //TODO check for support. in case of a dispute we dont want to hide the button
-            //if (notificationGroup != null)
-            //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
-            // confirmButton.setDisable(false);
             busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });

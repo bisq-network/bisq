@@ -430,7 +430,7 @@ public abstract class TradeStepView extends AnchorPane {
     protected void applyOnDisputeOpened() {
     }
 
-    private void updateDisputeState(Trade.DisputeState disputeState) {
+    protected void updateDisputeState(Trade.DisputeState disputeState) {
         Optional<Dispute> ownDispute;
         switch (disputeState) {
             case NO_DISPUTE:
@@ -513,8 +513,6 @@ public abstract class TradeStepView extends AnchorPane {
             default:
                 break;
         }
-
-        updateConfirmButtonDisableState(isDisputed());
     }
 
     private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
@@ -674,10 +672,6 @@ public abstract class TradeStepView extends AnchorPane {
         acceptMediationResultPopup.show();
     }
 
-    protected void updateConfirmButtonDisableState(boolean isDisabled) {
-        // By default do nothing. Only overwritten in certain trade steps
-    }
-
     protected String getCurrencyName(Trade trade) {
         return CurrencyUtil.getNameByCode(getCurrencyCode(trade));
     }
@@ -720,10 +714,6 @@ public abstract class TradeStepView extends AnchorPane {
                     break;
             }
         }
-    }
-
-    protected boolean isDisputed() {
-        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
     }
 
     private void checkIfLockTimeIsOver() {

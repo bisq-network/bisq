@@ -55,10 +55,6 @@ public class DisputeProtocol extends TradeProtocol {
         super(trade);
     }
 
-    protected boolean notDisputed() {
-        return trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // User interaction: Trader accepts mediation result

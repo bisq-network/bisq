@@ -134,7 +134,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
         expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
                 .with(event)
-                .preCondition(notDisputed()))
+                .preCondition(trade.confirmPermitted()))
                 .setup(tasks(ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),
                         BuyerSignPayoutTx.class,
@@ -188,5 +188,4 @@ public abstract class BuyerProtocol extends DisputeProtocol {
     }
 
     abstract protected Class<? extends TradeTask> getVerifyPeersFeePaymentClass();
-
 }

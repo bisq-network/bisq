@@ -244,6 +244,25 @@ public abstract class Trade implements Tradable, Model {
         public static protobuf.Trade.DisputeState toProtoMessage(Trade.DisputeState disputeState) {
             return protobuf.Trade.DisputeState.valueOf(disputeState.name());
         }
+
+        public boolean isNotDisputed() {
+            return this == Trade.DisputeState.NO_DISPUTE;
+        }
+
+        public boolean isMediated() {
+            return this == Trade.DisputeState.MEDIATION_REQUESTED ||
+                    this == Trade.DisputeState.MEDIATION_STARTED_BY_PEER ||
+                    this == Trade.DisputeState.MEDIATION_CLOSED;
+        }
+
+        public boolean isArbitrated() {
+            return this == Trade.DisputeState.DISPUTE_REQUESTED ||
+                    this == Trade.DisputeState.DISPUTE_STARTED_BY_PEER ||
+                    this == Trade.DisputeState.DISPUTE_CLOSED ||
+                    this == Trade.DisputeState.REFUND_REQUESTED ||
+                    this == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
+                    this == Trade.DisputeState.REFUND_REQUEST_CLOSED;
+        }
     }
 
     public enum TradePeriodState {
@@ -687,6 +706,15 @@ public abstract class Trade implements Tradable, Model {
         errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
     }
 
+    public boolean mediationResultAppliedPenaltyToSeller() {
+        // If mediated payout is same or more then normal payout we enable otherwise a penalty was applied
+        // by mediators and we keep the confirm disabled to avoid that the seller can complete the trade
+        // without the penalty.
+        long payoutAmountFromMediation = processModel.getSellerPayoutAmountFromMediation();
+        long normalPayoutAmount = offer.getSellerSecurityDeposit().value;
+        return payoutAmountFromMediation < normalPayoutAmount;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -703,6 +731,7 @@ public abstract class Trade implements Tradable, Model {
 
     public abstract Coin getPayoutAmount();
 
+    public abstract boolean confirmPermitted();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
