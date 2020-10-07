@@ -464,7 +464,12 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         return reportedPeers;
     }
 
-    public void addToReportedPeers(Set<Peer> reportedPeersToAdd, Connection connection) {
+    public void addToReportedPeers(Set<Peer> reportedPeersToAdd,
+                                   Connection connection,
+                                   Capabilities supportedCapabilities) {
+
+        //TODO apply supportedCapabilities
+
         printNewReportedPeers(reportedPeersToAdd);
 
         // We check if the reported msg is not violating our rules

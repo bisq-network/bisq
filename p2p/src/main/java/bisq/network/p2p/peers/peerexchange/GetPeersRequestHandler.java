@@ -130,8 +130,9 @@ class GetPeersRequestHandler {
                 }
             }
         }, MoreExecutors.directExecutor());
-
-        peerManager.addToReportedPeers(getPeersRequest.getReportedPeers(), connection);
+        peerManager.addToReportedPeers(getPeersRequest.getReportedPeers(),
+                connection,
+                getPeersRequest.getSupportedCapabilities());
     }
 
 
