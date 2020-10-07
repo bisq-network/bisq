@@ -54,12 +54,18 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     @Override
     public void getOffer(GetOfferRequest req,
                          StreamObserver<GetOfferReply> responseObserver) {
-        Offer offer = coreApi.getOffer(req.getId());
-        var reply = GetOfferReply.newBuilder()
-                .setOffer(toOfferInfo(offer).toProtoMessage())
-                .build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        try {
+            Offer offer = coreApi.getOffer(req.getId());
+            var reply = GetOfferReply.newBuilder()
+                    .setOffer(toOfferInfo(offer).toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
     }
 
     @Override
