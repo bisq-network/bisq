@@ -289,7 +289,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         if (!seedNodesAvailable) {
             isBootstrapped = true;
-            // As we do not expect a updated data request response we start here listening
+            // As we do not expect a updated data request response we start here with addHashMapChangedListenerAndApply
             addHashMapChangedListenerAndApply();
             p2pServiceListeners.stream().forEach(P2PServiceListener::onNoSeedNodeAvailable);
         }
@@ -351,7 +351,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (!isBootstrapped) {
             isBootstrapped = true;
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
-            // so far.
+            // after the hidden service was ready.
             addHashMapChangedListenerAndApply();
             p2pServiceListeners.stream().forEach(P2PServiceListener::onUpdatedDataReceived);
             p2PDataStorage.onBootstrapComplete();
@@ -458,7 +458,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // We run the batch processing of all mailbox messages we have received at startup in a thread to not block the UI.
     // For about 1000 messages decryption takes about 1 sec.
     private void threadedBatchProcessMailboxEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
-        ListeningExecutorService executor = Utilities.getSingleThreadExecutor("processMailboxEntry-" + new Random().nextInt(1000));
+        ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("processMailboxEntry-" + new Random().nextInt(1000));
         long ts = System.currentTimeMillis();
         ListenableFuture<Set<Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>>> future = executor.submit(() -> {
             var decryptedEntries = getDecryptedEntries(protectedMailboxStorageEntries);
@@ -557,7 +557,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
             // Prefix is not needed for direct messages but as old code is doing the verification we still need to
             // send it if peer has not updated.
-            // TODO persist capability
             PrefixedSealedAndSignedMessage sealedMsg = getPrefixedSealedAndSignedMessage(peersNodeAddress,
                     pubKeyRing,
                     message);
@@ -615,12 +614,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return;
         }
 
-        checkNotNull(peer,
-                "PeerAddress must not be null (sendEncryptedMailboxMessage)");
+        checkNotNull(peer, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         checkNotNull(networkNode.getNodeAddress(),
                 "My node address must not be null at sendEncryptedMailboxMessage");
-        checkArgument(!keyRing.getPubKeyRing().equals(peersPubKeyRing),
-                "We got own keyring instead of that from peer");
+        checkArgument(!keyRing.getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");
 
         if (!isBootstrapped())
             throw new NetworkNotReadyException();

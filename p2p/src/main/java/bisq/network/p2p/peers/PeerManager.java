@@ -213,7 +213,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 .orElse(false);
     }
 
-    // TODO persist Capabilities
+    // TODO get Capabilities from peers
     public Optional<Capabilities> findPeersCapabilities(NodeAddress peersNodeAddress) {
         return networkNode.getConfirmedConnections().stream()
                 .filter(c -> c.getPeersNodeAddressProperty().get() != null)
