@@ -32,6 +32,7 @@ import bisq.common.ClockWatcher;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.config.Config;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -205,6 +206,21 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         maxConnectionsAbsolute = Math.max(12, (int) Math.round(maxConnections * 2.5));            // app node 30; seedNode 66
     }
 
+
+    public boolean peerHasCapability(NodeAddress peersNodeAddress, Capability capability) {
+        return findPeersCapabilities(peersNodeAddress)
+                .map(capabilities -> capabilities.contains(capability))
+                .orElse(false);
+    }
+
+    // TODO persist Capabilities
+    public Optional<Capabilities> findPeersCapabilities(NodeAddress peersNodeAddress) {
+        return networkNode.getConfirmedConnections().stream()
+                .filter(c -> c.getPeersNodeAddressProperty().get() != null)
+                .filter(c -> c.getPeersNodeAddressProperty().get().equals(peersNodeAddress))
+                .map(Connection::getCapabilities)
+                .findAny();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
