@@ -168,7 +168,9 @@ class PeerExchangeHandler implements MessageListener {
 
                 // Check if the response is for our request
                 if (getPeersResponse.getRequestNonce() == nonce) {
-                    peerManager.addToReportedPeers(getPeersResponse.getReportedPeers(), connection);
+                    peerManager.addToReportedPeers(getPeersResponse.getReportedPeers(),
+                            connection,
+                            getPeersResponse.getSupportedCapabilities());
                     cleanup();
                     listener.onComplete();
                 } else {

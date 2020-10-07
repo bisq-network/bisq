@@ -323,8 +323,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
 
         requestDataManager.requestUpdateData();
-        /*if (Capabilities.app.containsAll(Capability.SEED_NODE))
-            UserThread.runPeriodically(() -> requestDataManager.requestUpdateData(), 1, TimeUnit.HOURS);*/
 
         // If we start up first time we don't have any peers so we need to request from seed node.
         // As well it can be that the persisted peer list is outdated with dead peers.
