@@ -271,8 +271,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     }
 
     public boolean isSeedNode(Connection connection) {
-        //TODO
-        return connection.hasPeersNodeAddress() && seedNodeAddresses.contains(connection.getPeersNodeAddressOptional().get());
+        return connection.getPeersNodeAddressOptional().isPresent() &&
+                seedNodeAddresses.contains(connection.getPeersNodeAddressOptional().get());
     }
 
     public boolean isSelf(NodeAddress nodeAddress) {
@@ -306,6 +306,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     // Peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("unused")
     public Optional<Peer> findPeer(NodeAddress peersNodeAddress) {
         return getAllPeers().stream()
                 .filter(peer -> peer.getNodeAddress().equals(peersNodeAddress))
