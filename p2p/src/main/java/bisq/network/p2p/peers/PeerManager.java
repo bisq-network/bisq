@@ -60,6 +60,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class PeerManager implements ConnectionListener, PersistedDataHost {
 
@@ -78,9 +80,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     // Age of what we consider connected peers still as live peers
     private static final long MAX_AGE_LIVE_PEERS = TimeUnit.MINUTES.toMillis(30);
     private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
-    @Setter
-    private boolean allowDisconnectSeedNodes;
-    private Set<Peer> latestLivePeers = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,19 +101,26 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     private final NetworkNode networkNode;
     private final ClockWatcher clockWatcher;
-
-    private int maxConnections;
     private final Set<NodeAddress> seedNodeAddresses;
-
     private final PersistenceManager<PeerList> persistenceManager;
-    private final PeerList peerList = new PeerList();
-    private final HashSet<Peer> persistedPeers = new HashSet<>();
-    private final Set<Peer> reportedPeers = new HashSet<>();
     private final ClockWatcher.Listener listener;
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+
+    // Persistable peerList
+    private final PeerList peerList = new PeerList();
+    // Peers we had persisted TODO use peerList instead
+    @Getter
+    private final Set<Peer> persistedPeers = new HashSet<>();
+    // Peers we got reported from other peers
+    @Getter
+    private final Set<Peer> reportedPeers = new HashSet<>();
+    // Peer of last 30 min.
+    private final Set<Peer> latestLivePeers = new HashSet<>();
+
     private Timer checkMaxConnectionsTimer;
     private boolean stopped;
     private boolean lostAllConnections;
+    private int maxConnections;
 
     @Getter
     private int minConnections;
@@ -122,6 +128,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private int maxConnectionsPeer;
     private int maxConnectionsNonDirect;
     private int maxConnectionsAbsolute;
+    @Setter
+    private boolean allowDisconnectSeedNodes;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,8 +140,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public PeerManager(NetworkNode networkNode,
                        SeedNodeRepository seedNodeRepository,
                        ClockWatcher clockWatcher,
-                       @Named(Config.MAX_CONNECTIONS) int maxConnections,
-                       PersistenceManager<PeerList> persistenceManager) {
+                       PersistenceManager<PeerList> persistenceManager,
+                       @Named(Config.MAX_CONNECTIONS) int maxConnections) {
         this.networkNode = networkNode;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
         this.clockWatcher = clockWatcher;
@@ -156,7 +164,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
             @Override
             public void onAwakeFromStandby(long missedMs) {
-                // TODO is "stopped = false;" correct?
+                // We got probably stopped set to true when we got a longer interruption (e.g. lost all connections),
+                // now we get awake again, so set stopped to false.
                 stopped = false;
                 listeners.forEach(Listener::onAwakeFromStandby);
             }
@@ -213,13 +222,38 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 .orElse(false);
     }
 
-    // TODO get Capabilities from peers
-    public Optional<Capabilities> findPeersCapabilities(NodeAddress peersNodeAddress) {
-        return networkNode.getConfirmedConnections().stream()
-                .filter(c -> c.getPeersNodeAddressProperty().get() != null)
-                .filter(c -> c.getPeersNodeAddressProperty().get().equals(peersNodeAddress))
-                .map(Connection::getCapabilities)
+    public Optional<Capabilities> findPeersCapabilities(NodeAddress nodeAddress) {
+        // We look up first our connections as that is our own data. If not found there we look up the peers which
+        // include reported peers.
+        Optional<Capabilities> optionalCapabilities = networkNode.findPeersCapabilities(nodeAddress);
+        if (optionalCapabilities.isPresent()) {
+            return optionalCapabilities;
+        }
+
+        // Reported peers are not trusted data. We could get capabilities which miss the
+        // peers real capability or we could get maliciously altered capabilities telling us the peer supports a
+        // capability which is in fact not supported. This could lead to connection loss as we might send data not
+        // recognized by the peer. As we register a listener on connection if we don't have set the capability from our
+        // own sources we would get it fixed as soon we have a connection with that peer, rendering such an attack
+        // inefficient.
+        // Also this risk is only for not updated peers, so in case that would be abused for an
+        // attack all users have a strong incentive to update ;-).
+        return getAllPeers().stream()
+                .filter(peer -> peer.getNodeAddress().equals(nodeAddress))
+                .findAny().map(Peer::getCapabilities);
+    }
+
+    public Optional<Peer> findPeer(NodeAddress peersNodeAddress) {
+        return getAllPeers().stream()
+                .filter(peer -> peer.getNodeAddress().equals(peersNodeAddress))
                 .findAny();
+    }
+
+    public Set<Peer> getAllPeers() {
+        Set<Peer> allPeers = new HashSet<>(getLivePeers());
+        allPeers.addAll(persistedPeers);
+        allPeers.addAll(reportedPeers);
+        return allPeers;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -460,15 +494,11 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         reportedPeersToRemove.forEach(this::removeReportedPeer);
     }
 
-    public Set<Peer> getReportedPeers() {
-        return reportedPeers;
-    }
-
     public void addToReportedPeers(Set<Peer> reportedPeersToAdd,
                                    Connection connection,
-                                   Capabilities supportedCapabilities) {
+                                   Capabilities capabilities) {
 
-        //TODO apply supportedCapabilities
+        applyCapabilities(connection, capabilities);
 
         printNewReportedPeers(reportedPeersToAdd);
 
@@ -479,8 +509,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
-            peerList.setAll(persistedPeers);
-            persistenceManager.requestPersistence();
+            requestPersistence();
 
             printReportedPeers();
         } else {
@@ -488,6 +517,17 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             // Reported list include the connected list. We use the max value and give some extra headroom.
             // Will trigger a shutdown after 2nd time sending too much
             connection.reportInvalidRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
+        }
+    }
+
+    private void applyCapabilities(Connection connection, Capabilities capabilities) {
+        if (capabilities != null && !capabilities.isEmpty()) {
+            connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
+                getAllPeers().stream()
+                        .filter(peer -> peer.getNodeAddress().equals(nodeAddress))
+                        .forEach(peer -> peer.setCapabilities(capabilities));
+            });
+            requestPersistence();
         }
     }
 
@@ -530,7 +570,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         if (PRINT_REPORTED_PEERS_DETAILS) {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
             List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
-            reportedPeersClone.stream().forEach(e -> result.append("\n\t").append(e));
+            reportedPeersClone.forEach(e -> result.append("\n\t").append(e));
             log.trace(result.toString());
         }
         log.debug("Number of new arrived reported peers: {}", reportedPeers.size());
@@ -544,23 +584,28 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private boolean removePersistedPeer(Peer persistedPeer) {
         if (persistedPeers.contains(persistedPeer)) {
             persistedPeers.remove(persistedPeer);
-            peerList.setAll(persistedPeers);
-            persistenceManager.requestPersistence();
+            requestPersistence();
             return true;
         } else {
             return false;
         }
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    private boolean removePersistedPeer(NodeAddress nodeAddress) {
-        Optional<Peer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
-        return persistedPeerOptional.isPresent() && removePersistedPeer(persistedPeerOptional.get());
+    private void requestPersistence() {
+        peerList.setAll(persistedPeers);
+        persistenceManager.requestPersistence();
     }
 
-    private Optional<Peer> getPersistedPeerOptional(NodeAddress nodeAddress) {
+    @SuppressWarnings("UnusedReturnValue")
+    private boolean removePersistedPeer(NodeAddress nodeAddress) {
+        Optional<Peer> optionalPersistedPeer = getOptionalPersistedPeer(nodeAddress);
+        return optionalPersistedPeer.isPresent() && removePersistedPeer(optionalPersistedPeer.get());
+    }
+
+    private Optional<Peer> getOptionalPersistedPeer(NodeAddress nodeAddress) {
         return persistedPeers.stream()
-                .filter(e -> e.getNodeAddress().equals(nodeAddress)).findAny();
+                .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                .findAny();
     }
 
     private void removeTooOldPersistedPeers() {
@@ -588,10 +633,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         } else {
             log.trace("No need to purge persisted peers.\n\tWe don't have more then {} persisted peers yet.", MAX_PERSISTED_PEERS);
         }
-    }
-
-    public Set<Peer> getPersistedPeers() {
-        return persistedPeers;
     }
 
 
@@ -644,7 +685,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         log.debug("handleConnectionFault called: nodeAddress=" + nodeAddress);
         boolean doRemovePersistedPeer = false;
         removeReportedPeer(nodeAddress);
-        Optional<Peer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
+        Optional<Peer> persistedPeerOptional = getOptionalPersistedPeer(nodeAddress);
         if (persistedPeerOptional.isPresent()) {
             Peer persistedPeer = persistedPeerOptional.get();
             persistedPeer.increaseFailedConnectionAttempts();
@@ -674,17 +715,27 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     // Delivers the live peers from the last 30 min (MAX_AGE_LIVE_PEERS)
     // We include older peers to avoid risks for network partitioning
-    public Set<Peer> getLivePeers(NodeAddress excludedNodeAddress) {
+    public Set<Peer> getLivePeers() {
+        return getLivePeers(null);
+    }
+
+    public Set<Peer> getLivePeers(@Nullable NodeAddress excludedNodeAddress) {
         int oldNumLatestLivePeers = latestLivePeers.size();
-        Set<Peer> currentLivePeers = new HashSet<>(getConnectedReportedPeers().stream()
+
+        Set<Peer> peers = new HashSet<>(latestLivePeers);
+        Set<Peer> currentLivePeers = getConnectedReportedPeers().stream()
                 .filter(e -> !isSeedNode(e))
                 .filter(e -> !e.getNodeAddress().equals(excludedNodeAddress))
-                .collect(Collectors.toSet()));
-        latestLivePeers.addAll(currentLivePeers);
-        long maxAge = new Date().getTime() - MAX_AGE_LIVE_PEERS;
-        latestLivePeers = latestLivePeers.stream()
-                .filter(peer -> peer.getDate().getTime() > maxAge)
                 .collect(Collectors.toSet());
+        peers.addAll(currentLivePeers);
+
+        long maxAge = new Date().getTime() - MAX_AGE_LIVE_PEERS;
+        latestLivePeers.clear();
+        Set<Peer> recentPeers = peers.stream()
+                .filter(peer -> peer.getDateAsLong() > maxAge)
+                .collect(Collectors.toSet());
+        latestLivePeers.addAll(recentPeers);
+
         if (oldNumLatestLivePeers != latestLivePeers.size())
             log.info("Num of latestLivePeers={}", latestLivePeers.size());
         return latestLivePeers;
@@ -703,17 +754,29 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                     // If we have a new connection the supportedCapabilities is empty.
                     // We lookup if we have already stored the supportedCapabilities at the persisted or reported peers
                     // and if so we use that.
+                    Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+                    checkArgument(peersNodeAddressOptional.isPresent()); // getConfirmedConnections delivers only connections where we know the address
+                    boolean getCapabilitiesFromConnection = !supportedCapabilities.isEmpty();
                     if (supportedCapabilities.isEmpty()) {
+                        // If not set we look up if we got the Capabilities set from any of the reported or persisted peers
                         Set<Peer> allPeers = new HashSet<>(getPersistedPeers());
                         allPeers.addAll(getReportedPeers());
-                        Optional<Peer> ourPeer = allPeers.stream().filter(peer -> peer.getNodeAddress().equals(connection.getPeersNodeAddressOptional().get()))
+                        Optional<Peer> ourPeer = allPeers.stream()
+                                .filter(peer -> peer.getNodeAddress().equals(peersNodeAddressOptional.get()))
                                 .filter(peer -> !peer.getCapabilities().isEmpty())
                                 .findAny();
-                        if (ourPeer.isPresent())
+                        if (ourPeer.isPresent()) {
                             supportedCapabilities = new Capabilities(ourPeer.get().getCapabilities());
+                        }
                     }
-                    Peer peer = new Peer(connection.getPeersNodeAddressOptional().get(), supportedCapabilities);
-                    connection.addWeakCapabilitiesListener(peer);
+                    Peer peer = new Peer(peersNodeAddressOptional.get(), supportedCapabilities);
+
+                    // If we only got the capabilities from a reported peer of did not get any we add a listener,
+                    // so once we get a connection with that peer and exchange a message containing the capabilities
+                    // we get set the capabilities
+                    if (!getCapabilitiesFromConnection) {
+                        connection.addWeakCapabilitiesListener(peer);
+                    }
                     return peer;
                 })
                 .collect(Collectors.toSet());
@@ -730,8 +793,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         if (!networkNode.getConfirmedConnections().isEmpty()) {
             StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                     "Connected peers for node " + networkNode.getNodeAddress() + ":");
-            networkNode.getConfirmedConnections().stream().forEach(e -> result.append("\n")
-                    .append(e.getPeersNodeAddressOptional().get()).append(" ").append(e.getPeerType()));
+            networkNode.getConfirmedConnections().forEach(e -> result.append("\n")
+                    .append(e.getPeersNodeAddressOptional()).append(" ").append(e.getPeerType()));
             result.append("\n------------------------------------------------------------\n");
             log.debug(result.toString());
         }
