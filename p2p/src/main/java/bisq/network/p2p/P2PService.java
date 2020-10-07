@@ -450,9 +450,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private void processSingleMailboxEntry(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
+        checkArgument(protectedMailboxStorageEntries.size() == 1);
         var decryptedEntries = new ArrayList<>(getDecryptedEntries(protectedMailboxStorageEntries));
-        checkArgument(decryptedEntries.size() == 1);
-        storeMailboxDataAndNotifyListeners(decryptedEntries.get(0));
+        if (protectedMailboxStorageEntries.size() == 1) {
+            storeMailboxDataAndNotifyListeners(decryptedEntries.get(0));
+        }
     }
 
     // We run the batch processing of all mailbox messages we have received at startup in a thread to not block the UI.
