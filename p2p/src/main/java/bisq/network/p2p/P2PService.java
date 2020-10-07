@@ -31,7 +31,6 @@ import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.RequestDataManager;
 import bisq.network.p2p.peers.keepalive.KeepAliveManager;
-import bisq.network.p2p.peers.peerexchange.Peer;
 import bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.network.p2p.storage.HashMapChangedListener;
@@ -46,6 +45,7 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
@@ -671,17 +671,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (!(message instanceof CapabilityRequiringPayload))
             return false;
 
-        Set<Peer> allPeers = peerManager.getPersistedPeers();
-        allPeers.addAll(peerManager.getReportedPeers());
-        allPeers.addAll(peerManager.getLivePeers(null));
         // We might have multiple entries of the same peer without the supportedCapabilities field set if we received
         // it from old versions, so we filter those.
-        Optional<Peer> optionalPeer = allPeers.stream()
-                .filter(peer -> peer.getNodeAddress().equals(peersNodeAddress))
-                .filter(peer -> !peer.getCapabilities().isEmpty())
-                .findAny();
-        if (optionalPeer.isPresent()) {
-            boolean result = optionalPeer.get().getCapabilities().containsAll(((CapabilityRequiringPayload) message).getRequiredCapabilities());
+        Optional<Capabilities> optionalCapabilities = peerManager.findPeersCapabilities(peersNodeAddress);
+        if (optionalCapabilities.isPresent()) {
+            boolean result = optionalCapabilities.get().containsAll(((CapabilityRequiringPayload) message).getRequiredCapabilities());
 
             if (!result)
                 log.warn("We don't send the message because the peer does not support the required capability. " +
