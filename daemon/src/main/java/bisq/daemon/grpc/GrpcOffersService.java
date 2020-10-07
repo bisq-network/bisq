@@ -68,7 +68,7 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     public void createOffer(CreateOfferRequest req,
                             StreamObserver<CreateOfferReply> responseObserver) {
         try {
-            Offer offer = coreApi.createOffer(
+            coreApi.createAnPlaceOffer(
                     req.getCurrencyCode(),
                     req.getDirection(),
                     req.getPrice(),
@@ -77,15 +77,10 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     req.getAmount(),
                     req.getMinAmount(),
                     req.getBuyerSecurityDeposit(),
-                    req.getPaymentAccountId());
-
-            // We don't support atm funding from external wallet to keep it simple.
-            boolean useSavingsWallet = true;
-            //noinspection ConstantConditions
-            coreApi.placeOffer(offer,
-                    req.getBuyerSecurityDeposit(),
-                    useSavingsWallet,
-                    transaction -> {
+                    req.getPaymentAccountId(),
+                    offer -> {
+                        // This result handling consumer's accept operation will return
+                        // the new offer to the gRPC client after async placement is done.
                         OfferInfo offerInfo = toOfferInfo(offer);
                         CreateOfferReply reply = CreateOfferReply.newBuilder()
                                 .setOffer(offerInfo.toProtoMessage())

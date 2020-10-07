@@ -24,10 +24,10 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.user.User;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -86,16 +87,17 @@ class CoreOffersService {
         return offers;
     }
 
-    // Create offer with a random offer id.
-    Offer createOffer(String currencyCode,
-                      String directionAsString,
-                      String priceAsString,
-                      boolean useMarketBasedPrice,
-                      double marketPriceMargin,
-                      long amountAsLong,
-                      long minAmountAsLong,
-                      double buyerSecurityDeposit,
-                      String paymentAccountId) {
+    // Create and place new offer.
+    void createAndPlaceOffer(String currencyCode,
+                             String directionAsString,
+                             String priceAsString,
+                             boolean useMarketBasedPrice,
+                             double marketPriceMargin,
+                             long amountAsLong,
+                             long minAmountAsLong,
+                             double buyerSecurityDeposit,
+                             String paymentAccountId,
+                             Consumer<Offer> resultHandler) {
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
@@ -104,7 +106,7 @@ class CoreOffersService {
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
         Coin useDefaultTxFee = Coin.ZERO;
-        return createOfferService.createAndGetOffer(offerId,
+        Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
                 upperCaseCurrencyCode,
                 amount,
@@ -115,22 +117,29 @@ class CoreOffersService {
                 exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
                 paymentAccount);
+
+        // We don't support atm funding from external wallet to keep it simple.
+        boolean useSavingsWallet = true;
+        //noinspection ConstantConditions
+        placeOffer(offer,
+                buyerSecurityDeposit,
+                useSavingsWallet,
+                transaction -> resultHandler.accept(offer));
     }
 
-    // Create offer for given offer id.
-    // Not used yet, should be renamed for a new placeoffer api method.
-    Offer createOffer(String offerId,
-                      String currencyCode,
-                      Direction direction,
-                      Price price,
-                      boolean useMarketBasedPrice,
-                      double marketPriceMargin,
-                      Coin amount,
-                      Coin minAmount,
-                      double buyerSecurityDeposit,
-                      PaymentAccount paymentAccount) {
+    // Edit a placed offer.
+    Offer editOffer(String offerId,
+                    String currencyCode,
+                    Direction direction,
+                    Price price,
+                    boolean useMarketBasedPrice,
+                    double marketPriceMargin,
+                    Coin amount,
+                    Coin minAmount,
+                    double buyerSecurityDeposit,
+                    PaymentAccount paymentAccount) {
         Coin useDefaultTxFee = Coin.ZERO;
-        Offer offer = createOfferService.createAndGetOffer(offerId,
+        return createOfferService.createAndGetOffer(offerId,
                 direction,
                 currencyCode.toUpperCase(),
                 amount,
@@ -141,22 +150,20 @@ class CoreOffersService {
                 exactMultiply(marketPriceMargin, 0.01),
                 buyerSecurityDeposit,
                 paymentAccount);
-        return offer;
     }
 
-    Offer placeOffer(Offer offer,
-                     double buyerSecurityDeposit,
-                     boolean useSavingsWallet,
-                     TransactionResultHandler resultHandler) {
+    private void placeOffer(Offer offer,
+                            double buyerSecurityDeposit,
+                            boolean useSavingsWallet,
+                            Consumer<Transaction> resultHandler) {
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
-                resultHandler,
+                resultHandler::accept,
                 log::error);
+
         if (offer.getErrorMessage() != null)
             throw new IllegalStateException(offer.getErrorMessage());
-
-        return offer;
     }
 
     private long priceStringToLong(String priceAsString, String currencyCode) {

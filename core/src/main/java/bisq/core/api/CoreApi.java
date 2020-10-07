@@ -22,7 +22,6 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -36,6 +35,7 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,16 +90,17 @@ public class CoreApi {
         return coreOffersService.getOffers(direction, currencyCode);
     }
 
-    public Offer createOffer(String currencyCode,
-                             String directionAsString,
-                             String priceAsString,
-                             boolean useMarketBasedPrice,
-                             double marketPriceMargin,
-                             long amountAsLong,
-                             long minAmountAsLong,
-                             double buyerSecurityDeposit,
-                             String paymentAccountId) {
-        return coreOffersService.createOffer(currencyCode,
+    public void createAnPlaceOffer(String currencyCode,
+                                   String directionAsString,
+                                   String priceAsString,
+                                   boolean useMarketBasedPrice,
+                                   double marketPriceMargin,
+                                   long amountAsLong,
+                                   long minAmountAsLong,
+                                   double buyerSecurityDeposit,
+                                   String paymentAccountId,
+                                   Consumer<Offer> resultHandler) {
+        coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
                 priceAsString,
                 useMarketBasedPrice,
@@ -107,21 +108,21 @@ public class CoreApi {
                 amountAsLong,
                 minAmountAsLong,
                 buyerSecurityDeposit,
-                paymentAccountId);
+                paymentAccountId,
+                resultHandler);
     }
 
-    // Not used yet, should be renamed for a new placeoffer api method.
-    public Offer createOffer(String offerId,
-                             String currencyCode,
-                             OfferPayload.Direction direction,
-                             Price price,
-                             boolean useMarketBasedPrice,
-                             double marketPriceMargin,
-                             Coin amount,
-                             Coin minAmount,
-                             double buyerSecurityDeposit,
-                             PaymentAccount paymentAccount) {
-        return coreOffersService.createOffer(offerId,
+    public Offer editOffer(String offerId,
+                           String currencyCode,
+                           OfferPayload.Direction direction,
+                           Price price,
+                           boolean useMarketBasedPrice,
+                           double marketPriceMargin,
+                           Coin amount,
+                           Coin minAmount,
+                           double buyerSecurityDeposit,
+                           PaymentAccount paymentAccount) {
+        return coreOffersService.editOffer(offerId,
                 currencyCode,
                 direction,
                 price,
@@ -131,17 +132,6 @@ public class CoreApi {
                 minAmount,
                 buyerSecurityDeposit,
                 paymentAccount);
-    }
-
-    public Offer placeOffer(Offer offer,
-                            double buyerSecurityDeposit,
-                            boolean useSavingsWallet,
-                            TransactionResultHandler resultHandler) {
-        coreOffersService.placeOffer(offer,
-                buyerSecurityDeposit,
-                useSavingsWallet,
-                resultHandler);
-        return offer;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
