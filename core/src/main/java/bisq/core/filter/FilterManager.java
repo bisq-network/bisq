@@ -56,6 +56,7 @@ import java.math.BigInteger;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -586,7 +587,11 @@ public class FilterManager {
     private boolean isFilterPublicKeyInList(Filter filter) {
         String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
         if (!isPublicKeyInList(signerPubKeyAsHex)) {
-            log.warn("signerPubKeyAsHex from filter is not part of our pub key list. filter={}, publicKeys={}", filter, publicKeys);
+            log.warn("Invalid filter (expected case for pre v1.3.9 filter as we still keep that in the network " +
+                            "but the new version does not recognize it as valid filter): " +
+                            "signerPubKeyAsHex from filter is not part of our pub key list. " +
+                            "signerPubKeyAsHex={}, publicKeys={}, filterCreationDate={}",
+                    signerPubKeyAsHex, publicKeys, new Date(filter.getCreationDate()));
             return false;
         }
         return true;
