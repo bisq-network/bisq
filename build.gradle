@@ -63,7 +63,7 @@ configure(subprojects) {
         loggingVersion = '1.2'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = '0.6.8'
+        netlayerVersion = 'cc80787'
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
@@ -271,10 +271,10 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile("com.github.JesusMcCloud.netlayer:tor.native:$netlayerVersion") {
+        compile("com.github.cd2357.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile("com.github.JesusMcCloud.netlayer:tor.external:$netlayerVersion") {
+        compile("com.github.cd2357.netlayer:tor.external:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
