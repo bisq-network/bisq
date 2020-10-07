@@ -900,11 +900,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     @Nullable
     private NodeAddress getSenderNodeAddress(NetworkEnvelope networkEnvelope) {
-        return getPeersNodeAddressOptional().isPresent() ?
-                getPeersNodeAddressOptional().get() :
+        return getPeersNodeAddressOptional().orElse(
                 networkEnvelope instanceof SendersNodeAddressMessage ?
                         ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress() :
-                        null;
+                        null);
     }
 
     private String getSenderNodeAddressAsString(NetworkEnvelope networkEnvelope) {
