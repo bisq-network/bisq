@@ -33,7 +33,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implements MailboxMessage, SendersNodeAddressMessage {
     private final NodeAddress senderNodeAddress;
     private final SealedAndSigned sealedAndSigned;
+
+    // From v1.4.0 on that can be an empty byte array. We cannot use null as not updated nodes would get a nullPointer
+    // at protobuf serialisation.
     private final byte[] addressPrefixHash;
+
     private final String uid;
 
     public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress,
