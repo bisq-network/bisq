@@ -928,11 +928,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 .findAny();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Value
     public class MailboxItem {
         private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
