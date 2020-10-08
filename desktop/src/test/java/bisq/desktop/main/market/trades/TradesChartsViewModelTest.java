@@ -64,9 +64,7 @@ public class TradesChartsViewModelTest {
     TradesChartsViewModel model;
     TradeStatisticsManager tradeStatisticsManager;
 
-    private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModelTest.class);
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-    private KeyRing keyRing;
     private File dir;
     OfferPayload offer = new OfferPayload(null,
             0,
@@ -217,7 +215,6 @@ public class TradesChartsViewModelTest {
         ArrayList<Trade> trades = new ArrayList<>();
 
         // Set predetermined time to use as "now" during test
-        Date test_time = dateFormat.parse("2018-01-01T00:00:05");  // Monday
 /*        new MockUp<System>() {
             @Mock
             long currentTimeMillis() {

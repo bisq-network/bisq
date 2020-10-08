@@ -121,7 +121,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqDashboardView(DaoFacade daoFacade,
+    public BsqDashboardView(DaoFacade daoFacade,
                              TradeStatisticsManager tradeStatisticsManager,
                              PriceFeedService priceFeedService,
                              Preferences preferences,
@@ -173,7 +173,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
 
-        availableAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, 1,
+        availableAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.dashboard.availableAmount")).second;
     }
 
