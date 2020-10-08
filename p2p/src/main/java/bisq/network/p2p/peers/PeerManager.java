@@ -208,6 +208,11 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             stopped = false;
             listeners.forEach(Listener::onNewConnectionAfterAllConnectionsLost);
         }
+
+        if (connection.getPeersNodeAddressOptional().isPresent()) {
+            findPeer(connection.getPeersNodeAddressOptional().get())
+                    .ifPresent(Peer::onConnection);
+        }
     }
 
     @Override
@@ -253,16 +258,16 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     }
 
     public void handleConnectionFault(NodeAddress nodeAddress, @Nullable Connection connection) {
-        log.debug("handleConnectionFault called: nodeAddress=" + nodeAddress);
         boolean doRemovePersistedPeer = false;
         removeReportedPeer(nodeAddress);
         Optional<Peer> persistedPeerOptional = findPersistedPeer(nodeAddress);
         if (persistedPeerOptional.isPresent()) {
             Peer persistedPeer = persistedPeerOptional.get();
-            persistedPeer.increaseFailedConnectionAttempts();
+            persistedPeer.onDisconnect();
             doRemovePersistedPeer = persistedPeer.tooManyFailedConnectionAttempts();
         }
-        doRemovePersistedPeer = doRemovePersistedPeer || (connection != null && connection.getRuleViolation() != null);
+        boolean ruleViolation = connection != null && connection.getRuleViolation() != null;
+        doRemovePersistedPeer = doRemovePersistedPeer || ruleViolation;
 
         if (doRemovePersistedPeer)
             removePersistedPeer(nodeAddress);

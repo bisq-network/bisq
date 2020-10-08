@@ -80,8 +80,12 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void increaseFailedConnectionAttempts() {
+    public void onDisconnect() {
         this.failedConnectionAttempts++;
+    }
+
+    public void onConnection() {
+        this.failedConnectionAttempts--;
     }
 
     public boolean tooManyFailedConnectionAttempts() {
