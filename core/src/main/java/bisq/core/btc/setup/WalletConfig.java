@@ -305,7 +305,11 @@ public class WalletConfig extends AbstractIdleService {
             if (migratedWalletToSegwit.get()) {
                 startPeerGroup();
             } else {
-                migratedWalletToSegwit.addListener((observable, oldValue, newValue) -> startPeerGroup());
+                migratedWalletToSegwit.addListener((observable, oldValue, newValue) -> {
+                    if (newValue) {
+                        startPeerGroup();
+                    }
+                });
             }
 
         } catch (BlockStoreException e) {
