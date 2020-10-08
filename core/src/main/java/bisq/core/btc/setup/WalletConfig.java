@@ -22,6 +22,7 @@ import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.*;
@@ -510,6 +511,14 @@ public class WalletConfig extends AbstractIdleService {
                 // wait for the aesKey to be set and this method to be invoked again.
                 return;
             }
+            // Do a backup of the wallet
+            File backup = new File(directory, WalletsSetup.PRE_SEGWIT_WALLET_BACKUP);
+            try {
+                FileUtil.copyFile(new File(directory, "bisq_BTC.wallet"), backup);
+            } catch (IOException e) {
+                log.error(e.toString(), e);
+            }
+
             // Btc wallet does not have a native segwit keychain, we should add one.
             DeterministicSeed seed = wallet.getKeyChainSeed();
             if (aesKey != null) {
