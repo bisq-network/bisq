@@ -208,11 +208,9 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             stopped = false;
             listeners.forEach(Listener::onNewConnectionAfterAllConnectionsLost);
         }
-
-        if (connection.getPeersNodeAddressOptional().isPresent()) {
-            findPeer(connection.getPeersNodeAddressOptional().get())
-                    .ifPresent(Peer::onConnection);
-        }
+        connection.getPeersNodeAddressOptional()
+                .flatMap(this::findPeer)
+                .ifPresent(Peer::onConnection);
     }
 
     @Override
@@ -581,12 +579,10 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
     private void removeReportedPeer(NodeAddress nodeAddress) {
         List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
-        Optional<Peer> reportedPeerOptional = reportedPeersClone.stream()
-                .filter(e -> e.getNodeAddress().equals(nodeAddress)).findAny();
-        if (reportedPeerOptional.isPresent()) {
-            Peer reportedPeer = reportedPeerOptional.get();
-            removeReportedPeer(reportedPeer);
-        }
+        reportedPeersClone.stream()
+                .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                .findAny()
+                .ifPresent(this::removeReportedPeer);
     }
 
     private void removeTooOldReportedPeers() {
@@ -648,7 +644,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
     private boolean removePersistedPeer(Peer persistedPeer) {
         if (getPersistedPeers().contains(persistedPeer)) {
-            //getPersistedPeers().remove(persistedPeer);
+            getPersistedPeers().remove(persistedPeer);
             requestPersistence();
             return true;
         } else {
