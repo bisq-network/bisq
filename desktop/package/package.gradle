@@ -65,23 +65,15 @@ task getJavaBinariesDownloadURLs {
         // See https://adoptopenjdk.net/releases.html?variant=openjdk15&jvmVariant=hotspot for latest download URLs
         // The links must be for: x64 + JDK + zip (for windows) or tar.gz (for mac/linux)
         Map jdk15DownloadURLs = [
-//            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_linux_hotspot_15_36.tar.gz',
-//            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_mac_hotspot_15_36.tar.gz',
-//            'windows' : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_windows_hotspot_15_36.zip'
+            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_linux_hotspot_15_36.tar.gz',
+            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_mac_hotspot_15_36.tar.gz',
+            'windows' : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_windows_hotspot_15_36.zip'
 
             // TODO For some reason, using "--runtime-image jdk-11" does NOT work with a v15 jpackage, but works with v14
             // v14
-            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_linux_hotspot_14.0.2_12.tar.gz',
-            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz',
-            'windows' : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_windows_hotspot_14.0.2_12.zip'
-        ]
-
-        // https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot
-        // The links must be for: x64 + JDK + zip (for windows) or tar.gz (for mac/linux)
-        Map jdk11DownloadURLs = [
-                'linux'   : 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.8_10.tar.gz',
-                'mac'     : 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_mac_hotspot_11.0.8_10.tar.gz',
-                'windows' : 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_windows_hotspot_11.0.8_10.zip'
+//            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_linux_hotspot_14.0.2_12.tar.gz',
+//            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz',
+//            'windows' : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_windows_hotspot_14.0.2_12.zip'
         ]
 
         String osKey
@@ -94,11 +86,9 @@ task getJavaBinariesDownloadURLs {
         }
 
         ext.jdk15DownloadURL = jdk15DownloadURLs[osKey]
-        ext.jdk11DownloadURL = jdk11DownloadURLs[osKey]
 
         // The download URLs can be manually overwritten here, if necessary
         // ext.jdk15DownloadURL = ...
-        // ext.jdk11DownloadURL = ...
     }
 }
 
@@ -114,32 +104,20 @@ task retrieveAndExtractJavaBinaries {
         File jdkForJpackageDir = new File(tempRootDir, jdkForJpackageDirName)
         jdkForJpackageDir.mkdirs();
 
-        // Folder where the app-runtime JDK (v11) archive will be downloaded and extracted
-        String jdkForAppRuntimeDirName = "jdk-app-runtime"
-        File jdkForAppRuntimeDir = new File(tempRootDir, jdkForAppRuntimeDirName)
-        jdkForAppRuntimeDir.mkdirs();
-
         String jdkForJpackageArchiveURL = getJavaBinariesDownloadURLs.property('jdk15DownloadURL')
         String jdkForJpackageArchiveFileName = jdkForJpackageArchiveURL.tokenize('/').last()
         File jdkForJpackageFile = new File(jdkForJpackageDir, jdkForJpackageArchiveFileName)
 
-        String jdkForAppRuntimeArchiveURL = getJavaBinariesDownloadURLs.property('jdk11DownloadURL')
-        String jdkForAppRuntimeArchiveFileName = jdkForAppRuntimeArchiveURL.tokenize('/').last()
-        File jdkForAppRuntimeFile = new File(jdkForAppRuntimeDir, jdkForAppRuntimeArchiveFileName)
-
         // Download necessary JDK binaries
         ext.downloadArchive(jdkForJpackageArchiveURL, jdkForJpackageFile)
-        ext.downloadArchive(jdkForAppRuntimeArchiveURL, jdkForAppRuntimeFile)
 
         // Extract them
         String jpackageBinaryFileName
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             ext.extractArchiveZip(jdkForJpackageFile, jdkForJpackageDir)
-            ext.extractArchiveZip(jdkForAppRuntimeFile, jdkForAppRuntimeDir)
             jpackageBinaryFileName = 'jpackage.exe'
         } else {
             ext.extractArchiveTarGz(jdkForJpackageFile, jdkForJpackageDir)
-            ext.extractArchiveTarGz(jdkForAppRuntimeFile, jdkForAppRuntimeDir)
             jpackageBinaryFileName = 'jpackage'
         }
 
@@ -149,9 +127,6 @@ task retrieveAndExtractJavaBinaries {
             println 'Using jpackage binary from ' + it
             ext.jpackageFilePath = it.path
         }
-
-        // After the JDK was extracted, find the path to the extracted folder (the app runtime JDK folder)
-        jdkForAppRuntimeDir.traverse(type: DIRECTORIES, maxDepth: 0) {ext.jdkForAppRuntimePath = it.path }
     }
 
     ext.downloadArchive = {String archiveURL, File destinationArchiveFile ->
@@ -188,7 +163,6 @@ task packageInstallers {
         String jPackageFilePath = retrieveAndExtractJavaBinaries.property('jpackageFilePath')
         String licenseFilePath = "${rootProject.projectDir}/LICENSE"
         File binariesFolderPath = file(getJavaBinariesDownloadURLs.property('binariesFolderPath'))
-        String jdkForAppRuntimePath = retrieveAndExtractJavaBinaries.property('jdkForAppRuntimePath')
 
         File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir")
         // The jpackateTempDir stores temp files used by jpackage for building the installers
@@ -237,8 +211,7 @@ task packageInstallers {
 //              " --java-options -Djdk.module.illegalAccess=deny" +
 
                 // Options for creating the application package
-                " --license-file \"${licenseFilePath}\"" +
-                " --runtime-image \"${jdkForAppRuntimePath}\""
+                " --license-file \"${licenseFilePath}\""
         )
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
