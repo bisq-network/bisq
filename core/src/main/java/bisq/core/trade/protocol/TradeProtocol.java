@@ -30,6 +30,7 @@ import bisq.network.p2p.DecryptedDirectMessageListener;
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 
@@ -77,8 +78,8 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
             processModel.getP2PService().addDecryptedDirectMessageListener(this);
         }
         processModel.getP2PService().addDecryptedMailboxListener(this);
-        processModel.getP2PService().getMailboxMap().values()
-                .stream().map(e -> e.second)
+        processModel.getP2PService().getMailboxItemsByUid().values()
+                .stream().map(P2PService.MailboxItem::getDecryptedMessageWithPubKey)
                 .forEach(this::handleDecryptedMessageWithPubKey);
     }
 

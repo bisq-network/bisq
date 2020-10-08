@@ -53,7 +53,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
@@ -97,6 +96,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
+import lombok.Value;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -126,7 +126,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final Set<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
     @Getter
-    private final Map<String, Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>> mailboxMap = new HashMap<>();
+    private final Map<String, MailboxItem> mailboxItemsByUid = new HashMap<>();
     private final Set<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
     private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
     private final BooleanProperty preliminaryDataReceived = new SimpleBooleanProperty();
@@ -462,7 +462,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void threadedBatchProcessMailboxEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
         ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("processMailboxEntry-" + new Random().nextInt(1000));
         long ts = System.currentTimeMillis();
-        ListenableFuture<Set<Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>>> future = executor.submit(() -> {
+        ListenableFuture<Set<MailboxItem>> future = executor.submit(() -> {
             var decryptedEntries = getDecryptedEntries(protectedMailboxStorageEntries);
             log.info("Batch processing of {} mailbox entries took {} ms",
                     protectedMailboxStorageEntries.size(),
@@ -471,8 +471,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(Set<Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>> decryptedEntries) {
-                UserThread.execute(() -> decryptedEntries.forEach(e -> storeMailboxDataAndNotifyListeners(e)));
+            public void onSuccess(Set<MailboxItem> decryptedMailboxMessageWithEntries) {
+                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> storeMailboxDataAndNotifyListeners(e)));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
@@ -481,25 +481,24 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }, MoreExecutors.directExecutor());
     }
 
-    private Set<Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>> getDecryptedEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
-        Set<Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>> decryptedEntries = new HashSet<>();
+    private Set<MailboxItem> getDecryptedEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
+        Set<MailboxItem> decryptedMailboxMessageWithEntries = new HashSet<>();
         protectedMailboxStorageEntries.stream()
                 .map(this::decryptProtectedMailboxStorageEntry)
                 .filter(Objects::nonNull)
-                .forEach(decryptedEntries::add);
-        return decryptedEntries;
+                .forEach(decryptedMailboxMessageWithEntries::add);
+        return decryptedMailboxMessageWithEntries;
     }
 
     @Nullable
-    private Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey> decryptProtectedMailboxStorageEntry(
-            ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
+    private MailboxItem decryptProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
         try {
             DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(protectedMailboxStorageEntry
                     .getMailboxStoragePayload()
                     .getPrefixedSealedAndSignedMessage()
                     .getSealedAndSigned());
             checkArgument(decryptedMessageWithPubKey.getNetworkEnvelope() instanceof MailboxMessage);
-            return new Tuple2<>(protectedMailboxStorageEntry, decryptedMessageWithPubKey);
+            return new MailboxItem(protectedMailboxStorageEntry, decryptedMessageWithPubKey);
         } catch (CryptoException ignore) {
             // Expected if message was not intended for us
         } catch (ProtobufferException e) {
@@ -509,11 +508,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return null;
     }
 
-    private void storeMailboxDataAndNotifyListeners(Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey> tuple2) {
-        DecryptedMessageWithPubKey decryptedMessageWithPubKey = tuple2.second;
+    private void storeMailboxDataAndNotifyListeners(MailboxItem mailboxItem) {
+        DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
         NodeAddress sender = mailboxMessage.getSenderNodeAddress();
-        mailboxMap.put(mailboxMessage.getUid(), tuple2);
+        mailboxItemsByUid.put(mailboxMessage.getUid(), mailboxItem);
         log.info("Received a {} mailbox message with uid {} and senderAddress {}",
                 mailboxMessage.getClass().getSimpleName(), mailboxMessage.getUid(), sender);
         decryptedMailboxListeners.forEach(e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, sender));
@@ -771,8 +770,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
         String uid = mailboxMessage.getUid();
-        if (mailboxMap.containsKey(uid)) {
-            ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid).first;
+        if (mailboxItemsByUid.containsKey(uid)) {
+            ProtectedMailboxStorageEntry mailboxData = mailboxItemsByUid.get(uid).getProtectedMailboxStorageEntry();
             if (mailboxData != null && mailboxData.getProtectedStoragePayload() instanceof MailboxStoragePayload) {
                 MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) mailboxData.getProtectedStoragePayload();
                 PublicKey receiversPubKey = mailboxData.getReceiversPubKey();
@@ -788,7 +787,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 }
 
-                mailboxMap.remove(uid);
+                mailboxItemsByUid.remove(uid);
                 log.info("Removed successfully decryptedMsgWithPubKey. uid={}", uid);
             }
         } else {
@@ -919,5 +918,18 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @VisibleForTesting
     public KeyRing getKeyRing() {
         return keyRing;
+    }
+
+
+    @Value
+    public class MailboxItem {
+        private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
+        private final DecryptedMessageWithPubKey decryptedMessageWithPubKey;
+
+        public MailboxItem(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
+                           DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+            this.protectedMailboxStorageEntry = protectedMailboxStorageEntry;
+            this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
+        }
     }
 }
