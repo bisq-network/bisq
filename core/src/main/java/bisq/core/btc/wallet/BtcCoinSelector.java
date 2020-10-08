@@ -64,7 +64,7 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
             Address address = WalletService.getAddressFromOutput(output);
             return addresses.contains(address);
         } else {
-            log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
+            log.warn("transactionOutput.getScriptPubKey() is not P2PKH nor P2SH nor P2WH");
             return false;
         }
     }

@@ -1239,6 +1239,7 @@ message AddressEntry {
     bytes pub_key = 9;
     bytes pub_key_hash = 10;
     int64 coin_locked_in_multi_sig = 11;
+    bool segwit = 12;
 }
 
 message NavigationPath {
