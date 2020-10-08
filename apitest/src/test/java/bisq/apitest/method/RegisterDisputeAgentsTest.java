@@ -71,7 +71,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
                 createRegisterDisputeAgentRequest("badagent");
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req));
-        assertEquals("INVALID_ARGUMENT: unknown dispute agent type badagent",
+        assertEquals("INVALID_ARGUMENT: unknown dispute agent type 'badagent'",
                 exception.getMessage());
     }
 
