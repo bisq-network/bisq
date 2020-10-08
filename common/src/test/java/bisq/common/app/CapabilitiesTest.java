@@ -50,8 +50,8 @@ public class CapabilitiesTest {
         assertFalse(new Capabilities(DAO_FULL_NODE).hasLess(new Capabilities(SEED_NODE)));
 
         Capabilities all = new Capabilities(
-                Capability.TRADE_STATISTICS,
-                Capability.TRADE_STATISTICS_2,
+                TRADE_STATISTICS,
+                TRADE_STATISTICS_2,
                 Capability.ACCOUNT_AGE_WITNESS,
                 Capability.ACK_MSG,
                 Capability.PROPOSAL,
@@ -64,8 +64,8 @@ public class CapabilitiesTest {
                 Capability.TRADE_STATISTICS_HASH_UPDATE
         );
         Capabilities other = new Capabilities(
-                Capability.TRADE_STATISTICS,
-                Capability.TRADE_STATISTICS_2,
+                TRADE_STATISTICS,
+                TRADE_STATISTICS_2,
                 Capability.ACCOUNT_AGE_WITNESS,
                 Capability.ACK_MSG,
                 Capability.PROPOSAL,
