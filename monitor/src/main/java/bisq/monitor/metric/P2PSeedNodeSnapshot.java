@@ -233,9 +233,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
 
             //   - update queried height
-            if(type.contains("DaoState"))
+            if (type.contains("DaoState"))
                 daostateheight = oldest - 20;
-            else if(type.contains("Proposal"))
+            else if (type.contains("Proposal"))
                 proposalheight = oldest - 20;
             else
                 blindvoteheight = oldest - 20;
@@ -255,7 +255,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
             List<ByteBuffer> states = hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(byteBufferIntegerEntry -> byteBufferIntegerEntry.getKey()).collect(Collectors.toList());
             hitcount.clear();
-
+            TradesChartsViewModelTest.java
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
 
             //   - report reference head
