@@ -334,18 +334,18 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                                    Capabilities capabilities) {
         applyCapabilities(connection, capabilities);
 
-        reportedPeersToAdd = reportedPeersToAdd.stream()
+        Set<Peer> peers = reportedPeersToAdd.stream()
                 .filter(peer -> !isSelf(peer.getNodeAddress()))
                 .collect(Collectors.toSet());
 
-        printNewReportedPeers(reportedPeersToAdd);
+        printNewReportedPeers(peers);
 
         // We check if the reported msg is not violating our rules
-        if (reportedPeersToAdd.size() <= (MAX_REPORTED_PEERS + maxConnectionsAbsolute + 10)) {
-            reportedPeers.addAll(reportedPeersToAdd);
+        if (peers.size() <= (MAX_REPORTED_PEERS + maxConnectionsAbsolute + 10)) {
+            reportedPeers.addAll(peers);
             purgeReportedPeersIfExceeds();
 
-            getPersistedPeers().addAll(reportedPeersToAdd);
+            getPersistedPeers().addAll(peers);
             purgePersistedPeersIfExceeds();
             requestPersistence();
 
