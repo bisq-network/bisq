@@ -39,17 +39,43 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Utilities;
+
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class SellerProtocol extends DisputeProtocol {
     enum SellerEvent implements FluentProtocol.Event {
+        STARTUP,
         PAYMENT_RECEIVED
     }
 
     public SellerProtocol(SellerTrade trade) {
         super(trade);
+    }
+
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
+
+        // We get called the constructor with any possible state and phase. As we don't want to log an error for such
+        // cases we use the alternative 'given' method instead of 'expect'.
+
+        // We only re-publish for about 2 weeks after 1.4.0 release until most nodes have updated to
+        // achieve sufficient resilience.
+        boolean currentDateBeforeCutOffDate = new Date().before(Utilities.getUTCDate(2020, GregorianCalendar.NOVEMBER, 1));
+        given(anyPhase(Trade.Phase.DEPOSIT_PUBLISHED,
+                Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED,
+                Trade.Phase.PAYOUT_PUBLISHED)
+                .with(SellerEvent.STARTUP)
+                .preCondition(currentDateBeforeCutOffDate))
+                .setup(tasks(SellerPublishesTradeStatistics.class))
+                .executeTasks();
     }
 
 
