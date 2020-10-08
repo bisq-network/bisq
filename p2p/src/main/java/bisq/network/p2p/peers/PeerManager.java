@@ -401,7 +401,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         // We look up first our connections as that is our own data. If not found there we look up the peers which
         // include reported peers.
         Optional<Capabilities> optionalCapabilities = networkNode.findPeersCapabilities(nodeAddress);
-        if (optionalCapabilities.isPresent()) {
+        if (optionalCapabilities.isPresent() && !optionalCapabilities.get().isEmpty()) {
             return optionalCapabilities;
         }
 
@@ -415,7 +415,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         // attack all users have a strong incentive to update ;-).
         return getAllPeers().stream()
                 .filter(peer -> peer.getNodeAddress().equals(nodeAddress))
-                .findAny().map(Peer::getCapabilities);
+                .findAny()
+                .map(Peer::getCapabilities);
     }
 
     private void applyCapabilities(Connection connection, Capabilities capabilities) {
@@ -647,7 +648,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
     private boolean removePersistedPeer(Peer persistedPeer) {
         if (getPersistedPeers().contains(persistedPeer)) {
-            getPersistedPeers().remove(persistedPeer);
+            //getPersistedPeers().remove(persistedPeer);
             requestPersistence();
             return true;
         } else {

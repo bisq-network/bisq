@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -104,7 +105,9 @@ class PeerExchangeHandler implements MessageListener {
         log.debug("sendGetPeersRequest to nodeAddress={}", nodeAddress);
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
-                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getLivePeers(nodeAddress));
+                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(),
+                        nonce,
+                        new HashSet<>(peerManager.getLivePeers(nodeAddress)));
                 if (timeoutTimer == null) {
                     timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                                 if (!stopped) {
