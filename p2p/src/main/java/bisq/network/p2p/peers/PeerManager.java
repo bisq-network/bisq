@@ -417,15 +417,16 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 .map(Peer::getCapabilities);
     }
 
-    private void applyCapabilities(Connection connection, Capabilities capabilities) {
-        if (capabilities == null || capabilities.isEmpty()) {
+    private void applyCapabilities(Connection connection, Capabilities newCapabilities) {
+        if (newCapabilities == null || newCapabilities.isEmpty()) {
             return;
         }
 
         connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
             getAllPeers().stream()
                     .filter(peer -> peer.getNodeAddress().equals(nodeAddress))
-                    .forEach(peer -> peer.setCapabilities(capabilities));
+                    .filter(peer -> peer.getCapabilities().hasLess(newCapabilities))
+                    .forEach(peer -> peer.setCapabilities(newCapabilities));
         });
         requestPersistence();
     }
