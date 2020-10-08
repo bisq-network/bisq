@@ -186,7 +186,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     public void readPersisted() {
         PeerList persisted = persistenceManager.getPersisted();
         if (persisted != null) {
-            peerList.setAll(persisted.getList());
+            peerList.setAll(persisted.getSet());
         }
     }
 
@@ -321,13 +321,17 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     }
 
     public Collection<Peer> getPersistedPeers() {
-        return peerList.getList();
+        return peerList.getSet();
     }
 
     public void addToReportedPeers(Set<Peer> reportedPeersToAdd,
                                    Connection connection,
                                    Capabilities capabilities) {
         applyCapabilities(connection, capabilities);
+
+        reportedPeersToAdd = reportedPeersToAdd.stream()
+                .filter(peer -> !isSelf(peer.getNodeAddress()))
+                .collect(Collectors.toSet());
 
         printNewReportedPeers(reportedPeersToAdd);
 
