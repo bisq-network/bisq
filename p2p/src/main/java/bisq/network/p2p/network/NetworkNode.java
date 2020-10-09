@@ -21,6 +21,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
@@ -495,5 +496,13 @@ public abstract class NetworkNode implements MessageListener {
     @Nullable
     public NodeAddress getNodeAddress() {
         return nodeAddressProperty.get();
+    }
+
+    public Optional<Capabilities> findPeersCapabilities(NodeAddress nodeAddress) {
+        return getConfirmedConnections().stream()
+                .filter(c -> c.getPeersNodeAddressProperty().get() != null)
+                .filter(c -> c.getPeersNodeAddressProperty().get().equals(nodeAddress))
+                .map(Connection::getCapabilities)
+                .findAny();
     }
 }

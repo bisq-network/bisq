@@ -98,6 +98,10 @@ public class Capabilities {
         return this.capabilities.containsAll(Arrays.asList(capabilities));
     }
 
+    public boolean contains(Capability capability) {
+        return this.capabilities.contains(capability);
+    }
+
     public boolean isEmpty() {
         return capabilities.isEmpty();
     }
@@ -179,5 +183,19 @@ public class Capabilities {
 
     public int size() {
         return capabilities.size();
+    }
+
+    // We return true if our capabilities have less capabilities than the parameter value
+    public boolean hasLess(Capabilities other) {
+        return findHighestCapability(this) < findHighestCapability(other);
+    }
+
+    // We use the sum of all capabilities. Alternatively we could use the highest entry.
+    // Neither would support removal of past capabilities, a use case we never had so far and which might have
+    // backward compatibility issues, so we should treat capabilities as an append-only data structure.
+    public int findHighestCapability(Capabilities capabilities) {
+        return (int) capabilities.capabilities.stream()
+                .mapToLong(e -> (long) e.ordinal())
+                .sum();
     }
 }

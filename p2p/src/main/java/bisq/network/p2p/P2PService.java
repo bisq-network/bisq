@@ -31,7 +31,6 @@ import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.RequestDataManager;
 import bisq.network.p2p.peers.keepalive.KeepAliveManager;
-import bisq.network.p2p.peers.peerexchange.Peer;
 import bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.network.p2p.storage.HashMapChangedListener;
@@ -46,19 +45,23 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -74,21 +77,26 @@ import javafx.beans.property.SimpleIntegerProperty;
 
 import java.security.PublicKey;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
+import lombok.Value;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -118,7 +126,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final Set<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
     @Getter
-    private final Map<String, Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>> mailboxMap = new HashMap<>();
+    private final Map<String, MailboxItem> mailboxItemsByUid = new HashMap<>();
     private final Set<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
     private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
     private final BooleanProperty preliminaryDataReceived = new SimpleBooleanProperty();
@@ -164,7 +172,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         this.networkNode.addConnectionListener(this);
         this.networkNode.addMessageListener(this);
-        this.p2PDataStorage.addHashMapChangedListener(this);
         this.requestDataManager.addListener(this);
 
         // We need to have both the initial data delivered and the hidden service published
@@ -197,13 +204,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public void onAllServicesInitialized() {
         if (networkNode.getNodeAddress() != null) {
-            maybeProcessAllMailboxEntries();
             myNodeAddress = networkNode.getNodeAddress();
         } else {
             // If our HS is still not published
             networkNode.nodeAddressProperty().addListener((observable, oldValue, newValue) -> {
                 if (newValue != null) {
-                    maybeProcessAllMailboxEntries();
                     myNodeAddress = networkNode.getNodeAddress();
                 }
             });
@@ -280,12 +285,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         boolean seedNodesAvailable = requestDataManager.requestPreliminaryData();
 
         keepAliveManager.start();
-        p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
+        p2pServiceListeners.forEach(SetupListener::onTorNodeReady);
 
         if (!seedNodesAvailable) {
             isBootstrapped = true;
-            maybeProcessAllMailboxEntries();
-            p2pServiceListeners.stream().forEach(P2PServiceListener::onNoSeedNodeAvailable);
+            // As we do not expect a updated data request response we start here with addHashMapChangedListenerAndApply
+            addHashMapChangedListenerAndApply();
+            p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
         }
     }
 
@@ -295,17 +301,17 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         hiddenServicePublished.set(true);
 
-        p2pServiceListeners.stream().forEach(SetupListener::onHiddenServicePublished);
+        p2pServiceListeners.forEach(SetupListener::onHiddenServicePublished);
     }
 
     @Override
     public void onSetupFailed(Throwable throwable) {
-        p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable));
+        p2pServiceListeners.forEach(e -> e.onSetupFailed(throwable));
     }
 
     @Override
     public void onRequestCustomBridges() {
-        p2pServiceListeners.stream().forEach(SetupListener::onRequestCustomBridges);
+        p2pServiceListeners.forEach(SetupListener::onRequestCustomBridges);
     }
 
     // Called from networkReadyBinding
@@ -317,8 +323,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
 
         requestDataManager.requestUpdateData();
-        /*if (Capabilities.app.containsAll(Capability.SEED_NODE))
-            UserThread.runPeriodically(() -> requestDataManager.requestUpdateData(), 1, TimeUnit.HOURS);*/
 
         // If we start up first time we don't have any peers so we need to request from seed node.
         // As well it can be that the persisted peer list is outdated with dead peers.
@@ -346,25 +350,27 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onUpdatedDataReceived() {
         if (!isBootstrapped) {
             isBootstrapped = true;
-            maybeProcessAllMailboxEntries();
-            p2pServiceListeners.stream().forEach(P2PServiceListener::onUpdatedDataReceived);
+            // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
+            // after the hidden service was ready.
+            addHashMapChangedListenerAndApply();
+            p2pServiceListeners.forEach(P2PServiceListener::onUpdatedDataReceived);
             p2PDataStorage.onBootstrapComplete();
         }
     }
 
     @Override
     public void onNoSeedNodeAvailable() {
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onNoSeedNodeAvailable);
+        p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
     }
 
     @Override
     public void onNoPeersAvailable() {
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onNoPeersAvailable);
+        p2pServiceListeners.forEach(P2PServiceListener::onNoPeersAvailable);
     }
 
     @Override
     public void onDataReceived() {
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onDataReceived);
+        p2pServiceListeners.forEach(P2PServiceListener::onDataReceived);
     }
 
 
@@ -398,57 +404,120 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof PrefixedSealedAndSignedMessage) {
-            // Seed nodes don't have set the encryptionService
+            PrefixedSealedAndSignedMessage sealedMsg = (PrefixedSealedAndSignedMessage) networkEnvelope;
+            connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
             try {
-                PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMessage) networkEnvelope;
-                if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
-                    // We set connectionType to that connection to avoid that is get closed when
-                    // we get too many connection attempts.
-                    connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
-
-                    log.debug("Try to decrypt...");
-                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(
-                            prefixedSealedAndSignedMessage.getSealedAndSigned());
-
-                    log.debug("\n\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n" +
-                            "Decrypted SealedAndSignedMessage:\ndecryptedMsgWithPubKey={}"
-                            + "\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n", decryptedMessageWithPubKey);
-                    if (connection.getPeersNodeAddressOptional().isPresent())
-                        decryptedDirectMessageListeners.forEach(
-                                e -> e.onDirectMessage(decryptedMessageWithPubKey, connection.getPeersNodeAddressOptional().get()));
-                    else
-                        log.error("peersNodeAddress is not available at onMessage.");
-                } else {
-                    log.debug("Wrong receiverAddressMaskHash. The message is not intended for us.");
-                }
+                DecryptedMessageWithPubKey decryptedMsg = encryptionService.decryptAndVerify(sealedMsg.getSealedAndSigned());
+                connection.getPeersNodeAddressOptional().ifPresentOrElse(nodeAddress ->
+                                decryptedDirectMessageListeners.forEach(e -> e.onDirectMessage(decryptedMsg, nodeAddress)),
+                        () -> {
+                            log.error("peersNodeAddress is expected to be available at onMessage for " +
+                                    "processing PrefixedSealedAndSignedMessage.");
+                        });
             } catch (CryptoException e) {
-                log.debug(networkEnvelope.toString());
-                log.debug(e.toString());
-                log.debug("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
-                        "That is expected if the message is not intended for us.");
+                log.warn("Decryption of a direct message failed. This is not expected as the " +
+                        "direct message was sent to our node.");
             } catch (ProtobufferException e) {
-                log.error("Protobuffer data could not be processed: {}", e.toString());
+                log.error("ProtobufferException at decryptAndVerify: {}", e.toString());
+                e.getStackTrace();
             }
         }
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // HashMapChangedListener implementation
+    // HashMapChangedListener implementation for ProtectedStorageEntry items
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void addHashMapChangedListenerAndApply() {
+        p2PDataStorage.addHashMapChangedListener(this);
+        onAdded(p2PDataStorage.getMap().values());
+    }
 
     @Override
     public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-        protectedStorageEntries.forEach(protectedStorageEntry -> {
-            if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-                processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
-        });
+        Collection<ProtectedMailboxStorageEntry> entries = protectedStorageEntries.stream()
+                .filter(e -> e instanceof ProtectedMailboxStorageEntry)
+                .map(e -> (ProtectedMailboxStorageEntry) e)
+                .filter(e -> networkNode.getNodeAddress() != null)
+                .filter(e -> !seedNodeRepository.isSeedNode(networkNode.getNodeAddress())) // Seed nodes don't expect mailbox messages
+                .collect(Collectors.toSet());
+        if (entries.size() > 1) {
+            threadedBatchProcessMailboxEntries(entries);
+        } else if (entries.size() == 1) {
+            processSingleMailboxEntry(entries);
+        }
     }
 
-    @Override
-    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-        // not used
+    private void processSingleMailboxEntry(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
+        checkArgument(protectedMailboxStorageEntries.size() == 1);
+        var decryptedEntries = new ArrayList<>(getDecryptedEntries(protectedMailboxStorageEntries));
+        if (decryptedEntries.size() == 1) {
+            storeMailboxDataAndNotifyListeners(decryptedEntries.get(0));
+        }
     }
+
+    // We run the batch processing of all mailbox messages we have received at startup in a thread to not block the UI.
+    // For about 1000 messages decryption takes about 1 sec.
+    private void threadedBatchProcessMailboxEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
+        ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("processMailboxEntry-" + new Random().nextInt(1000));
+        long ts = System.currentTimeMillis();
+        ListenableFuture<Set<MailboxItem>> future = executor.submit(() -> {
+            var decryptedEntries = getDecryptedEntries(protectedMailboxStorageEntries);
+            log.info("Batch processing of {} mailbox entries took {} ms",
+                    protectedMailboxStorageEntries.size(),
+                    System.currentTimeMillis() - ts);
+            return decryptedEntries;
+        });
+
+        Futures.addCallback(future, new FutureCallback<>() {
+            public void onSuccess(Set<MailboxItem> decryptedMailboxMessageWithEntries) {
+                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> storeMailboxDataAndNotifyListeners(e)));
+            }
+
+            public void onFailure(@NotNull Throwable throwable) {
+                log.error(throwable.toString());
+            }
+        }, MoreExecutors.directExecutor());
+    }
+
+    private Set<MailboxItem> getDecryptedEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
+        Set<MailboxItem> decryptedMailboxMessageWithEntries = new HashSet<>();
+        protectedMailboxStorageEntries.stream()
+                .map(this::decryptProtectedMailboxStorageEntry)
+                .filter(Objects::nonNull)
+                .forEach(decryptedMailboxMessageWithEntries::add);
+        return decryptedMailboxMessageWithEntries;
+    }
+
+    @Nullable
+    private MailboxItem decryptProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
+        try {
+            DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(protectedMailboxStorageEntry
+                    .getMailboxStoragePayload()
+                    .getPrefixedSealedAndSignedMessage()
+                    .getSealedAndSigned());
+            checkArgument(decryptedMessageWithPubKey.getNetworkEnvelope() instanceof MailboxMessage);
+            return new MailboxItem(protectedMailboxStorageEntry, decryptedMessageWithPubKey);
+        } catch (CryptoException ignore) {
+            // Expected if message was not intended for us
+        } catch (ProtobufferException e) {
+            log.error(e.toString());
+            e.getStackTrace();
+        }
+        return null;
+    }
+
+    private void storeMailboxDataAndNotifyListeners(MailboxItem mailboxItem) {
+        DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
+        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
+        NodeAddress sender = mailboxMessage.getSenderNodeAddress();
+        mailboxItemsByUid.put(mailboxMessage.getUid(), mailboxItem);
+        log.info("Received a {} mailbox message with uid {} and senderAddress {}",
+                mailboxMessage.getClass().getSimpleName(), mailboxMessage.getUid(), sender);
+        decryptedMailboxListeners.forEach(e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, sender));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DirectMessages
@@ -486,13 +555,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             log.debug("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
                     "Encrypt message:\nmessage={}"
                     + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
-            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
-                    networkNode.getNodeAddress(),
-                    encryptionService.encryptAndSign(pubKeyRing, message),
-                    peersNodeAddress.getAddressPrefixHash(),
-                    UUID.randomUUID().toString());
-            SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, prefixedSealedAndSignedMessage);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
+
+            // Prefix is not needed for direct messages but as old code is doing the verification we still need to
+            // send it if peer has not updated.
+            PrefixedSealedAndSignedMessage sealedMsg = getPrefixedSealedAndSignedMessage(peersNodeAddress,
+                    pubKeyRing,
+                    message);
+
+            SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, sealedMsg);
+            Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(@Nullable Connection connection) {
                     sendDirectMessageListener.onArrived();
@@ -513,48 +584,30 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
+    private PrefixedSealedAndSignedMessage getPrefixedSealedAndSignedMessage(NodeAddress peersNodeAddress,
+                                                                             PubKeyRing pubKeyRing,
+                                                                             NetworkEnvelope message) throws CryptoException {
+        byte[] addressPrefixHash;
+        if (peerManager.peerHasCapability(peersNodeAddress, Capability.NO_ADDRESS_PRE_FIX)) {
+            // The peer has an updated version so we do not need to send the prefix.
+            // We cannot use null as not updated nodes would get a nullPointer at protobuf serialisation.
+            addressPrefixHash = new byte[0];
+        } else {
+            addressPrefixHash = peersNodeAddress.getAddressPrefixHash();
+        }
+        return new PrefixedSealedAndSignedMessage(
+                networkNode.getNodeAddress(),
+                encryptionService.encryptAndSign(pubKeyRing, message),
+                addressPrefixHash,
+                UUID.randomUUID().toString());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MailboxMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void processMailboxEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
-        NodeAddress nodeAddress = networkNode.getNodeAddress();
-        // Seed nodes don't receive mailbox network_messages
-        if (nodeAddress != null && !seedNodeRepository.isSeedNode(nodeAddress)) {
-            MailboxStoragePayload mailboxStoragePayload = protectedMailboxStorageEntry.getMailboxStoragePayload();
-            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = mailboxStoragePayload.getPrefixedSealedAndSignedMessage();
-            if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
-                try {
-                    DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(
-                            prefixedSealedAndSignedMessage.getSealedAndSigned());
-                    if (decryptedMessageWithPubKey.getNetworkEnvelope() instanceof MailboxMessage) {
-                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
-                        NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
-                        checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
-
-                        mailboxMap.put(mailboxMessage.getUid(), new Tuple2<>(protectedMailboxStorageEntry, decryptedMessageWithPubKey));
-                        log.info("Received a {} mailbox message with messageUid {} and senderAddress {}", mailboxMessage.getClass().getSimpleName(), mailboxMessage.getUid(), senderNodeAddress);
-                        decryptedMailboxListeners.forEach(
-                                e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderNodeAddress));
-                    } else {
-                        log.warn("tryDecryptMailboxData: Expected MailboxMessage but got other type. " +
-                                "decryptedMsgWithPubKey.message={}", decryptedMessageWithPubKey.getNetworkEnvelope());
-                    }
-                } catch (CryptoException e) {
-                    log.debug(e.toString());
-                    log.debug("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
-                            "That is expected if the message is not intended for us.");
-                } catch (ProtobufferException e) {
-                    log.error("Protobuffer data could not be processed: {}", e.toString());
-                }
-            } else {
-                log.trace("Wrong blurredAddressHash. The message is not intended for us.");
-            }
-        }
-    }
-
-    public void sendEncryptedMailboxMessage(NodeAddress peersNodeAddress, PubKeyRing peersPubKeyRing,
+    public void sendEncryptedMailboxMessage(NodeAddress peer, PubKeyRing peersPubKeyRing,
                                             NetworkEnvelope message,
                                             SendMailboxMessageListener sendMailboxMessageListener) {
         if (peersPubKeyRing == null) {
@@ -562,12 +615,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return;
         }
 
-        checkNotNull(peersNodeAddress,
-                "PeerAddress must not be null (sendEncryptedMailboxMessage)");
+        checkNotNull(peer, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         checkNotNull(networkNode.getNodeAddress(),
                 "My node address must not be null at sendEncryptedMailboxMessage");
-        checkArgument(!keyRing.getPubKeyRing().equals(peersPubKeyRing),
-                "We got own keyring instead of that from peer");
+        checkArgument(!keyRing.getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");
 
         if (!isBootstrapped())
             throw new NetworkNotReadyException();
@@ -578,7 +629,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return;
         }
 
-        if (capabilityRequiredAndCapabilityNotSupported(peersNodeAddress, message)) {
+        if (capabilityRequiredAndCapabilityNotSupported(peer, message)) {
             sendMailboxMessageListener.onFault("We did not send the EncryptedMailboxMessage " +
                     "because the peer does not support the capability.");
             return;
@@ -589,15 +640,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     "Encrypt message:\nmessage={}"
                     + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
 
-            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
-                    networkNode.getNodeAddress(),
-                    encryptionService.encryptAndSign(peersPubKeyRing, message),
-                    peersNodeAddress.getAddressPrefixHash(),
-                    UUID.randomUUID().toString());
+            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = getPrefixedSealedAndSignedMessage(peer,
+                    peersPubKeyRing, message);
 
-            log.debug("sendEncryptedMailboxMessage msg={},  peersNodeAddress={}", message, peersNodeAddress);
-            SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, prefixedSealedAndSignedMessage);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
+            log.debug("sendEncryptedMailboxMessage msg={},  peersNodeAddress={}", message, peer);
+            SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
+            Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(@Nullable Connection connection) {
                     sendMailboxMessageListener.onArrived();
@@ -624,22 +672,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (!(message instanceof CapabilityRequiringPayload))
             return false;
 
-        // We only expect AckMessage so far
-        if (!(message instanceof AckMessage))
-            log.warn("We got a CapabilityRequiringPayload for the mailbox message which is not a AckMessage. " +
-                    "peersNodeAddress={}", peersNodeAddress);
-
-        Set<Peer> allPeers = peerManager.getPersistedPeers();
-        allPeers.addAll(peerManager.getReportedPeers());
-        allPeers.addAll(peerManager.getLivePeers(null));
         // We might have multiple entries of the same peer without the supportedCapabilities field set if we received
         // it from old versions, so we filter those.
-        Optional<Peer> optionalPeer = allPeers.stream()
-                .filter(peer -> peer.getNodeAddress().equals(peersNodeAddress))
-                .filter(peer -> !peer.getCapabilities().isEmpty())
-                .findAny();
-        if (optionalPeer.isPresent()) {
-            boolean result = optionalPeer.get().getCapabilities().containsAll(((CapabilityRequiringPayload) message).getRequiredCapabilities());
+        Optional<Capabilities> optionalCapabilities = peerManager.findPeersCapabilities(peersNodeAddress);
+        if (optionalCapabilities.isPresent()) {
+            boolean result = optionalCapabilities.get().containsAll(((CapabilityRequiringPayload) message).getRequiredCapabilities());
 
             if (!result)
                 log.warn("We don't send the message because the peer does not support the required capability. " +
@@ -652,15 +689,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "We decide to not sent the msg. peersNodeAddress={}", peersNodeAddress);
         return true;
 
-    }
-
-    private void maybeProcessAllMailboxEntries() {
-        if (isBootstrapped) {
-            p2PDataStorage.getMap().values().forEach(protectedStorageEntry -> {
-                if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-                    processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
-            });
-        }
     }
 
     private void addMailboxData(MailboxStoragePayload expirableMailboxStoragePayload,
@@ -742,8 +770,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
         String uid = mailboxMessage.getUid();
-        if (mailboxMap.containsKey(uid)) {
-            ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid).first;
+        if (mailboxItemsByUid.containsKey(uid)) {
+            ProtectedMailboxStorageEntry mailboxData = mailboxItemsByUid.get(uid).getProtectedMailboxStorageEntry();
             if (mailboxData != null && mailboxData.getProtectedStoragePayload() instanceof MailboxStoragePayload) {
                 MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) mailboxData.getProtectedStoragePayload();
                 PublicKey receiversPubKey = mailboxData.getReceiversPubKey();
@@ -759,7 +787,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 }
 
-                mailboxMap.remove(uid);
+                mailboxItemsByUid.remove(uid);
                 log.info("Removed successfully decryptedMsgWithPubKey. uid={}", uid);
             }
         } else {
@@ -840,8 +868,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void removeP2PServiceListener(P2PServiceListener listener) {
-        if (p2pServiceListeners.contains(listener))
-            p2pServiceListeners.remove(listener);
+        p2pServiceListeners.remove(listener);
     }
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
@@ -893,18 +920,16 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return keyRing;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean verifyAddressPrefixHash(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage) {
-        if (networkNode.getNodeAddress() != null) {
-            byte[] blurredAddressHash = networkNode.getNodeAddress().getAddressPrefixHash();
-            return blurredAddressHash != null &&
-                    Arrays.equals(blurredAddressHash, prefixedSealedAndSignedMessage.getAddressPrefixHash());
-        } else {
-            log.debug("myOnionAddress is null at verifyAddressPrefixHash. That is expected at startup.");
-            return false;
+    @Value
+    public class MailboxItem {
+        private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
+        private final DecryptedMessageWithPubKey decryptedMessageWithPubKey;
+
+        public MailboxItem(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
+                           DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+            this.protectedMailboxStorageEntry = protectedMailboxStorageEntry;
+            this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
         }
     }
 }

@@ -159,6 +159,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final List<Long> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
+    // We use a weak reference here to ensure that no connection causes a memory leak in case it get closed without
+    // the shutDown being called.
     private final CopyOnWriteArraySet<WeakReference<SupportedCapabilitiesListener>> capabilitiesListeners = new CopyOnWriteArraySet<>();
 
     @Getter
@@ -514,6 +516,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         } finally {
             protoOutputStream.onConnectionShutdown();
 
+            capabilitiesListeners.clear();
+
             try {
                 protoInputStream.close();
             } catch (IOException e) {
@@ -559,7 +563,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 '}';
     }
 
-    @SuppressWarnings("unused")
     public String printDetails() {
         String portInfo;
         if (socket.getLocalPort() == 0)
@@ -783,30 +786,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     }
 
                     if (networkEnvelope instanceof SupportedCapabilitiesMessage) {
-                        Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
-                        if (supportedCapabilities != null) {
-                            if (!capabilities.equals(supportedCapabilities)) {
-                                capabilities.set(supportedCapabilities);
-
-                                // Capabilities can be empty. We only check for mandatory if we get some capabilities.
-                                if (!capabilities.isEmpty() && !Capabilities.hasMandatoryCapability(capabilities)) {
-                                    String senderNodeAddress = networkEnvelope instanceof SendersNodeAddressMessage ?
-                                            ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress().getFullAddress() :
-                                            "[unknown address]";
-                                    log.info("We close a connection to old node {}. " +
-                                                    "Capabilities of old node: {}, networkEnvelope class name={}",
-                                            senderNodeAddress, capabilities.prettyPrint(), networkEnvelope.getClass().getSimpleName());
-                                    shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
-                                    return;
-                                }
-
-                                capabilitiesListeners.forEach(weakListener -> {
-                                    SupportedCapabilitiesListener supportedCapabilitiesListener = weakListener.get();
-                                    if (supportedCapabilitiesListener != null) {
-                                        UserThread.execute(() -> supportedCapabilitiesListener.onChanged(supportedCapabilities));
-                                    }
-                                });
-                            }
+                        boolean causedShutDown = handleSupportedCapabilitiesMessage(networkEnvelope);
+                        if (causedShutDown) {
+                            return;
                         }
                     }
 
@@ -881,5 +863,51 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         } catch (Throwable t) {
             handleException(t);
         }
+    }
+
+    protected boolean handleSupportedCapabilitiesMessage(NetworkEnvelope networkEnvelope) {
+        Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
+        if (supportedCapabilities == null || supportedCapabilities.isEmpty()) {
+            return false;
+        }
+
+        if (this.capabilities.equals(supportedCapabilities)) {
+            return false;
+        }
+
+        if (!Capabilities.hasMandatoryCapability(supportedCapabilities)) {
+            log.info("We close a connection because of " +
+                            "CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED " +
+                            "to node {}. Capabilities of old node: {}, " +
+                            "networkEnvelope class name={}",
+                    getSenderNodeAddressAsString(networkEnvelope),
+                    supportedCapabilities.prettyPrint(),
+                    networkEnvelope.getClass().getSimpleName());
+            shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
+            return true;
+        }
+
+        this.capabilities.set(supportedCapabilities);
+
+        capabilitiesListeners.forEach(weakListener -> {
+            SupportedCapabilitiesListener supportedCapabilitiesListener = weakListener.get();
+            if (supportedCapabilitiesListener != null) {
+                UserThread.execute(() -> supportedCapabilitiesListener.onChanged(supportedCapabilities));
+            }
+        });
+        return false;
+    }
+
+    @Nullable
+    private NodeAddress getSenderNodeAddress(NetworkEnvelope networkEnvelope) {
+        return getPeersNodeAddressOptional().orElse(
+                networkEnvelope instanceof SendersNodeAddressMessage ?
+                        ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress() :
+                        null);
+    }
+
+    private String getSenderNodeAddressAsString(NetworkEnvelope networkEnvelope) {
+        NodeAddress nodeAddress = getSenderNodeAddress(networkEnvelope);
+        return nodeAddress == null ? "null" : nodeAddress.getFullAddress();
     }
 }
