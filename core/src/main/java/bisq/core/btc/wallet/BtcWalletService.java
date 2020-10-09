@@ -27,7 +27,6 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
-import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 
 import org.bitcoinj.core.Address;
