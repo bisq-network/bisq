@@ -29,9 +29,6 @@ import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
-import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.KeyStorage;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
@@ -49,9 +46,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -116,7 +110,6 @@ public class TradesChartsViewModelTest {
         dir.delete();
         //noinspection ResultOfMethodCallIgnored
         dir.mkdir();
-        keyRing = new KeyRing(new KeyStorage(dir));
     }
 
     @SuppressWarnings("ConstantConditions")
