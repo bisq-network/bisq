@@ -55,7 +55,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static bisq.common.util.Preconditions.checkDir;
 
-// TODO: use a password protection for key storage
 @Singleton
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);

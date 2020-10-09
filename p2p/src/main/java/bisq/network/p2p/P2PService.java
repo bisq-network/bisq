@@ -920,6 +920,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return keyRing;
     }
 
+    public Optional<Capabilities> findPeersCapabilities(NodeAddress peer) {
+        return networkNode.getConfirmedConnections().stream()
+                .filter(e -> e.getPeersNodeAddressOptional().isPresent())
+                .filter(e -> e.getPeersNodeAddressOptional().get().equals(peer))
+                .map(Connection::getCapabilities)
+                .findAny();
+    }
 
     @Value
     public class MailboxItem {

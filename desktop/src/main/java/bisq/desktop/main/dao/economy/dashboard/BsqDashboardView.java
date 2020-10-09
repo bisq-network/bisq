@@ -30,7 +30,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -121,7 +121,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqDashboardView(DaoFacade daoFacade,
+    public BsqDashboardView(DaoFacade daoFacade,
                              TradeStatisticsManager tradeStatisticsManager,
                              PriceFeedService priceFeedService,
                              Preferences preferences,
@@ -173,7 +173,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
 
-        availableAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, 1,
+        availableAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.dashboard.availableAmount")).second;
     }
 
@@ -289,17 +289,17 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private void updateBsqPriceData() {
         seriesBSQPrice.getData().clear();
 
-        Map<LocalDate, List<TradeStatistics2>> bsqPriceByDate = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> e.getCurrencyCode().equals("BSQ"))
-                .sorted(Comparator.comparing(TradeStatistics2::getTradeDate))
-                .collect(Collectors.groupingBy(item -> new java.sql.Date(item.getTradeDate().getTime()).toLocalDate()
+        Map<LocalDate, List<TradeStatistics3>> bsqPriceByDate = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> e.getCurrency().equals("BSQ"))
+                .sorted(Comparator.comparing(TradeStatistics3::getDate))
+                .collect(Collectors.groupingBy(item -> new java.sql.Date(item.getDate()).toLocalDate()
                         .with(ADJUSTERS.get(DAY))));
 
         List<XYChart.Data<Number, Number>> updatedBSQPrice = bsqPriceByDate.keySet().stream()
                 .map(e -> {
                     ZonedDateTime zonedDateTime = e.atStartOfDay(ZoneId.systemDefault());
                     return new XYChart.Data<Number, Number>(zonedDateTime.toInstant().getEpochSecond(), bsqPriceByDate.get(e).stream()
-                            .map(TradeStatistics2::getTradePrice)
+                            .map(TradeStatistics3::getTradePrice)
                             .mapToDouble(Price::getValue)
                             .average()
                             .orElse(Double.NaN)
@@ -370,12 +370,12 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private long updateAveragePriceField(TextField textField, int days, boolean isUSDField) {
         Date pastXDays = getPastDate(days);
-        List<TradeStatistics2> bsqTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> e.getCurrencyCode().equals("BSQ"))
+        List<TradeStatistics3> bsqTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> e.getCurrency().equals("BSQ"))
                 .filter(e -> e.getTradeDate().after(pastXDays))
                 .collect(Collectors.toList());
-        List<TradeStatistics2> usdTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> e.getCurrencyCode().equals("USD"))
+        List<TradeStatistics3> usdTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> e.getCurrency().equals("USD"))
                 .filter(e -> e.getTradeDate().after(pastXDays))
                 .collect(Collectors.toList());
         long average = isUSDField ? getUSDAverage(bsqTradePastXDays, usdTradePastXDays) :
@@ -391,11 +391,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         return average;
     }
 
-    private long getBTCAverage(List<TradeStatistics2> bsqList) {
+    private long getBTCAverage(List<TradeStatistics3> bsqList) {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
 
-        for (TradeStatistics2 item : bsqList) {
+        for (TradeStatistics3 item : bsqList) {
             accumulatedVolume += item.getTradeVolume().getValue();
             accumulatedAmount += item.getTradeAmount().getValue(); // Amount of BTC traded
         }
@@ -406,17 +406,17 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         return averagePrice;
     }
 
-    private long getUSDAverage(List<TradeStatistics2> bsqList, List<TradeStatistics2> usdList) {
+    private long getUSDAverage(List<TradeStatistics3> bsqList, List<TradeStatistics3> usdList) {
         // Use next USD/BTC print as price to calculate BSQ/USD rate
         // Store each trade as amount of USD and amount of BSQ traded
         List<Tuple2<Double, Double>> usdBsqList = new ArrayList<>(bsqList.size());
-        usdList.sort(Comparator.comparing(o -> o.getTradeDate().getTime()));
+        usdList.sort(Comparator.comparing(TradeStatistics3::getDate));
         var usdBTCPrice = 10000d; // Default to 10000 USD per BTC if there is no USD feed at all
 
-        for (TradeStatistics2 item : bsqList) {
+        for (TradeStatistics3 item : bsqList) {
             // Find usdprice for trade item
             usdBTCPrice = usdList.stream()
-                    .filter(usd -> usd.getTradeDate().getTime() > item.getTradeDate().getTime())
+                    .filter(usd -> usd.getDate() > item.getDate())
                     .map(usd -> MathUtils.scaleDownByPowerOf10((double) usd.getTradePrice().getValue(),
                             Fiat.SMALLEST_UNIT_EXPONENT))
                     .findFirst()

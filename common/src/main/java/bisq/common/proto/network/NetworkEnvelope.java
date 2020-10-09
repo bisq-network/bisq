@@ -48,7 +48,6 @@ public abstract class NetworkEnvelope implements Envelope {
         return getNetworkEnvelopeBuilder().build();
     }
 
-    // todo remove
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder().build();
     }

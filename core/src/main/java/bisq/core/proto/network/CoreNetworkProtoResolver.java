@@ -59,7 +59,6 @@ import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.trade.messages.TraderSignedWitnessMessage;
-import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
@@ -265,9 +264,6 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return RefundAgent.fromProto(proto.getRefundAgent());
                 case FILTER:
                     return Filter.fromProto(proto.getFilter());
-                case TRADE_STATISTICS:
-                    // Still used to convert TradeStatistics data from pre v0.6 versions
-                    return TradeStatistics.fromProto(proto.getTradeStatistics());
                 case MAILBOX_STORAGE_PAYLOAD:
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
                 case OFFER_PAYLOAD:

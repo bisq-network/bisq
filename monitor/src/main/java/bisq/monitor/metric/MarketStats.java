@@ -20,30 +20,15 @@ package bisq.monitor.metric;
 import bisq.monitor.Metric;
 import bisq.monitor.Reporter;
 
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
-
-import org.berndpruenster.netlayer.tor.TorCtlException;
-
-import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-
-import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -110,7 +95,6 @@ public class MarketStats extends Metric {
         } catch (IllegalStateException ignore) {
             // no match found
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

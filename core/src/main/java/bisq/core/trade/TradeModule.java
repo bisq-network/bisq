@@ -24,8 +24,6 @@ import bisq.core.account.witness.AccountAgeWitnessStorageService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.statistics.ReferralIdService;
-import bisq.core.trade.statistics.TradeStatistics2StorageService;
-import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.AppModule;
 import bisq.common.config.Config;
@@ -46,8 +44,6 @@ public class TradeModule extends AppModule {
     @Override
     protected void configure() {
         bind(TradeManager.class).in(Singleton.class);
-        bind(TradeStatisticsManager.class).in(Singleton.class);
-        bind(TradeStatistics2StorageService.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
         bind(AccountAgeWitnessService.class).in(Singleton.class);

@@ -128,7 +128,6 @@ public class Version {
                 '}');
     }
 
-    //TODO move to consensus area
     public static final byte COMPENSATION_REQUEST = (byte) 0x01;
     public static final byte REIMBURSEMENT_REQUEST = (byte) 0x01;
     public static final byte PROPOSAL = (byte) 0x01;

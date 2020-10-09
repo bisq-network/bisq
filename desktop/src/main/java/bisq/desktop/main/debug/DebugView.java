@@ -27,7 +27,6 @@ import bisq.core.offer.placeoffer.tasks.AddToOfferBook;
 import bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
-import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
@@ -56,6 +55,7 @@ import bisq.core.trade.protocol.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.seller.SellerPublishesDepositTx;
+import bisq.core.trade.protocol.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.tasks.seller.SellerSendDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
@@ -145,7 +145,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
-                        PublishTradeStatistics.class,
+                        SellerPublishesTradeStatistics.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
                         ApplyFilter.class,
@@ -179,7 +179,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
                         BuyerVerifiesFinalDelayedPayoutTx.class,
-                        PublishTradeStatistics.class,
 
                         ApplyFilter.class,
                         MakerVerifyTakerFeePayment.class,
@@ -216,7 +215,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
                         BuyerVerifiesFinalDelayedPayoutTx.class,
-                        PublishTradeStatistics.class,
 
                         ApplyFilter.class,
                         TakerVerifyMakerFeePayment.class,
@@ -248,7 +246,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
-                        PublishTradeStatistics.class,
+                        SellerPublishesTradeStatistics.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
                         ApplyFilter.class,

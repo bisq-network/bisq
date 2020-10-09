@@ -21,6 +21,7 @@ import bisq.monitor.Metric;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.StatisticsHelper;
+
 import bisq.network.p2p.NodeAddress;
 
 import org.berndpruenster.netlayer.tor.Tor;
@@ -33,6 +34,7 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -84,7 +86,6 @@ public class TorRoundTripTime extends Metric {
                 reporter.report(StatisticsHelper.process(samples), getName());
             }
         } catch (TorCtlException | IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
