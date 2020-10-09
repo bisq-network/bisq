@@ -48,7 +48,6 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO is Hmac needed/make sense?
 public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);
 
