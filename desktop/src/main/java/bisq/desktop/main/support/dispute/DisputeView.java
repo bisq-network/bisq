@@ -55,7 +55,6 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
@@ -475,15 +474,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     protected abstract void handleOnSelectDispute(Dispute dispute);
 
-    protected void onCloseDispute(Dispute dispute) {
-        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
-        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
-            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
-                    .show(dispute);
-        } else {
-            new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
-        }
-    }
+    protected abstract void onCloseDispute(Dispute dispute);
 
     protected void reOpenDispute() {
         if (selectedDispute != null) {

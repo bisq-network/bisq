@@ -18,6 +18,7 @@
 package bisq.desktop.main.support.dispute.agent.arbitration;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -26,6 +27,7 @@ import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.dao.DaoFacade;
+import bisq.core.locale.Res;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
@@ -83,5 +85,18 @@ public class ArbitratorView extends DisputeAgentView {
     @Override
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
         return new ArbitrationSession(dispute, disputeManager.isTrader(dispute));
+    }
+
+    @Override
+    protected void onCloseDispute(Dispute dispute) {
+        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
+        // Only cases with protocolVersion 1 are candidates for legacy arbitration.
+        // This code path is not tested and it is not assumed that it is still be used as old arbitrators would use
+        // their old Bisq version if sill cases are pending.
+        if (protocolVersion == 1) {
+            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
+        } else {
+            new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
+        }
     }
 }
