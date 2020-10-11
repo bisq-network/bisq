@@ -474,8 +474,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     protected abstract void handleOnSelectDispute(Dispute dispute);
 
-    protected abstract void onCloseDispute(Dispute dispute);
-
     protected void reOpenDispute() {
         if (selectedDispute != null) {
             selectedDispute.setIsClosed(false);
