@@ -614,10 +614,10 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> context == e.getContext())
                 .filter(e -> isAddressUnused(e.getAddress()))
                 .filter(e -> {
-                        boolean isSegwitOutputScriptType = Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType());
-                        // We need to ensure that we take only addressEntries which matches our segWit flag
-                        boolean isMatchingOutputScriptType = isSegwitOutputScriptType == segwit;
-                        return isMatchingOutputScriptType;
+                    boolean isSegwitOutputScriptType = Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType());
+                    // We need to ensure that we take only addressEntries which matches our segWit flag
+                    boolean isMatchingOutputScriptType = isSegwitOutputScriptType == segwit;
+                    return isMatchingOutputScriptType;
                 })
                 .findAny();
         return getOrCreateAddressEntry(context, addressEntry, segwit);
@@ -628,7 +628,9 @@ public class BtcWalletService extends WalletService {
                 addressEntryList.swapAvailableToAddressEntryWithOfferId(addressEntry, context, offerId));
     }
 
-    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry, boolean segwit) {
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context,
+                                                 Optional<AddressEntry> addressEntry,
+                                                 boolean segwit) {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
@@ -1056,13 +1058,13 @@ public class BtcWalletService extends WalletService {
         return sendResult.tx.getTxId().toString();
     }
 
-    public String sendFundsForMultipleAddresses(Set<String> fromAddresses,
-                                                String toAddress,
-                                                Coin receiverAmount,
-                                                Coin fee,
-                                                @Nullable String changeAddress,
-                                                @Nullable KeyParameter aesKey,
-                                                FutureCallback<Transaction> callback) throws AddressFormatException,
+    public Transaction sendFundsForMultipleAddresses(Set<String> fromAddresses,
+                                                     String toAddress,
+                                                     Coin receiverAmount,
+                                                     Coin fee,
+                                                     @Nullable String changeAddress,
+                                                     @Nullable KeyParameter aesKey,
+                                                     FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
 
         SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
@@ -1070,7 +1072,7 @@ public class BtcWalletService extends WalletService {
         Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
 
         printTx("sendFunds", sendResult.tx);
-        return sendResult.tx.getTxId().toString();
+        return sendResult.tx;
     }
 
     private SendRequest getSendRequest(String fromAddress,
