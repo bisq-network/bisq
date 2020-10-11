@@ -102,7 +102,7 @@ public class TradeStatisticsConverter {
         // We listen to old TradeStatistics2 objects, convert and store them and rebroadcast.
         p2PDataStorage.addAppendOnlyDataStoreListener(payload -> {
             if (payload instanceof TradeStatistics2) {
-                TradeStatistics3 tradeStatistics3 = convertToTradeStatistics3((TradeStatistics2) payload, true);
+                TradeStatistics3 tradeStatistics3 = convertToTradeStatistics3((TradeStatistics2) payload);
                 // We add it to the p2PDataStorage, which handles to get the data stored in the maps and maybe
                 // re-broadcast as tradeStatistics3 object if not already received.
                 p2PDataStorage.addPersistableNetworkPayload(tradeStatistics3, null, true);
@@ -133,7 +133,7 @@ public class TradeStatisticsConverter {
         log.info("We convert the existing {} trade statistics objects to the new format.", mapWithoutDuplicates.size());
 
         mapWithoutDuplicates.values().stream()
-                .map(e -> convertToTradeStatistics3(e, false))
+                .map(TradeStatisticsConverter::convertToTradeStatistics3)
                 .filter(TradeStatistics3::isValid)
                 .forEach(list::add);
 
@@ -151,25 +151,22 @@ public class TradeStatisticsConverter {
                 tradeStatistics3.pruneOptionalData();
             }
         }
-
         return list;
     }
 
-    private static TradeStatistics3 convertToTradeStatistics3(TradeStatistics2 tradeStatistics2, boolean fromNetwork) {
+    private static TradeStatistics3 convertToTradeStatistics3(TradeStatistics2 tradeStatistics2) {
         Map<String, String> extraDataMap = tradeStatistics2.getExtraDataMap();
         String mediator = extraDataMap != null ? extraDataMap.get(TradeStatistics2.MEDIATOR_ADDRESS) : null;
         String refundAgent = extraDataMap != null ? extraDataMap.get(TradeStatistics2.REFUND_AGENT_ADDRESS) : null;
         long time = tradeStatistics2.getTradeDate().getTime();
-        byte[] hash = null;
-        if (fromNetwork) {
-            // We need to avoid that we duplicate tradeStatistics2 objects in case both traders have not udpated yet.
-            // Before v1.4.0 both traders published the trade statistics. If one trader has updated he will check
-            // the capabilities of the peer and if the peer has not updated he will leave publishing to the peer, so we
-            // do not have the problem of duplicated objects.
-            // To ensure we add only one object we will use the hash of the tradeStatistics2 object which is the same
-            // for both traders as it excluded the trade date which is different for both.
-            hash = tradeStatistics2.getHash();
-        }
+        // We need to avoid that we duplicate tradeStatistics2 objects in case both traders have not updated yet.
+        // Before v1.4.0 both traders published the trade statistics. If one trader has updated he will check
+        // the capabilities of the peer and if the peer has not updated he will leave publishing to the peer, so we
+        // do not have the problem of duplicated objects.
+        // Also at conversion of locally stored old trade statistics we need to avoid duplicated entries.
+        // To ensure we add only one object we will use the hash of the tradeStatistics2 object which is the same
+        // for both traders as it excluded the trade date which is different for both.
+        byte[] hash = tradeStatistics2.getHash();
         return new TradeStatistics3(tradeStatistics2.getCurrencyCode(),
                 tradeStatistics2.getTradePrice().getValue(),
                 tradeStatistics2.getTradeAmount().getValue(),
