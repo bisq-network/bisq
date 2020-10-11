@@ -138,10 +138,11 @@ public class BtcWalletService extends WalletService {
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
         getAddressEntryListAsImmutableList().forEach(e -> sb.append(e.toString()).append("\n"));
+        //boolean reallyIncludePrivKeys = includePrivKeys && !wallet.isEncrypted();
         return "Address entry list:\n" +
                 sb.toString() +
                 "\n\n" +
-                wallet.toString(true, includePrivKeys, null, true, true, walletsSetup.getChain()) + "\n\n" +
+                wallet.toString(true, includePrivKeys, this.aesKey, true, true, walletsSetup.getChain()) + "\n\n" +
                 "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
