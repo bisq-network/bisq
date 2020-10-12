@@ -19,7 +19,6 @@ package bisq.core.app.misc;
 
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.SetupUtils;
 import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -79,7 +78,8 @@ public class AppSetupWithP2P extends AppSetup {
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
         persistedDataHosts.forEach(e -> {
             try {
-                e.readPersisted();
+                e.readPersisted(() -> {
+                });
             } catch (Throwable e1) {
                 log.error("readPersisted error", e1);
             }
@@ -88,10 +88,8 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        SetupUtils.readFromResources(p2PService.getP2PDataStorage(), config).addListener((observable, oldValue, newValue) -> {
-            if (newValue)
-                startInitP2PNetwork();
-        });
+        String postFix = "_" + config.baseCurrencyNetwork.name();
+        p2PService.getP2PDataStorage().readFromResources(postFix, this::startInitP2PNetwork);
     }
 
     private void startInitP2PNetwork() {

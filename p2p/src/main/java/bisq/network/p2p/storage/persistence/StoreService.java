@@ -26,6 +26,8 @@ import java.nio.file.Paths;
 
 import java.io.File;
 
+import java.util.function.Consumer;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -76,14 +78,14 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void readFromResources(String postFix) {
+    protected void readFromResources(String postFix, Runnable completeHandler) {
         String fileName = getFileName();
         makeFileFromResourceFile(fileName, postFix);
         try {
-            readStore();
+            readStore(persisted -> completeHandler.run());
         } catch (Throwable t) {
             makeFileFromResourceFile(fileName, postFix);
-            readStore();
+            readStore(persisted -> completeHandler.run());
         }
     }
 
@@ -112,25 +114,19 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         return false;
     }
 
-    protected T getStore(String fileName) {
-        T store;
-        T persisted = persistenceManager.getPersisted(fileName);
-        if (persisted != null) {
-            store = persisted;
-           /* int length = store.toProtoMessage().getSerializedSize();
-            double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;
-            String unit = length > 1_000_000D ? "MB" : "KB";
-            log.info("{}: size of {}: {} {}", this.getClass().getSimpleName(),
-                    persisted.getClass().getSimpleName(), size, unit);*/
-        } else {
-            store = createStore();
-        }
-        return store;
+    protected void readStore(String fileName, Consumer<T> consumer) {
+        persistenceManager.readPersisted(fileName,
+                consumer,
+                () -> consumer.accept(createStore()));
     }
 
-    protected void readStore() {
-        store = getStore(getFileName());
-        initializePersistenceManager();
+    protected void readStore(Consumer<T> consumer) {
+        readStore(getFileName(),
+                persisted -> {
+                    store = persisted;
+                    initializePersistenceManager();
+                    consumer.accept(persisted);
+                });
     }
 
     protected abstract void initializePersistenceManager();

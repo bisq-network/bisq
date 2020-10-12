@@ -317,11 +317,9 @@ public class BisqSetup {
         }
     }
 
-    private void readMapsFromResources(Runnable nextStep) {
-        SetupUtils.readFromResources(p2PService.getP2PDataStorage(), config).addListener((observable, oldValue, newValue) -> {
-            if (newValue)
-                nextStep.run();
-        });
+    private void readMapsFromResources(Runnable completeHandler) {
+        String postFix = "_" + config.baseCurrencyNetwork.name();
+        p2PService.getP2PDataStorage().readFromResources(postFix, completeHandler);
     }
 
     private void startP2pNetworkAndWallet(Runnable nextStep) {

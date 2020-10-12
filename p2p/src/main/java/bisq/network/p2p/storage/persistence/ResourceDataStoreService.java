@@ -17,12 +17,14 @@
 
 package bisq.network.p2p.storage.persistence;
 
+import bisq.common.UserThread;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
 import javax.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +44,14 @@ public class ResourceDataStoreService {
         services.add(service);
     }
 
-    public void readFromResources(String postFix) {
-        services.forEach(service -> service.readFromResources(postFix));
+    public void readFromResources(String postFix, Runnable completeHandler) {
+        AtomicInteger remaining = new AtomicInteger(services.size());
+        services.forEach(service -> {
+            service.readFromResources(postFix, () -> {
+                if (remaining.decrementAndGet() == 0) {
+                    UserThread.execute(completeHandler);
+                }
+            });
+        });
     }
 }

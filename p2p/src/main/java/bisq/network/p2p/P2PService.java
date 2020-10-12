@@ -193,9 +193,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     @Override
-    public void readPersisted() {
-        p2PDataStorage.readPersisted();
-        peerManager.readPersisted();
+    public void readPersisted(Runnable completeHandler) {
+        p2PDataStorage.readPersisted(completeHandler);
+        peerManager.readPersisted(completeHandler);
     }
 
 

@@ -55,12 +55,15 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            MyReputationList persisted = persistenceManager.getPersisted();
-            if (persisted != null) {
-                myReputationList.setAll(persisted.getList());
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        myReputationList.setAll(persisted.getList());
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 

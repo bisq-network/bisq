@@ -73,9 +73,9 @@ public class TempProposalStorageService extends MapStoreService<TempProposalStor
     }
 
     @Override
-    protected void readFromResources(String postFix) {
+    protected void readFromResources(String postFix, Runnable completeHandler) {
         // We do not have a resource file for that store, so we just call the readStore method instead.
-        readStore();
+        readStore(persisted -> completeHandler.run());
     }
 
 

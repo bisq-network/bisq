@@ -145,19 +145,21 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
 
     @Override
-    protected void readFromResources(String postFix) {
-        readStore();
-        log.info("We have created the {} store for the live data and filled it with {} entries from the persisted data.",
-                getFileName(), getMapOfLiveData().size());
+    protected void readFromResources(String postFix, Runnable completeHandler) {
+        readStore(persisted -> {
+            log.info("We have created the {} store for the live data and filled it with {} entries from the persisted data.",
+                    getFileName(), getMapOfLiveData().size());
 
-        // Now we add our historical data stores. As they are immutable after created we use an ImmutableMap
-        ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
-        ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder = ImmutableMap.builder();
+            // Now we add our historical data stores. As they are immutable after created we use an ImmutableMap
+            ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
+            ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder = ImmutableMap.builder();
 
         Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS.forEach(version -> readHistoricalStoreFromResources(version, postFix, allHistoricalPayloadsBuilder, storesByVersionBuilder));
 
-        allHistoricalPayloads = allHistoricalPayloadsBuilder.build();
-        storesByVersion = storesByVersionBuilder.build();
+            allHistoricalPayloads = allHistoricalPayloadsBuilder.build();
+            storesByVersion = storesByVersionBuilder.build();
+            completeHandler.run();
+        });
     }
 
 
@@ -172,19 +174,18 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         String fileName = getFileName() + "_" + version;
         boolean wasCreatedFromResources = makeFileFromResourceFile(fileName, postFix);
 
-        // If resource file does not exist we return null. We do not create a new store as it would never get filled.
-        PersistableNetworkPayloadStore<? extends PersistableNetworkPayload> historicalStore = persistenceManager.getPersisted(fileName);
-        if (historicalStore == null) {
-            log.warn("Resource file with file name {} does not exits.", fileName);
-            return;
-        }
+        // If resource file does not exist we do not create a new store as it would never get filled.
+        persistenceManager.readPersisted(getFileName(), persisted -> {
+                    storesByVersionBuilder.put(version, persisted);
+                    allHistoricalDataBuilder.putAll(persisted.getMap());
 
-        storesByVersionBuilder.put(version, historicalStore);
-        allHistoricalDataBuilder.putAll(historicalStore.getMap());
-
-        if (wasCreatedFromResources) {
-            pruneStore(historicalStore, version);
-        }
+                    if (wasCreatedFromResources) {
+                        pruneStore(persisted, version);
+                    }
+                },
+                () -> {
+                    log.warn("Resource file with file name {} does not exits.", fileName);
+                });
     }
 
     private void pruneStore(PersistableNetworkPayloadStore<? extends PersistableNetworkPayload> historicalStore,

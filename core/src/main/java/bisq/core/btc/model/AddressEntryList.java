@@ -63,12 +63,13 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     }
 
     @Override
-    public void readPersisted() {
-        AddressEntryList persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            entrySet.clear();
-            entrySet.addAll(persisted.entrySet);
-        }
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    entrySet.clear();
+                    entrySet.addAll(persisted.entrySet);
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 
@@ -110,12 +111,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             Set<AddressEntry> toBeRemoved = new HashSet<>();
             entrySet.forEach(addressEntry -> {
                 Script.ScriptType scriptType = addressEntry.isSegwit() ? Script.ScriptType.P2WPKH
-                                                                       : Script.ScriptType.P2PKH;
+                        : Script.ScriptType.P2PKH;
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(
-                                                                        addressEntry.getPubKeyHash(), scriptType);
+                        addressEntry.getPubKeyHash(), scriptType);
                 if (keyFromPubHash != null) {
                     Address addressFromKey = Address.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash,
-                                                             scriptType);
+                            scriptType);
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
@@ -197,8 +198,8 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public void swapToAvailable(AddressEntry addressEntry) {
         boolean setChangedByRemove = entrySet.remove(addressEntry);
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
-                                                                AddressEntry.Context.AVAILABLE,
-                                                                addressEntry.isSegwit()));
+                AddressEntry.Context.AVAILABLE,
+                addressEntry.isSegwit()));
         if (setChangedByRemove || setChangedByAdd) {
             requestPersistence();
         }
@@ -234,7 +235,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                 .map(address -> Pair.of(address, (DeterministicKey) wallet.findKeyFromAddress(address)))
                 .filter(pair -> pair.getRight() != null)
                 .map(pair -> new AddressEntry(pair.getRight(), AddressEntry.Context.AVAILABLE,
-                                              pair.getLeft() instanceof SegwitAddress))
+                        pair.getLeft() instanceof SegwitAddress))
                 .forEach(this::addAddressEntry);
     }
 

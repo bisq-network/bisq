@@ -20,6 +20,7 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
+import bisq.common.UserThread;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
 import javax.inject.Inject;
@@ -27,6 +28,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -52,8 +54,15 @@ public class ProtectedDataStoreService {
         services.add(service);
     }
 
-    public void readFromResources(String postFix) {
-        services.forEach(service -> service.readFromResources(postFix));
+    public void readFromResources(String postFix, Runnable completeHandler) {
+        AtomicInteger remaining = new AtomicInteger(services.size());
+        services.forEach(service -> {
+            service.readFromResources(postFix, () -> {
+                if (remaining.decrementAndGet() == 0) {
+                    UserThread.execute(completeHandler);
+                }
+            });
+        });
     }
 
     public Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> getMap() {

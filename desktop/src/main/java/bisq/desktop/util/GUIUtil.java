@@ -247,25 +247,24 @@ public class GUIUtil {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
                 PersistenceManager<PaymentAccountList> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
-                PaymentAccountList persisted = persistenceManager.getPersisted(fileName);
-                if (persisted != null) {
-                    final StringBuilder msg = new StringBuilder();
-                    final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
-                    persisted.getList().forEach(paymentAccount -> {
-                        final String id = paymentAccount.getId();
-                        if (user.getPaymentAccount(id) == null) {
-                            paymentAccounts.add(paymentAccount);
-                            msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
-                        } else {
-                            msg.append(Res.get("guiUtil.accountImport.noImport", id));
-                        }
-                    });
-                    user.addImportedPaymentAccounts(paymentAccounts);
-                    new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
-
-                } else {
-                    new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
-                }
+                persistenceManager.readPersisted(fileName, persisted -> {
+                            StringBuilder msg = new StringBuilder();
+                            HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
+                            persisted.getList().forEach(paymentAccount -> {
+                                String id = paymentAccount.getId();
+                                if (user.getPaymentAccount(id) == null) {
+                                    paymentAccounts.add(paymentAccount);
+                                    msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
+                                } else {
+                                    msg.append(Res.get("guiUtil.accountImport.noImport", id));
+                                }
+                            });
+                            user.addImportedPaymentAccounts(paymentAccounts);
+                            new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                        },
+                        () -> {
+                            new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                        });
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
             }

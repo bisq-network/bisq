@@ -77,14 +77,13 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     // seems to be not justified as it is needed only temporarily.
     @Override
     protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
-        PersistableNetworkPayload previous = getMapOfAllData().putIfAbsent(hash, payload);
-        return previous;
+        return getMapOfAllData().putIfAbsent(hash, payload);
     }
 
     @Override
-    protected void readFromResources(String postFix) {
+    protected void readFromResources(String postFix, Runnable completeHandler) {
         // We do not attempt to read from resources as that file is not provided anymore
-        readStore();
+        readStore(persisted -> completeHandler.run());
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfAllData() {

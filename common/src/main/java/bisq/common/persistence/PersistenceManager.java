@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -213,14 +214,41 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Reading file
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Read persisted file in a thread.
+     *
+     * @param resultHandler     Consumer of persisted data once it was read from disk.
+     * @param orElse            Called if no file exists or reading of file failed.
+     */
+    public void readPersisted(Consumer<T> resultHandler, Runnable orElse) {
+        readPersisted(checkNotNull(fileName), resultHandler, orElse);
+    }
+
+    /**
+     * Read persisted file in a thread.
+     *
+     * @param fileName          File name of our persisted data.
+     * @param resultHandler     Consumer of persisted data once it was read from disk.
+     * @param orElse            Called if no file exists or reading of file failed.
+     */
+    public void readPersisted(String fileName, Consumer<T> resultHandler, Runnable orElse) {
+        new Thread(() -> {
+            T persisted = getPersisted(fileName);
+            if (persisted != null) {
+                resultHandler.accept(persisted);
+            } else {
+                orElse.run();
+            }
+        }, "BisqExecutable-read-" + fileName).start();
+    }
+
+    // API for synchronous reading of data. Not recommended to be used in application code.
+    // Currently used by tests and monitor. Should be converted to the threaded API as well.
     @Nullable
     public T getPersisted() {
         return getPersisted(checkNotNull(fileName));
     }
 
-    //TODO use threading here instead in the clients
-    // We get called at startup either by readAllPersisted or readFromResources. Both are wrapped in a thread so we
-    // are not on the user thread.
     @Nullable
     public T getPersisted(String fileName) {
         File storageFile = new File(dir, fileName);

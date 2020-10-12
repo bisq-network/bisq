@@ -168,8 +168,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public Preferences(PersistenceManager<PreferencesPayload> persistenceManager,
                        Config config,
@@ -225,53 +223,66 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted("PreferencesPayload",
+                persisted -> {
+                    initFromPersistedPreferences(persisted);
+                    completeHandler.run();
+                },
+                () -> {
+                    initNewPreferences();
+                    completeHandler.run();
+                });
+    }
+
+    private void initFromPersistedPreferences(PreferencesPayload persisted) {
+        prefPayload = persisted;
+        GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+        GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
+        TradeCurrency preferredTradeCurrency = checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null");
+        setPreferredTradeCurrency(preferredTradeCurrency);
+        setFiatCurrencies(prefPayload.getFiatCurrencies());
+        setCryptoCurrencies(prefPayload.getCryptoCurrencies());
+        setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
+        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
+        setupPreferences();
+    }
+
+    private void initNewPreferences() {
+        prefPayload = new PreferencesPayload();
+        prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
+        prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
+        GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+        TradeCurrency preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
+                "preferredTradeCurrency must not be null");
+        prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
+        setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
+        setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
+
         BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
-        TradeCurrency preferredTradeCurrency;
-
-        PreferencesPayload persisted = persistenceManager.getPersisted("PreferencesPayload");
-        if (persisted != null) {
-            prefPayload = persisted;
-            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-            GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
-            preferredTradeCurrency = checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null");
-            setPreferredTradeCurrency(preferredTradeCurrency);
-            setFiatCurrencies(prefPayload.getFiatCurrencies());
-            setCryptoCurrencies(prefPayload.getCryptoCurrencies());
-            setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
+        if ("BTC".equals(baseCurrencyNetwork.getCurrencyCode())) {
+            setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
+            setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
         } else {
-            prefPayload = new PreferencesPayload();
-            prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
-            prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
-            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-            preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
-                    "preferredTradeCurrency must not be null");
-            prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
-            setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
-            setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
-
-            if ("BTC".equals(baseCurrencyNetwork.getCurrencyCode())) {
-                setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
-                setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
-            } else {
-                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
-            }
-
-            prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
-
-            prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
-            prefPayload.setTradeChartsScreenCurrencyCode(preferredTradeCurrency.getCode());
-            prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
-            prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
+            throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
 
+        prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
+
+        prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
+        prefPayload.setTradeChartsScreenCurrencyCode(preferredTradeCurrency.getCode());
+        prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
+        prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
+        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
+        setupPreferences();
+    }
+
+    private void setupPreferences() {
         persistenceManager.initialize(prefPayload, PersistenceManager.Source.PRIVATE);
 
         // We don't want to pass Preferences to all popups where the don't show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
         DontShowAgainLookup.setPreferences(this);
-
-        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
 
         // set all properties
         useAnimationsProperty.set(prefPayload.isUseAnimations());
@@ -335,6 +346,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         initialReadDone = true;
         requestPersistence();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

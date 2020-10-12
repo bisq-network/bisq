@@ -183,11 +183,12 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
-        PeerList persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            peerList.setAll(persisted.getSet());
-        }
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    peerList.setAll(persisted.getSet());
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 
