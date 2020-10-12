@@ -208,7 +208,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     @Override
     String getWalletAsString(boolean includePrivKeys) {
-        return wallet.toString(true, includePrivKeys, null, true, true, walletsSetup.getChain()) + "\n\n" +
+        return wallet.toString(true, includePrivKeys, this.aesKey, true, true, walletsSetup.getChain()) + "\n\n" +
                 "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
