@@ -94,11 +94,10 @@ public class PreferencesTest {
         when(payload.getPreferredTradeCurrency()).thenReturn(usd);
         when(payload.getFiatCurrencies()).thenReturn(fiatCurrencies);
 
-        preferences.readPersisted();
-
-        assertEquals(7, preferences.getFiatCurrenciesAsObservable().size());
-        assertTrue(preferences.getFiatCurrenciesAsObservable().contains(usd));
-
+        preferences.readPersisted(() -> {
+            assertEquals(7, preferences.getFiatCurrenciesAsObservable().size());
+            assertTrue(preferences.getFiatCurrenciesAsObservable().contains(usd));
+        });
     }
 
     @Test
@@ -115,9 +114,9 @@ public class PreferencesTest {
         when(payload.getPreferredTradeCurrency()).thenReturn(new FiatCurrency("USD"));
         when(payload.getCryptoCurrencies()).thenReturn(cryptoCurrencies);
 
-        preferences.readPersisted();
-
-        assertTrue(preferences.getCryptoCurrenciesAsObservable().contains(dash));
+        preferences.readPersisted(() -> {
+            assertTrue(preferences.getCryptoCurrenciesAsObservable().contains(dash));
+        });
     }
 
     @Test
@@ -136,9 +135,8 @@ public class PreferencesTest {
         when(payload.getPreferredTradeCurrency()).thenReturn(usd);
         when(payload.getFiatCurrencies()).thenReturn(fiatCurrencies);
 
-        preferences.readPersisted();
-
-        assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode());
+        preferences.readPersisted(() -> {
+            assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode());
+        });
     }
-
 }
