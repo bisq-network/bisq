@@ -87,6 +87,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     // tradeDate is different for both peers so we ignore it for hash
     @JsonExclude
     private final long tradeDate;
+    @JsonExclude
     @Nullable
     private final String depositTxId;
 
