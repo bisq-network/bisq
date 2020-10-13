@@ -468,9 +468,13 @@ public class WalletConfig extends AbstractIdleService {
 
             // vPeerGroup.stop has no timeout and can take very long (10 sec. in my test). So we call it at the end.
             // We might get likely interrupted by the parent call timeout.
-            vPeerGroup.stop();
+            if (vPeerGroup.isRunning()) {
+                vPeerGroup.stop();
+                log.info("PeerGroup stopped");
+            } else {
+                log.info("PeerGroup not stopped because it was not running");
+            }
             vPeerGroup = null;
-            log.info("PeerGroup stopped");
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
