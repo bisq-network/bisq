@@ -328,10 +328,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         Set<T> filteredResults = mapToFilter.entrySet().stream()
                 .filter(e -> !knownHashes.contains(e.getKey()))
-                .filter(e -> limit.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
                 .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
                         objToPayloadFunction.apply(networkPayload)))
+                .filter(e -> limit.decrementAndGet() >= 0)
                 .collect(Collectors.toSet());
 
         if (limit.get() < 0) {
