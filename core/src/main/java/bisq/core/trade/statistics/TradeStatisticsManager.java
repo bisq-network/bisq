@@ -123,13 +123,13 @@ public class TradeStatisticsManager {
             ArrayList<CurrencyTuple> fiatCurrencyList = CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toCollection(ArrayList::new));
-            jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
+            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
 
             ArrayList<CurrencyTuple> cryptoCurrencyList = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toCollection(ArrayList::new));
             cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
-            jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
+            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
         }
 
         List<TradeStatisticsForJson> list = observableTradeStatisticsSet.stream()
@@ -138,6 +138,6 @@ public class TradeStatisticsManager {
                 .collect(Collectors.toList());
         TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
         list.toArray(array);
-        jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
+        jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(array), "trade_statistics");
     }
 }

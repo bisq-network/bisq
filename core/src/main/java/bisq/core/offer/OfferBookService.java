@@ -245,6 +245,6 @@ public class OfferBookService {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        jsonFileManager.writeToDisc(Utilities.objectToJson(offerForJsonList), "offers_statistics");
+        jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(offerForJsonList), "offers_statistics");
     }
 }

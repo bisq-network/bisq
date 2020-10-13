@@ -21,6 +21,7 @@ import bisq.core.app.BisqExecutable;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoSetup;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
@@ -31,6 +32,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.setup.GracefulShutDownHandler;
@@ -83,6 +85,8 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         log.info("gracefulShutDown");
         try {
             if (injector != null) {
+                JsonFileManager.shutDownAllInstances();
+                injector.getInstance(DaoSetup.class).shutDown();
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
                     injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
