@@ -774,12 +774,12 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // Addresses
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Address getChangeAddress() {
+    private LegacyAddress getChangeAddress() {
         return getUnusedAddress();
     }
 
-    public Address getUnusedAddress() {
-        return wallet.getIssuedReceiveAddresses().stream()
+    public LegacyAddress getUnusedAddress() {
+        return (LegacyAddress) wallet.getIssuedReceiveAddresses().stream()
                 .filter(this::isAddressUnused)
                 .findAny()
                 .orElse(wallet.freshReceiveAddress());

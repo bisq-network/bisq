@@ -28,6 +28,7 @@ import bisq.core.locale.Res;
 import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -102,7 +103,7 @@ class BsqTxListItem extends TxConfidenceListItem {
                     WalletService.isOutputScriptConvertibleToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can
                 // assume that only one output is not from our own wallets.
-                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
+                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) WalletService.getAddressFromOutput(output));
                 break;
             }
         }
@@ -113,7 +114,7 @@ class BsqTxListItem extends TxConfidenceListItem {
         if (sendToAddress != null) {
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
+                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) WalletService.getAddressFromOutput(output));
                     break;
                 }
             }
