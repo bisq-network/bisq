@@ -209,7 +209,7 @@ public abstract class BsqNode implements DaoSetupService {
         parseBlockchainComplete = true;
         daoStateService.onParseBlockChainComplete();
 
-        maybeExportToJson();
+        exportJsonFilesService.onParseBlockChainComplete();
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -291,7 +291,7 @@ public abstract class BsqNode implements DaoSetupService {
         return Optional.empty();
     }
 
-    protected void maybeExportToJson() {
-        exportJsonFilesService.maybeExportToJson();
+    protected void maybeExportNewBlockToJson(Block block) {
+        exportJsonFilesService.onNewBlock(block);
     }
 }
