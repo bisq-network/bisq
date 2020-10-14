@@ -99,6 +99,7 @@ configure([project(':cli'),
            project(':seednode'),
            project(':statsnode'),
            project(':pricenode'),
+           project(':inventory'),
            project(':apitest')]) {
 
     apply plugin: 'application'
@@ -590,6 +591,18 @@ configure(project(':daemon')) {
         implementation "ch.qos.logback:logback-classic:$logbackVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+configure(project(':inventory')) {
+    mainClassName = 'bisq.inventory.InventoryMonitorMain'
+
+    dependencies {
+        compile project(':core')
+        compile "com.google.guava:guava:$guavaVersion"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
