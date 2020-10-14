@@ -567,14 +567,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics3 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(DisplayUtils.formatDateTime(item.getTradeDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator(Comparator.comparing(TradeStatistics3::getTradeDate));
+        dateColumn.setComparator(Comparator.comparing(TradeStatistics3::getDate));
         tableView.getColumns().add(dateColumn);
 
         // market
@@ -603,7 +603,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        marketColumn.setComparator(Comparator.comparing(TradeStatistics3::getTradeDate));
+        marketColumn.setComparator(Comparator.comparing(TradeStatistics3::getDate));
         tableView.getColumns().add(marketColumn);
 
         // price

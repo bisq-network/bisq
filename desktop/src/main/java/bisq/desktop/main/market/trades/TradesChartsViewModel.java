@@ -260,7 +260,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         tradeStatisticsByCurrency.forEach(e -> {
             for (long i = maxTicks; i > 0; --i) {
                 Pair<Date, Set<TradeStatistics3>> p = itemsPerInterval.get(i);
-                if (e.getTradeDate().after(p.getKey())) {
+                if (e.getDate().after(p.getKey())) {
                     p.getValue().add(e);
                     break;
                 }
@@ -307,7 +307,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         Collections.sort(tradePrices);
 
         List<TradeStatistics3> list = new ArrayList<>(set);
-        list.sort(Comparator.comparingLong(TradeStatistics3::getDate));
+        list.sort(Comparator.comparingLong(TradeStatistics3::getDateAsLong));
         if (list.size() > 0) {
             open = list.get(0).getTradePrice().getValue();
             close = list.get(list.size() - 1).getTradePrice().getValue();

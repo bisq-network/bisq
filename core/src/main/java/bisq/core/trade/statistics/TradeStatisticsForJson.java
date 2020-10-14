@@ -55,7 +55,7 @@ public final class TradeStatisticsForJson {
         this.paymentMethod = tradeStatistics.getPaymentMethod();
         this.tradePrice = tradeStatistics.getPrice();
         this.tradeAmount = tradeStatistics.getAmount();
-        this.tradeDate = tradeStatistics.getDate();
+        this.tradeDate = tradeStatistics.getDateAsLong();
 
         try {
             Price tradePrice = getTradePrice();

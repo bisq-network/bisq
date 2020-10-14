@@ -188,7 +188,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                 .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
                 .map(tradeStatistics3 -> {
                     StringBuilder sb = new StringBuilder();
-                    sb.append("Date: ").append(DisplayUtils.formatDateTime(tradeStatistics3.getTradeDate())).append("\n")
+                    sb.append("Date: ").append(DisplayUtils.formatDateTime(tradeStatistics3.getDate())).append("\n")
                             .append("Market: ").append(CurrencyUtil.getCurrencyPair(tradeStatistics3.getCurrency())).append("\n")
                             .append("Price: ").append(FormattingUtils.formatPrice(tradeStatistics3.getTradePrice())).append("\n")
                             .append("Amount: ").append(formatter.formatCoin(tradeStatistics3.getTradeAmount())).append("\n")

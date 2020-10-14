@@ -63,7 +63,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Data size is about 50 bytes in average
  */
 @Slf4j
-@Getter
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload, DateSortedTruncatablePayload {
 
@@ -106,8 +105,11 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         BLOCK_CHAINS_INSTANT
     }
 
+    @Getter
     private final String currency;
+    @Getter
     private final long price;
+    @Getter
     private final long amount;
     private final String paymentMethod;
     // As only seller is publishing it is the sellers trade date
@@ -116,9 +118,11 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // Old converted trade stat objects might not have it set
     @Nullable
     @JsonExclude
+    @Getter
     private String mediator;
     @Nullable
     @JsonExclude
+    @Getter
     private String refundAgent;
 
     // todo should we add referrerId as well? get added to extra map atm but not used so far
@@ -131,6 +135,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     @JsonExclude
+    @Getter
     private final Map<String, String> extraDataMap;
 
     public TradeStatistics3(String currency,
@@ -270,7 +275,11 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
 
     @Override
     public Date getDate() {
-        return getTradeDate();
+        return new Date(date);
+    }
+
+    public long getDateAsLong() {
+        return date;
     }
 
     @Override
@@ -289,10 +298,6 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         } catch (Throwable ignore) {
             return paymentMethod;
         }
-    }
-
-    public Date getTradeDate() {
-        return new Date(date);
     }
 
     public Price getTradePrice() {
