@@ -20,6 +20,7 @@ package bisq.core.network.p2p.seed;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 
 import javax.inject.Inject;
@@ -29,8 +30,10 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -62,23 +65,9 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
                 return;
             }
 
-            // else, we fetch the seed nodes from our resources
-            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(config.baseCurrencyNetwork.name().toLowerCase() + ENDING);
-            BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
-
-            // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
             cache.clear();
-
-            // refill the cache
-            seedNodeFile.lines().forEach(line -> {
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.find())
-                    cache.add(new NodeAddress(matcher.group(1)));
-
-                // Maybe better include in regex...
-                if (line.startsWith("localhost"))
-                    cache.add(new NodeAddress(line));
-            });
+            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork);
+            cache.addAll(result);
 
             // filter
             cache.removeAll(
@@ -93,6 +82,28 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             t.printStackTrace();
             throw t;
         }
+    }
+
+    public static List<NodeAddress> getSeedNodeAddressesFromPropertyFile(BaseCurrencyNetwork baseCurrencyNetwork) {
+        List<NodeAddress> list = new ArrayList<>();
+        InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(
+                baseCurrencyNetwork.name().toLowerCase() + ENDING);
+        if (fileInputStream == null) {
+            return new ArrayList<>();
+        }
+        BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
+
+
+        seedNodeFile.lines().forEach(line -> {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find())
+                list.add(new NodeAddress(matcher.group(1)));
+
+            // Maybe better include in regex...
+            if (line.startsWith("localhost"))
+                list.add(new NodeAddress(line));
+        });
+        return list;
     }
 
     public Collection<NodeAddress> getSeedNodeAddresses() {
