@@ -294,7 +294,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return map;
     }
 
-    private Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
+    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {

@@ -78,6 +78,9 @@ message NetworkEnvelope {
 
         RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true];
         TraderSignedWitnessMessage trader_signed_witness_message = 51 [deprecated = true];
+
+        GetInventoryRequest get_inventory_request = 52;
+        GetInventoryResponse get_inventory_response = 53;
     }
 }
 
@@ -135,6 +138,16 @@ message Ping {
 
 message Pong {
     int32 request_nonce = 1;
+}
+
+// Inventory
+
+message GetInventoryRequest {
+    string version = 1;
+}
+
+message GetInventoryResponse {
+    map<string, uint32> num_payloads_map = 1;
 }
 
 // offer

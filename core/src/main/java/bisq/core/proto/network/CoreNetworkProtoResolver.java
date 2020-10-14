@@ -64,6 +64,8 @@ import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
+import bisq.network.p2p.inventory.messages.GetInventoryRequest;
+import bisq.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -223,6 +225,11 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
 
                 case BUNDLE_OF_ENVELOPES:
                     return BundleOfEnvelopes.fromProto(proto.getBundleOfEnvelopes(), this, messageVersion);
+
+                case GET_INVENTORY_REQUEST:
+                    return GetInventoryRequest.fromProto(proto.getGetInventoryRequest(), messageVersion);
+                case GET_INVENTORY_RESPONSE:
+                    return GetInventoryResponse.fromProto(proto.getGetInventoryResponse(), messageVersion);
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
