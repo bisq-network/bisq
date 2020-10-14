@@ -115,6 +115,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
+    @Nullable
     private static Config config;
 
     // Leaving some constants package-private for tests to know limits.
@@ -249,10 +250,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     // Throttle outbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
-                    if (elapsed < config.sendMsgThrottleTrigger) {
+                    if (elapsed < getSendMsgThrottleTrigger()) {
                         log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
                                         "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
-                                config.sendMsgThrottleTrigger, config.sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
+                                getSendMsgThrottleTrigger(), getSendMsgThrottleSleep(), lastSendTimeStamp, now, elapsed,
                                 networkEnvelope.getClass().getSimpleName());
 
                         // check if BundleOfEnvelopes is supported
@@ -265,7 +266,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     queueOfBundles.add(new BundleOfEnvelopes());
 
                                     // - and schedule it for sending
-                                    lastSendTimeStamp += config.sendMsgThrottleSleep;
+                                    lastSendTimeStamp += getSendMsgThrottleSleep();
 
                                     bundleSender.schedule(() -> {
                                         if (!stopped) {
@@ -297,7 +298,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                             return;
                         }
 
-                        Thread.sleep(config.sendMsgThrottleSleep);
+                        Thread.sleep(getSendMsgThrottleSleep());
                     }
 
                     lastSendTimeStamp = now;
@@ -372,11 +373,27 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         messageTimeStamps.add(now);
 
         // clean list
-        while (messageTimeStamps.size() > config.msgThrottlePer10Sec)
+        while (messageTimeStamps.size() > getMsgThrottlePer10Sec())
             messageTimeStamps.remove(0);
 
-        return violatesThrottleLimit(now, 1, config.msgThrottlePerSec) ||
-                violatesThrottleLimit(now, 10, config.msgThrottlePer10Sec);
+        return violatesThrottleLimit(now, 1, getMsgThrottlePerSec()) ||
+                violatesThrottleLimit(now, 10, getMsgThrottlePer10Sec());
+    }
+
+    private int getMsgThrottlePerSec() {
+        return config != null ? config.msgThrottlePerSec : 200;
+    }
+
+    private int getMsgThrottlePer10Sec() {
+        return config != null ? config.msgThrottlePer10Sec : 1000;
+    }
+
+    private int getSendMsgThrottleSleep() {
+        return config != null ? config.sendMsgThrottleSleep : 50;
+    }
+
+    private int getSendMsgThrottleTrigger() {
+        return config != null ? config.sendMsgThrottleTrigger : 20;
     }
 
     private boolean violatesThrottleLimit(long now, int seconds, int messageCountLimit) {
