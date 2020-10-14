@@ -11,6 +11,7 @@ include 'pricenode'
 include 'relay'
 include 'seednode'
 include 'statsnode'
+include 'inventory'
 include 'apitest'
 
 rootProject.name = 'bisq'
